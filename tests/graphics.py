@@ -11,6 +11,23 @@ from nodebox.graphics import *
 
 class GraphicsTestCase(unittest.TestCase):
     
+    def test_arrow_type_error(self):
+        """Test if passing a wrong arrow type raises an error."""
+        ctx = Context()
+        self.assertRaises(NodeBoxError, ctx.arrow, 0, 0, 100, type=42)
+
+    def test_too_many_pops(self):
+        """Test if popping too many times raises an error."""
+        ctx = Context()
+        self.assertRaises(NodeBoxError, ctx.pop)
+        
+    def test_font_not_found(self):
+        """Test if setting an unexisting font raises an error."""
+        ctx = Context()
+        old_font = ctx.font()
+        self.assertRaises(NodeBoxError, ctx.font, "THIS_FONT_DOES_NOT_EXIST")
+        self.assertEquals(ctx.font(), old_font, "Current font has not changed.")
+    
     def test_ellipse(self):
         """Test if ellipse is an alias for oval."""
         ctx = Context()
