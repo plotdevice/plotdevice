@@ -678,12 +678,7 @@ class LineTracker(object):
     def numberOfLines(self):
         return len(self.lines)
 
-_basicFont = NSFont.fontWithName_size_("Monaco", 10)
-if _basicFont is None:
-    import sys
-    from nodebox.gui.mac.util import errorAlert
-    errorAlert("Monaco font not enabled", 'NodeBox needs the "Monaco" font to work properly. Please enable it in Font Book.')
-    sys.exit(-1)
+_basicFont = NSFont.userFixedPitchFontOfSize_(11)
 
 _BASICATTRS = {NSFontAttributeName: _basicFont,
                NSLigatureAttributeName: 0}
