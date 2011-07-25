@@ -91,6 +91,9 @@ class NodeBoxDocument(NSDocument):
         self._seed = time.time()
         self.currentView = self.graphicsView
         return self
+    
+    def autosavesInPlace(self):
+        return True
 
     def close(self):
         self.stopScript()
