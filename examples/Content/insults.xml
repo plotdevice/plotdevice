@@ -1,0 +1,347 @@
+<?xml version="1.0"?>
+<!DOCTYPE grammar PUBLIC "-//diveintopython.org//DTD Kant Generator Pro v1.0//EN" "kgp.dtd">
+<grammar>
+<!-- 
+Thanks to David Giffin <dgiffin@davtri.com> for his Davtri Insult Generator (http://www.davtri.com)
+Word list taken from web page source code on page http://www.tower.org/insult/
+-->
+
+<ref id="space-adj1">
+	<p>dribbling</p>
+	<p>snivelling</p>
+	<p>braindead</p>
+	<p>tentacled</p>
+	<p>three eyed</p>
+	<p>one dimensional</p>
+	<p>borg loving</p>
+	<p>slime sucking</p>
+	<p>borg sniffing</p>
+	<p>bug eyed</p>
+	<p>single celled</p>
+	<p>scruffy looking</p>
+</ref>
+<ref id="space-adv">
+	<p>son of a</p>
+	<p>clone of a</p>
+	<p>excuse for a</p>
+	<p>hologram of a</p>
+	<p>apology for a</p>
+	<p>pimp for a</p>
+</ref>
+<ref id="space-adj2">
+	<p>mutant</p>
+	<p>parasitic</p>
+	<p>vat-grown</p>
+	<p>Ferengi</p>
+	<p>radiation damaged</p>
+	<p>deranged</p>
+	<p>space sick</p>
+	<p>warp sick</p>
+	<p>deviant</p>
+	<p>clockwork</p>
+</ref>
+<ref id="space-subst">
+	<p>star goat</p>
+	<p>space weevil</p>
+	<p>toilet cleaning droid</p>
+	<p>bilge spore</p>
+	<p>nose worm</p>
+	<p>hyper slug</p>
+	<p>replicant</p>
+	<p>android</p>
+	<p>garbage droid</p>
+	<p>cyborg</p>
+	<p>pleasure droid</p>
+	<p>nerf herder</p>
+</ref>
+
+<ref id="elizabeth-adj1">
+	<p>artless</p>
+	<p>bawdy</p>
+	<p>beslubbering</p>
+	<p>bootless</p>
+	<p>churlish</p>
+	<p>cockered</p>
+	<p>clouted</p>
+	<p>craven</p>
+	<p>currish</p>
+	<p>dankish</p>
+	<p>dissembling</p>
+	<p>droning</p>
+	<p>errant</p>
+	<p>fawning</p>
+	<p>fobbing</p>
+	<p>froward</p>
+	<p>frothy</p>
+	<p>gleeking</p>
+	<p>goatish</p>
+	<p>gorbellied</p>
+	<p>impertinent</p>
+	<p>infectious</p>
+	<p>jarring</p>
+	<p>loggerheaded</p>
+	<p>lumpish</p>
+	<p>mammering</p>
+	<p>mangled</p>
+	<p>mewling</p>
+	<p>paunchy</p>
+	<p>pribbling</p>
+	<p>puking</p>
+	<p>puny</p>
+	<p>qualling</p>
+	<p>rank</p>
+	<p>reeky</p>
+	<p>roguish</p>
+	<p>ruttish</p>
+	<p>saucy</p>
+	<p>spleeny</p>
+	<p>spongy</p>
+	<p>surly</p>
+	<p>tottering</p>
+	<p>unmuzzled</p>
+	<p>vain</p>
+	<p>venomed</p>
+	<p>villainous</p>
+	<p>warped</p>
+	<p>wayward</p>
+	<p>weedy</p>
+	<p>yeasty</p>
+</ref>
+<ref id="elizabeth-adj2">
+	<p>base-court</p>
+	<p>bat-fowling</p>
+	<p>beef-witted</p>
+	<p>beetle-headed</p>
+	<p>boil-brained</p>
+	<p>clapper-clawed</p>
+	<p>clay-brained</p>
+	<p>common-kissing</p>
+	<p>crook-pated</p>
+	<p>dismal-dreaming</p>
+	<p>dizzy-eyed</p>
+	<p>doghearted</p>
+	<p>dread-bolted</p>
+	<p>earth-vexing</p>
+	<p>elf-skinned</p>
+	<p>fat-kidneyed</p>
+	<p>fen-sucked</p>
+	<p>flap-mouthed</p>
+	<p>fly-bitten</p>
+	<p>folly-fallen</p>
+	<p>fool-born</p>
+	<p>full-gorged</p>
+	<p>guts-griping</p>
+	<p>half-faced</p>
+	<p>hasty-witted</p>
+	<p>hedge-born</p>
+	<p>hell-hated</p>
+	<p>idle-headed</p>
+	<p>ill-breeding</p>
+	<p>ill-nurtured</p>
+	<p>knotty-pated</p>
+	<p>milk-livered</p>
+	<p>motley-minded</p>
+	<p>onion-eyed</p>
+	<p>plume-plucked</p>
+	<p>pottle-deep</p>
+	<p>pox-marked</p>
+	<p>reeling-ripe</p>
+	<p>rough-hewn</p>
+	<p>rude-growing</p>
+	<p>rump-fed</p>
+	<p>shard-borne</p>
+	<p>sheep-biting</p>
+	<p>spur-galled</p>
+	<p>swag-bellied</p>
+	<p>tardy-gaited</p>
+	<p>tickle-brained</p>
+	<p>toad-spotted</p>
+	<p>unchin-snouted</p>
+	<p>weather-bitten</p>
+</ref>
+<ref id="elizabeth-subst">
+	<p>apple-john</p>
+	<p>baggage</p>
+	<p>barnacle</p>
+	<p>bladder</p>
+	<p>boar-pig</p>
+	<p>bugbear</p>
+	<p>bum-bailey</p>
+	<p>canker-blossom</p>
+	<p>clack-dish</p>
+	<p>clotpole</p>
+	<p>coxcomb</p>
+	<p>codpiece</p>
+	<p>death-token</p>
+	<p>dewberry</p>
+	<p>flap-dragon</p>
+	<p>flax-wench</p>
+	<p>flirt-gill</p>
+	<p>foot-licker</p>
+	<p>fustilarian</p>
+	<p>giglet</p>
+	<p>gudgeon</p>
+	<p>haggard</p>
+	<p>harpy</p>
+	<p>hedge-pig</p>
+	<p>horn-beast</p>
+	<p>hugger-mugger</p>
+	<p>joithead</p>
+	<p>lewdster</p>
+	<p>lout</p>
+	<p>maggot-pie</p>
+	<p>malt-worm</p>
+	<p>mammet</p>
+	<p>measle</p>
+	<p>minnow</p>
+	<p>miscreant</p>
+	<p>moldwarp</p>
+	<p>mumble-news</p>
+	<p>nut-hook</p>
+	<p>pigeon-egg</p>
+	<p>pignut</p>
+	<p>puttock</p>
+	<p>pumpion</p>
+	<p>ratsbane</p>
+	<p>scut</p>
+	<p>skainsmate</p>
+	<p>strumpet</p>
+	<p>varlot</p>
+	<p>vassal</p>
+	<p>whey-face</p>
+	<p>wagtail</p>
+</ref>
+
+
+<ref id="redneck-adj1">
+	<p>back stabbing</p>
+	<p>bawdy</p>
+	<p>beer-bellied</p>
+	<p>bone-headed</p>
+	<p>conniving</p>
+	<p>cross eyed</p>
+	<p>disagreeable</p>
+	<p>knock-kneed</p>
+	<p>lily-livered</p>
+	<p>lard eatin</p>
+	<p>lop-jawed</p>
+	<p>pea-brained</p>
+	<p>pot-bellied</p>
+	<p>whimpy</p>
+</ref>
+<ref id="redneck-adj2">
+	<p>aggravatin</p>
+	<p>awkward</p>
+	<p>back-woods</p>
+	<p>high falutin</p>
+	<p>impertinent</p>
+	<p>illiterate</p>
+	<p>low down</p>
+	<p>mealy-mouthed</p>
+	<p>shiftless</p>
+	<p>smart-mouth</p>
+	<p>worthless</p>
+</ref>
+<ref id="redneck-subst">
+	<p>bean pole</p>
+	<p>boob</p>
+	<p>brat</p>
+	<p>buzzard bait</p>
+	<p>cracker</p>
+	<p>clod hopper</p>
+	<p>dufus</p>
+	<p>hick</p>
+	<p>jerk</p>
+	<p>moron</p>
+	<p>mule</p>
+	<p>nimrod</p>
+	<p>plow boy</p>
+	<p>pole cat</p>
+	<p>red neck</p>
+	<p>rip snorter</p>
+	<p>river rat</p>
+	<p>sap sucker</p>
+	<p>skunk</p>
+	<p>slop wallower</p>
+	<p>swamp momma</p>
+	<p>trailer bum</p>
+</ref>
+
+<ref id="conservative-adj1">
+	<p>ignorant</p>
+	<p>selfish</p>
+	<p>self-absorbed</p>
+	<p>prejudiced</p>
+	<p>stupid</p>
+	<p>inhuman</p>
+	<p>unfeeling</p>
+	<p>amoral</p>
+	<p>craven</p>
+	<p>close-minded</p>
+	<p>elitist</p>
+	<p>self-rightous</p>
+	<p>loud-mouth</p>
+	<p>bigoted</p>
+</ref>
+<ref id="conservative-adj2">
+	<p>blind-to-reality</p>
+	<p>money-grubbing</p>
+	<p>Gingrich-suckling</p>
+	<p>holier-than-thou</p>
+	<p>party-line</p>
+	<p>thick-skulled</p>
+	<p>upper-class</p>
+	<p>flapping-mouthed</p>
+	<p>flag-worshipping</p>
+	<p>school-prayer-supporting</p>
+	<p>anti-choice</p>
+	<p>cash-worshipping</p>
+	<p>obstructing</p>
+	<p>bible-thumping</p>
+	<p>militaristic</p>
+	<p>selfish</p>
+</ref>
+<ref id="conservative-subst">
+	<p>moron</p>
+	<p>ditto-head</p>
+	<p>elephant-lover</p>
+	<p>pork-barrel</p>
+	<p>automaton</p>
+	<p>oppressor</p>
+	<p>animal-hater</p>
+	<p>industrialist</p>
+	<p>bourgoisie</p>
+	<p>redneck</p>
+	<p>dipshit</p>
+	<p>forest-cutter</p>
+	<p>Limbaugh-lover</p>
+	<p>fascist</p>
+	<p>bonehead</p>
+	<p>muckraker</p>
+	<p>retroeconomist</p>
+</ref>
+
+
+<ref id="space-insult">
+ 	<p>You <xref id="space-adj1"/> <xref id="space-adv"/> <xref id="space-adj2"/> <xref id="space-subst"/>!</p>
+</ref>
+
+<ref id="elizabeth-insult">
+ 	<p>You <xref id="elizabeth-adj1"/> <xref id="elizabeth-adj2"/> <xref id="elizabeth-subst"/>!</p>
+</ref>
+
+<ref id="redneck-insult">
+ 	<p>You <xref id="redneck-adj1"/> <xref id="redneck-adj2"/> <xref id="redneck-subst"/>!</p>
+</ref>
+
+<ref id="conservative-insult">
+ 	<p>You <xref id="conservative-adj1"/> <xref id="conservative-adj2"/> <xref id="conservative-subst"/>!</p>
+</ref>
+
+<ref id="insult">
+	<p><xref id="space-insult"/></p>
+	<p><xref id="elizabeth-insult"/></p>
+	<p><xref id="redneck-insult"/></p>
+	<p><xref id="conservative-insult"/></p>
+</ref>
+</grammar>

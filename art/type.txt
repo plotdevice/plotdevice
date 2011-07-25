@@ -1,0 +1,5 @@
+Type is set in Dolly-Roman.
+Navigation is 13pt, strong anti-aliasing with an extra layer copy at 70%.
+Same for topics.
+Components are 12pt, sharp anti-aliasing with an extra layer copy at 70%.
+Reference text is 16pt, sharp anti-aliasing with an extra layer copy at 70%.

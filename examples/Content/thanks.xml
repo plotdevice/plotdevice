@@ -1,0 +1,436 @@
+<?xml version="1.0"?>
+<!DOCTYPE grammar PUBLIC "-//diveintopython.org//DTD Kant Generator Pro v1.0//EN" "kgp.dtd">
+<grammar>
+
+<ref id="money.object">
+  <p>new clothes</p>
+  <p>a really good book</p>
+  <p>drugs</p>
+  <p>comic books</p>
+  <p>booze for a party I'm throwing this weekend</p>
+  <p>new computer hardware</p>
+  <p>a stuffed animal</p>
+  <p>a cute little pewter castle with crystals on the towers</p>
+  <p>sexy underwear</p>
+  <p>a bread machine</p>
+  <p>car repairs</p>
+  <p>a digital watch</p>
+  <p>a new pet hamster</p>
+  <p>a new toaster</p>
+  <p>shampoo</p>
+  <p>things for my new baby</p>
+  <p>legal fees</p>
+  <p>my divorce</p>
+  <p>this month's rent</p>
+  <p>food<p chance="50"> <choice><p>for the baby</p><p>for the next <choice><p>week</p><p>few days</p></choice></p></choice></p></p>
+  <p>plastic surgery</p>
+</ref>
+
+<ref id="thank.you.paragraph">
+  <p>    <p class="sentence"><xref id="money.thanks"/></p></p>
+  <p>    <p class="sentence"><xref id="gift.thanks"/></p></p>
+</ref>
+
+<ref id="closing">
+  <p><xref id="closing.line"/>
+<choice><p><xref id="male.name"/></p><p><xref id="female.name"/></p></choice></p>
+</ref>
+
+<ref id="gift.used">
+  <p>I'm planning to take it to the shooting range the next time I go.</p>
+  <p>I'm sure I will put it to good use.</p>
+  <p>Everyone I konw is envious.</p>
+  <p>It looks lovely in my <xref id="room"/>.</p>
+  <p>I've made it the central focus of my <xref id="room"/>.</p>
+  <p>My <xref id="room"/> looked empty without it.</p>
+</ref>
+
+<ref id="money.thanks">
+  <p><xref id="money.received"/>  <choice><p><xref id="money.spent"/></p><p><xref id="money.saved"/></p></choice>  <xref id="money.tag.line"/></p>
+</ref>
+
+<ref id="male.name">
+  <p>Bob</p>
+  <p>Jim</p>
+  <p>John</p>
+  <p>Fred</p>
+  <p>Elmer</p>
+  <p>Charlie</p>
+  <p>Lester</p>
+  <p>David</p>
+  <p>Mark</p>
+  <p>Andrew</p>
+  <p>Pete</p>
+  <p>Bill</p>
+  <p>William</p>
+  <p>James</p>
+  <p>Richard</p>
+  <p>Scott</p>
+  <p>Nathan</p>
+  <p>Matt</p>
+  <p>Jeff</p>
+  <p>Archie</p>
+  <p>Tom</p>
+  <p>Harry</p>
+  <p>Vinnie</p>
+  <p>Michael</p>
+  <p>Dan</p>
+  <p>Ray</p>
+  <p>Roy</p>
+  <p>Todd</p>
+  <p>Chad</p>
+  <p>Jeremy</p>
+  <p>Jason</p>
+  <p>Kurt</p>
+  <p>Keith</p>
+  <p>Ken</p>
+  <p>Tim</p>
+  <p>Randall</p>
+  <p>Eric</p>
+  <p>Stuart</p>
+  <p>Roger</p>
+  <p>Alex</p>
+  <p>Joel</p>
+  <p>Don</p>
+  <p>Ron</p>
+  <p>Arnold</p>
+  <p>Frank</p>
+  <p>Ted</p>
+  <p>Gary</p>
+  <p>Josh</p>
+  <p>Warren</p>
+  <p>Nick</p>
+  <p>Ben</p>
+  <p>Calvin</p>
+  <p>Martin</p>
+  <p>Jake</p>
+  <p>Ed</p>
+</ref>
+
+<ref id="gift.thanks">
+  <p><xref id="gift.received"/>  <xref id="gift.used"/>  <xref id="gift.tag.line"/></p>
+</ref>
+
+<ref id="money.amount">
+  <p>$5</p>
+  <p>$10</p>
+  <p>$15</p>
+  <p>$20</p>
+  <p>$25</p>
+  <p>$30</p>
+  <p>$35</p>
+  <p>$40</p>
+  <p>$45</p>
+  <p>$50</p>
+  <p>$75</p>
+  <p>$100</p>
+</ref>
+
+<ref id="female.name">
+  <p>Mary</p>
+  <p>Emily</p>
+  <p>Anne</p>
+  <p>Kathy</p>
+  <p>Natalie</p>
+  <p>Ellen</p>
+  <p>Joan</p>
+  <p>Jean</p>
+  <p>Jill</p>
+  <p>Rachel</p>
+  <p>Kendra</p>
+  <p>Sabina</p>
+  <p>Sheila</p>
+  <p>Jessica</p>
+  <p>Andrea</p>
+  <p>Megan</p>
+  <p>Alison</p>
+  <p>Robin</p>
+  <p>Lynn</p>
+  <p>Joy</p>
+  <p>Wendy</p>
+  <p>Kristin</p>
+  <p>Donna</p>
+  <p>Kim</p>
+  <p>Jen</p>
+  <p>Beth</p>
+  <p>Lisa</p>
+  <p>Angie</p>
+  <p>Sarah</p>
+  <p>Peggy</p>
+  <p>Becky</p>
+  <p>Laura</p>
+  <p>Nicole</p>
+  <p>Melanie</p>
+  <p>Miriam</p>
+  <p>Alicia</p>
+  <p>Sylvia</p>
+  <p>Clara</p>
+  <p>Julie</p>
+  <p>Rhoda</p>
+  <p>Rhonda</p>
+  <p>Greta</p>
+  <p>Amelia</p>
+  <p>Emma</p>
+  <p>Courtney</p>
+  <p>Ashley</p>
+  <p>Stephanie</p>
+  <p>Vicky</p>
+  <p>Lois</p>
+  <p>Thelma</p>
+  <p>Ruth</p>
+  <p>Elizabeth</p>
+  <p>Sandy</p>
+  <p>Stella</p>
+  <p>Carolyn</p>
+  <p>Maria</p>
+  <p>Marjorie</p>
+  <p>Edith</p>
+  <p>Teresa</p>
+  <p>Linda</p>
+  <p>Sue</p>
+  <p>Rose</p>
+  <p>April</p>
+  <p>Frances</p>
+  <p>Dora</p>
+</ref>
+
+<ref id="room">
+  <p>living room</p>
+  <p>bathroom</p>
+  <p>basement</p>
+  <p>bedroom</p>
+  <p>closet</p>
+  <p>kitchen</p>
+  <p>garage</p>
+  <p>attic</p>
+  <p>dining room</p>
+  <p>hallway</p>
+  <p>guest room</p>
+  <p>sewing room</p>
+  <p>office</p>
+  <p>billiard parlor</p>
+  <p>junk drawer</p>
+  <p>backyard</p>
+  <p>doghouse</p>
+</ref>
+
+<ref id="person">
+  <p><xref id="male"/></p>
+  <p><xref id="female"/></p>
+  <p><xref id="female"/> and <xref id="male"/></p>
+  <p><xref id="male"/> and <xref id="female"/></p>
+  <p><xref id="male.name"/> and <xref id="male.name"/></p>
+  <p><xref id="female.name"/> and <xref id="female.name"/></p>
+</ref>
+
+<ref id="magazine">
+  <p>Maxim</p>
+  <p>The New Yorker</p>
+  <p>Time</p>
+  <p>Newsweek</p>
+  <p>Guns and Ammo</p>
+  <p>Esquire</p>
+  <p>GQ</p>
+  <p>Cosmopolitan</p>
+  <p>The American Spectator</p>
+  <p>The Nation</p>
+  <p>Mother Jones</p>
+  <p>Field and Stream</p>
+  <p>Reader's Digest</p>
+  <p>The Journal of the American Chemical Society</p>
+  <p>Mind</p>
+  <p>Discover</p>
+  <p>Games</p>
+  <p>MacWorld</p>
+  <p>New Republic</p>
+  <p>Wired</p>
+</ref>
+
+<ref id="female">
+  <p>Grandma<p chance="50"> <xref id="female.name"/></p></p>
+  <p>Mom</p>
+  <p>Aunt <xref id="female.name"/></p>
+  <p>sister</p>
+  <p><xref id="female.name"/></p>
+  <p><xref id="female.name"/></p>
+  <p><xref id="female.name"/></p>
+</ref>
+
+<ref id="male">
+  <p>Grandpa<p chance="50"> <xref id="male.name"/></p></p>
+  <p>Dad</p>
+  <p>Uncle <xref id="male.name"/></p>
+  <p>brother</p>
+  <p><xref id="male.name"/></p>
+  <p><xref id="male.name"/></p>
+  <p><xref id="male.name"/></p>
+</ref>
+
+<ref id="state">
+  <p>dead</p>
+  <p>in prison</p>
+  <p>in a labor camp in Siberia</p>
+  <p>in the hospital</p>
+  <p>reported missing last month</p>
+  <p>broke</p>
+  <p>destitute</p>
+  <p>in the witness relocation program</p>
+</ref>
+
+<ref id="money.saved">
+  <p>I've already <choice><p>put</p><p>stashed</p></choice> it in <choice><p>the bank</p><p>a shoebox</p></choice><p chance="50"> to save for <xref id="money.object"/></p>.</p>
+  <p><p chance="50">I'd love to spend it, but </p>I'm saving it to buy <xref id="money.object"/>.</p>
+  <p><p chance="50">It's nice to have some "fun money" to spend, but </p>I've decided to save it for <xref id="money.object"/>.</p>
+  <p><p chance="50">I'd love to spend it<p chance="50"><choice><p>immediately</p><p>right away</p></choice></p>, but </p>I need to save up for <xref id="money.object"/>.</p>
+</ref>
+
+<ref id="greeting">
+  <p>Dear <xref id="person"/>,</p>
+</ref>
+
+<ref id="money.tag.line">
+  <p class="sentence">It's not much by today's standards, but every little bit helps!</p>
+  <p class="sentence">It was either that or give it to the poor.</p>
+  <p class="sentence"><xref id="tag.line"/></p>
+  <p class="sentence"><xref id="tag.line"/></p>
+  <p class="sentence"><xref id="tag.line"/></p>
+  <p class="sentence"><xref id="tag.line"/></p>
+  <p class="sentence"><xref id="tag.line"/></p>
+  <p class="sentence"><xref id="tag.line"/></p>
+  <p class="sentence"><xref id="tag.line"/></p>
+</ref>
+
+<ref id="money.received">
+<p class="sentence"><p chance="50">This is </p>just a brief note to <choice><p>say <choice><p>thanks</p><p>"thank you"</p></choice></p><p>thank you</p></choice> for the <xref id="money.amount"/> <choice><p>you sent</p><p>I received from you</p></choice> for <xref id="occasion"/>.</p>
+<p class="sentence">Of all the <choice><p>presents</p><p>gifts</p><p>things</p><p>stuff</p></choice> I <choice><p>received</p><p>got</p></choice> for <xref id="occasion"/>, I <choice><p>liked</p><p>loved</p></choice> your <p chance="50">gift of </p><xref id="money.amount"/> <choice><p>the most</p><p>more than anything else</p></choice>.</p>
+<p class="sentence">I <p chance="50">really </p><choice><p>appreciate</p><p>enjoyed receiving</p></choice> the <xref id="money.amount"/> you <choice><p>gave</p><p>sent</p></choice> me for <xref id="occasion"/>.</p>
+<p class="sentence">I <p chance="50">really </p>love <choice><p>getting</p><p>receiving</p></choice> money for <xref id="occasion"/>, <choice><p>since</p><p>because</p></choice> <choice><p>that</p><p>it</p></choice> means I can <p chance="50">always </p><p chance="50">go out and </p><choice><p>spend it on</p><p>use it for</p></choice> what I really <choice><p>want</p><p>need</p></choice>.  <choice><p>Thanks</p><p>Thank you</p></choice> for the <xref id="money.amount"/>.</p>
+<p class="sentence">You can't imagine how surprised I was to discover that you had sent me <xref id="money.amount"/> for <xref id="occasion"/>.</p>
+<p class="sentence"><choice><p>Thanks</p><p>Thank you</p></choice> for the <xref id="money.amount"/><choice><p>.  I</p><p>; i</p></choice>t was <choice><p>the perfect</p><p>a great</p></choice> <choice><p>present</p><p>gift</p></choice> for <xref id="occasion"/>.</p>
+<p class="sentence">I don't know how to thank you <p chance="50"><choice><p>properly</p><p>enough</p></choice> </p>for the <xref id="money.amount"/> you <choice><p>sent</p><p>gave</p></choice> <p chance="50">me </p>for <xref id="occasion"/>.</p>
+<p class="sentence">I'm <p chance="50">just </p>writing to say <choice><p>thanks</p><p>"thank you"</p></choice> for the <xref id="money.amount"/> you <p chance="50">graciously </p><choice><p>gave</p><p>sent</p></choice> me for <xref id="occasion"/>.</p>
+<p class="sentence"><choice><p>Thank you</p><p>Thanks</p></choice> for the <xref id="money.amount"/> you <choice><p>bestowed upon</p><p>sent</p></choice> me for <xref id="occasion"/>.</p>
+<p class="sentence"><p chance="50">This is </p>just a quick note to <choice><p>say "thank you"</p><p>thank you</p></choice> for the <xref id="money.amount"/> <choice><p>I <choice><p>got</p><p>received</p></choice> from you</p><p>you sent<p chance="50"> me</p></p></choice> for <xref id="occasion"/>.</p>
+</ref>
+
+<ref id="gift.received">
+<p class="sentence"><p chance="50">This is </p>just a brief note to <choice><p>say <choice><p>thanks</p><p>"thank you"</p></choice></p><p>thank you</p></choice> for the <xref id="gift.object"/> <choice><p>you sent</p><p>I received from you</p></choice> for <xref id="occasion"/>.</p>
+<p class="sentence">Of all the <choice><p>presents</p><p>gifts</p><p>things</p><p>stuff</p></choice> I <choice><p>received</p><p>got</p></choice> for <xref id="occasion"/>, I <choice><p>liked</p><p>loved</p></choice> your <p chance="50">gift of </p><xref id="gift.object"/> <choice><p>the most</p><p>more than anything else</p></choice>.</p>
+<p class="sentence">I <p chance="50">really </p><choice><p>appreciate</p><p>enjoyed receiving</p></choice> the <xref id="gift.object"/> you <choice><p>gave</p><p>sent</p></choice> me for <xref id="occasion"/>.</p>
+<p class="sentence">I <p chance="50">really </p>love <choice><p>getting</p><p>receiving</p></choice> money for <xref id="occasion"/>, <choice><p>since</p><p>because</p></choice> <choice><p>that</p><p>it</p></choice> means I can <p chance="50">always </p><p chance="50">go out and </p><choice><p>spend it on</p><p>use it for</p></choice> what I really <choice><p>want</p><p>need</p></choice>.  <choice><p>Thanks</p><p>Thank you</p></choice> for the <xref id="gift.object"/>.</p>
+<p class="sentence">You can't imagine how surprised I was to discover that you had sent me <xref id="gift.object"/> for <xref id="occasion"/>.</p>
+<p class="sentence"><choice><p>Thanks</p><p>Thank you</p></choice> for the <xref id="gift.object"/><choice><p>.  I</p><p>; i</p></choice>t was <choice><p>the perfect</p><p>a great</p></choice> <choice><p>present</p><p>gift</p></choice> for <xref id="occasion"/>.</p>
+<p class="sentence">I don't know how to thank you <p chance="50"><choice><p>properly</p><p>enough</p></choice> </p>for the <xref id="gift.object"/> you <choice><p>sent</p><p>gave</p></choice> <p chance="50">me </p>for <xref id="occasion"/>.</p>
+<p class="sentence">I'm <p chance="50">just </p>writing to say <choice><p>thanks</p><p>"thank you"</p></choice> for the <xref id="gift.object"/> you <p chance="50">graciously </p><choice><p>gave</p><p>sent</p></choice> me for <xref id="occasion"/>.</p>
+<p class="sentence"><choice><p>Thank you</p><p>Thanks</p></choice> for the <xref id="gift.object"/> you <choice><p>bestowed upon</p><p>sent</p></choice> me for <xref id="occasion"/>.</p>
+<p class="sentence"><p chance="50">This is </p>just a quick note to <choice><p>say "thank you"</p><p>thank you</p></choice> for the <xref id="gift.object"/> <choice><p>I <choice><p>got</p><p>received</p></choice> from you</p><p>you sent<p chance="50"> me</p></p></choice> for <xref id="occasion"/>.</p>
+</ref>
+
+<ref id="occasion">
+  <p>Christmas</p>
+  <p>Valentine's Day</p>
+  <p>my birthday</p>
+  <p>Easter</p>
+  <p>New Year's</p>
+  <p>Hanukkah</p>
+  <p>our wedding</p>
+  <p>our divorce</p>
+  <p>my half-birthday</p>
+  <p>my confirmation</p>
+  <p>my Bar Mitzvah</p>
+  <p>my debutante ball</p>
+  <p>my coming-out party</p>
+  <p>our first baby</p>
+  <p>my bachelor party</p>
+  <p>my bridal shower</p>
+  <p>our housewarming party</p>
+</ref>
+
+<ref id="gift.tag.line">
+  <p><xref id="tag.line"/></p>
+</ref>
+
+<ref id="tag.line">
+  <p class="sentence">I know how much of a sacrifice this sort of gift is for you.</p>
+  <p class="sentence"><xref id="male.name"/> and <xref id="female.name"/> tried to steal it from me, but I was too quick for them.</p>
+  <p class="sentence"><p chance="50">I'm </p>looking forward to getting your next gift for <xref id="occasion"/>.</p>
+  <p class="sentence"><p chance="50">Frankly, </p>it was <p chance="50">a little </p>strange to get anything from you<p chance="50"> at all</p>, because <choice><p>I thought</p><p>my friends to me that</p></choice> you were <xref id="state"/>.</p>
+  <p class="sentence">How thoughtful of you.</p>
+  <p class="sentence">Give my love to <choice><p><xref id="male.name"/></p><p><xref id="female.name"/></p></choice>.</p>
+  <p class="sentence">Best wishes to you<p chance="50"> and <xref id="person"/></p>.</p>
+</ref>
+
+<ref id="closing.line">
+  <p>Sincerely</p>
+  <p>Love<p chance="50"> always</p>,</p>
+  <p>Thank you<p chance="50"> again</p>,</p>
+  <p>See you soon,</p>
+  <p>Hugs and kisses,</p>
+  <p>From,</p>
+  <p>Thanks<p chance="50"> again</p>,</p>
+  <p>Peace,</p>
+  <p>Faithfully,</p>
+</ref>
+
+<ref id="thank.you.note">
+  <p><xref id="greeting"/>
+<xref id="thank.you.paragraph"/>
+
+<xref id="closing"/></p>
+</ref>
+
+<ref id="money.spent">
+  <p class="sentence"><p chance="50">You'll be happy to know that </p>I've already spent it on <xref id="money.object"/>.</p>
+  <p class="sentence">It<choice><p>'s</p><p> has</p></choice> <p chance="50">already </p>been well-spent on <xref id="money.object"/>.</p>
+  <p class="sentence">My <choice><p>mother</p><p>father</p></choice> insisted that I spend it on <xref id="money.object"/>.</p>
+  <p class="sentence">Now I <p chance="50"> finally</p>have enough money for <xref id="money.object"/>.</p>
+  <p class="sentence"><p chance="50"><choice><p>As soon as I can, </p><p>When I get a chance, </p></choice></p>I'm going <p chance="50">to the mall </p>and spending it on <xref id="money.object"/>.</p>
+  <p class="sentence"><p chance="50">To be honest, </p><choice><p>I tried to get it to the bank</p><p>I wanted to save it</p></choice>, but I <p chance="50">realized I </p><choice><p>needed</p><p>had</p></choice> to spend it on <xref id="money.object"/><p chance="50"> instead</p>.</p>
+  <p class="sentence"><p chance="50">I just wanted to let you know that </p>it's already gone towards <xref id="money.object"/>.</p>
+  <p class="sentence">I <p chance="50"><choice><p>immediately</p><p>rushed right out and</p></choice> </p>spent it on <xref id="money.object"/><p chance="50"> for the first time<p chance="50"> in years</p></p>.</p>
+  <p class="sentence"><p chance="50">As soon as I finish writing this letter, </p>I'm going to put it towards <xref id="money.object"/>.</p>
+  <p class="sentence"><p chance="50">I have to admit that </p>I already spent it on this month's protection.</p>
+</ref>
+
+<ref id="gift.object">
+  <p>toaster</p>
+  <p>blender</p>
+  <p>pajamas</p>
+  <p>wallet</p>
+  <p>umbrella</p>
+  <p>shampoo</p>
+  <p>mouthwash</p>
+  <p>beer</p>
+  <p>disk drive</p>
+  <p>mousepad</p>
+  <p>stereo</p>
+  <p>compact disc</p>
+  <p>dart board</p>
+  <p>bread machine</p>
+  <p>moustache comb</p>
+  <p>fruitcake</p>
+  <p>towel rack</p>
+  <p>bong</p>
+  <p>jigsaw puzzle</p>
+  <p>Star Trek "Picard" doll</p>
+  <p>stuffed animal</p>
+  <p>beanbag chair</p>
+  <p>box of chocolates</p>
+  <p>microwave oven</p>
+  <p>snowblower</p>
+  <p>jacket</p>
+  <p>sweatshirt</p>
+  <p>tie</p>
+  <p>laundry detergent</p>
+  <p>fake tree</p>
+  <p>makeup kit</p>
+  <p>miniature pool table</p>
+  <p>carton of cigarettes</p>
+  <p>basketball</p>
+  <p>fake vomit</p>
+  <p>book</p>
+  <p>subscription to <xref id="magazine"/></p>
+  <p>"Critique of Pure Reason"</p>
+</ref>
+
+</grammar>

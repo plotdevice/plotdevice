@@ -1,0 +1,52 @@
+body {
+	margin: 20px 0 20px 150px;
+}
+
+body, td, th {
+	font: 11px/1.5em Verdana, sans-serif;	
+}
+
+
+h1 {
+	font-size: 160%;
+	padding: 0;
+	margin: 0em 0 -2em 0;
+}
+
+h2 {
+	font-size: 130%;
+	padding: 0;
+	margin: 4em 0 0.2em 0;
+	clear:both;
+}
+
+img {
+	float: left;
+	border: 1px solid #000;
+	margin: 2px;
+}
+
+table.statistics {
+	margin:2px;
+	width:16em;
+	border:1px solid #666;
+}
+
+table.statistics td {
+	font-weight: bold;
+	text-align: right;
+	padding: 2px 5px;
+}
+
+table.statistics td + td{
+	font-weight: normal;
+	text-align: left;
+}
+
+tr.even {
+	background: #eee;
+}
+
+tr.odd {
+	background: #ddd;
+}
