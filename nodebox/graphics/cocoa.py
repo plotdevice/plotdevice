@@ -13,6 +13,7 @@ __all__ = [
         "RGB", "HSB", "CMYK",
         "CENTER", "CORNER",
         "MOVETO", "LINETO", "CURVETO", "CLOSE",
+        "MITER", "ROUND", "BEVEL", "BUTT", "SQUARE",
         "LEFT", "RIGHT", "CENTER", "JUSTIFY",
         "NORMAL","FORTYFIVE",
         "NUMBER", "TEXT", "BOOLEAN","BUTTON",
@@ -38,6 +39,12 @@ MOVETO = NSMoveToBezierPathElement
 LINETO = NSLineToBezierPathElement
 CURVETO = NSCurveToBezierPathElement
 CLOSE = NSClosePathBezierPathElement
+
+MITER = NSMiterLineJoinStyle
+ROUND = NSRoundLineJoinStyle # Also used for NSRoundLineCapStyle, same value.
+BEVEL = NSBevelLineJoinStyle
+BUTT = NSButtLineCapStyle
+SQUARE = NSSquareLineCapStyle
 
 LEFT = NSLeftTextAlignment
 RIGHT = NSRightTextAlignment
@@ -66,6 +73,8 @@ _STATE_NAMES = {
     '_fillcolor':     'fill',
     '_strokecolor':   'stroke',
     '_strokewidth':   'strokewidth',
+    '_capstyle':      'capstyle',
+    '_joinstyle':     'joinstyle',
     '_transform':     'transform',
     '_transformmode': 'transformmode',
     '_fontname':      'font',
@@ -210,13 +219,15 @@ class ColorMixin(object):
 class BezierPath(Grob, TransformMixin, ColorMixin):
     """A BezierPath provides a wrapper around NSBezierPath."""
     
-    stateAttributes = ('_fillcolor', '_strokecolor', '_strokewidth', '_transform', '_transformmode')
-    kwargs = ('fill', 'stroke', 'strokewidth')
+    stateAttributes = ('_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_transform', '_transformmode')
+    kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle')
 
     def __init__(self, ctx, path=None, **kwargs):
         super(BezierPath, self).__init__(ctx)
         TransformMixin.__init__(self)
         ColorMixin.__init__(self, **kwargs)
+        self.capstyle = kwargs.get('capstyle', BUTT)
+        self.joinstyle = kwargs.get('joinstyle', MITER)
         self._segment_cache = None
         if path is None:
             self._nsBezierPath = NSBezierPath.bezierPath()
@@ -238,6 +249,24 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
 
     def copy(self):
         return self.__class__(self._ctx, self)
+    
+    ### Cap and Join style ###
+    
+    def _get_capstyle(self):
+        return self._capstyle
+    def _set_capstyle(self, style):
+        if style not in (BUTT, ROUND, SQUARE):
+            raise NodeBoxError, 'Line cap style should be BUTT, ROUND or SQUARE.'
+        self._capstyle = style
+    capstyle = property(_get_capstyle, _set_capstyle)
+
+    def _get_joinstyle(self):
+        return self._joinstyle
+    def _set_joinstyle(self, style):
+        if style not in (MITER, ROUND, BEVEL):
+            raise NodeBoxError, 'Line join style should be MITER, ROUND or BEVEL.'
+        self._joinstyle = style
+    joinstyle = property(_get_joinstyle, _set_joinstyle)
 
     ### Path methods ###
 
@@ -256,7 +285,7 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
     def closepath(self):
         self._segment_cache = None
         self._nsBezierPath.closePath()
-
+        
     def setlinewidth(self, width):
         self.linewidth = width
 
@@ -359,6 +388,8 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
         if (self._strokecolor):
             self._strokecolor.set()
             self._nsBezierPath.setLineWidth_(self._strokewidth)
+            self._nsBezierPath.setLineCapStyle_(self._capstyle)
+            self._nsBezierPath.setLineJoinStyle_(self._joinstyle)
             self._nsBezierPath.stroke()
         _restore()
 

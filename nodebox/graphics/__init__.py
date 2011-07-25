@@ -41,6 +41,8 @@ class Context(object):
         self._fillcolor = self.Color()
         self._strokecolor = None
         self._strokewidth = 1.0
+        self._capstyle = BUTT
+        self._joinstyle = MITER
         self.canvas.background = self.Color(1.0)
         self._path = None
         self._autoclosepath = True
@@ -409,6 +411,20 @@ class Context(object):
         if width is not None:
             self._strokewidth = max(width, 0.0001)
         return self._strokewidth
+        
+    def capstyle(self, style=None):
+        if style is not None:
+            if style not in (BUTT, ROUND, SQUARE):
+                raise NodeBoxError, 'Line cap style should be BUTT, ROUND or SQUARE.'
+            self._capstyle = style
+        return self._capstyle
+
+    def joinstyle(self, style=None):
+        if style is not None:
+            if style not in (MITER, ROUND, BEVEL):
+                raise NodeBoxError, 'Line join style should be MITER, ROUND or BEVEL.'
+            self._joinstyle = style
+        return self._joinstyle
 
     ### Font Commands ###
 
