@@ -172,6 +172,8 @@ class Context(object):
           path.draw()
         return path
 
+    ellipse = oval
+
     def line(self, x1, y1, x2, y2, draw=True, **kwargs):
         BezierPath.checkKwargs(kwargs)
         p = self.BezierPath(**kwargs)

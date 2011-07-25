@@ -281,6 +281,8 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
     def oval(self, x, y, width, height):
         self._segment_cache = None
         self._nsBezierPath.appendBezierPathWithOvalInRect_( ((x, y), (width, height)) )
+    
+    ellipse = oval
         
     def line(self, x1, y1, x2, y2):
         self._segment_cache = None
