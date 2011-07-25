@@ -212,8 +212,8 @@
 		612813B310BD2C9400B18218 /* libs */ = {isa = PBXFileReference; lastKnownFileType = folder; path = libs; sourceTree = "<group>"; };
 		615FA75B10BAC855000F45F9 /* DrawingPrimitives.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DrawingPrimitives.py; sourceTree = "<group>"; };
 		61972F2C10BAD1DC0007D375 /* macboot.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = macboot.py; sourceTree = "<group>"; };
-		61DB844010BEAEA6003F73B9 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
-		61DB844110BEAEAD003F73B9 /* CHANGES */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGES; sourceTree = "<group>"; };
+		61D9974513DD7456005190B2 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		61D9974613DD749C005190B2 /* CHANGES.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = CHANGES.md; sourceTree = "<group>"; };
 		8D15AC360486D014006FF6A4 /* NodeBox-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "NodeBox-Info.plist"; sourceTree = "<group>"; };
 		8D15AC370486D014006FF6A4 /* NodeBox.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NodeBox.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -261,8 +261,8 @@
 		2A37F4AAFDCFA73011CA2CEA /* NodeBox */ = {
 			isa = PBXGroup;
 			children = (
-				61DB844010BEAEA6003F73B9 /* README */,
-				61DB844110BEAEAD003F73B9 /* CHANGES */,
+				61D9974513DD7456005190B2 /* README.md */,
+				61D9974613DD749C005190B2 /* CHANGES.md */,
 				611CC4AE10BA8C1B00B55455 /* nodebox */,
 				2A37F4AFFDCFA73011CA2CEA /* Other Sources */,
 				612813B310BD2C9400B18218 /* libs */,

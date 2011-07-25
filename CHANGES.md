@@ -1,3 +1,7 @@
+NodeBox 1.9.7
+-------------
+* Compatibility with Mac OS X 10.7 Lion.
+
 NodeBox 1.9.6
 -------------
 * NSImage are no longer cached internally, which gave problems when rendering a large and small version of the same image.
