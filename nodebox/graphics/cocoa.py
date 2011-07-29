@@ -5,7 +5,11 @@ from AppKit import *
 from Foundation import *
 
 from nodebox.util import _copy_attr, _copy_attrs
-import cPolymagic
+
+try:
+    import cPolymagic
+except ImportError, e:
+    warnings.warn('Could not load cPolymagic: %s' % e)
 
 __all__ = [
         "DEFAULT_WIDTH", "DEFAULT_HEIGHT",

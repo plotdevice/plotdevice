@@ -22,13 +22,13 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		611B5F4F13E2F0DB0009BC14 /* libpython2.5.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 611B5F4E13E2F0DB0009BC14 /* libpython2.5.dylib */; };
 		611CC49810BA8B9E00B55455 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48110BA8B9E00B55455 /* Credits.rtf */; };
 		611CC49C10BA8B9E00B55455 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48910BA8B9E00B55455 /* InfoPlist.strings */; };
 		611CC4A110BA8B9E00B55455 /* NodeBox.icns in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49310BA8B9E00B55455 /* NodeBox.icns */; };
 		611CC4A210BA8B9E00B55455 /* NodeBoxFile.icns in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49410BA8B9E00B55455 /* NodeBoxFile.icns */; };
 		611CC4A310BA8B9E00B55455 /* zoombig.png in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49510BA8B9E00B55455 /* zoombig.png */; };
 		611CC4A410BA8B9E00B55455 /* zoomsmall.png in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49610BA8B9E00B55455 /* zoomsmall.png */; };
-		611CC50F10BA8C7500B55455 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 611CC50E10BA8C7500B55455 /* Python.framework */; };
 		611CC52F10BA8DDF00B55455 /* __init__.py in Copy Python root */ = {isa = PBXBuildFile; fileRef = 611CC4AF10BA8C1B00B55455 /* __init__.py */; };
 		611CC53010BA8DE200B55455 /* console.py in Copy Python root */ = {isa = PBXBuildFile; fileRef = 611CC4B110BA8C1B00B55455 /* console.py */; };
 		611CC53310BA8E2800B55455 /* __init__.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 611CC4C510BA8C1B00B55455 /* __init__.py */; };
@@ -74,7 +74,7 @@
 			remoteGlobalIDString = 8D15AC270486D014006FF6A4;
 			remoteInfo = NodeBox;
 		};
-		61FFC06210BAD9F4009AF371 /* PBXContainerItemProxy */ = {
+		61EB1E3313E2C6E6002641C0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 2A37F4A9FDCFA73011CA2CEA /* Project object */;
 			proxyType = 1;
@@ -175,6 +175,7 @@
 		2A37F4B0FDCFA73011CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		611B5F4E13E2F0DB0009BC14 /* libpython2.5.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.5.dylib; path = /usr/lib/libpython2.5.dylib; sourceTree = "<absolute>"; };
 		611CC48210BA8B9E00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = English; path = English.lproj/Credits.rtf; sourceTree = "<group>"; };
 		611CC48A10BA8B9E00B55455 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		611CC49310BA8B9E00B55455 /* NodeBox.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = NodeBox.icns; path = Resources/NodeBox.icns; sourceTree = "<group>"; };
@@ -203,7 +204,6 @@
 		611CC4DC10BA8C1B00B55455 /* PyFontify.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PyFontify.py; sourceTree = "<group>"; };
 		611CC4DE10BA8C1B00B55455 /* QTSupport.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = QTSupport.py; sourceTree = "<group>"; };
 		611CC4E010BA8C1B00B55455 /* vdiff.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = vdiff.py; sourceTree = "<group>"; };
-		611CC50E10BA8C7500B55455 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
 		611CC59F10BA908C00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/NodeBoxDocument.xib; sourceTree = "<group>"; };
 		611CC5A710BA919A00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/NodeBoxPreferences.xib; sourceTree = "<group>"; };
 		611CC5AE10BA91CB00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/ProgressBarSheet.xib; sourceTree = "<group>"; };
@@ -225,8 +225,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				611B5F4F13E2F0DB0009BC14 /* libpython2.5.dylib in Frameworks */,
 				8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */,
-				611CC50F10BA8C7500B55455 /* Python.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,7 +236,7 @@
 		1058C7A6FEA54F5311CA2CBB /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				611CC50E10BA8C7500B55455 /* Python.framework */,
+				611B5F4E13E2F0DB0009BC14 /* libpython2.5.dylib */,
 				1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */,
 			);
 			name = "Linked Frameworks";
@@ -394,7 +394,7 @@
 			buildConfigurationList = 61EF506410BC26F9006DEF6C /* Build configuration list for PBXLegacyTarget "Clean Extensions" */;
 			buildPhases = (
 			);
-			buildToolPath = python;
+			buildToolPath = python2.5;
 			buildWorkingDirectory = libs;
 			dependencies = (
 			);
@@ -408,7 +408,7 @@
 			buildConfigurationList = 61FFC03B10BAD915009AF371 /* Build configuration list for PBXLegacyTarget "Build Extensions" */;
 			buildPhases = (
 			);
-			buildToolPath = python;
+			buildToolPath = python2.5;
 			buildWorkingDirectory = libs;
 			dependencies = (
 			);
@@ -437,7 +437,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				61FFC06310BAD9F4009AF371 /* PBXTargetDependency */,
+				61EB1E3413E2C6E6002641C0 /* PBXTargetDependency */,
 			);
 			name = NodeBox;
 			productInstallPath = "$(HOME)/Applications";
@@ -548,10 +548,10 @@
 			target = 8D15AC270486D014006FF6A4 /* NodeBox */;
 			targetProxy = 61DB841310BEABD4003F73B9 /* PBXContainerItemProxy */;
 		};
-		61FFC06310BAD9F4009AF371 /* PBXTargetDependency */ = {
+		61EB1E3413E2C6E6002641C0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 61FFC03810BAD90D009AF371 /* Build Extensions */;
-			targetProxy = 61FFC06210BAD9F4009AF371 /* PBXContainerItemProxy */;
+			targetProxy = 61EB1E3313E2C6E6002641C0 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -636,9 +636,6 @@
 		61DB841110BEABCF003F73B9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
 				PRODUCT_NAME = "Build Distribution";
 			};
 			name = Debug;
@@ -646,50 +643,31 @@
 		61DB841210BEABCF003F73B9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				PRODUCT_NAME = "Build Distribution";
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		61EF506210BC26D1006DEF6C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				PRODUCT_NAME = "Clean Extensions";
 			};
 			name = Debug;
 		};
 		61EF506310BC26D1006DEF6C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				PRODUCT_NAME = "Clean Extensions";
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		61FFC03910BAD90D009AF371 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				PRODUCT_NAME = "Build Extensions";
 			};
 			name = Debug;
 		};
 		61FFC03A10BAD90D009AF371 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				PRODUCT_NAME = "Build Extensions";
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
@@ -706,6 +684,7 @@
 				INFOPLIST_FILE = "NodeBox-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = NodeBox;
 			};
 			name = Debug;
@@ -721,6 +700,7 @@
 				INFOPLIST_FILE = "NodeBox-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = NodeBox;
 			};
 			name = Release;
@@ -728,24 +708,14 @@
 		C05733CC08A9546B00998B17 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
+				PRODUCT_NAME = NodeBox;
 			};
 			name = Debug;
 		};
 		C05733CD08A9546B00998B17 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				SDKROOT = macosx;
+				PRODUCT_NAME = NodeBox;
 			};
 			name = Release;
 		};
