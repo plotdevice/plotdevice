@@ -1,6 +1,8 @@
 NodeBox 1.9.7
 -------------
-* Compatibility with Mac OS X 10.7 Lion.
+* Compatibility with Mac OS X 10.7 Lion (auto-saving! versions!).
+* ellipse() is an alias for oval(). Path.ellipse() works as well.
+* Support for Line cap and line join styles. Use joinstyle() with MITER, ROUND or BEVEL and capstyle() with BUTT, ROUND or SQUARE. Path.joinstyle = MITER and Path.capstyle = BUTT works as well.
 
 NodeBox 1.9.6
 -------------
