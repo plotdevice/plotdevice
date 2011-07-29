@@ -58,6 +58,8 @@
 		611CC68710BAA0A600B55455 /* AskString.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC68510BAA0A600B55455 /* AskString.xib */; };
 		611CC68C10BAA0E300B55455 /* ExportImageAccessory.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC68A10BAA0E300B55455 /* ExportImageAccessory.xib */; };
 		611CC69210BAA0FB00B55455 /* ExportMovieAccessory.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC69010BAA0FB00B55455 /* ExportMovieAccessory.xib */; };
+		6155D9F413E2B79E00675A92 /* CHANGES.md in Resources */ = {isa = PBXBuildFile; fileRef = 6155D9F213E2B79E00675A92 /* CHANGES.md */; };
+		6155D9F513E2B79E00675A92 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 6155D9F313E2B79E00675A92 /* README.md */; };
 		615FA75C10BAC855000F45F9 /* DrawingPrimitives.py in Resources */ = {isa = PBXBuildFile; fileRef = 615FA75B10BAC855000F45F9 /* DrawingPrimitives.py */; };
 		61972F2D10BAD1DC0007D375 /* macboot.py in Resources */ = {isa = PBXBuildFile; fileRef = 61972F2C10BAD1DC0007D375 /* macboot.py */; };
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -210,10 +212,10 @@
 		611CC68B10BAA0E300B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/ExportImageAccessory.xib; sourceTree = "<group>"; };
 		611CC69110BAA0FB00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/ExportMovieAccessory.xib; sourceTree = "<group>"; };
 		612813B310BD2C9400B18218 /* libs */ = {isa = PBXFileReference; lastKnownFileType = folder; path = libs; sourceTree = "<group>"; };
+		6155D9F213E2B79E00675A92 /* CHANGES.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGES.md; sourceTree = "<group>"; };
+		6155D9F313E2B79E00675A92 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		615FA75B10BAC855000F45F9 /* DrawingPrimitives.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DrawingPrimitives.py; sourceTree = "<group>"; };
 		61972F2C10BAD1DC0007D375 /* macboot.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = macboot.py; sourceTree = "<group>"; };
-		61D9974513DD7456005190B2 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
-		61D9974613DD749C005190B2 /* CHANGES.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = CHANGES.md; sourceTree = "<group>"; };
 		8D15AC360486D014006FF6A4 /* NodeBox-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "NodeBox-Info.plist"; sourceTree = "<group>"; };
 		8D15AC370486D014006FF6A4 /* NodeBox.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NodeBox.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -261,8 +263,8 @@
 		2A37F4AAFDCFA73011CA2CEA /* NodeBox */ = {
 			isa = PBXGroup;
 			children = (
-				61D9974513DD7456005190B2 /* README.md */,
-				61D9974613DD749C005190B2 /* CHANGES.md */,
+				6155D9F213E2B79E00675A92 /* CHANGES.md */,
+				6155D9F313E2B79E00675A92 /* README.md */,
 				611CC4AE10BA8C1B00B55455 /* nodebox */,
 				2A37F4AFFDCFA73011CA2CEA /* Other Sources */,
 				612813B310BD2C9400B18218 /* libs */,
@@ -490,6 +492,8 @@
 				611CC69210BAA0FB00B55455 /* ExportMovieAccessory.xib in Resources */,
 				615FA75C10BAC855000F45F9 /* DrawingPrimitives.py in Resources */,
 				61972F2D10BAD1DC0007D375 /* macboot.py in Resources */,
+				6155D9F413E2B79E00675A92 /* CHANGES.md in Resources */,
+				6155D9F513E2B79E00675A92 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -523,7 +527,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Remove the distribution folder\nrm -rf dist\n# Make a new one\nmkdir -p dist/NodeBox/NodeBox\ncd dist/NodeBox/NodeBox\n# Copy the current NodeBox application.\ncp -R -p $TARGET_BUILD_DIR/* .\n# Copy changes and readme\ncp ../../../CHANGES Changes.txt\ncp ../../../README Readme.txt\n# Copy examples\ncp -R ../../../examples Examples\n# Remove all .svn cruft\nrm -rf `find . -type d -name .svn`\n# Make DMG\ncd ../..\nhdiutil create NodeBox.dmg -srcfolder NodeBox\nhdiutil internet-enable NodeBox.dmg";
+			shellScript = "# Remove the distribution folder\nrm -rf dist\n# Make a new one\nmkdir -p dist/NodeBox/NodeBox\ncd dist/NodeBox/NodeBox\n# Copy the current NodeBox application.\ncp -R -p $TARGET_BUILD_DIR/* .\n# Copy changes and readme\ncp ../../../CHANGES.md Changes.txt\ncp ../../../README.md Readme.txt\n# Copy examples\ncp -R ../../../examples Examples\n# Remove all .svn cruft\nrm -rf `find . -type d -name .svn`\n# Make DMG\ncd ../..\nhdiutil create NodeBox.dmg -srcfolder NodeBox\nhdiutil internet-enable NodeBox.dmg";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -701,6 +705,7 @@
 				GCC_PREFIX_HEADER = NodeBox_Prefix.pch;
 				INFOPLIST_FILE = "NodeBox-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				PRODUCT_NAME = NodeBox;
 			};
 			name = Debug;
@@ -715,6 +720,7 @@
 				GCC_PREFIX_HEADER = NodeBox_Prefix.pch;
 				INFOPLIST_FILE = "NodeBox-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				PRODUCT_NAME = NodeBox;
 			};
 			name = Release;
