@@ -979,6 +979,7 @@ class NodeBoxGraphicsView(NSView):
         self.keycode = event.keyCode()
         
     def scrollWheel_(self, event):
+        NSResponder.scrollWheel_(self, event)
         self.scrollwheel = True
         self.wheeldelta = event.deltaY()
 
