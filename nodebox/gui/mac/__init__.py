@@ -143,6 +143,13 @@ class NodeBoxDocument(NSDocument):
         self.textView.window().makeFirstResponder_(self.textView)
         self.windowControllers()[0].setWindowFrameAutosaveName_("NodeBoxDocumentWindow")
 
+        # disable system's auto-smartquotes (10.9+) in the editor pane
+        try:
+            self.textView.setAutomaticQuoteSubstitutionEnabled_(False)
+            self.textView.setEnabledTextCheckingTypes_(0)
+        except AttributeError:
+            pass
+
     def readFromUTF8(self, path):
         f = file(path)
         text = unicode(f.read(), "utf_8")
