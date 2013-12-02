@@ -1,8 +1,9 @@
 from distutils.core import setup, Extension
 
-CFLAGS=[]
+#CFLAGS=[]
 
-cPolymagic = Extension("cPolymagic", sources = ["gpc.c", "polymagic.m"], extra_compile_args=CFLAGS)
+#cPolymagic = Extension("cPolymagic", sources = ["gpc.c", "polymagic.m"], extra_compile_args=CFLAGS)
+cPolymagic = Extension("cPolymagic", sources = ["gpc.c", "polymagic.m"])
 
 setup (name = "polymagic",
        version = "0.1",

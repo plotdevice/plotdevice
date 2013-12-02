@@ -21,7 +21,7 @@ def build_libraries():
         print "Building", lib_name
         # run_setup gave some wonky errors, so we're defaulting to a simple os.system call.
         os.chdir(os.path.dirname(setup_script))
-        result = os.system('python2.5 setup.py build')
+        result = os.system('python2.7 setup.py build')
         if result > 0:
             raise OSError("Could not build %s" % lib_name)
         os.chdir(lib_root)
