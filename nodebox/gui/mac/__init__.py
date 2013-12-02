@@ -99,6 +99,16 @@ class NodeBoxDocument(NSDocument):
         self.stopScript()
         super(NodeBoxDocument, self).close()
 
+    def refresh(self):
+        """Reload source from file if it has been modified while the app was inactive"""
+        url = self.fileURL()
+        pth = url.fileSystemRepresentation()
+        if os.path.exists(pth):
+            filesrc = file(pth).read()
+            docsrc = self.source().encode("utf8")
+            if filesrc != docsrc:
+                self.revertToContentsOfURL_ofType_error_(url, self.fileType(), None)
+
     def __del__(self):
         nc = NSNotificationCenter.defaultCenter()
         nc.removeObserver_name_object_(self, "PyDETextFontChanged", None)
@@ -993,6 +1003,7 @@ class NodeBoxAppDelegate(NSObject):
 
     def awakeFromNib(self):
         self._prefsController = None
+        self._docsController = NSDocumentController.sharedDocumentController()
         libDir = os.path.join(os.getenv("HOME"), "Library", "Application Support", "NodeBox")
         try:
             if not os.path.exists(libDir):
@@ -1002,6 +1013,13 @@ class NodeBoxAppDelegate(NSObject):
                 f.close()
         except OSError: pass
         except IOError: pass
+
+    def applicationWillBecomeActive_(self, note):
+        # check for filesystem changes while the app was inactive
+        for doc in self._docsController.documents():
+            url = doc.fileURL()
+            if url and os.path.exists(url.fileSystemRepresentation()):
+                doc.refresh()
 
     @objc.IBAction
     def showPreferencesPanel_(self, sender):
