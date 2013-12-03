@@ -8,6 +8,9 @@ import random
 from Foundation import *
 from AppKit import *
 from threading import Thread
+from Queue import Queue
+from hashlib import md5
+from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 from nodebox.gui.mac.ValueLadder import MAGICVAR
 from nodebox.gui.mac import PyDETextView
@@ -21,6 +24,8 @@ QUICKTIME = 0x71747878 # 'qt  '
 
 VERY_LIGHT_GRAY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.95, NSColor.whiteColor())
 DARKER_GRAY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.8, NSColor.whiteColor())
+
+RPC_PORT = 9000
 
 from nodebox.gui.mac.dashboard import *
 from nodebox.gui.mac.progressbar import ProgressBarController
@@ -90,6 +95,7 @@ class NodeBoxDocument(NSDocument):
         self.fullScreen = None
         self._seed = time.time()
         self.currentView = self.graphicsView
+        self._opts = dict(args=[], range=[], virtualenv=None, live=False)
         return self
     
     def autosavesInPlace(self):
@@ -104,10 +110,14 @@ class NodeBoxDocument(NSDocument):
         url = self.fileURL()
         pth = url.fileSystemRepresentation()
         if os.path.exists(pth):
-            filesrc = file(pth).read()
-            docsrc = self.source().encode("utf8")
-            if filesrc != docsrc:
-                self.revertToContentsOfURL_ofType_error_(url, self.fileType(), None)
+            try:
+                filehash = md5(file(pth).read())
+                if filehash != self._filemd5:
+                    self.revertToContentsOfURL_ofType_error_(url, self.fileType(), None)
+                    if self._opts['live']:
+                        self.runScript()
+            except IOError:
+                pass
 
     def __del__(self):
         nc = NSNotificationCenter.defaultCenter()
@@ -130,8 +140,9 @@ class NodeBoxDocument(NSDocument):
 
     def writeToFile_ofType_(self, path, tp):
         f = file(path, "w")
-        text = self.textView.string()
-        f.write(text.encode("utf8"))
+        text = self.textView.string().encode("utf8")
+        self._filemd5 = md5(text)
+        f.write(text)
         f.close()
         return True
 
@@ -151,11 +162,11 @@ class NodeBoxDocument(NSDocument):
             pass
 
     def readFromUTF8(self, path):
-        f = file(path)
-        text = unicode(f.read(), "utf_8")
-        f.close()
-        self.textView.setString_(text)
-        self.textView.usesTabs = "\t" in text
+        with file(path) as f:
+            text = f.read()
+            self.textView.setString_(text.decode("utf-8"))
+            self.textView.usesTabs = "\t" in text
+            self._filemd5 = md5(text)
         
     def cleanRun(self, fn, newSeed = True, buildInterface=True):
         self.animationSpinner.startAnimation_(None)
@@ -402,9 +413,12 @@ class NodeBoxDocument(NSDocument):
         save = sys.stdout, sys.stderr
         saveDir = os.getcwd()
         saveArgv = sys.argv
-        sys.argv = [self.scriptName]
+        savePath = list(sys.path)
+        sys.argv = [self.scriptName] + self._opts.get('args',[])
         if os.path.exists(libDir):
             sys.path.insert(0, libDir)
+        if self._opts['virtualenv']:
+            sys.path.insert(0, self._opts['virtualenv'])
         os.chdir(curDir)
         sys.path.insert(0, curDir)
         output = []
@@ -433,11 +447,7 @@ class NodeBoxDocument(NSDocument):
             self._scriptDone = True
             sys.stdout, sys.stderr = save
             os.chdir(saveDir)
-            sys.path.remove(curDir)
-            try:
-                sys.path.remove(libDir)
-            except ValueError:
-                pass
+            sys.path = savePath
             sys.argv = saveArgv
             #self._flushOutput()
         return True, output
@@ -1065,11 +1075,51 @@ class NodeBoxGraphicsView(NSView):
     def acceptsFirstResponder(self):
         return True
 
+
+
+class CommandListener(Thread):
+    active = False
+
+    def __init__(self, command_q, output_q):
+        super(CommandListener, self).__init__()
+        self.command_q = command_q
+        self.output_q = output_q
+
+        try:
+            self._server = SimpleXMLRPCServer(('localhost', RPC_PORT), allow_none=True, logRequests=False)
+            self._server.register_function(self.exec_command, 'exec_command')
+            self._server.register_function(self.status, 'status')
+            self.active = True
+        except Exception, e:
+            NSLog("%@", e)
+            NSLog("Another NodeBox instance is listening on port %i"%RPC_PORT)
+            NSLog("The nodebox.py command line tool will not be able to communicate with this process")
+
+    def status(self):
+        return "ready"
+
+    def exec_command(self, cmd):
+        self.command_q.put(cmd)
+        AppHelper.callAfter(NSApp.delegate().run_script)
+        return self.output_q.get()
+
+    def run(self):
+        if self.active:
+            self._server.serve_forever()
+
+    def join(self, timeout=None):
+        if self.active:
+            self._server.shutdown()
+        super(CommandListener, self).join(timeout)
+
 class NodeBoxAppDelegate(NSObject):
 
     def awakeFromNib(self):
         self._prefsController = None
         self._docsController = NSDocumentController.sharedDocumentController()
+        self._command_q = Queue()
+        self._output_q = Queue()
+        self._listener = CommandListener(self._command_q, self._output_q)
         libDir = os.path.join(os.getenv("HOME"), "Library", "Application Support", "NodeBox")
         try:
             if not os.path.exists(libDir):
@@ -1077,8 +1127,27 @@ class NodeBoxAppDelegate(NSObject):
                 f = open(os.path.join(libDir, "README"), "w")
                 f.write("In this directory, you can put Python libraries to make them available to your scripts.\n")
                 f.close()
+            self._listener.start()
         except OSError: pass
         except IOError: pass
+
+    def run_script(self):
+        cmd = self._command_q.get()
+        NSLog("run script: %@", cmd)
+
+        url = NSURL.URLWithString_('file://%s'%cmd['file'])
+        err = None
+        self._docsController.openDocumentWithContentsOfURL_display_error_(url, True, err)
+        for doc in self._docsController.documents():
+            if doc.fileURL() and doc.fileURL().isEqualTo_(url):
+                doc._opts = cmd
+                doc.refresh()
+                doc.runScript()
+                output = doc.outputView.string()
+                self._output_q.put(output.encode('utf8'))
+                break
+        else:
+            self._output_q.put("couldn't open script: %s"%cmd['file'])
 
     def applicationWillBecomeActive_(self, note):
         # check for filesystem changes while the app was inactive
@@ -1115,5 +1184,6 @@ class NodeBoxAppDelegate(NSObject):
         NSWorkspace.sharedWorkspace().openURL_(url)
 
     def applicationWillTerminate_(self, note):
+        self._listener.join()
         import atexit
         atexit._run_exitfuncs()
