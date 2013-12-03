@@ -42,10 +42,29 @@
                                             <rect key="frame" x="0.0" y="0.0" width="332" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxY="YES"/>
                                             <subviews>
+                                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="dEo-Ua-AoG">
+                                                    <rect key="frame" x="140" y="6" width="38" height="11"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Zoom" id="ANS-OM-9B6">
+                                                        <font key="font" metaFont="miniSystem"/>
+                                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                </textField>
                                                 <progressIndicator toolTip="The script is running." horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="276">
                                                     <rect key="frame" x="1" y="2" width="16" height="16"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                 </progressIndicator>
+                                                <slider toolTip="Sets the zoom level." verticalHuggingPriority="750" id="257">
+                                                    <rect key="frame" x="175" y="5" width="124" height="12"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES"/>
+                                                    <sliderCell key="cell" controlSize="mini" continuous="YES" alignment="left" minValue="1" maxValue="1000" doubleValue="100" tickMarkPosition="above" sliderType="linear" id="284">
+                                                        <font key="font" size="12" name="Helvetica"/>
+                                                    </sliderCell>
+                                                    <connections>
+                                                        <action selector="dragZoom:" target="15o-mm-Ppr" id="aU3-6E-oWh"/>
+                                                    </connections>
+                                                </slider>
                                                 <button toolTip="Zoom to actual size." id="273">
                                                     <rect key="frame" x="290" y="4" width="42" height="15"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES"/>
@@ -57,16 +76,6 @@
                                                         <action selector="resetZoom:" target="15o-mm-Ppr" id="1mk-DL-Ni7"/>
                                                     </connections>
                                                 </button>
-                                                <slider toolTip="Sets the zoom level." verticalHuggingPriority="750" id="257">
-                                                    <rect key="frame" x="175" y="5" width="124" height="12"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES"/>
-                                                    <sliderCell key="cell" controlSize="mini" continuous="YES" alignment="left" minValue="1" maxValue="1000" doubleValue="100" tickMarkPosition="above" sliderType="linear" id="284">
-                                                        <font key="font" size="12" name="Helvetica"/>
-                                                    </sliderCell>
-                                                    <connections>
-                                                        <action selector="dragZoom:" target="15o-mm-Ppr" id="aU3-6E-oWh"/>
-                                                    </connections>
-                                                </slider>
                                             </subviews>
                                         </customView>
                                         <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="aEp-5c-owl">
@@ -147,10 +156,10 @@
                                                     <rect key="frame" x="0.0" y="0.0" width="364" height="110"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                    <size key="minSize" width="364" height="110"/>
+                                                    <size key="minSize" width="0.0" height="110"/>
                                                     <size key="maxSize" width="723" height="10000000"/>
                                                     <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                    <size key="minSize" width="364" height="110"/>
+                                                    <size key="minSize" width="0.0" height="110"/>
                                                     <size key="maxSize" width="723" height="10000000"/>
                                                 </textView>
                                             </subviews>
