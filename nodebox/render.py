@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-nodebox.py
+render.py
 
-Run nodebox scripts from the command line:
-
-  $ nodebox.py [--live] [--virtualenv=path/to/env] <filename>
-
+Run nodebox scripts from the command line
 """
 
 import sys
