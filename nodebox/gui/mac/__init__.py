@@ -801,6 +801,50 @@ def calc_scaling_factor(width, height, maxwidth, maxheight):
 class ZoomPanel(NSView):
     pass
 
+class NodeBoxBackdrop(NSView):
+    """A container that sits between the NSClipView and NodeBoxGraphicsView
+
+       It resizes to fit the size of the canvas and centers it when the canvas
+       is smaller than the display space in the NSSplitView.
+    """
+    gfxView = None
+
+    def isFlipped(self):
+        return True
+
+    def setFrame_(self, frame):
+        if self.gfxView:
+            scrollview = self.superview().superview()
+            visible = scrollview.documentVisibleRect()
+            minsize = self.gfxView.bounds().size
+            frame.size.width = max(visible.size.width, minsize.width)
+            frame.size.height = max(visible.size.height, minsize.height)
+        self = super(NodeBoxBackdrop, self).setFrame_(frame)
+
+    def didAddSubview_(self, subview):
+        nc = NSNotificationCenter.defaultCenter()
+        nc.addObserver_selector_name_object_(self, "viewFrameDidChange:", NSViewFrameDidChangeNotification, subview)
+        self.gfxView = subview
+    
+    def willRemoveSubview_(self, subview):
+        nc = NSNotificationCenter.defaultCenter()
+        nc.removeObserver_name_object_(self, NSViewFrameDidChangeNotification, subview)
+
+    def viewFrameDidChange_(self, note):
+        self.setFrame_(self.frame())
+        newframe = self.frame()
+        gfxframe = self.gfxView.frame()
+        if newframe.size.width > gfxframe.size.width:
+            gfxframe.origin.x = (newframe.size.width-gfxframe.size.width)/2.0
+        else:
+            gfxframe.origin.x = 0
+        if newframe.size.height > gfxframe.size.height:
+            gfxframe.origin.y = (newframe.size.height-gfxframe.size.height)/2.0
+        else:
+            gfxframe.origin.y = 0
+        self.gfxView.setFrame_(gfxframe)
+
+
 # class defined in NodeBoxGraphicsView.xib
 class NodeBoxGraphicsView(NSView):
     document = objc.IBOutlet()
@@ -827,14 +871,25 @@ class NodeBoxGraphicsView(NSView):
         self._zoom = 1.0
         self.setFrameSize_( (graphics.DEFAULT_WIDTH, graphics.DEFAULT_HEIGHT) )
         self.setFocusRingType_(NSFocusRingTypeExterior)
-        if self.superview() is not None:
-            self.superview().setBackgroundColor_(VERY_LIGHT_GRAY)
+        clipview = self.superview().superview()
+        if clipview is not None:
+            clipview.setBackgroundColor_(DARKER_GRAY)
 
     def setCanvas(self, canvas):
         self.canvas = canvas
         if canvas is not None:
-            w, h = self.canvas.size
-            self.setFrameSize_([w*self._zoom, h*self._zoom])
+            scrollview = self.superview().superview().superview()
+            visible = scrollview.documentVisibleRect()
+            oldframe = self.frame()
+            x_pct = NSMidX(visible) / NSWidth(oldframe)
+            y_pct = NSMidY(visible) / NSHeight(oldframe)
+
+            w, h = [s*self._zoom for s in self.canvas.size]
+            self.setFrameSize_([w, h])
+
+            half_w = NSWidth(visible) / 2.0
+            half_h = NSHeight(visible) / 2.0
+            self.scrollPoint_( (x_pct*w-half_w, y_pct*h-half_h) )
         self.markDirty()
         
     def _get_zoom(self):
