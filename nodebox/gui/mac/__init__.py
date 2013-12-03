@@ -180,6 +180,7 @@ class NodeBoxDocument(NSDocument):
 
         # Compile the script
         success, output = self._boxedRun(self._compileScript)
+        self._truncateOutput()
         self._flushOutput(output)
         if not success:
             return False
@@ -454,6 +455,9 @@ class NodeBoxDocument(NSDocument):
                 os.kill(os.getpid(), SIGINT)
                 break
             time.sleep(0.25)
+
+    def _truncateOutput(self):
+        self.outputView.setString_("")
 
     def _flushOutput(self, output):
         outAttrs = PyDETextView.getBasicTextAttributes()
