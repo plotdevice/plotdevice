@@ -95,7 +95,7 @@ class NodeBoxDocument(NSDocument):
         self.fullScreen = None
         self._seed = time.time()
         self.currentView = self.graphicsView
-        self._opts = dict(args=[], range=[], virtualenv=None, live=False)
+        self._meta = dict(args=[], range=[], virtualenv=None, live=False, stdout=None)
         return self
     
     def autosavesInPlace(self):
@@ -114,7 +114,7 @@ class NodeBoxDocument(NSDocument):
                 filehash = md5(file(pth).read())
                 if filehash != self._filemd5:
                     self.revertToContentsOfURL_ofType_error_(url, self.fileType(), None)
-                    if self._opts['live']:
+                    if self._meta['live']:
                         self.runScript()
             except IOError:
                 pass
@@ -261,7 +261,14 @@ class NodeBoxDocument(NSDocument):
         self.currentView.setCanvas(self.canvas)
 
         return True
-        
+    
+    def runWith(self, opts, stdout=None):
+        if stdout:
+            opts['stdout']=stdout
+        self._meta = opts
+        self.refresh()
+        self.runScript()
+
     @objc.IBAction
     def runFullscreen_(self, sender):
         if self.fullScreen is not None: return
@@ -315,6 +322,10 @@ class NodeBoxDocument(NSDocument):
                 
             # Start the spinner
             self.animationSpinner.startAnimation_(None)
+        else:
+            if self._meta['stdout']:
+                self._meta['stdout'].put(None)
+                self._meta['stdout'] = None
 
     def runScriptFast(self):        
         if self.animationTimer is None:
@@ -356,6 +367,10 @@ class NodeBoxDocument(NSDocument):
         self.textView.hideValueLadder()
         window = self.textView.window()
         window.makeFirstResponder_(self.textView)
+
+        if self._meta['stdout']:
+            self._meta['stdout'].put(None)
+            self._meta['stdout'] = None
 
     def _compileScript(self, source=None):
         if source is None:
@@ -414,11 +429,11 @@ class NodeBoxDocument(NSDocument):
         saveDir = os.getcwd()
         saveArgv = sys.argv
         savePath = list(sys.path)
-        sys.argv = [self.scriptName] + self._opts.get('args',[])
+        sys.argv = [self.scriptName] + self._meta.get('args',[])
         if os.path.exists(libDir):
             sys.path.insert(0, libDir)
-        if self._opts['virtualenv']:
-            sys.path.insert(0, self._opts['virtualenv'])
+        if self._meta['virtualenv']:
+            sys.path.insert(0, self._meta['virtualenv'])
         os.chdir(curDir)
         sys.path.insert(0, curDir)
         output = []
@@ -438,8 +453,9 @@ class NodeBoxDocument(NSDocument):
                 self.stopScript()
             except:
                 etype, value, tb = sys.exc_info()
-                if tb.tb_next is not None:
-                    tb = tb.tb_next  # skip the frame doing the exec
+                # skip the frames doing the _boxedRun and exec
+                if tb.tb_next is not None and tb.tb_next.tb_next is not None:
+                    tb = tb.tb_next.tb_next 
                 traceback.print_exception(etype, value, tb)
                 etype = value = tb = None
                 return False, output
@@ -484,6 +500,9 @@ class NodeBoxDocument(NSDocument):
                 outputView.setTypingAttributes_(attrs)
                 lastErr = isErr
             outputView.insertText_(data)
+            if self._meta['stdout']:
+                self._meta['stdout'].put(data.encode('utf8'))
+
         # del self.output
 
     @objc.IBAction
@@ -1101,7 +1120,12 @@ class CommandListener(Thread):
     def exec_command(self, cmd):
         self.command_q.put(cmd)
         AppHelper.callAfter(NSApp.delegate().run_script)
-        return self.output_q.get()
+        output = []
+        txt = self.output_q.get()
+        while txt is not None:
+            output.append(txt)
+            txt = self.output_q.get()
+        return "".join(output)
 
     def run(self):
         if self.active:
@@ -1136,15 +1160,10 @@ class NodeBoxAppDelegate(NSObject):
         NSLog("run script: %@", cmd)
 
         url = NSURL.URLWithString_('file://%s'%cmd['file'])
-        err = None
-        self._docsController.openDocumentWithContentsOfURL_display_error_(url, True, err)
+        self._docsController.openDocumentWithContentsOfURL_display_error_(url, True, None)
         for doc in self._docsController.documents():
             if doc.fileURL() and doc.fileURL().isEqualTo_(url):
-                doc._opts = cmd
-                doc.refresh()
-                doc.runScript()
-                output = doc.outputView.string()
-                self._output_q.put(output.encode('utf8'))
+                doc.runWith(cmd, stdout=self._output_q)
                 break
         else:
             self._output_q.put("couldn't open script: %s"%cmd['file'])
