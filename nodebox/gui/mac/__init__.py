@@ -4,13 +4,15 @@ import traceback, linecache
 import re
 import objc
 import time
+import json
 import random
+import socket
+import SocketServer
 from Foundation import *
 from AppKit import *
 from threading import Thread
-from Queue import Queue
+from Queue import Queue, Empty
 from hashlib import md5
-from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 from nodebox.gui.mac.ValueLadder import MAGICVAR
 from nodebox.gui.mac import PyDETextView
@@ -280,8 +282,7 @@ class NodeBoxDocument(NSDocument):
         return True
     
     def scriptedRun(self, opts, stdout=None):
-        meta = dict( (k, opts[k]) for k in ['args', 'virtualenv', 'live', 'first', 'last'] )
-        meta['stdout'] = stdout
+        meta = dict( (k, opts[k]) for k in ['args', 'virtualenv', 'live', 'first', 'last', 'stdout'] )
         self._meta = meta
         self.refresh()
 
@@ -542,11 +543,11 @@ class NodeBoxDocument(NSDocument):
         # del self.output
 
     def _finishOutput(self):
-        self._meta['first'], self._meta['last'] = (1,None)
-        # self._meta['frames'] = dict(first=1,last=None)
-        if self._meta['stdout']:
-            self._meta['stdout'].put(None)
-            self._meta['stdout'] = None
+        if not self._meta['live']:
+            self._meta['first'], self._meta['last'] = (1,None)
+            if self._meta['stdout']:
+                self._meta['stdout'].put(None)
+                self._meta['stdout'] = None
 
     @objc.IBAction
     def copyImageAsPDF_(self, sender):
@@ -1150,43 +1151,61 @@ class NodeBoxGraphicsView(NSView):
 
 
 class CommandListener(Thread):
+
+    class CommandHandler(SocketServer.BaseRequestHandler):
+        def handle(self):
+            self.stdout_q = Queue()
+            self.opts = json.loads(self.request.recv(1024).split('\n')[0])
+            self.opts['stdout'] = self.stdout_q
+            AppHelper.callAfter(NSApp.delegate().run_script, self.opts)
+    
+            txt = ''
+            try:
+                while txt is not None:
+                    if txt:
+                        self.request.sendall(txt)
+                    try:
+                        self.check_interrupt()
+                        txt = self.stdout_q.get_nowait()
+                    except Empty:
+                        time.sleep(.1)
+                        txt = ''
+            except socket.error, e:
+                pass # if client closed socket, stop sending
+
+        def check_interrupt(self):
+            try:
+                self.request.setblocking(0)
+                interrupt = self.request.recv(1024)
+                AppHelper.callAfter(NSApp.delegate().stop_script, self.opts)
+            except socket.error, e:
+                pass # no input from the client
+            finally:
+                self.request.settimeout(socket.getdefaulttimeout())
+
+    class SocketListener(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+        daemon_threads = True # Ctrl-C will cleanly kill all spawned threads
+        allow_reuse_address = True # much faster rebinding
+
     active = False
-
-    def __init__(self, command_q, output_q):
+    def __init__(self):
         super(CommandListener, self).__init__()
-        self.command_q = command_q
-        self.output_q = output_q
-
         try:
-            self._server = SimpleXMLRPCServer(('localhost', RPC_PORT), allow_none=True, logRequests=False)
-            self._server.register_function(self.exec_command, 'exec_command')
-            self._server.register_function(self.status, 'status')
+            self.server = self.SocketListener(('localhost', RPC_PORT), self.CommandHandler)
+            self.ip, self.port = self.server.server_address
             self.active = True
-        except Exception, e:
-            NSLog("%@", e)
+        except socket.error, e:
             NSLog("Another NodeBox instance is listening on port %i"%RPC_PORT)
             NSLog("The nodebox.py command line tool will not be able to communicate with this process")
-
-    def status(self):
-        return "ready"
-
-    def exec_command(self, cmd):
-        self.command_q.put(cmd)
-        AppHelper.callAfter(NSApp.delegate().run_script)
-        output = []
-        txt = self.output_q.get()
-        while txt is not None:
-            output.append(txt)
-            txt = self.output_q.get()
-        return "".join(output)
+            pass
 
     def run(self):
         if self.active:
-            self._server.serve_forever()
-
+            self.server.serve_forever()
+      
     def join(self, timeout=None):
         if self.active:
-            self._server.shutdown()
+            self.server.shutdown()
         super(CommandListener, self).join(timeout)
 
 class NodeBoxAppDelegate(NSObject):
@@ -1194,9 +1213,7 @@ class NodeBoxAppDelegate(NSObject):
     def awakeFromNib(self):
         self._prefsController = None
         self._docsController = NSDocumentController.sharedDocumentController()
-        self._command_q = Queue()
-        self._output_q = Queue()
-        self._listener = CommandListener(self._command_q, self._output_q)
+        self._listener = CommandListener()
         libDir = os.path.join(os.getenv("HOME"), "Library", "Application Support", "NodeBox")
         try:
             if not os.path.exists(libDir):
@@ -1208,21 +1225,26 @@ class NodeBoxAppDelegate(NSObject):
         except OSError: pass
         except IOError: pass
 
-    def run_script(self):
-        cmd = self._command_q.get()
-        NSLog("run script: %@", cmd)
-
-        url = NSURL.URLWithString_('file://%s'%cmd['file'])
+    def run_script(self, opts):
+        url = NSURL.URLWithString_('file://%s'%opts['file'])
         self._docsController.openDocumentWithContentsOfURL_display_error_(url, True, None)
         for doc in self._docsController.documents():
             if doc.fileURL() and doc.fileURL().isEqualTo_(url):
-                if cmd['activate']:
+                if opts['activate']:
                     nsapp = NSApplication.sharedApplication()
                     nsapp.activateIgnoringOtherApps_(True)
-                doc.scriptedRun(cmd, stdout=self._output_q)
+                doc.scriptedRun(opts)
                 break
         else:
             self._output_q.put("couldn't open script: %s"%cmd['file'])
+
+    def stop_script(self, opts):
+        url = NSURL.URLWithString_('file://%s'%opts['file'])
+        self._docsController.openDocumentWithContentsOfURL_display_error_(url, True, None)
+        for doc in self._docsController.documents():
+            if doc.fileURL() and doc.fileURL().isEqualTo_(url):
+                doc._meta['live'] = False
+                doc.stopScript()
 
     def applicationWillBecomeActive_(self, note):
         # check for filesystem changes while the app was inactive

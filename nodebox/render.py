@@ -17,15 +17,46 @@ from pprint import pprint
 import argparse
 import xmlrpclib
 import socket
+import json
 from time import sleep
 
 PORT = 9000
 
-def connected(proxy):
+def connect(retry=12):
+  sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   try:
-    return proxy.status() == 'ready'
-  except:
-    return False
+    sock.connect(("localhost", PORT))
+  except socket.error, e:
+    if not retry:
+      return None
+    sleep(.2)
+    return connect(retry-1)
+  return sock
+
+def read_and_echo(sock):
+  response = sock.recv(80)
+  if response:
+    print response,
+  return response
+
+def exec_command(opts):  
+  sock = connect(0)
+  if not sock:
+    os.system('open -a NodeBox "%s"'%opts.file)
+    sock = connect()
+  if not sock:
+    print "Couldn't connect to the NodeBox application"
+    sys.exit(1)
+
+  try:
+    sock.sendall(json.dumps(vars(opts)) + "\n")
+    try:
+      while read_and_echo(sock): pass
+    except KeyboardInterrupt:
+      sock.sendall('STOP\n')
+      while read_and_echo(sock): pass
+  finally:
+    sock.close()
 
 def main():
   parser = argparse.ArgumentParser(description='Run python scripts in NodeBox.app')
@@ -78,12 +109,7 @@ def main():
         parser.exit(1,'export directory not found: %s\n'%os.path.abspath(export_dir))
     opts.export = os.path.abspath(opts.export)
 
-  proxy = xmlrpclib.ServerProxy('http://localhost:%i'%PORT, allow_none=True)
-  if not connected(proxy):
-    os.system('open -a NodeBox "%s"'%opts.file)
-    while not connected(proxy):
-      sleep(0.2)
-  print proxy.exec_command(opts),
+  exec_command(opts)
 
 if __name__ == "__main__":
   main()
