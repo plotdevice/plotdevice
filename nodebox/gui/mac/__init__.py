@@ -860,8 +860,7 @@ class FullscreenView(NSView):
         self.keycode = event.keyCode()
 
         if self.keycode==53: # stop animating on ESC
-            nsapp = NSApplication.sharedApplication()
-            nsapp.sendAction_to_from_('stopScript:', None, self)
+            NSApp.sendAction_to_from_('stopScript:', None, self)
 
     def keyUp_(self, event):
         self.keydown = False
@@ -1129,8 +1128,7 @@ class NodeBoxGraphicsView(NSView):
         self.keycode = event.keyCode()
         
         if self.keycode==53: # stop animating on ESC
-            nsapp = NSApplication.sharedApplication()
-            nsapp.sendAction_to_from_('stopScript:', None, self)
+            NSApp.sendAction_to_from_('stopScript:', None, self)
 
     def keyUp_(self, event):
         self.keydown = False
@@ -1228,15 +1226,20 @@ class NodeBoxAppDelegate(NSObject):
     def run_script(self, opts):
         url = NSURL.URLWithString_('file://%s'%opts['file'])
         self._docsController.openDocumentWithContentsOfURL_display_error_(url, True, None)
+        stdout = opts['stdout']
         for doc in self._docsController.documents():
             if doc.fileURL() and doc.fileURL().isEqualTo_(url):
+                if doc._meta['stdout']:
+                    stdout.put("already running: %s"%opts['file'])
+                    stdout.put(None)
+                    break
                 if opts['activate']:
-                    nsapp = NSApplication.sharedApplication()
-                    nsapp.activateIgnoringOtherApps_(True)
+                    NSApp.activateIgnoringOtherApps_(True)
                 doc.scriptedRun(opts)
                 break
         else:
-            self._output_q.put("couldn't open script: %s"%cmd['file'])
+            stdout.put("couldn't open script: %s"%opts['file'])
+            stdout.put(None)
 
     def stop_script(self, opts):
         url = NSURL.URLWithString_('file://%s'%opts['file'])
