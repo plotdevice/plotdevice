@@ -141,10 +141,24 @@ class NodeBoxDocument(NSDocument):
             self.readFromUTF8(path)
         return True
 
+    def _updateWindowAutosave(self):
+        url = self.fileURL()
+        if url:
+            name = 'nodebox:%s'%url.fileSystemRepresentation()
+            lower_splitview = self.textView.superview().superview().superview()
+            upper_splitview = lower_splitview.superview()
+            window_ctl = self.windowControllers()[0]
+
+            window_ctl.setShouldCascadeWindows_(False)
+            window_ctl.setWindowFrameAutosaveName_(name)
+            lower_splitview.setAutosaveName_('%s - lower'%name)
+            upper_splitview.setAutosaveName_('%s - upper'%name)
+
     def writeToFile_ofType_(self, path, tp):
         f = file(path, "w")
         text = self.source().encode("utf8")
         self._fileMD5 = md5(text).digest()
+        self._updateWindowAutosave()
         f.write(text)
         f.close()
         return True
@@ -155,7 +169,6 @@ class NodeBoxDocument(NSDocument):
         font = PyDETextView.getBasicTextAttributes()[NSFontAttributeName]
         self.outputView.setFont_(font)
         self.textView.window().makeFirstResponder_(self.textView)
-        self.windowControllers()[0].setWindowFrameAutosaveName_("NodeBoxDocumentWindow")
 
         # disable system's auto-smartquotes (10.9+) in the editor pane
         try:
@@ -168,7 +181,8 @@ class NodeBoxDocument(NSDocument):
         with file(path) as f:
             text = f.read()
             self._fileMD5 = md5(text).digest()
-            self.textView.setString_(text.decode("utf-8"))
+            self._updateWindowAutosave()
+            self.setSource_(text.decode("utf-8"))
             self.textView.usesTabs = "\t" in text
 
     def cleanRun(self, fn, newSeed = True, buildInterface=True):
@@ -1220,7 +1234,7 @@ class NodeBoxAppDelegate(NSObject):
         controller = NSDocumentController.sharedDocumentController()
         doc = controller.newDocument_(sender)
         doc = controller.currentDocument()
-        doc.textView.setString_(genProgram())
+        doc.setSource_(genProgram())
         doc.runScript()
 
     @objc.IBAction

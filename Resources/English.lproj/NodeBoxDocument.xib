@@ -17,7 +17,7 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application"/>
-        <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" wantsToBeColor="NO" visibleAtLaunch="NO" frameAutosaveName="NodeBoxDocumentWindow" animationBehavior="default" id="5" userLabel="Window">
+        <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" wantsToBeColor="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="5" userLabel="Window">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="283" y="378" width="722" height="485"/>
@@ -27,7 +27,7 @@
                 <rect key="frame" x="0.0" y="0.0" width="722" height="485"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <splitView autosaveName="NodeBoxDocumentWindow" vertical="YES" id="271">
+                    <splitView autosaveName="" vertical="YES" id="271">
                         <rect key="frame" x="0.0" y="0.0" width="722" height="485"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
@@ -66,7 +66,7 @@
                                                     </connections>
                                                 </slider>
                                                 <button toolTip="Zoom to actual size." id="273">
-                                                    <rect key="frame" x="290" y="4" width="42" height="15"/>
+                                                    <rect key="frame" x="295" y="4" width="37" height="15"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES"/>
                                                     <buttonCell key="cell" type="smallSquare" title="100%" bezelStyle="smallSquare" alignment="right" controlSize="mini" inset="2" id="287">
                                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -90,7 +90,7 @@
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <subviews>
                                                             <customView id="15o-mm-Ppr" customClass="NodeBoxGraphicsView">
-                                                                <rect key="frame" x="0.0" y="0.0" width="200" height="80"/>
+                                                                <rect key="frame" x="115" y="367" width="200" height="80"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                                                 <connections>
                                                                     <outlet property="document" destination="-2" id="eZd-0H-uvu"/>
@@ -116,7 +116,7 @@
                                 <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                                 <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                             </box>
-                            <splitView autosaveName="NodeBoxDocumentWindow" id="41">
+                            <splitView autosaveName="" id="41">
                                 <rect key="frame" x="341" y="0.0" width="381" height="485"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
@@ -156,10 +156,10 @@
                                                     <rect key="frame" x="0.0" y="0.0" width="364" height="110"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                    <size key="minSize" width="0.0" height="110"/>
+                                                    <size key="minSize" width="364" height="110"/>
                                                     <size key="maxSize" width="723" height="10000000"/>
                                                     <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                    <size key="minSize" width="0.0" height="110"/>
+                                                    <size key="minSize" width="364" height="110"/>
                                                     <size key="maxSize" width="723" height="10000000"/>
                                                 </textView>
                                             </subviews>
