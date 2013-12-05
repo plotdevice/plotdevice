@@ -383,6 +383,9 @@ class NodeBoxDocument(NSDocument):
     def setSource_(self, source):
         self.textView.setString_(source)
 
+    def cancelOperation_(self, sender):
+        self.stopScript()
+
     @objc.IBAction
     def stopScript_(self, sender=None):
         self.stopScript()
@@ -855,6 +858,10 @@ class FullscreenView(NSView):
         self.key = event.characters()
         self.keycode = event.keyCode()
 
+        if self.keycode==53: # stop animating on ESC
+            nsapp = NSApplication.sharedApplication()
+            nsapp.sendAction_to_from_('stopScript:', None, self)
+
     def keyUp_(self, event):
         self.keydown = False
         self.key = event.characters()
@@ -1120,6 +1127,10 @@ class NodeBoxGraphicsView(NSView):
         self.key = event.characters()
         self.keycode = event.keyCode()
         
+        if self.keycode==53: # stop animating on ESC
+            nsapp = NSApplication.sharedApplication()
+            nsapp.sendAction_to_from_('stopScript:', None, self)
+
     def keyUp_(self, event):
         self.keydown = False
         self.key = event.characters()
