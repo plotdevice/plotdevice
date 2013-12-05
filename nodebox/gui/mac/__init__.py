@@ -29,6 +29,7 @@ RPC_PORT = 9000
 
 from nodebox.gui.mac.dashboard import *
 from nodebox.gui.mac.progressbar import ProgressBarController
+objc.setVerbose(1)
 
 class ExportCommand(NSScriptCommand):
     pass    
@@ -89,13 +90,15 @@ class NodeBoxDocument(NSDocument):
         self.canvas = graphics.Canvas()
         self.context = graphics.Context(self.canvas, self.namespace)
         self.animationTimer = None
+        self.fullScreen = None
+        self.currentView = self.graphicsView # almost surely nil at this point. bug?
         self.__doc__ = {}
         self._pageNumber = 1
         self._frame = 150
-        self.fullScreen = None
         self._seed = time.time()
-        self.currentView = self.graphicsView
-        self._meta = dict(args=[], range=[], virtualenv=None, live=False, stdout=None)
+        self._fileMD5 = None
+        self._meta = dict(args=[], virtualenv=None, live=False,
+                          export=None, first=1, last=None, stdout=None )
         return self
     
     def autosavesInPlace(self):
@@ -111,8 +114,8 @@ class NodeBoxDocument(NSDocument):
         pth = url.fileSystemRepresentation()
         if os.path.exists(pth):
             try:
-                filehash = md5(file(pth).read())
-                if filehash != self._filemd5:
+                filehash = md5(file(pth).read()).digest()
+                if filehash != self._fileMD5:
                     self.revertToContentsOfURL_ofType_error_(url, self.fileType(), None)
                     if self._meta['live']:
                         self.runScript()
@@ -140,8 +143,8 @@ class NodeBoxDocument(NSDocument):
 
     def writeToFile_ofType_(self, path, tp):
         f = file(path, "w")
-        text = self.textView.string().encode("utf8")
-        self._filemd5 = md5(text)
+        text = self.source().encode("utf8")
+        self._fileMD5 = md5(text).digest()
         f.write(text)
         f.close()
         return True
@@ -164,10 +167,10 @@ class NodeBoxDocument(NSDocument):
     def readFromUTF8(self, path):
         with file(path) as f:
             text = f.read()
+            self._fileMD5 = md5(text).digest()
             self.textView.setString_(text.decode("utf-8"))
             self.textView.usesTabs = "\t" in text
-            self._filemd5 = md5(text)
-        
+
     def cleanRun(self, fn, newSeed = True, buildInterface=True):
         self.animationSpinner.startAnimation_(None)
 
@@ -203,7 +206,7 @@ class NodeBoxDocument(NSDocument):
         self._pageNum = 1
         
         # Reset the frame
-        self._frame = 1
+        self._frame = self._meta['first']
 
         self.speed = self.canvas.speed = None
 
@@ -262,12 +265,30 @@ class NodeBoxDocument(NSDocument):
 
         return True
     
-    def runWith(self, opts, stdout=None):
-        if stdout:
-            opts['stdout']=stdout
-        self._meta = opts
+    def scriptedRun(self, opts, stdout=None):
+        meta = dict( (k, opts[k]) for k in ['args', 'virtualenv', 'live', 'first', 'last'] )
+        meta['stdout'] = stdout
+        self._meta = meta
         self.refresh()
-        self.runScript()
+
+        # if we haven't rendered previously, currentView will still be None
+        if not self.currentView:
+            self.currentView = self.graphicsView
+
+        if opts['export']:
+            fn = opts['export']
+            if fn.endswith('mov'):
+                self.doExportAsMovie(fn, fps=opts['fps'], 
+                                         frames=opts['last'], 
+                                         first=opts['first'])
+            else:
+                self.doExportAsImage(fn, format=fn.rsplit('.',1)[1], 
+                                         pages=opts['last'] or 1,
+                                         first=opts['first'])
+        elif opts['fullscreen']:
+            self.runFullscreen_(None)
+        else:
+            self.runScript()
 
     @objc.IBAction
     def runFullscreen_(self, sender):
@@ -323,9 +344,7 @@ class NodeBoxDocument(NSDocument):
             # Start the spinner
             self.animationSpinner.startAnimation_(None)
         else:
-            if self._meta['stdout']:
-                self._meta['stdout'].put(None)
-                self._meta['stdout'] = None
+            self._finishOutput()
 
     def runScriptFast(self):        
         if self.animationTimer is None:
@@ -339,7 +358,10 @@ class NodeBoxDocument(NSDocument):
 
     def doFrame(self):
         self.fastRun(self.namespace["draw"], newSeed=True)
-        self._frame += 1
+        if self._frame==self._meta['last']:
+            self.stopScript()
+        else:
+            self._frame += 1
         
     def source(self):
         return self.textView.string()
@@ -367,14 +389,11 @@ class NodeBoxDocument(NSDocument):
         self.textView.hideValueLadder()
         window = self.textView.window()
         window.makeFirstResponder_(self.textView)
-
-        if self._meta['stdout']:
-            self._meta['stdout'].put(None)
-            self._meta['stdout'] = None
+        self._finishOutput()
 
     def _compileScript(self, source=None):
         if source is None:
-            source = self.textView.string()
+            source = self.source()
         self._code = None
         self._code = compile(source + "\n\n", self.scriptName.encode('ascii', 'ignore'), "exec")
 
@@ -505,6 +524,13 @@ class NodeBoxDocument(NSDocument):
 
         # del self.output
 
+    def _finishOutput(self):
+        self._meta['first'], self._meta['last'] = (1,None)
+        # self._meta['frames'] = dict(first=1,last=None)
+        if self._meta['stdout']:
+            self._meta['stdout'].put(None)
+            self._meta['stdout'] = None
+
     @objc.IBAction
     def copyImageAsPDF_(self, sender):
         pboard = NSPasteboard.generalPasteboard()
@@ -553,7 +579,7 @@ class NodeBoxDocument(NSDocument):
         panel = sender.window()
         panel.setRequiredFileType_(image_formats[sender.indexOfSelectedItem()])
 
-    def doExportAsImage(self, fname, format, pages=1):
+    def doExportAsImage(self, fname, format, pages=1, first=1):
         basename, ext = os.path.splitext(fname)
         # When saving one page (the default), just save the current graphics
         # context. When generating multiple pages, we run the script again 
@@ -568,8 +594,8 @@ class NodeBoxDocument(NSDocument):
             pb.begin("Generating %s images..." % pages, pages)
             try:
                 if not self.cleanRun(self._execScript): return
-                self._pageNumber = 1
-                self._frame = 1
+                self._pageNumber = first
+                self._frame = first
 
                 # If the speed is set, we are dealing with animation
                 if self.canvas.speed is None:
@@ -607,6 +633,7 @@ class NodeBoxDocument(NSDocument):
             del pb
         self._pageNumber = 1
         self._frame = 1
+        self._finishOutput()
 
     @objc.IBAction
     def exportAsMovie_(self, sender):
@@ -648,7 +675,7 @@ class NodeBoxDocument(NSDocument):
     qtPanelDidEnd_returnCode_contextInfo_ = objc.selector(qtPanelDidEnd_returnCode_contextInfo_,
             signature="v@:@ii")
 
-    def doExportAsMovie(self, fname, frames=60, fps=30):
+    def doExportAsMovie(self, fname, frames=60, fps=30, first=1):
         # Only load QTSupport when necessary. 
         # QTSupport loads QTKit, which wants to establish a connection to the window server.
         # If we load QTSupport before something is on screen, the connection to the window server
@@ -671,8 +698,8 @@ class NodeBoxDocument(NSDocument):
         pb.begin("Generating %s frames..." % frames, frames)
         try:
             if not self.cleanRun(self._execScript): return
-            self._pageNumber = 1
-            self._frame = 1
+            self._pageNumber = first
+            self._frame = first
 
             movie = QTSupport.Movie(fname, fps)
             # If the speed is set, we are dealing with animation
@@ -705,6 +732,7 @@ class NodeBoxDocument(NSDocument):
         movie.save()
         self._pageNumber = 1
         self._frame = 1
+        self._finishOutput()
 
     @objc.IBAction
     def printDocument_(self, sender):
@@ -1163,7 +1191,10 @@ class NodeBoxAppDelegate(NSObject):
         self._docsController.openDocumentWithContentsOfURL_display_error_(url, True, None)
         for doc in self._docsController.documents():
             if doc.fileURL() and doc.fileURL().isEqualTo_(url):
-                doc.runWith(cmd, stdout=self._output_q)
+                if cmd['activate']:
+                    nsapp = NSApplication.sharedApplication()
+                    nsapp.activateIgnoringOtherApps_(True)
+                doc.scriptedRun(cmd, stdout=self._output_q)
                 break
         else:
             self._output_q.put("couldn't open script: %s"%cmd['file'])

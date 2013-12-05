@@ -29,8 +29,12 @@ def connected(proxy):
 
 def main():
   parser = argparse.ArgumentParser(description='Run python scripts in NodeBox.app')
-  parser.add_argument('--frame', dest='range', metavar='FIRST[-LAST]', help='first (and optionally last) frame to render')
+  parser.add_argument('-f', dest='fullscreen', action='store_const', const=True, default=False, help='run full-screen')
+  parser.add_argument('-b', dest='activate', action='store_const', const=False, default=True, help='run NodeBox in the background')
   parser.add_argument('--virtualenv', metavar='PATH', help='path to virtualenv whose libraries you want to use')
+  parser.add_argument('--export', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, gif, or mov')
+  parser.add_argument('--frames', metavar='N or M-N', help='number of frames to render or a range specifying the first and last frames (default "1-")')
+  parser.add_argument('--fps', metavar='N', default=30, help='frames per second in exported video (default 30)')
   parser.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
   parser.add_argument('file', help='the python script to be rendered')
   parser.add_argument('args', nargs=argparse.REMAINDER, metavar='<arg ...>', help='optional arguments to be passed to the script')
@@ -48,23 +52,38 @@ def main():
     if not os.path.exists(opts.file):
       parser.exit(1, "file not found: %s\n"%opts.file)
 
-  if opts.range:
+  if opts.frames:
     try:
-      frames = [int(f) for f in opts.range.split('-')]
+      frames = [int(f) if f else None for f in opts.frames.split('-')]
     except ValueError:
-      parser.exit(1, 'bad argument [--frame]\nmust be a single integer ("42") or a hyphen-separated range ("33-66").\ncouldn\'t make sense of "%s"\n'%opts.range)
+      parser.exit(1, 'bad argument [--frame]\nmust be a single integer ("42") or a hyphen-separated range ("33-66").\ncouldn\'t make sense of "%s"\n'%opts.frames)
 
-    if len(frames) > 1 and frames[1]<frames[0]:
-      parser.exit(1, "bad argument [--frame]\nfinal-frame number is less than first-frame\n")
+    if len(frames) == 1:
+      opts.first, opts.last = (1, frames[0])
+    elif len(frames) == 2:
+      if frames[1] is not None and frames[1]<frames[0]:
+        parser.exit(1, "bad argument [--frame]\nfinal-frame number is less than first-frame\n")
+      opts.first, opts.last = frames
+      del opts.frames
+  else:
+    opts.first, opts.last = (1, None)
 
-    opts.range = frames
+  if opts.export:
+    basename, ext = opts.export.rsplit('.',1)
+    if ext.lower() not in ('pdf', 'eps', 'png', 'tiff', 'jpg', 'gif', 'mov'):
+      parser.exit(1, 'bad argument [--export]\nthe output filename must end with a supported format:\npdf, eps, png, tiff, jpg, gif, or mov\n')
+    if '/' in opts.export:
+      export_dir = os.path.dirname(opts.export)
+      if not os.path.exists(export_dir):
+        parser.exit(1,'export directory not found: %s\n'%os.path.abspath(export_dir))
+    opts.export = os.path.abspath(opts.export)
 
   proxy = xmlrpclib.ServerProxy('http://localhost:%i'%PORT, allow_none=True)
   if not connected(proxy):
     os.system('open -a NodeBox "%s"'%opts.file)
     while not connected(proxy):
       sleep(0.2)
-  print proxy.exec_command(opts)
+  print proxy.exec_command(opts),
 
 if __name__ == "__main__":
   main()
