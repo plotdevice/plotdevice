@@ -292,10 +292,12 @@ class NodeBoxDocument(NSDocument):
 
         if opts['export']:
             fn = opts['export']
-            if fn.endswith('mov'):
+            if fn.endswith('mov') or fn.endswith('gif') and opts['last']:
+            # if fn.endswith('mov'):
                 self.doExportAsMovie(fn, fps=opts['fps'], 
                                          frames=opts['last'], 
-                                         first=opts['first'])
+                                         first=opts['first'],
+                                         loop=opts['loop'])
             else:
                 self.doExportAsImage(fn, format=fn.rsplit('.',1)[1], 
                                          pages=opts['last'] or 1,
@@ -693,7 +695,7 @@ class NodeBoxDocument(NSDocument):
     qtPanelDidEnd_returnCode_contextInfo_ = objc.selector(qtPanelDidEnd_returnCode_contextInfo_,
             signature="v@:@ii")
 
-    def doExportAsMovie(self, fname, frames=60, fps=30, first=1):
+    def doExportAsMovie(self, fname, frames=60, fps=30, first=1, loop=0):
         # Only load QTSupport when necessary. 
         # QTSupport loads QTKit, which wants to establish a connection to the window server.
         # If we load QTSupport before something is on screen, the connection to the window server
@@ -719,7 +721,7 @@ class NodeBoxDocument(NSDocument):
             self._pageNumber = first
             self._frame = first
 
-            movie = QTSupport.Movie(fname, fps)
+            movie = QTSupport.Movie(fname, frames, fps, loop)
             # If the speed is set, we are dealing with animation
             if self.canvas.speed is None:
                 for i in range(frames):

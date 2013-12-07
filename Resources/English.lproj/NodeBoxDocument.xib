@@ -82,15 +82,15 @@
                                             <rect key="frame" x="0.0" y="21" width="332" height="464"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <clipView key="contentView" id="cGy-9c-FHD">
-                                                <rect key="frame" x="1" y="1" width="315" height="447"/>
+                                                <rect key="frame" x="1" y="1" width="330" height="462"/>
                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
                                                     <customView id="W8B-XM-nL9" customClass="NodeBoxBackdrop">
-                                                        <rect key="frame" x="0.0" y="0.0" width="315" height="447"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="330" height="462"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <subviews>
                                                             <customView id="15o-mm-Ppr" customClass="NodeBoxGraphicsView">
-                                                                <rect key="frame" x="115" y="367" width="200" height="80"/>
+                                                                <rect key="frame" x="130" y="382" width="200" height="80"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                                                 <connections>
                                                                     <outlet property="document" destination="-2" id="eZd-0H-uvu"/>
@@ -103,11 +103,11 @@
                                                 </subviews>
                                             </clipView>
                                             <scroller key="horizontalScroller" verticalHuggingPriority="750" horizontal="YES" id="9DE-Kz-uoN">
-                                                <rect key="frame" x="1" y="448" width="315" height="15"/>
+                                                <rect key="frame" x="1" y="447" width="330" height="16"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
                                             <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="Gog-0j-9A9">
-                                                <rect key="frame" x="316" y="1" width="15" height="447"/>
+                                                <rect key="frame" x="315" y="1" width="16" height="462"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
                                         </scrollView>
@@ -124,11 +124,11 @@
                                         <rect key="frame" x="0.0" y="0.0" width="381" height="364"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <clipView key="contentView" id="yt1-Yq-neg">
-                                            <rect key="frame" x="1" y="1" width="364" height="362"/>
+                                            <rect key="frame" x="1" y="1" width="379" height="362"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <customView id="39" customClass="PyDETextView">
-                                                    <rect key="frame" x="0.0" y="0.0" width="382" height="331"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="397" height="331"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <connections>
                                                         <outlet property="document" destination="-2" id="165"/>
@@ -141,7 +141,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
                                         <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="295">
-                                            <rect key="frame" x="365" y="1" width="15" height="362"/>
+                                            <rect key="frame" x="364" y="1" width="16" height="362"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
                                     </scrollView>
@@ -149,17 +149,17 @@
                                         <rect key="frame" x="0.0" y="373" width="381" height="112"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <clipView key="contentView" id="15t-by-Wh6">
-                                            <rect key="frame" x="1" y="1" width="364" height="110"/>
+                                            <rect key="frame" x="1" y="1" width="379" height="110"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <textView importsGraphics="NO" richText="NO" findStyle="panel" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" smartInsertDelete="YES" id="31">
-                                                    <rect key="frame" x="0.0" y="0.0" width="364" height="110"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="379" height="110"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                    <size key="minSize" width="364" height="110"/>
+                                                    <size key="minSize" width="379" height="110"/>
                                                     <size key="maxSize" width="723" height="10000000"/>
                                                     <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                    <size key="minSize" width="364" height="110"/>
+                                                    <size key="minSize" width="379" height="110"/>
                                                     <size key="maxSize" width="723" height="10000000"/>
                                                 </textView>
                                             </subviews>
@@ -170,7 +170,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
                                         <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="293">
-                                            <rect key="frame" x="365" y="1" width="15" height="110"/>
+                                            <rect key="frame" x="364" y="1" width="16" height="110"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
                                     </scrollView>
