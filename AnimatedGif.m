@@ -28,10 +28,10 @@
 		
 		// write logical screen desc
 		UInt8 screen_desc[7] = { LO(aSize.width),HI(aSize.width),
-		                         LO(aSize.height),HI(aSize.height),
-		                         7<<4, // global color table flags ()
-		                         0,    // bg color (from global color map)
-		                         0};   // pixel aspect ratio
+								 LO(aSize.height),HI(aSize.height),
+								 7<<4, // global color table flags ()
+								 0,    // bg color (from global color map)
+								 0};   // pixel aspect ratio
 		[fileHandle writeData:[NSData dataWithBytesNoCopy:&screen_desc length:7 freeWhenDone:NO]];
 
 		// if looping is enabled, write an application extension block with the loop count
@@ -53,7 +53,7 @@
 	UInt8 *gif = (UInt8 *)[gifData bytes];
 	GifMap map = [self _getOffsets:gifData]; // find the offsets for the important data blocks in the gif
 
-    // don't echo the application extension (though maybe one of them should get passed through?)
+	// don't echo the application extension (though maybe one of them should get passed through?)
 	// if (map.ext_addr) [fileHandle writeData:[NSData dataWithBytesNoCopy:gif+map.ext_addr length:map.ext_n freeWhenDone:NO]];
 	
 	// write graphics control extension for frame

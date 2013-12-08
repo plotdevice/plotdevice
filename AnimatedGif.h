@@ -16,21 +16,12 @@
 #define kExtSeparator 0x21
 
 typedef struct {
-    NSInteger clr_addr; // color table
-    NSInteger clr_n;
-    UInt8 clr_depth;
-    
-    NSInteger data_addr; // image data
-    NSInteger data_n;
-    
-    NSInteger desc_addr; // image descriptor
-    NSInteger desc_n;
-    
-    NSInteger gfx_addr;  // graphics control extension
-    NSInteger gfx_n;
-
-    NSInteger ext_addr;  // application extension
-    NSInteger ext_n;    
+    NSInteger clr_addr; NSInteger clr_n; // color table
+    UInt8 clr_depth; // color table depth (in bpp-1 form)
+    NSInteger data_addr; NSInteger data_n; // image data
+    NSInteger desc_addr; NSInteger desc_n; // image descriptor
+    NSInteger gfx_addr; NSInteger gfx_n; // graphics control extension
+    NSInteger ext_addr; NSInteger ext_n; // application extension
 } GifMap;
 
 @interface AnimatedGif : NSObject{

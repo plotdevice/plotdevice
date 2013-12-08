@@ -27,11 +27,7 @@ class GIFMovie(object):
     def __init__(self, fname, frames, fps, loop):
         if os.path.exists(fname):
             os.remove(fname)
-        self.frame = 1
-        self.frames = frames
         self.fname = fname
-        self.tmpfname = None
-        self.firstFrame = True
         self.movie = None
         self.fps = fps
         self.loop = loop
@@ -46,46 +42,6 @@ class GIFMovie(object):
 
     def save(self):
         self.movie.closeFile()
-
-
-class CGGIFMovie(object):
-    def __init__(self, fname, frames, fps):
-        if os.path.exists(fname):
-            os.remove(fname)
-        self.frame = 1
-        self.fname = fname
-        self.tmpfname = None
-        self.firstFrame = True
-        self.movie = None
-        self.fps = fps
-        self._delay = 1.0/fps
-
-        self.frameProps = {kCGImagePropertyGIFDictionary:{kCGImagePropertyGIFDelayTime:self._delay}}
-        # self.gifProps = {kCGImagePropertyGIFDictionary:{kCGImagePropertyGIFLoopCount:0}}
-        # self.gifProps = {kCGImagePropertyGIFDictionary:{}}
-        self.gifProps = {kCGImagePropertyGIFDictionary:{kCGImagePropertyGIFHasGlobalColorMap:False}}
-        
-        
-        self.movie = CGImageDestinationCreateWithURL(
-            NSURL.fileURLWithPath_(self.fname), kUTTypeGIF,
-            frames, # number of images in this GIF
-            None
-        )
-
-    def add(self, canvas_or_context):
-        image = canvas_or_context._nsImage
-        cgFrame, dims = image.CGImageForProposedRect_context_hints_(None, NSGraphicsContext.currentContext(), None)
-        props = dict(self.frameProps)
-        props.update({kCGImagePropertyGIFImageColorMap:clut.encodeRawColorTable()})
-        CGImageDestinationAddImage(self.movie, cgFrame, props)
-
-    def save(self):
-        CGImageDestinationSetProperties(self.movie, self.gifProps)
-        if CGImageDestinationFinalize(self.movie):
-            NSLog("success")
-        else:
-            NSLog("failure")
-        self.movie = None
         
 class AVMovie(object):
 
