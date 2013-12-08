@@ -25,6 +25,10 @@
 		2A03978A184E990300F5754F /* render.py in Copy Tool */ = {isa = PBXBuildFile; fileRef = 2A039784184E980C00F5754F /* render.py */; };
 		2A1FC381185285F100AF615C /* AnimatedGif.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A1FC380185285F100AF615C /* AnimatedGif.m */; };
 		2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */; };
+		2ABBB2F818540104001C4E0A /* Animation.m in Sources */ = {isa = PBXBuildFile; fileRef = 2ABBB2F718540104001C4E0A /* Animation.m */; };
+		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
+		2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FB18540246001C4E0A /* CoreVideo.framework */; };
+		2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */; };
 		611CC49810BA8B9E00B55455 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48110BA8B9E00B55455 /* Credits.rtf */; };
 		611CC49C10BA8B9E00B55455 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48910BA8B9E00B55455 /* InfoPlist.strings */; };
 		611CC4A110BA8B9E00B55455 /* NodeBox.icns in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49310BA8B9E00B55455 /* NodeBox.icns */; };
@@ -46,7 +50,6 @@
 		611CC57A10BA8FA800B55455 /* kgp.py in Copy Python util */ = {isa = PBXBuildFile; fileRef = 611CC4D910BA8C1B00B55455 /* kgp.py */; };
 		611CC57B10BA8FA800B55455 /* ottobot.py in Copy Python util */ = {isa = PBXBuildFile; fileRef = 611CC4DA10BA8C1B00B55455 /* ottobot.py */; };
 		611CC57D10BA8FA800B55455 /* PyFontify.py in Copy Python util */ = {isa = PBXBuildFile; fileRef = 611CC4DC10BA8C1B00B55455 /* PyFontify.py */; };
-		611CC57F10BA8FA800B55455 /* QTSupport.py in Copy Python util */ = {isa = PBXBuildFile; fileRef = 611CC4DE10BA8C1B00B55455 /* QTSupport.py */; };
 		611CC58110BA8FA800B55455 /* vdiff.py in Copy Python util */ = {isa = PBXBuildFile; fileRef = 611CC4E010BA8C1B00B55455 /* vdiff.py */; };
 		611CC58310BA8FD700B55455 /* __init__.py in Copy Python graphics */ = {isa = PBXBuildFile; fileRef = 611CC4BE10BA8C1B00B55455 /* __init__.py */; };
 		611CC58410BA8FD700B55455 /* bezier.py in Copy Python graphics */ = {isa = PBXBuildFile; fileRef = 611CC4C010BA8C1B00B55455 /* bezier.py */; };
@@ -148,7 +151,6 @@
 				611CC57A10BA8FA800B55455 /* kgp.py in Copy Python util */,
 				611CC57B10BA8FA800B55455 /* ottobot.py in Copy Python util */,
 				611CC57D10BA8FA800B55455 /* PyFontify.py in Copy Python util */,
-				611CC57F10BA8FA800B55455 /* QTSupport.py in Copy Python util */,
 				611CC58110BA8FA800B55455 /* vdiff.py in Copy Python util */,
 			);
 			name = "Copy Python util";
@@ -192,6 +194,11 @@
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = ../../../../../../usr/lib/libpython2.7.dylib; sourceTree = "<group>"; };
+		2ABBB2F618540104001C4E0A /* Animation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Animation.h; sourceTree = "<group>"; };
+		2ABBB2F718540104001C4E0A /* Animation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Animation.m; sourceTree = "<group>"; };
+		2ABBB2F91854018B001C4E0A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		2ABBB2FB18540246001C4E0A /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		611CC48210BA8B9E00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = English; path = English.lproj/Credits.rtf; sourceTree = "<group>"; };
 		611CC48A10BA8B9E00B55455 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		611CC49310BA8B9E00B55455 /* NodeBox.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = NodeBox.icns; path = Resources/NodeBox.icns; sourceTree = "<group>"; };
@@ -218,7 +225,6 @@
 		611CC4D910BA8C1B00B55455 /* kgp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = kgp.py; sourceTree = "<group>"; };
 		611CC4DA10BA8C1B00B55455 /* ottobot.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ottobot.py; sourceTree = "<group>"; };
 		611CC4DC10BA8C1B00B55455 /* PyFontify.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PyFontify.py; sourceTree = "<group>"; };
-		611CC4DE10BA8C1B00B55455 /* QTSupport.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = QTSupport.py; sourceTree = "<group>"; };
 		611CC4E010BA8C1B00B55455 /* vdiff.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = vdiff.py; sourceTree = "<group>"; };
 		611CC59F10BA908C00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/NodeBoxDocument.xib; sourceTree = "<group>"; };
 		611CC5A710BA919A00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/NodeBoxPreferences.xib; sourceTree = "<group>"; };
@@ -242,6 +248,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */,
+				2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */,
+				2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */,
+				2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */,
 				8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -298,6 +307,8 @@
 				61972F2C10BAD1DC0007D375 /* macboot.py */,
 				615FA75B10BAC855000F45F9 /* DrawingPrimitives.py */,
 				2564AD2C0F5327BB00F57823 /* NodeBox_Prefix.pch */,
+				2ABBB2F618540104001C4E0A /* Animation.h */,
+				2ABBB2F718540104001C4E0A /* Animation.m */,
 				2A1FC37F185285F100AF615C /* AnimatedGif.h */,
 				2A1FC380185285F100AF615C /* AnimatedGif.m */,
 				2A37F4B0FDCFA73011CA2CEA /* main.m */,
@@ -329,6 +340,9 @@
 		2A37F4C3FDCFA73011CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */,
+				2ABBB2FB18540246001C4E0A /* CoreVideo.framework */,
+				2ABBB2F91854018B001C4E0A /* AVFoundation.framework */,
 				1058C7A6FEA54F5311CA2CBB /* Linked Frameworks */,
 				1058C7A8FEA54F5311CA2CBB /* Other Frameworks */,
 			);
@@ -398,7 +412,6 @@
 				611CC4D910BA8C1B00B55455 /* kgp.py */,
 				611CC4DA10BA8C1B00B55455 /* ottobot.py */,
 				611CC4DC10BA8C1B00B55455 /* PyFontify.py */,
-				611CC4DE10BA8C1B00B55455 /* QTSupport.py */,
 				611CC4E010BA8C1B00B55455 /* vdiff.py */,
 			);
 			path = util;
@@ -557,6 +570,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2A1FC381185285F100AF615C /* AnimatedGif.m in Sources */,
+				2ABBB2F818540104001C4E0A /* Animation.m in Sources */,
 				8D15AC320486D014006FF6A4 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

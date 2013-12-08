@@ -50,6 +50,36 @@ class OutputFile(object):
                 data = "XXX " + repr(data)
         self.data.append((self.isErr, data))
 
+class Movie(object):
+    movie = None
+
+    def __init__(self, fname, frames=60, fps=30, loop=0):
+        if os.path.exists(fname):
+            os.remove(fname)
+        basename, ext = fname.rsplit('.',1)
+        self.fname = fname
+        self.ext = ext.lower()
+        self.fps = fps
+        self.loop = loop
+
+    def add(self, canvas_or_context):
+        image = canvas_or_context._nsImage
+        if not self.movie:
+            if self.ext.lower() == 'mov':
+                self.movie = Animation.alloc().initWithFile_size_fps_(
+                   self.fname, image.size(), self.fps
+                )
+            elif self.ext.lower() == 'gif':
+                self.movie = AnimatedGif.alloc().initWithFile_size_fps_loop_(
+                   self.fname, image.size(), self.fps, self.loop
+                )
+            else:
+                raise 'unrecognized movie format: %s' % ext
+        self.movie.addFrame_(image)
+
+    def save(self):
+        self.movie.closeFile()
+
 # class defined in NodeBoxDocument.xib
 class NodeBoxDocument(NSDocument):
     graphicsView = objc.IBOutlet()
@@ -736,11 +766,6 @@ class NodeBoxDocument(NSDocument):
         self.exportMovieLoop.setState_(NSOnState if format=='gif' else NSOffState)
 
     def doExportAsMovie(self, fname, frames=60, fps=30, first=1, loop=0):
-        # Only load QTSupport when necessary. 
-        # QTSupport loads QTKit, which wants to establish a connection to the window server.
-        # If we load QTSupport before something is on screen, the connection to the window server
-        # cannot be established.
-        from nodebox.util import QTSupport
         try:
             os.unlink(fname)
         except:
@@ -761,7 +786,7 @@ class NodeBoxDocument(NSDocument):
             self._pageNumber = first
             self._frame = first
 
-            movie = QTSupport.Movie(fname, frames, fps, loop)
+            movie = Movie(fname, frames, fps, loop)
             # If the speed is set, we are dealing with animation
             if self.canvas.speed is None:
                 for i in range(frames):
