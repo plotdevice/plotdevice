@@ -2,7 +2,11 @@
 *.pyc
 build/
 dist/
-
+examples/*/*.pdf
+examples/*/*.png
+examples/*/*.jpg
+examples/*/*.gif
+examples/*/*.mov
 # Xcode user files
 project.xcworkspace
 xcuserdata
