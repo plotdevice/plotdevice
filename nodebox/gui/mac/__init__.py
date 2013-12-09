@@ -51,6 +51,10 @@ class NodeBoxAppDelegate(NSObject):
                     stdout.put("already running: %s"%opts['file'])
                     stdout.put(None)
                     break
+                if doc.export['session'] and doc.export['session'].running:
+                    stdout.put("already exporting: %s"%opts['file'])
+                    stdout.put(None)
+                    break
                 if opts['activate']:
                     NSApp.activateIgnoringOtherApps_(True)
                 doc.scriptedRun(opts)

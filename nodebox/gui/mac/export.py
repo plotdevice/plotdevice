@@ -3,107 +3,123 @@ from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
 
-class ImageExportSession(object):
-    def __init__(self, fname, pages, format, batches=[]):
-        self.pages = pages
-        self.format = format
-        self.fname = fname
-        self.batches = batches
-        self.added = 0
-        self.seq = ImageSequence.alloc().initWithFormat_pages_(format, pages)
-        self.progress = ProgressBarController.alloc().initWithCallback_(self.progress)
-        self.progress.begin("Generating %s pages..." % pages, 2 * pages)
+IMG_BATCH_SIZE = 8
+MOV_BATCH_SIZE = 40
 
-    def progress(self, cancel=False):
+class ExportSession(object):
+    running = True
+    writer = None
+    callback = None
+    added = 0
+    written = 0
+    total = 0
+
+    def __init__(self):
+        super(ExportSession, self).__init__()
+
+    def begin(self, frames=None, pages=None):
+        self.progress = ProgressBarController.alloc().initWithCallback_(self.status)
+        if frames is not None:
+            msg = "Generating %s frames..." % frames
+            self.total = frames
+        else:
+            msg = "Generating %s pages..." % pages
+            self.total = pages
+        self.progress.begin(msg, self.total)
+        
+    def status(self, cancel=False):
         if cancel:
             self.batches = []
             self._shutdown()
-        written = self.seq.pagesWritten()
-        if written == self.pages:
-            AppHelper.callLater(0.4, self._shutdown)
-        return self.added + written
+            return
+
+        if not self.writer:
+            return 0
+        self.written = self.writer.framesWritten()
+        if self.written == self.total:
+            self._complete()
+        return self.written
+
+    def _complete(self):
+        self.progress.complete()
+        AppHelper.callLater(0.2, self._shutdown)
+
+    def _shutdown(self):
+        self.running = False
+        self.progress.end()
+        if self.callback:
+            self.callback()
+            self.callback = None
+
+    def on_complete(self, cb):
+        if self.running: cb()
+        else: self.callback = cb
+
+class ImageExportSession(ExportSession):
+    def __init__(self, fname, pages, format, first=1):
+        super(ImageExportSession, self).__init__()
+        self.begin(pages=pages-first+1)
+        self.format = format
+        self.fname = fname
+        self.batches = [(n, min(n+IMG_BATCH_SIZE-1,pages)) for n in range(first, pages+1, IMG_BATCH_SIZE)]
+        self.writer = ImageSequence.alloc().init()
 
     def add(self, canvas_or_context, frame):
         basename, ext = os.path.splitext(self.fname)
         fn = "%s-%05d%s" % (basename, frame, ext)
         image = canvas_or_context._getImageData(self.format)
-        self.seq.writeData_toFile_(image, fn)
+        self.writer.writeData_toFile_(image, fn)
         self.added += 1
 
     def done(self):
         pass
 
-    def _shutdown(self):
-        self.progress.end()
-
-
-class MovieExportSession(object):
-    movie = None
-
-    def __init__(self, fname, frames=60, fps=30, loop=0, batches=[]):
+class MovieExportSession(ExportSession):
+    def __init__(self, fname, frames=60, fps=30, loop=0, first=1):
+        super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
         except:
             pass
-
+        self.begin(frames=frames-first+1)
         basename, ext = fname.rsplit('.',1)
         self.fname = fname
         self.ext = ext.lower()
         self.fps = fps
         self.loop = loop
-        self.frames = frames
-        self.batches = batches
-        self.added = 0
-        self.progress = ProgressBarController.alloc().initWithCallback_(self.progress)
-        self.progress.begin("Generating %s frames..." % frames, 2 * frames)
-
-    def progress(self, cancel=False):
-        if cancel:
-            NSLog("halt Movie Export")
-            self.batches = []
-            self._shutdown()
-        if not self.movie:
-            return 0
-        written = self.movie.framesWritten()
-        if written == self.frames:
-            AppHelper.callAfter(self._shutdown)
-        return self.added + written
+        self.batches = [(n, min(n+MOV_BATCH_SIZE-1,frames)) for n in range(first, frames+1, MOV_BATCH_SIZE)]
 
     def add(self, canvas_or_context, frame):
         image = canvas_or_context._nsImage
-        if not self.movie:
+        if not self.writer:
+            dims = image.size()
             if self.ext == 'mov':
-                self.movie = Animation.alloc().initWithFile_size_fps_(
-                   self.fname, image.size(), self.fps
-                )
+                self.writer = Animation.alloc()
+                self.writer.initWithFile_size_fps_(self.fname, dims, self.fps)
             elif self.ext == 'gif':
-                self.movie = AnimatedGif.alloc().initWithFile_size_fps_loop_(
-                   self.fname, image.size(), self.fps, self.loop
-                )
+                self.writer = AnimatedGif.alloc()
+                self.writer.initWithFile_size_fps_loop_(self.fname, dims, self.fps, self.loop)
             else:
-                raise 'unrecognized output format: %s' % ext
+                NSLog('unrecognized output format: %s' % ext)
                 self._shutdown()
-
-        self.movie.addFrame_(image)
+        self.writer.addFrame_(image)
         self.added += 1
 
     def done(self):
-        self.movie.closeFile()
+        self.writer.closeFile()
 
-    def _shutdown(self):
-        self.progress.end()
 
 class ProgressBarController(NSWindowController):
     messageField = objc.IBOutlet()
     progressBar = objc.IBOutlet()
     poll = None
-    update_fn = None
+    status_fn = None
 
     def initWithCallback_(self, cb):
         NSBundle.loadNibNamed_owner_("ProgressBarSheet", self)
         self.poll = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-                                    0.05,self,"update:",None,True)
-        self.update_fn = cb
+                                    0.25,self,"update:",None,True)
+        self.status_fn = cb
         return self
 
     def begin(self, message, maxval):
@@ -117,17 +133,25 @@ class ProgressBarController(NSWindowController):
         self.poll.fire()
 
     def update_(self, note):
-        self.step(self.update_fn())
+        self.step(self.status_fn())
 
     def step(self, toVal):
         self.value = toVal
         self.progressBar.setDoubleValue_(self.value)
 
-    def end(self):
-        self.poll.invalidate()
+    def complete(self):
+        self.progressBar.setDoubleValue_(self.maxval)
+        if self.poll:
+            self.poll.invalidate()
+            self.poll = None
+
+    def end(self, delay=0):
+        if self.poll:
+            self.poll.invalidate()
+            self.poll = None
         NSApp().endSheet_(self.window())
         self.window().orderOut_(self)
 
     @objc.IBAction
     def cancelOperation_(self, sender):
-        self.update_fn(cancel=True)
+        self.status_fn(cancel=True)

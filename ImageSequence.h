@@ -11,11 +11,9 @@
 @interface ImageSequence : NSObject{
     NSOperationQueue *queue;
 }
-@property (nonatomic, retain) NSString *format;
-@property (nonatomic, assign) NSInteger *pages;
-@property (nonatomic, assign) NSInteger pagesWritten;
+@property (nonatomic, assign) NSInteger framesWritten;
 
-- (id)initWithFormat:(NSString *)fmt pages:(NSInteger)n;
+- (id)init;
 - (void)writeData:(NSData *)img toFile:(NSString *)fname;
 - (void)_wroteFrame;
 

@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 import traceback
 import random
 import time
@@ -13,10 +14,11 @@ from nodebox.gui.mac import PyDETextView
 from nodebox.gui.mac.ValueLadder import MAGICVAR
 from nodebox.gui.mac.export import MovieExportSession, ImageExportSession
 from nodebox.gui.mac.dashboard import *
+from nodebox.gui.mac.util import errorAlert
 from nodebox import util
 from nodebox import graphics
 
-BATCH_SIZE = 20
+
 
 # class defined in NodeBoxDocument.xib
 class NodeBoxDocument(NSDocument):
@@ -51,7 +53,7 @@ class NodeBoxDocument(NSDocument):
     # file export config & state
     export = dict(formats=dict(image=('pdf', 'eps', 'png', 'tiff', 'jpg', 'gif'), movie=('mov', 'gif')),
                   movie=dict(format='mov', frames=150, fps=30, loop=0),
-                  image=dict(format='pdf', pages=1),
+                  image=dict(format='png', pages=10),
                   dir=None, session=None)
     # run/export-related state
     _meta = dict(args=[], virtualenv=None, live=False,
@@ -69,13 +71,29 @@ class NodeBoxDocument(NSDocument):
         self.context = graphics.Context(self.canvas, self.namespace)
         self.animationTimer = None
         self.fullScreen = None
-        self.currentView = self.graphicsView # almost surely nil at this point. bug?
+        self.currentView = None
         self.__doc__ = {}
         self._pageNumber = 1
         self._frame = 150
         self._seed = time.time()
         self._fileMD5 = None
         return self
+
+    def windowControllerDidLoadNib_(self, controller):
+        if self.path:
+            self.readFromUTF8(self.path)
+        font = PyDETextView.getBasicTextAttributes()[NSFontAttributeName]
+        self.outputView.setFont_(font)
+        self.textView.window().makeFirstResponder_(self.textView)
+        self.textView.window().setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
+        self.currentView = self.graphicsView
+
+        # disable system's auto-smartquotes (10.9+) in the editor pane
+        try:
+            self.textView.setAutomaticQuoteSubstitutionEnabled_(False)
+            self.textView.setEnabledTextCheckingTypes_(0)
+        except AttributeError:
+            pass
 
     def autosavesInPlace(self):
         return True
@@ -138,20 +156,6 @@ class NodeBoxDocument(NSDocument):
         f.write(text)
         f.close()
         return True
-
-    def windowControllerDidLoadNib_(self, controller):
-        if self.path:
-            self.readFromUTF8(self.path)
-        font = PyDETextView.getBasicTextAttributes()[NSFontAttributeName]
-        self.outputView.setFont_(font)
-        self.textView.window().makeFirstResponder_(self.textView)
-
-        # disable system's auto-smartquotes (10.9+) in the editor pane
-        try:
-            self.textView.setAutomaticQuoteSubstitutionEnabled_(False)
-            self.textView.setEnabledTextCheckingTypes_(0)
-        except AttributeError:
-            pass
 
     def readFromUTF8(self, path):
         with file(path) as f:
@@ -260,10 +264,6 @@ class NodeBoxDocument(NSDocument):
         self._meta = meta
         self.refresh()
 
-        # if we haven't rendered previously, currentView will still be None
-        if not self.currentView:
-            self.currentView = self.graphicsView
-
         if opts['export']:
             fn = opts['export']
             if fn.endswith('mov') or fn.endswith('gif') and opts['last']:
@@ -305,11 +305,12 @@ class NodeBoxDocument(NSDocument):
         self._runScript(compile, newSeed)
 
     def _runScript(self, compile=True, newSeed=True):
+        # execute the script
         if not self.cleanRun(self._execScript):
-            pass
-
-        # Check whether we are dealing with animation
-        if self.canvas.speed is not None:
+            # syntax error. bail out before looping
+            self._finishOutput()
+        elif self.canvas.speed is not None:
+            # Check whether we are dealing with animation
             if not self.namespace.has_key("draw"):
                 errorAlert("Not a proper NodeBox animation",
                     "NodeBox animations should have at least a draw() method.")
@@ -347,8 +348,8 @@ class NodeBoxDocument(NSDocument):
             self.fastRun(self.namespace["draw"])
 
     def doFrame(self):
-        self.fastRun(self.namespace["draw"], newSeed=True)
-        if self._frame==self._meta['last']:
+        ok = self.fastRun(self.namespace["draw"], newSeed=True)
+        if not ok or self._frame==self._meta['last']:
             self.stopScript()
         else:
             self._frame += 1
@@ -382,6 +383,8 @@ class NodeBoxDocument(NSDocument):
         self.textView.hideValueLadder()
         window = self.textView.window()
         window.makeFirstResponder_(self.textView)
+        if self.export['session']:
+            self.export['session'].status(cancel=True)
         self._finishOutput()
 
     def _compileScript(self, source=None):
@@ -465,10 +468,7 @@ class NodeBoxDocument(NSDocument):
                 self.stopScript()
             except:
                 etype, value, tb = sys.exc_info()
-                # skip the frames doing the _boxedRun and exec
-                if tb.tb_next is not None and tb.tb_next.tb_next is not None:
-                    tb = tb.tb_next.tb_next
-                traceback.print_exception(etype, value, tb)
+                tb = self._prettifyStacktrace(etype, value, tb)
                 etype = value = tb = None
                 return False, output
         finally:
@@ -479,6 +479,23 @@ class NodeBoxDocument(NSDocument):
             sys.argv = saveArgv
             #self._flushOutput()
         return True, output
+
+    def _prettifyStacktrace(self, etype, value, tb):
+        # remove the internal nodebox frames from the stacktrace
+        while tb and 'nodebox/gui' in tb.tb_frame.f_code.co_filename:
+            tb = tb.tb_next
+
+        # make filenames relative to the script's dir
+        errtxt = "".join(traceback.format_exception(etype, value, tb))
+        if self.fileName():
+            basedir = os.path.dirname(self.fileName())
+            def relativize(m):
+                abspath = m.group(2)
+                relpath = os.path.relpath(m.group(2), basedir)
+                pth = relpath if len(relpath)<len(abspath) else abspath
+                return '%sFile "%s"'%(m.group(1), pth)
+            errtxt = re.sub(r'( +)File "([^"]+)"', relativize, errtxt)
+        sys.stderr.write(errtxt)
 
     # from Mac/Tools/IDE/PyEdit.py
     def _userCancelledMonitor(self):
@@ -572,10 +589,6 @@ class NodeBoxDocument(NSDocument):
             format = panel.requiredFileType()
             panel.close()
             self.export['image'] = dict(format=format, pages=pages)
-
-            # if we haven't rendered previously, currentView will still be None
-            if not self.currentView:
-                self.currentView = self.graphicsView
             self.doExportAsImage(fname, format, pages)
     imageExportPanelDidEnd_returnCode_contextInfo_ = objc.selector(imageExportPanelDidEnd_returnCode_contextInfo_,
             signature="v@:@ii")
@@ -587,7 +600,8 @@ class NodeBoxDocument(NSDocument):
         panel.setRequiredFileType_(format)
 
     def doExportAsImage(self, fname, format, pages=1, first=1):
-        basename, ext = os.path.splitext(fname)
+        if self.animationTimer is not None:
+            self.stopScript()
         # When saving one page (the default), just save the current graphics
         # context. When generating multiple pages, we run the script again
         # (so we don't use the current displayed view) for the first page,
@@ -597,8 +611,7 @@ class NodeBoxDocument(NSDocument):
                 self.runScript()
             self.canvas.save(fname, format)
         elif pages > 1:
-            batches = [(n, min(n+BATCH_SIZE-1,pages)) for n in range(first, pages+1, BATCH_SIZE)]
-            self.export['session'] = ImageExportSession(fname, pages, format, batches=batches)
+            self.export['session'] = ImageExportSession(fname, pages, format, first=first)
 
             if not self.cleanRun(self._execScript): return
             self._pageNumber = first
@@ -621,7 +634,6 @@ class NodeBoxDocument(NSDocument):
                 for i in range(first, last+1):
                     if i > 0: # Run has already happened first time
                         self.fastRun(self._execScript, newSeed=True)
-                    self.shareThread()
                     self.export['session'].add(self.canvas, self._frame)
                     self.graphicsView.setNeedsDisplay_(True)
                     self._pageNumber += 1
@@ -630,7 +642,6 @@ class NodeBoxDocument(NSDocument):
             else:
                 for i in range(first, last+1):
                     self.fastRun(self.namespace["draw"], newSeed=True)
-                    self.shareThread()
                     self.export['session'].add(self.canvas, self._frame)
                     self.graphicsView.setNeedsDisplay_(True)
                     self._pageNumber += 1
@@ -641,6 +652,7 @@ class NodeBoxDocument(NSDocument):
             # keep running _runExportBatch until we run out of batches
             AppHelper.callLater(0.1, self._runExportBatch)
         else:
+            # clean up after script and finish any sessions
             if self.canvas.speed is not None and self.namespace.has_key("stop"):
                 # only run the stop() function in the user script is an animation
                 success, output = self._boxedRun(self.namespace["stop"])
@@ -648,7 +660,10 @@ class NodeBoxDocument(NSDocument):
             self.export['session'].done()
             self._pageNumber = 1
             self._frame = 1
-            self._finishOutput()
+            if self.export['session'].running:
+                self.export['session'].on_complete(self._finishOutput)
+            else:
+                self._finishOutput()
 
     @objc.IBAction
     def exportAsMovie_(self, sender):
@@ -702,9 +717,6 @@ class NodeBoxDocument(NSDocument):
             panel.close()
 
             if frames <= 0 or fps <= 0: return
-            # if we haven't rendered previously, currentView will still be None
-            if not self.currentView:
-                self.currentView = self.graphicsView
             self.doExportAsMovie(fname, frames, fps, loop=loop)
     moviePanelDidEnd_returnCode_contextInfo_ = objc.selector(moviePanelDidEnd_returnCode_contextInfo_,
             signature="v@:@ii")
@@ -718,11 +730,13 @@ class NodeBoxDocument(NSDocument):
         self.exportMovieLoop.setState_(NSOnState if format=='gif' else NSOffState)
 
     def doExportAsMovie(self, fname, frames=60, fps=30, first=1, loop=0):
+        if self.animationTimer is not None:
+            self.stopScript()
         if not self.cleanRun(self._execScript): return
         self._pageNumber = first
         self._frame = first
-        batches = [(n, min(n+BATCH_SIZE-1,frames)) for n in range(first, frames+1, BATCH_SIZE)]
-        self.export['session'] = MovieExportSession(fname, frames, fps, loop, batches=batches)
+        
+        self.export['session'] = MovieExportSession(fname, frames, fps, loop, first=first)
 
         if self.canvas.speed is not None and self.namespace.has_key("setup"):
             self.fastRun(self.namespace["setup"])

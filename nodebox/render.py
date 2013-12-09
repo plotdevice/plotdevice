@@ -54,6 +54,7 @@ def exec_command(opts):
       while read_and_echo(sock): pass
     except KeyboardInterrupt:
       sock.sendall('STOP\n')
+      print "\n",
       while read_and_echo(sock): pass
   finally:
     sock.close()
@@ -68,8 +69,8 @@ def main():
   parser.add_argument('--fps', metavar='N', default=30, help='frames per second in exported video (default 30)')
   parser.add_argument('--loop', metavar='N', default=0, nargs='?', const=-1, help='number of times to loop an exported animated gif (omit N to loop forever)')
   parser.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
+  parser.add_argument('--args', nargs='*', default=[], metavar='<arg ...>', help='optional arguments to be passed to the script')
   parser.add_argument('file', help='the python script to be rendered')
-  parser.add_argument('args', nargs=argparse.REMAINDER, metavar='<arg ...>', help='optional arguments to be passed to the script')
   opts = parser.parse_args()
   
   if opts.virtualenv:

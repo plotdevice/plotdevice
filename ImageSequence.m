@@ -25,14 +25,12 @@
 
 
 @implementation ImageSequence
-@synthesize format, pages, pagesWritten;
-- (id)initWithFormat:(NSString *)fmt pages:(NSInteger)n{
+@synthesize framesWritten;
+- (id)init{
 	if ((self = [super init])) {
-		self.pages = n;
-		self.format = fmt;
-		self.pagesWritten = 0;
+		self.framesWritten = 0;
 		queue = [[NSOperationQueue alloc] init];
-		queue.maxConcurrentOperationCount = 4;
+		queue.maxConcurrentOperationCount = 3;
 	}
 	return self;
 }
@@ -43,11 +41,10 @@
     iw.fname = fname;
     iw.image = img;
     [queue addOperation:iw];
-
 }
 
 - (void)_wroteFrame{
-    self.pagesWritten++;
+    self.framesWritten++;
 }
 
 - (void)dealloc{
