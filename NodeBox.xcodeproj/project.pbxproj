@@ -24,6 +24,8 @@
 /* Begin PBXBuildFile section */
 		2A03978A184E990300F5754F /* render.py in Copy Tool */ = {isa = PBXBuildFile; fileRef = 2A039784184E980C00F5754F /* render.py */; };
 		2A1FC381185285F100AF615C /* AnimatedGif.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A1FC380185285F100AF615C /* AnimatedGif.m */; };
+		2A62D14218555C980090024F /* document.py in Resources */ = {isa = PBXBuildFile; fileRef = 2A62D14118555C980090024F /* document.py */; };
+		2A62D14318555CB00090024F /* document.py in Copy Python gui.mac */ = {isa = PBXBuildFile; fileRef = 2A62D14118555C980090024F /* document.py */; };
 		2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */; };
 		2ABBB2F818540104001C4E0A /* Animation.m in Sources */ = {isa = PBXBuildFile; fileRef = 2ABBB2F718540104001C4E0A /* Animation.m */; };
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
@@ -134,6 +136,7 @@
 				611CC53510BA8E4000B55455 /* __init__.py in Copy Python gui.mac */,
 				611CC53610BA8E4000B55455 /* AskString.py in Copy Python gui.mac */,
 				611CC53710BA8E4000B55455 /* dashboard.py in Copy Python gui.mac */,
+				2A62D14318555CB00090024F /* document.py in Copy Python gui.mac */,
 				611CC53910BA8E4000B55455 /* preferences.py in Copy Python gui.mac */,
 				611CC53C10BA8E4000B55455 /* PyDETextView.py in Copy Python gui.mac */,
 				2ABBB30218544B6A001C4E0A /* export.py in Copy Python gui.mac */,
@@ -195,6 +198,7 @@
 		2A37F4B0FDCFA73011CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		2A62D14118555C980090024F /* document.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = document.py; sourceTree = "<group>"; };
 		2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = ../../../../../../usr/lib/libpython2.7.dylib; sourceTree = "<group>"; };
 		2ABBB2F618540104001C4E0A /* Animation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Animation.h; sourceTree = "<group>"; };
 		2ABBB2F718540104001C4E0A /* Animation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Animation.m; sourceTree = "<group>"; };
@@ -402,6 +406,7 @@
 				611CC4C810BA8C1B00B55455 /* __init__.py */,
 				611CC4CA10BA8C1B00B55455 /* AskString.py */,
 				611CC4CB10BA8C1B00B55455 /* dashboard.py */,
+				2A62D14118555C980090024F /* document.py */,
 				2ABBB2FF18544B39001C4E0A /* export.py */,
 				611CC4CD10BA8C1B00B55455 /* preferences.py */,
 				611CC4D010BA8C1B00B55455 /* PyDETextView.py */,
@@ -525,6 +530,7 @@
 				611CC5A010BA908C00B55455 /* NodeBoxDocument.xib in Resources */,
 				611CC5A810BA919A00B55455 /* NodeBoxPreferences.xib in Resources */,
 				611CC5AF10BA91CB00B55455 /* ProgressBarSheet.xib in Resources */,
+				2A62D14218555C980090024F /* document.py in Resources */,
 				611CC68010BAA08300B55455 /* MainMenu.xib in Resources */,
 				611CC68710BAA0A600B55455 /* AskString.xib in Resources */,
 				611CC68C10BAA0E300B55455 /* ExportImageAccessory.xib in Resources */,
