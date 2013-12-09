@@ -29,6 +29,9 @@
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
 		2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FB18540246001C4E0A /* CoreVideo.framework */; };
 		2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */; };
+		2ABBB30018544B39001C4E0A /* export.py in Resources */ = {isa = PBXBuildFile; fileRef = 2ABBB2FF18544B39001C4E0A /* export.py */; };
+		2ABBB30218544B6A001C4E0A /* export.py in Copy Python gui.mac */ = {isa = PBXBuildFile; fileRef = 2ABBB2FF18544B39001C4E0A /* export.py */; };
+		2ABBB305185483F0001C4E0A /* ImageSequence.m in Sources */ = {isa = PBXBuildFile; fileRef = 2ABBB304185483F0001C4E0A /* ImageSequence.m */; };
 		611CC49810BA8B9E00B55455 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48110BA8B9E00B55455 /* Credits.rtf */; };
 		611CC49C10BA8B9E00B55455 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48910BA8B9E00B55455 /* InfoPlist.strings */; };
 		611CC4A110BA8B9E00B55455 /* NodeBox.icns in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49310BA8B9E00B55455 /* NodeBox.icns */; };
@@ -42,7 +45,6 @@
 		611CC53610BA8E4000B55455 /* AskString.py in Copy Python gui.mac */ = {isa = PBXBuildFile; fileRef = 611CC4CA10BA8C1B00B55455 /* AskString.py */; };
 		611CC53710BA8E4000B55455 /* dashboard.py in Copy Python gui.mac */ = {isa = PBXBuildFile; fileRef = 611CC4CB10BA8C1B00B55455 /* dashboard.py */; };
 		611CC53910BA8E4000B55455 /* preferences.py in Copy Python gui.mac */ = {isa = PBXBuildFile; fileRef = 611CC4CD10BA8C1B00B55455 /* preferences.py */; };
-		611CC53A10BA8E4000B55455 /* progressbar.py in Copy Python gui.mac */ = {isa = PBXBuildFile; fileRef = 611CC4CE10BA8C1B00B55455 /* progressbar.py */; };
 		611CC53C10BA8E4000B55455 /* PyDETextView.py in Copy Python gui.mac */ = {isa = PBXBuildFile; fileRef = 611CC4D010BA8C1B00B55455 /* PyDETextView.py */; };
 		611CC53E10BA8E4000B55455 /* util.py in Copy Python gui.mac */ = {isa = PBXBuildFile; fileRef = 611CC4D210BA8C1B00B55455 /* util.py */; };
 		611CC54010BA8E4000B55455 /* ValueLadder.py in Copy Python gui.mac */ = {isa = PBXBuildFile; fileRef = 611CC4D410BA8C1B00B55455 /* ValueLadder.py */; };
@@ -133,8 +135,8 @@
 				611CC53610BA8E4000B55455 /* AskString.py in Copy Python gui.mac */,
 				611CC53710BA8E4000B55455 /* dashboard.py in Copy Python gui.mac */,
 				611CC53910BA8E4000B55455 /* preferences.py in Copy Python gui.mac */,
-				611CC53A10BA8E4000B55455 /* progressbar.py in Copy Python gui.mac */,
 				611CC53C10BA8E4000B55455 /* PyDETextView.py in Copy Python gui.mac */,
+				2ABBB30218544B6A001C4E0A /* export.py in Copy Python gui.mac */,
 				611CC53E10BA8E4000B55455 /* util.py in Copy Python gui.mac */,
 				611CC54010BA8E4000B55455 /* ValueLadder.py in Copy Python gui.mac */,
 			);
@@ -199,6 +201,9 @@
 		2ABBB2F91854018B001C4E0A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		2ABBB2FB18540246001C4E0A /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		2ABBB2FF18544B39001C4E0A /* export.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = export.py; sourceTree = "<group>"; };
+		2ABBB303185483F0001C4E0A /* ImageSequence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageSequence.h; sourceTree = "<group>"; };
+		2ABBB304185483F0001C4E0A /* ImageSequence.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageSequence.m; sourceTree = "<group>"; };
 		611CC48210BA8B9E00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = English; path = English.lproj/Credits.rtf; sourceTree = "<group>"; };
 		611CC48A10BA8B9E00B55455 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		611CC49310BA8B9E00B55455 /* NodeBox.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = NodeBox.icns; path = Resources/NodeBox.icns; sourceTree = "<group>"; };
@@ -217,7 +222,6 @@
 		611CC4CA10BA8C1B00B55455 /* AskString.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AskString.py; sourceTree = "<group>"; };
 		611CC4CB10BA8C1B00B55455 /* dashboard.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = dashboard.py; sourceTree = "<group>"; };
 		611CC4CD10BA8C1B00B55455 /* preferences.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = preferences.py; sourceTree = "<group>"; };
-		611CC4CE10BA8C1B00B55455 /* progressbar.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = progressbar.py; sourceTree = "<group>"; };
 		611CC4D010BA8C1B00B55455 /* PyDETextView.py */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = text.script.python; path = PyDETextView.py; sourceTree = "<group>"; tabWidth = 4; usesTabs = 0; };
 		611CC4D210BA8C1B00B55455 /* util.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = util.py; sourceTree = "<group>"; };
 		611CC4D410BA8C1B00B55455 /* ValueLadder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ValueLadder.py; sourceTree = "<group>"; };
@@ -312,6 +316,8 @@
 				2A1FC37F185285F100AF615C /* AnimatedGif.h */,
 				2A1FC380185285F100AF615C /* AnimatedGif.m */,
 				2A37F4B0FDCFA73011CA2CEA /* main.m */,
+				2ABBB303185483F0001C4E0A /* ImageSequence.h */,
+				2ABBB304185483F0001C4E0A /* ImageSequence.m */,
 			);
 			name = "Other Sources";
 			sourceTree = "<group>";
@@ -396,8 +402,8 @@
 				611CC4C810BA8C1B00B55455 /* __init__.py */,
 				611CC4CA10BA8C1B00B55455 /* AskString.py */,
 				611CC4CB10BA8C1B00B55455 /* dashboard.py */,
+				2ABBB2FF18544B39001C4E0A /* export.py */,
 				611CC4CD10BA8C1B00B55455 /* preferences.py */,
-				611CC4CE10BA8C1B00B55455 /* progressbar.py */,
 				611CC4D010BA8C1B00B55455 /* PyDETextView.py */,
 				611CC4D210BA8C1B00B55455 /* util.py */,
 				611CC4D410BA8C1B00B55455 /* ValueLadder.py */,
@@ -526,6 +532,7 @@
 				615FA75C10BAC855000F45F9 /* DrawingPrimitives.py in Resources */,
 				61972F2D10BAD1DC0007D375 /* macboot.py in Resources */,
 				6155D9F413E2B79E00675A92 /* CHANGES.md in Resources */,
+				2ABBB30018544B39001C4E0A /* export.py in Resources */,
 				6155D9F513E2B79E00675A92 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -571,6 +578,7 @@
 			files = (
 				2A1FC381185285F100AF615C /* AnimatedGif.m in Sources */,
 				2ABBB2F818540104001C4E0A /* Animation.m in Sources */,
+				2ABBB305185483F0001C4E0A /* ImageSequence.m in Sources */,
 				8D15AC320486D014006FF6A4 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -28,11 +28,14 @@ typedef struct {
     NSFileHandle *fileHandle;
     NSString *filePath;
     double frameRate;
+    NSOperationQueue *frames;
 }
+@property (nonatomic, assign) NSInteger framesWritten;
 
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps loop:(NSInteger)count;
 - (void)addFrame:(NSData *)gifData;
 - (void)closeFile;
-- (GifMap)_getOffsets:(NSData *)imRep; // find data regions within a candidate frame
+// - (GifMap)_getOffsets:(NSData *)imRep; // find data regions within a candidate frame
+- (void)_wroteFrame;
 
 @end

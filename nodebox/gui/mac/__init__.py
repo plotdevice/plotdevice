@@ -16,6 +16,7 @@ from hashlib import md5
 
 from nodebox.gui.mac.ValueLadder import MAGICVAR
 from nodebox.gui.mac import PyDETextView
+from nodebox.gui.mac.export import MovieExportSession, ImageExportSession
 from nodebox.gui.mac.util import errorAlert
 from nodebox import util
 from nodebox import graphics
@@ -28,9 +29,9 @@ VERY_LIGHT_GRAY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.95, N
 DARKER_GRAY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.8, NSColor.whiteColor())
 
 RPC_PORT = 9000
+BATCH_SIZE = 20
 
 from nodebox.gui.mac.dashboard import *
-from nodebox.gui.mac.progressbar import ProgressBarController
 objc.setVerbose(1)
 
 class ExportCommand(NSScriptCommand):
@@ -50,35 +51,6 @@ class OutputFile(object):
                 data = "XXX " + repr(data)
         self.data.append((self.isErr, data))
 
-class Movie(object):
-    movie = None
-
-    def __init__(self, fname, frames=60, fps=30, loop=0):
-        if os.path.exists(fname):
-            os.remove(fname)
-        basename, ext = fname.rsplit('.',1)
-        self.fname = fname
-        self.ext = ext.lower()
-        self.fps = fps
-        self.loop = loop
-
-    def add(self, canvas_or_context):
-        image = canvas_or_context._nsImage
-        if not self.movie:
-            if self.ext.lower() == 'mov':
-                self.movie = Animation.alloc().initWithFile_size_fps_(
-                   self.fname, image.size(), self.fps
-                )
-            elif self.ext.lower() == 'gif':
-                self.movie = AnimatedGif.alloc().initWithFile_size_fps_loop_(
-                   self.fname, image.size(), self.fps, self.loop
-                )
-            else:
-                raise 'unrecognized movie format: %s' % ext
-        self.movie.addFrame_(image)
-
-    def save(self):
-        self.movie.closeFile()
 
 # class defined in NodeBoxDocument.xib
 class NodeBoxDocument(NSDocument):
@@ -114,7 +86,6 @@ class NodeBoxDocument(NSDocument):
     magicvar = None # Used for value ladders.
     _code = None
     vars = []
-    movie = None
 
     def windowNibName(self):
         return "NodeBoxDocument"
@@ -328,7 +299,6 @@ class NodeBoxDocument(NSDocument):
         if opts['export']:
             fn = opts['export']
             if fn.endswith('mov') or fn.endswith('gif') and opts['last']:
-            # if fn.endswith('mov'):
                 self.doExportAsMovie(fn, fps=opts['fps'], 
                                          frames=opts['last'], 
                                          first=opts['first'],
@@ -594,20 +564,7 @@ class NodeBoxDocument(NSDocument):
 
     @objc.IBAction
     def exportAsImage_(self, sender):
-        exportPanel = NSSavePanel.savePanel()
-
-        # set defaults
-        format_idx = self.export['formats']['image'].index(self.export['image']['format'])
-        exportPanel.setNameFieldLabel_("Export To:")
-        exportPanel.setPrompt_("Export")
-        exportPanel.setCanSelectHiddenExtension_(True)
-        if not NSBundle.loadNibNamed_owner_("ExportImageAccessory", self):
-            NSLog("Error -- could not load ExportImageAccessory.")
-        self.exportImagePageCount.setIntValue_(self.export['image']['pages'])
-        self.exportImageFormat.selectItemAtIndex_(format_idx)
-        exportPanel.setRequiredFileType_(self.export['image']['format'])
-        exportPanel.setAccessoryView_(self.exportImageAccessory)
-
+        exportPanel = self.imageExportPanel()
         path = self.fileName()
         if path:
             dirName, fileName = os.path.split(path)
@@ -621,9 +578,25 @@ class NodeBoxDocument(NSDocument):
 
         exportPanel.beginSheetForDirectory_file_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
             dirName, fileName, NSApp().mainWindow(), self,
-            "exportPanelDidEnd:returnCode:contextInfo:", 0)
+            "imageExportPanelDidEnd:returnCode:contextInfo:", 0)
 
-    def exportPanelDidEnd_returnCode_contextInfo_(self, panel, returnCode, context):
+    def imageExportPanel(self):
+        exportPanel = NSSavePanel.savePanel()
+
+        # set defaults
+        format_idx = self.export['formats']['image'].index(self.export['image']['format'])
+        exportPanel.setNameFieldLabel_("Export To:")
+        exportPanel.setPrompt_("Export")
+        exportPanel.setCanSelectHiddenExtension_(True)
+        if not NSBundle.loadNibNamed_owner_("ExportImageAccessory", self):
+            NSLog("Error -- could not load ExportImageAccessory.")
+        self.exportImagePageCount.setIntValue_(self.export['image']['pages'])
+        self.exportImageFormat.selectItemAtIndex_(format_idx)
+        exportPanel.setRequiredFileType_(self.export['image']['format'])
+        exportPanel.setAccessoryView_(self.exportImageAccessory)
+        return exportPanel
+
+    def imageExportPanelDidEnd_returnCode_contextInfo_(self, panel, returnCode, context):
         if returnCode:
             fname = panel.filename()
             self.export['dir'] = os.path.split(fname)[0] # Save the directory we exported to.
@@ -636,7 +609,7 @@ class NodeBoxDocument(NSDocument):
             if not self.currentView:
                 self.currentView = self.graphicsView
             self.doExportAsImage(fname, format, pages)
-    exportPanelDidEnd_returnCode_contextInfo_ = objc.selector(exportPanelDidEnd_returnCode_contextInfo_,
+    imageExportPanelDidEnd_returnCode_contextInfo_ = objc.selector(imageExportPanelDidEnd_returnCode_contextInfo_,
             signature="v@:@ii")
             
     @objc.IBAction
@@ -656,53 +629,78 @@ class NodeBoxDocument(NSDocument):
                 self.runScript()
             self.canvas.save(fname, format)
         elif pages > 1:
-            pb = ProgressBarController.alloc().init()
-            pb.begin("Generating %s images..." % pages, pages)
-            try:
-                if not self.cleanRun(self._execScript): return
-                self._pageNumber = first
-                self._frame = first
+            batches = [(n, min(n+BATCH_SIZE-1,pages)) for n in range(first, pages+1, BATCH_SIZE)]
+            self.export['session'] = ImageExportSession(fname, pages, format, batches=batches)
 
-                # If the speed is set, we are dealing with animation
-                if self.canvas.speed is None:
-                    for i in range(pages):
-                        if i > 0: # Run has already happened first time
-                            self.fastRun(self._execScript, newSeed=True)
-                        counterAsString = "-%5d" % self._pageNumber
-                        counterAsString = counterAsString.replace(' ', '0')
-                        exportName = basename + counterAsString + ext
+            if not self.cleanRun(self._execScript): return
+            self._pageNumber = first
+            self._frame = first
 
-                        self.canvas.save(exportName, format)
-                        self.graphicsView.setNeedsDisplay_(True)
-                        self._pageNumber += 1
-                        self._frame += 1
-                        pb.inc()
-                else:
-                    if self.namespace.has_key("setup"):
-                        self.fastRun(self.namespace["setup"])
-                    for i in range(pages):
-                        self.fastRun(self.namespace["draw"], newSeed=True)
-                        counterAsString = "-%5d" % self._pageNumber
-                        counterAsString = counterAsString.replace(' ', '0')
-                        exportName = basename + counterAsString + ext
-                        self.canvas.save(exportName, format)
-                        self.graphicsView.setNeedsDisplay_(True)
-                        self._pageNumber += 1
-                        self._frame += 1
-                        pb.inc()
-                    if self.namespace.has_key("stop"):
-                        success, output = self._boxedRun(self.namespace["stop"])
-                        self._flushOutput(output)
-            except KeyboardInterrupt:
-                pass
-            pb.end()
-            del pb
-        self._pageNumber = 1
-        self._frame = 1
-        self._finishOutput()
+            # # If the speed is set, we are dealing with animation
+            if self.canvas.speed is not None and self.namespace.has_key("setup"):
+                if self.namespace.has_key("setup"):
+                    self.fastRun(self.namespace["setup"])
+            AppHelper.callAfter(self._runExportBatch)
+
+    def _runExportBatch(self):
+        if self.export['session'].batches:
+            first, last = self.export['session'].batches.pop(0)
+            self._pageNumber = first
+            self._frame = first
+
+            # If the speed is set, we are dealing with animation
+            if self.canvas.speed is None:
+                for i in range(first, last+1):
+                    if i > 0: # Run has already happened first time
+                        self.fastRun(self._execScript, newSeed=True)
+                    self.shareThread()
+                    self.export['session'].add(self.canvas, self._frame)
+                    self.graphicsView.setNeedsDisplay_(True)
+                    self._pageNumber += 1
+                    self._frame += 1
+                    self.shareThread()
+            else:
+                for i in range(first, last+1):
+                    self.fastRun(self.namespace["draw"], newSeed=True)
+                    self.shareThread()
+                    self.export['session'].add(self.canvas, self._frame)
+                    self.graphicsView.setNeedsDisplay_(True)
+                    self._pageNumber += 1
+                    self._frame += 1
+                    self.shareThread()
+
+        if self.export['session'].batches:
+            # keep running _runExportBatch until we run out of batches
+            AppHelper.callLater(0.1, self._runExportBatch)
+        else:
+            if self.canvas.speed is not None and self.namespace.has_key("stop"):
+                # only run the stop() function in the user script is an animation
+                success, output = self._boxedRun(self.namespace["stop"])
+                self._flushOutput(output)
+            self.export['session'].done()
+            self._pageNumber = 1
+            self._frame = 1
+            self._finishOutput()
 
     @objc.IBAction
     def exportAsMovie_(self, sender):
+        exportPanel = self.movieExportPanel()
+        path = self.fileName()
+        if path:
+            dirName, fileName = os.path.split(path)
+            fileName, ext = os.path.splitext(fileName)
+            fileName += "." + self.export['movie']['format']
+        else:
+            dirName, fileName = None, "Untitled.%s" % self.export['movie']['format']
+        # If a file was already exported, use that folder as the default.
+        if self.export['dir'] is not None:
+            dirName = self.export['dir']
+
+        exportPanel.beginSheetForDirectory_file_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            dirName, fileName, NSApp().mainWindow(), self,
+            "moviePanelDidEnd:returnCode:contextInfo:", 0)
+
+    def movieExportPanel(self):
         exportPanel = NSSavePanel.savePanel()
 
         # set defaults
@@ -721,23 +719,9 @@ class NodeBoxDocument(NSDocument):
         exportPanel.setRequiredFileType_(self.export['movie']['format'])
         self.exportMovieLoop.setEnabled_(self.export['movie']['format']=='gif')
         self.exportMovieLoop.setState_(NSOnState if should_loop else NSOffState)
+        return exportPanel
 
-        path = self.fileName()
-        if path:
-            dirName, fileName = os.path.split(path)
-            fileName, ext = os.path.splitext(fileName)
-            fileName += "." + self.export['movie']['format']
-        else:
-            dirName, fileName = None, "Untitled.%s" % self.export['movie']['format']
-        # If a file was already exported, use that folder as the default.
-        if self.export['dir'] is not None:
-            dirName = self.export['dir']
-
-        exportPanel.beginSheetForDirectory_file_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
-            dirName, fileName, NSApp().mainWindow(), self,
-            "qtPanelDidEnd:returnCode:contextInfo:", 0)
-                
-    def qtPanelDidEnd_returnCode_contextInfo_(self, panel, returnCode, context):
+    def moviePanelDidEnd_returnCode_contextInfo_(self, panel, returnCode, context):
         if returnCode:
             fname = panel.filename()
             self.export['dir'] = os.path.split(fname)[0] # Save the directory we exported to.
@@ -754,7 +738,7 @@ class NodeBoxDocument(NSDocument):
             if not self.currentView:
                 self.currentView = self.graphicsView
             self.doExportAsMovie(fname, frames, fps, loop=loop)
-    qtPanelDidEnd_returnCode_contextInfo_ = objc.selector(qtPanelDidEnd_returnCode_contextInfo_,
+    moviePanelDidEnd_returnCode_contextInfo_ = objc.selector(moviePanelDidEnd_returnCode_contextInfo_,
             signature="v@:@ii")
 
     @objc.IBAction
@@ -766,58 +750,21 @@ class NodeBoxDocument(NSDocument):
         self.exportMovieLoop.setState_(NSOnState if format=='gif' else NSOffState)
 
     def doExportAsMovie(self, fname, frames=60, fps=30, first=1, loop=0):
-        try:
-            os.unlink(fname)
-        except:
-            pass
-        try:
-            fp = open(fname, 'w')
-            fp.close()
-        except:
-            errorAlert("File Error", "Could not create file '%s'. Perhaps it is locked or busy." % fname)
-            return
+        if not self.cleanRun(self._execScript): return
+        self._pageNumber = first
+        self._frame = first
+        batches = [(n, min(n+BATCH_SIZE-1,frames)) for n in range(first, frames+1, BATCH_SIZE)]
+        self.export['session'] = MovieExportSession(fname, frames, fps, loop, batches=batches)
 
-        movie = None
+        if self.canvas.speed is not None and self.namespace.has_key("setup"):
+            self.fastRun(self.namespace["setup"])
+            self.shareThread()
+        AppHelper.callAfter(self._runExportBatch)
 
-        pb = ProgressBarController.alloc().init()
-        pb.begin("Generating %s frames..." % frames, frames)
-        try:
-            if not self.cleanRun(self._execScript): return
-            self._pageNumber = first
-            self._frame = first
-
-            movie = Movie(fname, frames, fps, loop)
-            # If the speed is set, we are dealing with animation
-            if self.canvas.speed is None:
-                for i in range(frames):
-                    if i > 0: # Run has already happened first time
-                        self.fastRun(self._execScript, newSeed=True)
-                    movie.add(self.canvas)
-                    self.graphicsView.setNeedsDisplay_(True)
-                    pb.inc()
-                    self._pageNumber += 1
-                    self._frame += 1
-            else:
-                if self.namespace.has_key("setup"):
-                    self.fastRun(self.namespace["setup"])
-                for i in range(frames):
-                    self.fastRun(self.namespace["draw"], newSeed=True)
-                    movie.add(self.canvas)
-                    self.graphicsView.setNeedsDisplay_(True)
-                    pb.inc()
-                    self._pageNumber += 1
-                    self._frame += 1
-                if self.namespace.has_key("stop"):
-                    success, output = self._boxedRun(self.namespace["stop"])
-                    self._flushOutput(output)
-        except KeyboardInterrupt:
-            pass
-        pb.end()
-        del pb
-        movie.save()
-        self._pageNumber = 1
-        self._frame = 1
-        self._finishOutput()
+    def shareThread(self):
+        # give the runloop a chance to collect events (rather than just beachballing)
+        date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
+        NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
 
     @objc.IBAction
     def printDocument_(self, sender):

@@ -16,12 +16,15 @@
     AVAssetWriterInputPixelBufferAdaptor *adaptor;
     NSInteger frameRate;
     NSInteger frameCount;
+    NSOperationQueue *frames;
 }
+@property (nonatomic, assign) NSInteger framesWritten;
 
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps;
 - (void)addFrame:(NSImage *)frame;
 - (void)closeFile;
-- (CVPixelBufferRef)_pixelBufferFromNSImage:(NSImage *)image;
+
+- (void)_wroteFrame;
 
 @end
 
