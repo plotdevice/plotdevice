@@ -101,12 +101,17 @@
         frames = [[NSOperationQueue alloc] init];
         frames.maxConcurrentOperationCount = 1;
 
-        
+
         videoWriter = [[AVAssetWriter alloc] initWithURL: [NSURL fileURLWithPath:fileName] fileType:AVFileTypeQuickTimeMovie error:&error];
         NSParameterAssert(videoWriter);
+        
         NSDictionary *videoSettings = @{ AVVideoCodecKey: AVVideoCodecH264,
-                                         AVVideoWidthKey: [NSNumber numberWithInt:aSize.width],
-                                         AVVideoHeightKey: [NSNumber numberWithInt:aSize.height] };
+                                         AVVideoWidthKey: @(aSize.width),
+                                         AVVideoCompressionPropertiesKey: @{
+                                             // AVVideoAverageBitRateKey
+                                             // AVVideoMaxKeyFrameIntervalKey: @1
+                                         },
+                                         AVVideoHeightKey: [NSNumber numberWithInt:aSize.height]};
         videoWriterInput = [[AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo
                                                                outputSettings:videoSettings] retain];
         
