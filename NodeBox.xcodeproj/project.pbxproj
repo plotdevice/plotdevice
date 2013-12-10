@@ -573,7 +573,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Remove the distribution folder\nrm -rf dist\n# Make a new one\nmkdir -p dist/NodeBox/NodeBox\ncd dist/NodeBox/NodeBox\n# Copy the current NodeBox application.\ncp -R -p $TARGET_BUILD_DIR/* .\n# Copy changes and readme\ncp ../../../CHANGES.md Changes.txt\ncp ../../../README.md Readme.txt\n# Copy examples\ncp -R ../../../examples Examples\n# Remove all .svn cruft\nrm -rf `find . -type d -name .svn`\n# Make DMG\ncd ../..\nhdiutil create NodeBox.dmg -srcfolder NodeBox\nhdiutil internet-enable NodeBox.dmg";
+			shellScript = "# Remove the distribution folder\nrm -rf dist\n# Make a new one\nmkdir -p dist/NodeBox/NodeBox\ncd dist/NodeBox/NodeBox\n# Copy the current NodeBox application.\ncp -R -p $TARGET_BUILD_DIR/* .\n# Copy changes and readme\ncp ../../../CHANGES.md Changes.txt\ncp ../../../README.md Readme.txt\n# Copy examples\ncp -R ../../../examples Examples\nchmod 644 Examples/*/*\nchflags uchg Examples/*/*.py\n# Remove all .svn cruft\nrm -rf `find . -type d -name .svn`\n# Make DMG\ncd ../..\nhdiutil create NodeBox.dmg -srcfolder NodeBox\nhdiutil internet-enable NodeBox.dmg";
 		};
 /* End PBXShellScriptBuildPhase section */
 
