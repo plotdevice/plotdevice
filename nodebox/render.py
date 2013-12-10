@@ -8,12 +8,6 @@ Run nodebox scripts from the command line
 
 import sys
 import os
-from pdb import set_trace as tron
-from collections import defaultdict as ddict
-py_root = os.path.dirname(os.path.abspath(__file__))
-_mkdir = lambda pth: os.path.exists(pth) or os.makedirs(pth)
-from pprint import pprint
-
 import argparse
 import xmlrpclib
 import socket
@@ -22,27 +16,22 @@ from time import sleep
 
 PORT = 9000
 
-def connect(retry=12):
+def connect(retry=12, delay=0):
+  if delay:
+    sleep(delay)
   sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   try:
     sock.connect(("localhost", PORT))
   except socket.error, e:
     if not retry:
       return None
-    sleep(.2)
-    return connect(retry-1)
+    return connect(retry-1, delay=.2)
   return sock
-
-def read_and_echo(sock):
-  response = sock.recv(80)
-  if response:
-    print response,
-  return response
 
 def exec_command(opts):  
   sock = connect(0)
   if not sock:
-    os.system('open -a NodeBox "%s"'%opts.file)
+    os.system('open -a "%s" "%s"'%(app_name(), opts.file))
     sock = connect()
   if not sock:
     print "Couldn't connect to the NodeBox application"
@@ -59,18 +48,38 @@ def exec_command(opts):
   finally:
     sock.close()
 
+def app_name():
+  parent = os.path.dirname(__file__)
+  if os.path.islink(__file__):
+    parent = os.path.dirname(os.path.realpath(__file__))
+  if parent.endswith('NodeBox.app/Contents/SharedSupport/bin'):
+    return os.path.abspath('%s/../../..'%parent)
+  return 'NodeBox.app'
+
+def read_and_echo(sock):
+  response = sock.recv(80)
+  if response:
+    print response,
+  return response
+
 def main():
-  parser = argparse.ArgumentParser(description='Run python scripts in NodeBox.app')
-  parser.add_argument('-f', dest='fullscreen', action='store_const', const=True, default=False, help='run full-screen')
-  parser.add_argument('-b', dest='activate', action='store_const', const=False, default=True, help='run NodeBox in the background')
-  parser.add_argument('--virtualenv', metavar='PATH', help='path to virtualenv whose libraries you want to use')
-  parser.add_argument('--export', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, gif, or mov')
-  parser.add_argument('--frames', metavar='N or M-N', help='number of frames to render or a range specifying the first and last frames (default "1-")')
-  parser.add_argument('--fps', metavar='N', default=30, help='frames per second in exported video (default 30)')
-  parser.add_argument('--loop', metavar='N', default=0, nargs='?', const=-1, help='number of times to loop an exported animated gif (omit N to loop forever)')
-  parser.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
-  parser.add_argument('--args', nargs='*', default=[], metavar='<arg ...>', help='optional arguments to be passed to the script')
-  parser.add_argument('file', help='the python script to be rendered')
+  parser = argparse.ArgumentParser(description='Run python scripts in NodeBox.app', add_help=False)
+  o = parser.add_argument_group("Options", None)
+  o.add_argument('-h','--help', dest='helpscreen', action='store_const', const=True, default=False, help='show this help message and exit')
+  o.add_argument('-f', dest='fullscreen', action='store_const', const=True, default=False, help='run full-screen')
+  o.add_argument('-b', dest='activate', action='store_const', const=False, default=True, help='run NodeBox in the background')
+  o.add_argument('--virtualenv', metavar='PATH', help='path to virtualenv whose libraries you want to use (this should point to the top-level virtualenv directory; a folder containing a lib/python2.7/site-packages subdirectory)')
+  o.add_argument('--export', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, gif, or mov')
+  o.add_argument('--frames', metavar='N or M-N', help='number of frames to render or a range specifying the first and last frames (default "1-")')
+  o.add_argument('--fps', metavar='N', default=30, help='frames per second in exported video (default 30)')
+  o.add_argument('--loop', metavar='N', default=0, nargs='?', const=-1, help='number of times to loop an exported animated gif (omit N to loop forever)')
+  o.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
+  o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='remainder of command line will be passed to the script as sys.argv')
+  i = parser.add_argument_group("NodeBox Script File", None)
+  i.add_argument('file', help='the python script to be rendered')
+  parser.print_help()
+  # print dir(parser)
+  sys.exit(0)  
   opts = parser.parse_args()
   
   if opts.virtualenv:
