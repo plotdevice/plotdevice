@@ -43,7 +43,7 @@
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxY="YES"/>
                                             <subviews>
                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="dEo-Ua-AoG">
-                                                    <rect key="frame" x="140" y="6" width="38" height="11"/>
+                                                    <rect key="frame" x="140" y="5" width="38" height="11"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                                                     <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Zoom" id="ANS-OM-9B6">
                                                         <font key="font" metaFont="miniSystem"/>
@@ -52,11 +52,11 @@
                                                     </textFieldCell>
                                                 </textField>
                                                 <progressIndicator toolTip="The script is running." horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="276">
-                                                    <rect key="frame" x="1" y="2" width="16" height="16"/>
+                                                    <rect key="frame" x="3" y="3" width="16" height="16"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                 </progressIndicator>
                                                 <slider toolTip="Sets the zoom level." verticalHuggingPriority="750" id="257">
-                                                    <rect key="frame" x="175" y="5" width="124" height="12"/>
+                                                    <rect key="frame" x="175" y="4" width="124" height="12"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES"/>
                                                     <sliderCell key="cell" controlSize="mini" continuous="YES" alignment="left" minValue="1" maxValue="1000" doubleValue="100" tickMarkPosition="above" sliderType="linear" id="284">
                                                         <font key="font" size="12" name="Helvetica"/>
@@ -66,7 +66,7 @@
                                                     </connections>
                                                 </slider>
                                                 <button toolTip="Zoom to actual size." id="273">
-                                                    <rect key="frame" x="295" y="4" width="37" height="15"/>
+                                                    <rect key="frame" x="295" y="3" width="37" height="15"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES"/>
                                                     <buttonCell key="cell" type="smallSquare" title="100%" bezelStyle="smallSquare" alignment="right" controlSize="mini" inset="2" id="287">
                                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -107,7 +107,7 @@
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
                                             <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="Gog-0j-9A9">
-                                                <rect key="frame" x="315" y="1" width="16" height="462"/>
+                                                <rect key="frame" x="316" y="1" width="15" height="462"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
                                         </scrollView>
@@ -152,7 +152,7 @@
                                             <rect key="frame" x="1" y="1" width="379" height="110"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
-                                                <textView importsGraphics="NO" richText="NO" findStyle="panel" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" smartInsertDelete="YES" id="31">
+                                                <textView editable="NO" importsGraphics="NO" richText="NO" findStyle="panel" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" smartInsertDelete="YES" id="31" customClass="OutputTextView">
                                                     <rect key="frame" x="0.0" y="0.0" width="379" height="110"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>

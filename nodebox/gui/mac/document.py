@@ -188,7 +188,7 @@ class NodeBoxDocument(NSDocument):
 
         # Compile the script
         success, output = self._boxedRun(self._compileScript)
-        self._truncateOutput()
+        self.outputView.clear(timestamp=True)
         self._flushOutput(output)
         if not success:
             return False
@@ -511,9 +511,6 @@ class NodeBoxDocument(NSDocument):
                 break
             time.sleep(0.25)
 
-    def _truncateOutput(self):
-        self.outputView.setString_("")
-
     def _flushOutput(self, output):
         outAttrs = PyDETextView.getBasicTextAttributes()
         errAttrs = outAttrs.copy()
@@ -522,13 +519,8 @@ class NodeBoxDocument(NSDocument):
 
         outputView = self.outputView
         outputView.setSelectedRange_((outputView.textStorage().length(), 0))
-        lastErr = None
         for isErr, data in output:
-            if isErr != lastErr:
-                attrs = [outAttrs, errAttrs][isErr]
-                outputView.setTypingAttributes_(attrs)
-                lastErr = isErr
-            outputView.insertText_(data)
+            outputView.append(data, stream='err' if isErr else 'message')
             if self._meta['stdout']:
                 self._meta['stdout'].put(data.encode('utf8'))
 

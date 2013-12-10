@@ -678,6 +678,26 @@ class LineTracker(object):
     def numberOfLines(self):
         return len(self.lines)
 
+
+class OutputTextView(NSTextView):
+
+    def awakeFromNib(self):
+        self.ts = self.textStorage()
+        self.txt_attrs = dict((t, getBasicTextAttributes().copy()) for t in ['err','message','info'])
+        self.txt_attrs['err'][NSForegroundColorAttributeName] = NSColor.redColor()
+        self.txt_attrs['info'][NSForegroundColorAttributeName] = NSColor.blackColor().colorWithAlphaComponent_(0.5)
+
+    def append(self, txt, stream='message'):
+        atxt = NSAttributedString.alloc().initWithString_attributes_(txt, self.txt_attrs[stream])
+        self.ts.replaceCharactersInRange_withAttributedString_((self.ts.length(),0), atxt)
+
+    def clear(self, timestamp=False):
+        self.ts.replaceCharactersInRange_withString_((0,self.ts.length()), "")
+        if timestamp:
+            locale = NSUserDefaults.standardUserDefaults().dictionaryRepresentation()
+            timestamp = NSDate.date().descriptionWithCalendarFormat_timeZone_locale_("%Y-%m-%d %H:%M:%S", None, locale)
+            self.append(timestamp+"\n", 'info')
+
 _basicFont = NSFont.userFixedPitchFontOfSize_(11)
 
 _BASICATTRS = {NSFontAttributeName: _basicFont,
