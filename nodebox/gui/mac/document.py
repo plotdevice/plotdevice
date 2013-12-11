@@ -84,9 +84,19 @@ class NodeBoxDocument(NSDocument):
             self.readFromUTF8(self.path)
         font = PyDETextView.getBasicTextAttributes()[NSFontAttributeName]
         self.outputView.setFont_(font)
-        self.textView.window().makeFirstResponder_(self.textView)
-        self.textView.window().setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
+        win = self.textView.window()
+        win.setRestorable_(True)
+        win.setIdentifier_("nodebox-doc")
+        win.makeFirstResponder_(self.textView)
+        win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
         self.currentView = self.graphicsView
+
+        # would like to set:
+        #   win.setRestorationClass_(objc.lookUpClass('NodeBoxDocument'))
+        # but the built-in pyobjc can't deal with the block arg in:
+        #   restoreDocumentWindowWithIdentifier_state_completionHandler_
+        # which we'd need to implement for restoration to work. try
+        # again in 10.9.x?
 
         # disable system's auto-smartquotes (10.9+) in the editor pane
         try:
@@ -336,6 +346,7 @@ class NodeBoxDocument(NSDocument):
             self.animationSpinner.startAnimation_(None)
         else:
             self._finishOutput()
+            self.textView.window().makeFirstResponder_(self.textView)
 
     def runScriptFast(self):
         if self.animationTimer is None:
@@ -386,6 +397,7 @@ class NodeBoxDocument(NSDocument):
         if self.export['session']:
             self.export['session'].status(cancel=True)
         self._finishOutput()
+        window.makeFirstResponder_(self.textView)
 
     def _compileScript(self, source=None):
         if source is None:
