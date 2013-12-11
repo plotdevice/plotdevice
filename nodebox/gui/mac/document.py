@@ -55,6 +55,7 @@ class NodeBoxDocument(NSDocument):
     _meta = dict(args=[], virtualenv=None, live=False,
                  export=None, first=1, last=None, stdout=None )    
 
+    _ca_layer = None # only present if `subpixel antialiasing' pref is turned off
     magicvar = None # Used for value ladders.
     _code = None
     vars = []
@@ -89,6 +90,15 @@ class NodeBoxDocument(NSDocument):
         win.makeFirstResponder_(self.textView)
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
         self.currentView = self.graphicsView
+
+        # this makes drawing more efficient but at the cost of disabling
+        # subpixel antialiasing:
+        if get_default('use-ca-layer'):
+            self.graphicsView.setWantsLayer_(True)
+            self._ca_layer = self.graphicsView.layer()
+            NSLog("layer backed")
+        else:
+            NSLog("quartz backed")
 
         # would like to set:
         #   win.setRestorationClass_(NodeBoxDocument)
