@@ -5,11 +5,15 @@ from PyDETextView import setTextFont, setBasicTextAttributes, setSyntaxTextAttri
 
 # class defined in NodeBoxPreferences.xib
 class NodeBoxPreferencesController(NSWindowController):
-    commentsColorWell = objc.IBOutlet()
     fontPreview = objc.IBOutlet()
+    commentsColorWell = objc.IBOutlet()
     funcClassColorWell = objc.IBOutlet()
     keywordsColorWell = objc.IBOutlet()
     stringsColorWell = objc.IBOutlet()
+    plainColorWell = objc.IBOutlet()
+    errColorWell = objc.IBOutlet()
+    pageColorWell = objc.IBOutlet()
+    selectionColorWell = objc.IBOutlet()
 
     def init(self):
         self = self.initWithWindowNibName_("NodeBoxPreferences")
@@ -24,9 +28,15 @@ class NodeBoxPreferencesController(NSWindowController):
         self.keywordsColorWell.setColor_(syntaxAttrs["keyword"][NSForegroundColorAttributeName])
         self.funcClassColorWell.setColor_(syntaxAttrs["identifier"][NSForegroundColorAttributeName])
         self.commentsColorWell.setColor_(syntaxAttrs["comment"][NSForegroundColorAttributeName])
+        self.plainColorWell.setColor_(syntaxAttrs["plain"][NSForegroundColorAttributeName])
+        self.errColorWell.setColor_(syntaxAttrs["err"][NSForegroundColorAttributeName])
+        self.pageColorWell.setColor_(syntaxAttrs["page"][NSBackgroundColorAttributeName])
+        self.selectionColorWell.setColor_(syntaxAttrs["selection"][NSBackgroundColorAttributeName])
+        self._wells = [self.commentsColorWell, self.funcClassColorWell, self.keywordsColorWell, self.stringsColorWell, self.plainColorWell, self.errColorWell, self.pageColorWell, self.selectionColorWell]
 
         nc = NSNotificationCenter.defaultCenter()
         nc.addObserver_selector_name_object_(self, "textFontChanged:", "PyDETextFontChanged", None)
+        nc.addObserver_selector_name_object_(self, "blur:", "NSWindowDidResignKeyNotification", None)
 
     def windowWillClose_(self, notification):
         fm = NSFontManager.sharedFontManager()
@@ -37,10 +47,9 @@ class NodeBoxPreferencesController(NSWindowController):
 
     @objc.IBAction
     def updateColors_(self, sender):
-        if self.timer is not None:
-            self.timer.invalidate()
-        self.timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-                1.0, self, "timeToUpdateTheColors:", None, False)
+        if not self.timer:
+            self.timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+                                    0.2, self, "timeToUpdateTheColors:", None, True)
 
     def timeToUpdateTheColors_(self, sender):
         syntaxAttrs = getSyntaxTextAttributes()
@@ -48,7 +57,20 @@ class NodeBoxPreferencesController(NSWindowController):
         syntaxAttrs["keyword"][NSForegroundColorAttributeName] = self.keywordsColorWell.color()
         syntaxAttrs["identifier"][NSForegroundColorAttributeName] = self.funcClassColorWell.color()
         syntaxAttrs["comment"][NSForegroundColorAttributeName] = self.commentsColorWell.color()
+        syntaxAttrs["plain"][NSForegroundColorAttributeName] = self.plainColorWell.color()
+        syntaxAttrs["err"][NSForegroundColorAttributeName] = self.errColorWell.color()
+        syntaxAttrs["page"][NSBackgroundColorAttributeName] = self.pageColorWell.color()
+        syntaxAttrs["selection"][NSBackgroundColorAttributeName] = self.selectionColorWell.color()
         setSyntaxTextAttributes(syntaxAttrs)
+        active = [w for w in self._wells if w.isActive()]
+        if not active:
+            self.stopUpdating()
+
+    def stopUpdating(self):
+        if self.timer:
+            self.timer.invalidate()
+            self.timer = None
+            NSLog("stopped")
 
     @objc.IBAction
     def chooseFont_(self, sender):
@@ -65,6 +87,12 @@ class NodeBoxPreferencesController(NSWindowController):
         newFont = sender.convertFont_(oldFont)
         if oldFont != newFont:
             setTextFont(newFont)
+    
+    def blur_(self, note):
+        self.stopUpdating()
+        for well in [w for w in self._wells if w.isActive()]:
+            well.deactivate()
+        NSColorPanel.sharedColorPanel().orderOut_(objc.nil)
 
     def textFontChanged_(self, notification):
         basicAttrs = getBasicTextAttributes()
@@ -75,3 +103,9 @@ class NodeBoxPreferencesController(NSWindowController):
             size = int(size)
         s = u"%s %s" % (font.displayName(), size)
         self.fontPreview.setStringValue_(s)
+
+    def __del__(self):
+        self.stopUpdating()
+        nc = NSNotificationCenter.defaultCenter()
+        nc.removeObserver_name_object_(self, "PyDETextFontChanged", None)
+        nc.removeObserver_name_object_(self, "NSWindowDidResignKeyNotification", None)

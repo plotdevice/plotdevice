@@ -40,8 +40,6 @@ def removeStringsAndComments(s):
             break
     return "".join(items)
 
-
-
 class PyDETextView(NSTextView):
 
     document = objc.IBOutlet()
@@ -53,10 +51,11 @@ class PyDETextView(NSTextView):
         self.setFrame_(((0, 0), scrollView.contentSize()))
         self.setAutoresizingMask_(NSViewWidthSizable)
         self.textContainer().setWidthTracksTextView_(True)
+        self.setTextContainerInset_( (0,4) ) # add a pinch of top-margin
         self.setAllowsUndo_(True)
         self.setRichText_(False)
         self.setTypingAttributes_(getBasicTextAttributes())
-        self.setUsesFindPanel_(True)
+        self.setIncrementalSearchingEnabled_(True)
         self.usesTabs = 0
         self.indentSize = 4
         self._string = self.textStorage().mutableString().nsstring()
@@ -73,11 +72,46 @@ class PyDETextView(NSTextView):
         self.textContainer().setWidthTracksTextView_(False)
         self.textContainer().setContainerSize_(layoutSize)
 
+        editorAttrs = getSyntaxTextAttributes()
+        self.setBackgroundColor_(bgColor(editorAttrs['page']))
+        self.setInsertionPointColor_(fgColor(editorAttrs['plain']))
+        self.setSelectedTextAttributes_(editorAttrs['selection'])
+
         # FDB: value ladder
         self.valueLadder = None
 
+        # use a FindBar rather than FindPanel
+        self._finder = NSTextFinder.alloc().init()
+        self._finder.setClient_(self)
+        self._finder.setFindBarContainer_(self.enclosingScrollView())
+        self._findTimer = None
+        self.setUsesFindBar_(True)
+
+        self.window().setAutorecalculatesKeyViewLoop_(True)
         nc = NSNotificationCenter.defaultCenter()
         nc.addObserver_selector_name_object_(self, "textFontChanged:", "PyDETextFontChanged", None)
+
+    def performFindPanelAction_(self, sender):
+        # frustrating bug:
+        # when the find bar is dismissed with esc, the *other* textview becomes
+        # first responder. the `solution' here is to monitor the find bar's field
+        # editor and notice when it is detached from the view hierarchy. it then
+        # re-sets itself as first responder
+        super(PyDETextView, self).performFindPanelAction_(sender)
+        if self._findTimer:
+            self._findTimer.invalidate()
+        self._findEditor = self.window().firstResponder().superview().superview()
+        self._findTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+                                    0.05, self, "stillFinding:", None, True)
+
+    def stillFinding_(self, note):
+        active = self._findEditor.superview().superview() is not None
+        if not active:
+            self.window().makeFirstResponder_(self)
+            self._findTimer.invalidate()
+
+    def changeColor_(self, clr):
+        pass # ignore the infernal system color panel's commands...
 
     def drawRect_(self, rect):
         NSTextView.drawRect_(self, rect)
@@ -187,8 +221,15 @@ class PyDETextView(NSTextView):
         self.setNeedsDisplay_(True)
 
     def textFontChanged_(self, notification):
+        editorAttrs = getSyntaxTextAttributes()
         basicAttrs = getBasicTextAttributes()
+        basicAttrs.update(editorAttrs['plain'])
+        self.setBackgroundColor_(bgColor(editorAttrs['page']))
+        self.setInsertionPointColor_(fgColor(editorAttrs['plain']))
+        self.setSelectedTextAttributes_(editorAttrs['selection'])
+        self.setDrawsBackground_(True)
         self.setTypingAttributes_(basicAttrs)
+
         # Somehow the next line is needed, we crash otherwise :(
         self.layoutManager().invalidateDisplayForCharacterRange_((0, self._string.length()))
         self._storageDelegate.textFontChanged_(notification)
@@ -546,6 +587,7 @@ class PyDETextStorageDelegate(NSObject):
         setAttrs = storage.setAttributes_range_
         getAttrs = storage.attributesAtIndex_effectiveRange_
         basicAttrs = getBasicTextAttributes()
+        basicAttrs.update(self._syntaxColors['plain'])
 
         lastEnd = end = dirtyStart
         count = 0
@@ -680,33 +722,103 @@ class LineTracker(object):
 
 
 class OutputTextView(NSTextView):
+    endl = False
+    scroll_lock = True
 
     def awakeFromNib(self):
         self.ts = self.textStorage()
         self.txt_attrs = dict((t, getBasicTextAttributes().copy()) for t in ['err','message','info'])
-        self.txt_attrs['err'][NSForegroundColorAttributeName] = NSColor.redColor()
-        self.txt_attrs['info'][NSForegroundColorAttributeName] = NSColor.blackColor().colorWithAlphaComponent_(0.5)
+        self.colorize()
+        self.setTextContainerInset_( (0,4) ) # a pinch of top-margin
+        self.setUsesFindBar_(True)
+
+        nc = NSNotificationCenter.defaultCenter()
+        nc.addObserver_selector_name_object_(self, "textFontChanged:", "PyDETextFontChanged", None)
+
+    def textFontChanged_(self, font):
+        self.colorize()
+
+    def canBecomeKeyView(self):
+        return False
+
+    def colorize(self):
+        attrs = getSyntaxTextAttributes()
+        pageColor = bgColor(attrs['page'])
+        plainColor = fgColor(attrs['plain'])
+        self.setBackgroundColor_(pageColor)
+        # self.setDrawsBackground_(True)
+
+        basicAttrs = getBasicTextAttributes()
+        basicAttrs.update(attrs['plain'])
+        self.setTypingAttributes_(basicAttrs)
+        self.txt_attrs['message'] = attrs['plain']
+        self.txt_attrs['err'] = attrs['err']
+        self.txt_attrs['info'] = dict(attrs['plain'])
+        self.txt_attrs['info'][NSForegroundColorAttributeName] = plainColor.colorWithAlphaComponent_(0.5)
+
+        # use a FindBar rather than FindPanel
+        self._finder = NSTextFinder.alloc().init()
+        self._finder.setClient_(self)
+        self._finder.setFindBarContainer_(self.enclosingScrollView())
+        self._findTimer = None
+        self.setUsesFindBar_(True)
+
+    def changeColor_(self, clr):
+        pass # ignore system color panel
 
     def append(self, txt, stream='message'):
+        # scroller = self.enclosingScrollview()
+
+        defer_endl = txt.endswith(u'\n')
+        txt = (u"\n" if self.endl else u"") + (txt[:-1 if defer_endl else None])
         atxt = NSAttributedString.alloc().initWithString_attributes_(txt, self.txt_attrs[stream])
-        self.ts.replaceCharactersInRange_withAttributedString_((self.ts.length(),0), atxt)
+        self.ts.appendAttributedString_(atxt)
+        self.scrollRangeToVisible_(NSMakeRange(self.ts.length()-1, 0))
+        self.endl = defer_endl
 
     def clear(self, timestamp=False):
+        self.endl = False
         self.ts.replaceCharactersInRange_withString_((0,self.ts.length()), "")
         if timestamp:
             locale = NSUserDefaults.standardUserDefaults().dictionaryRepresentation()
             timestamp = NSDate.date().descriptionWithCalendarFormat_timeZone_locale_("%Y-%m-%d %H:%M:%S", None, locale)
             self.append(timestamp+"\n", 'info')
 
+    def performFindPanelAction_(self, sender):
+        # same timer-based hack as PyDETextView.performFindPanelAction_
+        super(OutputTextView, self).performFindPanelAction_(sender)
+        if self._findTimer:
+            self._findTimer.invalidate()
+        self._findEditor = self.window().firstResponder().superview().superview()
+        self._findTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+                                    0.05, self, "stillFinding:", None, True)
+
+    def stillFinding_(self, note):
+        active = self._findEditor.superview().superview() is not None
+        if not active:
+            self.window().makeFirstResponder_(self)
+            self._findTimer.invalidate()
+            self._findTimer = None
+
+    def __del__(self):
+        nc = NSNotificationCenter.defaultCenter()
+        nc.removeObserver_name_object_(self, "PyDETextFontChanged", None)
+
 _basicFont = NSFont.userFixedPitchFontOfSize_(11)
 
 _BASICATTRS = {NSFontAttributeName: _basicFont,
                NSLigatureAttributeName: 0}
 _SYNTAXCOLORS = {
+    # text colors
     "keyword": {NSForegroundColorAttributeName: NSColor.blueColor()},
     "identifier": {NSForegroundColorAttributeName: NSColor.redColor().shadowWithLevel_(0.2)},
     "string": {NSForegroundColorAttributeName: NSColor.magentaColor()},
     "comment": {NSForegroundColorAttributeName: NSColor.grayColor()},
+    "plain": {NSForegroundColorAttributeName: NSColor.blackColor()},
+    "err": {NSForegroundColorAttributeName: NSColor.colorWithRed_green_blue_alpha_(167/255.0, 41/255.0, 34/255.0, 1.0)},
+    # background colors
+    "page": {NSBackgroundColorAttributeName: NSColor.whiteColor()},
+    "selection": {NSBackgroundColorAttributeName: NSColor.colorWithRed_green_blue_alpha_(175/255.0, 247/255.0, 1.0, 1.0)},
 }
 for key, value in _SYNTAXCOLORS.items():
     newVal = _BASICATTRS.copy()
@@ -743,6 +855,11 @@ def packAttrs(d):
         packed[key] = value
     return packed
 
+def fgColor(attrs):
+    return attrs.get(NSForegroundColorAttributeName)
+
+def bgColor(attrs):
+    return attrs.get(NSBackgroundColorAttributeName)
 
 def getBasicTextAttributes():
     attrs = NSUserDefaults.standardUserDefaults().objectForKey_(
