@@ -85,6 +85,7 @@ class DashboardController(NSObject):
         control.setBordered_(False)
         control.setDrawsBackground_(False)
         control.setFont_(SMALL_FONT)
+        control.setTextColor_(NSColor.whiteColor())
         self.panel.contentView().addSubview_(control)
 
     def _addSlider(self, v, y, cnt):
@@ -127,6 +128,11 @@ class DashboardController(NSObject):
         control.cell().setControlTint_(NSGraphiteControlTint)
         control.setTarget_(self)
         control.setTag_(cnt)
+        switchTitle = NSMutableAttributedString.alloc().initWithAttributedString_(control.attributedTitle())
+        switchTitle.addAttribute_value_range_(NSForegroundColorAttributeName,
+                                              NSColor.whiteColor(),
+                                              (0, switchTitle.length()))
+        control.setAttributedTitle_(switchTitle)
         control.setAction_(objc.selector(self.booleanChanged_, signature="v@:@@"))
         self.panel.contentView().addSubview_(control)
         
