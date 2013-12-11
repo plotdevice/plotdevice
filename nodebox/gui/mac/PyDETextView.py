@@ -3,21 +3,18 @@ import re
 import objc
 from Foundation import *
 from AppKit import *
-#from PyObjCTools import NibClassBuilder
+from nodebox.gui.mac.preferences import getBasicTextAttributes, getSyntaxTextAttributes
+from nodebox.gui.mac.preferences import setTextFont, FG_COLOR, BG_COLOR
 from nodebox.util.PyFontify import fontify
 from nodebox.gui.mac.ValueLadder import ValueLadder
-
 whiteRE = re.compile(r"[ \t]+")
 commentRE = re.compile(r"[ \t]*(#)")
-
-#NibClassBuilder.extractClasses("NodeBoxDocument")
 
 def findWhitespace(s, pos=0):
     m = whiteRE.match(s, pos)
     if m is None:
         return pos
     return m.end()
-
 
 stringPat = r"q[^\\q\n]*(\\[\000-\377][^\\q\n]*)*q"
 stringOrCommentPat = stringPat.replace("q", "'") + "|" + stringPat.replace('q', '"') + "|#.*"
@@ -73,8 +70,8 @@ class PyDETextView(NSTextView):
         self.textContainer().setContainerSize_(layoutSize)
 
         editorAttrs = getSyntaxTextAttributes()
-        self.setBackgroundColor_(bgColor(editorAttrs['page']))
-        self.setInsertionPointColor_(fgColor(editorAttrs['plain']))
+        self.setBackgroundColor_(editorAttrs['page'][BG_COLOR])
+        self.setInsertionPointColor_(editorAttrs['plain'][FG_COLOR])
         self.setSelectedTextAttributes_(editorAttrs['selection'])
 
         # FDB: value ladder
@@ -224,8 +221,8 @@ class PyDETextView(NSTextView):
         editorAttrs = getSyntaxTextAttributes()
         basicAttrs = getBasicTextAttributes()
         basicAttrs.update(editorAttrs['plain'])
-        self.setBackgroundColor_(bgColor(editorAttrs['page']))
-        self.setInsertionPointColor_(fgColor(editorAttrs['plain']))
+        self.setBackgroundColor_(editorAttrs['page'][BG_COLOR])
+        self.setInsertionPointColor_(editorAttrs['plain'][FG_COLOR])
         self.setSelectedTextAttributes_(editorAttrs['selection'])
         self.setDrawsBackground_(True)
         self.setTypingAttributes_(basicAttrs)
@@ -727,34 +724,9 @@ class OutputTextView(NSTextView):
 
     def awakeFromNib(self):
         self.ts = self.textStorage()
-        self.txt_attrs = dict((t, getBasicTextAttributes().copy()) for t in ['err','message','info'])
         self.colorize()
         self.setTextContainerInset_( (0,4) ) # a pinch of top-margin
         self.setUsesFindBar_(True)
-
-        nc = NSNotificationCenter.defaultCenter()
-        nc.addObserver_selector_name_object_(self, "textFontChanged:", "PyDETextFontChanged", None)
-
-    def textFontChanged_(self, font):
-        self.colorize()
-
-    def canBecomeKeyView(self):
-        return False
-
-    def colorize(self):
-        attrs = getSyntaxTextAttributes()
-        pageColor = bgColor(attrs['page'])
-        plainColor = fgColor(attrs['plain'])
-        self.setBackgroundColor_(pageColor)
-        # self.setDrawsBackground_(True)
-
-        basicAttrs = getBasicTextAttributes()
-        basicAttrs.update(attrs['plain'])
-        self.setTypingAttributes_(basicAttrs)
-        self.txt_attrs['message'] = attrs['plain']
-        self.txt_attrs['err'] = attrs['err']
-        self.txt_attrs['info'] = dict(attrs['plain'])
-        self.txt_attrs['info'][NSForegroundColorAttributeName] = plainColor.colorWithAlphaComponent_(0.5)
 
         # use a FindBar rather than FindPanel
         self._finder = NSTextFinder.alloc().init()
@@ -763,15 +735,46 @@ class OutputTextView(NSTextView):
         self._findTimer = None
         self.setUsesFindBar_(True)
 
+        nc = NSNotificationCenter.defaultCenter()
+        nc.addObserver_selector_name_object_(self, "textFontChanged:", "PyDETextFontChanged", None)
+
+    def textFontChanged_(self, font):
+        self.setFont_(getBasicTextAttributes()[NSFontAttributeName])
+        self.colorize()
+
+    def canBecomeKeyView(self):
+        return False
+
+    def colorize(self):
+        attrs = getSyntaxTextAttributes()
+        pageColor = attrs['page'][BG_COLOR]
+        plainColor = attrs['plain'][FG_COLOR]
+        self.setBackgroundColor_(pageColor)
+        # self.setDrawsBackground_(True)
+
+        self.setTypingAttributes_(attrs['plain'])
+        self.setSelectedTextAttributes_(attrs['selection'])
+
+    def _attrs(self, stream=None):
+        attrs = getSyntaxTextAttributes()
+        attrs.update({
+            'message':attrs['plain'],
+            'info':dict(attrs['plain'])
+        })
+        attrs['info'][FG_COLOR] = attrs['plain'][FG_COLOR].colorWithAlphaComponent_(0.5)
+        for s,a in attrs.items():
+            a.update({"stream":s})
+        if stream:
+            return attrs.get(stream)
+        return attrs
+
     def changeColor_(self, clr):
         pass # ignore system color panel
 
     def append(self, txt, stream='message'):
-        # scroller = self.enclosingScrollview()
-
         defer_endl = txt.endswith(u'\n')
         txt = (u"\n" if self.endl else u"") + (txt[:-1 if defer_endl else None])
-        atxt = NSAttributedString.alloc().initWithString_attributes_(txt, self.txt_attrs[stream])
+        atxt = NSAttributedString.alloc().initWithString_attributes_(txt, self._attrs(stream))
         self.ts.appendAttributedString_(atxt)
         self.scrollRangeToVisible_(NSMakeRange(self.ts.length()-1, 0))
         self.endl = defer_endl
@@ -786,6 +789,8 @@ class OutputTextView(NSTextView):
 
     def performFindPanelAction_(self, sender):
         # same timer-based hack as PyDETextView.performFindPanelAction_
+        # what could be the problem? something in the tab-ordering of the
+        # views? or is the containing splitview getting involved?
         super(OutputTextView, self).performFindPanelAction_(sender)
         if self._findTimer:
             self._findTimer.invalidate()
@@ -804,99 +809,3 @@ class OutputTextView(NSTextView):
         nc = NSNotificationCenter.defaultCenter()
         nc.removeObserver_name_object_(self, "PyDETextFontChanged", None)
 
-_basicFont = NSFont.userFixedPitchFontOfSize_(11)
-
-_BASICATTRS = {NSFontAttributeName: _basicFont,
-               NSLigatureAttributeName: 0}
-_SYNTAXCOLORS = {
-    # text colors
-    "keyword": {NSForegroundColorAttributeName: NSColor.blueColor()},
-    "identifier": {NSForegroundColorAttributeName: NSColor.redColor().shadowWithLevel_(0.2)},
-    "string": {NSForegroundColorAttributeName: NSColor.magentaColor()},
-    "comment": {NSForegroundColorAttributeName: NSColor.grayColor()},
-    "plain": {NSForegroundColorAttributeName: NSColor.blackColor()},
-    "err": {NSForegroundColorAttributeName: NSColor.colorWithRed_green_blue_alpha_(167/255.0, 41/255.0, 34/255.0, 1.0)},
-    # background colors
-    "page": {NSBackgroundColorAttributeName: NSColor.whiteColor()},
-    "selection": {NSBackgroundColorAttributeName: NSColor.colorWithRed_green_blue_alpha_(175/255.0, 247/255.0, 1.0, 1.0)},
-}
-for key, value in _SYNTAXCOLORS.items():
-    newVal = _BASICATTRS.copy()
-    newVal.update(value)
-    _SYNTAXCOLORS[key] = NSDictionary.dictionaryWithDictionary_(newVal)
-_BASICATTRS = NSDictionary.dictionaryWithDictionary_(_BASICATTRS)
-
-
-def unpackAttrs(d):
-    unpacked = {}
-    for key, value in d.items():
-        if key == NSFontAttributeName:
-            name = value["name"]
-            size = value["size"]
-            value = NSFont.fontWithName_size_(name, size)
-        elif key in (NSForegroundColorAttributeName, NSBackgroundColorAttributeName):
-            r, g, b, a = map(float, value.split())
-            value = NSColor.colorWithCalibratedRed_green_blue_alpha_(r, g, b, a)
-        elif isinstance(value, (dict, NSDictionary)):
-            value = unpackAttrs(value)
-        unpacked[key] = value
-    return unpacked
-
-def packAttrs(d):
-    packed = {}
-    for key, value in d.items():
-        if key == NSFontAttributeName:
-            value = {"name": value.fontName(), "size": value.pointSize()}
-        elif key in (NSForegroundColorAttributeName, NSBackgroundColorAttributeName):
-            channels = value.colorUsingColorSpaceName_(NSCalibratedRGBColorSpace).getRed_green_blue_alpha_(None, None, None, None)
-            value = " ".join(map(str, channels))
-        elif isinstance(value, (dict, NSDictionary)):
-            value = packAttrs(value)
-        packed[key] = value
-    return packed
-
-def fgColor(attrs):
-    return attrs.get(NSForegroundColorAttributeName)
-
-def bgColor(attrs):
-    return attrs.get(NSBackgroundColorAttributeName)
-
-def getBasicTextAttributes():
-    attrs = NSUserDefaults.standardUserDefaults().objectForKey_(
-            "PyDEDefaultTextAttributes")
-    return unpackAttrs(attrs)
-
-def getSyntaxTextAttributes():
-    attrs = NSUserDefaults.standardUserDefaults().objectForKey_(
-            "PyDESyntaxTextAttributes")
-    return unpackAttrs(attrs)
-
-def setBasicTextAttributes(basicAttrs):
-    if basicAttrs != getBasicTextAttributes():
-        NSUserDefaults.standardUserDefaults().setObject_forKey_(
-                packAttrs(basicAttrs), "PyDEDefaultTextAttributes")
-        nc = NSNotificationCenter.defaultCenter()
-        nc.postNotificationName_object_("PyDETextFontChanged", None)
-
-def setSyntaxTextAttributes(syntaxAttrs):
-    if syntaxAttrs != getSyntaxTextAttributes():
-        NSUserDefaults.standardUserDefaults().setObject_forKey_(
-                packAttrs(syntaxAttrs), "PyDESyntaxTextAttributes")
-        nc = NSNotificationCenter.defaultCenter()
-        nc.postNotificationName_object_("PyDETextFontChanged", None)
-
-def setTextFont(font):
-    basicAttrs = getBasicTextAttributes()
-    syntaxAttrs = getSyntaxTextAttributes()
-    basicAttrs[NSFontAttributeName] = font
-    for v in syntaxAttrs.values():
-        v[NSFontAttributeName] = font
-    setBasicTextAttributes(basicAttrs)
-    setSyntaxTextAttributes(syntaxAttrs)
-
-_defaultUserDefaults = {
-    "PyDEDefaultTextAttributes": packAttrs(_BASICATTRS),
-    "PyDESyntaxTextAttributes": packAttrs(_SYNTAXCOLORS),
-}
-
-NSUserDefaults.standardUserDefaults().registerDefaults_(_defaultUserDefaults)

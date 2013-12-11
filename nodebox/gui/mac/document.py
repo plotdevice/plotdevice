@@ -10,11 +10,12 @@ from hashlib import md5
 from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
-from nodebox.gui.mac import PyDETextView
+from nodebox.gui.mac.preferences import get_default, getBasicTextAttributes
 from nodebox.gui.mac.ValueLadder import MAGICVAR
 from nodebox.gui.mac.export import MovieExportSession, ImageExportSession
 from nodebox.gui.mac.dashboard import *
 from nodebox.gui.mac.util import errorAlert
+from nodebox.gui.mac import PyDETextView
 from nodebox import util
 from nodebox import graphics
 
@@ -45,11 +46,6 @@ class NodeBoxDocument(NSDocument):
     # When the ExportSheet is loaded, we also add:
     exportSheet = objc.IBOutlet()
     exportSheetIndicator = objc.IBOutlet()
-
-    magicvar = None # Used for value ladders.
-    _code = None
-    vars = []
-    path = None
     # file export config & state
     export = dict(formats=dict(image=('pdf', 'eps', 'png', 'tiff', 'jpg', 'gif'), movie=('mov', 'gif')),
                   movie=dict(format='mov', frames=150, fps=30, loop=0),
@@ -59,13 +55,16 @@ class NodeBoxDocument(NSDocument):
     _meta = dict(args=[], virtualenv=None, live=False,
                  export=None, first=1, last=None, stdout=None )    
 
+    magicvar = None # Used for value ladders.
+    _code = None
+    vars = []
+    path = None
+
     def windowNibName(self):
         return "NodeBoxDocument"
 
     def init(self):
         self = super(NodeBoxDocument, self).init()
-        nc = NSNotificationCenter.defaultCenter()
-        nc.addObserver_selector_name_object_(self, "textFontChanged:", "PyDETextFontChanged", None)
         self.namespace = {}
         self.canvas = graphics.Canvas()
         self.context = graphics.Context(self.canvas, self.namespace)
@@ -82,8 +81,8 @@ class NodeBoxDocument(NSDocument):
     def windowControllerDidLoadNib_(self, controller):
         if self.path:
             self.readFromUTF8(self.path)
-        font = PyDETextView.getBasicTextAttributes()[NSFontAttributeName]
-        self.outputView.setFont_(font)
+        font = getBasicTextAttributes()[NSFontAttributeName]
+        # self.outputView.setFont_(font)
         win = self.textView.window()
         win.setRestorable_(True)
         win.setIdentifier_("nodebox-doc")
@@ -92,7 +91,7 @@ class NodeBoxDocument(NSDocument):
         self.currentView = self.graphicsView
 
         # would like to set:
-        #   win.setRestorationClass_(objc.lookUpClass('NodeBoxDocument'))
+        #   win.setRestorationClass_(NodeBoxDocument)
         # but the built-in pyobjc can't deal with the block arg in:
         #   restoreDocumentWindowWithIdentifier_state_completionHandler_
         # which we'd need to implement for restoration to work. try
@@ -127,14 +126,8 @@ class NodeBoxDocument(NSDocument):
                 pass
 
     def __del__(self):
-        nc = NSNotificationCenter.defaultCenter()
-        nc.removeObserver_name_object_(self, "PyDETextFontChanged", None)
         # text view has a couple of circular refs, it can let go of them now
         self.textView._cleanup()
-
-    def textFontChanged_(self, notification):
-        font = PyDETextView.getBasicTextAttributes()[NSFontAttributeName]
-        self.outputView.setFont_(font)
 
     def readFromFile_ofType_(self, path, tp):
         if self.textView is None:
@@ -524,7 +517,7 @@ class NodeBoxDocument(NSDocument):
             time.sleep(0.25)
 
     def _flushOutput(self, output):
-        outAttrs = PyDETextView.getBasicTextAttributes()
+        outAttrs = getBasicTextAttributes()
         errAttrs = outAttrs.copy()
         # XXX err color from user defaults...
         errAttrs[NSForegroundColorAttributeName] = NSColor.redColor()

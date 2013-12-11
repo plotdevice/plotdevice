@@ -13,7 +13,7 @@ from AppKit import *
 from threading import Thread
 from Queue import Queue, Empty
 from nodebox.gui.mac.document import NodeBoxDocument
-from nodebox.gui.mac import PyDETextView
+from nodebox.gui.mac.preferences import getBasicTextAttributes
 from nodebox.gui.mac.util import errorAlert
 from nodebox import util
 from nodebox import graphics
@@ -301,7 +301,7 @@ class NodeBoxGraphicsView(NSView):
                     tb = tb.tb_next  # skip the frame doing the exec
                 traceback.print_exception(etype, value, tb)
                 data = "".join(traceback.format_exception(etype, value, tb))
-                attrs = PyDETextView.getBasicTextAttributes()
+                attrs = getBasicTextAttributes()
                 attrs[NSForegroundColorAttributeName] = NSColor.redColor()
                 outputView = self.document.outputView
                 outputView.setSelectedRange_((outputView.textStorage().length(), 0))
