@@ -10,9 +10,9 @@ from hashlib import md5
 from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
+from nodebox.export import MovieExportSession, ImageExportSession
 from nodebox.gui.mac.preferences import get_default, getBasicTextAttributes
 from nodebox.gui.mac.ValueLadder import MAGICVAR
-from nodebox.gui.mac.export import MovieExportSession, ImageExportSession
 from nodebox.gui.mac.dashboard import *
 from nodebox.gui.mac.util import errorAlert
 from nodebox.gui.mac import PyDETextView
@@ -95,6 +95,7 @@ class NodeBoxDocument(NSDocument):
         # subpixel antialiasing:
         if get_default('use-ca-layer'):
             self.graphicsView.setWantsLayer_(True)
+            self.graphicsView.setLayerContentsRedrawPolicy_(NSViewLayerContentsRedrawOnSetNeedsDisplay)
             self._ca_layer = self.graphicsView.layer()
             NSLog("layer backed")
         else:

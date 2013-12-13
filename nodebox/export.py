@@ -1,7 +1,8 @@
-import os
+import sys, os
 from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
+from math import floor
 
 IMG_BATCH_SIZE = 8
 MOV_BATCH_SIZE = 40
@@ -17,15 +18,17 @@ class ExportSession(object):
     def __init__(self):
         super(ExportSession, self).__init__()
 
-    def begin(self, frames=None, pages=None):
-        self.progress = ProgressBarController.alloc().initWithCallback_(self.status)
+    def begin(self, frames=None, pages=None, console=False):
+        ProgBar = ASCIIProgressBar if console else ProgressBarController
+        self.progress = ProgBar.alloc().initWithCallback_(self.status)
         if frames is not None:
-            msg = "Generating %s frames..." % frames
+            msg = "Generating %s frames" % frames
             self.total = frames
         else:
-            msg = "Generating %s pages..." % pages
+            msg = "Generating %s pages" % pages
             self.total = pages
         self.progress.begin(msg, self.total)
+
         
     def status(self, cancel=False):
         if cancel:
@@ -52,13 +55,13 @@ class ExportSession(object):
             self.callback = None
 
     def on_complete(self, cb):
-        if self.running: cb()
+        if not self.running: cb()
         else: self.callback = cb
 
 class ImageExportSession(ExportSession):
-    def __init__(self, fname, pages, format, first=1):
+    def __init__(self, fname, pages, format, first=1, console=False):
         super(ImageExportSession, self).__init__()
-        self.begin(pages=pages-first+1)
+        self.begin(pages=pages-first+1, console=console)
         self.format = format
         self.fname = fname
         self.batches = [(n, min(n+IMG_BATCH_SIZE-1,pages)) for n in range(first, pages+1, IMG_BATCH_SIZE)]
@@ -75,13 +78,13 @@ class ImageExportSession(ExportSession):
         pass
 
 class MovieExportSession(ExportSession):
-    def __init__(self, fname, frames=60, fps=30, loop=0, first=1):
+    def __init__(self, fname, frames=60, fps=30, loop=0, first=1, console=False):
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
         except:
             pass
-        self.begin(frames=frames-first+1)
+        self.begin(frames=frames-first+1, console=console)
         basename, ext = fname.rsplit('.',1)
         self.fname = fname
         self.ext = ext.lower()
@@ -106,8 +109,51 @@ class MovieExportSession(ExportSession):
         self.added += 1
 
     def done(self):
-        self.writer.closeFile()
+        if self.writer:
+            self.writer.closeFile()
 
+class ASCIIProgressBar(NSObject):
+    poll = None
+    status_fn = None
+    _stderr = None
+
+    def initWithCallback_(self, cb):
+        self.status_fn = cb
+        self._stderr = sys.stderr
+        return self
+
+    def begin(self, message, maxval):
+        self.value = 0
+        self.message = '%s:'%message
+        self.maxval = maxval
+        self.poll = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+                                    0.1,self,"update:",None,True)
+        self.poll.fire()
+
+    def update_(self, note):
+        self.step(self.status_fn())
+
+    def _render(self, width=20):
+        pct = int(floor(width*self.value/self.maxval))
+        dots = "".join(['#'*pct]+['.']*(width-pct))
+        msg = "\r%s [%s]\n"%(self.message, dots)
+        self._stderr.write(msg)
+        self._stderr.flush()
+
+    def step(self, toVal):
+        if self.poll.isValid():
+            self.value = toVal
+            self._render()
+
+    def complete(self):
+        self.value = self.maxval
+        self._render()
+        if self.poll:
+            self.poll.invalidate()
+
+    def end(self, delay=0):
+        if self.poll:
+            self.poll.invalidate()
 
 class ProgressBarController(NSWindowController):
     messageField = objc.IBOutlet()
@@ -124,13 +170,12 @@ class ProgressBarController(NSWindowController):
 
     def begin(self, message, maxval):
         self.value = 0
-        self.message = message
+        self.message = '%s...'%message
         self.maxval = maxval
         self.progressBar.setMaxValue_(self.maxval)
         self.messageField.cell().setTitle_(self.message)
         parentWindow = NSApp().keyWindow()
         NSApp().beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.window(), parentWindow, self, None, 0)
-        self.poll.fire()
 
     def update_(self, note):
         self.step(self.status_fn())

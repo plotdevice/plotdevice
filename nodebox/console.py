@@ -1,151 +1,181 @@
-from AppKit import NSApplication
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+render.py
 
-try:
-    import nodebox
-except ImportError:
-    import sys, os
-    nodebox_dir = os.path.dirname(os.path.abspath(__file__))
-    sys.path.append(os.path.dirname(nodebox_dir))
+Run nodebox scripts from the command line
+"""
 
-from nodebox import graphics
-from nodebox import util
+import sys
+import os
+import re
+import argparse
+import xmlrpclib
+import socket
+import json
+import select
+from time import sleep
 
-class NodeBoxRunner(object):
-    
-    def __init__(self):
-        # Force NSApp initialisation.
-        NSApplication.sharedApplication().activateIgnoringOtherApps_(0)
-        self.namespace = {}
-        self.canvas = graphics.Canvas()
-        self.context = graphics.Context(self.canvas, self.namespace)
-        self.__doc__ = {}
-        self._pageNumber = 1
-        self.frame = 1
-        
-    def _check_animation(self):
-        """Returns False if this is not an animation, True otherwise.
-        Throws an expection if the animation is not correct (missing a draw method)."""
-        if self.canvas.speed is not None:
-            if not self.namespace.has_key('draw'):
-                raise graphics.NodeBoxError('Not a correct animation: No draw() method.')
-            return True
-        return False
+import shutil
+import tempfile
+from datetime import datetime
+from subprocess import Popen, PIPE
 
-    def run(self, source_or_code):
-        self._initNamespace()
-        if isinstance(source_or_code, basestring):
-            source_or_code = compile(source_or_code + "\n\n", "<Untitled>", "exec")
-        exec source_or_code in self.namespace
-        if self._check_animation():
-            if self.namespace.has_key('setup'):
-                self.namespace['setup']()
-            self.namespace['draw']()
-        
-    def run_multiple(self, source_or_code, frames):
-        if isinstance(source_or_code, basestring):
-            source_or_code = compile(source_or_code + "\n\n", "<Untitled>", "exec")
-            
-        # First frame is special:
-        self.run(source_or_code)
-        yield 1
-        animation = self._check_animation()
-            
-        for i in range(frames-1):
-            self.canvas.clear()
-            self.frame = i + 2
-            self.namespace["PAGENUM"] = self.namespace["FRAME"] = self.frame
-            if animation:
-                self.namespace['draw']()
-            else:
-                exec source_or_code in self.namespace
-            yield self.frame
-    
-    def _initNamespace(self, frame=1):
-        self.canvas.clear()
-        self.namespace.clear()
-        # Add everything from the namespace
-        for name in graphics.__all__:
-            self.namespace[name] = getattr(graphics, name)
-        for name in util.__all__:
-            self.namespace[name] = getattr(util, name)
-        # Add everything from the context object
-        self.namespace["_ctx"] = self.context
-        for attrName in dir(self.context):
-            self.namespace[attrName] = getattr(self.context, attrName)
-        # Add the document global
-        self.namespace["__doc__"] = self.__doc__
-        # Add the frame
-        self.frame = frame
-        self.namespace["PAGENUM"] = self.namespace["FRAME"] = self.frame
-        
-def make_image(source_or_code, outputfile):
-    
-    """Given a source string or code object, executes the scripts and saves the result as an image.
-    Supported image extensions: pdf, tiff, png, jpg, gif"""
-    
-    runner = NodeBoxRunner()
-    runner.run(source_or_code)
-    runner.canvas.save(outputfile)
-    
-def make_movie(source_or_code, outputfile, frames, fps=30):
+PORT = 9000
 
-    """Given a source string or code object, executes the scripts and saves the result as a movie.
-    You also have to specify the number of frames to render.
-    Supported movie extension: mov"""
+def connect(retry=12, delay=0):
+  if delay:
+    sleep(delay)
+  sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  try:
+    sock.connect(("localhost", PORT))
+  except socket.error, e:
+    if not retry:
+      return None
+    return connect(retry-1, delay=.2)
+  return sock
 
-    from nodebox.util import QTSupport
-    runner = NodeBoxRunner()
-    movie = QTSupport.Movie(outputfile, fps)
-    for frame in runner.run_multiple(source_or_code, frames):
-        movie.add(runner.canvas)
-    movie.save()
+def app_path():
+  parent = os.path.abspath(os.path.dirname(__file__))
+  if os.path.islink(__file__):
+    parent = os.path.dirname(os.path.realpath(__file__))
+  if parent.endswith('Resources/python/nodebox'):
+    return os.path.abspath('%s/../../../..'%parent)
+  elif parent.endswith('nodebox'):
+    return os.path.abspath('%s/../Build/Products/Debug/NodeBox.app'%parent)
+  return None
 
-def usage(err=""):
-    if len(err) > 0:
-        err = '\n\nError: ' + str(err)
-    print """NodeBox console runner
-Usage: console.py sourcefile imagefile
-   or: console.py sourcefile moviefile number_of_frames [fps]
-Supported image extensions: pdf, tiff, png, jpg, gif
-Supported movie extension:  mov""" + err
+def task_path():
+  return "%s/Contents/Resources/NodeBoxTask.app/Contents/MacOS/NodeBoxTask" % app_path()
+
+def app_name():
+  return app_path() or 'NodeBox.app'
+
+def read_and_echo(sock):
+  response = sock.recv(80)
+  if response:
+    print response,
+  return response
+
+def exec_console(opts):
+  bin_path = task_path()
+  env = dict(os.environ)
+  p = Popen([bin_path], env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+  p.stdin.write(json.dumps(vars(opts))+"\n")
+
+  ERASER = '\r%s\r'%(' '*80)
+  re_progress = re.compile(r'^\r.*?\[[#\.]{10,}\]$')
+  started = datetime.now()
+  progress = ''
+  while True:
+    reads = [p.stdout.fileno(), p.stderr.fileno()]
+    ret = select.select(reads, [], [])
+    for fd in ret[0]:
+      if fd == p.stdout.fileno():
+        line = p.stdout.readline()
+        sys.stdout.write(ERASER+line+progress)
+
+      if fd == p.stderr.fileno():
+        line = p.stderr.readline()
+        # the progress bar should overwrite itself, but anything else
+        # on stderr should be passed through
+        if re_progress.search(line):
+          line = line.rstrip()
+        else:
+          sys.stdout.write(ERASER)
+        progress = line
+        sys.stdout.write(progress)
+      sys.stdout.flush()
+
+    if p.poll() != None:
+        break
+
+def exec_application(opts):  
+  sock = connect(0)
+  if not sock:
+    os.system('open -a "%s" "%s"'%(app_name(), opts.file))
+    sock = connect()
+  if not sock:
+    print "Couldn't connect to the NodeBox application"
+    sys.exit(1)
+
+  try:
+    sock.sendall(json.dumps(vars(opts)) + "\n")
+    try:
+      while read_and_echo(sock): pass
+    except KeyboardInterrupt:
+      sock.sendall('STOP\n')
+      print "\n",
+      while read_and_echo(sock): pass
+  finally:
+    sock.close()
 
 def main():
-    import sys, os
-    if len(sys.argv) < 2:
-        usage()
-    elif len(sys.argv) == 3: # Should be an image
-        basename, ext = os.path.splitext(sys.argv[2])
-        if ext not in ('.pdf', '.gif', '.jpg', '.jpeg', '.png', '.tiff'):
-            return usage('This is not a supported image format.')
-        make_image(open(sys.argv[1]).read(), sys.argv[2])
-    elif len(sys.argv) == 4 or len(sys.argv) == 5: # Should be a movie
-        basename, ext = os.path.splitext(sys.argv[2])
-        if ext != '.mov':
-            return usage('This is not a supported movie format.')
-        if len(sys.argv) == 5:
-            try:
-                fps = int(sys.argv[4])
-            except ValueError:
-                return usage()
-        else:
-            fps = 30
-        make_movie(open(sys.argv[1]).read(), sys.argv[2], int(sys.argv[3]), fps)
+  parser = argparse.ArgumentParser(description='Run python scripts in NodeBox.app', add_help=False)
+  o = parser.add_argument_group("Options", None)
+  o.add_argument('-h','--help', dest='helpscreen', action='store_const', const=True, default=False, help='show this help message and exit')
+  o.add_argument('-f', dest='fullscreen', action='store_const', const=True, default=False, help='run full-screen')
+  o.add_argument('-b', dest='activate', action='store_const', const=False, default=True, help='run NodeBox in the background')
+  o.add_argument('--virtualenv', metavar='PATH', help='path to virtualenv whose libraries you want to use (this should point to the top-level virtualenv directory; a folder containing a lib/python2.7/site-packages subdirectory)')
+  o.add_argument('--export', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, gif, or mov')
+  o.add_argument('--frames', metavar='N or M-N', help='number of frames to render or a range specifying the first and last frames (default "1-")')
+  o.add_argument('--fps', metavar='N', default=30, help='frames per second in exported video (default 30)')
+  o.add_argument('--loop', metavar='N', default=0, nargs='?', const=-1, help='number of times to loop an exported animated gif (omit N to loop forever)')
+  o.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
+  o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='remainder of command line will be passed to the script as sys.argv')
+  i = parser.add_argument_group("NodeBox Script File", None)
+  i.add_argument('file', help='the python script to be rendered')
+  # parser.print_help()
+  opts = parser.parse_args()
+  
+  if opts.virtualenv:
+    libdir = '%s/lib/python2.7/site-packages'%opts.virtualenv
+    if os.path.exists(libdir):
+      opts.virtualenv = os.path.abspath(libdir)
+    else:
+      parser.exit(1, "bad argument [--virtualenv]\nvirtualenv site-packages dir not found: %s\n"%libdir)
 
-def test():
-    # Creating the NodeBoxRunner class directly:
-    runner = NodeBoxRunner()
-    runner.run('size(500,500)\nfor i in range(400):\n  oval(random(WIDTH),random(HEIGHT),50,50, fill=(random(), 0,0,random()))')
-    runner.canvas.save('console-test.pdf')
-    runner.canvas.save('console-test.png')
-    
-    # Using the runner for animations:
-    runner = NodeBoxRunner()
-    for frame in runner.run_multiple('size(300, 300)\ntext(FRAME, 100, 100)', 10):
-        runner.canvas.save('console-test-frame%02i.png' % frame)
+  if opts.file:
+    opts.file = os.path.abspath(opts.file)
+    if not os.path.exists(opts.file):
+      parser.exit(1, "file not found: %s\n"%opts.file)
 
-    # Using the shortcut functions:
-    make_image('size(200,200)\ntext(FRAME, 100, 100)', 'console-test.gif')
-    make_movie('size(200,200)\ntext(FRAME, 100, 100)', 'console-test.mov', 10)
+  if opts.frames:
+    try:
+      frames = [int(f) if f else None for f in opts.frames.split('-')]
+    except ValueError:
+      parser.exit(1, 'bad argument [--frame]\nmust be a single integer ("42") or a hyphen-separated range ("33-66").\ncouldn\'t make sense of "%s"\n'%opts.frames)
 
-if __name__=='__main__':
-    main()
+    if len(frames) == 1:
+      opts.first, opts.last = (1, int(frames[0]))
+    elif len(frames) == 2:
+      if frames[1] is not None and frames[1]<frames[0]:
+        parser.exit(1, "bad argument [--frame]\nfinal-frame number is less than first-frame\n")
+      opts.first, opts.last = frames
+      del opts.frames
+  else:
+    opts.first, opts.last = (1, None)
+
+  if opts.fps:
+    opts.fps = int(opts.fps)
+
+  if opts.loop:
+    opts.loop = int(opts.loop)
+
+  if opts.export:
+    basename, ext = opts.export.rsplit('.',1)
+    if ext.lower() not in ('pdf', 'eps', 'png', 'tiff', 'jpg', 'gif', 'mov'):
+      parser.exit(1, 'bad argument [--export]\nthe output filename must end with a supported format:\npdf, eps, png, tiff, jpg, gif, or mov\n')
+    if '/' in opts.export:
+      export_dir = os.path.dirname(opts.export)
+      if not os.path.exists(export_dir):
+        parser.exit(1,'export directory not found: %s\n'%os.path.abspath(export_dir))
+    opts.export = os.path.abspath(opts.export)
+
+  if not opts.activate:
+    exec_console(opts)
+  else:
+    exec_application(opts)
+
+if __name__ == "__main__":
+  main()
