@@ -94,7 +94,7 @@ class NodeBoxRunner(object):
         self.namespace["PAGENUM"] = self.namespace["FRAME"] = self.frame
 
     def export(self, **opts):
-        fn, first, last fps = opts['export'], opts['first'], opts['last'], opts['fps']
+        fn, first, last, fps = opts['export'], opts['first'], opts['last'], opts['fps']
         format = fn.rsplit('.',1)[1]
         if last:
             # pick the right kind of output (single movie vs multiple docs)
@@ -127,6 +127,8 @@ class NodeBoxRunner(object):
             sys.stdout.write(errtxt)
             self.session._shutdown()
             AppHelper.callAfter(quit)            
+            # self.session.on_complete(quit)
+            # self.session.done()
         else:
             self.session.on_complete(quit)
             self.session.done()

@@ -67,28 +67,32 @@ def exec_console(opts):
   re_progress = re.compile(r'^\r.*?\[[#\.]{10,}\]$')
   started = datetime.now()
   progress = ''
-  while True:
-    reads = [p.stdout.fileno(), p.stderr.fileno()]
-    ret = select.select(reads, [], [])
-    for fd in ret[0]:
-      if fd == p.stdout.fileno():
-        line = p.stdout.readline()
-        sys.stdout.write(ERASER+line+progress)
+  try:
+    while True:
+      reads = [p.stdout.fileno(), p.stderr.fileno()]
+      ret = select.select(reads, [], [])
+      for fd in ret[0]:
+        if fd == p.stdout.fileno():
+          line = p.stdout.readline()
+          sys.stdout.write(ERASER+line+progress)
 
-      if fd == p.stderr.fileno():
-        line = p.stderr.readline()
-        # the progress bar should overwrite itself, but anything else
-        # on stderr should be passed through
-        if re_progress.search(line):
-          line = line.rstrip()
-        else:
-          sys.stdout.write(ERASER)
-        progress = line
-        sys.stdout.write(progress)
-      sys.stdout.flush()
+        if fd == p.stderr.fileno():
+          line = p.stderr.readline()
+          # the progress bar should overwrite itself, but anything else
+          # on stderr should be passed through
+          if re_progress.search(line):
+            line = line.rstrip()
+          else:
+            sys.stdout.write(ERASER)
+          progress = line
+          sys.stdout.write(progress)
+        sys.stdout.flush()
 
-    if p.poll() != None:
-        break
+      if p.poll() != None:
+          break
+  except KeyboardInterrupt:
+    # print "\rCancelled."
+    pass
 
 def exec_application(opts):  
   sock = connect(0)
