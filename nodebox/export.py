@@ -29,7 +29,6 @@ class ExportSession(object):
             self.total = pages
         self.progress.begin(msg, self.total)
 
-        
     def status(self, cancel=False):
         if cancel:
             self.batches = []
@@ -91,6 +90,7 @@ class MovieExportSession(ExportSession):
         self.fps = fps
         self.loop = loop
         self.batches = [(n, min(n+MOV_BATCH_SIZE-1,frames)) for n in range(first, frames+1, MOV_BATCH_SIZE)]
+        self.bitrate = 1
 
     def add(self, canvas_or_context, frame):
         image = canvas_or_context._nsImage
@@ -98,7 +98,7 @@ class MovieExportSession(ExportSession):
             dims = image.size()
             if self.ext == 'mov':
                 self.writer = Video.alloc()
-                self.writer.initWithFile_size_fps_(self.fname, dims, self.fps)
+                self.writer.initWithFile_size_fps_bitrate_(self.fname, dims, self.fps, self.bitrate)
             elif self.ext == 'gif':
                 self.writer = AnimatedGif.alloc()
                 self.writer.initWithFile_size_fps_loop_(self.fname, dims, self.fps, self.loop)

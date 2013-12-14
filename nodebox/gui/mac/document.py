@@ -40,6 +40,7 @@ class NodeBoxDocument(NSDocument):
     exportMovieFrames = objc.IBOutlet()
     exportMovieFps = objc.IBOutlet()
     exportMovieLoop = objc.IBOutlet()
+    exportMovieBitrate = objc.IBOutlet()
     # When the PageCount accessory is loaded, we also add:
     pageCount = objc.IBOutlet()
     pageCountAccessory = objc.IBOutlet()
@@ -48,7 +49,7 @@ class NodeBoxDocument(NSDocument):
     exportSheetIndicator = objc.IBOutlet()
     # file export config & state
     export = dict(formats=dict(image=('pdf', 'eps', 'png', 'tiff', 'jpg', 'gif'), movie=('mov', 'gif')),
-                  movie=dict(format='mov', frames=150, fps=30, loop=0),
+                  movie=dict(format='mov', frames=150, fps=30, rate=1, loop=0),
                   image=dict(format='png', pages=10),
                   dir=None, session=None)
     # run/export-related state
@@ -697,8 +698,10 @@ class NodeBoxDocument(NSDocument):
         exportPanel.setAccessoryView_(self.exportMovieAccessory)
         self.exportMovieFormat.selectItemAtIndex_(format_idx)
         exportPanel.setRequiredFileType_(self.export['movie']['format'])
-        self.exportMovieLoop.setEnabled_(self.export['movie']['format']=='gif')
         self.exportMovieLoop.setState_(NSOnState if should_loop else NSOffState)
+        self.exportMovieLoop.setEnabled_(format=='gif')
+        self.exportMovieBitrate.setEnabled_(format!='gif')
+        self.exportMovieBitrate.selectItemWithTag_(self.export['movie']['rate'])
         return exportPanel
 
     def moviePanelDidEnd_returnCode_contextInfo_(self, panel, returnCode, context):
@@ -710,7 +713,8 @@ class NodeBoxDocument(NSDocument):
             format_idx = self.exportMovieFormat.indexOfSelectedItem()
             format = self.export['formats']['movie'][format_idx]
             loop = -1 if self.exportMovieLoop.state()==NSOnState else 0
-            self.export['movie'] = dict(format=format, frames=frames, fps=fps, loop=loop)
+            rate = self.exportMovieBitrate.selectedItem().tag()
+            self.export['movie'] = dict(format=format, frames=frames, fps=fps, loop=loop, rate=rate)
             panel.close()
 
             if frames <= 0 or fps <= 0: return
@@ -723,8 +727,9 @@ class NodeBoxDocument(NSDocument):
         panel = sender.window()
         format = self.export['formats']['movie'][sender.indexOfSelectedItem()]
         panel.setRequiredFileType_(format)
-        self.exportMovieLoop.setEnabled_(format=='gif') # only gifs can loop
         self.exportMovieLoop.setState_(NSOnState if format=='gif' else NSOffState)
+        self.exportMovieLoop.setEnabled_(format=='gif')
+        self.exportMovieBitrate.setEnabled_(format!='gif')
 
     def doExportAsMovie(self, fname, frames=60, fps=30, first=1, loop=0):
         if self.animationTimer is not None:
@@ -734,7 +739,7 @@ class NodeBoxDocument(NSDocument):
         self._frame = first
         
         self.export['session'] = MovieExportSession(fname, frames, fps, loop, first=first)
-
+        self.export['session'].bitrate = self.export['movie']['rate']
         if self.canvas.speed is not None and self.namespace.has_key("setup"):
             self.fastRun(self.namespace["setup"])
             self.shareThread()

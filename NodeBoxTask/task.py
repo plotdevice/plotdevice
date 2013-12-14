@@ -100,6 +100,7 @@ class NodeBoxRunner(object):
             # pick the right kind of output (single movie vs multiple docs)
             if format in ('mov','gif'):
                 self.session = MovieExportSession(fname=fn, frames=last, fps=fps, first=first, console=True)
+                self.session.bitrate = opts['rate']
             else:
                 self.session = ImageExportSession(fname=fn, pages=last, format=format, first=first, console=True)
             self._run_session(last, first)
@@ -127,8 +128,6 @@ class NodeBoxRunner(object):
             sys.stdout.write(errtxt)
             self.session._shutdown()
             AppHelper.callAfter(quit)            
-            # self.session.on_complete(quit)
-            # self.session.done()
         else:
             self.session.on_complete(quit)
             self.session.done()

@@ -20,7 +20,7 @@
 }
 @property (nonatomic, assign) NSInteger framesWritten;
 
-- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps;
+- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps;
 - (void)addFrame:(NSImage *)frame;
 - (void)closeFile;
 

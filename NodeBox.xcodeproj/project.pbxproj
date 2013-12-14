@@ -362,10 +362,10 @@
 				2564AD2C0F5327BB00F57823 /* NodeBox_Prefix.pch */,
 				2A62D1441856B3890090024F /* AnimatedGif.h */,
 				2A62D1451856B3890090024F /* AnimatedGif.m */,
-				2A62D1461856B3890090024F /* Video.h */,
-				2A62D1471856B3890090024F /* Video.m */,
 				2A62D1481856B3890090024F /* ImageSequence.h */,
 				2A62D1491856B3890090024F /* ImageSequence.m */,
+				2A62D1461856B3890090024F /* Video.h */,
+				2A62D1471856B3890090024F /* Video.m */,
 				2A591FEC185C168500D1833D /* Installer.h */,
 				2A591FED185C168500D1833D /* Installer.m */,
 				2A37F4B0FDCFA73011CA2CEA /* main.m */,
@@ -681,7 +681,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Remove the distribution folder\nrm -rf dist\n# Make a new one\nmkdir -p dist/NodeBox/NodeBox\ncd dist/NodeBox/NodeBox\n# Copy the current NodeBox application.\ncp -R -p $TARGET_BUILD_DIR/* .\n# Copy changes and readme\ncp ../../../CHANGES.md Changes.txt\ncp ../../../README.md Readme.txt\n# Copy examples\ncp -R ../../../examples Examples\nchmod 644 Examples/*/*\nchflags uchg Examples/*/*.py\n# Remove all .svn cruft\nrm -rf `find . -type d -name .svn`\n# Make DMG\ncd ../..\nhdiutil create NodeBox.dmg -srcfolder NodeBox\nhdiutil internet-enable NodeBox.dmg";
+			shellScript = "# Remove the distribution folder\nfind dist -name \\*.py -exec chflags nouchg '{}' \\;\nrm -rf dist\n# Make a new one\nmkdir -p dist/NodeBox/NodeBox\ncd dist/NodeBox/NodeBox\n# Copy the current NodeBox application.\ncp -R -p $TARGET_BUILD_DIR/NodeBox.app .\n# Copy changes and readme\ncp ../../../CHANGES.md Changes.txt\ncp ../../../README.md Readme.txt\n# Copy examples\ncp -R ../../../examples Examples\nchmod 644 Examples/*/*\nchflags uchg Examples/*/*.py\n# Remove all .svn cruft\nrm -rf `find . -type d -name .svn`\n# Make DMG\ncd ../..\nhdiutil create NodeBox.dmg -srcfolder NodeBox\nhdiutil internet-enable NodeBox.dmg";
 		};
 /* End PBXShellScriptBuildPhase section */
 

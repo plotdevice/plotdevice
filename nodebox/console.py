@@ -65,7 +65,6 @@ def exec_console(opts):
 
   ERASER = '\r%s\r'%(' '*80)
   re_progress = re.compile(r'^\r.*?\[[#\.]{10,}\]$')
-  started = datetime.now()
   progress = ''
   try:
     while True:
@@ -117,19 +116,20 @@ def exec_application(opts):
 def main():
   parser = argparse.ArgumentParser(description='Run python scripts in NodeBox.app', add_help=False)
   o = parser.add_argument_group("Options", None)
-  o.add_argument('-h','--help', dest='helpscreen', action='store_const', const=True, default=False, help='show this help message and exit')
+  o.add_argument('-h','--help', action='help', help='show this help message and exit')
   o.add_argument('-f', dest='fullscreen', action='store_const', const=True, default=False, help='run full-screen')
   o.add_argument('-b', dest='activate', action='store_const', const=False, default=True, help='run NodeBox in the background')
   o.add_argument('--virtualenv', metavar='PATH', help='path to virtualenv whose libraries you want to use (this should point to the top-level virtualenv directory; a folder containing a lib/python2.7/site-packages subdirectory)')
   o.add_argument('--export', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, gif, or mov')
   o.add_argument('--frames', metavar='N or M-N', help='number of frames to render or a range specifying the first and last frames (default "1-")')
-  o.add_argument('--fps', metavar='N', default=30, help='frames per second in exported video (default 30)')
+  o.add_argument('--fps', metavar='N', default=30, type=int, help='frames per second in exported video (default 30)')
+  o.add_argument('--rate', metavar='N', default=1.0, type=float, help='bitrate in megabits per second (video only)')
   o.add_argument('--loop', metavar='N', default=0, nargs='?', const=-1, help='number of times to loop an exported animated gif (omit N to loop forever)')
   o.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
   o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='remainder of command line will be passed to the script as sys.argv')
   i = parser.add_argument_group("NodeBox Script File", None)
   i.add_argument('file', help='the python script to be rendered')
-  # parser.print_help()
+  
   opts = parser.parse_args()
   
   if opts.virtualenv:
@@ -159,12 +159,6 @@ def main():
       del opts.frames
   else:
     opts.first, opts.last = (1, None)
-
-  if opts.fps:
-    opts.fps = int(opts.fps)
-
-  if opts.loop:
-    opts.loop = int(opts.loop)
 
   if opts.export:
     basename, ext = opts.export.rsplit('.',1)

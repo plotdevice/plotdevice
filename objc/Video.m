@@ -92,7 +92,7 @@
 
 @implementation Video
 
-- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps{
+- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps{
 	if ((self = [super init])) {
 
         NSError *error = nil;
@@ -104,12 +104,12 @@
 
         videoWriter = [[AVAssetWriter alloc] initWithURL: [NSURL fileURLWithPath:fileName] fileType:AVFileTypeQuickTimeMovie error:&error];
         NSParameterAssert(videoWriter);
-        
         NSDictionary *videoSettings = @{ AVVideoCodecKey: AVVideoCodecH264,
                                          AVVideoWidthKey: @(aSize.width),
                                          AVVideoHeightKey: [NSNumber numberWithInt:aSize.height],
-                                         AVVideoCompressionPropertiesKey: @{ AVVideoAverageBitRateKey:@(1000000)
-                                                                             /*AVVideoMaxKeyFrameIntervalKey: @1*/}
+                                         AVVideoCompressionPropertiesKey: @{
+                                            AVVideoAverageBitRateKey:@((int)(mbps*1000000))
+                                            /*AVVideoMaxKeyFrameIntervalKey: @1*/}
                                          };
         videoWriterInput = [[AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo
                                                                outputSettings:videoSettings] retain];
