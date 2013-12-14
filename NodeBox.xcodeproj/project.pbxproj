@@ -22,14 +22,16 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		2A591FEE185C168500D1833D /* Installer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A591FED185C168500D1833D /* Installer.m */; };
+		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
 		2A62D14318555CB00090024F /* document.py in Copy Python gui.mac */ = {isa = PBXBuildFile; fileRef = 2A62D14118555C980090024F /* document.py */; };
 		2A62D14A1856B3890090024F /* AnimatedGif.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1451856B3890090024F /* AnimatedGif.m */; };
-		2A62D14B1856B3890090024F /* Animation.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1471856B3890090024F /* Animation.m */; };
+		2A62D14B1856B3890090024F /* Video.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1471856B3890090024F /* Video.m */; };
 		2A62D14C1856B3890090024F /* ImageSequence.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1491856B3890090024F /* ImageSequence.m */; };
 		2A827CCA1859E9FE00A126BA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A827CC91859E9FE00A126BA /* Cocoa.framework */; };
 		2A827CD21859E9FE00A126BA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A827CD11859E9FE00A126BA /* main.m */; };
 		2A827CFE1859EAC900A126BA /* AnimatedGif.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1451856B3890090024F /* AnimatedGif.m */; };
-		2A827D001859EAC900A126BA /* Animation.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1471856B3890090024F /* Animation.m */; };
+		2A827D001859EAC900A126BA /* Video.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1471856B3890090024F /* Video.m */; };
 		2A827D021859EAC900A126BA /* ImageSequence.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1491856B3890090024F /* ImageSequence.m */; };
 		2A827D031859EAEC00A126BA /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */; };
 		2A827D041859EB0000A126BA /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FB18540246001C4E0A /* CoreVideo.framework */; };
@@ -217,11 +219,14 @@
 		2A37F4B0FDCFA73011CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		2A591FEC185C168500D1833D /* Installer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Installer.h; path = objc/Installer.h; sourceTree = "<group>"; };
+		2A591FED185C168500D1833D /* Installer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Installer.m; path = objc/Installer.m; sourceTree = "<group>"; };
+		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		2A62D14118555C980090024F /* document.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = document.py; sourceTree = "<group>"; };
 		2A62D1441856B3890090024F /* AnimatedGif.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AnimatedGif.h; path = objc/AnimatedGif.h; sourceTree = "<group>"; };
 		2A62D1451856B3890090024F /* AnimatedGif.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AnimatedGif.m; path = objc/AnimatedGif.m; sourceTree = "<group>"; };
-		2A62D1461856B3890090024F /* Animation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Animation.h; path = objc/Animation.h; sourceTree = "<group>"; };
-		2A62D1471856B3890090024F /* Animation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Animation.m; path = objc/Animation.m; sourceTree = "<group>"; };
+		2A62D1461856B3890090024F /* Video.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Video.h; path = objc/Video.h; sourceTree = "<group>"; };
+		2A62D1471856B3890090024F /* Video.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Video.m; path = objc/Video.m; sourceTree = "<group>"; };
 		2A62D1481856B3890090024F /* ImageSequence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ImageSequence.h; path = objc/ImageSequence.h; sourceTree = "<group>"; };
 		2A62D1491856B3890090024F /* ImageSequence.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ImageSequence.m; path = objc/ImageSequence.m; sourceTree = "<group>"; };
 		2A827CC81859E9FE00A126BA /* NodeBoxTask.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NodeBoxTask.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -295,6 +300,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */,
+				2A591FF0185C17D200D1833D /* Security.framework in Frameworks */,
 				2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */,
 				2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */,
 				2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */,
@@ -356,10 +362,12 @@
 				2564AD2C0F5327BB00F57823 /* NodeBox_Prefix.pch */,
 				2A62D1441856B3890090024F /* AnimatedGif.h */,
 				2A62D1451856B3890090024F /* AnimatedGif.m */,
-				2A62D1461856B3890090024F /* Animation.h */,
-				2A62D1471856B3890090024F /* Animation.m */,
+				2A62D1461856B3890090024F /* Video.h */,
+				2A62D1471856B3890090024F /* Video.m */,
 				2A62D1481856B3890090024F /* ImageSequence.h */,
 				2A62D1491856B3890090024F /* ImageSequence.m */,
+				2A591FEC185C168500D1833D /* Installer.h */,
+				2A591FED185C168500D1833D /* Installer.m */,
 				2A37F4B0FDCFA73011CA2CEA /* main.m */,
 			);
 			name = "Other Sources";
@@ -389,6 +397,7 @@
 		2A37F4C3FDCFA73011CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2A591FEF185C17D200D1833D /* Security.framework */,
 				2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */,
 				2ABBB2FB18540246001C4E0A /* CoreVideo.framework */,
 				2ABBB2F91854018B001C4E0A /* AVFoundation.framework */,
@@ -683,7 +692,7 @@
 			files = (
 				2A827CD21859E9FE00A126BA /* main.m in Sources */,
 				2A827CFE1859EAC900A126BA /* AnimatedGif.m in Sources */,
-				2A827D001859EAC900A126BA /* Animation.m in Sources */,
+				2A827D001859EAC900A126BA /* Video.m in Sources */,
 				2A827D021859EAC900A126BA /* ImageSequence.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -692,10 +701,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2A62D14B1856B3890090024F /* Animation.m in Sources */,
+				2A62D14B1856B3890090024F /* Video.m in Sources */,
 				8D15AC320486D014006FF6A4 /* main.m in Sources */,
 				2A62D14C1856B3890090024F /* ImageSequence.m in Sources */,
 				2A62D14A1856B3890090024F /* AnimatedGif.m in Sources */,
+				2A591FEE185C168500D1833D /* Installer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1007,6 +1017,7 @@
 				2A827CF31859E9FF00A126BA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		61DB842F10BEABDF003F73B9 /* Build configuration list for PBXAggregateTarget "Build Distribution" */ = {
 			isa = XCConfigurationList;

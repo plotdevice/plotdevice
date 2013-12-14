@@ -1,5 +1,7 @@
 from AppKit import *
 from Foundation import *
+from subprocess import Popen, PIPE
+import os
 
 def get_default(label, packed=False):
     if not label.startswith('NS'):
@@ -15,7 +17,7 @@ def set_default(label, value, packed=False):
 
 FG_COLOR = NSForegroundColorAttributeName
 BG_COLOR = NSBackgroundColorAttributeName
-from pprint import pformat
+
 def unpackAttrs(d):
     unpacked = {}
     for key, value in d.items():
@@ -47,7 +49,6 @@ def packAttrs(d):
 def getBasicTextAttributes():
     return get_default("text-attributes", packed=True)
 
-from pprint import pprint,pformat
 def getSyntaxTextAttributes():
     syntax = {}
     basic = get_default("text-attributes", packed=True)
@@ -63,9 +64,6 @@ def setBasicTextAttributes(basicAttrs):
 
 def setSyntaxTextAttributes(syntaxAttrs):
     if syntaxAttrs != getSyntaxTextAttributes():
-        # print "changed from",pformat(getSyntaxTextAttributes())
-        # print "to",pformat(syntaxAttrs)
-
         set_default("text-colors", syntaxAttrs, packed=True)
         nc = NSNotificationCenter.defaultCenter()
         nc.postNotificationName_object_("PyDETextFontChanged", None)
@@ -79,11 +77,40 @@ def setTextFont(font):
     setBasicTextAttributes(basicAttrs)
     setSyntaxTextAttributes(syntaxAttrs)
 
+def possibleToolLocations():
+    homebin = '%s/bin/nodebox'%os.environ['HOME']
+    localbin = '/usr/local/bin/nodebox'
+    locations = [homebin, localbin]
+
+    # find the user's path by launching the same shell Terminal.app uses
+    # and peeking at the $PATH
+    term = NSUserDefaults.standardUserDefaults().persistentDomainForName_('com.apple.Terminal')
+    if term:
+        setting = term['Default Window Settings']
+        shell = term['Window Settings'][setting]['CommandString']
+        p = Popen([shell,"-l"], stdout=PIPE, stderr=PIPE, stdin=PIPE)
+        out, err = p.communicate("echo $PATH")
+        locations = []
+        for path in out.strip().split(':'):
+            if '/sbin' in path: continue
+            if path.startswith('/bin'): continue
+            if path.startswith('/usr/bin'): continue
+            locations.append('%s/nodebox'%path)
+    if localbin not in locations:
+        locations.insert(0, localbin)
+    if homebin not in locations:
+        locations.insert(0, homebin)
+    return locations
+
 # class defined in NodeBoxPreferences.xib
 class NodeBoxPreferencesController(NSWindowController):
     fontPreview = objc.IBOutlet()
-    useCALayer = objc.IBOutlet()
     keepWindows = objc.IBOutlet()
+    toolInstall = objc.IBOutlet()
+    toolPath = objc.IBOutlet()
+    toolRepair = objc.IBOutlet()
+    toolInstallSheet = objc.IBOutlet()
+    toolInstallMenu = objc.IBOutlet()
     commentsColorWell = objc.IBOutlet()
     funcClassColorWell = objc.IBOutlet()
     keywordsColorWell = objc.IBOutlet()
@@ -92,6 +119,8 @@ class NodeBoxPreferencesController(NSWindowController):
     errColorWell = objc.IBOutlet()
     pageColorWell = objc.IBOutlet()
     selectionColorWell = objc.IBOutlet()
+    toolFound = False
+    toolValid = False
 
     def init(self):
         self = self.initWithWindowNibName_("NodeBoxPreferences")
@@ -111,13 +140,11 @@ class NodeBoxPreferencesController(NSWindowController):
         self.pageColorWell.setColor_(syntaxAttrs["page"][BG_COLOR])
         self.selectionColorWell.setColor_(syntaxAttrs["selection"][BG_COLOR])
         self._wells = [self.commentsColorWell, self.funcClassColorWell, self.keywordsColorWell, self.stringsColorWell, self.plainColorWell, self.errColorWell, self.pageColorWell, self.selectionColorWell]
-
-        self.useCALayer.setState_(NSOffState if get_default('use-ca-layer') else NSOnState)
         self.keepWindows.selectCellAtRow_column_(0, 0 if get_default('NSQuitAlwaysKeepsWindows') else 1)
-
         nc = NSNotificationCenter.defaultCenter()
         nc.addObserver_selector_name_object_(self, "textFontChanged:", "PyDETextFontChanged", None)
         nc.addObserver_selector_name_object_(self, "blur:", "NSWindowDidResignKeyNotification", None)
+        self.checkTool()
 
     def windowWillClose_(self, notification):
         fm = NSFontManager.sharedFontManager()
@@ -126,9 +153,8 @@ class NodeBoxPreferencesController(NSWindowController):
             fp.setDelegate_(None)
             fp.close()
 
-    @objc.IBAction
-    def updateLayerUsage_(self, sender):
-        set_default('use-ca-layer', NSOffState==self.useCALayer.state())
+    def windowDidBecomeMain_(self, notification):
+        self.checkTool()
 
     @objc.IBAction
     def updateOpenBehavior_(self, sender):
@@ -139,6 +165,55 @@ class NodeBoxPreferencesController(NSWindowController):
         if not self.timer:
             self.timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
                                     0.2, self, "timeToUpdateTheColors:", None, True)
+
+    def checkTool(self):
+        broken = []
+        for path in possibleToolLocations():
+            self.toolFound = path if os.path.islink(path) else None
+            if self.toolFound:
+                console_path = os.path.realpath(path)
+                bundle_path = NSBundle.mainBundle().bundlePath()
+                self.toolValid = console_path.startswith(bundle_path)
+            elif os.path.exists(path):
+                broken.append(path)
+            if self.toolFound and self.toolValid:
+                break
+        if not self.toolFound:
+            self.toolFound = broken[0] if broken else None
+            self.toolValid = False
+
+        self.toolInstall.setHidden_(self.toolFound is not None)
+        self.toolPath.setSelectable_(self.toolFound is not None)
+        self.toolPath.setStringValue_(self.toolFound.replace(os.environ['HOME'],'~') if self.toolFound else '')
+        self.toolPath.setTextColor_(ERR_COL if not self.toolValid else NSColor.blackColor())
+        self.toolRepair.setHidden_(not (self.toolFound and not self.toolValid) )
+
+    @objc.IBAction 
+    def installTool_(self, sender):
+        locs = [loc.replace(os.environ['HOME'],'~') for loc in possibleToolLocations()]
+        self.toolInstallMenu.removeAllItems()
+        self.toolInstallMenu.addItemsWithTitles_(locs)
+        NSApp().beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.toolInstallSheet, self.window(), self, None, 0)
+
+    @objc.IBAction
+    def finishInstallation_(self, sender):
+        should_install = sender.tag()
+        if should_install:
+            bundle_path = NSBundle.mainBundle().bundlePath()
+            console_py = '%s/Contents/Resources/python/nodebox/console.py'%bundle_path
+            pth = self.toolInstallMenu.selectedItem().title().replace('~',os.environ['HOME'])
+            dirname = os.path.dirname(pth)
+            try:
+                if os.path.exists(pth) or os.path.islink(pth):
+                    os.unlink(pth)
+                elif not os.path.exists(dirname):
+                    os.makedirs(dirname)
+                os.symlink(console_py, pth)
+            except OSError:
+                Installer.createLink_(pth)
+        self.checkTool()
+        NSApp().endSheet_(self.toolInstallSheet)
+        self.toolInstallSheet.orderOut_(self)
 
     def timeToUpdateTheColors_(self, sender):
         syntaxAttrs = getSyntaxTextAttributes()
@@ -198,7 +273,7 @@ class NodeBoxPreferencesController(NSWindowController):
         nc.removeObserver_name_object_(self, "PyDETextFontChanged", None)
         nc.removeObserver_name_object_(self, "NSWindowDidResignKeyNotification", None)
 
-
+ERR_COL = NSColor.colorWithRed_green_blue_alpha_(167/255.0, 41/255.0, 34/255.0, 1.0)
 def defaultDefaults():
     _basicFont = NSFont.userFixedPitchFontOfSize_(11)
     _BASICATTRS = {NSFontAttributeName: _basicFont,
@@ -210,7 +285,7 @@ def defaultDefaults():
         "string": {FG_COLOR: NSColor.magentaColor()},
         "comment": {FG_COLOR: NSColor.grayColor()},
         "plain": {FG_COLOR: NSColor.blackColor()},
-        "err": {FG_COLOR: NSColor.colorWithRed_green_blue_alpha_(167/255.0, 41/255.0, 34/255.0, 1.0)},
+        "err": {FG_COLOR: ERR_COL},
         # background colors
         "page": {BG_COLOR: NSColor.whiteColor()},
         "selection": {BG_COLOR: NSColor.colorWithRed_green_blue_alpha_(175/255.0, 247/255.0, 1.0, 1.0)},
