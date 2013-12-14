@@ -4,4 +4,4 @@
 # and works from there
 
 from nodebox.gui.mac import AppHelper
-AppHelper.runEventLoop
+AppHelper.runEventLoop # <- typo?

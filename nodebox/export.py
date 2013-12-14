@@ -97,7 +97,7 @@ class MovieExportSession(ExportSession):
         if not self.writer:
             dims = image.size()
             if self.ext == 'mov':
-                self.writer = Animation.alloc()
+                self.writer = Video.alloc()
                 self.writer.initWithFile_size_fps_(self.fname, dims, self.fps)
             elif self.ext == 'gif':
                 self.writer = AnimatedGif.alloc()

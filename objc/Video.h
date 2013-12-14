@@ -10,7 +10,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <CoreVideo/CoreVideo.h>
 
-@interface Animation : NSObject{
+@interface Video : NSObject{
     AVAssetWriter *videoWriter;
     AVAssetWriterInput* videoWriterInput;
     AVAssetWriterInputPixelBufferAdaptor *adaptor;

@@ -6,10 +6,10 @@
 //
 //
 
-#import "Animation.h"
+#import "Video.h"
 
 @interface FrameWriter : NSOperation
-@property (nonatomic, assign) Animation *delegate;
+@property (nonatomic, assign) Video *delegate;
 @property (nonatomic, assign) NSInteger frameNum;
 @property (nonatomic, assign) NSInteger frameRate;
 @property (nonatomic, retain) NSImage *frame;
@@ -59,8 +59,8 @@
     CGColorSpaceRef cs = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
     CGBitmapInfo bi = kCGImageAlphaNoneSkipFirst; // *not* CGImageGetBitmapInfo(image);
     NSDictionary *d = [NSDictionary dictionaryWithObjectsAndKeys:
-                       [NSNumber numberWithBool:YES], kCVPixelBufferCGImageCompatibilityKey,
-                       [NSNumber numberWithBool:YES], kCVPixelBufferCGBitmapContextCompatibilityKey, nil];
+                       @(YES), kCVPixelBufferCGImageCompatibilityKey,
+                       @(YES), kCVPixelBufferCGBitmapContextCompatibilityKey, nil];
     
     // create pixel buffer
     CVPixelBufferCreate(kCFAllocatorDefault, width, height, k32ARGBPixelFormat, (CFDictionaryRef)d, &buffer);
@@ -90,7 +90,7 @@
 @end
 
 
-@implementation Animation
+@implementation Video
 
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps{
 	if ((self = [super init])) {
@@ -107,11 +107,10 @@
         
         NSDictionary *videoSettings = @{ AVVideoCodecKey: AVVideoCodecH264,
                                          AVVideoWidthKey: @(aSize.width),
-                                         AVVideoCompressionPropertiesKey: @{
-                                             // AVVideoAverageBitRateKey
-                                             // AVVideoMaxKeyFrameIntervalKey: @1
-                                         },
-                                         AVVideoHeightKey: [NSNumber numberWithInt:aSize.height]};
+                                         AVVideoHeightKey: [NSNumber numberWithInt:aSize.height],
+                                         AVVideoCompressionPropertiesKey: @{ AVVideoAverageBitRateKey:@(1000000)
+                                                                             /*AVVideoMaxKeyFrameIntervalKey: @1*/}
+                                         };
         videoWriterInput = [[AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo
                                                                outputSettings:videoSettings] retain];
         
