@@ -1,9 +1,40 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-render.py
+console.py
 
 Run nodebox scripts from the command line
+
+usage: nodebox [-h] [-f] [-b] [--virtualenv PATH] [--export FILE]
+               [--frames N or M-N] [--fps N] [--rate N] [--loop [N]] [--live]
+               [--args [a [b ...]]]
+               file
+
+Options:
+  -h, --help          show this help message and exit
+  -f                  run full-screen
+  -b                  run NodeBox in the background
+  --virtualenv PATH   path to virtualenv whose libraries you want to use (this
+                      should point to the top-level virtualenv directory; a
+                      folder containing a lib/python2.7/site-packages
+                      subdirectory)
+  --export FILE       a destination filename ending in pdf, eps, png, tiff,
+                      jpg, gif, or mov
+  --frames N or M-N   number of frames to render or a range specifying the
+                      first and last frames (default "1-")
+  --fps N             frames per second in exported video (default 30)
+  --rate N            bitrate in megabits per second (video only)
+  --loop [N]          number of times to loop an exported animated gif (omit N
+                      to loop forever)
+  --live              perform an export in the application rather than the
+                      console. if not exporting, re-render graphics each time
+                      the file is saved
+  --args [a [b ...]]  remainder of command line will be passed to the script
+                      as sys.argv
+
+NodeBox Script File:
+  file                the python script to be rendered
+
 """
 
 import sys
@@ -17,7 +48,6 @@ import select
 from time import sleep
 
 import shutil
-import tempfile
 from datetime import datetime
 from subprocess import Popen, PIPE
 
