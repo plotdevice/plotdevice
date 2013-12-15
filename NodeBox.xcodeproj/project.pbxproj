@@ -565,6 +565,7 @@
 				8D15AC330486D014006FF6A4 /* Frameworks */,
 				2A827D0B1859EEF900A126BA /* Copy NodeBoxTask background app */,
 				6156AAC410BC110E00C3CE99 /* Copy External Libraries & Symlink "python" Folder into Task */,
+				2A591FF1185D38C800D1833D /* Stash examples in the app bundle */,
 			);
 			buildRules = (
 			);
@@ -640,6 +641,20 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		2A591FF1185D38C800D1833D /* Stash examples in the app bundle */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Stash examples in the app bundle";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ditto examples $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\nchmod 644 $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples/*/*.py\nchflags uchg $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples/*/*.py";
+		};
 		2A827D12185AA27800A126BA /* Symlink "python" Folder in parent bundle */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;

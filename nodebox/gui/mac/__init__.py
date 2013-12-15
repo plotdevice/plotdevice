@@ -6,6 +6,9 @@ import time
 import json
 import socket
 import SocketServer
+import tempfile
+import shutil
+from glob import glob
 
 from PyObjCTools import AppHelper
 from Foundation import *
@@ -16,15 +19,15 @@ from nodebox.gui.mac.document import NodeBoxDocument
 from nodebox.gui.mac.preferences import getBasicTextAttributes
 from nodebox.gui.mac.util import errorAlert
 from nodebox import util
-from nodebox import graphics
+from nodebox import graphics, get_bundle_path
 
 RPC_PORT = 9000
 VERY_LIGHT_GRAY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.95, NSColor.whiteColor())
 DARKER_GRAY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.8, NSColor.whiteColor())
-
 objc.setVerbose(1)
 
 class NodeBoxAppDelegate(NSObject):
+    examplesMenu = None
 
     def awakeFromNib(self):
         self._prefsController = None
@@ -40,8 +43,33 @@ class NodeBoxAppDelegate(NSObject):
             self._listener.start()
         except OSError: pass
         except IOError: pass
+        self.examplesMenu = NSApp().mainMenu().itemWithTitle_('Examples')
 
-    def run_script(self, opts):
+    def updateExamples(self):
+        examples_folder = os.path.abspath('%s/Contents/Resources/examples'%get_bundle_path())
+        pyfiles = glob('%s/*/*.py'%examples_folder)
+        categories = self.examplesMenu.submenu()
+        folders = {}
+        for item in categories.itemArray():
+            item.submenu().removeAllItems()
+            folders[item.title()] = item.submenu()
+        for fn in sorted(pyfiles):
+            cat = os.path.basename(os.path.dirname(fn))
+            example = os.path.basename(fn)
+            item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(example.replace('.py',''), "openExample:", "")
+            item.setRepresentedObject_(fn)
+            folders[cat].addItem_(item)
+        self.examplesMenu.setHidden_(not pyfiles)
+
+    def openExample_(self, sender):
+        pth = sender.representedObject()
+        doc, err = self._docsController.makeUntitledDocumentOfType_error_("NodeBoxDocument",None)
+        doc.stationery = pth
+        self._docsController.addDocument_(doc)
+        doc.makeWindowControllers()
+        doc.showWindows()
+
+    def runScript(self, opts):
         url = NSURL.URLWithString_('file://%s'%opts['file'])
         self._docsController.openDocumentWithContentsOfURL_display_error_(url, True, None)
         stdout = opts['stdout']
@@ -63,7 +91,7 @@ class NodeBoxAppDelegate(NSObject):
             stdout.put("couldn't open script: %s"%opts['file'])
             stdout.put(None)
 
-    def stop_script(self, opts):
+    def stopScript(self, opts):
         url = NSURL.URLWithString_('file://%s'%opts['file'])
         self._docsController.openDocumentWithContentsOfURL_display_error_(url, True, None)
         for doc in self._docsController.documents():
@@ -77,6 +105,7 @@ class NodeBoxAppDelegate(NSObject):
             url = doc.fileURL()
             if url and os.path.exists(url.fileSystemRepresentation()):
                 doc.refresh()
+        self.updateExamples()
 
     @objc.IBAction
     def showPreferencesPanel_(self, sender):
@@ -388,7 +417,7 @@ class CommandListener(Thread):
             self.stdout_q = Queue()
             self.opts = json.loads(self.request.recv(1024).split('\n')[0])
             self.opts['stdout'] = self.stdout_q
-            AppHelper.callAfter(NSApp.delegate().run_script, self.opts)
+            AppHelper.callAfter(NSApp.delegate().runScript, self.opts)
     
             txt = ''
             try:
@@ -408,7 +437,7 @@ class CommandListener(Thread):
             try:
                 self.request.setblocking(0)
                 interrupt = self.request.recv(1024)
-                AppHelper.callAfter(NSApp.delegate().stop_script, self.opts)
+                AppHelper.callAfter(NSApp.delegate().stopScript, self.opts)
             except socket.error, e:
                 pass # no input from the client
             finally:

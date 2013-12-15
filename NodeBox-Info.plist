@@ -14,7 +14,7 @@
 			<key>CFBundleTypeIconFile</key>
 			<string>NodeBoxFile.icns</string>
 			<key>CFBundleTypeName</key>
-			<string>DocumentType</string>
+			<string>NodeBoxDocument</string>
 			<key>CFBundleTypeOSTypes</key>
 			<array>
 				<string>????</string>
@@ -41,8 +41,6 @@
 	<string>1.9.7rc2</string>
 	<key>CFBundleSignature</key>
 	<string>NdBx</string>
-	<key>CFBundleURLTypes</key>
-	<array/>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>LSApplicationCategoryType</key>
@@ -53,11 +51,5 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>NSServices</key>
-	<array/>
-	<key>UTExportedTypeDeclarations</key>
-	<array/>
-	<key>UTImportedTypeDeclarations</key>
-	<array/>
 </dict>
 </plist>

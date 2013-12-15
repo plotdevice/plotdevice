@@ -17,7 +17,7 @@ from nodebox.gui.mac.dashboard import *
 from nodebox.gui.mac.util import errorAlert
 from nodebox.gui.mac import PyDETextView
 from nodebox import util
-from nodebox import graphics
+from nodebox import graphics, get_bundle_path
 
 
 
@@ -60,6 +60,7 @@ class NodeBoxDocument(NSDocument):
     _code = None
     vars = []
     path = None
+    stationery = None
 
     def windowNibName(self):
         return "NodeBoxDocument"
@@ -80,16 +81,16 @@ class NodeBoxDocument(NSDocument):
         return self
 
     def windowControllerDidLoadNib_(self, controller):
-        if self.path:
-            self.readFromUTF8(self.path)
+        pth = self.path or self.stationery
+        if pth:
+            self.readFromUTF8(pth)
+        if self.stationery:
+            self.setDisplayName_(os.path.basename(self.stationery))
         font = getBasicTextAttributes()[NSFontAttributeName]
-        # self.outputView.setFont_(font)
         win = self.textView.window()
+        win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
         win.setRestorable_(True)
         win.setIdentifier_("nodebox-doc")
-        win.makeFirstResponder_(self.textView)
-        win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
-        self.currentView = self.graphicsView
 
         # would like to set:
         #   win.setRestorationClass_(NodeBoxDocument)
@@ -98,13 +99,16 @@ class NodeBoxDocument(NSDocument):
         # which we'd need to implement for restoration to work. try
         # again in 10.9.x?
 
-        # disable system's auto-smartquotes (10.9+) in the editor pane
+        # disable system's auto-smartquotes in the editor pane
         try:
             self.textView.setAutomaticQuoteSubstitutionEnabled_(False)
             self.textView.setEnabledTextCheckingTypes_(0)
         except AttributeError:
             pass
 
+        win.makeFirstResponder_(self.textView)
+        self.currentView = self.graphicsView
+ 
     def autosavesInPlace(self):
         return True
 
