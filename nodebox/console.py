@@ -10,6 +10,8 @@ usage: nodebox [-h] [-f] [-b] [--virtualenv PATH] [--export FILE]
                [--args [a [b ...]]]
                file
 
+Run python scripts in NodeBox.app
+
 Options:
   -h, --help          show this help message and exit
   -f                  run full-screen
@@ -26,15 +28,12 @@ Options:
   --rate N            bitrate in megabits per second (video only)
   --loop [N]          number of times to loop an exported animated gif (omit N
                       to loop forever)
-  --live              perform an export in the application rather than the
-                      console. if not exporting, re-render graphics each time
-                      the file is saved
+  --live              re-render graphics each time the file is saved
   --args [a [b ...]]  remainder of command line will be passed to the script
                       as sys.argv
 
 NodeBox Script File:
   file                the python script to be rendered
-
 """
 
 import sys
@@ -200,7 +199,7 @@ def main():
         parser.exit(1,'export directory not found: %s\n'%os.path.abspath(export_dir))
     opts.export = os.path.abspath(opts.export)
 
-  if not opts.activate:
+  if opts.export:
     exec_console(opts)
   else:
     exec_application(opts)
