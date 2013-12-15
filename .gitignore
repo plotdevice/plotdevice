@@ -9,6 +9,7 @@ examples/*/*.png
 examples/*/*.jpg
 examples/*/*.gif
 examples/*/*.mov
+Resources/English.lproj/NodeBoxHelp/
 todo.txt
 
 # Xcode user files

@@ -66,7 +66,7 @@ ext_modules = [
     Extension('cPolymagic', ['nodebox/ext/gpc.c', 'nodebox/ext/cPolymagic.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation'])
     ]
 
-packages = ['nodebox', 'nodebox.graphics', 'nodebox.util', 'nodebox.geo']
+packages = ['nodebox', 'nodebox.graphics', 'nodebox.util', 'nodebox.geo', 'nodebox.gui', 'nodebox.run']
 
 if __name__=='__main__':
 

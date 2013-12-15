@@ -18,7 +18,7 @@
 }
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification{
     NSBundle *mainBundle = [NSBundle mainBundle];
-    NSString *taskPath = [mainBundle pathForResource:@"task" ofType:@"py"];
+    NSString *taskPath = [[mainBundle resourcePath] stringByAppendingString:@"/python/nodebox/run/task.py"];
     Py_SetProgramName("/usr/bin/python");
     Py_Initialize();
     PySys_SetArgv(_argc, (char **)_argv);

@@ -3,10 +3,10 @@ import re
 import objc
 from Foundation import *
 from AppKit import *
-from nodebox.gui.mac.preferences import getBasicTextAttributes, getSyntaxTextAttributes
-from nodebox.gui.mac.preferences import setTextFont, FG_COLOR, BG_COLOR
+from nodebox.gui.preferences import getBasicTextAttributes, getSyntaxTextAttributes
+from nodebox.gui.preferences import setTextFont, FG_COLOR, BG_COLOR
 from nodebox.util.PyFontify import fontify
-from nodebox.gui.mac.ValueLadder import ValueLadder
+from nodebox.gui.ValueLadder import ValueLadder
 whiteRE = re.compile(r"[ \t]+")
 commentRE = re.compile(r"[ \t]*(#)")
 
@@ -193,7 +193,7 @@ class PyDETextView(NSTextView):
 
     @objc.IBAction
     def jumpToLine_(self, sender):
-        from nodebox.gui.mac.AskString import AskString
+        from nodebox.gui.AskString import AskString
         AskString("Jump to line number:", self._jumpToLineCallback,
                   parentWindow=self.window())
 

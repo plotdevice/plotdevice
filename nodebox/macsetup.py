@@ -14,7 +14,7 @@ import py2app
 from distutils.core import setup, Extension
 
 from setup import VERSION, NAME, packages, ext_modules
-packages.extend(['nodebox.gui', 'nodebox.gui.mac'])
+packages.extend(['nodebox.gui'])
 
 # Useful site packages
 includes = ['Image', 'numpy', 'psyco']

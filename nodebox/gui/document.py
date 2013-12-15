@@ -10,12 +10,12 @@ from hashlib import md5
 from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
-from nodebox.export import MovieExportSession, ImageExportSession
-from nodebox.gui.mac.preferences import get_default, getBasicTextAttributes
-from nodebox.gui.mac.ValueLadder import MAGICVAR
-from nodebox.gui.mac.dashboard import *
-from nodebox.gui.mac.util import errorAlert
-from nodebox.gui.mac import PyDETextView
+from nodebox.run import MovieExportSession, ImageExportSession
+from nodebox.gui.preferences import get_default, getBasicTextAttributes
+from nodebox.gui.ValueLadder import MAGICVAR
+from nodebox.gui.dashboard import *
+from nodebox.gui.util import errorAlert
+from nodebox.gui import PyDETextView
 from nodebox import util
 from nodebox import graphics, get_bundle_path
 
@@ -444,7 +444,11 @@ class NodeBoxDocument(NSDocument):
 
         self.scriptName = self.fileName()
         libDir = os.path.join(os.getenv("HOME"), "Library", "Application Support", "NodeBox")
-        if not self.scriptName:
+        
+        if self.stationery:
+            curDir = os.path.dirname(self.stationery)
+            self.scriptName = os.path.basename(self.stationery)
+        elif not self.scriptName:
             curDir = os.getenv("HOME")
             self.scriptName = "<untitled>"
         else:

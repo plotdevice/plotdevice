@@ -14,11 +14,11 @@ import traceback
 from AppKit import NSApplication
 from Foundation import *
 from PyObjCTools import AppHelper
-nodebox_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append("%s/python"%nodebox_dir)
 
-import nodebox
-from nodebox.export import MovieExportSession, ImageExportSession
+lib_dir = os.path.abspath('%s/../..'%os.path.dirname(__file__))
+sys.path.append(lib_dir)
+
+from nodebox.run import MovieExportSession, ImageExportSession
 from nodebox import graphics
 from nodebox import util
 

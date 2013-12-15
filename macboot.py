@@ -1,6 +1,6 @@
 # Startup file for the NodeBox OS X application
 # PyObjC requires the startup file to be in the root folder.
-# This just imports everything from the nodebox.gui.mac module
+# This just imports everything from the nodebox.gui module
 # and works from there
 
 import objc
@@ -9,6 +9,6 @@ import AppKit
 
 from PyObjCTools import AppHelper
 
-import nodebox.gui.mac
+import nodebox.gui
 
 AppHelper.runEventLoop()
