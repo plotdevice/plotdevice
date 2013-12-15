@@ -339,7 +339,6 @@ class NodeBoxDocument(NSDocument):
             # Start the timer
             self.animationTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
                 1.0 / self.speed, self, objc.selector(self.doFrame, signature="v@:@"), None, True)
-
             # Start the spinner
             self.animationSpinner.startAnimation_(None)
         else:
@@ -528,7 +527,6 @@ class NodeBoxDocument(NSDocument):
         errAttrs[NSForegroundColorAttributeName] = NSColor.redColor()
 
         outputView = self.outputView
-        outputView.setSelectedRange_((outputView.textStorage().length(), 0))
         for isErr, data in output:
             outputView.append(data, stream='err' if isErr else 'message')
             if self._meta['stdout']:

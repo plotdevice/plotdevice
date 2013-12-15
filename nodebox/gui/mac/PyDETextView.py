@@ -772,12 +772,16 @@ class OutputTextView(NSTextView):
         pass # ignore system color panel
 
     def append(self, txt, stream='message'):
+        if not txt: return
         defer_endl = txt.endswith(u'\n')
         txt = (u"\n" if self.endl else u"") + (txt[:-1 if defer_endl else None])
         atxt = NSAttributedString.alloc().initWithString_attributes_(txt, self._attrs(stream))
+        self.ts.beginEditing()
         self.ts.appendAttributedString_(atxt)
+        self.ts.endEditing()
         self.scrollRangeToVisible_(NSMakeRange(self.ts.length()-1, 0))
         self.endl = defer_endl
+        self.setNeedsDisplay_(True)
 
     def clear(self, timestamp=False):
         self.endl = False

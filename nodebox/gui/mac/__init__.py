@@ -325,17 +325,15 @@ class NodeBoxGraphicsView(NSView):
                 self.canvas.draw()
             except:
                 # A lot of code just to display the error in the output view.
+                # (though it's unclear what would make things fail here rather
+                # than in the document's animation or export-batch loop)
                 etype, value, tb = sys.exc_info()
-                if tb.tb_next is not None:
-                    tb = tb.tb_next  # skip the frame doing the exec
+                while tb and 'nodebox/gui' in tb.tb_frame.f_code.co_filename:
+                    tb = tb.tb_next
                 traceback.print_exception(etype, value, tb)
                 data = "".join(traceback.format_exception(etype, value, tb))
-                attrs = getBasicTextAttributes()
-                attrs[NSForegroundColorAttributeName] = NSColor.redColor()
                 outputView = self.document.outputView
-                outputView.setSelectedRange_((outputView.textStorage().length(), 0))
-                outputView.setTypingAttributes_(attrs)
-                outputView.insertText_(data)
+                outputView.append(data, stream='err')
             NSGraphicsContext.currentContext().restoreGraphicsState()
 
     def _updateImage(self):
