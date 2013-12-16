@@ -28,7 +28,9 @@
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleHelpBookFolder</key>
-	<string>NodeBoxHelp</string>
+	<string>NodeBox Help</string>
+	<key>CFBundleHelpBookName</key>
+	<string>NodeBox Help</string>
 	<key>CFBundleIconFile</key>
 	<string>NodeBox.icns</string>
 	<key>CFBundleIdentifier</key>

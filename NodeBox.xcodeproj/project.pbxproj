@@ -33,11 +33,10 @@
 		2A294479185E578300E9F650 /* PyDETextView.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294469185E575F00E9F650 /* PyDETextView.py */; };
 		2A29447A185E578300E9F650 /* util.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A29446A185E575F00E9F650 /* util.py */; };
 		2A29447B185E578300E9F650 /* ValueLadder.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A29446B185E575F00E9F650 /* ValueLadder.py */; };
-		2A29447E185E595000E9F650 /* context.py in Resources */ = {isa = PBXBuildFile; fileRef = 2A29447C185E595000E9F650 /* context.py */; };
-		2A29447F185E595000E9F650 /* grobs.py in Resources */ = {isa = PBXBuildFile; fileRef = 2A29447D185E595000E9F650 /* grobs.py */; };
 		2A294480185E596200E9F650 /* context.py in Copy Python graphics */ = {isa = PBXBuildFile; fileRef = 2A29447C185E595000E9F650 /* context.py */; };
 		2A294481185E596800E9F650 /* grobs.py in Copy Python graphics */ = {isa = PBXBuildFile; fileRef = 2A29447D185E595000E9F650 /* grobs.py */; };
-		2A294484185E617900E9F650 /* NodeBoxHelp in Resources */ = {isa = PBXBuildFile; fileRef = 2A294482185E617900E9F650 /* NodeBoxHelp */; };
+		2A294484185E617900E9F650 /* NodeBox Help in Resources */ = {isa = PBXBuildFile; fileRef = 2A294482185E617900E9F650 /* NodeBox Help */; };
+		2A591EAA185E75CF00A45E06 /* remote.py in Copy Python run */ = {isa = PBXBuildFile; fileRef = 2A591EA8185E75AD00A45E06 /* remote.py */; };
 		2A591FEE185C168500D1833D /* Installer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A591FED185C168500D1833D /* Installer.m */; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
 		2A62D14A1856B3890090024F /* AnimatedGif.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1451856B3890090024F /* AnimatedGif.m */; };
@@ -119,6 +118,7 @@
 			files = (
 				2A294463185E550400E9F650 /* __init__.py in Copy Python run */,
 				2A294462185E54F900E9F650 /* task.py in Copy Python run */,
+				2A591EAA185E75CF00A45E06 /* remote.py in Copy Python run */,
 				2A294461185E54F600E9F650 /* export.py in Copy Python run */,
 			);
 			name = "Copy Python run";
@@ -245,10 +245,11 @@
 		2A29446B185E575F00E9F650 /* ValueLadder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ValueLadder.py; sourceTree = "<group>"; };
 		2A29447C185E595000E9F650 /* context.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = context.py; sourceTree = "<group>"; };
 		2A29447D185E595000E9F650 /* grobs.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = grobs.py; sourceTree = "<group>"; };
-		2A294483185E617900E9F650 /* English */ = {isa = PBXFileReference; lastKnownFileType = folder; name = English; path = Resources/English.lproj/NodeBoxHelp; sourceTree = "<group>"; };
+		2A294483185E617900E9F650 /* English */ = {isa = PBXFileReference; lastKnownFileType = folder; name = English; path = "Resources/English.lproj/NodeBox Help"; sourceTree = "<group>"; };
 		2A37F4B0FDCFA73011CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		2A591EA8185E75AD00A45E06 /* remote.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = remote.py; sourceTree = "<group>"; };
 		2A591FEC185C168500D1833D /* Installer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Installer.h; path = objc/Installer.h; sourceTree = "<group>"; };
 		2A591FED185C168500D1833D /* Installer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Installer.m; path = objc/Installer.m; sourceTree = "<group>"; };
 		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
@@ -363,6 +364,7 @@
 				2A294458185E539400E9F650 /* __init__.py */,
 				2A294459185E539400E9F650 /* export.py */,
 				2A29445A185E539400E9F650 /* task.py */,
+				2A591EA8185E75AD00A45E06 /* remote.py */,
 			);
 			path = run;
 			sourceTree = "<group>";
@@ -417,7 +419,7 @@
 				611CC49410BA8B9E00B55455 /* NodeBoxFile.icns */,
 				611CC49510BA8B9E00B55455 /* zoombig.png */,
 				611CC49610BA8B9E00B55455 /* zoomsmall.png */,
-				2A294482185E617900E9F650 /* NodeBoxHelp */,
+				2A294482185E617900E9F650 /* NodeBox Help */,
 				8D15AC360486D014006FF6A4 /* NodeBox-Info.plist */,
 			);
 			name = Resources;
@@ -648,17 +650,15 @@
 				611CC4A210BA8B9E00B55455 /* NodeBoxFile.icns in Resources */,
 				611CC5A010BA908C00B55455 /* NodeBoxDocument.xib in Resources */,
 				611CC5A810BA919A00B55455 /* NodeBoxPreferences.xib in Resources */,
-				2A294484185E617900E9F650 /* NodeBoxHelp in Resources */,
+				2A294484185E617900E9F650 /* NodeBox Help in Resources */,
 				611CC5AF10BA91CB00B55455 /* ProgressBarSheet.xib in Resources */,
 				611CC68010BAA08300B55455 /* MainMenu.xib in Resources */,
 				611CC68710BAA0A600B55455 /* AskString.xib in Resources */,
 				611CC68C10BAA0E300B55455 /* ExportImageAccessory.xib in Resources */,
 				611CC69210BAA0FB00B55455 /* ExportMovieAccessory.xib in Resources */,
 				61972F2D10BAD1DC0007D375 /* macboot.py in Resources */,
-				2A29447F185E595000E9F650 /* grobs.py in Resources */,
 				6155D9F413E2B79E00675A92 /* CHANGES.md in Resources */,
 				6155D9F513E2B79E00675A92 /* README.md in Resources */,
-				2A29447E185E595000E9F650 /* context.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -769,12 +769,12 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		2A294482185E617900E9F650 /* NodeBoxHelp */ = {
+		2A294482185E617900E9F650 /* NodeBox Help */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2A294483185E617900E9F650 /* English */,
 			);
-			name = NodeBoxHelp;
+			name = "NodeBox Help";
 			sourceTree = "<group>";
 		};
 		611CC48110BA8B9E00B55455 /* Credits.rtf */ = {
