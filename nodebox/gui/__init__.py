@@ -2,26 +2,16 @@ import sys
 import os
 import traceback
 import objc
-import time
-import json
-import socket
-import SocketServer
-import tempfile
-import shutil
 from glob import glob
 
-from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
-from threading import Thread
-from Queue import Queue, Empty
 from nodebox.gui.document import NodeBoxDocument
 from nodebox.gui.preferences import getBasicTextAttributes
-from nodebox.gui.util import errorAlert
+from nodebox.run import CommandListener
 from nodebox import util
 from nodebox import graphics, get_bundle_path
 
-RPC_PORT = 9000
 VERY_LIGHT_GRAY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.95, NSColor.whiteColor())
 DARKER_GRAY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.8, NSColor.whiteColor())
 objc.setVerbose(1)
@@ -69,36 +59,6 @@ class NodeBoxAppDelegate(NSObject):
         doc.makeWindowControllers()
         doc.showWindows()
 
-    def runScript(self, opts):
-        url = NSURL.URLWithString_('file://%s'%opts['file'])
-        self._docsController.openDocumentWithContentsOfURL_display_error_(url, True, None)
-        stdout = opts['stdout']
-        for doc in self._docsController.documents():
-            if doc.fileURL() and doc.fileURL().isEqualTo_(url):
-                if doc._meta['stdout']:
-                    stdout.put("already running: %s"%opts['file'])
-                    stdout.put(None)
-                    break
-                if doc.export['session'] and doc.export['session'].running:
-                    stdout.put("already exporting: %s"%opts['file'])
-                    stdout.put(None)
-                    break
-                if opts['activate']:
-                    NSApp.activateIgnoringOtherApps_(True)
-                doc.scriptedRun(opts)
-                break
-        else:
-            stdout.put("couldn't open script: %s"%opts['file'])
-            stdout.put(None)
-
-    def stopScript(self, opts):
-        url = NSURL.URLWithString_('file://%s'%opts['file'])
-        self._docsController.openDocumentWithContentsOfURL_display_error_(url, True, None)
-        for doc in self._docsController.documents():
-            if doc.fileURL() and doc.fileURL().isEqualTo_(url):
-                doc._meta['live'] = False
-                doc.stopScript()
-
     def applicationWillBecomeActive_(self, note):
         # check for filesystem changes while the app was inactive
         for doc in self._docsController.documents():
@@ -124,10 +84,10 @@ class NodeBoxAppDelegate(NSObject):
         doc.setSource_(genProgram())
         doc.runScript()
 
-    @objc.IBAction
-    def showHelp_(self, sender):
-        url = NSURL.URLWithString_("http://nodebox.net/code/index.php/Reference")
-        NSWorkspace.sharedWorkspace().openURL_(url)
+    # @objc.IBAction
+    # def showHelp_(self, sender):
+    #     url = NSURL.URLWithString_("http://nodebox.net/code/index.php/Reference")
+    #     NSWorkspace.sharedWorkspace().openURL_(url)
 
     @objc.IBAction
     def showSite_(self, sender):
@@ -406,63 +366,4 @@ class NodeBoxGraphicsView(NSView):
     def acceptsFirstResponder(self):
         return True
 
-
-
-class CommandListener(Thread):
-
-    class CommandHandler(SocketServer.BaseRequestHandler):
-        def handle(self):
-            self.stdout_q = Queue()
-            self.opts = json.loads(self.request.recv(1024).split('\n')[0])
-            self.opts['stdout'] = self.stdout_q
-            AppHelper.callAfter(NSApp.delegate().runScript, self.opts)
-    
-            txt = ''
-            try:
-                while txt is not None:
-                    if txt:
-                        self.request.sendall(txt)
-                    try:
-                        self.check_interrupt()
-                        txt = self.stdout_q.get_nowait()
-                    except Empty:
-                        time.sleep(.1)
-                        txt = ''
-            except socket.error, e:
-                pass # if client closed socket, stop sending
-
-        def check_interrupt(self):
-            try:
-                self.request.setblocking(0)
-                interrupt = self.request.recv(1024)
-                AppHelper.callAfter(NSApp.delegate().stopScript, self.opts)
-            except socket.error, e:
-                pass # no input from the client
-            finally:
-                self.request.settimeout(socket.getdefaulttimeout())
-
-    class SocketListener(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
-        daemon_threads = True # Ctrl-C will cleanly kill all spawned threads
-        allow_reuse_address = True # much faster rebinding
-
-    active = False
-    def __init__(self):
-        super(CommandListener, self).__init__()
-        try:
-            self.server = self.SocketListener(('localhost', RPC_PORT), self.CommandHandler)
-            self.ip, self.port = self.server.server_address
-            self.active = True
-        except socket.error, e:
-            NSLog("Another NodeBox instance is listening on port %i"%RPC_PORT)
-            NSLog("The nodebox.py command line tool will not be able to communicate with this process")
-            pass
-
-    def run(self):
-        if self.active:
-            self.server.serve_forever()
-      
-    def join(self, timeout=None):
-        if self.active:
-            self.server.shutdown()
-        super(CommandListener, self).join(timeout)
 

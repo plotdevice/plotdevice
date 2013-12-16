@@ -14,12 +14,9 @@ from nodebox.run import MovieExportSession, ImageExportSession
 from nodebox.gui.preferences import get_default, getBasicTextAttributes
 from nodebox.gui.ValueLadder import MAGICVAR
 from nodebox.gui.dashboard import *
-from nodebox.gui.util import errorAlert
 from nodebox.gui import PyDETextView
 from nodebox import util
 from nodebox import graphics, get_bundle_path
-
-
 
 # class defined in NodeBoxDocument.xib
 class NodeBoxDocument(NSDocument):
@@ -878,7 +875,7 @@ class FullscreenView(NSView):
         self.keycode = event.keyCode()
 
         if self.keycode==53: # stop animating on ESC
-            NSApp.sendAction_to_from_('stopScript:', None, self)
+            NSApp().sendAction_to_from_('stopScript:', None, self)
 
     def keyUp_(self, event):
         self.keydown = False
@@ -897,3 +894,13 @@ class FullscreenView(NSView):
 
 def calc_scaling_factor(width, height, maxwidth, maxheight):
     return min(float(maxwidth) / width, float(maxheight) / height)
+
+def errorAlert(msgText, infoText):
+    # Force NSApp initialisation.
+    NSApplication.sharedApplication().activateIgnoringOtherApps_(0)
+    alert = NSAlert.alloc().init()
+    alert.setMessageText_(msgText)
+    alert.setInformativeText_(infoText)
+    alert.setAlertStyle_(NSCriticalAlertStyle)
+    btn = alert.addButtonWithTitle_("OK")
+    return alert.runModal()
