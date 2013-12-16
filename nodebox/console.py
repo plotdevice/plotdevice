@@ -49,15 +49,16 @@ from time import sleep
 import shutil
 from datetime import datetime
 from subprocess import Popen, PIPE
+from Foundation import NSUserDefaults
 
-PORT = 9000
 
 def connect(retry=12, delay=0):
+  port = NSUserDefaults.standardUserDefaults().persistentDomainForName_('net.nodebox.NodeBox').objectForKey_('nodebox:remote-port') or "9000"
   if delay:
     sleep(delay)
   sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   try:
-    sock.connect(("localhost", PORT))
+    sock.connect(("localhost", port))
   except socket.error, e:
     if not retry:
       return None
@@ -70,8 +71,6 @@ def app_path():
     parent = os.path.dirname(os.path.realpath(__file__))
   if parent.endswith('Resources/python/nodebox'):
     return os.path.abspath('%s/../../../..'%parent)
-  elif parent.endswith('nodebox'):
-    return os.path.abspath('%s/../Build/Products/Debug/NodeBox.app'%parent)
   return None
 
 def task_path():

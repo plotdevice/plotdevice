@@ -1,3 +1,4 @@
+import re
 from AppKit import *
 from Foundation import *
 from subprocess import Popen, PIPE
@@ -111,6 +112,10 @@ class NodeBoxPreferencesController(NSWindowController):
     toolRepair = objc.IBOutlet()
     toolInstallSheet = objc.IBOutlet()
     toolInstallMenu = objc.IBOutlet()
+    toolPort = objc.IBOutlet()
+    toolPortLabel = objc.IBOutlet()
+    toolPortStepper = objc.IBOutlet()
+    toolPortTimer = None
     commentsColorWell = objc.IBOutlet()
     funcClassColorWell = objc.IBOutlet()
     keywordsColorWell = objc.IBOutlet()
@@ -140,7 +145,9 @@ class NodeBoxPreferencesController(NSWindowController):
         self.pageColorWell.setColor_(syntaxAttrs["page"][BG_COLOR])
         self.selectionColorWell.setColor_(syntaxAttrs["selection"][BG_COLOR])
         self._wells = [self.commentsColorWell, self.funcClassColorWell, self.keywordsColorWell, self.stringsColorWell, self.plainColorWell, self.errColorWell, self.pageColorWell, self.selectionColorWell]
-        self.keepWindows.selectCellAtRow_column_(0, 0 if get_default('NSQuitAlwaysKeepsWindows') else 1)
+        self.toolPortStepper.setIntValue_(get_default('remote-port'))
+        self.toolPort.setStringValue_(str(get_default('remote-port')))
+        self.toolPort.setTextColor_(ERR_COL if not NSApp().delegate()._listener.active else NSColor.blackColor())
         nc = NSNotificationCenter.defaultCenter()
         nc.addObserver_selector_name_object_(self, "textFontChanged:", "PyDETextFontChanged", None)
         nc.addObserver_selector_name_object_(self, "blur:", "NSWindowDidResignKeyNotification", None)
@@ -156,9 +163,11 @@ class NodeBoxPreferencesController(NSWindowController):
     def windowDidBecomeMain_(self, notification):
         self.checkTool()
 
-    @objc.IBAction
-    def updateOpenBehavior_(self, sender):
-        set_default('NSQuitAlwaysKeepsWindows', 0==self.keepWindows.selectedColumn())
+    def controlTextDidChange_(self, note):
+        print note.userInfo
+        txt = re.sub(r'[^0-9]','', self.toolPort.stringValue())
+        print "changed",txt
+        self.toolPort.setStringValue_("huh?")
 
     @objc.IBAction
     def updateColors_(self, sender):
@@ -184,9 +193,30 @@ class NodeBoxPreferencesController(NSWindowController):
 
         self.toolInstall.setHidden_(self.toolFound is not None)
         self.toolPath.setSelectable_(self.toolFound is not None)
-        self.toolPath.setStringValue_(self.toolFound.replace(os.environ['HOME'],'~') if self.toolFound else '')
+        # self.toolPath.setStringValue_(self.toolFound.replace(os.environ['HOME'],'~') if self.toolFound else '')
+        self.toolPath.setStringValue_(self.toolFound if self.toolFound else '')
         self.toolPath.setTextColor_(ERR_COL if not self.toolValid else NSColor.blackColor())
         self.toolRepair.setHidden_(not (self.toolFound and not self.toolValid) )
+        self.toolPort.setHidden_(not self.toolValid)
+        self.toolPortLabel.setHidden_(not self.toolValid)
+        self.toolPortStepper.setHidden_(not self.toolValid)
+
+    @objc.IBAction
+    def modifyPort_(self, sender):
+        newport = sender.intValue()
+        self.toolPort.setStringValue_(str(newport))
+
+        if self.toolPortTimer:
+            self.toolPortTimer.invalidate()
+        self.toolPortTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0.4, self, "switchPort:", None, False)
+
+    def switchPort_(self, timer):
+        newport = self.toolPortStepper.intValue()
+        set_default('remote-port', newport)
+        app = NSApp().delegate()
+        app.listenOnPort_(newport)
+        self.toolPort.setTextColor_(ERR_COL if not app._listener.active else NSColor.blackColor())
+        self.toolPortTimer = None
 
     @objc.IBAction 
     def installTool_(self, sender):
@@ -298,7 +328,7 @@ def defaultDefaults():
 
     return {
         "NSQuitAlwaysKeepsWindows": True,
-        "nodebox:use-ca-layer": True,
+        "nodebox:remote-port": 9001,
         "nodebox:text-attributes": packAttrs(_BASICATTRS),
         "nodebox:text-colors": packAttrs(_SYNTAXCOLORS),
     }

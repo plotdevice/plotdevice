@@ -7,7 +7,7 @@ from glob import glob
 from Foundation import *
 from AppKit import *
 from nodebox.gui.document import NodeBoxDocument
-from nodebox.gui.preferences import getBasicTextAttributes
+from nodebox.gui.preferences import getBasicTextAttributes, get_default
 from nodebox.run import CommandListener
 from nodebox import util
 from nodebox import graphics, get_bundle_path
@@ -22,7 +22,7 @@ class NodeBoxAppDelegate(NSObject):
     def awakeFromNib(self):
         self._prefsController = None
         self._docsController = NSDocumentController.sharedDocumentController()
-        self._listener = CommandListener()
+        self._listener = CommandListener(port=get_default('remote-port'))
         libDir = os.path.join(os.getenv("HOME"), "Library", "Application Support", "NodeBox")
         try:
             if not os.path.exists(libDir):
@@ -34,6 +34,16 @@ class NodeBoxAppDelegate(NSObject):
         except OSError: pass
         except IOError: pass
         self.examplesMenu = NSApp().mainMenu().itemWithTitle_('Examples')
+
+    def listenOnPort_(self, port):
+        if self._listener and self._listener.port == port:
+            return
+        newlistener = CommandListener(port=port)
+        if self._listener:
+            self._listener.join()
+        self._listener = newlistener
+        newlistener.start()
+        return newlistener.active
 
     def updateExamples(self):
         examples_folder = os.path.abspath('%s/Contents/Resources/examples'%get_bundle_path())

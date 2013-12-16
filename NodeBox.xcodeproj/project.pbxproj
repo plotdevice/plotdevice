@@ -31,19 +31,19 @@
 		2A294477185E578300E9F650 /* document.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294467185E575F00E9F650 /* document.py */; };
 		2A294478185E578300E9F650 /* preferences.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294468185E575F00E9F650 /* preferences.py */; };
 		2A294479185E578300E9F650 /* PyDETextView.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294469185E575F00E9F650 /* PyDETextView.py */; };
-		2A29447A185E578300E9F650 /* util.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A29446A185E575F00E9F650 /* util.py */; };
 		2A29447B185E578300E9F650 /* ValueLadder.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A29446B185E575F00E9F650 /* ValueLadder.py */; };
 		2A294480185E596200E9F650 /* context.py in Copy Python graphics */ = {isa = PBXBuildFile; fileRef = 2A29447C185E595000E9F650 /* context.py */; };
 		2A294481185E596800E9F650 /* grobs.py in Copy Python graphics */ = {isa = PBXBuildFile; fileRef = 2A29447D185E595000E9F650 /* grobs.py */; };
 		2A294484185E617900E9F650 /* NodeBox Help in Resources */ = {isa = PBXBuildFile; fileRef = 2A294482185E617900E9F650 /* NodeBox Help */; };
 		2A591EAA185E75CF00A45E06 /* remote.py in Copy Python run */ = {isa = PBXBuildFile; fileRef = 2A591EA8185E75AD00A45E06 /* remote.py */; };
+		2A591EAE185E84BE00A45E06 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A591EAB185E84BE00A45E06 /* main.m */; };
+		2A591EAF185E84BE00A45E06 /* NodeBoxTask-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2A591EAC185E84BE00A45E06 /* NodeBoxTask-Info.plist */; };
 		2A591FEE185C168500D1833D /* Installer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A591FED185C168500D1833D /* Installer.m */; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
 		2A62D14A1856B3890090024F /* AnimatedGif.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1451856B3890090024F /* AnimatedGif.m */; };
 		2A62D14B1856B3890090024F /* Video.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1471856B3890090024F /* Video.m */; };
 		2A62D14C1856B3890090024F /* ImageSequence.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1491856B3890090024F /* ImageSequence.m */; };
 		2A827CCA1859E9FE00A126BA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A827CC91859E9FE00A126BA /* Cocoa.framework */; };
-		2A827CD21859E9FE00A126BA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A827CD11859E9FE00A126BA /* main.m */; };
 		2A827CFE1859EAC900A126BA /* AnimatedGif.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1451856B3890090024F /* AnimatedGif.m */; };
 		2A827D001859EAC900A126BA /* Video.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1471856B3890090024F /* Video.m */; };
 		2A827D021859EAC900A126BA /* ImageSequence.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A62D1491856B3890090024F /* ImageSequence.m */; };
@@ -169,7 +169,6 @@
 				2A294477185E578300E9F650 /* document.py in Copy Python gui */,
 				2A294478185E578300E9F650 /* preferences.py in Copy Python gui */,
 				2A294479185E578300E9F650 /* PyDETextView.py in Copy Python gui */,
-				2A29447A185E578300E9F650 /* util.py in Copy Python gui */,
 				2A29447B185E578300E9F650 /* ValueLadder.py in Copy Python gui */,
 			);
 			name = "Copy Python gui";
@@ -241,7 +240,6 @@
 		2A294467185E575F00E9F650 /* document.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = document.py; sourceTree = "<group>"; };
 		2A294468185E575F00E9F650 /* preferences.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = preferences.py; sourceTree = "<group>"; };
 		2A294469185E575F00E9F650 /* PyDETextView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PyDETextView.py; sourceTree = "<group>"; };
-		2A29446A185E575F00E9F650 /* util.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = util.py; sourceTree = "<group>"; };
 		2A29446B185E575F00E9F650 /* ValueLadder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ValueLadder.py; sourceTree = "<group>"; };
 		2A29447C185E595000E9F650 /* context.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = context.py; sourceTree = "<group>"; };
 		2A29447D185E595000E9F650 /* grobs.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = grobs.py; sourceTree = "<group>"; };
@@ -250,6 +248,9 @@
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		2A591EA8185E75AD00A45E06 /* remote.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = remote.py; sourceTree = "<group>"; };
+		2A591EAB185E84BE00A45E06 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = objc/NodeBoxTask/main.m; sourceTree = SOURCE_ROOT; };
+		2A591EAC185E84BE00A45E06 /* NodeBoxTask-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "NodeBoxTask-Info.plist"; path = "objc/NodeBoxTask/NodeBoxTask-Info.plist"; sourceTree = SOURCE_ROOT; };
+		2A591EAD185E84BE00A45E06 /* NodeBoxTask-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NodeBoxTask-Prefix.pch"; path = "objc/NodeBoxTask/NodeBoxTask-Prefix.pch"; sourceTree = SOURCE_ROOT; };
 		2A591FEC185C168500D1833D /* Installer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Installer.h; path = objc/Installer.h; sourceTree = "<group>"; };
 		2A591FED185C168500D1833D /* Installer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Installer.m; path = objc/Installer.m; sourceTree = "<group>"; };
 		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
@@ -261,9 +262,6 @@
 		2A62D1491856B3890090024F /* ImageSequence.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ImageSequence.m; path = objc/ImageSequence.m; sourceTree = "<group>"; };
 		2A827CC81859E9FE00A126BA /* NodeBoxTask.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NodeBoxTask.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2A827CC91859E9FE00A126BA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
-		2A827CCD1859E9FE00A126BA /* NodeBoxTask-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "NodeBoxTask-Info.plist"; sourceTree = "<group>"; };
-		2A827CD11859E9FE00A126BA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		2A827CD31859E9FE00A126BA /* NodeBoxTask-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NodeBoxTask-Prefix.pch"; sourceTree = "<group>"; };
 		2A827CE41859E9FF00A126BA /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = ../../../../../../usr/lib/libpython2.7.dylib; sourceTree = "<group>"; };
 		2ABBB2F91854018B001C4E0A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
@@ -451,9 +449,9 @@
 		2A827CCC1859E9FE00A126BA /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				2A827CCD1859E9FE00A126BA /* NodeBoxTask-Info.plist */,
-				2A827CD11859E9FE00A126BA /* main.m */,
-				2A827CD31859E9FE00A126BA /* NodeBoxTask-Prefix.pch */,
+				2A591EAB185E84BE00A45E06 /* main.m */,
+				2A591EAC185E84BE00A45E06 /* NodeBoxTask-Info.plist */,
+				2A591EAD185E84BE00A45E06 /* NodeBoxTask-Prefix.pch */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -501,7 +499,6 @@
 				2A294467185E575F00E9F650 /* document.py */,
 				2A294468185E575F00E9F650 /* preferences.py */,
 				2A294469185E575F00E9F650 /* PyDETextView.py */,
-				2A29446A185E575F00E9F650 /* util.py */,
 				2A29446B185E575F00E9F650 /* ValueLadder.py */,
 			);
 			path = gui;
@@ -560,7 +557,6 @@
 				2A827CC41859E9FE00A126BA /* Sources */,
 				2A827CC51859E9FE00A126BA /* Frameworks */,
 				2A827CC61859E9FE00A126BA /* Resources */,
-				2A827D12185AA27800A126BA /* Symlink "python" Folder in parent bundle */,
 			);
 			buildRules = (
 			);
@@ -637,6 +633,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2A591EAF185E84BE00A45E06 /* NodeBoxTask-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -679,20 +676,6 @@
 			shellPath = /bin/sh;
 			shellScript = "ditto examples $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\nchmod 644 $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples/*/*.py";
 		};
-		2A827D12185AA27800A126BA /* Symlink "python" Folder in parent bundle */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Symlink \"python\" Folder in parent bundle";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "#echo \"ln -s ../../../python $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python\"\n#ln -s ../../../python \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python\"";
-		};
 		6156AAC410BC110E00C3CE99 /* Copy External Libraries & Symlink "python" Folder into Task */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -729,9 +712,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2A827CD21859E9FE00A126BA /* main.m in Sources */,
 				2A827CFE1859EAC900A126BA /* AnimatedGif.m in Sources */,
 				2A827D001859EAC900A126BA /* Video.m in Sources */,
+				2A591EAE185E84BE00A45E06 /* main.m in Sources */,
 				2A827D021859EAC900A126BA /* ImageSequence.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -877,7 +860,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "NodeBoxTask/NodeBoxTask-Prefix.pch";
+				GCC_PREFIX_HEADER = "objc/NodeBoxTask/NodeBoxTask-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -894,7 +877,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7,
 				);
-				INFOPLIST_FILE = "NodeBoxTask/NodeBoxTask-Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/objc/NodeBoxTask/NodeBoxTask-Info.plist";
 				LIBRARY_SEARCH_PATHS = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -926,7 +909,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "NodeBoxTask/NodeBoxTask-Prefix.pch";
+				GCC_PREFIX_HEADER = "objc/NodeBoxTask/NodeBoxTask-Prefix.pch";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -938,7 +921,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7,
 				);
-				INFOPLIST_FILE = "NodeBoxTask/NodeBoxTask-Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/objc/NodeBoxTask/NodeBoxTask-Info.plist";
 				LIBRARY_SEARCH_PATHS = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";

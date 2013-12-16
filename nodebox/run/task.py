@@ -136,7 +136,11 @@ def quit():
     NSApplication.sharedApplication().terminate_(None)
 
 def main():
-    opts = json.loads(sys.stdin.readline())
+    try:
+        opts = json.loads(sys.stdin.readline())
+    except ValueError:
+        print "bad args"
+        sys.exit(1)
     runner = NodeBoxRunner(opts['file'])
     runner.export(**opts)
 

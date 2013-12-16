@@ -9,20 +9,18 @@ from PyObjCTools import AppHelper
 from Queue import Queue, Empty
 from threading import Thread
 
-RPC_PORT = 9000
-
 class CommandListener(Thread):
     active = False
-    def __init__(self):
+    def __init__(self, port=9000):
         super(CommandListener, self).__init__()
         try:
-            self.server = self.SocketListener(('localhost', RPC_PORT), self.CommandHandler)
+            self.server = self.SocketListener(('localhost', port), self.CommandHandler)
             self.ip, self.port = self.server.server_address
             self.active = True
         except socket.error, e:
-            NSLog("Another NodeBox instance is listening on port %i"%RPC_PORT)
+            NSLog("Another process is listening on port %i (possibly another NodeBox instance)"%port)
             NSLog("The nodebox.py command line tool will not be able to communicate with this process")
-            pass
+            self.port = None
 
     def run(self):
         if self.active:
@@ -36,7 +34,10 @@ class CommandListener(Thread):
     class CommandHandler(SocketServer.BaseRequestHandler):
         def handle(self):
             self.stdout_q = Queue()
-            self.opts = json.loads(self.request.recv(1024).split('\n')[0])
+            try:
+                self.opts = json.loads(self.request.recv(1024).split('\n')[0])
+            except ValueError:
+                return
             self.opts['stdout'] = self.stdout_q
             AppHelper.callAfter(self.run_script, self.opts)
     
