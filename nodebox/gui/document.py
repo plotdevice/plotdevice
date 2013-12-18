@@ -11,10 +11,9 @@ from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
 from nodebox.run import MovieExportSession, ImageExportSession
+from nodebox.gui.editor import PyDETextView, OutputTextView
 from nodebox.gui.preferences import get_default, getBasicTextAttributes
-from nodebox.gui.ValueLadder import MAGICVAR
-from nodebox.gui.dashboard import *
-from nodebox.gui import PyDETextView
+from nodebox.gui.widgets import DashboardController, MAGICVAR
 from nodebox import util
 from nodebox import graphics, get_bundle_path
 
@@ -24,7 +23,6 @@ class NodeBoxDocument(NSDocument):
     outputView = objc.IBOutlet()
     textView = objc.IBOutlet()
     window = objc.IBOutlet()
-    variablesController = objc.IBOutlet()
     dashboardController = objc.IBOutlet()
     animationSpinner = objc.IBOutlet()
     # The ExportImageAccessory adds:

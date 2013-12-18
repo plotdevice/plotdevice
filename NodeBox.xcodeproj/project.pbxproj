@@ -26,12 +26,8 @@
 		2A294462185E54F900E9F650 /* task.py in Copy Python run */ = {isa = PBXBuildFile; fileRef = 2A29445A185E539400E9F650 /* task.py */; };
 		2A294463185E550400E9F650 /* __init__.py in Copy Python run */ = {isa = PBXBuildFile; fileRef = 2A294458185E539400E9F650 /* __init__.py */; };
 		2A294474185E578300E9F650 /* __init__.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294464185E575F00E9F650 /* __init__.py */; };
-		2A294475185E578300E9F650 /* AskString.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294465185E575F00E9F650 /* AskString.py */; };
-		2A294476185E578300E9F650 /* dashboard.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294466185E575F00E9F650 /* dashboard.py */; };
 		2A294477185E578300E9F650 /* document.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294467185E575F00E9F650 /* document.py */; };
 		2A294478185E578300E9F650 /* preferences.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294468185E575F00E9F650 /* preferences.py */; };
-		2A294479185E578300E9F650 /* PyDETextView.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294469185E575F00E9F650 /* PyDETextView.py */; };
-		2A29447B185E578300E9F650 /* ValueLadder.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A29446B185E575F00E9F650 /* ValueLadder.py */; };
 		2A294480185E596200E9F650 /* context.py in Copy Python graphics */ = {isa = PBXBuildFile; fileRef = 2A29447C185E595000E9F650 /* context.py */; };
 		2A294481185E596800E9F650 /* grobs.py in Copy Python graphics */ = {isa = PBXBuildFile; fileRef = 2A29447D185E595000E9F650 /* grobs.py */; };
 		2A294484185E617900E9F650 /* NodeBox Help in Resources */ = {isa = PBXBuildFile; fileRef = 2A294482185E617900E9F650 /* NodeBox Help */; };
@@ -56,6 +52,8 @@
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
 		2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FB18540246001C4E0A /* CoreVideo.framework */; };
 		2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */; };
+		2AE5AD2B186236C400CCDD45 /* editor.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD291862366300CCDD45 /* editor.py */; };
+		2AE5AD2E1862387200CCDD45 /* widgets.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD2C1862386400CCDD45 /* widgets.py */; };
 		611CC49810BA8B9E00B55455 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48110BA8B9E00B55455 /* Credits.rtf */; };
 		611CC49C10BA8B9E00B55455 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48910BA8B9E00B55455 /* InfoPlist.strings */; };
 		611CC4A110BA8B9E00B55455 /* NodeBox.icns in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49310BA8B9E00B55455 /* NodeBox.icns */; };
@@ -124,16 +122,6 @@
 			name = "Copy Python run";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2A827CB91859CB6300A126BA /* Copy Python export */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = python/nodebox/export;
-			dstSubfolderSpec = 7;
-			files = (
-			);
-			name = "Copy Python export";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		2A827D0B1859EEF900A126BA /* Copy NodeBoxTask background app */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -164,24 +152,12 @@
 			dstSubfolderSpec = 7;
 			files = (
 				2A294474185E578300E9F650 /* __init__.py in Copy Python gui */,
-				2A294475185E578300E9F650 /* AskString.py in Copy Python gui */,
-				2A294476185E578300E9F650 /* dashboard.py in Copy Python gui */,
 				2A294477185E578300E9F650 /* document.py in Copy Python gui */,
+				2AE5AD2B186236C400CCDD45 /* editor.py in Copy Python gui */,
 				2A294478185E578300E9F650 /* preferences.py in Copy Python gui */,
-				2A294479185E578300E9F650 /* PyDETextView.py in Copy Python gui */,
-				2A29447B185E578300E9F650 /* ValueLadder.py in Copy Python gui */,
+				2AE5AD2E1862387200CCDD45 /* widgets.py in Copy Python gui */,
 			);
 			name = "Copy Python gui";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		611CC55110BA8E4900B55455 /* Copy Python gui.mac */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = python/nodebox/gui/mac;
-			dstSubfolderSpec = 7;
-			files = (
-			);
-			name = "Copy Python gui.mac";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		611CC59610BA901100B55455 /* Copy Python util */ = {
@@ -235,12 +211,8 @@
 		2A294459185E539400E9F650 /* export.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = export.py; sourceTree = "<group>"; };
 		2A29445A185E539400E9F650 /* task.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = task.py; sourceTree = "<group>"; };
 		2A294464185E575F00E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		2A294465185E575F00E9F650 /* AskString.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AskString.py; sourceTree = "<group>"; };
-		2A294466185E575F00E9F650 /* dashboard.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = dashboard.py; sourceTree = "<group>"; };
 		2A294467185E575F00E9F650 /* document.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = document.py; sourceTree = "<group>"; };
 		2A294468185E575F00E9F650 /* preferences.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = preferences.py; sourceTree = "<group>"; };
-		2A294469185E575F00E9F650 /* PyDETextView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PyDETextView.py; sourceTree = "<group>"; };
-		2A29446B185E575F00E9F650 /* ValueLadder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ValueLadder.py; sourceTree = "<group>"; };
 		2A29447C185E595000E9F650 /* context.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = context.py; sourceTree = "<group>"; };
 		2A29447D185E595000E9F650 /* grobs.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = grobs.py; sourceTree = "<group>"; };
 		2A294483185E617900E9F650 /* English */ = {isa = PBXFileReference; lastKnownFileType = folder; name = English; path = "Resources/English.lproj/NodeBox Help"; sourceTree = "<group>"; };
@@ -267,6 +239,8 @@
 		2ABBB2F91854018B001C4E0A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		2ABBB2FB18540246001C4E0A /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		2AE5AD291862366300CCDD45 /* editor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = editor.py; sourceTree = "<group>"; };
+		2AE5AD2C1862386400CCDD45 /* widgets.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = widgets.py; sourceTree = "<group>"; };
 		611CC48210BA8B9E00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = English; path = English.lproj/Credits.rtf; sourceTree = "<group>"; };
 		611CC48A10BA8B9E00B55455 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		611CC49310BA8B9E00B55455 /* NodeBox.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = NodeBox.icns; path = Resources/NodeBox.icns; sourceTree = "<group>"; };
@@ -374,8 +348,8 @@
 				6155D9F313E2B79E00675A92 /* README.md */,
 				611CC4AE10BA8C1B00B55455 /* nodebox */,
 				2A37F4AFFDCFA73011CA2CEA /* Other Sources */,
-				612813B310BD2C9400B18218 /* libs */,
 				2A37F4B8FDCFA73011CA2CEA /* Resources */,
+				612813B310BD2C9400B18218 /* libs */,
 				2A827CCB1859E9FE00A126BA /* NodeBoxTask */,
 				2A37F4C3FDCFA73011CA2CEA /* Frameworks */,
 				19C28FB0FE9D524F11CA2CBB /* Products */,
@@ -386,8 +360,8 @@
 		2A37F4AFFDCFA73011CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
-				61972F2C10BAD1DC0007D375 /* macboot.py */,
 				2564AD2C0F5327BB00F57823 /* NodeBox_Prefix.pch */,
+				61972F2C10BAD1DC0007D375 /* macboot.py */,
 				2A62D1441856B3890090024F /* AnimatedGif.h */,
 				2A62D1451856B3890090024F /* AnimatedGif.m */,
 				2A62D1481856B3890090024F /* ImageSequence.h */,
@@ -494,12 +468,10 @@
 			isa = PBXGroup;
 			children = (
 				2A294464185E575F00E9F650 /* __init__.py */,
-				2A294465185E575F00E9F650 /* AskString.py */,
-				2A294466185E575F00E9F650 /* dashboard.py */,
 				2A294467185E575F00E9F650 /* document.py */,
 				2A294468185E575F00E9F650 /* preferences.py */,
-				2A294469185E575F00E9F650 /* PyDETextView.py */,
-				2A29446B185E575F00E9F650 /* ValueLadder.py */,
+				2AE5AD291862366300CCDD45 /* editor.py */,
+				2AE5AD2C1862386400CCDD45 /* widgets.py */,
 			);
 			path = gui;
 			sourceTree = "<group>";
@@ -574,8 +546,6 @@
 				8D15AC2B0486D014006FF6A4 /* Resources */,
 				611CC53110BA8E0000B55455 /* Copy Python root */,
 				611CC55010BA8E4900B55455 /* Copy Python gui */,
-				611CC55110BA8E4900B55455 /* Copy Python gui.mac */,
-				2A827CB91859CB6300A126BA /* Copy Python export */,
 				611CC59610BA901100B55455 /* Copy Python util */,
 				2A29445E185E54C200E9F650 /* Copy Python run */,
 				611CC59710BA901100B55455 /* Copy Python graphics */,

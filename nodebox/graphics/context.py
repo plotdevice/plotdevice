@@ -1,3 +1,4 @@
+from AppKit import *
 from nodebox.graphics.grobs import *
 from nodebox.graphics import grobs
 
@@ -498,3 +499,114 @@ class Context(object):
     
     def save(self, fname, format=None):
         self.canvas.save(fname, format)
+
+
+class _PDFRenderView(NSView):
+    
+    # This view was created to provide PDF data.
+    # Strangely enough, the only way to get PDF data from Cocoa is by asking
+    # dataWithPDFInsideRect_ from a NSView. So, we create one just to get to
+    # the PDF data.
+
+    def initWithCanvas_(self, canvas):
+        super(_PDFRenderView, self).initWithFrame_( ((0, 0), (canvas.width, canvas.height)) )
+        self.canvas = canvas
+        return self
+        
+    def drawRect_(self, rect):
+        self.canvas.draw()
+        
+    def isOpaque(self):
+        return False
+
+    def isFlipped(self):
+        return True
+
+class Canvas(Grob):
+
+    def __init__(self, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
+        self.width = width
+        self.height = height
+        self.speed = None
+        self.mousedown = False
+        self.clear()
+
+    def clear(self):
+        self._grobs = self._container = []
+        self._grobstack = [self._grobs]
+        
+    def _get_size(self):
+        return self.width, self.height
+    size = property(_get_size)
+
+    def append(self, el):
+        self._container.append(el)
+        
+    def __iter__(self):
+        for grob in self._grobs:
+            yield grob
+            
+    def __len__(self):
+        return len(self._grobs)
+        
+    def __getitem__(self, index):
+        return self._grobs[index]
+        
+    def push(self, containerGrob):
+        self._grobstack.insert(0, containerGrob)
+        self._container.append(containerGrob)
+        self._container = containerGrob
+        
+    def pop(self):
+        try:
+            del self._grobstack[0]
+            self._container = self._grobstack[0]
+        except IndexError, e:
+            raise NodeBoxError, "pop: too many canvas pops!"
+
+    def draw(self):
+        if self.background is not None:
+            self.background.set()
+            NSRectFillUsingOperation(((0,0), (self.width, self.height)), NSCompositeSourceOver)
+        for grob in self._grobs:
+            grob._draw()
+            
+    def _get_nsImage(self):
+        img = NSImage.alloc().initWithSize_((self.width, self.height))
+        img.setFlipped_(True)
+        img.lockFocus()
+        self.draw()
+        img.unlockFocus()
+        return img
+    _nsImage = property(_get_nsImage)
+    
+    def _getImageData(self, format):
+        if format == 'pdf':
+            view = _PDFRenderView.alloc().initWithCanvas_(self)
+            return view.dataWithPDFInsideRect_(view.bounds())
+        elif format == 'eps':
+            view = _PDFRenderView.alloc().initWithCanvas_(self)
+            return view.dataWithEPSInsideRect_(view.bounds())
+        else:
+            imgTypes = {"gif":  NSGIFFileType,
+                        "jpg":  NSJPEGFileType,
+                        "jpeg": NSJPEGFileType,
+                        "png":  NSPNGFileType,
+                        "tiff": NSTIFFFileType}
+            if format not in imgTypes:
+                raise NodeBoxError, "Filename should end in .pdf, .eps, .tiff, .gif, .jpg or .png"
+            data = self._nsImage.TIFFRepresentation()
+            if format != 'tiff':
+                imgType = imgTypes[format]
+                rep = NSBitmapImageRep.imageRepWithData_(data)
+                return rep.representationUsingType_properties_(imgType, None)
+            else:
+                return data
+
+    def save(self, fname, format=None):
+        if format is None:
+            basename, ext = os.path.splitext(fname)
+            format = ext[1:].lower() # Skip the dot
+        data = self._getImageData(format)
+        fname = NSString.stringByExpandingTildeInPath(fname)
+        data.writeToFile_atomically_(fname, False)
