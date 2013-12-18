@@ -10,6 +10,7 @@ examples/*/*.jpg
 examples/*/*.gif
 examples/*/*.mov
 Resources/English.lproj/NodeBox\ Help/
+related/
 todo.txt
 
 # Xcode user files
