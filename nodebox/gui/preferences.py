@@ -191,15 +191,17 @@ class NodeBoxPreferencesController(NSWindowController):
             self.toolFound = broken[0] if broken else None
             self.toolValid = False
 
-        self.toolInstall.setHidden_(self.toolFound is not None)
-        self.toolPath.setSelectable_(self.toolFound is not None)
-        # self.toolPath.setStringValue_(self.toolFound.replace(os.environ['HOME'],'~') if self.toolFound else '')
-        self.toolPath.setStringValue_(self.toolFound if self.toolFound else '')
-        self.toolPath.setTextColor_(ERR_COL if not self.toolValid else NSColor.blackColor())
-        self.toolRepair.setHidden_(not (self.toolFound and not self.toolValid) )
-        self.toolPort.setHidden_(not self.toolValid)
-        self.toolPortLabel.setHidden_(not self.toolValid)
-        self.toolPortStepper.setHidden_(not self.toolValid)
+        found, valid = self.toolFound, self.toolValid
+        self.toolInstall.setHidden_(found is not None)
+        self.toolPath.setSelectable_(found is not None)
+        # self.toolPath.setStringValue_(found.replace(os.environ['HOME'],'~') if found else '')
+        self.toolPath.setStringValue_(found if found else '')
+        self.toolPath.setTextColor_(ERR_COL if not valid else NSColor.blackColor())
+        self.toolRepair.setHidden_(not (found and not valid) )
+        self.toolPort.setHidden_(not valid)
+        self.toolPortLabel.setHidden_(not valid)
+        self.toolPortStepper.setHidden_(not valid)
+        if valid: set_default('remote-port', get_default('remote-port'))
 
     @objc.IBAction
     def modifyPort_(self, sender):

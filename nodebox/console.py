@@ -10,8 +10,6 @@ usage: nodebox [-h] [-f] [-b] [--virtualenv PATH] [--export FILE]
                [--args [a [b ...]]]
                file
 
-Run python scripts in NodeBox.app
-
 Options:
   -h, --help          show this help message and exit
   -f                  run full-screen
@@ -53,7 +51,7 @@ from Foundation import NSUserDefaults
 
 
 def connect(retry=12, delay=0):
-  port = NSUserDefaults.standardUserDefaults().persistentDomainForName_('net.nodebox.NodeBox').objectForKey_('nodebox:remote-port') or "9000"
+  port = NSUserDefaults.standardUserDefaults().persistentDomainForName_('net.nodebox.NodeBox').objectForKey_('nodebox:remote-port') or 9001
   if delay:
     sleep(delay)
   sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -121,7 +119,7 @@ def exec_console(opts):
     # print "\rCancelled."
     pass
 
-def exec_application(opts):  
+def exec_application(opts):
   sock = connect(0)
   if not sock:
     os.system('open -a "%s" "%s"'%(app_name(), opts.file))
@@ -157,9 +155,9 @@ def main():
   o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='remainder of command line will be passed to the script as sys.argv')
   i = parser.add_argument_group("NodeBox Script File", None)
   i.add_argument('file', help='the python script to be rendered')
-  
+
   opts = parser.parse_args()
-  
+
   if opts.virtualenv:
     libdir = '%s/lib/python2.7/site-packages'%opts.virtualenv
     if os.path.exists(libdir):

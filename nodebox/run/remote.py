@@ -11,7 +11,7 @@ from threading import Thread
 
 class CommandListener(Thread):
     active = False
-    def __init__(self, port=9000):
+    def __init__(self, port=9001):
         super(CommandListener, self).__init__()
         try:
             self.server = self.SocketListener(('localhost', port), self.CommandHandler)
