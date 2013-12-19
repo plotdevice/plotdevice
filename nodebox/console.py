@@ -49,96 +49,6 @@ from datetime import datetime
 from subprocess import Popen, PIPE
 from Foundation import NSUserDefaults
 
-
-def connect(retry=12, delay=0):
-  port = NSUserDefaults.standardUserDefaults().persistentDomainForName_('net.nodebox.NodeBox').objectForKey_('nodebox:remote-port') or 9001
-  if delay:
-    sleep(delay)
-  sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  try:
-    sock.connect(("localhost", port))
-  except socket.error, e:
-    if not retry:
-      return None
-    return connect(retry-1, delay=.2)
-  return sock
-
-def app_path():
-  parent = os.path.abspath(os.path.dirname(__file__))
-  if os.path.islink(__file__):
-    parent = os.path.dirname(os.path.realpath(__file__))
-  if parent.endswith('Resources/python/nodebox'):
-    return os.path.abspath('%s/../../../..'%parent)
-  return None
-
-def task_path():
-  return "%s/Contents/Resources/NodeBoxTask.app/Contents/MacOS/NodeBoxTask" % app_path()
-
-def app_name():
-  return app_path() or 'NodeBox.app'
-
-def read_and_echo(sock):
-  response = sock.recv(80)
-  if response:
-    print response,
-  return response
-
-def exec_console(opts):
-  bin_path = task_path()
-  env = dict(os.environ)
-  p = Popen([bin_path], env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-  p.stdin.write(json.dumps(vars(opts))+"\n")
-
-  ERASER = '\r%s\r'%(' '*80)
-  re_progress = re.compile(r'^\r.*?\[[#\.]{10,}\]$')
-  progress = ''
-  try:
-    while True:
-      reads = [p.stdout.fileno(), p.stderr.fileno()]
-      ret = select.select(reads, [], [])
-      for fd in ret[0]:
-        if fd == p.stdout.fileno():
-          line = p.stdout.readline()
-          sys.stdout.write(ERASER+line+progress)
-
-        if fd == p.stderr.fileno():
-          line = p.stderr.readline()
-          # the progress bar should overwrite itself, but anything else
-          # on stderr should be passed through
-          if re_progress.search(line):
-            line = line.rstrip()
-          else:
-            sys.stdout.write(ERASER)
-          progress = line
-          sys.stdout.write(progress)
-        sys.stdout.flush()
-
-      if p.poll() != None:
-          break
-  except KeyboardInterrupt:
-    # print "\rCancelled."
-    pass
-
-def exec_application(opts):
-  sock = connect(0)
-  if not sock:
-    os.system('open -a "%s" "%s"'%(app_name(), opts.file))
-    sock = connect()
-  if not sock:
-    print "Couldn't connect to the NodeBox application"
-    sys.exit(1)
-
-  try:
-    sock.sendall(json.dumps(vars(opts)) + "\n")
-    try:
-      while read_and_echo(sock): pass
-    except KeyboardInterrupt:
-      sock.sendall('STOP\n')
-      print "\n",
-      while read_and_echo(sock): pass
-  finally:
-    sock.close()
-
 def main():
   parser = argparse.ArgumentParser(description='Run python scripts in NodeBox.app', add_help=False)
   o = parser.add_argument_group("Options", None)
@@ -200,6 +110,104 @@ def main():
     exec_console(opts)
   else:
     exec_application(opts)
+
+def exec_console(opts):
+  """Run export operation in the console"""
+  bin_path = task_path()
+  env = dict(os.environ)
+  p = Popen(['/usr/bin/python',bin_path], env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+  p.stdin.write(json.dumps(vars(opts))+"\n")
+
+  ERASER = '\r%s\r'%(' '*80)
+  re_progress = re.compile(r'^\r.*?\[[#\.]{10,}\]$')
+  progress = ''
+  try:
+    while True:
+      reads = [p.stdout.fileno(), p.stderr.fileno()]
+      ret = select.select(reads, [], [])
+      for fd in ret[0]:
+        if fd == p.stdout.fileno():
+          line = p.stdout.readline()
+          sys.stdout.write(ERASER+line+progress)
+
+        if fd == p.stderr.fileno():
+          line = p.stderr.readline()
+          # the progress bar should overwrite itself, but anything else
+          # on stderr should be passed through
+          if re_progress.search(line):
+            line = line.rstrip()
+          else:
+            sys.stdout.write(ERASER)
+          progress = line
+          sys.stdout.write(progress)
+        sys.stdout.flush()
+
+      if p.poll() != None:
+          break
+  except KeyboardInterrupt:
+    # print "\rCancelled."
+    pass
+
+def exec_application(opts):
+  """Launch NodeBox.app if needed and run the script (while echoing output to the console)"""
+  sock = connect(0)
+  if not sock:
+    os.system('open -a "%s" "%s"'%(app_name(), opts.file))
+    sock = connect()
+  if not sock:
+    print "Couldn't connect to the NodeBox application on port", default_port()
+    sys.exit(1)
+
+  try:
+    sock.sendall(json.dumps(vars(opts)) + "\n")
+    try:
+      while read_and_echo(sock): pass
+    except KeyboardInterrupt:
+      sock.sendall('STOP\n')
+      print "\n",
+      while read_and_echo(sock): pass
+  finally:
+    sock.close()
+
+def connect(retry=12, delay=0):
+  port = default_port()
+  if delay:
+    sleep(delay)
+  sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  try:
+    sock.connect(("localhost", port))
+  except socket.error, e:
+    if not retry:
+      return None
+    return connect(retry-1, delay=.2)
+  return sock
+
+def app_path():
+  parent = os.path.abspath(os.path.dirname(__file__))
+  if os.path.islink(__file__):
+    parent = os.path.dirname(os.path.realpath(__file__))
+  if parent.endswith('Resources/python/nodebox'):
+    return os.path.abspath('%s/../../../..'%parent)
+  return None
+
+def task_path():
+  if app_path():
+    return "%s/%s" % (app_path(), 'Contents/Resources/python/nodebox/run/task.py')
+  else:
+    return "%s/%s" % (os.path.abspath(os.path.dirname(__file__)), 'run/task.py')
+
+def app_name():
+  return app_path() or 'NodeBox.app'
+
+def default_port():
+  appdefaults = NSUserDefaults.standardUserDefaults().persistentDomainForName_('net.nodebox.NodeBox')
+  return appdefaults.objectForKey_('nodebox:remote-port') or 9001
+
+def read_and_echo(sock):
+  response = sock.recv(80)
+  if response:
+    print response,
+  return response
 
 if __name__ == "__main__":
   main()

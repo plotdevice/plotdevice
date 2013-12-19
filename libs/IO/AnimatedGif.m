@@ -12,7 +12,12 @@
 #define LO(longInt) ((UInt8)((UInt16)longInt&0xFF))
 #define HI(longInt) ((UInt8)((UInt16)longInt>>8))
 
-@interface GifWriter : NSOperation
+@interface GifWriter : NSOperation{
+	AnimatedGif *delegate;
+	NSFileHandle *fileHandle;
+	NSImage *frame;
+	double frameRate;
+}
 @property (nonatomic, assign) AnimatedGif *delegate;
 @property (nonatomic, retain) NSFileHandle *fileHandle;
 @property (nonatomic, retain) NSImage *frame;
@@ -100,7 +105,7 @@
 				UInt8 depth = 1 + (cursor[9] & 0x7);
 				UInt16 numCols = pow(2, depth);
 				if (!map.clr_addr){
-					map.clr_addr = cursor+10;
+					map.clr_addr = (NSInteger)cursor+10;
 					map.clr_addr = 3*numCols;
 				}
 				cursor += 3*numCols;
@@ -159,7 +164,7 @@
 	if (cursor[0]==kGifTrailer){
 		// Success!
 	}else{
-		NSLog(@"ERR %lu/%lu", cursor-gif, [gifData length]);
+		NSLog(@"ERR %d/%lu", cursor-gif, (unsigned long)[gifData length]);
 	}
 
 	return map;	

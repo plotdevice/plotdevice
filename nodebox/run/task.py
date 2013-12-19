@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-NodeBoxTask.py
+task.py
 
-Headless renderer for command line export tasks
+Headless renderer for command line export tasks. 
+
+This is the back-end of the console.py arg parser -- presuming an export option was specified.
+Otherwise the command is handled by the nodebox.run.listener module.
 """
 
 import sys
@@ -11,8 +14,8 @@ import os
 import json
 import objc
 import traceback
-from AppKit import NSApplication
 from Foundation import *
+from AppKit import *
 from PyObjCTools import AppHelper
 
 lib_dir = os.path.abspath('%s/../..'%os.path.dirname(__file__))
@@ -135,14 +138,25 @@ class NodeBoxRunner(object):
 def quit():
     NSApplication.sharedApplication().terminate_(None)
 
-def main():
-    try:
-        opts = json.loads(sys.stdin.readline())
-    except ValueError:
-        print "bad args"
-        sys.exit(1)
-    runner = NodeBoxRunner(opts['file'])
-    runner.export(**opts)
+
+class QuietApplication(NSApplication):
+    def sharedApplication(self):
+        app = super(QuietApplication, self).sharedApplication()
+        app.setActivationPolicy_(NSApplicationActivationPolicyAccessory);
+        return app
+
+class AppDelegate(NSObject):
+    def applicationDidFinishLaunching_(self, note):
+        try:
+            opts = json.loads(sys.stdin.readline())
+        except ValueError:
+            print "bad args"
+            sys.exit(1)
+        runner = NodeBoxRunner(opts['file'])
+        runner.export(**opts)
 
 if __name__ == '__main__':
-    main()
+    app = QuietApplication.sharedApplication()
+    delegate = AppDelegate.alloc().init()
+    app.setDelegate_(delegate)
+    AppHelper.runEventLoop()

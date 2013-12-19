@@ -246,7 +246,7 @@
                                     <rect key="frame" x="103" y="13" width="227" height="22"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" lineBreakMode="truncatingMiddle" selectable="YES" sendsActionOnEndEditing="YES" state="on" title="/usr/local/bin/nodebox" id="Psj-xs-GZG">
-                                        <font key="font" size="13" name="Menlo-Regular"/>
+                                        <font key="font" size="12" name="Menlo-Regular"/>
                                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
@@ -274,7 +274,7 @@
                                     </connections>
                                 </button>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="Ik1-1j-9fo">
-                                    <rect key="frame" x="330" y="17" width="34" height="17"/>
+                                    <rect key="frame" x="332" y="17" width="34" height="17"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Port:" id="a96-zg-CP7">
                                         <font key="font" metaFont="system"/>
@@ -294,7 +294,7 @@
                                                 <bool key="localizesFormat" value="NO"/>
                                             </metadata>
                                         </numberFormatter>
-                                        <font key="font" size="13" name="Menlo-Regular"/>
+                                        <font key="font" size="12" name="Menlo-Regular"/>
                                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>

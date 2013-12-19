@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 #import <AVFoundation/AVFoundation.h>
 #import <CoreVideo/CoreVideo.h>
 
@@ -17,6 +18,7 @@
     NSInteger frameRate;
     NSInteger frameCount;
     NSOperationQueue *frames;
+    NSInteger framesWritten;
 }
 @property (nonatomic, assign) NSInteger framesWritten;
 

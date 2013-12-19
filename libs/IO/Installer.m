@@ -28,7 +28,11 @@
     AuthorizationRef ref;
     AuthorizationFlags flags = kAuthorizationFlagDefaults;
     status = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment, flags, &ref);
+    if (status) return NO;
     status = AuthorizationExecuteWithPrivileges(ref, mkdir, flags, mkdirArgs, &pipe);
+    if (status) return NO;
     status = AuthorizationExecuteWithPrivileges(ref, link, flags, linkArgs, &pipe);
+    if (status) return NO;
+    return YES;
 }
 @end

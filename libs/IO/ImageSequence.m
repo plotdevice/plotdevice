@@ -8,13 +8,18 @@
 
 #import "ImageSequence.h"
 
-@interface ImageWriter : NSOperation
+@interface ImageWriter : NSOperation{
+    ImageSequence *delegate;
+    NSString *fname;
+    NSData *image;
+}
 @property (nonatomic, assign) ImageSequence *delegate;
 @property (nonatomic, retain) NSString *fname;
 @property (nonatomic, retain) NSData *image;
 @end
 
 @implementation ImageWriter
+@synthesize delegate, fname, image;
 -(void)main{
 	@autoreleasepool{
 		[self.image writeToFile:self.fname atomically:NO];

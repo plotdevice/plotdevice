@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 
 #define kGifHeader "GIF89a"
 #define kGifTrailer 0x3B
@@ -29,6 +30,7 @@ typedef struct {
     NSString *filePath;
     double frameRate;
     NSOperationQueue *frames;
+    NSInteger framesWritten;
 }
 @property (nonatomic, assign) NSInteger framesWritten;
 

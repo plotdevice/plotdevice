@@ -4,6 +4,15 @@ from AppKit import *
 from PyObjCTools import AppHelper
 from math import floor
 
+try:
+    Installer, Video, AnimatedGif, ImageSequence
+except NameError:
+    import cIO
+    AnimatedGif = objc.lookUpClass("AnimatedGif")
+    ImageSequence = objc.lookUpClass("ImageSequence")
+    Installer = objc.lookUpClass("Installer")
+    Video = objc.lookUpClass("Video")
+
 IMG_BATCH_SIZE = 8
 MOV_BATCH_SIZE = 40
 

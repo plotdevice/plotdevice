@@ -8,7 +8,15 @@
 
 #import "Video.h"
 
-@interface FrameWriter : NSOperation
+@interface FrameWriter : NSOperation{
+    Video *delegate;
+    NSInteger frameNum;
+    NSInteger frameRate;
+    NSImage *frame;
+    AVAssetWriter *videoWriter;
+    AVAssetWriterInput* videoWriterInput;
+    AVAssetWriterInputPixelBufferAdaptor *adaptor;
+}
 @property (nonatomic, assign) Video *delegate;
 @property (nonatomic, assign) NSInteger frameNum;
 @property (nonatomic, assign) NSInteger frameRate;
@@ -19,7 +27,7 @@
 @end
 
 @implementation FrameWriter
-@synthesize frame, frameNum, frameRate, videoWriter, videoWriterInput, adaptor;
+@synthesize delegate, frame, frameNum, frameRate, videoWriter, videoWriterInput, adaptor;
 -(void) main{
     @autoreleasepool{
         if (self.isCancelled || !frame){
@@ -91,7 +99,7 @@
 
 
 @implementation Video
-
+@synthesize framesWritten;
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps{
 	if ((self = [super init])) {
 

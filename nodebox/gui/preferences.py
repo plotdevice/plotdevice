@@ -91,16 +91,13 @@ def possibleToolLocations():
         shell = term['Window Settings'][setting]['CommandString']
         p = Popen([shell,"-l"], stdout=PIPE, stderr=PIPE, stdin=PIPE)
         out, err = p.communicate("echo $PATH")
-        locations = []
         for path in out.strip().split(':'):
+            path += '/nodebox'
             if '/sbin' in path: continue
             if path.startswith('/bin'): continue
             if path.startswith('/usr/bin'): continue
-            locations.append('%s/nodebox'%path)
-    if localbin not in locations:
-        locations.insert(0, localbin)
-    if homebin not in locations:
-        locations.insert(0, homebin)
+            if path in locations: continue
+            locations.append(path)
     return locations
 
 # class defined in NodeBoxPreferences.xib

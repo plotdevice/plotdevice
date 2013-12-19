@@ -10,6 +10,7 @@
 
 @interface ImageSequence : NSObject{
     NSOperationQueue *queue;
+    NSInteger framesWritten;
 }
 @property (nonatomic, assign) NSInteger framesWritten;
 
