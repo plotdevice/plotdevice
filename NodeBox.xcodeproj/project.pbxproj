@@ -22,38 +22,39 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		2A294461185E54F600E9F650 /* export.py in Copy Python run */ = {isa = PBXBuildFile; fileRef = 2A294459185E539400E9F650 /* export.py */; };
-		2A294462185E54F900E9F650 /* task.py in Copy Python run */ = {isa = PBXBuildFile; fileRef = 2A29445A185E539400E9F650 /* task.py */; };
-		2A294463185E550400E9F650 /* __init__.py in Copy Python run */ = {isa = PBXBuildFile; fileRef = 2A294458185E539400E9F650 /* __init__.py */; };
-		2A294474185E578300E9F650 /* __init__.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294464185E575F00E9F650 /* __init__.py */; };
-		2A294477185E578300E9F650 /* document.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294467185E575F00E9F650 /* document.py */; };
-		2A294478185E578300E9F650 /* preferences.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2A294468185E575F00E9F650 /* preferences.py */; };
-		2A294480185E596200E9F650 /* context.py in Copy Python graphics */ = {isa = PBXBuildFile; fileRef = 2A29447C185E595000E9F650 /* context.py */; };
-		2A294481185E596800E9F650 /* grobs.py in Copy Python graphics */ = {isa = PBXBuildFile; fileRef = 2A29447D185E595000E9F650 /* grobs.py */; };
+		2A294461185E54F600E9F650 /* export.py in Copy nodebox.run */ = {isa = PBXBuildFile; fileRef = 2A294459185E539400E9F650 /* export.py */; };
+		2A294462185E54F900E9F650 /* task.py in Copy nodebox.run */ = {isa = PBXBuildFile; fileRef = 2A29445A185E539400E9F650 /* task.py */; };
+		2A294463185E550400E9F650 /* __init__.py in Copy nodebox.run */ = {isa = PBXBuildFile; fileRef = 2A294458185E539400E9F650 /* __init__.py */; };
+		2A294474185E578300E9F650 /* __init__.py in Copy nodebox.gui */ = {isa = PBXBuildFile; fileRef = 2A294464185E575F00E9F650 /* __init__.py */; };
+		2A294477185E578300E9F650 /* document.py in Copy nodebox.gui */ = {isa = PBXBuildFile; fileRef = 2A294467185E575F00E9F650 /* document.py */; };
+		2A294478185E578300E9F650 /* preferences.py in Copy nodebox.gui */ = {isa = PBXBuildFile; fileRef = 2A294468185E575F00E9F650 /* preferences.py */; };
+		2A294480185E596200E9F650 /* context.py in Copy nodebox.graphics */ = {isa = PBXBuildFile; fileRef = 2A29447C185E595000E9F650 /* context.py */; };
+		2A294481185E596800E9F650 /* grobs.py in Copy nodebox.graphics */ = {isa = PBXBuildFile; fileRef = 2A29447D185E595000E9F650 /* grobs.py */; };
 		2A294484185E617900E9F650 /* NodeBox Help in Resources */ = {isa = PBXBuildFile; fileRef = 2A294482185E617900E9F650 /* NodeBox Help */; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
 		2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */; };
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
 		2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FB18540246001C4E0A /* CoreVideo.framework */; };
 		2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */; };
-		2AE5AD2B186236C400CCDD45 /* editor.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD291862366300CCDD45 /* editor.py */; };
-		2AE5AD2E1862387200CCDD45 /* widgets.py in Copy Python gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD2C1862386400CCDD45 /* widgets.py */; };
-		2AE5AD80186249F300CCDD45 /* listener.py in Copy Python run */ = {isa = PBXBuildFile; fileRef = 2AE5AD7E186249E100CCDD45 /* listener.py */; };
+		2AC5188118636CAF007FB066 /* sandbox.py in Copy nodebox.run */ = {isa = PBXBuildFile; fileRef = 2AC5187F18636C9F007FB066 /* sandbox.py */; };
+		2AE5AD2B186236C400CCDD45 /* editor.py in Copy nodebox.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD291862366300CCDD45 /* editor.py */; };
+		2AE5AD2E1862387200CCDD45 /* widgets.py in Copy nodebox.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD2C1862386400CCDD45 /* widgets.py */; };
+		2AE5AD80186249F300CCDD45 /* listener.py in Copy nodebox.run */ = {isa = PBXBuildFile; fileRef = 2AE5AD7E186249E100CCDD45 /* listener.py */; };
 		611CC49810BA8B9E00B55455 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48110BA8B9E00B55455 /* Credits.rtf */; };
 		611CC49C10BA8B9E00B55455 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48910BA8B9E00B55455 /* InfoPlist.strings */; };
 		611CC4A110BA8B9E00B55455 /* NodeBox.icns in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49310BA8B9E00B55455 /* NodeBox.icns */; };
 		611CC4A210BA8B9E00B55455 /* NodeBoxFile.icns in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49410BA8B9E00B55455 /* NodeBoxFile.icns */; };
-		611CC52F10BA8DDF00B55455 /* __init__.py in Copy Python root */ = {isa = PBXBuildFile; fileRef = 611CC4AF10BA8C1B00B55455 /* __init__.py */; };
-		611CC53010BA8DE200B55455 /* console.py in Copy Python root */ = {isa = PBXBuildFile; fileRef = 611CC4B110BA8C1B00B55455 /* console.py */; };
-		611CC57910BA8FA800B55455 /* __init__.py in Copy Python util */ = {isa = PBXBuildFile; fileRef = 611CC4D710BA8C1B00B55455 /* __init__.py */; };
-		611CC57A10BA8FA800B55455 /* kgp.py in Copy Python util */ = {isa = PBXBuildFile; fileRef = 611CC4D910BA8C1B00B55455 /* kgp.py */; };
-		611CC57B10BA8FA800B55455 /* ottobot.py in Copy Python util */ = {isa = PBXBuildFile; fileRef = 611CC4DA10BA8C1B00B55455 /* ottobot.py */; };
-		611CC57D10BA8FA800B55455 /* PyFontify.py in Copy Python util */ = {isa = PBXBuildFile; fileRef = 611CC4DC10BA8C1B00B55455 /* PyFontify.py */; };
-		611CC58110BA8FA800B55455 /* vdiff.py in Copy Python util */ = {isa = PBXBuildFile; fileRef = 611CC4E010BA8C1B00B55455 /* vdiff.py */; };
-		611CC58310BA8FD700B55455 /* __init__.py in Copy Python graphics */ = {isa = PBXBuildFile; fileRef = 611CC4BE10BA8C1B00B55455 /* __init__.py */; };
-		611CC58410BA8FD700B55455 /* bezier.py in Copy Python graphics */ = {isa = PBXBuildFile; fileRef = 611CC4C010BA8C1B00B55455 /* bezier.py */; };
-		611CC58910BA8FF000B55455 /* __init__.py in Copy Python geo */ = {isa = PBXBuildFile; fileRef = 611CC4BB10BA8C1B00B55455 /* __init__.py */; };
-		611CC58A10BA8FF000B55455 /* pathmatics.py in Copy Python geo */ = {isa = PBXBuildFile; fileRef = 611CC4BC10BA8C1B00B55455 /* pathmatics.py */; };
+		611CC52F10BA8DDF00B55455 /* __init__.py in Copy nodebox root */ = {isa = PBXBuildFile; fileRef = 611CC4AF10BA8C1B00B55455 /* __init__.py */; };
+		611CC53010BA8DE200B55455 /* console.py in Copy nodebox root */ = {isa = PBXBuildFile; fileRef = 611CC4B110BA8C1B00B55455 /* console.py */; };
+		611CC57910BA8FA800B55455 /* __init__.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 611CC4D710BA8C1B00B55455 /* __init__.py */; };
+		611CC57A10BA8FA800B55455 /* kgp.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 611CC4D910BA8C1B00B55455 /* kgp.py */; };
+		611CC57B10BA8FA800B55455 /* ottobot.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 611CC4DA10BA8C1B00B55455 /* ottobot.py */; };
+		611CC57D10BA8FA800B55455 /* PyFontify.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 611CC4DC10BA8C1B00B55455 /* PyFontify.py */; };
+		611CC58110BA8FA800B55455 /* vdiff.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 611CC4E010BA8C1B00B55455 /* vdiff.py */; };
+		611CC58310BA8FD700B55455 /* __init__.py in Copy nodebox.graphics */ = {isa = PBXBuildFile; fileRef = 611CC4BE10BA8C1B00B55455 /* __init__.py */; };
+		611CC58410BA8FD700B55455 /* bezier.py in Copy nodebox.graphics */ = {isa = PBXBuildFile; fileRef = 611CC4C010BA8C1B00B55455 /* bezier.py */; };
+		611CC58910BA8FF000B55455 /* __init__.py in Copy nodebox.geo */ = {isa = PBXBuildFile; fileRef = 611CC4BB10BA8C1B00B55455 /* __init__.py */; };
+		611CC58A10BA8FF000B55455 /* pathmatics.py in Copy nodebox.geo */ = {isa = PBXBuildFile; fileRef = 611CC4BC10BA8C1B00B55455 /* pathmatics.py */; };
 		611CC5A010BA908C00B55455 /* NodeBoxDocument.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC59E10BA908C00B55455 /* NodeBoxDocument.xib */; };
 		611CC5A810BA919A00B55455 /* NodeBoxPreferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC5A610BA919A00B55455 /* NodeBoxPreferences.xib */; };
 		611CC5AF10BA91CB00B55455 /* ProgressBarSheet.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC5AD10BA91CB00B55455 /* ProgressBarSheet.xib */; };
@@ -86,86 +87,87 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		2A29445E185E54C200E9F650 /* Copy Python run */ = {
+		2A29445E185E54C200E9F650 /* Copy nodebox.run */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = python/nodebox/run;
 			dstSubfolderSpec = 7;
 			files = (
-				2A294463185E550400E9F650 /* __init__.py in Copy Python run */,
-				2AE5AD80186249F300CCDD45 /* listener.py in Copy Python run */,
-				2A294462185E54F900E9F650 /* task.py in Copy Python run */,
-				2A294461185E54F600E9F650 /* export.py in Copy Python run */,
+				2A294463185E550400E9F650 /* __init__.py in Copy nodebox.run */,
+				2AC5188118636CAF007FB066 /* sandbox.py in Copy nodebox.run */,
+				2AE5AD80186249F300CCDD45 /* listener.py in Copy nodebox.run */,
+				2A294462185E54F900E9F650 /* task.py in Copy nodebox.run */,
+				2A294461185E54F600E9F650 /* export.py in Copy nodebox.run */,
 			);
-			name = "Copy Python run";
+			name = "Copy nodebox.run";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		611CC53110BA8E0000B55455 /* Copy Python root */ = {
+		611CC53110BA8E0000B55455 /* Copy nodebox root */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = python/nodebox;
 			dstSubfolderSpec = 7;
 			files = (
-				611CC52F10BA8DDF00B55455 /* __init__.py in Copy Python root */,
-				611CC53010BA8DE200B55455 /* console.py in Copy Python root */,
+				611CC52F10BA8DDF00B55455 /* __init__.py in Copy nodebox root */,
+				611CC53010BA8DE200B55455 /* console.py in Copy nodebox root */,
 			);
-			name = "Copy Python root";
+			name = "Copy nodebox root";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		611CC55010BA8E4900B55455 /* Copy Python gui */ = {
+		611CC55010BA8E4900B55455 /* Copy nodebox.gui */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = python/nodebox/gui;
 			dstSubfolderSpec = 7;
 			files = (
-				2A294474185E578300E9F650 /* __init__.py in Copy Python gui */,
-				2A294477185E578300E9F650 /* document.py in Copy Python gui */,
-				2AE5AD2B186236C400CCDD45 /* editor.py in Copy Python gui */,
-				2A294478185E578300E9F650 /* preferences.py in Copy Python gui */,
-				2AE5AD2E1862387200CCDD45 /* widgets.py in Copy Python gui */,
+				2A294474185E578300E9F650 /* __init__.py in Copy nodebox.gui */,
+				2A294477185E578300E9F650 /* document.py in Copy nodebox.gui */,
+				2AE5AD2B186236C400CCDD45 /* editor.py in Copy nodebox.gui */,
+				2A294478185E578300E9F650 /* preferences.py in Copy nodebox.gui */,
+				2AE5AD2E1862387200CCDD45 /* widgets.py in Copy nodebox.gui */,
 			);
-			name = "Copy Python gui";
+			name = "Copy nodebox.gui";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		611CC59610BA901100B55455 /* Copy Python util */ = {
+		611CC59610BA901100B55455 /* Copy nodebox.util */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = python/nodebox/util;
 			dstSubfolderSpec = 7;
 			files = (
-				611CC57910BA8FA800B55455 /* __init__.py in Copy Python util */,
-				611CC57A10BA8FA800B55455 /* kgp.py in Copy Python util */,
-				611CC57B10BA8FA800B55455 /* ottobot.py in Copy Python util */,
-				611CC57D10BA8FA800B55455 /* PyFontify.py in Copy Python util */,
-				611CC58110BA8FA800B55455 /* vdiff.py in Copy Python util */,
+				611CC57910BA8FA800B55455 /* __init__.py in Copy nodebox.util */,
+				611CC57A10BA8FA800B55455 /* kgp.py in Copy nodebox.util */,
+				611CC57B10BA8FA800B55455 /* ottobot.py in Copy nodebox.util */,
+				611CC57D10BA8FA800B55455 /* PyFontify.py in Copy nodebox.util */,
+				611CC58110BA8FA800B55455 /* vdiff.py in Copy nodebox.util */,
 			);
-			name = "Copy Python util";
+			name = "Copy nodebox.util";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		611CC59710BA901100B55455 /* Copy Python graphics */ = {
+		611CC59710BA901100B55455 /* Copy nodebox.graphics */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = python/nodebox/graphics;
 			dstSubfolderSpec = 7;
 			files = (
-				611CC58310BA8FD700B55455 /* __init__.py in Copy Python graphics */,
-				611CC58410BA8FD700B55455 /* bezier.py in Copy Python graphics */,
-				2A294480185E596200E9F650 /* context.py in Copy Python graphics */,
-				2A294481185E596800E9F650 /* grobs.py in Copy Python graphics */,
+				611CC58310BA8FD700B55455 /* __init__.py in Copy nodebox.graphics */,
+				611CC58410BA8FD700B55455 /* bezier.py in Copy nodebox.graphics */,
+				2A294480185E596200E9F650 /* context.py in Copy nodebox.graphics */,
+				2A294481185E596800E9F650 /* grobs.py in Copy nodebox.graphics */,
 			);
-			name = "Copy Python graphics";
+			name = "Copy nodebox.graphics";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		611CC59810BA901100B55455 /* Copy Python geo */ = {
+		611CC59810BA901100B55455 /* Copy nodebox.geo */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = python/nodebox/geo;
 			dstSubfolderSpec = 7;
 			files = (
-				611CC58910BA8FF000B55455 /* __init__.py in Copy Python geo */,
-				611CC58A10BA8FF000B55455 /* pathmatics.py in Copy Python geo */,
+				611CC58910BA8FF000B55455 /* __init__.py in Copy nodebox.geo */,
+				611CC58A10BA8FF000B55455 /* pathmatics.py in Copy nodebox.geo */,
 			);
-			name = "Copy Python geo";
+			name = "Copy nodebox.geo";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -192,6 +194,7 @@
 		2ABBB2F91854018B001C4E0A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		2ABBB2FB18540246001C4E0A /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		2AC5187F18636C9F007FB066 /* sandbox.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sandbox.py; sourceTree = "<group>"; };
 		2AE5AD291862366300CCDD45 /* editor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = editor.py; sourceTree = "<group>"; };
 		2AE5AD2C1862386400CCDD45 /* widgets.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = widgets.py; sourceTree = "<group>"; };
 		2AE5AD7E186249E100CCDD45 /* listener.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = listener.py; sourceTree = "<group>"; };
@@ -199,8 +202,6 @@
 		611CC48A10BA8B9E00B55455 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		611CC49310BA8B9E00B55455 /* NodeBox.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = NodeBox.icns; path = Resources/NodeBox.icns; sourceTree = "<group>"; };
 		611CC49410BA8B9E00B55455 /* NodeBoxFile.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = NodeBoxFile.icns; path = Resources/NodeBoxFile.icns; sourceTree = "<group>"; };
-		611CC49510BA8B9E00B55455 /* zoombig.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = zoombig.png; path = Resources/zoombig.png; sourceTree = "<group>"; };
-		611CC49610BA8B9E00B55455 /* zoomsmall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = zoomsmall.png; path = Resources/zoomsmall.png; sourceTree = "<group>"; };
 		611CC4AF10BA8C1B00B55455 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		611CC4B110BA8C1B00B55455 /* console.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = console.py; sourceTree = "<group>"; };
 		611CC4BB10BA8C1B00B55455 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
@@ -275,6 +276,7 @@
 			isa = PBXGroup;
 			children = (
 				2A294458185E539400E9F650 /* __init__.py */,
+				2AC5187F18636C9F007FB066 /* sandbox.py */,
 				2A294459185E539400E9F650 /* export.py */,
 				2A29445A185E539400E9F650 /* task.py */,
 				2AE5AD7E186249E100CCDD45 /* listener.py */,
@@ -321,8 +323,6 @@
 				611CC48910BA8B9E00B55455 /* InfoPlist.strings */,
 				611CC49310BA8B9E00B55455 /* NodeBox.icns */,
 				611CC49410BA8B9E00B55455 /* NodeBoxFile.icns */,
-				611CC49510BA8B9E00B55455 /* zoombig.png */,
-				611CC49610BA8B9E00B55455 /* zoomsmall.png */,
 				2A294482185E617900E9F650 /* NodeBox Help */,
 				8D15AC360486D014006FF6A4 /* NodeBox-Info.plist */,
 			);
@@ -440,15 +440,15 @@
 			buildConfigurationList = C05733C708A9546B00998B17 /* Build configuration list for PBXNativeTarget "NodeBox" */;
 			buildPhases = (
 				8D15AC2B0486D014006FF6A4 /* Resources */,
-				611CC53110BA8E0000B55455 /* Copy Python root */,
-				611CC55010BA8E4900B55455 /* Copy Python gui */,
-				611CC59610BA901100B55455 /* Copy Python util */,
-				2A29445E185E54C200E9F650 /* Copy Python run */,
-				611CC59710BA901100B55455 /* Copy Python graphics */,
-				611CC59810BA901100B55455 /* Copy Python geo */,
+				611CC53110BA8E0000B55455 /* Copy nodebox root */,
+				611CC55010BA8E4900B55455 /* Copy nodebox.gui */,
+				611CC59610BA901100B55455 /* Copy nodebox.util */,
+				2A29445E185E54C200E9F650 /* Copy nodebox.run */,
+				611CC59710BA901100B55455 /* Copy nodebox.graphics */,
+				611CC59810BA901100B55455 /* Copy nodebox.geo */,
 				8D15AC300486D014006FF6A4 /* Sources */,
 				8D15AC330486D014006FF6A4 /* Frameworks */,
-				6156AAC410BC110E00C3CE99 /* Copy External Libraries & Symlink "python" Folder into Bundle */,
+				6156AAC410BC110E00C3CE99 /* Copy External Libraries */,
 				2A591FF1185D38C800D1833D /* Stash examples in the app bundle */,
 			);
 			buildRules = (
@@ -531,7 +531,7 @@
 			shellPath = /bin/sh;
 			shellScript = "ditto examples $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\nchmod 644 $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples/*/*.py";
 		};
-		6156AAC410BC110E00C3CE99 /* Copy External Libraries & Symlink "python" Folder into Bundle */ = {
+		6156AAC410BC110E00C3CE99 /* Copy External Libraries */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			comments = "Copy all libraries built with the \"Build Extensions\" target to the NodeBox resources folder.";
@@ -539,12 +539,12 @@
 			);
 			inputPaths = (
 			);
-			name = "Copy External Libraries & Symlink \"python\" Folder into Bundle";
+			name = "Copy External Libraries";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#mkdir -p \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/NodeBoxTask.app/Contents/Resources\"\ncp -R -p build/libs/* \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python\"\n#rm -f \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/NodeBoxTask.app/Contents/Resources/python\"\n#ln -s ../../../python \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/NodeBoxTask.app/Contents/Resources/python\"\n#rm -f \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/NodeBoxTask.app/Contents/Frameworks\"\n#ln -s ../../../Frameworks \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/NodeBoxTask.app/Contents/Frameworks\"\n";
+			shellScript = "cp -R -p build/libs/* \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python\"\n";
 		};
 		61DB840F10BEABCF003F73B9 /* Make Dist */ = {
 			isa = PBXShellScriptBuildPhase;

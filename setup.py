@@ -14,15 +14,16 @@
 # - Numpy (installable using "easy_install numpy")
 
 import os
-import tempfile
-import distutils.cmd 
-import distutils.command.build
-from distutils.core import setup, Extension
-import distutils.spawn as d_spawn
+from distutils.core import setup, Command
+from setuptools.extension import Extension
+import py2app
 import nodebox
 
 NAME = 'NodeBox'
 VERSION = nodebox.__version__
+CREATOR = 'NdBx'
+BUNDLE_ID = "net.nodebox.NodeBox"
+HELP = "NodeBox Help"
 
 AUTHOR = "Frederik De Bleser",
 AUTHOR_EMAIL = "frederik@pandora.be",
@@ -65,18 +66,70 @@ The current version features:
 * Zooming
 """
 
+packages = ['nodebox', 'nodebox.graphics', 'nodebox.util', 'nodebox.geo', 'nodebox.gui', 'nodebox.run']
+
 ext_modules = [
     Extension('cGeo', ['libs/cGeo/cGeo.c']),
     Extension('cPathmatics', ['libs/pathmatics/pathmatics.c']),
     Extension('cPolymagic', ['libs/polymagic/gpc.c', 'libs/polymagic/polymagic.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation']),
     Extension('cIO', ['libs/IO/module.m','libs/IO/Installer.m', 'libs/IO/ImageSequence.m', 'libs/IO/AnimatedGif.m', 'libs/IO/Video.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation', '-framework', 'Security', '-framework', 'AVFoundation', '-framework', 'CoreMedia', '-framework', 'CoreVideo'])
-    ]
+]
 
-packages = ['nodebox', 'nodebox.graphics', 'nodebox.util', 'nodebox.geo', 'nodebox.gui', 'nodebox.run']
+plist={
+    'CFBundleDocumentTypes': [{
+        'CFBundleTypeExtensions': [ 'py' ],
+        'CFBundleTypeIconFile': 'NodeBoxFile.icns',
+        'CFBundleTypeName': "Python File",
+        'CFBundleTypeRole': 'Editor',
+        'LSItemContentTypes':['public.python-script'],
+        'LSHandlerRank':'Alternate',
+        'NSDocumentClass': 'NodeBoxDocument',
+    }],
+    "CFBundleIdentifier": BUNDLE_ID,
+    "CFBundleName": NAME,
+    "CFBundleSignature": CREATOR,
+    "CFBundleShortVersionString": VERSION,
+    "CFBundleGetInfoString": DESCRIPTION,
+    "CFBundleHelpBookFolder":HELP,
+    "CFBundleHelpBookName":HELP,
+    "LSMinimumSystemVersion":"10.9",
+    "NSMainNibFile":"MainMenu",
+    "NSPrincipalClass": 'NSApplication',
+}
+
+rsrc = [
+    "Resources/English.lproj/AskString.xib",
+    "Resources/English.lproj/Credits.rtf",
+    "Resources/English.lproj/ExportImageAccessory.xib",
+    "Resources/English.lproj/ExportMovieAccessory.xib",
+    "Resources/English.lproj/MainMenu.xib",
+    "Resources/English.lproj/NodeBox Help",
+    "Resources/English.lproj/NodeBoxDocument.xib",
+    "Resources/English.lproj/NodeBoxPreferences.xib",
+    "Resources/English.lproj/ProgressBarSheet.xib",
+    "Resources/NodeBox.icns",
+    "Resources/NodeBoxFile.icns",
+]
+
+class CleanCommand(Command):
+    description = "wipe out the ./build ./dist and libs/.../build dirs"
+    user_options = []
+    def initialize_options(self):
+        self.cwd = None
+    def finalize_options(self):
+        self.cwd = os.getcwd()
+    def run(self):
+        assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
+        os.system('rm -rf ./build ./dist')
+        os.system('rm -rf ./libs/*/build')
 
 if __name__=='__main__':
-    # build_io()
-    setup(name = NAME,
+    setup(
+        app = [{
+            'script': "macboot.py",
+            "plist":plist,
+        }],        
+        name = NAME,
         version = VERSION,
         description = DESCRIPTION,
         long_description = LONG_DESCRIPTION,
@@ -84,8 +137,19 @@ if __name__=='__main__':
         author_email = AUTHOR_EMAIL,
         url = URL,
         classifiers = CLASSIFIERS,
+        data_files = rsrc,
         ext_modules = ext_modules,
         packages = packages,
-        # data_files = {'nodebox':['build/IO.framework']}
+        options = {
+            "py2app": {
+                "iconfile": "Resources/NodeBox.icns",
+                "semi_standalone":True,
+                "site_packages":True,
+            }
+        },
+        zip_safe=False,
+        zip_ok=False,
+        cmdclass={
+            'clean': CleanCommand,
+        },
     )
-

@@ -1,5 +1,5 @@
 from os.path import dirname, abspath
-__version__='1.9.7rc2'
+__version__='1.9.8'
 
 def get_version():
     return __version__
