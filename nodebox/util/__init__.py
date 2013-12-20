@@ -61,6 +61,8 @@ def files(path="*"):
         f = files('*.gif')
     """
     from glob import glob
+    if not type(path)==unicode:
+        path = path.decode('utf-8')
     return glob(path)
 
 def autotext(sourceFile):
