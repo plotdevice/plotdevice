@@ -19,7 +19,7 @@
 	double frameRate;
 }
 @property (nonatomic, assign) AnimatedGif *delegate;
-@property (nonatomic, retain) NSFileHandle *fileHandle;
+@property (nonatomic, assign) NSFileHandle *fileHandle;
 @property (nonatomic, retain) NSImage *frame;
 @property (nonatomic, assign) double frameRate;
 @end
@@ -34,6 +34,7 @@
 			[encoded appendBytes:&aByte length:1];
 			[fileHandle writeData:encoded];
 			[fileHandle closeFile];
+			[fileHandle release];
 			return;
 		}
 
@@ -69,6 +70,8 @@
 		// write image data
 		[fileHandle writeData:[NSData dataWithBytesNoCopy:gif+map.data_addr length:map.data_n freeWhenDone:NO]];
 		[self.delegate performSelectorOnMainThread:@selector(_wroteFrame) withObject:nil waitUntilDone:NO];		
+
+		self.frame = nil;
 	}
 }
 
@@ -179,7 +182,7 @@
 		if (![[NSFileManager defaultManager] fileExistsAtPath:fileName]) {
 			[[NSFileManager defaultManager] createFileAtPath:fileName contents:[NSData data] attributes:nil];
 		}
-		fileHandle = [NSFileHandle fileHandleForWritingAtPath:fileName];
+		fileHandle = [[NSFileHandle fileHandleForWritingAtPath:fileName] retain];
 		filePath = fileName;
 		frameRate = 100.0/(double)fps;
 		frames = [[NSOperationQueue alloc] init];
@@ -209,7 +212,7 @@
 }
 
 - (void) addFrame:(NSImage *)gifImage{
-	GifWriter *gw = [[GifWriter alloc] init];
+	GifWriter *gw = [[[GifWriter alloc] init] autorelease];
 	gw.delegate = self;
 	gw.fileHandle = fileHandle;
 	gw.frame = gifImage;
@@ -222,9 +225,9 @@
 }
 
 - (void) closeFile{
-	GifWriter *gw = [[GifWriter alloc] init];
+	GifWriter *gw = [[[GifWriter alloc] init] autorelease];
 	gw.fileHandle = fileHandle;
-    gw.delegate = self;
+  gw.delegate = self;
 	[frames addOperation:gw];
 }
 

@@ -52,49 +52,48 @@
         if (!ok) {
             NSLog(@"Video export failed: couldn't write frame %li", (long)frameNum);
         }
-        [self.delegate performSelectorOnMainThread:@selector(_wroteFrame) withObject:nil waitUntilDone:NO];        
+        [self.delegate performSelectorOnMainThread:@selector(_wroteFrame) withObject:nil waitUntilDone:NO];
     }
 }
 
-- (CVPixelBufferRef)_pixelBufferFromNSImage:(NSImage *)image
+- (void)dealloc{
+    self.frame = nil;
+    self.videoWriter = nil;
+    self.videoWriterInput = nil;
+    self.adaptor = nil;
+    [super dealloc];
+}
+
+- (CVPixelBufferRef)_pixelBufferFromNSImage:(NSImage*)image
 {
-    CVPixelBufferRef buffer = NULL;
-    
     // config
-    size_t width = [image size].width;
-    size_t height = [image size].height;
-    size_t bitsPerComponent = 8; // *not* CGImageGetBitsPerComponent(image);
-    CGColorSpaceRef cs = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-    CGBitmapInfo bi = kCGImageAlphaNoneSkipFirst; // *not* CGImageGetBitmapInfo(image);
-    NSDictionary *d = [NSDictionary dictionaryWithObjectsAndKeys:
-                       @(YES), kCVPixelBufferCGImageCompatibilityKey,
-                       @(YES), kCVPixelBufferCGBitmapContextCompatibilityKey, nil];
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
+    NSDictionary* pixelBufferProperties = @{(id)kCVPixelBufferCGImageCompatibilityKey:@YES, (id)kCVPixelBufferCGBitmapContextCompatibilityKey:@YES};
     
     // create pixel buffer
-    CVPixelBufferCreate(kCFAllocatorDefault, width, height, k32ARGBPixelFormat, (CFDictionaryRef)d, &buffer);
-    CVPixelBufferLockBaseAddress(buffer, 0);
-    void *rasterData = CVPixelBufferGetBaseAddress(buffer);
-    size_t bytesPerRow = CVPixelBufferGetBytesPerRow(buffer);
-    
+    CVPixelBufferRef pixelBuffer = NULL;
+    CVPixelBufferCreate(kCFAllocatorDefault, [image size].width, [image size].height, k32ARGBPixelFormat, (__bridge CFDictionaryRef)pixelBufferProperties, &pixelBuffer);
+    CVPixelBufferLockBaseAddress(pixelBuffer, 0);
+
     // context to draw in, set to pixel buffer's address
-    CGContextRef ctxt = CGBitmapContextCreate(rasterData, width, height, bitsPerComponent, bytesPerRow, cs, bi);
-    if(ctxt == NULL){
-        NSLog(@"could not create context");
-        return NULL;
-    }
+    void* baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
+    size_t bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
+    CGContextRef context = CGBitmapContextCreate(baseAddress, [image size].width, [image size].height, 8, bytesPerRow, colorSpace, kCGImageAlphaNoneSkipFirst);
     
     // draw
-    NSGraphicsContext *nsctxt = [NSGraphicsContext graphicsContextWithGraphicsPort:ctxt flipped:NO];
+    NSGraphicsContext* imageContext = [NSGraphicsContext graphicsContextWithGraphicsPort:context flipped:NO];
     [NSGraphicsContext saveGraphicsState];
-    [NSGraphicsContext setCurrentContext:nsctxt];
-    [image drawAtPoint:NSMakePoint(0.0, 0.0) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+    [NSGraphicsContext setCurrentContext:imageContext];
+    [image compositeToPoint:NSMakePoint(0.0, 0.0) operation:NSCompositeCopy];
     [NSGraphicsContext restoreGraphicsState];
-    
-    CVPixelBufferUnlockBaseAddress(buffer, 0);
-    CFRelease(ctxt);
-    
-    return buffer;
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+
+    // cleanup
+    CFRelease(context);
+    CGColorSpaceRelease(colorSpace);
+    return pixelBuffer;
 }
+
 @end
 
 
@@ -140,7 +139,7 @@
 }
 
 - (void)addFrame:(NSImage *)frame{
-    FrameWriter *fw = [[FrameWriter alloc] init];
+    FrameWriter *fw = [[[FrameWriter alloc] init] autorelease];
     fw.frame=frame;
     fw.frameNum = frameCount++;
     fw.frameRate = frameRate;
@@ -152,7 +151,7 @@
 }
 
 - (void)closeFile{
-    FrameWriter *fw = [[FrameWriter alloc] init];
+    FrameWriter *fw = [[[FrameWriter alloc] init] autorelease];
     fw.videoWriter = videoWriter;
     fw.videoWriterInput = videoWriterInput;
     [frames addOperation:fw];

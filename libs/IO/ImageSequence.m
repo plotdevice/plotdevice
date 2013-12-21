@@ -24,6 +24,8 @@
 	@autoreleasepool{
 		[self.image writeToFile:self.fname atomically:NO];
 		[self.delegate performSelectorOnMainThread:@selector(_wroteFrame) withObject:nil waitUntilDone:NO];
+        self.fname = nil;
+        self.image = nil;
 	}
 }
 @end
@@ -41,7 +43,7 @@
 }
 
 - (void)writeData:(NSData *)img toFile:(NSString *)fname{
-    ImageWriter *iw = [[ImageWriter alloc] init];
+    ImageWriter *iw = [[[ImageWriter alloc] init] autorelease];
     iw.delegate = self;
     iw.fname = fname;
     iw.image = img;
