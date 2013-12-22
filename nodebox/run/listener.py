@@ -38,7 +38,7 @@ class CommandListener(Thread):
                 self.opts = json.loads(self.request.recv(1024).split('\n')[0])
             except ValueError:
                 return
-            self.opts['stdout'] = self.stdout_q
+            self.opts['console'] = self.stdout_q
             AppHelper.callAfter(self.run_script, self.opts)
     
             txt = ''
@@ -66,17 +66,17 @@ class CommandListener(Thread):
                 self.request.settimeout(socket.getdefaulttimeout())
 
         def run_script(self, opts):
-            url = NSURL.URLWithString_('file://%s'%opts['file'])
+            url = NSURL.URLWithString_('file://%s'%opts['file']) # use doc.path instead...
             dc = NSApp().delegate()._docsController
             dc.openDocumentWithContentsOfURL_display_error_(url, True, None)
-            stdout = opts['stdout']
+            stdout = opts['console']
             for doc in dc.documents():
                 if doc.fileURL() and doc.fileURL().isEqualTo_(url):
-                    if doc._meta['stdout']:
+                    if doc.vm.metadata['stdout']:
                         stdout.put("already running: %s"%opts['file'])
                         stdout.put(None)
                         break
-                    if doc.export['session'] and doc.export['session'].running:
+                    if doc.vm.session and doc.vm.session.running:
                         stdout.put("already exporting: %s"%opts['file'])
                         stdout.put(None)
                         break

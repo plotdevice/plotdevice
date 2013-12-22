@@ -3,28 +3,23 @@ from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
 from math import floor
-
-try:
-    Installer, Video, AnimatedGif, ImageSequence
-except NameError:
-    import cIO
-    AnimatedGif = objc.lookUpClass("AnimatedGif")
-    ImageSequence = objc.lookUpClass("ImageSequence")
-    Installer = objc.lookUpClass("Installer")
-    Video = objc.lookUpClass("Video")
+import cIO
 
 IMG_BATCH_SIZE = 8
 MOV_BATCH_SIZE = 40
 
+# map in the objc classes from the cIO module
+AnimatedGif, ImageSequence, Installer, Video = [objc.lookUpClass(c) for c in "AnimatedGif", "ImageSequence", "Installer", "Video"]
+
 class ExportSession(object):
     running = True
     writer = None
-    callback = None
     added = 0
     written = 0
     total = 0
 
     def __init__(self):
+        self.callback = None
         super(ExportSession, self).__init__()
 
     def begin(self, frames=None, pages=None, console=False):
@@ -36,12 +31,14 @@ class ExportSession(object):
         else:
             msg = "Generating %s pages" % pages
             self.total = pages
+
         self.progress.begin(msg, self.total)
 
     def status(self, cancel=False):
         if cancel:
             self.batches = []
-            self._shutdown()
+            self.progress.end()
+            # self._shutdown()
             return
 
         if not self.writer:
@@ -61,10 +58,13 @@ class ExportSession(object):
         if self.callback:
             self.callback()
             self.callback = None
-
+        self.writer = None 
+    
     def on_complete(self, cb):
-        if not self.running: cb()
-        else: self.callback = cb
+        if not self.running: 
+            cb()
+        else: 
+            self.callback = cb
 
 class ImageExportSession(ExportSession):
     def __init__(self, fname, pages, format, first=1, console=False):
@@ -86,7 +86,7 @@ class ImageExportSession(ExportSession):
         pass
 
 class MovieExportSession(ExportSession):
-    def __init__(self, fname, frames=60, fps=30, loop=0, first=1, console=False):
+    def __init__(self, fname, frames=60, fps=30, loop=0, first=1, bitrate=1, console=False):
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
@@ -98,8 +98,8 @@ class MovieExportSession(ExportSession):
         self.ext = ext.lower()
         self.fps = fps
         self.loop = loop
+        self.bitrate = bitrate
         self.batches = [(n, min(n+MOV_BATCH_SIZE-1,frames)) for n in range(first, frames+1, MOV_BATCH_SIZE)]
-        self.bitrate = 1
 
     def add(self, canvas_or_context, frame):
         image = canvas_or_context._nsImage
@@ -142,11 +142,14 @@ class ASCIIProgressBar(NSObject):
     def update_(self, note):
         self.step(self.status_fn())
 
-    def _render(self, width=20):
+    def render(self, width=20):
         pct = int(floor(width*self.value/self.maxval))
         dots = "".join(['#'*pct]+['.']*(width-pct))
-        msg = "\r%s [%s]\n"%(self.message, dots)
-        self._stderr.write(msg)
+        msg = "\r%s [%s]"%(self.message, dots)
+        return msg
+
+    def _render(self, width=20):
+        self._stderr.write(self.render(width))
         self._stderr.flush()
 
     def step(self, toVal):

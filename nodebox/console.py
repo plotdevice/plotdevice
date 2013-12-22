@@ -41,7 +41,7 @@ import argparse
 import xmlrpclib
 import socket
 import json
-import select
+import signal
 from time import sleep
 
 import shutil
@@ -113,40 +113,14 @@ def main():
 
 def exec_console(opts):
   """Run export operation in the console"""
-  bin_path = task_path()
-  env = dict(os.environ)
-  p = Popen(['/usr/bin/python',bin_path], env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+  def cancel(*args):
+    p.stdin.write("CANCEL\n")
+  signal.signal(signal.SIGINT, cancel)
+
+  p = Popen(['/usr/bin/python',task_path()], env=dict(os.environ), stdin=PIPE)
   p.stdin.write(json.dumps(vars(opts))+"\n")
+  p.wait()
 
-  ERASER = '\r%s\r'%(' '*80)
-  re_progress = re.compile(r'^\r.*?\[[#\.]{10,}\]$')
-  progress = ''
-  try:
-    while True:
-      reads = [p.stdout.fileno(), p.stderr.fileno()]
-      ret = select.select(reads, [], [])
-      for fd in ret[0]:
-        if fd == p.stdout.fileno():
-          line = p.stdout.readline()
-          sys.stdout.write(ERASER+line+progress)
-
-        if fd == p.stderr.fileno():
-          line = p.stderr.readline()
-          # the progress bar should overwrite itself, but anything else
-          # on stderr should be passed through
-          if re_progress.search(line):
-            line = line.rstrip()
-          else:
-            sys.stdout.write(ERASER)
-          progress = line
-          sys.stdout.write(progress)
-        sys.stdout.flush()
-
-      if p.poll() != None:
-          break
-  except KeyboardInterrupt:
-    # print "\rCancelled."
-    pass
 
 def exec_application(opts):
   """Launch NodeBox.app if needed and run the script (while echoing output to the console)"""

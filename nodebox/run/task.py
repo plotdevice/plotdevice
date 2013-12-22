@@ -13,150 +13,116 @@ import sys
 import os
 import json
 import objc
-import traceback
+import select
+import signal
 from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
 
 lib_dir = os.path.abspath('%s/../..'%os.path.dirname(__file__))
 sys.path.append(lib_dir)
-
-from nodebox.run import MovieExportSession, ImageExportSession
-from nodebox import graphics
-from nodebox import util
+from nodebox.run import Sandbox
 
 objc.setVerbose(True)
 
-class NodeBoxRunner(object):
-    
-    def __init__(self, src_or_path):
-        src, fname = src_or_path, '<Untitled>'
-        if os.path.exists(src_or_path):
-            src = file(src_or_path).read().decode('utf-8')
-            fname = src_or_path
-        self._code = compile(src+"\n\n", fname, 'exec')
-        self.namespace = {}
-        self.canvas = graphics.Canvas()
-        self.context = graphics.Context(self.canvas, self.namespace)
-        self.__doc__ = {}
-        self._pageNumber = 1
-        self.frame = 1
-        self.session = None
+def console_export(opts):
+    STDOUT = sys.stdout
+    STDERR = sys.stderr
+    ERASER = '\r%s\r'%(' '*80)
 
-    def _check_animation(self):
-        """Returns False if this is not an animation, True otherwise.
-        Throws an expection if the animation is not correct (missing a draw method)."""
-        if self.canvas.speed is not None:
-            if not self.namespace.has_key('draw'):
-                raise graphics.NodeBoxError('Not a correct animation: No draw() method.')
-            return True
-        return False
+    class QuietApplication(NSApplication):
+        def sharedApplication(self):
+            app = super(QuietApplication, self).sharedApplication()
+            app.setActivationPolicy_(NSApplicationActivationPolicyAccessory);
+            return app
 
-    def run(self):
-        self._initNamespace()
-        exec self._code in self.namespace
-        if self._check_animation():
-            if self.namespace.has_key('setup'):
-                self.namespace['setup']()
-            self.namespace['draw']()
+    class AppDelegate(NSObject):
+        def initWithOpts_(self, opts):
+            self.opts = opts
+            return self
+      
+        def applicationDidFinishLaunching_(self, note):
+            runner = NodeBoxRunner(self.opts['file'])
+            runner.export(**self.opts)
 
-    def run_multiple(self, frames, first=1):
-        # First frame is special:
-        self.run()
-        yield first
-        animation = self._check_animation()
-            
-        for i in range(first, frames):
-            self.canvas.clear()
-            self.context._resetContext()
-            self.frame = i + 1
-            self.namespace["PAGENUM"] = self.namespace["FRAME"] = self.frame
-            if animation:
-                self.namespace['draw']()
-            else:
-                exec self._code in self.namespace
-            sys.stdout.flush()
-            yield self.frame
-    
-    def _initNamespace(self, frame=1):
-        self.canvas.clear()
-        self.namespace.clear()
-        # Add everything from the namespace
-        for name in graphics.__all__:
-            self.namespace[name] = getattr(graphics, name)
-        for name in util.__all__:
-            self.namespace[name] = getattr(util, name)
-        # Add everything from the context object
-        self.namespace["_ctx"] = self.context
-        for attrName in dir(self.context):
-            self.namespace[attrName] = getattr(self.context, attrName)
-        # Add the document global
-        self.namespace["__doc__"] = self.__doc__
-        # Add the frame
-        self.frame = frame
-        self.namespace["PAGENUM"] = self.namespace["FRAME"] = self.frame
+    class NodeBoxRunner(object):
+        def __init__(self, src_or_path):
+            src, fname = src_or_path, '<Untitled>'
+            if os.path.exists(src_or_path):
+                src = file(src_or_path).read().decode('utf-8')
+                fname = src_or_path
 
-    def export(self, **opts):
-        fn, first, last, fps = opts['export'], opts['first'], opts['last'], opts['fps']
-        format = fn.rsplit('.',1)[1]
-        if last:
+            self.vm = Sandbox(self)
+            self.vm.source = src
+            self.vm.script = fname
+
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+        def export(self, **opts):
+            fn, first, last, fps, mbps, loop = [opts[k] for k in ('export','first','last','fps','rate','loop')]
+            format = fn.rsplit('.',1)[1]
+            self.vm.metadata = opts
+
             # pick the right kind of output (single movie vs multiple docs)
             if format in ('mov','gif'):
-                self.session = MovieExportSession(fname=fn, frames=last, fps=fps, first=first, console=True)
-                self.session.bitrate = opts['rate']
+                self.vm.export('movie', fn, first, last, fps, loop, mbps)
             else:
-                self.session = ImageExportSession(fname=fn, pages=last, format=format, first=first, console=True)
-            self._run_session(last, first)
-        else:
-            self._run_single()
+                self.vm.export('image', fn, first, last, format)
 
-    def _run_single(self, fn):
-        self.run()
-        self.canvas.save(fn)
-        quit()
+        def echo(self, output):
+            STDERR.write(ERASER)
+            # print ["%s[%s]"%('stderr' if o.isErr else 'stdout', o.data[:4]) for o in output]
+            for o in output:
+                pipe = STDERR if o.isErr else STDOUT
+                # pipe.write('%s %s'%(pipe.name, o.data))
+                pipe.write(o.data)
+                pipe.flush()
+        
+        def exportMessage(self, output):
+            self.echo(output)        
 
-    def _run_session(self, frames, first):
-        try:
-            for frame in self.run_multiple(frames, first=first):
-                self.session.add(self.canvas, frame)
-                date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
-                NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
-        except KeyboardInterrupt:
-            print "\rWrote %i/%i"%(frame, frames)
-        except:
-            etype, value, tb = sys.exc_info()
-            while tb and 'NodeBoxTask.app' in tb.tb_frame.f_code.co_filename:
-                tb = tb.tb_next
-            errtxt = "".join(traceback.format_exception(etype, value, tb))
-            sys.stdout.write(errtxt)
-            self.session._shutdown()
-            AppHelper.callAfter(quit)            
-        else:
-            self.session.on_complete(quit)
-            self.session.done()
+        def exportProgress(self, progressBar):
+            STDERR.write(ERASER+progressBar)
+            STDERR.flush()
 
-def quit():
-    NSApplication.sharedApplication().terminate_(None)
+            read, write, timeout = select.select([sys.stdin.fileno()], [], [], 0)
+            for fd in read:
+                if fd == sys.stdin.fileno():
+                    line = sys.stdin.readline().strip()
+                    if 'CANCEL' in line:
+                        STDERR.write('\r')
+                        STDERR.flush()
+                        self.quit()
 
 
-class QuietApplication(NSApplication):
-    def sharedApplication(self):
-        app = super(QuietApplication, self).sharedApplication()
-        app.setActivationPolicy_(NSApplicationActivationPolicyAccessory);
-        return app
+        def exportFrame(self, frameNum, canvas, result):
+            self.echo(result.output)
 
-class AppDelegate(NSObject):
-    def applicationDidFinishLaunching_(self, note):
-        try:
-            opts = json.loads(sys.stdin.readline())
-        except ValueError:
-            print "bad args"
-            sys.exit(1)
-        runner = NodeBoxRunner(opts['file'])
-        runner.export(**opts)
+        def exportFailed(self, output):
+            STDERR.write('\r')
+            STDERR.flush()
+            self.echo(output)
+            self.quit()
+
+        def exportComplete(self):
+            STDERR.write('\r')
+            STDERR.flush()
+            self.quit()
+
+        def quit(self):
+            NSApplication.sharedApplication().terminate_(None)
+
+
+    app = QuietApplication.sharedApplication()
+    delegate = AppDelegate.alloc().initWithOpts_(opts)
+    app.setDelegate_(delegate)
+    AppHelper.runEventLoop(installInterrupt=False)
+
 
 if __name__ == '__main__':
-    app = QuietApplication.sharedApplication()
-    delegate = AppDelegate.alloc().init()
-    app.setDelegate_(delegate)
-    AppHelper.runEventLoop()
+    try:
+        opts = json.loads(sys.stdin.readline())
+    except ValueError:
+        print "bad args"
+        sys.exit(1)
+    console_export(opts)

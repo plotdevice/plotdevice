@@ -677,6 +677,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				COMBINE_HIDPI_IMAGES = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "Build Distribution";
 			};
 			name = Debug;
@@ -694,6 +695,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "NodeBox Clean";
 			};
 			name = Debug;
@@ -710,6 +712,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "NodeBox Build";
 			};
 			name = Debug;

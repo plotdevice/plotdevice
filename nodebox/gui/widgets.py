@@ -251,7 +251,8 @@ class ValueLadder:
         self.textView.setNeedsDisplay_(True)
         self.textView.document.magicvar = self.value
         self.textView.document.currentView.direct = True
-        self.textView.document.runScriptFast()
+        # self.textView.document.runScriptFast()
+        self.textView.document.runScript()
 
 
 # class defined in AskString.xib
@@ -316,27 +317,26 @@ class DashboardController(NSObject):
             s.removeFromSuperview()
 
     def numberChanged_(self, sender):
-        var = self.document.vars[sender.tag()]
+        var = self.document.vm.vars[sender.tag()]
         var.value = sender.floatValue()
-        self.document.runScript(compile=False, newSeed=False)
+        self.document.runScript()
 
     def textChanged_(self, sender):
-        var = self.document.vars[sender.tag()]
+        var = self.document.vm.vars[sender.tag()]
         var.value = sender.stringValue()
-        self.document.runScript(compile=False, newSeed=False)
+        self.document.runScript()
 
     def booleanChanged_(self, sender):
-        var = self.document.vars[sender.tag()]
+        var = self.document.vm.vars[sender.tag()]
         if sender.state() == NSOnState:
             var.value = True
         else:
             var.value = False
-        self.document.runScript(compile=False, newSeed=False)
+        self.document.runScript()
         
     def buttonClicked_(self, sender):
-        var = self.document.vars[sender.tag()]
-        self.document.fastRun(self.document.namespace[var.name], newSeed=True)
-        #self.document.runFunction_(var.name)
+        var = self.document.vm.vars[sender.tag()]
+        self.document.fastRun(var.name)
 
     def buildInterface(self, vars):
         self.vars = vars
