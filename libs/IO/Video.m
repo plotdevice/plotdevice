@@ -84,7 +84,7 @@
     NSGraphicsContext* imageContext = [NSGraphicsContext graphicsContextWithGraphicsPort:context flipped:NO];
     [NSGraphicsContext saveGraphicsState];
     [NSGraphicsContext setCurrentContext:imageContext];
-    [image compositeToPoint:NSMakePoint(0.0, 0.0) operation:NSCompositeCopy];
+    [image drawAtPoint:NSMakePoint(0.0, 0.0) fromRect:NSZeroRect operation:NSCompositeCopy fraction:1.0];
     [NSGraphicsContext restoreGraphicsState];
     CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
 
