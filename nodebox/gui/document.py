@@ -120,14 +120,21 @@ class NodeBoxDocument(NSDocument):
     def _updateWindowAutosave(self):
         if self.path and self.textView: # don't try to access views until fully loaded
             name = 'nodebox:%s'%self.path
-            lower_splitview = self.textView.superview().superview().superview()
-            upper_splitview = lower_splitview.superview()
-            window_ctl = self.windowControllers()[0]
 
+            # walk through superviews to set the autosave id for the splitters
+            splits = {"lower":None, "upper":None}
+            it = self.textView
+            while it.superview():
+                if type(it) is NSSplitView:
+                    side = 'lower' if not splits['lower'] else 'upper'
+                    splits[side] = it
+                    it.setAutosaveName_(' - '.join([name,side]))
+                    if splits['upper']: break
+                it = it.superview()
+            
+            window_ctl = self.windowControllers()[0]
             window_ctl.setShouldCascadeWindows_(False)
             window_ctl.setWindowFrameAutosaveName_(name)
-            lower_splitview.setAutosaveName_('%s - lower'%name)
-            upper_splitview.setAutosaveName_('%s - upper'%name)
 
     def _ui_state(self):
         # Set the mouse position
@@ -175,6 +182,9 @@ class NodeBoxDocument(NSDocument):
     # 
     def setFileURL_(self, url):
         super(NodeBoxDocument, self).setFileURL_(url)
+        if not url: 
+            self.path = None
+            return
         self.path = url.fileSystemRepresentation()
         self._updateWindowAutosave()
         if self.vm:
@@ -634,7 +644,7 @@ class FullscreenView(NSView):
 
     def scrollWheel_(self, event):
         self.scrollwheel = True
-        self.wheeldelta = event.deltaY()
+        self.wheeldelta = event.scrollingDeltaY()
 
     def canBecomeKeyView(self):
         return True

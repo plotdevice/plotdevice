@@ -148,7 +148,6 @@ if __name__=='__main__':
             }
         },
         zip_safe=False,
-        zip_ok=False,
         cmdclass={
             'clean': CleanCommand,
         },

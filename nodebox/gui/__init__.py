@@ -56,14 +56,14 @@ class NodeBoxAppDelegate(NSObject):
         for fn in sorted(pyfiles):
             cat = os.path.basename(os.path.dirname(fn))
             example = os.path.basename(fn)
-            item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(example.replace('.py',''), "openExample:", "")
+            item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(example[:-3], "openExample:", "")
             item.setRepresentedObject_(fn)
             folders[cat].addItem_(item)
         self.examplesMenu.setHidden_(not pyfiles)
 
     def openExample_(self, sender):
         pth = sender.representedObject()
-        doc, err = self._docsController.makeUntitledDocumentOfType_error_("NodeBoxDocument",None)
+        doc, err = self._docsController.makeUntitledDocumentOfType_error_("public.python-script", None)
         doc.stationery = pth
         self._docsController.addDocument_(doc)
         doc.makeWindowControllers()
@@ -368,7 +368,7 @@ class NodeBoxGraphicsView(NSView):
     def scrollWheel_(self, event):
         NSResponder.scrollWheel_(self, event)
         self.scrollwheel = True
-        self.wheeldelta = event.deltaY()
+        self.wheeldelta = event.scrollingDeltaY()
 
     def canBecomeKeyView(self):
         return True

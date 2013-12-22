@@ -66,7 +66,6 @@ class Sandbox(object):
     def _set_script(self, pth):
         if pth==self._script: return
         self._script = pth
-        # print "script ->", pth
     script = property(_get_script, _set_script)
 
     # .source
@@ -92,7 +91,6 @@ class Sandbox(object):
         return dict(self._meta.items())
     def _set_meta(self, metadict):
         self._meta.update(metadict)
-        # print self.metadata
     metadata = property(_get_meta, _set_meta)
 
     @property
@@ -143,10 +141,7 @@ class Sandbox(object):
         
         # Reset the frame / animation status
         self._meta.next = self._meta.first
-        # self.namespace['PAGENUM'] = self.namespace['FRAME'] = self._meta.first
         self.canvas.speed = None
-        # self._pageNum = self._meta.first
-        # self._frame = self._meta.first
         return result
 
     def stop(self):

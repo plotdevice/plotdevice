@@ -1,6 +1,7 @@
 from AppKit import *
 from nodebox.graphics.grobs import *
 from nodebox.graphics import grobs
+from nodebox import geo
 
 class Context(object):
     
@@ -503,16 +504,16 @@ class Context(object):
     ### Geometry
 
     def angle(self, x0, y0, x1, y1):
-        return nodebox.geo.angle( x0, y0, x1, y1)
+        return geo.angle(x0, y0, x1, y1)
 
     def distance(self, x0, y0, x1, y1):
-        return nodebox.geo.distance( x0, y0, x1, y1)
+        return geo.distance(x0, y0, x1, y1)
 
     def coordinates(self, x0, y0, distance, angle):
-        return nodebox.geo.coordinates(self, x0, y0, distance, angle)
+        return geo.coordinates(x0, y0, distance, angle)
 
     def reflect(self, x0, y0, x1, y1, d=1.0, a=180):
-        return nodebox.geo.reflect(self, x0, y0, x1, y1, d=1.0, a=180)
+        return geo.reflect(x0, y0, x1, y1, d, a)
 
 class _PDFRenderView(NSView):
     
