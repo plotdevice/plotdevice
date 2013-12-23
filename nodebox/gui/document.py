@@ -14,8 +14,7 @@ from nodebox.run import Sandbox
 from nodebox.gui.editor import PyDETextView, OutputTextView
 from nodebox.gui.preferences import get_default, getBasicTextAttributes
 from nodebox.gui.widgets import DashboardController, MAGICVAR
-from nodebox import util
-from nodebox import graphics, get_bundle_path
+from nodebox import util, graphics
 
 # class defined in NodeBoxDocument.xib
 class NodeBoxDocument(NSDocument):
@@ -220,7 +219,7 @@ class NodeBoxDocument(NSDocument):
     # Running the script in the main window
     # 
     def scriptedRun(self, opts):
-        meta = dict( (k, opts[k]) for k in ['args', 'virtualenv', 'live', 'first', 'last', 'stdout'] )
+        meta = dict( (k, opts[k]) for k in ['args', 'virtualenv', 'live', 'first', 'last', 'console'] )
         self._live = meta['live']
         self.vm.metadata = meta
         self.refresh()

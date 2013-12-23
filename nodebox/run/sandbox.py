@@ -11,7 +11,7 @@ from AppKit import *
 from nodebox.graphics import NodeBoxError
 # from nodebox.gui.widgets import MAGICVAR
 from nodebox import util
-from nodebox import graphics, get_bundle_path
+from nodebox import graphics
 from nodebox.run.export import MovieExportSession, ImageExportSession
 
 __all__ = ['Sandbox']

@@ -72,7 +72,7 @@ class CommandListener(Thread):
             stdout = opts['console']
             for doc in dc.documents():
                 if doc.fileURL() and doc.fileURL().isEqualTo_(url):
-                    if doc.vm.metadata['stdout']:
+                    if doc.vm.metadata['console']:
                         stdout.put("already running: %s"%opts['file'])
                         stdout.put(None)
                         break
@@ -94,7 +94,7 @@ class CommandListener(Thread):
             dc.openDocumentWithContentsOfURL_display_error_(url, True, None)
             for doc in dc.documents():
                 if doc.fileURL() and doc.fileURL().isEqualTo_(url):
-                    doc._meta['live'] = False
+                    doc._live = False
                     doc.stopScript()
 
 
