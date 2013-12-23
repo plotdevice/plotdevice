@@ -10,7 +10,7 @@ from nodebox.gui.document import NodeBoxDocument
 from nodebox.gui.preferences import getBasicTextAttributes, get_default
 from nodebox.run import CommandListener
 from nodebox import util
-from nodebox import graphics, get_bundle_path
+from nodebox import graphics
 
 VERY_LIGHT_GRAY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.95, NSColor.whiteColor())
 DARKER_GRAY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.8, NSColor.whiteColor())
@@ -46,7 +46,7 @@ class NodeBoxAppDelegate(NSObject):
         return newlistener.active
 
     def updateExamples(self):
-        examples_folder = os.path.abspath('%s/Contents/Resources/examples'%get_bundle_path())
+        examples_folder = os.path.join(NSBundle.mainBundle().bundlePath(), "Contents/Resources/examples")
         pyfiles = glob('%s/*/*.py'%examples_folder)
         categories = self.examplesMenu.submenu()
         folders = {}

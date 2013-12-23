@@ -13,10 +13,9 @@
 # - Numeric (included in the "libs" folder)
 # - Numpy (installable using "easy_install numpy")
 
-import os
+import sys,os
 from distutils.core import setup, Command
 from setuptools.extension import Extension
-import py2app
 import nodebox
 
 NAME = 'NodeBox'
@@ -111,6 +110,10 @@ rsrc = [
     "Resources/NodeBoxFile.icns",
 ]
 
+BUILD_APP = 'py2app' in sys.argv
+if BUILD_APP:
+    import py2app
+
 class CleanCommand(Command):
     description = "wipe out the ./build ./dist and libs/.../build dirs"
     user_options = []
@@ -124,11 +127,29 @@ class CleanCommand(Command):
         os.system('rm -rf ./libs/*/build')
 
 if __name__=='__main__':
-    setup(
-        app = [{
-            'script': "macboot.py",
-            "plist":plist,
-        }],        
+    config = {}
+
+    # app-specific config
+    if BUILD_APP:
+        config.update(dict(
+            app = [{
+                'script': "macboot.py",
+                "plist":plist,
+            }],
+            data_files = rsrc,
+            options = {
+                "py2app": {
+                    "iconfile": "Resources/NodeBox.icns",
+                    "semi_standalone":True,
+                    "site_packages":True,
+                    "strip":False,
+                    "semi_standalone":True,
+                }
+            },
+        ))
+
+    # common config between module and app builds
+    config.update(dict(
         name = NAME,
         version = VERSION,
         description = DESCRIPTION,
@@ -137,18 +158,13 @@ if __name__=='__main__':
         author_email = AUTHOR_EMAIL,
         url = URL,
         classifiers = CLASSIFIERS,
-        data_files = rsrc,
         ext_modules = ext_modules,
         packages = packages,
-        options = {
-            "py2app": {
-                "iconfile": "Resources/NodeBox.icns",
-                "semi_standalone":True,
-                "site_packages":True,
-            }
-        },
+        scripts = ["nodebox/console.py"],
         zip_safe=False,
         cmdclass={
             'clean': CleanCommand,
         },
-    )
+    ))
+
+    setup(**config)

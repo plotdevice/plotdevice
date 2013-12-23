@@ -42,14 +42,60 @@ import xmlrpclib
 import socket
 import json
 import signal
-from time import sleep
-
 import shutil
+
+from time import sleep
 from datetime import datetime
 from subprocess import Popen, PIPE
-from Foundation import NSUserDefaults
+from os.path import exists, islink, dirname, abspath, realpath
+
+try:
+  from Foundation import NSUserDefaults
+except ImportError:
+  # virtualenv doesn't seem to add these to the system.path for some reason
+  extras = '/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python'
+  sys.path.append(extras)
+  sys.path.append('%s/PyObjC'%extras)
 
 def main():
+  opts = parse_args()
+  if opts.export:
+    exec_console(opts)
+  else:
+    exec_application(opts)
+
+def exec_console(opts):
+  """Run export operation in the console"""
+  def cancel(*args):
+    p.stdin.write("CANCEL\n")
+  signal.signal(signal.SIGINT, cancel)
+
+  p = Popen(['/usr/bin/python',task_path()], env=dict(os.environ), stdin=PIPE)
+  p.stdin.write(json.dumps(vars(opts))+"\n")
+  p.wait()
+
+def exec_application(opts):
+  """Launch NodeBox.app if needed and run the script (while echoing output to the console)"""
+  sock = connect(0)
+  if not sock:
+    os.system('open -a "%s" "%s"'%(app_path() or 'NodeBox.app', opts.file))
+    sock = connect()
+  if not sock:
+    print "Couldn't connect to the NodeBox application on port", default_port()
+    sys.exit(1)
+
+  try:
+    sock.sendall(json.dumps(vars(opts)) + "\n")
+    try:
+      while read_and_echo(sock): pass
+    except KeyboardInterrupt:
+      sock.sendall('STOP\n')
+      print "\n",
+      while read_and_echo(sock): pass
+  finally:
+    sock.close()
+
+def parse_args():
   parser = argparse.ArgumentParser(description='Run python scripts in NodeBox.app', add_help=False)
   o = parser.add_argument_group("Options", None)
   o.add_argument('-h','--help', action='help', help='show this help message and exit')
@@ -70,14 +116,14 @@ def main():
 
   if opts.virtualenv:
     libdir = '%s/lib/python2.7/site-packages'%opts.virtualenv
-    if os.path.exists(libdir):
-      opts.virtualenv = os.path.abspath(libdir)
+    if exists(libdir):
+      opts.virtualenv = abspath(libdir)
     else:
       parser.exit(1, "bad argument [--virtualenv]\nvirtualenv site-packages dir not found: %s\n"%libdir)
 
   if opts.file:
-    opts.file = os.path.abspath(opts.file)
-    if not os.path.exists(opts.file):
+    opts.file = abspath(opts.file)
+    if not exists(opts.file):
       parser.exit(1, "file not found: %s\n"%opts.file)
 
   if opts.frames:
@@ -101,47 +147,10 @@ def main():
     if ext.lower() not in ('pdf', 'eps', 'png', 'tiff', 'jpg', 'gif', 'mov'):
       parser.exit(1, 'bad argument [--export]\nthe output filename must end with a supported format:\npdf, eps, png, tiff, jpg, gif, or mov\n')
     if '/' in opts.export:
-      export_dir = os.path.dirname(opts.export)
-      if not os.path.exists(export_dir):
-        parser.exit(1,'export directory not found: %s\n'%os.path.abspath(export_dir))
-    opts.export = os.path.abspath(opts.export)
-
-  if opts.export:
-    exec_console(opts)
-  else:
-    exec_application(opts)
-
-def exec_console(opts):
-  """Run export operation in the console"""
-  def cancel(*args):
-    p.stdin.write("CANCEL\n")
-  signal.signal(signal.SIGINT, cancel)
-
-  p = Popen(['/usr/bin/python',task_path()], env=dict(os.environ), stdin=PIPE)
-  p.stdin.write(json.dumps(vars(opts))+"\n")
-  p.wait()
-
-
-def exec_application(opts):
-  """Launch NodeBox.app if needed and run the script (while echoing output to the console)"""
-  sock = connect(0)
-  if not sock:
-    os.system('open -a "%s" "%s"'%(app_name(), opts.file))
-    sock = connect()
-  if not sock:
-    print "Couldn't connect to the NodeBox application on port", default_port()
-    sys.exit(1)
-
-  try:
-    sock.sendall(json.dumps(vars(opts)) + "\n")
-    try:
-      while read_and_echo(sock): pass
-    except KeyboardInterrupt:
-      sock.sendall('STOP\n')
-      print "\n",
-      while read_and_echo(sock): pass
-  finally:
-    sock.close()
+      export_dir = dirname(opts.export)
+      if not exists(export_dir):
+        parser.exit(1,'export directory not found: %s\n'%abspath(export_dir))
+    opts.export = abspath(opts.export)
 
 def connect(retry=12, delay=0):
   port = default_port()
@@ -157,21 +166,20 @@ def connect(retry=12, delay=0):
   return sock
 
 def app_path():
-  parent = os.path.abspath(os.path.dirname(__file__))
-  if os.path.islink(__file__):
-    parent = os.path.dirname(os.path.realpath(__file__))
-  if parent.endswith('Resources/python/nodebox'):
-    return os.path.abspath('%s/../../../..'%parent)
-  return None
+  parent = dirname(realpath(__file__)) if islink(__file__) else abspath(dirname(__file__))
+  try:
+    # we're being called from within an app bundle
+    return parent[:parent.index('NodeBox.app')+len('NodeBox.app')]
+  except ValueError:
+    # no app bundle present, we're part of a module install instead
+    return None
 
 def task_path():
   if app_path():
     return "%s/%s" % (app_path(), 'Contents/Resources/python/nodebox/run/task.py')
   else:
-    return "%s/%s" % (os.path.abspath(os.path.dirname(__file__)), 'run/task.py')
-
-def app_name():
-  return app_path() or 'NodeBox.app'
+    import nodebox
+    return "%s/%s" % (abspath(dirname(nodebox.__file__)), 'run/task.py')
 
 def default_port():
   appdefaults = NSUserDefaults.standardUserDefaults().persistentDomainForName_('net.nodebox.NodeBox')
