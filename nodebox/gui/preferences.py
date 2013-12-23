@@ -121,8 +121,8 @@ class NodeBoxPreferencesController(NSWindowController):
     errColorWell = objc.IBOutlet()
     pageColorWell = objc.IBOutlet()
     selectionColorWell = objc.IBOutlet()
-    toolFound = False
-    toolValid = False
+    # toolFound = False
+    # toolValid = False
 
     def init(self):
         self = self.initWithWindowNibName_("NodeBoxPreferences")
@@ -175,20 +175,22 @@ class NodeBoxPreferencesController(NSWindowController):
     def checkTool(self):
         broken = []
         for path in possibleToolLocations():
-            self.toolFound = path if os.path.islink(path) else None
-            if self.toolFound:
-                console_path = os.path.realpath(path)
+            if os.path.islink(path):
+                # if it's a symlink, make sure it points to this bundle
+                tool_path = os.path.realpath(path)
                 bundle_path = NSBundle.mainBundle().bundlePath()
-                self.toolValid = console_path.startswith(bundle_path)
-            elif os.path.exists(path):
+                found = path
+                valid = tool_path.startswith(bundle_path)
+                if valid: break
                 broken.append(path)
-            if self.toolFound and self.toolValid:
-                break
-        if not self.toolFound:
-            self.toolFound = broken[0] if broken else None
-            self.toolValid = False
+            if os.path.exists(path):
+                # if it's a normal file, something went wrong
+                broken.append(path)
+        else:
+            # didn't find any working symlinks in the $PATH
+            found = broken[0] if broken else None
+            valid = False
 
-        found, valid = self.toolFound, self.toolValid
         self.toolInstall.setHidden_(found is not None)
         self.toolPath.setSelectable_(found is not None)
         # self.toolPath.setStringValue_(found.replace(os.environ['HOME'],'~') if found else '')
@@ -229,7 +231,7 @@ class NodeBoxPreferencesController(NSWindowController):
         should_install = sender.tag()
         if should_install:
             bundle_path = NSBundle.mainBundle().bundlePath()
-            console_py = '%s/Contents/Resources/python/nodebox/console.py'%bundle_path
+            console_py = '%s/Contents/SharedSupport/nodebox'%bundle_path
             pth = self.toolInstallMenu.selectedItem().title().replace('~',os.environ['HOME'])
             dirname = os.path.dirname(pth)
             try:

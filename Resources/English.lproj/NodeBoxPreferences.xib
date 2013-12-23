@@ -212,7 +212,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="UYd-2I-6Wq">
-                                    <rect key="frame" x="51" y="107" width="49" height="17"/>
+                                    <rect key="frame" x="51" y="109" width="49" height="17"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Colors:" id="W4C-rr-dVd">
                                         <font key="font" metaFont="system"/>

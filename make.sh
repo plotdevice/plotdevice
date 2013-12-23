@@ -4,6 +4,7 @@
 TOP=`pwd`
 VERSION=$(python -c 'import nodebox; print nodebox.__version__')
 RSRC="$TOP/dist/NodeBox.app/Contents/Resources"
+BIN="$TOP/dist/NodeBox.app/Contents/SharedSupport"
 SITE_PKGS="$RSRC/lib/python2.7/site-packages"
 
 clean () {
@@ -15,21 +16,31 @@ build () {
     # Build the application.
     python setup.py py2app
 
-    # Do some py2app `configuration'
+    # Do some py2app `configuration' to make the bundle layout more
+    # like what xcode produces
     mkdir $SITE_PKGS
     cd $SITE_PKGS
     unzip -q ../site-packages.zip
     rm ../site-packages.zip
-    mkdir $RSRC/python
-    ln -s ../lib/python2.7/site-packages/nodebox $RSRC/python/nodebox
-    cp -p ../lib-dynload/*.so $RSRC/python
+
     cd $TOP
     ditto nodebox $SITE_PKGS/nodebox
     ditto examples $RSRC/examples
-    mkdir $RSRC/English.lproj
-    mv $RSRC/*.nib $RSRC/English.lproj/
-    mv $RSRC/NodeBox\ Help $RSRC/English.lproj/NodeBox\ Help
-    rmdir $RSRC/../Frameworks
+    mkdir -p $BIN
+    cp -p boot/nodebox $BIN
+    chmod 755 $BIN/nodebox
+
+    cd $RSRC
+    mkdir python
+    ln -s ../lib/python2.7/site-packages/nodebox python/nodebox
+    cp -p lib/python2.7/lib-dynload/*.so python
+
+    rmdir ../Frameworks
+    mkdir English.lproj
+    mv *.nib "NodeBox Help" English.lproj/
+
+    cd $TOP
+    rm -r build
     echo "done building NodeBox.app in ./dist"
 }
 
@@ -39,15 +50,15 @@ dist () {
     cd dist/NodeBox/NodeBox
 
     # Copy the current NodeBox application.
-    cp -R -p ../../NodeBox.app .
+    ditto ../../NodeBox.app NodeBox.app
 
     # Copy changes and readme
     cp ../../../CHANGES.md Changes.txt
     cp ../../../README.md Readme.txt
 
     # Copy examples
-    cp -R ../../../examples Examples
-    chmod 755 Examples/*/*
+    ditto ../../../examples Examples
+    chmod 755 Examples/*/*.py
 
     # Make DMG
     cd ../..

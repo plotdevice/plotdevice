@@ -14,7 +14,7 @@
 			<key>CFBundleTypeIconFile</key>
 			<string>NodeBoxFile.icns</string>
 			<key>CFBundleTypeName</key>
-			<string>NodeBoxDocument</string>
+			<string>NodeBox Document</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-console.py
+nodebox.py
 
 Run nodebox scripts from the command line
 
@@ -56,9 +56,10 @@ except ImportError:
   extras = '/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python'
   sys.path.append(extras)
   sys.path.append('%s/PyObjC'%extras)
+  from Foundation import NSUserDefaults
 
 def main():
-  opts = parse_args()
+  opts = validate_opts(parse_args())
   if opts.export:
     exec_console(opts)
   else:
@@ -111,9 +112,9 @@ def parse_args():
   o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='remainder of command line will be passed to the script as sys.argv')
   i = parser.add_argument_group("NodeBox Script File", None)
   i.add_argument('file', help='the python script to be rendered')
+  return parser.parse_args()
 
-  opts = parser.parse_args()
-
+def validate_opts(opts):
   if opts.virtualenv:
     libdir = '%s/lib/python2.7/site-packages'%opts.virtualenv
     if exists(libdir):
@@ -151,6 +152,8 @@ def parse_args():
       if not exists(export_dir):
         parser.exit(1,'export directory not found: %s\n'%abspath(export_dir))
     opts.export = abspath(opts.export)
+  
+  return opts
 
 def connect(retry=12, delay=0):
   port = default_port()
@@ -188,7 +191,8 @@ def default_port():
 def read_and_echo(sock):
   response = sock.recv(80)
   if response:
-    print response,
+    sys.stdout.write(response)
+    sys.stdout.flush()
   return response
 
 if __name__ == "__main__":

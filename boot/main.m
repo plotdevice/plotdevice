@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
         NSArray *possibleMainExtensions = @[@"py", @"pyc", @"pyo"];
         NSString *mainFilePath = nil;
         for (NSString *possibleMainExtension in possibleMainExtensions) {
-            mainFilePath = [mainBundle pathForResource: @"macboot" ofType: possibleMainExtension];
+            mainFilePath = [mainBundle pathForResource: @"nodebox-app" ofType: possibleMainExtension];
             if ( mainFilePath != nil ) break;
         }
         

@@ -13,7 +13,7 @@
 + (BOOL)createLink:(NSString *)toolPath{
     NSString *toolDir = [toolPath stringByDeletingLastPathComponent];
     NSString *bundle_path = [[NSBundle mainBundle ] bundlePath];
-    NSString *console_py = [bundle_path stringByAppendingString:@"/Contents/Resources/python/nodebox/console.py"];
+    NSString *console_py = [bundle_path stringByAppendingString:@"/Contents/SharedSupport/nodebox"];
     OSStatus status;
     FILE *pipe = NULL;
         

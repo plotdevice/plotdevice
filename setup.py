@@ -133,7 +133,7 @@ if __name__=='__main__':
     if BUILD_APP:
         config.update(dict(
             app = [{
-                'script': "macboot.py",
+                'script': "boot/nodebox-app.py",
                 "plist":plist,
             }],
             data_files = rsrc,
@@ -160,7 +160,7 @@ if __name__=='__main__':
         classifiers = CLASSIFIERS,
         ext_modules = ext_modules,
         packages = packages,
-        scripts = ["nodebox/console.py"],
+        scripts = ["boot/nodebox"],
         zip_safe=False,
         cmdclass={
             'clean': CleanCommand,

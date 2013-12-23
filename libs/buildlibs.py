@@ -51,7 +51,9 @@ def clean_build_files():
     
 if __name__=='__main__':
     import sys
-    if len(sys.argv) > 1 and sys.argv[1] == 'clean':
+    clean = len(sys.argv)>1 and sys.argv[1]=='clean'
+
+    if clean or os.environ['ACTION']=='clean':
         clean_build_files()
     else:
         build_libraries()
