@@ -72,7 +72,7 @@ class CommandListener(Thread):
             stdout = opts['console']
             for doc in dc.documents():
                 if doc.fileURL() and doc.fileURL().isEqualTo_(url):
-                    if doc.vm.metadata['console']:
+                    if doc.vm.tty:
                         stdout.put("already running: %s"%opts['file'])
                         stdout.put(None)
                         break

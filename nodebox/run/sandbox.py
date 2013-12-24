@@ -22,7 +22,7 @@ PLUGIN_DIR = os.path.join(os.getenv("HOME"), "Library", "Application Support", "
 MODULE_ROOT = abspath(dirname(dirname(__file__)))
 
 class Metadata(object):
-    __slots__ = 'args', 'virtualenv', 'first', 'next', 'last', 'console'
+    __slots__ = 'args', 'virtualenv', 'first', 'next', 'last', 'console', 'running'
     def __init__(self, **opts):
         for k,v in opts.items(): setattr(self,k,v)
     def update(self, changes):
@@ -111,13 +111,14 @@ class Sandbox(object):
     @property
     def running(self):
         """Whether the script still has frames to be rendered"""
-        if self.canvas.speed and 'draw' in self.namespace:
+        if self._meta.running and self.canvas.speed and 'draw' in self.namespace:
             return self._meta.last is None or self._meta.next <= self._meta.last
-        return False
+        return self._meta.running
 
     @property
-    def istty(self):
-        return not hasattr(self.delegate, 'graphicsView')
+    def tty(self):
+        """Whether the script's output is being redirected to a pipe"""
+        return self._meta.console is not None
 
     def compile(self, src=None):
         """Set up a namespace for the script (or src if specified) and prepare it for rendering"""
@@ -140,6 +141,7 @@ class Sandbox(object):
                 return result
         
         # Reset the frame / animation status
+        self._meta.running = False
         self._meta.next = self._meta.first
         self.canvas.speed = None
         return result
@@ -148,9 +150,11 @@ class Sandbox(object):
         """Called once the script has stop running (voluntarily or otherwise)"""
         # print "stopping at", self._meta.next-1, "of", self._meta.last
         result = Outcome(True, [])
-        if not self._meta.last or self._meta.next-1 == self._meta.last:
+        # if not self._meta.last or self._meta.next-1 == self._meta.last:
+        if self._meta.running:
             result = self.call("stop")
-            self._meta.first, self._meta.last = (1,None)
+            self._meta.running = False
+        self._meta.first, self._meta.last = (1,None)
         if self._meta.console:
             self._meta.console.put(None)
             self._meta.console = None
@@ -178,8 +182,13 @@ class Sandbox(object):
         # Run the script
         result = self.call(method)
 
-        if not self.animated or method=='draw':
-            self._meta.next+=1
+        if self.animated:
+            # flag that we're starting a new animation
+            if method==None:
+                self._meta.running = True                 
+            # tick the frame ahead after each draw call
+            elif method=='draw':
+                self._meta.next+=1
 
         return result
 
@@ -284,10 +293,10 @@ class Sandbox(object):
 
         if kind=='image':
             fname, first, last, format = args
-            self.session = ImageExportSession(fname, last, format, first=first, console=self.istty)
+            self.session = ImageExportSession(fname, last, format, first=first, console=self.tty)
         elif kind=='movie':
             fname, first, last, fps, loop, bitrate = args
-            self.session = MovieExportSession(fname, last, fps, loop, first, bitrate, console=self.istty)
+            self.session = MovieExportSession(fname, last, fps, loop, first, bitrate, console=self.tty)
         else:
             return
 
@@ -319,7 +328,7 @@ class Sandbox(object):
                     return self._finishExport()
                 self.session.add(self.canvas, i)
                 self.delegate.exportFrame(i, self.canvas, result)
-                if self.istty:
+                if self.tty:
                     self.delegate.exportProgress(self.session.progress.render())
                 self.shareThread()
 
