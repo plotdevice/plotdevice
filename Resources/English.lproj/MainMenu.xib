@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment version="1060" defaultVersion="1070" identifier="macosx"/>
+        <deployment version="1090" defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
     </dependencies>
     <objects>
@@ -226,43 +226,6 @@
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="Spelling" id="216">
-                                <menu key="submenu" title="Spelling" id="200">
-                                    <items>
-                                        <menuItem title="Spelling..." keyEquivalent=":" id="204">
-                                            <connections>
-                                                <action selector="showGuessPanel:" target="-1" id="230"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Check Spelling" keyEquivalent=";" id="201">
-                                            <connections>
-                                                <action selector="checkSpelling:" target="-1" id="225"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Check Spelling as You Type" id="219">
-                                            <connections>
-                                                <action selector="toggleContinuousSpellChecking:" target="-1" id="222"/>
-                                            </connections>
-                                        </menuItem>
-                                    </items>
-                                </menu>
-                            </menuItem>
-                            <menuItem title="Speech" id="211">
-                                <menu key="submenu" title="Speech" id="212">
-                                    <items>
-                                        <menuItem title="Start Speaking" id="196">
-                                            <connections>
-                                                <action selector="startSpeaking:" target="-1" id="233"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Stop Speaking" id="195">
-                                            <connections>
-                                                <action selector="stopSpeaking:" target="-1" id="227"/>
-                                            </connections>
-                                        </menuItem>
-                                    </items>
-                                </menu>
-                            </menuItem>
                         </items>
                     </menu>
                 </menuItem>
@@ -314,6 +277,12 @@
                                         </menuItem>
                                     </items>
                                 </menu>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="DSK-3c-GP2"/>
+                            <menuItem title="Hide Status Bar" keyEquivalent="/" id="Aeg-Zo-fi3">
+                                <connections>
+                                    <action selector="toggleStatusBar:" target="-1" id="sxb-wT-2XG"/>
+                                </connections>
                             </menuItem>
                         </items>
                     </menu>
@@ -370,136 +339,6 @@
                             <menuItem title="Jump to line..." keyEquivalent="j" id="389">
                                 <connections>
                                     <action selector="jumpToLine:" target="-1" id="408"/>
-                                </connections>
-                            </menuItem>
-                        </items>
-                    </menu>
-                </menuItem>
-                <menuItem title="Font" id="261">
-                    <menu key="submenu" title="Font" systemMenu="font" id="253">
-                        <items>
-                            <menuItem title="Show Fonts" keyEquivalent="t" id="268">
-                                <connections>
-                                    <action selector="orderFrontFontPanel:" target="277" id="276"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Bold" tag="2" keyEquivalent="b" id="244">
-                                <connections>
-                                    <action selector="addFontTrait:" target="277" id="281"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Italic" tag="1" keyEquivalent="i" id="256">
-                                <connections>
-                                    <action selector="addFontTrait:" target="277" id="282"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Underline" keyEquivalent="u" id="242">
-                                <connections>
-                                    <action selector="underline:" target="-1" id="286"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="252">
-                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
-                            </menuItem>
-                            <menuItem title="Kern" id="248">
-                                <menu key="submenu" title="Kern" id="262">
-                                    <items>
-                                        <menuItem title="Use Default" id="259">
-                                            <connections>
-                                                <action selector="useStandardKerning:" target="-1" id="285"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Use None" id="269">
-                                            <connections>
-                                                <action selector="turnOffKerning:" target="-1" id="280"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Tighten" id="258">
-                                            <connections>
-                                                <action selector="tightenKerning:" target="-1" id="288"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Loosen" id="251">
-                                            <connections>
-                                                <action selector="loosenKerning:" target="-1" id="284"/>
-                                            </connections>
-                                        </menuItem>
-                                    </items>
-                                </menu>
-                            </menuItem>
-                            <menuItem title="Ligature" id="250">
-                                <menu key="submenu" title="Ligature" id="267">
-                                    <items>
-                                        <menuItem title="Use Default" id="255">
-                                            <connections>
-                                                <action selector="useStandardLigatures:" target="-1" id="287"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Use None" id="257">
-                                            <connections>
-                                                <action selector="turnOffLigatures:" target="-1" id="271"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Use All" id="260">
-                                            <connections>
-                                                <action selector="useAllLigatures:" target="-1" id="273"/>
-                                            </connections>
-                                        </menuItem>
-                                    </items>
-                                </menu>
-                            </menuItem>
-                            <menuItem title="Baseline" id="245">
-                                <menu key="submenu" title="Baseline" id="249">
-                                    <items>
-                                        <menuItem title="Use Default" id="241">
-                                            <connections>
-                                                <action selector="unscript:" target="-1" id="279"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Superscript" id="254">
-                                            <connections>
-                                                <action selector="superscript:" target="-1" id="278"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Subscript" id="247">
-                                            <connections>
-                                                <action selector="subscript:" target="-1" id="283"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Raise" id="243">
-                                            <connections>
-                                                <action selector="raiseBaseline:" target="-1" id="272"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Lower" id="240">
-                                            <connections>
-                                                <action selector="lowerBaseline:" target="-1" id="274"/>
-                                            </connections>
-                                        </menuItem>
-                                    </items>
-                                </menu>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="264">
-                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
-                            </menuItem>
-                            <menuItem title="Show Colors" id="265">
-                                <connections>
-                                    <action selector="orderFrontColorPanel:" target="-1" id="289"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="263">
-                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
-                            </menuItem>
-                            <menuItem title="Copy Style" keyEquivalent="c" id="246">
-                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
-                                <connections>
-                                    <action selector="copyFont:" target="-1" id="275"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Paste Style" keyEquivalent="v" id="266">
-                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
-                                <connections>
-                                    <action selector="pasteFont:" target="-1" id="270"/>
                                 </connections>
                             </menuItem>
                         </items>
