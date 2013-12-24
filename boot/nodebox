@@ -59,7 +59,7 @@ except ImportError:
   from Foundation import NSUserDefaults
 
 def main():
-  opts = validate_opts(parse_args())
+  opts = parse_args()
   if opts.export:
     exec_console(opts)
   else:
@@ -112,9 +112,8 @@ def parse_args():
   o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='remainder of command line will be passed to the script as sys.argv')
   i = parser.add_argument_group("NodeBox Script File", None)
   i.add_argument('file', help='the python script to be rendered')
-  return parser.parse_args()
+  opts = parser.parse_args()
 
-def validate_opts(opts):
   if opts.virtualenv:
     libdir = '%s/lib/python2.7/site-packages'%opts.virtualenv
     if exists(libdir):
@@ -146,7 +145,7 @@ def validate_opts(opts):
   if opts.export:
     basename, ext = opts.export.rsplit('.',1)
     if ext.lower() not in ('pdf', 'eps', 'png', 'tiff', 'jpg', 'gif', 'mov'):
-      parser.exit(1, 'bad argument [--export]\nthe output filename must end with a supported format:\npdf, eps, png, tiff, jpg, gif, or mov\n')
+      parser.exit(1, 'bad argument [--export]\nthe output filename must end with a supported format:\n  pdf, eps, png, tiff, jpg, gif, or mov\n')
     if '/' in opts.export:
       export_dir = dirname(opts.export)
       if not exists(export_dir):
