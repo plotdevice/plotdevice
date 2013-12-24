@@ -6,13 +6,14 @@ from math import floor
 import cIO
 
 IMG_BATCH_SIZE = 8
-MOV_BATCH_SIZE = 40
+MOV_BATCH_SIZE = 16
 
 # map in the objc classes from the cIO module
 AnimatedGif, ImageSequence, Installer, Video = [objc.lookUpClass(c) for c in "AnimatedGif", "ImageSequence", "Installer", "Video"]
 
 class ExportSession(object):
     running = True
+    cancelled = False
     writer = None
     added = 0
     written = 0
@@ -38,18 +39,26 @@ class ExportSession(object):
         if cancel:
             self.batches = []
             self.progress.end()
-            # self._shutdown()
             return
 
         if not self.writer:
             return 0
         self.written = self.writer.framesWritten()
-        if self.written == self.total:
+
+        total = self.total if not self.cancelled else self.added
+        if self.written == total:
             self._complete()
         return self.written
 
+    def cancel(self):
+        self.cancelled = True
+        self.batches = []
+
     def _complete(self):
-        self.progress.complete()
+        if self.cancelled:
+            self.progress.bailed()
+        else:
+            self.progress.complete()
         AppHelper.callLater(0.2, self._shutdown)
 
     def _shutdown(self):
@@ -76,6 +85,7 @@ class ImageExportSession(ExportSession):
         self.writer = ImageSequence.alloc().init()
 
     def add(self, canvas_or_context, frame):
+        if self.cancelled: return
         basename, ext = os.path.splitext(self.fname)
         fn = "%s-%05d%s" % (basename, frame, ext)
         image = canvas_or_context._getImageData(self.format)
@@ -102,6 +112,7 @@ class MovieExportSession(ExportSession):
         self.batches = [(n, min(n+MOV_BATCH_SIZE-1,frames)) for n in range(first, frames+1, MOV_BATCH_SIZE)]
 
     def add(self, canvas_or_context, frame):
+        if self.cancelled: return
         image = canvas_or_context._nsImage
         if not self.writer:
             dims = image.size()
@@ -157,6 +168,11 @@ class ASCIIProgressBar(NSObject):
             self.value = toVal
             self._render()
 
+    def bailed(self):
+        if self.poll:
+            self.poll.invalidate()
+        self._stderr.write('\rWrote %i of %i frames%s\n'%(self.value,self.maxval,' '*40))
+
     def complete(self):
         self.value = self.maxval
         self._render()
@@ -195,6 +211,9 @@ class ProgressBarController(NSWindowController):
     def step(self, toVal):
         self.value = toVal
         self.progressBar.setDoubleValue_(self.value)
+
+    def bailed(self):
+        self.complete()
 
     def complete(self):
         self.progressBar.setDoubleValue_(self.maxval)

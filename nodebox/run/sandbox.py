@@ -118,7 +118,8 @@ class Sandbox(object):
     @property
     def tty(self):
         """Whether the script's output is being redirected to a pipe"""
-        return self._meta.console is not None
+        return not hasattr(self.delegate, 'graphicsView')
+        # return self._meta.console is not None
 
     def compile(self, src=None):
         """Set up a namespace for the script (or src if specified) and prepare it for rendering"""
@@ -304,13 +305,16 @@ class Sandbox(object):
         self._runExportBatch()
 
     def _finishExport(self):
+        # print "finishing"
         self.session.done()
         if self.session.running:
+            # print "still running. wait for complete"
             self.session.on_complete(self._exportComplete)
         else:
             self._exportComplete()
 
     def _exportComplete(self):
+        # print "completed"
         self.session = None
         self.delegate.exportComplete() # the delegate should run vm.stop() on its own
 
@@ -320,6 +324,10 @@ class Sandbox(object):
 
             method = "draw" if self.animated else None
             for i in range(first, last+1):
+                if self.session.cancelled: 
+                    # print "bailing out", self.session.batches
+                    break
+
                 self._meta.next = i
                 result = self.render(method)
                 if not result.ok:
@@ -331,6 +339,7 @@ class Sandbox(object):
                 if self.tty:
                     self.delegate.exportProgress(self.session.progress.render())
                 self.shareThread()
+                
 
         if self.session.batches:
             # keep running _runExportBatch until we run out of batches

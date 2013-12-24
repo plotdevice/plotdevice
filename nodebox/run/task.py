@@ -71,10 +71,8 @@ def console_export(opts):
 
         def echo(self, output):
             STDERR.write(ERASER)
-            # print ["%s[%s]"%('stderr' if o.isErr else 'stdout', o.data[:4]) for o in output]
             for o in output:
                 pipe = STDERR if o.isErr else STDOUT
-                # pipe.write('%s %s'%(pipe.name, o.data))
                 pipe.write(o.data)
                 pipe.flush()
         
@@ -90,10 +88,7 @@ def console_export(opts):
                 if fd == sys.stdin.fileno():
                     line = sys.stdin.readline().strip()
                     if 'CANCEL' in line:
-                        STDERR.write('\r')
-                        STDERR.flush()
-                        self.quit()
-
+                        self.vm.session.cancel()
 
         def exportFrame(self, frameNum, canvas, result):
             self.echo(result.output)
