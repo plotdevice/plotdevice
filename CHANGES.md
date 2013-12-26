@@ -1,3 +1,11 @@
+NodeBox 1.9.8
+-------------
+* Enhanced command line interface.
+* Video export in H.264 or animated gif formats.
+* Build system now works with xcode or py2app for the application and pip for the module.
+* A few more text colors are configurable in the preferences pane.
+* Python 2.7, virtualenv support, and 64 bit extensions (now requires OS X 10.9+).
+
 NodeBox 1.9.7
 -------------
 * Compatibility with Mac OS X 10.7 Lion (auto-saving! versions!).
