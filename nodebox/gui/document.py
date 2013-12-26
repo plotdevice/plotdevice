@@ -24,6 +24,8 @@ class NodeBoxDocument(NSDocument):
     window = objc.IBOutlet()
     dashboardController = objc.IBOutlet()
     animationSpinner = objc.IBOutlet()
+    zoomPanel = objc.IBOutlet()
+    mainSplitView = objc.IBOutlet()
     # The ExportImageAccessory adds:
     exportImageAccessory = objc.IBOutlet()
     exportImageFormat = objc.IBOutlet()
@@ -66,6 +68,7 @@ class NodeBoxDocument(NSDocument):
         self._frame = 150
         self._seed = time.time()
         self._fileMD5 = None
+        self._showZoom = True
         self.stationery = None
         return self
 
@@ -99,6 +102,10 @@ class NodeBoxDocument(NSDocument):
 
         win.makeFirstResponder_(self.textView)
         self.currentView = self.graphicsView
+
+
+        win.setAutorecalculatesContentBorderThickness_forEdge_(True,NSMinYEdge)
+        win.setContentBorderThickness_forEdge_(22.0,NSMinYEdge)
  
     def autosavesInPlace(self):
         return True
@@ -229,6 +236,40 @@ class NodeBoxDocument(NSDocument):
         else:
             self.runScript()
 
+
+    @objc.IBAction
+    def toggleStatusBar_(self, sender):
+        win = self.textView.window()
+        self._showZoom = not self._showZoom
+        thickness = 22 if self._showZoom else 0
+
+        zoom = self.zoomPanel.frame()
+        zoom.origin.y = thickness-22
+
+        content = win.contentView().frame()
+        content.size.height -= thickness
+        content.origin.y += thickness
+        
+        self.zoomPanel.setFrame_(zoom)
+        self.mainSplitView.setFrame_(content)
+        win.setContentBorderThickness_forEdge_(thickness, NSMinYEdge)
+
+        # NSAnimationContext.beginGrouping()
+        # duration = 0.5 * NSAnimationContext.currentContext().duration()
+        # NSAnimationContext.currentContext().setDuration_(duration)
+        # self.zoomPanel.animator().setFrame_(zoom)
+        # self.mainSplitView.animator().setFrame_(content)
+        # NSAnimationContext.endGrouping()
+        # if not self._showZoom:
+        #     win.setContentBorderThickness_forEdge_(0 , NSMinYEdge)
+        # else:
+        #     self.performSelector_withObject_afterDelay_("endAnimation:", None, duration)
+
+    # def endAnimation_(self, note):
+    #     win = self.textView.window()
+    #     thickness = 22 if self._showZoom else 0
+    #     win.setContentBorderThickness_forEdge_(thickness , NSMinYEdge)
+
     @objc.IBAction
     def runFullscreen_(self, sender):
         if self.fullScreen is not None: return
@@ -254,6 +295,10 @@ class NodeBoxDocument(NSDocument):
         self._runScript()
 
     def _runScript(self):
+        # Check if animationTimer is already running
+        if self.animationTimer is not None:
+            self.stopScript()
+
         # execute the script
         if not self.cleanRun():
             # syntax error. bail out before looping
@@ -264,10 +309,6 @@ class NodeBoxDocument(NSDocument):
                 errorAlert("Not a proper NodeBox animation",
                     "NodeBox animations should have at least a draw() method.")
                 return
-
-            # Check if animationTimer is already running
-            if self.animationTimer is not None:
-                self.stopScript()
 
             # Run setup routine
             self.fastRun("setup")
@@ -309,8 +350,13 @@ class NodeBoxDocument(NSDocument):
         result = self.vm.render(method=method)
         self.echo(result.output)
 
+        # only update the view during animations after the script's draw()
+        # method is called (otherwise a blank canvas flashes on the screen
+        # during the compilation and setup() calls.
+        redraw = not self.vm.animated or method=='draw'
+
         # Display the output of the script
-        if result.ok:
+        if result.ok and redraw:
             self.currentView.setCanvas(self.vm.canvas)
 
         return result.ok
@@ -350,7 +396,7 @@ class NodeBoxDocument(NSDocument):
         self.vm.export('movie', fname, first, frames, fps, loop, mbps)
 
     # 
-    # Handling export-related events
+    # Handling export-related events (invoked by self.vm.session object)
     # 
     def exportFailed(self, output):
         print "Export failed"
@@ -384,8 +430,10 @@ class NodeBoxDocument(NSDocument):
         self.stopScript()
 
     def stopScript(self):
-        result = self.vm.stop()
+        # run stop() method if the script defines one
+        result = self.vm.stop() 
         self.echo(result.output)
+
         self.animationSpinner.stopAnimation_(None)
         if self.animationTimer is not None:
             self.animationTimer.invalidate()

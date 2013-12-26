@@ -57,7 +57,7 @@ class Sandbox(object):
         self._env.update( (a,getattr(util,a)) for a in util.__all__  )
         self._env.update( (a,getattr(self.context,a)) for a in dir(self.context) if not re_private.search(a) )
         self._env["_ctx"] = self.context
-        self._meta = Metadata(args=[], virtualenv=None, first=1, next=1, last=None, console=None)
+        self._meta = Metadata(args=[], virtualenv=None, first=1, next=1, last=None, running=False, console=None)
 
     # .script
     def _get_script(self):
@@ -110,14 +110,14 @@ class Sandbox(object):
 
     @property
     def running(self):
-        """Whether the script still has frames to be rendered"""
+        """Whether the script still has frames to be rendered (r)"""
         if self._meta.running and self.canvas.speed and 'draw' in self.namespace:
             return self._meta.last is None or self._meta.next <= self._meta.last
         return self._meta.running
 
     @property
     def tty(self):
-        """Whether the script's output is being redirected to a pipe"""
+        """Whether the script's output is being redirected to a pipe (r)"""
         return not hasattr(self.delegate, 'graphicsView')
         # return self._meta.console is not None
 

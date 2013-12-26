@@ -279,7 +279,7 @@
                                 </menu>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="DSK-3c-GP2"/>
-                            <menuItem title="Hide Status Bar" keyEquivalent="/" id="Aeg-Zo-fi3">
+                            <menuItem title="Toggle Status Bar" keyEquivalent="/" id="Aeg-Zo-fi3">
                                 <connections>
                                     <action selector="toggleStatusBar:" target="-1" id="sxb-wT-2XG"/>
                                 </connections>
