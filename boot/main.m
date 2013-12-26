@@ -8,15 +8,9 @@ int main(int argc, char *argv[])
         NSString *resourcePath = [mainBundle resourcePath];
         setenv("PYTHONPATH", [[resourcePath stringByAppendingPathComponent:@"python"] UTF8String], 1);        
 
-        NSArray *possibleMainExtensions = @[@"py", @"pyc", @"pyo"];
-        NSString *mainFilePath = nil;
-        for (NSString *possibleMainExtension in possibleMainExtensions) {
-            mainFilePath = [mainBundle pathForResource: @"nodebox-app" ofType: possibleMainExtension];
-            if ( mainFilePath != nil ) break;
-        }
-        
+        NSString *mainFilePath = [mainBundle pathForResource: @"nodebox-app" ofType:@"py"];
         if ( !mainFilePath ) {
-            [NSException raise: NSInternalInconsistencyException format: @"%s:%d main() Failed to find the macboot.{py,pyc,pyo} file in the application wrapper's Resources directory.", __FILE__, __LINE__];
+            [NSException raise: NSInternalInconsistencyException format: @"%s:%d main() Failed to find the nodebox-app.py file in the application wrapper's Resources directory.", __FILE__, __LINE__];
         }
         
         Py_SetProgramName("/usr/bin/python");

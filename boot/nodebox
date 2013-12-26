@@ -34,18 +34,13 @@ NodeBox Script File:
   file                the python script to be rendered
 """
 
-import sys
-import os
-import re
+import sys, os, re
 import argparse
-import xmlrpclib
 import socket
 import json
 import signal
-import shutil
 
 from time import sleep
-from datetime import datetime
 from subprocess import Popen, PIPE
 from os.path import exists, islink, dirname, abspath, realpath
 
@@ -60,7 +55,7 @@ except ImportError:
 
 def main():
   opts = parse_args()
-  if opts.export:
+  if opts.export or not app_path():
     exec_console(opts)
   else:
     exec_application(opts)
