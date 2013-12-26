@@ -16,6 +16,8 @@ from nodebox.gui.preferences import get_default, getBasicTextAttributes
 from nodebox.gui.widgets import DashboardController, MAGICVAR
 from nodebox import util, graphics
 
+NSEventGestureAxisVertical = 2
+
 # class defined in NodeBoxDocument.xib
 class NodeBoxDocument(NSDocument):
     graphicsView = objc.IBOutlet()
@@ -103,9 +105,12 @@ class NodeBoxDocument(NSDocument):
         win.makeFirstResponder_(self.textView)
         self.currentView = self.graphicsView
 
-
         win.setAutorecalculatesContentBorderThickness_forEdge_(True,NSMinYEdge)
         win.setContentBorderThickness_forEdge_(22.0,NSMinYEdge)
+
+        self.outputView.superview().superview().addFloatingSubview_forAxis_(self.animationSpinner,NSEventGestureAxisVertical)
+        x = self.outputView.frame().size.width - 17
+        self.animationSpinner.setFrame_(((x,3),(16,16)))
  
     def autosavesInPlace(self):
         return True
@@ -221,6 +226,10 @@ class NodeBoxDocument(NSDocument):
             self.textView.usesTabs = "\t" in text
             self.vm.script = path
             self.vm.source = text.decode("utf-8")
+
+    # def prepareSavePanel_(self, panel):
+    #     panel.setShowsTagField_(False)
+    #     return True
 
     # 
     # Running the script in the main window
@@ -399,7 +408,6 @@ class NodeBoxDocument(NSDocument):
     # Handling export-related events (invoked by self.vm.session object)
     # 
     def exportFailed(self, output):
-        print "Export failed"
         self.echo(output)
 
     def exportMessage(self, output):
@@ -407,7 +415,6 @@ class NodeBoxDocument(NSDocument):
         self.shareThread()
 
     def exportComplete(self):
-        print "_exportComplete"
         self.stopScript()
 
     def exportFrame(self, frameNum, canvas, result):
@@ -455,7 +462,20 @@ class NodeBoxDocument(NSDocument):
     # 
     @objc.IBAction
     def exportAsImage_(self, sender):
-        exportPanel = self.imageExportPanel()
+        # configure save panel for image export
+        exportPanel.setNameFieldLabel_("Export To:")
+        exportPanel.setPrompt_("Export")
+        exportPanel.setCanSelectHiddenExtension_(True)
+        exportPanel.setShowsTagField_(False)
+        if not NSBundle.loadNibNamed_owner_("ExportImageAccessory", self):
+            NSLog("Error -- could not load ExportImageAccessory.")
+        self.exportImagePageCount.setIntValue_(self.export['image']['pages'])
+        format_idx = self.export['formats']['image'].index(self.export['image']['format'])
+        self.exportImageFormat.selectItemAtIndex_(format_idx)
+        exportPanel.setRequiredFileType_(self.export['image']['format'])
+        exportPanel.setAccessoryView_(self.exportImageAccessory)
+
+        # set the default filename and save dir
         path = self.fileName()
         if path:
             dirName, fileName = os.path.split(path)
@@ -467,25 +487,16 @@ class NodeBoxDocument(NSDocument):
         if self.export['dir'] is not None:
             dirName = self.export['dir']
 
+        # present the dialog
         exportPanel.beginSheetForDirectory_file_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
             dirName, fileName, NSApp().mainWindow(), self,
             "imageExportPanelDidEnd:returnCode:contextInfo:", 0)
 
-    def imageExportPanel(self):
-        exportPanel = NSSavePanel.savePanel()
-
-        # set defaults
-        format_idx = self.export['formats']['image'].index(self.export['image']['format'])
-        exportPanel.setNameFieldLabel_("Export To:")
-        exportPanel.setPrompt_("Export")
-        exportPanel.setCanSelectHiddenExtension_(True)
-        if not NSBundle.loadNibNamed_owner_("ExportImageAccessory", self):
-            NSLog("Error -- could not load ExportImageAccessory.")
-        self.exportImagePageCount.setIntValue_(self.export['image']['pages'])
-        self.exportImageFormat.selectItemAtIndex_(format_idx)
-        exportPanel.setRequiredFileType_(self.export['image']['format'])
-        exportPanel.setAccessoryView_(self.exportImageAccessory)
-        return exportPanel
+    @objc.IBAction
+    def exportImageFormatChanged_(self, sender):
+        panel = sender.window()
+        format = self.export['formats']['image'][sender.indexOfSelectedItem()]
+        panel.setRequiredFileType_(format)
 
     def imageExportPanelDidEnd_returnCode_contextInfo_(self, panel, returnCode, context):
         if returnCode:
@@ -500,39 +511,16 @@ class NodeBoxDocument(NSDocument):
             signature="v@:@ii")
 
     @objc.IBAction
-    def exportImageFormatChanged_(self, sender):
-        panel = sender.window()
-        format = self.export['formats']['image'][sender.indexOfSelectedItem()]
-        panel.setRequiredFileType_(format)
-
-    @objc.IBAction
     def exportAsMovie_(self, sender):
-        exportPanel = self.movieExportPanel()
-        path = self.fileName()
-        if path:
-            dirName, fileName = os.path.split(path)
-            fileName, ext = os.path.splitext(fileName)
-            fileName += "." + self.export['movie']['format']
-        else:
-            dirName, fileName = None, "Untitled.%s" % self.export['movie']['format']
-        # If a file was already exported, use that folder as the default.
-        if self.export['dir'] is not None:
-            dirName = self.export['dir']
-
-        exportPanel.beginSheetForDirectory_file_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
-            dirName, fileName, NSApp().mainWindow(), self,
-            "moviePanelDidEnd:returnCode:contextInfo:", 0)
-
-    def movieExportPanel(self):
+        # configure save panel for movie export
         exportPanel = NSSavePanel.savePanel()
-
-        # set defaults
         format_idx = self.export['formats']['movie'].index(self.export['movie']['format'])
         should_loop = self.export['movie']['format']=='gif' and self.export['movie']['loop']==-1
         exportPanel.setNameFieldLabel_("Export To:")
         exportPanel.setPrompt_("Export")
         exportPanel.setCanSelectHiddenExtension_(True)
         exportPanel.setAllowedFileTypes_(self.export['formats']['movie'])
+        exportPanel.setShowsTagField_(False)
         if not NSBundle.loadNibNamed_owner_("ExportMovieAccessory", self):
             NSLog("Error -- could not load ExportMovieAccessory.")
         self.exportMovieFrames.setIntValue_(self.export['movie']['frames'])
@@ -544,7 +532,32 @@ class NodeBoxDocument(NSDocument):
         self.exportMovieLoop.setEnabled_(format=='gif')
         self.exportMovieBitrate.setEnabled_(format!='gif')
         self.exportMovieBitrate.selectItemWithTag_(self.export['movie']['rate'])
-        return exportPanel
+
+        # set the default filename and save dir
+        path = self.fileName()
+        if path:
+            dirName, fileName = os.path.split(path)
+            fileName, ext = os.path.splitext(fileName)
+            fileName += "." + self.export['movie']['format']
+        else:
+            dirName, fileName = None, "Untitled.%s" % self.export['movie']['format']
+        # If a file was already exported, use that folder as the default.
+        if self.export['dir'] is not None:
+            dirName = self.export['dir']
+
+        # present the dialog
+        exportPanel.beginSheetForDirectory_file_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            dirName, fileName, NSApp().mainWindow(), self,
+            "moviePanelDidEnd:returnCode:contextInfo:", 0)
+
+    @objc.IBAction
+    def exportMovieFormatChanged_(self, sender):
+        panel = sender.window()
+        format = self.export['formats']['movie'][sender.indexOfSelectedItem()]
+        panel.setRequiredFileType_(format)
+        self.exportMovieLoop.setState_(NSOnState if format=='gif' else NSOffState)
+        self.exportMovieLoop.setEnabled_(format=='gif')
+        self.exportMovieBitrate.setEnabled_(format!='gif')
 
     def moviePanelDidEnd_returnCode_contextInfo_(self, panel, returnCode, context):
         if returnCode:
@@ -563,15 +576,6 @@ class NodeBoxDocument(NSDocument):
             self.doExportAsMovie(fname, frames, fps, loop=loop)
     moviePanelDidEnd_returnCode_contextInfo_ = objc.selector(moviePanelDidEnd_returnCode_contextInfo_,
             signature="v@:@ii")
-
-    @objc.IBAction
-    def exportMovieFormatChanged_(self, sender):
-        panel = sender.window()
-        format = self.export['formats']['movie'][sender.indexOfSelectedItem()]
-        panel.setRequiredFileType_(format)
-        self.exportMovieLoop.setState_(NSOnState if format=='gif' else NSOffState)
-        self.exportMovieLoop.setEnabled_(format=='gif')
-        self.exportMovieBitrate.setEnabled_(format!='gif')
 
     #
     # Pasteboards
@@ -689,9 +693,9 @@ class FullscreenView(NSView):
         self.key = event.characters()
         self.keycode = event.keyCode()
 
-    def scrollWheel_(self, event):
-        self.scrollwheel = True
-        self.wheeldelta = event.scrollingDeltaY()
+    # def scrollWheel_(self, event):
+    #     self.scrollwheel = True
+    #     self.wheeldelta = event.scrollingDeltaY()
 
     def canBecomeKeyView(self):
         return True

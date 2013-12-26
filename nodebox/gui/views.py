@@ -19,11 +19,20 @@ class NodeBoxBackdrop(NSView):
     """A container that sits between the NSClipView and NodeBoxGraphicsView
 
        It resizes to fit the size of the canvas and centers it when the canvas
-       is smaller than the display space in the NSSplitView.
+       is smaller than the display space in the NSSplitView. It also draws the
+       background color and maintains an isOpaque=True to take advantage of
+       Responsive Scrolling in 10.9
     """
     gfxView = None
 
     def isFlipped(self):
+        return True
+
+    def isOpaque(self):
+        return True
+
+    @classmethod
+    def isCompatibleWithResponsiveScrolling(self):
         return True
 
     def setFrame_(self, frame):
@@ -43,6 +52,11 @@ class NodeBoxBackdrop(NSView):
     def willRemoveSubview_(self, subview):
         nc = NSNotificationCenter.defaultCenter()
         nc.removeObserver_name_object_(self, NSViewFrameDidChangeNotification, subview)
+
+    def drawRect_(self, rect):
+        DARK_GREY.setFill()
+        NSRectFill(rect)
+        super(NodeBoxBackdrop, self).drawRect_(rect)
 
     def viewFrameDidChange_(self, note):
         self.setFrame_(self.frame())
@@ -265,10 +279,10 @@ class NodeBoxGraphicsView(NSView):
         self.key = event.characters()
         self.keycode = event.keyCode()
 
-    def scrollWheel_(self, event):
-        NSResponder.scrollWheel_(self, event)
-        self.scrollwheel = True
-        self.wheeldelta = event.scrollingDeltaY()
+    # def scrollWheel_(self, event):
+    #     NSResponder.scrollWheel_(self, event)
+    #     self.scrollwheel = True
+    #     self.wheeldelta = event.scrollingDeltaY()
 
     def canBecomeKeyView(self):
         return True
