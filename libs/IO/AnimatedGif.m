@@ -115,7 +115,7 @@
 			}
 
 			// walk to end of image data
-			int imstart = cursor-gif;
+			NSInteger imstart = cursor-gif;
 			cursor++;
 			UInt8 blockSize = cursor[0];
 			while(blockSize){
@@ -166,8 +166,6 @@
 	}
 	if (cursor[0]==kGifTrailer){
 		// Success!
-	}else{
-		NSLog(@"ERR %d/%lu", cursor-gif, (unsigned long)[gifData length]);
 	}
 
 	return map;	

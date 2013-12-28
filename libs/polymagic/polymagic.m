@@ -8,35 +8,35 @@
 
 // dumps poly structure to log for testing/debug
 
-static void
-logPoly( gpc_polygon* poly )
-{
+// static void
+// logPoly( gpc_polygon* poly )
+// {
 
-    printf("polygon <contours: %i>\n", poly->num_contours);
+//     printf("polygon <contours: %i>\n", poly->num_contours);
     
-    int cont;
+//     int cont;
     
-    for( cont = 0; cont < poly->num_contours; ++cont )
-    {
-        printf("contour #%i: %i vertices: \n", cont, poly->contour[cont].num_vertices);
-        printf("drawpath([");
+//     for( cont = 0; cont < poly->num_contours; ++cont )
+//     {
+//         printf("contour #%i: %i vertices: \n", cont, poly->contour[cont].num_vertices);
+//         printf("drawpath([");
 
-        int vert;
-        for( vert = 0; vert < poly->contour[cont].num_vertices; ++vert ) {
-            printf("(%.3f, %.3f),", poly->contour[cont].vertex[vert].x, poly->contour[cont].vertex[vert].y);
+//         int vert;
+//         for( vert = 0; vert < poly->contour[cont].num_vertices; ++vert ) {
+//             printf("(%.3f, %.3f),", poly->contour[cont].vertex[vert].x, poly->contour[cont].vertex[vert].y);
             
-        }
-        printf("])");
-        printf("\n------ end of contour %i ------\n", cont);
-    }
-    printf("------ end of polygon ------\n");
-}
+//         }
+//         printf("])");
+//         printf("\n------ end of contour %i ------\n", cont);
+//     }
+//     printf("------ end of polygon ------\n");
+// }
 
 static int
 contours_in_path(NSBezierPath *path)
 {
     NSBezierPathElement    et;
-    int                    sp, i, ec = [path elementCount];
+    int                    sp, i, ec = (int)[path elementCount];
     
     sp = 0;
     
@@ -55,7 +55,7 @@ static int
 contours_in_path_from_el(NSBezierPath *path, int se)
 {
     NSBezierPathElement    et;
-    int                    sp, i, ec = [path elementCount];
+    int                    sp, i, ec = (int)[path elementCount];
     
     sp = 1;
     
@@ -82,7 +82,7 @@ path_to_polygon(NSBezierPath *path, float flatness)
     NSBezierPath*            flat = [path bezierPathByFlatteningPath];
     NSBezierPathElement      elem;
     NSPoint                  ap[3];
-    int                      i, ec = [flat elementCount];
+    int                      i, ec = (int)[flat elementCount];
     gpc_polygon*             poly;
     
     [flat setWindingRule:[path windingRule]];
@@ -332,8 +332,8 @@ cPolymagic_operation(PyObject *self, PyObject *args, int op)
 {
     PyObject *pyObject1, *pyObject2;
     NSBezierPath *path1, *path2, *pathResult;
-    PyObject *result;
-    PyTypeObject *cls_type;
+    // PyObject *result;
+    // PyTypeObject *cls_type;
     float flatness = 0.6;
     
     if (!PyArg_ParseTuple(args, "OO|f", &pyObject1, &pyObject2, &flatness))
@@ -445,7 +445,7 @@ int xmain(int argc, char *argv[])
     [p2 moveToPoint:NSMakePoint(70, 100)];
     [p2 appendBezierPathWithGlyph:68 inFont:helveticaFont];
     
-    printf("p1: %i\n", [p1 elementCount]);
+    printf("p1: %i\n", (int)[p1 elementCount]);
     if (intersects_path(p1, p2)) {
         printf("INTERSECTS\n");
     } else {

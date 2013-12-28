@@ -33,7 +33,7 @@
         if (self.isCancelled || !frame){
             // close the file
             [videoWriterInput markAsFinished];
-            [videoWriter finishWriting];
+            [videoWriter finishWritingWithCompletionHandler:^{}];
             return;
         }
 
@@ -78,7 +78,7 @@
     // context to draw in, set to pixel buffer's address
     void* baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
     size_t bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
-    CGContextRef context = CGBitmapContextCreate(baseAddress, [image size].width, [image size].height, 8, bytesPerRow, colorSpace, kCGImageAlphaNoneSkipFirst);
+    CGContextRef context = CGBitmapContextCreate(baseAddress, [image size].width, [image size].height, 8, bytesPerRow, colorSpace, (CGBitmapInfo)kCGImageAlphaNoneSkipFirst);
     
     // draw
     NSGraphicsContext* imageContext = [NSGraphicsContext graphicsContextWithGraphicsPort:context flipped:NO];

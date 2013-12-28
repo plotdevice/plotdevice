@@ -5,7 +5,7 @@ TOP=`pwd`
 VERSION=$(python -c 'import nodebox; print nodebox.__version__')
 RSRC="$TOP/dist/NodeBox.app/Contents/Resources"
 BIN="$TOP/dist/NodeBox.app/Contents/SharedSupport"
-SITE_PKGS="$RSRC/lib/python2.7/site-packages"
+# SITE_PKGS="$RSRC/lib/python2.7/site-packages"
 
 clean () {
     # Remove dist, build, and libs/.../build
@@ -18,29 +18,26 @@ build () {
 
     # Do some py2app `configuration' to make the bundle layout more
     # like what xcode produces
-    mkdir $SITE_PKGS
-    cd $SITE_PKGS
-    unzip -q ../site-packages.zip
-    rm ../site-packages.zip
+    mkdir $BIN
+    mkdir $RSRC/python
+    mkdir $RSRC/English.lproj
+    rmdir $RSRC/../Frameworks
 
-    cd $TOP
-    ditto nodebox $SITE_PKGS/nodebox
-    ditto examples $RSRC/examples
-    mkdir -p $BIN
+    # place the command line tool in SharedSupport
     cp -p boot/nodebox $BIN
     chmod 755 $BIN/nodebox
 
+    # put the module and .so files in a known location (primarily so the
+    # tool can find task.py)
     cd $RSRC
-    mkdir python
-    ln -s ../lib/python2.7/site-packages/nodebox python/nodebox
+    find $TOP/nodebox -name \*pyc -exec rm {} \;
+    ditto $TOP/nodebox python/nodebox
     cp -p lib/python2.7/lib-dynload/*.so python
 
-    rmdir ../Frameworks
-    mkdir English.lproj
+    # install the documentation
     mv *.nib "NodeBox Help" English.lproj/
+    ditto $TOP/examples $RSRC/examples
 
-    cd $TOP
-    rm -r build
     echo "done building NodeBox.app in ./dist"
 }
 

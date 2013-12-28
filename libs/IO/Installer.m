@@ -27,6 +27,8 @@
 
     AuthorizationRef ref;
     AuthorizationFlags flags = kAuthorizationFlagDefaults;
+
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations" 
     status = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment, flags, &ref);
     if (status) return NO;
     status = AuthorizationExecuteWithPrivileges(ref, mkdir, flags, mkdirArgs, &pipe);
@@ -34,5 +36,6 @@
     status = AuthorizationExecuteWithPrivileges(ref, link, flags, linkArgs, &pipe);
     if (status) return NO;
     return YES;
+    #pragma clang diagnostic warning "-Wdeprecated-declarations"
 }
 @end

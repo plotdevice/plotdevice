@@ -15,6 +15,8 @@
 
 import sys,os
 from distutils.core import setup, Command
+from distutils.command.build_py import build_py
+from setuptools import find_packages
 from setuptools.extension import Extension
 import nodebox
 
@@ -51,27 +53,28 @@ with programming code. The application targets an audience of designers, with an
 commands that is both intuitive and creative. It is essentially a learning environment and an automation tool.
 
 The current version features:
-
 * State-based graphics context
 * Extensive reference documentation and tutorials
-* PDF export for graphics
+* Vector (pdf/eps) or raster (png/jpg/gif/tiff) export for graphics
 * H.264 or Gif export for animations
 * Manipulate every numeric variable in a script by command-dragging it, even during animation
 * Creating simple user interfaces using text fields, sliders, and buttons
 * Stop a running script by typing command-period
-* 64 bit clean
 * Integrated bezier mathematics and boolean operations
 * Command-line interface
 * Zooming
+
+Requires:
+* Mac OS X 10.9+
 """
 
-packages = ['nodebox', 'nodebox.graphics', 'nodebox.util', 'nodebox.geo', 'nodebox.gui', 'nodebox.run']
+quiet = {"extra_compile_args":['-Qunused-arguments']}
 
 ext_modules = [
-    Extension('cGeo', ['libs/cGeo/cGeo.c']),
-    Extension('cPathmatics', ['libs/pathmatics/pathmatics.c']),
-    Extension('cPolymagic', ['libs/polymagic/gpc.c', 'libs/polymagic/polymagic.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation']),
-    Extension('cIO', ['libs/IO/module.m','libs/IO/Installer.m', 'libs/IO/ImageSequence.m', 'libs/IO/AnimatedGif.m', 'libs/IO/Video.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation', '-framework', 'Security', '-framework', 'AVFoundation', '-framework', 'CoreMedia', '-framework', 'CoreVideo'])
+    Extension('cGeo', ['libs/cGeo/cGeo.c'], **quiet),
+    Extension('cPathmatics', ['libs/pathmatics/pathmatics.c'], **quiet),
+    Extension('cPolymagic', ['libs/polymagic/gpc.c', 'libs/polymagic/polymagic.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation'], **quiet),
+    Extension('cIO', ['libs/IO/module.m','libs/IO/Installer.m', 'libs/IO/ImageSequence.m', 'libs/IO/AnimatedGif.m', 'libs/IO/Video.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation', '-framework', 'Security', '-framework', 'AVFoundation', '-framework', 'CoreMedia', '-framework', 'CoreVideo'], **quiet)
 ]
 
 plist={
@@ -126,6 +129,19 @@ class CleanCommand(Command):
         os.system('rm -rf ./build ./dist')
         os.system('rm -rf ./libs/*/build')
 
+class BuildCommand(build_py):
+    def run(self):
+
+        # let the real build_py routine do its thing
+        build_py.run(self)
+
+        # include some ui resources for running a script from the command line
+        if not BUILD_APP:
+            rsrc_dir = '%s/nodebox/run/rsrc'%self.build_lib
+            self.mkpath(rsrc_dir)
+            self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "Resources/English.lproj/NodeBoxDocument.xib"])
+            self.copy_file("Resources/NodeBoxFile.icns", '%s/icon.icns'%rsrc_dir)
+        
 if __name__=='__main__':
     config = {}
 
@@ -159,11 +175,12 @@ if __name__=='__main__':
         url = URL,
         classifiers = CLASSIFIERS,
         ext_modules = ext_modules,
-        packages = packages,
+        packages = find_packages(),
         scripts = ["boot/nodebox"],
         zip_safe=False,
         cmdclass={
             'clean': CleanCommand,
+            'build_py': BuildCommand,
         },
     ))
 
