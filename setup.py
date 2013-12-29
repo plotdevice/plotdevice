@@ -1,22 +1,21 @@
-# This is a setup file for a command-line version of NodeBox.
-# If you want to work on the Mac OS X version, go look in macsetup.py.
-
-# This is your standard setup.py, so to install the package, use:
+# This is your standard setup.py, so to install the module & command line tool, use:
 #     python setup.py install
-
+# 
+# To build an application in the dist subdirectory, use:
+#     python setup.py py2app
+# 
+# To build a distribution friendly dmg & zip, use:
+#     python setup.py dist
+# 
 # We require some dependencies:
-# - PyObjC
-# - psyco
-# - py2app
-# - cPathMatics (included in the "libs" folder)
-# - polymagic (included in the "libs" folder)
-# - Numeric (included in the "libs" folder)
-# - Numpy (installable using "easy_install numpy")
+# - Mac OS X 10.9+
+# - py2app or xcode or just pip
+# - PyObjC (should be in /System/Library/Frameworks/Python.framework/Versions/2.7/Extras)
+# - cPathMatics, cGeo, cIO, & polymagic (included in the "libs" folder)
 
 import sys,os
-from distutils.core import setup, Command
-from distutils.command.build_py import build_py
-from setuptools import find_packages
+from distutils.dir_util import remove_tree
+from setuptools import setup, find_packages
 from setuptools.extension import Extension
 import nodebox
 
@@ -113,10 +112,9 @@ rsrc = [
     "Resources/NodeBoxFile.icns",
 ]
 
-BUILD_APP = 'py2app' in sys.argv
-if BUILD_APP:
-    import py2app
+BUILD_APP = any(v in ('py2app','dist') for v in sys.argv)
 
+from distutils.core import Command
 class CleanCommand(Command):
     description = "wipe out the ./build ./dist and libs/.../build dirs"
     user_options = []
@@ -129,9 +127,9 @@ class CleanCommand(Command):
         os.system('rm -rf ./build ./dist')
         os.system('rm -rf ./libs/*/build')
 
+from distutils.command.build_py import build_py
 class BuildCommand(build_py):
     def run(self):
-
         # let the real build_py routine do its thing
         build_py.run(self)
 
@@ -139,30 +137,100 @@ class BuildCommand(build_py):
         if not BUILD_APP:
             rsrc_dir = '%s/nodebox/run/rsrc'%self.build_lib
             self.mkpath(rsrc_dir)
-            self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "Resources/English.lproj/NodeBoxDocument.xib"])
+            self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "Resources/English.lproj/NodeBoxViewer.xib"])
             self.copy_file("Resources/NodeBoxFile.icns", '%s/icon.icns'%rsrc_dir)
         
+if BUILD_APP:
+    # virtualenv doesn't include pyobjc, py2app, etc. in the sys.path for some reason, so make sure 
+    # we only try to import them if an app (or dist) build was explicitly requested (implying we're using
+    # the system's python interpreter rather than pip+virtualenv)
+    import py2app
+    from py2app.build_app import py2app as build_app
+    class BuildAppCommand(build_app):
+        description = """Build NodeBox.app with py2app (then undo some of its questionable layout defaults)"""
+        def initialize_options(self):
+            self.cwd = None
+            build_app.initialize_options(self)
+        def finalize_options(self):
+            self.cwd = os.getcwd()
+            build_app.finalize_options(self)
+        def run(self):
+            assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
+            build_app.run(self)
+
+            # Do some py2app `configuration' to make the bundle layout more
+            # like what xcode produces
+            TOP=self.cwd
+            RSRC="%s/dist/NodeBox.app/Contents/Resources"%self.cwd
+            BIN="%s/dist/NodeBox.app/Contents/SharedSupport"%self.cwd
+
+            self.mkpath(BIN)
+            self.mkpath("%s/python"%RSRC)
+            self.mkpath("%s/English.lproj"%RSRC)
+            remove_tree("%s/../Frameworks"%RSRC, dry_run=self.dry_run)
+
+            # place the command line tool in SharedSupport
+            self.copy_file("%s/boot/nodebox"%TOP, BIN)
+
+            # put the module and .so files in a known location (primarily so the
+            # tool can find task.py)
+            self.copy_tree('%s/nodebox'%TOP, '%s/python/nodebox'%RSRC)
+            self.copy_tree('%s/lib/python2.7/lib-dynload'%RSRC, '%s/python'%RSRC)
+            # find $TOP/nodebox -name \*pyc -exec rm {} \;
+
+            # install the documentation
+            self.copy_tree('%s/examples'%TOP, '%s/examples'%RSRC)
+
+            print "done building NodeBox.app in ./dist"
+
+    class DistCommand(Command):
+        description = "Create distributable zip and dmg files containing the app + documentation"
+        user_options = []
+        def initialize_options(self):
+            self.cwd = None
+        def finalize_options(self):
+            self.cwd = os.getcwd()
+        def run(self):
+            TOP = self.cwd
+            DEST = "%s/dist/NodeBox/NodeBox"%self.cwd
+            DMG = 'NodeBox-%s.dmg'%VERSION
+            ZIP = 'NodeBox-%s.zip'%VERSION
+
+            # build the app
+            self.run_command('py2app')
+
+            # Make a staging area for the disk image
+            self.mkpath(DEST)
+
+            # Copy the current NodeBox application.
+            self.copy_tree("dist/NodeBox.app", "%s/NodeBox.app"%DEST)
+
+            # Copy changes and readme
+            self.copy_file('CHANGES.md', '%s/Changes.txt'%DEST)
+            self.copy_file('README.md', '%s/Readme.txt'%DEST)
+
+            # Copy examples
+            self.copy_tree('%s/examples'%TOP, '%s/Examples'%DEST)
+            # chmod 755 Examples/*/*.py
+
+            # Make DMG
+            os.chdir('dist')
+            self.spawn(['hdiutil','create',DMG,'-srcfolder','NodeBox'])
+            self.spawn(['hdiutil','internet-enable',DMG])
+
+            # Make Zip
+            os.chdir('NodeBox')
+            self.spawn(['zip','-r','-q',ZIP,'NodeBox'])
+            self.move_file(ZIP, '%s/dist'%TOP)
+
+            # clean up the staging area
+            remove_tree('%s/dist/NodeBox'%TOP, verbose=False)
+
+            print "done building NodeBox.app, %s, and %s in ./dist"%(ZIP,DMG)
+
+
 if __name__=='__main__':
     config = {}
-
-    # app-specific config
-    if BUILD_APP:
-        config.update(dict(
-            app = [{
-                'script': "boot/nodebox-app.py",
-                "plist":plist,
-            }],
-            data_files = rsrc,
-            options = {
-                "py2app": {
-                    "iconfile": "Resources/NodeBox.icns",
-                    "semi_standalone":True,
-                    "site_packages":True,
-                    "strip":False,
-                    "semi_standalone":True,
-                }
-            },
-        ))
 
     # common config between module and app builds
     config.update(dict(
@@ -184,4 +252,26 @@ if __name__=='__main__':
         },
     ))
 
+
+    # app-specific config
+    if BUILD_APP:
+        config.update(dict(
+            app = [{
+                'script': "boot/nodebox-app.py",
+                "plist":plist,
+            }],
+            data_files = rsrc,
+            options = {
+                "py2app": {
+                    "iconfile": "Resources/NodeBox.icns",
+                    "semi_standalone":True,
+                    "site_packages":True,
+                    "strip":False,
+                }
+            },
+        ))
+        config['cmdclass'].update({
+            'py2app': BuildAppCommand,
+            'dist': DistCommand,
+        })
     setup(**config)
