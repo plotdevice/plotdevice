@@ -5,9 +5,6 @@ int main(int argc, char *argv[])
 {
     @autoreleasepool {
         NSBundle *mainBundle = [NSBundle mainBundle];
-        NSString *resourcePath = [mainBundle resourcePath];
-        setenv("PYTHONPATH", [[resourcePath stringByAppendingPathComponent:@"python"] UTF8String], 1);        
-
         NSString *mainFilePath = [mainBundle pathForResource: @"nodebox-app" ofType:@"py"];
         if ( !mainFilePath ) {
             [NSException raise: NSInternalInconsistencyException format: @"%s:%d main() Failed to find the nodebox-app.py file in the application wrapper's Resources directory.", __FILE__, __LINE__];
