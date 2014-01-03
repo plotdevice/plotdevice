@@ -67,7 +67,7 @@ class ScriptAppDelegate(NSObject):
             # self.script = HeadlessScript(self.opts['file'])
             self.script.export()
         elif self.mode=='windowed':
-            nib = NSData.dataWithContentsOfFile_('%s/viewer.nib'%RSRC)
+            nib = NSData.dataWithContentsOfFile_('%s/NodeBoxScript.nib'%RSRC)
             ui = NSNib.alloc().initWithNibData_bundle_(nib, None)
             ok, objs = ui.instantiateNibWithOwner_topLevelObjects_(self, None)
             self.script.initWithOpts_forMode_(self.opts, self.mode)

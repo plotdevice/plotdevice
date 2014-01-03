@@ -163,14 +163,21 @@ def parse_args():
   del opts.frames
 
   if opts.export:
-    basename, ext = opts.export.rsplit('.',1)
-    if ext.lower() not in ('pdf', 'eps', 'png', 'tiff', 'jpg', 'gif', 'mov'):
+    # screen out unsupported file extensions
+    _, ext = opts.export.lower().rsplit('.',1)
+    if ext not in ('pdf', 'eps', 'png', 'tiff', 'jpg', 'gif', 'mov'):
       parser.exit(1, 'bad argument [--export]\nthe output filename must end with a supported format:\n  pdf, eps, png, tiff, jpg, gif, or mov\n')
+    
+    # make sure the output path is sane
     if '/' in opts.export:
       export_dir = dirname(opts.export)
       if not exists(export_dir):
         parser.exit(1,'export directory not found: %s\n'%abspath(export_dir))
     opts.export = abspath(opts.export)
+
+    # movies aren't allowed to be infinitely long (sorry)
+    if opts.last is None and ext in ('mov','gif'):
+      opts.first, opts.last = (1, 150)
   
   return opts
 

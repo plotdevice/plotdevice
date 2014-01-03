@@ -34,7 +34,6 @@ class ExportSession(object):
         self.poll = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
                                     0.1,self,"update:",None,True)
 
-
     def update_(self, note):
         if self.writer:
             self.written = self.writer.framesWritten()
@@ -72,8 +71,9 @@ class ExportSession(object):
             self._progress = cb
 
 class ImageExportSession(ExportSession):
-    def __init__(self, fname, last=1, format='pdf', first=1, console=False, **rest):
+    def __init__(self, fname, format='pdf', first=1, last=1, console=False, **rest):
         super(ImageExportSession, self).__init__()
+        last = last or first
         self.begin(pages=last-first+1, console=console)
         self.format = format
         self.fname = fname
@@ -96,7 +96,7 @@ class ImageExportSession(ExportSession):
         pass
 
 class MovieExportSession(ExportSession):
-    def __init__(self, fname, format='mov', last=60, fps=30, loop=0, first=1, bitrate=1, console=False, **rest):
+    def __init__(self, fname, format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, console=False, **rest):
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
@@ -130,103 +130,3 @@ class MovieExportSession(ExportSession):
     def done(self):
         if self.writer:
             self.writer.closeFile()
-
-# class ASCIIProgressBar(NSObject):
-#     poll = None
-#     status_fn = None
-#     _stderr = None
-
-#     def initWithCallback_(self, cb):
-#         self.status_fn = cb
-#         self._stderr = sys.stderr
-#         return self
-
-#     def begin(self, message, maxval):
-#         self.value = 0
-#         self.message = '%s:'%message
-#         self.maxval = maxval
-#         self.poll = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-#                                     0.1,self,"update:",None,True)
-#         self.poll.fire()
-
-#     def update_(self, note):
-#         self.step(self.status_fn())
-
-#     def render(self, width=20):
-#         pct = int(floor(width*self.value/self.maxval))
-#         dots = "".join(['#'*pct]+['.']*(width-pct))
-#         msg = "\r%s [%s]"%(self.message, dots)
-#         return msg
-
-#     def _render(self, width=20):
-#         self._stderr.write(self.render(width))
-#         self._stderr.flush()
-
-#     def step(self, toVal):
-#         if self.poll.isValid():
-#             self.value = toVal
-#             self._render()
-
-#     def bailed(self):
-#         if self.poll:
-#             self.poll.invalidate()
-#         self._stderr.write('\rWrote %i of %i frames%s\n'%(self.value,self.maxval,' '*40))
-
-#     def complete(self):
-#         self.value = self.maxval
-#         self._render()
-#         if self.poll:
-#             self.poll.invalidate()
-
-#     def end(self, delay=0):
-#         if self.poll:
-#             self.poll.invalidate()
-
-# class ProgressBarController(NSWindowController):
-#     messageField = objc.IBOutlet()
-#     progressBar = objc.IBOutlet()
-#     poll = None
-#     status_fn = None
-
-#     def initWithCallback_(self, cb):
-#         NSBundle.loadNibNamed_owner_("ProgressBarSheet", self)
-#         self.poll = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-#                                     0.25,self,"update:",None,True)
-#         self.status_fn = cb
-#         return self
-
-#     def begin(self, message, maxval):
-#         self.value = 0
-#         self.message = '%s...'%message
-#         self.maxval = maxval
-#         self.progressBar.setMaxValue_(self.maxval)
-#         self.messageField.cell().setTitle_(self.message)
-#         parentWindow = NSApp().keyWindow()
-#         NSApp().beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.window(), parentWindow, self, None, 0)
-
-#     def update_(self, note):
-#         self.step(self.status_fn())
-
-#     def step(self, toVal):
-#         self.value = toVal
-#         self.progressBar.setDoubleValue_(self.value)
-
-#     def bailed(self):
-#         self.complete()
-
-#     def complete(self):
-#         self.progressBar.setDoubleValue_(self.maxval)
-#         if self.poll:
-#             self.poll.invalidate()
-#             self.poll = None
-
-#     def end(self, delay=0):
-#         if self.poll:
-#             self.poll.invalidate()
-#             self.poll = None
-#         NSApp().endSheet_(self.window())
-#         self.window().orderOut_(self)
-
-#     @objc.IBAction
-#     def cancelOperation_(self, sender):
-#         self.status_fn(cancel=True)

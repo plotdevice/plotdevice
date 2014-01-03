@@ -211,7 +211,7 @@
 		2ABDB7751867EB520069EFC3 /* app.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = app.py; sourceTree = "<group>"; };
 		2ABDB7761867EB520069EFC3 /* views.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = views.py; sourceTree = "<group>"; };
 		2AC5187F18636C9F007FB066 /* sandbox.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sandbox.py; sourceTree = "<group>"; };
-		2AD0A9B6186E552700D1F6DE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/NodeBoxViewer.xib; sourceTree = "<group>"; };
+		2AD0A9B6186E552700D1F6DE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/NodeBoxScript.xib; sourceTree = "<group>"; };
 		2AE5AD291862366300CCDD45 /* editor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = editor.py; sourceTree = "<group>"; };
 		2AE5AD2C1862386400CCDD45 /* widgets.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = widgets.py; sourceTree = "<group>"; };
 		2AE5AD7E186249E100CCDD45 /* listener.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = listener.py; sourceTree = "<group>"; };
@@ -328,7 +328,7 @@
 				611CC67E10BAA08300B55455 /* MainMenu.xib */,
 				611CC5A610BA919A00B55455 /* NodeBoxPreferences.xib */,
 				611CC59E10BA908C00B55455 /* NodeBoxDocument.xib */,
-				2AD0A9B5186E552700D1F6DE /* NodeBoxViewer.xib */,
+				2AD0A9B5186E552700D1F6DE /* NodeBoxScript.xib */,
 				611CC48110BA8B9E00B55455 /* Credits.rtf */,
 				611CC48910BA8B9E00B55455 /* InfoPlist.strings */,
 				611CC49310BA8B9E00B55455 /* NodeBox.icns */,
@@ -604,12 +604,12 @@
 			name = "NodeBox Help";
 			sourceTree = "<group>";
 		};
-		2AD0A9B5186E552700D1F6DE /* NodeBoxViewer.xib */ = {
+		2AD0A9B5186E552700D1F6DE /* NodeBoxScript.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2AD0A9B6186E552700D1F6DE /* English */,
 			);
-			name = NodeBoxViewer.xib;
+			name = NodeBoxScript.xib;
 			sourceTree = "<group>";
 		};
 		611CC48110BA8B9E00B55455 /* Credits.rtf */ = {

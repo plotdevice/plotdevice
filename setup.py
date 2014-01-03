@@ -105,7 +105,6 @@ rsrc = [
     "Resources/English.lproj/NodeBox Help",
     "Resources/English.lproj/NodeBoxDocument.xib",
     "Resources/English.lproj/NodeBoxPreferences.xib",
-    "Resources/English.lproj/ProgressBarSheet.xib",
     "Resources/NodeBox.icns",
     "Resources/NodeBoxFile.icns",
 ]
@@ -135,7 +134,7 @@ class BuildCommand(build_py):
         if not BUILD_APP:
             rsrc_dir = '%s/nodebox/rsrc'%self.build_lib
             self.mkpath(rsrc_dir)
-            self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "Resources/English.lproj/NodeBoxViewer.xib"])
+            self.spawn(['/usr/bin/ibtool','--compile', '%s/NodeBoxScript.nib'%rsrc_dir, "Resources/English.lproj/NodeBoxScript.xib"])
             self.copy_file("Resources/NodeBoxFile.icns", '%s/icon.icns'%rsrc_dir)
         
 if BUILD_APP:
