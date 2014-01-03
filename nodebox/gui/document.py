@@ -28,7 +28,7 @@ class NodeBoxDocument(NSDocument):
     dashboardController = objc.IBOutlet()
     animationSpinner = objc.IBOutlet()
     footer = objc.IBOutlet()
-    mainSplitView = objc.IBOutlet()
+    mainView = objc.IBOutlet()
     exportSheet = objc.IBOutlet()
 
     _live = False # whether to re-render the graphic when the script changes
@@ -124,6 +124,29 @@ class NodeBoxDocument(NSDocument):
             window_ctl.setShouldCascadeWindows_(False)
             window_ctl.setWindowFrameAutosaveName_(name)
 
+    @objc.IBAction
+    def toggleStatusBar_(self, sender):
+        win = self.graphicsView.window()
+        self._showFooter = not self._showFooter
+        thickness = 22 if self._showFooter else 0
+
+        content = win.contentView().frame()
+        content.size.height -= thickness
+        content.origin.y += thickness
+        
+        # work around a weird piece of NSBehavior (http://goo.gl/pGFQqn):
+        style = None
+        scrollview = None
+        if self.textView:
+            scrollview = self.textView.superview().superview()
+            style = scrollview.scrollerStyle()
+
+        self.mainView.setFrame_(content)
+        win.setContentBorderThickness_forEdge_(thickness, NSMinYEdge)
+
+        if scrollview and style is not None:
+            scrollview.setScrollerStyle_(style)
+
     def _ui_state(self):
         # Set the mouse position
         window = self.currentView.window()
@@ -208,33 +231,17 @@ class NodeBoxDocument(NSDocument):
     # Running the script in the main window
     # 
     def scriptedRun(self, opts):
-        meta = dict( (k, opts[k]) for k in ['args', 'virtualenv', 'live', 'first', 'last', 'console'] )
-        self._live = meta['live']
-        self.vm.metadata = meta
+        self._live = opts['live']
+        self.vm.metadata = opts
+        # meta = dict( (k, opts[k]) for k in ['args', 'virtualenv', 'live', 'first', 'last', 'console'] )
+        # self._live = meta['live']
+        # self.vm.metadata = meta
         self.refresh()
 
         if opts['fullscreen']:
             self.runFullscreen_(None)
         else:
             self.runScript()
-
-
-    @objc.IBAction
-    def toggleStatusBar_(self, sender):
-        win = self.graphicsView.window()
-        self._showFooter = not self._showFooter
-        thickness = 22 if self._showFooter else 0
-
-        # zoom = self.footer.frame()
-        # zoom.origin.y = thickness-22
-
-        content = win.contentView().frame()
-        content.size.height -= thickness
-        content.origin.y += thickness
-        
-        # self.footer.setFrame_(zoom)
-        self.mainSplitView.setFrame_(content)
-        win.setContentBorderThickness_forEdge_(thickness, NSMinYEdge)
 
     @objc.IBAction
     def runFullscreen_(self, sender):
@@ -290,7 +297,7 @@ class NodeBoxDocument(NSDocument):
             self.vm.stop()
             focus = self.textView or self.graphicsView
             focus.window().makeFirstResponder_(focus)
-            
+
     def cleanRun(self, method=None):
         self.animationSpinner.startAnimation_(None)
         if (self.outputView):
@@ -332,7 +339,7 @@ class NodeBoxDocument(NSDocument):
     def doFrame(self):
         ok = self.fastRun("draw")
         if not ok or not self.vm.running:
-            self.stopScript()
+            self.stopScript()                
 
     def echo(self, output):
         """Pass a list of (isStdErr, txt) tuples to the output window"""

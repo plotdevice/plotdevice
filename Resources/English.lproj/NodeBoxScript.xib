@@ -53,7 +53,7 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="vzN-o6-7sn">
-                            <rect key="frame" x="584" y="0.0" width="16" height="463"/>
+                            <rect key="frame" x="585" y="0.0" width="15" height="463"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
@@ -179,7 +179,7 @@
                 <outlet property="exportSheet" destination="NPn-1j-FnS" id="iGW-dG-CW8"/>
                 <outlet property="footer" destination="POd-hY-unu" id="Xr8-4H-0hq"/>
                 <outlet property="graphicsView" destination="vrd-6s-Y5i" id="TrA-Sg-ITa"/>
-                <outlet property="mainSplitView" destination="U9m-0Q-49M" id="AVg-Ok-3gd"/>
+                <outlet property="mainView" destination="U9m-0Q-49M" id="tNi-Yb-aXE"/>
                 <outlet property="window" destination="5" id="ZRW-jd-ILx"/>
             </connections>
         </customObject>
