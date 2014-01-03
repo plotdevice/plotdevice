@@ -1,3 +1,4 @@
+# encoding: utf-8
 import sys
 import os
 import re
@@ -13,7 +14,7 @@ from AppKit import *
 from nodebox.run import Sandbox
 from nodebox.gui.editor import PyDETextView, OutputTextView
 from nodebox.gui.preferences import get_default, getBasicTextAttributes
-from nodebox.gui.widgets import DashboardController, MAGICVAR
+from nodebox.gui.widgets import DashboardController, ExportSheet, MAGICVAR
 from nodebox import util, graphics
 
 NSEventGestureAxisVertical = 2
@@ -26,30 +27,9 @@ class NodeBoxDocument(NSDocument):
     window = objc.IBOutlet()
     dashboardController = objc.IBOutlet()
     animationSpinner = objc.IBOutlet()
-    zoomPanel = objc.IBOutlet()
+    footer = objc.IBOutlet()
     mainSplitView = objc.IBOutlet()
-    # The ExportImageAccessory adds:
-    exportImageAccessory = objc.IBOutlet()
-    exportImageFormat = objc.IBOutlet()
-    exportImagePageCount = objc.IBOutlet()
-    # The ExportMovieAccessory adds:
-    exportMovieAccessory = objc.IBOutlet()
-    exportMovieFormat = objc.IBOutlet()
-    exportMovieFrames = objc.IBOutlet()
-    exportMovieFps = objc.IBOutlet()
-    exportMovieLoop = objc.IBOutlet()
-    exportMovieBitrate = objc.IBOutlet()
-    # When the PageCount accessory is loaded, we also add:
-    pageCount = objc.IBOutlet()
-    pageCountAccessory = objc.IBOutlet()
-    # When the ExportSheet is loaded, we also add:
     exportSheet = objc.IBOutlet()
-    exportSheetIndicator = objc.IBOutlet()
-    # file export config & state
-    export = dict(formats=dict(image=('pdf', 'eps', 'png', 'tiff', 'jpg', 'gif'), movie=('mov', 'gif')),
-                  movie=dict(format='mov', frames=150, fps=30, rate=1, loop=0),
-                  image=dict(format='pdf', pages=1),
-                  dir=None)
 
     _live = False # whether to re-render the graphic when the script changes
     magicvar = 0  # used for value ladders
@@ -65,13 +45,10 @@ class NodeBoxDocument(NSDocument):
         self.animationTimer = None
         self.fullScreen = None
         self.currentView = None
-        self.__doc__ = {}
-        self._pageNumber = 1
-        self._frame = 150
-        self._seed = time.time()
-        self._fileMD5 = None
-        self._showZoom = True
         self.stationery = None
+        self.__doc__ = {}
+        self._fileMD5 = None
+        self._showFooter = True
         return self
 
     def windowControllerDidLoadNib_(self, controller):
@@ -88,6 +65,9 @@ class NodeBoxDocument(NSDocument):
         win.setRestorable_(True)
         win.setIdentifier_("nodebox-doc")
 
+        self.graphicsView.zoomLevel.cell().setHighlightsBy_(NSContentsCellMask)
+        self.graphicsView.zoomLevel.cell().setShowsStateBy_(NSContentsCellMask)
+        
         # would like to set:
         #   win.setRestorationClass_(NodeBoxDocument)
         # but the built-in pyobjc can't deal with the block arg in:
@@ -96,11 +76,8 @@ class NodeBoxDocument(NSDocument):
         # again in 10.9.x, or is there a way to monkeypatch the metadata?
 
         # disable system's auto-smartquotes in the editor pane
-        try:
-            self.textView.setAutomaticQuoteSubstitutionEnabled_(False)
-            self.textView.setEnabledTextCheckingTypes_(0)
-        except AttributeError:
-            pass
+        self.textView.setAutomaticQuoteSubstitutionEnabled_(False)
+        self.textView.setEnabledTextCheckingTypes_(0)
 
         win.makeFirstResponder_(self.textView)
         self.currentView = self.graphicsView
@@ -227,10 +204,6 @@ class NodeBoxDocument(NSDocument):
             self.vm.script = path
             self.vm.source = text.decode("utf-8")
 
-    # def prepareSavePanel_(self, panel):
-    #     panel.setShowsTagField_(False)
-    #     return True
-
     # 
     # Running the script in the main window
     # 
@@ -248,36 +221,20 @@ class NodeBoxDocument(NSDocument):
 
     @objc.IBAction
     def toggleStatusBar_(self, sender):
-        win = self.textView.window()
-        self._showZoom = not self._showZoom
-        thickness = 22 if self._showZoom else 0
+        win = self.graphicsView.window()
+        self._showFooter = not self._showFooter
+        thickness = 22 if self._showFooter else 0
 
-        zoom = self.zoomPanel.frame()
-        zoom.origin.y = thickness-22
+        # zoom = self.footer.frame()
+        # zoom.origin.y = thickness-22
 
         content = win.contentView().frame()
         content.size.height -= thickness
         content.origin.y += thickness
         
-        self.zoomPanel.setFrame_(zoom)
+        # self.footer.setFrame_(zoom)
         self.mainSplitView.setFrame_(content)
         win.setContentBorderThickness_forEdge_(thickness, NSMinYEdge)
-
-        # NSAnimationContext.beginGrouping()
-        # duration = 0.5 * NSAnimationContext.currentContext().duration()
-        # NSAnimationContext.currentContext().setDuration_(duration)
-        # self.zoomPanel.animator().setFrame_(zoom)
-        # self.mainSplitView.animator().setFrame_(content)
-        # NSAnimationContext.endGrouping()
-        # if not self._showZoom:
-        #     win.setContentBorderThickness_forEdge_(0 , NSMinYEdge)
-        # else:
-        #     self.performSelector_withObject_afterDelay_("endAnimation:", None, duration)
-
-    # def endAnimation_(self, note):
-    #     win = self.textView.window()
-    #     thickness = 22 if self._showZoom else 0
-    #     win.setContentBorderThickness_forEdge_(thickness , NSMinYEdge)
 
     @objc.IBAction
     def runFullscreen_(self, sender):
@@ -331,14 +288,16 @@ class NodeBoxDocument(NSDocument):
             self.animationSpinner.startAnimation_(None)
         else:
             self.vm.stop()
-            self.textView.window().makeFirstResponder_(self.textView)
-
+            focus = self.textView or self.graphicsView
+            focus.window().makeFirstResponder_(focus)
+            
     def cleanRun(self, method=None):
         self.animationSpinner.startAnimation_(None)
-        self.outputView.clear(timestamp=True)        
+        if (self.outputView):
+            self.outputView.clear(timestamp=True)
 
         # Compile the script
-        compilation = self.vm.compile(self.textView.string())
+        compilation = self.vm.compile(self.source())
         self.echo(compilation.output)
         if not compilation.ok:
             return False
@@ -383,51 +342,59 @@ class NodeBoxDocument(NSDocument):
     # 
     # Exporting to file(s)
     # 
-    def doExportAsImage(self, fname, format, pages=1, first=1):
+    @objc.IBAction
+    def exportAsImage_(self, sender):
+        self.exportSheet.beginExport('image')
+
+    @objc.IBAction
+    def exportAsMovie_(self, sender):
+        self.exportSheet.beginExport('movie')
+
+    def _export(self, kind, fname, opts):
+        """Begin actual export (invoked by self.exportSheet unless sheet was cancelled)"""
+        self.vm.source = self.source()
         if self.animationTimer is not None:
             self.stopScript()
 
-        self.vm.source = self.textView.string()
-        if pages == 1:
-            # if self.graphicsView.canvas is None:
+        if kind=='image' and opts['last'] == opts['first']:
             self.runScript()
             self.vm.canvas.save(fname, format)
-        elif pages > 1:
-            self.vm.export('image', fname, first, pages, format)
+        else:
+            msg = u"Generating %s %s…"%(opts['last']-opts['first']+1, 'pages' if kind=='image' else 'frames')
+            self.footer.setMode_('export')
+            self.footer.setMessage_(msg)
 
+            self.vm.export(kind, fname, opts)
 
-    def doExportAsMovie(self, fname, frames=60, fps=30, first=1, loop=0):
-        if self.animationTimer is not None:
-            self.stopScript()
-        
-        mbps = self.export['movie']['rate']
-        self.vm.source = self.textView.string()
-        self.vm.export('movie', fname, first, frames, fps, loop, mbps)
+    def exportStatus(self, status, canvas=None):
+        """Handle export-related events (invoked by self.vm.session object)"""
+        if status.output:
+            # print any console messages
+            self.echo(status.output)
 
-    # 
-    # Handling export-related events (invoked by self.vm.session object)
-    # 
-    def exportFailed(self, output):
-        self.echo(output)
-
-    def exportMessage(self, output):
-        self.echo(output)        
-        self.shareThread()
-
-    def exportComplete(self):
-        self.stopScript()
-
-    def exportFrame(self, frameNum, canvas, result):
-        self.echo(result.output)
-        if result.ok: 
+        if status.ok:
+            # display the canvas
             self.currentView.setCanvas(canvas)
             self.graphicsView.setNeedsDisplay_(True)
-            self.shareThread()
+            # give the runloop a chance to collect events (rather than just beachballing)
+            date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
+            NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
+        else:
+            # we're done, either because of an error or because the export is complete
+            failed = status.ok is False # whereas None means successful
+            self.footer.setMode_('zoom')
+            self.stopScript()
 
-    def shareThread(self):
-        # give the runloop a chance to collect events (rather than just beachballing)
-        date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
-        NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
+    def exportProgress(self, written, total, cancelled):
+        label = self.footer.progressPanel.message
+        if cancelled:
+            self.footer.setMessage_(u'Export terminated…')
+        else:
+            bar = self.footer.progressPanel.bar
+            bar.setMaxValue_(total)
+            bar.setDoubleValue_(written)
+            if (total==written):
+                self.footer.setMessage_(u'Finishing export…')        
 
     # 
     # Interrupting the run
@@ -450,132 +417,14 @@ class NodeBoxDocument(NSDocument):
             self.fullScreen = None
             NSMenu.setMenuBarVisible_(True)
         NSCursor.unhide()
-        self.textView.hideValueLadder()
-        window = self.textView.window()
-        window.makeFirstResponder_(self.textView)
+        focus = self.textView or self.graphicsView
+        focus.window().makeFirstResponder_(focus)
+        focus.window().makeKeyAndOrderFront_(self)
+
+        if self.textView:
+            self.textView.hideValueLadder()
         if self.vm.session:
-            self.vm.session.status(cancel=True)
-        window.makeFirstResponder_(self.textView)
-
-    # 
-    # export config dialog boxes
-    # 
-    @objc.IBAction
-    def exportAsImage_(self, sender):
-        # configure save panel for image export
-        exportPanel.setNameFieldLabel_("Export To:")
-        exportPanel.setPrompt_("Export")
-        exportPanel.setCanSelectHiddenExtension_(True)
-        exportPanel.setShowsTagField_(False)
-        if not NSBundle.loadNibNamed_owner_("ExportImageAccessory", self):
-            NSLog("Error -- could not load ExportImageAccessory.")
-        self.exportImagePageCount.setIntValue_(self.export['image']['pages'])
-        format_idx = self.export['formats']['image'].index(self.export['image']['format'])
-        self.exportImageFormat.selectItemAtIndex_(format_idx)
-        exportPanel.setRequiredFileType_(self.export['image']['format'])
-        exportPanel.setAccessoryView_(self.exportImageAccessory)
-
-        # set the default filename and save dir
-        path = self.fileName()
-        if path:
-            dirName, fileName = os.path.split(path)
-            fileName, ext = os.path.splitext(fileName)
-            fileName += "." + self.export['image']['format']
-        else:
-            dirName, fileName = None, "Untitled.%s"%self.export['image']['format']
-        # If a file was already exported, use that folder as the default.
-        if self.export['dir'] is not None:
-            dirName = self.export['dir']
-
-        # present the dialog
-        exportPanel.beginSheetForDirectory_file_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
-            dirName, fileName, NSApp().mainWindow(), self,
-            "imageExportPanelDidEnd:returnCode:contextInfo:", 0)
-
-    @objc.IBAction
-    def exportImageFormatChanged_(self, sender):
-        panel = sender.window()
-        format = self.export['formats']['image'][sender.indexOfSelectedItem()]
-        panel.setRequiredFileType_(format)
-
-    def imageExportPanelDidEnd_returnCode_contextInfo_(self, panel, returnCode, context):
-        if returnCode:
-            fname = panel.filename()
-            self.export['dir'] = os.path.split(fname)[0] # Save the directory we exported to.
-            pages = self.exportImagePageCount.intValue()
-            format = panel.requiredFileType()
-            panel.close()
-            self.export['image'] = dict(format=format, pages=pages)
-            self.doExportAsImage(fname, format, pages)
-    imageExportPanelDidEnd_returnCode_contextInfo_ = objc.selector(imageExportPanelDidEnd_returnCode_contextInfo_,
-            signature="v@:@ii")
-
-    @objc.IBAction
-    def exportAsMovie_(self, sender):
-        # configure save panel for movie export
-        exportPanel = NSSavePanel.savePanel()
-        format_idx = self.export['formats']['movie'].index(self.export['movie']['format'])
-        should_loop = self.export['movie']['format']=='gif' and self.export['movie']['loop']==-1
-        exportPanel.setNameFieldLabel_("Export To:")
-        exportPanel.setPrompt_("Export")
-        exportPanel.setCanSelectHiddenExtension_(True)
-        exportPanel.setAllowedFileTypes_(self.export['formats']['movie'])
-        exportPanel.setShowsTagField_(False)
-        if not NSBundle.loadNibNamed_owner_("ExportMovieAccessory", self):
-            NSLog("Error -- could not load ExportMovieAccessory.")
-        self.exportMovieFrames.setIntValue_(self.export['movie']['frames'])
-        self.exportMovieFps.setIntValue_(self.export['movie']['fps'])
-        exportPanel.setAccessoryView_(self.exportMovieAccessory)
-        self.exportMovieFormat.selectItemAtIndex_(format_idx)
-        exportPanel.setRequiredFileType_(self.export['movie']['format'])
-        self.exportMovieLoop.setState_(NSOnState if should_loop else NSOffState)
-        self.exportMovieLoop.setEnabled_(format=='gif')
-        self.exportMovieBitrate.setEnabled_(format!='gif')
-        self.exportMovieBitrate.selectItemWithTag_(self.export['movie']['rate'])
-
-        # set the default filename and save dir
-        path = self.fileName()
-        if path:
-            dirName, fileName = os.path.split(path)
-            fileName, ext = os.path.splitext(fileName)
-            fileName += "." + self.export['movie']['format']
-        else:
-            dirName, fileName = None, "Untitled.%s" % self.export['movie']['format']
-        # If a file was already exported, use that folder as the default.
-        if self.export['dir'] is not None:
-            dirName = self.export['dir']
-
-        # present the dialog
-        exportPanel.beginSheetForDirectory_file_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
-            dirName, fileName, NSApp().mainWindow(), self,
-            "moviePanelDidEnd:returnCode:contextInfo:", 0)
-
-    @objc.IBAction
-    def exportMovieFormatChanged_(self, sender):
-        panel = sender.window()
-        format = self.export['formats']['movie'][sender.indexOfSelectedItem()]
-        panel.setRequiredFileType_(format)
-        self.exportMovieLoop.setState_(NSOnState if format=='gif' else NSOffState)
-        self.exportMovieLoop.setEnabled_(format=='gif')
-        self.exportMovieBitrate.setEnabled_(format!='gif')
-
-    def moviePanelDidEnd_returnCode_contextInfo_(self, panel, returnCode, context):
-        if returnCode:
-            fname = panel.filename()
-            self.export['dir'] = os.path.split(fname)[0] # Save the directory we exported to.
-            frames = self.exportMovieFrames.intValue()
-            fps = self.exportMovieFps.floatValue()
-            format_idx = self.exportMovieFormat.indexOfSelectedItem()
-            format = self.export['formats']['movie'][format_idx]
-            loop = -1 if self.exportMovieLoop.state()==NSOnState else 0
-            rate = self.exportMovieBitrate.selectedItem().tag()
-            self.export['movie'] = dict(format=format, frames=frames, fps=fps, loop=loop, rate=rate)
-            panel.close()
-
-            if frames <= 0 or fps <= 0: return
-            self.doExportAsMovie(fname, frames, fps, loop=loop)
-    moviePanelDidEnd_returnCode_contextInfo_ = objc.selector(moviePanelDidEnd_returnCode_contextInfo_,
-            signature="v@:@ii")
+            self.vm.session.cancel()
 
     #
     # Pasteboards

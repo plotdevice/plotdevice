@@ -118,7 +118,7 @@ class Sandbox(object):
     @property
     def tty(self):
         """Whether the script's output is being redirected to a pipe (r)"""
-        return not hasattr(self.delegate, 'graphicsView')
+        return getattr(self.delegate, 'graphicsView', None) is None
         # return self._meta.console is not None
 
     def compile(self, src=None):
@@ -277,46 +277,52 @@ class Sandbox(object):
             sys.argv = argv
         return Outcome(True, output.data)
 
-    def export(self, kind, *args):
+    def export(self, kind, fname, opts):
+        """Export graphics and animations to image and movie files.
+
+        args:
+            kind - 'image' or 'movie'
+            fname - path to outputfile
+            opts - dictionary with required keys:
+                     first, last, format
+                   and for a movie export, also include:
+                     bitrate, fps, loop
+        """
         compilation = self.compile() # compile the script
+        self.delegate.exportStatus(compilation)
         if not compilation.ok:
-            return self.delegate.exportFailed(compilation.output)
+            return
 
         firstpass = self.call() # evaluate the script once
+        self.delegate.exportStatus(firstpass)
         if not firstpass.ok:
-            return self.delegate.exportFailed(firstpass.output)
-        self.delegate.exportMessage(firstpass.output)
+            return
 
         if self.animated:
             setup = self.call("setup")
+            self.delegate.exportStatus(setup)
             if not setup.ok:
-                return self.delegate.exportFailed(compilation.output)            
+                return
 
-        if kind=='image':
-            fname, first, last, format = args
-            self.session = ImageExportSession(fname, last, format, first=first, console=self.tty)
-        elif kind=='movie':
-            fname, first, last, fps, loop, bitrate = args
-            self.session = MovieExportSession(fname, last, fps, loop, first, bitrate, console=self.tty)
-        else:
-            return
+        opts.setdefault('console', self.tty)
+        opts.setdefault('first', 1)
+        ExportSession = ImageExportSession if kind=='image' else MovieExportSession
+        self.session = ExportSession(fname, **opts)
+        self.session.on_progress(self.delegate.exportProgress)
 
-        self._meta.first, self._meta.last = first,last
+        self._meta.first, self._meta.last = opts['first'], opts['last']
         self._runExportBatch()
 
     def _finishExport(self):
-        # print "finishing"
         self.session.done()
         if self.session.running:
-            # print "still running. wait for complete"
             self.session.on_complete(self._exportComplete)
         else:
             self._exportComplete()
 
     def _exportComplete(self):
-        # print "completed"
         self.session = None
-        self.delegate.exportComplete() # the delegate should run vm.stop() on its own
+        self.delegate.exportStatus(status=Outcome(None, [])) # the delegate should run vm.stop() on its own
 
     def _runExportBatch(self):
         if self.session.batches:
@@ -325,20 +331,20 @@ class Sandbox(object):
             method = "draw" if self.animated else None
             for i in range(first, last+1):
                 if self.session.cancelled: 
-                    # print "bailing out", self.session.batches
                     break
 
                 self._meta.next = i
                 result = self.render(method)
+                self.delegate.exportStatus(result, self.canvas)
                 if not result.ok:
-                    self.delegate.exportFailed(result.output)
                     self.session._shutdown()
                     return self._finishExport()
                 self.session.add(self.canvas, i)
-                self.delegate.exportFrame(i, self.canvas, result)
-                if self.tty:
-                    self.delegate.exportProgress(self.session.progress.render())
-                self.shareThread()
+                self.delegate.exportProgress(self.session.written, self.session.total, self.session.cancelled)
+
+                # give the runloop a chance to collect events (rather than just beachballing)
+                date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
+                NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
                 
 
         if self.session.batches:
@@ -348,12 +354,8 @@ class Sandbox(object):
             self._finishExport()
     
     def _cleanup(self):
+        # self.session = None
         self.delegate = None
-
-    def shareThread(self):
-        # give the runloop a chance to collect events (rather than just beachballing)
-        date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
-        NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
 
 
 class StdIO(object):

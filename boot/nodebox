@@ -3,12 +3,28 @@
 """
 nodebox.py
 
-Run nodebox scripts from the command line
-
 usage: nodebox [-h] [-f] [-b] [--virtualenv PATH] [--export FILE]
                [--frames N or M-N] [--fps N] [--rate N] [--loop [N]] [--live]
                [--args [a [b ...]]]
                file
+
+Run python scripts in NodeBox.app or export graphics to a document (pdf/eps),
+image (png/gif/jpg/tiff), or movie (mov/gif).
+
+  Run a script:
+    nodebox script.py
+
+  Run fullscreen:
+    nodebox -f script.py
+
+  Save script's output to pdf:
+    nodebox script.py --export output.pdf
+
+  Create an animated gif that loops every 2 seconds:
+    nodebox script.py --export output.gif --frames 60 --fps 30 --loop
+
+  Create a sequence of png files – one for each frame in the animation:
+    nodebox script.py --export output.png --frames 10
 
 Options:
   -h, --help          show this help message and exit
@@ -27,14 +43,13 @@ Options:
   --loop [N]          number of times to loop an exported animated gif (omit N
                       to loop forever)
   --live              re-render graphics each time the file is saved
-  --args [a [b ...]]  remainder of command line will be passed to the script
-                      as sys.argv
+  --args [a [b ...]]  arguments to be passed to the script as sys.argv
 
 NodeBox Script File:
   file                the python script to be rendered
 """
 
-import sys, os, re
+import sys, os
 import argparse
 import socket
 import json
@@ -54,6 +69,7 @@ except ImportError:
   from Foundation import NSUserDefaults
 
 def main():
+  """Run python scripts in NodeBox.app or export graphics to a document (pdf/eps), image (png/gif/jpg/tiff), or movie (mov/gif)."""
   opts = parse_args()
   if opts.export or not app_path():
     exec_console(opts)
@@ -66,33 +82,42 @@ def exec_console(opts):
     p.stdin.write("CANCEL\n")
   signal.signal(signal.SIGINT, cancel)
 
-  p = Popen(['/usr/bin/python',task_path()], env=dict(os.environ), stdin=PIPE)
+  exe = task_path()
+  env = dict(os.environ)
+
+  if '..' in exe:
+    py_path = env.get('PYTHONPATH','').split(':')
+    so_path = abspath('%s/../build/lib.macosx-10.9-intel-2.7'%dirname(abspath(__file__)))
+    env['PYTHONPATH'] = ":".join(py_path + [so_path])
+
+  # sys.path.append(abspath('%s/../build/lib.macosx-10.9-intel-2.7'%dirname(abspath(__file__)))
+  # print "append",'%s/../build/lib.macosx-10.9-intel-2.7'%dirname(abspath(__file__))
+
+  p = Popen(['/usr/bin/python',exe], env=env, stdin=PIPE)
   p.stdin.write(json.dumps(vars(opts))+"\n")
   p.wait()
 
 def exec_application(opts):
   """Launch NodeBox.app if needed and run the script (while echoing output to the console)"""
-  sock = connect(0)
+  sock = connect()
   if not sock:
     os.system('open -a "%s" "%s"'%(app_path() or 'NodeBox.app', opts.file))
-    sock = connect()
+    sock = connect(retry=12)
   if not sock:
     print "Couldn't connect to the NodeBox application on port", default_port()
     sys.exit(1)
 
   try:
-    sock.sendall(json.dumps(vars(opts)) + "\n")
-    try:
-      while read_and_echo(sock): pass
-    except KeyboardInterrupt:
+    def stop(*args):
       sock.sendall('STOP\n')
-      print "\n",
-      while read_and_echo(sock): pass
+    signal.signal(signal.SIGINT, stop)
+    sock.sendall(json.dumps(vars(opts)) + "\n")
+    read_and_echo(sock)
   finally:
     sock.close()
 
 def parse_args():
-  parser = argparse.ArgumentParser(description='Run python scripts in NodeBox.app', add_help=False)
+  parser = argparse.ArgumentParser(description=main.__doc__, add_help=False)
   o = parser.add_argument_group("Options", None)
   o.add_argument('-h','--help', action='help', help='show this help message and exit')
   o.add_argument('-f', dest='fullscreen', action='store_const', const=True, default=False, help='run full-screen')
@@ -101,10 +126,10 @@ def parse_args():
   o.add_argument('--export', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, gif, or mov')
   o.add_argument('--frames', metavar='N or M-N', help='number of frames to render or a range specifying the first and last frames (default "1-")')
   o.add_argument('--fps', metavar='N', default=30, type=int, help='frames per second in exported video (default 30)')
-  o.add_argument('--rate', metavar='N', default=1.0, type=float, help='bitrate in megabits per second (video only)')
+  o.add_argument('--rate', metavar='N', default=1.0, type=float, dest='bitrate', help='bitrate in megabits per second (video only)')
   o.add_argument('--loop', metavar='N', default=0, nargs='?', const=-1, help='number of times to loop an exported animated gif (omit N to loop forever)')
   o.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
-  o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='remainder of command line will be passed to the script as sys.argv')
+  o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='arguments to be passed to the script as sys.argv')
   i = parser.add_argument_group("NodeBox Script File", None)
   i.add_argument('file', help='the python script to be rendered')
   opts = parser.parse_args()
@@ -133,9 +158,9 @@ def parse_args():
       if frames[1] is not None and frames[1]<frames[0]:
         parser.exit(1, "bad argument [--frame]\nfinal-frame number is less than first-frame\n")
       opts.first, opts.last = frames
-      del opts.frames
   else:
     opts.first, opts.last = (1, None)
+  del opts.frames
 
   if opts.export:
     basename, ext = opts.export.rsplit('.',1)
@@ -149,7 +174,7 @@ def parse_args():
   
   return opts
 
-def connect(retry=12, delay=0):
+def connect(retry=0, delay=0):
   port = default_port()
   if delay:
     sleep(delay)
@@ -174,9 +199,12 @@ def app_path():
 def task_path():
   if app_path():
     return "%s/%s" % (app_path(), 'Contents/Resources/python/nodebox/run/task.py')
-  else:
+  
+  try:
     import nodebox
     return "%s/%s" % (abspath(dirname(nodebox.__file__)), 'run/task.py')
+  except ImportError:
+    return "%s/../nodebox/run/task.py"%dirname(abspath(__file__))
 
 def default_port():
   appdefaults = NSUserDefaults.standardUserDefaults().persistentDomainForName_('net.nodebox.NodeBox')
@@ -184,10 +212,10 @@ def default_port():
 
 def read_and_echo(sock):
   response = sock.recv(80)
-  if response:
+  while response:
     sys.stdout.write(response)
     sys.stdout.flush()
-  return response
+    response = sock.recv(80)
 
 if __name__ == "__main__":
   main()
