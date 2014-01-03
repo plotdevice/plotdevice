@@ -12,9 +12,6 @@ DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.8, NSColor.
 class ExportCommand(NSScriptCommand):
     pass
 
-class ZoomPanel(NSView):
-    pass
-
 class NodeBoxBackdrop(NSView):
     """A container that sits between the NSClipView and NodeBoxGraphicsView
 
@@ -31,9 +28,9 @@ class NodeBoxBackdrop(NSView):
     def isOpaque(self):
         return True
 
-    @classmethod
-    def isCompatibleWithResponsiveScrolling(self):
-        return True
+    # @classmethod
+    # def isCompatibleWithResponsiveScrolling(self):
+    #     return True
 
     def setFrame_(self, frame):
         if self.gfxView:
@@ -290,4 +287,48 @@ class NodeBoxGraphicsView(NSView):
     def acceptsFirstResponder(self):
         return True
 
+
+class Footer(NSView):
+    zoomPanel = objc.IBOutlet()
+    progressPanel = objc.IBOutlet()
+
+    def awakeFromNib(self):
+        self._mode = 'zoom'
+        if self.progressPanel:
+            self.progressPanel.setHidden_(True)
+
+    def setMode_(self, mode):
+        if mode==self._mode:
+            return
+        incoming = self.progressPanel if mode=='export' else self.zoomPanel
+        outgoing = self.zoomPanel if mode=='export' else self.progressPanel
+
+        incoming.setAlphaValue_(0)
+        incoming.setHidden_(False)
+        NSAnimationContext.beginGrouping()
+        dt = 0.666
+        ctx = NSAnimationContext.currentContext()
+        ctx.setDuration_(dt)
+        incoming.animator().setAlphaValue_(1)
+        outgoing.animator().setAlphaValue_(0)
+        NSAnimationContext.endGrouping()
+        self.performSelector_withObject_afterDelay_("endModeSwitch:", mode, dt)
+        self._mode = mode
+
+    def setMessage_(self, msg):
+        self.progressPanel.message.setStringValue_(msg)
+
+    def endModeSwitch_(self, mode):
+        incoming = self.progressPanel if mode=='export' else self.zoomPanel
+        outgoing = self.zoomPanel if mode=='export' else self.progressPanel
+        outgoing.setHidden_(True)
+        incoming.setHidden_(False)
+
+class ProgressPanel(NSView):
+    bar = objc.IBOutlet()
+    cancel = objc.IBOutlet()
+    message = objc.IBOutlet()
+
+class ZoomPanel(NSView):
+    pass
 

@@ -61,11 +61,8 @@
 		611CC58A10BA8FF000B55455 /* pathmatics.py in Copy nodebox.geo */ = {isa = PBXBuildFile; fileRef = 611CC4BC10BA8C1B00B55455 /* pathmatics.py */; };
 		611CC5A010BA908C00B55455 /* NodeBoxDocument.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC59E10BA908C00B55455 /* NodeBoxDocument.xib */; };
 		611CC5A810BA919A00B55455 /* NodeBoxPreferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC5A610BA919A00B55455 /* NodeBoxPreferences.xib */; };
-		611CC5AF10BA91CB00B55455 /* ProgressBarSheet.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC5AD10BA91CB00B55455 /* ProgressBarSheet.xib */; };
 		611CC68010BAA08300B55455 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC67E10BAA08300B55455 /* MainMenu.xib */; };
 		611CC68710BAA0A600B55455 /* AskString.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC68510BAA0A600B55455 /* AskString.xib */; };
-		611CC68C10BAA0E300B55455 /* ExportImageAccessory.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC68A10BAA0E300B55455 /* ExportImageAccessory.xib */; };
-		611CC69210BAA0FB00B55455 /* ExportMovieAccessory.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC69010BAA0FB00B55455 /* ExportMovieAccessory.xib */; };
 		6155D9F413E2B79E00675A92 /* CHANGES.md in Resources */ = {isa = PBXBuildFile; fileRef = 6155D9F213E2B79E00675A92 /* CHANGES.md */; };
 		6155D9F513E2B79E00675A92 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 6155D9F313E2B79E00675A92 /* README.md */; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
@@ -214,6 +211,7 @@
 		2ABDB7751867EB520069EFC3 /* app.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = app.py; sourceTree = "<group>"; };
 		2ABDB7761867EB520069EFC3 /* views.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = views.py; sourceTree = "<group>"; };
 		2AC5187F18636C9F007FB066 /* sandbox.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sandbox.py; sourceTree = "<group>"; };
+		2AD0A9B6186E552700D1F6DE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/NodeBoxViewer.xib; sourceTree = "<group>"; };
 		2AE5AD291862366300CCDD45 /* editor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = editor.py; sourceTree = "<group>"; };
 		2AE5AD2C1862386400CCDD45 /* widgets.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = widgets.py; sourceTree = "<group>"; };
 		2AE5AD7E186249E100CCDD45 /* listener.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = listener.py; sourceTree = "<group>"; };
@@ -233,11 +231,8 @@
 		611CC4E010BA8C1B00B55455 /* vdiff.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = vdiff.py; sourceTree = "<group>"; };
 		611CC59F10BA908C00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/NodeBoxDocument.xib; sourceTree = "<group>"; };
 		611CC5A710BA919A00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/NodeBoxPreferences.xib; sourceTree = "<group>"; };
-		611CC5AE10BA91CB00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/ProgressBarSheet.xib; sourceTree = "<group>"; };
 		611CC67F10BAA08300B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		611CC68610BAA0A600B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/AskString.xib; sourceTree = "<group>"; };
-		611CC68B10BAA0E300B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/ExportImageAccessory.xib; sourceTree = "<group>"; };
-		611CC69110BAA0FB00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/ExportMovieAccessory.xib; sourceTree = "<group>"; };
 		612813B310BD2C9400B18218 /* libs */ = {isa = PBXFileReference; lastKnownFileType = folder; path = libs; sourceTree = "<group>"; };
 		6155D9F213E2B79E00675A92 /* CHANGES.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGES.md; sourceTree = "<group>"; };
 		6155D9F313E2B79E00675A92 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -329,13 +324,11 @@
 		2A37F4B8FDCFA73011CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				611CC69010BAA0FB00B55455 /* ExportMovieAccessory.xib */,
-				611CC68A10BAA0E300B55455 /* ExportImageAccessory.xib */,
 				611CC68510BAA0A600B55455 /* AskString.xib */,
 				611CC67E10BAA08300B55455 /* MainMenu.xib */,
-				611CC5AD10BA91CB00B55455 /* ProgressBarSheet.xib */,
 				611CC5A610BA919A00B55455 /* NodeBoxPreferences.xib */,
 				611CC59E10BA908C00B55455 /* NodeBoxDocument.xib */,
+				2AD0A9B5186E552700D1F6DE /* NodeBoxViewer.xib */,
 				611CC48110BA8B9E00B55455 /* Credits.rtf */,
 				611CC48910BA8B9E00B55455 /* InfoPlist.strings */,
 				611CC49310BA8B9E00B55455 /* NodeBox.icns */,
@@ -523,11 +516,8 @@
 				611CC5A010BA908C00B55455 /* NodeBoxDocument.xib in Resources */,
 				611CC5A810BA919A00B55455 /* NodeBoxPreferences.xib in Resources */,
 				2A294484185E617900E9F650 /* NodeBox Help in Resources */,
-				611CC5AF10BA91CB00B55455 /* ProgressBarSheet.xib in Resources */,
 				611CC68010BAA08300B55455 /* MainMenu.xib in Resources */,
 				611CC68710BAA0A600B55455 /* AskString.xib in Resources */,
-				611CC68C10BAA0E300B55455 /* ExportImageAccessory.xib in Resources */,
-				611CC69210BAA0FB00B55455 /* ExportMovieAccessory.xib in Resources */,
 				6155D9F413E2B79E00675A92 /* CHANGES.md in Resources */,
 				6155D9F513E2B79E00675A92 /* README.md in Resources */,
 			);
@@ -614,6 +604,14 @@
 			name = "NodeBox Help";
 			sourceTree = "<group>";
 		};
+		2AD0A9B5186E552700D1F6DE /* NodeBoxViewer.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				2AD0A9B6186E552700D1F6DE /* English */,
+			);
+			name = NodeBoxViewer.xib;
+			sourceTree = "<group>";
+		};
 		611CC48110BA8B9E00B55455 /* Credits.rtf */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -648,14 +646,6 @@
 			name = NodeBoxPreferences.xib;
 			sourceTree = "<group>";
 		};
-		611CC5AD10BA91CB00B55455 /* ProgressBarSheet.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				611CC5AE10BA91CB00B55455 /* English */,
-			);
-			name = ProgressBarSheet.xib;
-			sourceTree = "<group>";
-		};
 		611CC67E10BAA08300B55455 /* MainMenu.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -670,22 +660,6 @@
 				611CC68610BAA0A600B55455 /* English */,
 			);
 			name = AskString.xib;
-			sourceTree = "<group>";
-		};
-		611CC68A10BAA0E300B55455 /* ExportImageAccessory.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				611CC68B10BAA0E300B55455 /* English */,
-			);
-			name = ExportImageAccessory.xib;
-			sourceTree = "<group>";
-		};
-		611CC69010BAA0FB00B55455 /* ExportMovieAccessory.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				611CC69110BAA0FB00B55455 /* English */,
-			);
-			name = ExportMovieAccessory.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

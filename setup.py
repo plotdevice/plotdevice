@@ -101,8 +101,6 @@ plist={
 rsrc = [
     "Resources/English.lproj/AskString.xib",
     "Resources/English.lproj/Credits.rtf",
-    "Resources/English.lproj/ExportImageAccessory.xib",
-    "Resources/English.lproj/ExportMovieAccessory.xib",
     "Resources/English.lproj/MainMenu.xib",
     "Resources/English.lproj/NodeBox Help",
     "Resources/English.lproj/NodeBoxDocument.xib",
@@ -135,7 +133,7 @@ class BuildCommand(build_py):
 
         # include some ui resources for running a script from the command line
         if not BUILD_APP:
-            rsrc_dir = '%s/nodebox/run/rsrc'%self.build_lib
+            rsrc_dir = '%s/nodebox/rsrc'%self.build_lib
             self.mkpath(rsrc_dir)
             self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "Resources/English.lproj/NodeBoxViewer.xib"])
             self.copy_file("Resources/NodeBoxFile.icns", '%s/icon.icns'%rsrc_dir)
