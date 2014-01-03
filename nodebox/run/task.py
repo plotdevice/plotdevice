@@ -123,6 +123,7 @@ class NodeBoxScript(NodeBoxDocument):
 
     def runScript(self):
         self.vm.source = self.source()
+        self.vm.metadata = self.opts
         super(NodeBoxScript, self).runScript()
 
         # resize the window to fit

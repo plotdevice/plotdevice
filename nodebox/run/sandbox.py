@@ -22,7 +22,7 @@ PLUGIN_DIR = os.path.join(os.getenv("HOME"), "Library", "Application Support", "
 MODULE_ROOT = abspath(dirname(dirname(__file__)))
 
 class Metadata(object):
-    __slots__ = 'args', 'virtualenv', 'first', 'next', 'last', 'console', 'running'
+    __slots__ = 'args', 'virtualenv', 'first', 'next', 'last', 'console', 'running', 'loop'
     def __init__(self, **opts):
         for k,v in opts.items(): setattr(self,k,v)
     def update(self, changes):
@@ -36,17 +36,19 @@ class Metadata(object):
 class Sandbox(object):
 
     def __init__(self, delegate=None):
-        self._env = {}      # the base namespace for the script (with all the gfx routines)
-        self._meta = None   # runtime opts for the script
-        self._script = None # file path to the active script
-        self._source = None # unicode contents of script
-        self._code = None   # byte-compiled source
-        self.canvas = None  # can be handed off to views or exporters to access the image
-        self.context = None # quartz playground
-        self.namespace = {} # a mutable copy of _env with the user script's functions mixed in
-        self.session = None # the image/movie export session (if any)
-        self.stationery = False # whether the script is from the examples fodlder
-        self.delegate = None    # object with an frameUpdated(canvas, frameNum) method
+        self._env = {}          # the base namespace for the script (with all the gfx routines)
+        self._meta = None       # runtime opts for the script
+        self._script = None     # file path to the active script
+        self._source = None     # unicode contents of script
+        self._code = None       # byte-compiled source
+        self.canvas = None      # can be handed off to views or exporters to access the image
+        self.context = None     # quartz playground
+        self.namespace = {}     # a mutable copy of _env with the user script's functions mixed in
+        self.session = None     # the image/movie export session (if any)
+        self.stationery = False # whether the script is from the examples folder
+        self.delegate = None    # object with exportStatus and exportProgress methods
+
+        # set up the graphics plumbing
         self.canvas = graphics.Canvas()
         self.context = graphics.Context(self.canvas, self.namespace)
         self.delegate = delegate
@@ -57,7 +59,7 @@ class Sandbox(object):
         self._env.update( (a,getattr(util,a)) for a in util.__all__  )
         self._env.update( (a,getattr(self.context,a)) for a in dir(self.context) if not re_private.search(a) )
         self._env["_ctx"] = self.context
-        self._meta = Metadata(args=[], virtualenv=None, first=1, next=1, last=None, running=False, console=None)
+        self._meta = Metadata(args=[], virtualenv=None, first=1, next=1, last=None, running=False, console=None, loop=False)
 
     # .script
     def _get_script(self):
@@ -190,6 +192,8 @@ class Sandbox(object):
             # tick the frame ahead after each draw call
             elif method=='draw':
                 self._meta.next+=1
+                if self._meta.next > self._meta.last and self._meta.loop:
+                    self._meta.next = self._meta.first
 
         return result
 
@@ -336,16 +340,15 @@ class Sandbox(object):
                 self._meta.next = i
                 result = self.render(method)
                 self.delegate.exportStatus(result, self.canvas)
+                self.delegate.exportProgress(self.session.written, self.session.total, self.session.cancelled)
                 if not result.ok:
                     self.session._shutdown()
                     return self._finishExport()
                 self.session.add(self.canvas, i)
-                self.delegate.exportProgress(self.session.written, self.session.total, self.session.cancelled)
 
                 # give the runloop a chance to collect events (rather than just beachballing)
                 date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
                 NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
-                
 
         if self.session.batches:
             # keep running _runExportBatch until we run out of batches
