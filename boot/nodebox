@@ -80,6 +80,7 @@ def exec_console(opts):
   """Run export operation in the console"""
   def cancel(*args):
     p.stdin.write("CANCEL\n")
+    p.stdin.flush()
   signal.signal(signal.SIGINT, cancel)
 
   exe = task_path()

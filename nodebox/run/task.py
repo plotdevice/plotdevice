@@ -57,8 +57,11 @@ class ScriptAppDelegate(NSObject):
     def initWithOpts_forMode_(self, opts, mode):
         self.opts = opts
         self.mode = mode
-        self.poll = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-                0.1, self, objc.selector(self.catchInterrupts, signature="v@:@"), None, True)
+        self.poll = NSFileHandle.fileHandleWithStandardInput()
+
+        nc = NSNotificationCenter.defaultCenter()
+        nc.addObserver_selector_name_object_(self, "catchInterrupts:", "NSFileHandleDataAvailableNotification", None)
+        self.poll.waitForDataInBackgroundAndNotify()
         return self
   
     def applicationDidFinishLaunching_(self, note):
@@ -83,13 +86,14 @@ class ScriptAppDelegate(NSObject):
                 NSApp().activateIgnoringOtherApps_(True)
             AppHelper.callAfter(self.script.runScript)
 
-    def catchInterrupts(self, sender):
+    def catchInterrupts_(self, sender):
         read, write, timeout = select.select([sys.stdin.fileno()], [], [], 0)
         for fd in read:
             if fd == sys.stdin.fileno():
                 line = sys.stdin.readline().strip()
                 if 'CANCEL' in line:
                     self.script.cancel()
+        self.poll.waitForDataInBackgroundAndNotify()
 
     def done(self, quit=False):
         if self.mode=='headless' or quit:
