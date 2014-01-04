@@ -4,7 +4,7 @@
 # To build an application in the dist subdirectory, use:
 #     python setup.py py2app
 # 
-# To build a distribution friendly dmg & zip, use:
+# To build a distribution-friendly dmg & zip, use:
 #     python setup.py dist
 # 
 # We require some dependencies:
@@ -152,15 +152,14 @@ if BUILD_APP:
             self.cwd = os.getcwd()
             build_app.finalize_options(self)
         def run(self):
+            TOP=self.cwd
             assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
             build_app.run(self)
 
             # Do some py2app `configuration' to make the bundle layout more
             # like what xcode produces
-            TOP=self.cwd
             RSRC="%s/dist/NodeBox.app/Contents/Resources"%self.cwd
             BIN="%s/dist/NodeBox.app/Contents/SharedSupport"%self.cwd
-
             self.mkpath(BIN)
             self.mkpath("%s/python"%RSRC)
             self.mkpath("%s/English.lproj"%RSRC)
