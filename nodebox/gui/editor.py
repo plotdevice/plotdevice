@@ -62,6 +62,7 @@ class PyDETextView(NSTextView):
         # Thanks to http://cocoa.mamasam.com/COCOADEV/2003/12/2/80304.php
         scrollView = self.enclosingScrollView()
         scrollView.setHasHorizontalScroller_(True)
+        scrollView.setHasVerticalScroller_(True)
         self.setHorizontallyResizable_(True)
         layoutSize = self.maxSize()
         layoutSize = (layoutSize[1], layoutSize[1])

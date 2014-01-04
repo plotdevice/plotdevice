@@ -53,13 +53,13 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="vzN-o6-7sn">
-                            <rect key="frame" x="585" y="0.0" width="15" height="463"/>
+                            <rect key="frame" x="584" y="0.0" width="16" height="463"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
                     <customView id="POd-hY-unu" customClass="Footer">
                         <rect key="frame" x="0.0" y="0.0" width="640" height="22"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <customView id="268" customClass="ZoomPanel">
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="22"/>

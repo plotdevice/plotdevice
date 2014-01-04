@@ -28,9 +28,11 @@ class NodeBoxBackdrop(NSView):
     def isOpaque(self):
         return True
 
-    # @classmethod
-    # def isCompatibleWithResponsiveScrolling(self):
-    #     return True
+    def wantsLayer(self):
+        return True
+
+    def canDrawSubviewsIntoLayer(self):
+        return True
 
     def setFrame_(self, frame):
         if self.gfxView:
@@ -52,7 +54,7 @@ class NodeBoxBackdrop(NSView):
 
     def drawRect_(self, rect):
         DARK_GREY.setFill()
-        NSRectFill(rect)
+        NSRectFillUsingOperation(rect, NSCompositeCopy)
         super(NodeBoxBackdrop, self).drawRect_(rect)
 
     def viewFrameDidChange_(self, note):
@@ -98,6 +100,7 @@ class NodeBoxGraphicsView(NSView):
         self.setFocusRingType_(NSFocusRingTypeExterior)
         clipview = self.superview().superview()
         if clipview is not None:
+            clipview.setDrawsBackground_(True)
             clipview.setBackgroundColor_(DARK_GREY)
 
     def setCanvas(self, canvas):

@@ -1,6 +1,7 @@
 from AppKit import *
 from nodebox.graphics.grobs import *
 from nodebox.graphics import grobs
+from nodebox.util import _copy_attr
 from nodebox import geo
 
 class Context(object):
@@ -40,7 +41,7 @@ class Context(object):
         self._strokewidth = 1.0
         self._capstyle = BUTT
         self._joinstyle = MITER
-        self.canvas.background = self.Color(1.0)
+        self.canvas.background = getattr(self.canvas, 'background', self.Color(1.0))
         self._path = None
         self._autoclosepath = True
         self._transform = Transform()
