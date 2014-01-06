@@ -18,9 +18,9 @@ int main(int argc, char *argv[])
         FILE *mainFile = fopen(mainFilePathPtr, "r");
         int result = PyRun_SimpleFile(mainFile, (char *)[[mainFilePath lastPathComponent] UTF8String]);
         
-        if ( result != 0 )
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"%s:%d main() PyRun_SimpleFile failed with file '%@'.  See console for errors.", __FILE__, __LINE__, mainFilePath];
+//        if ( result != 0 )
+//        [NSException raise: NSInternalInconsistencyException
+//                    format: @"%s:%d main() PyRun_SimpleFile failed with file '%@'.  See console for errors.", __FILE__, __LINE__, mainFilePath];
         return result;
     }
 }

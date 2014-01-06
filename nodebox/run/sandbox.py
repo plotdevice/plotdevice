@@ -13,13 +13,13 @@ from nodebox.graphics import NodeBoxError
 from nodebox import util
 from nodebox import graphics
 from nodebox.run.export import MovieExportSession, ImageExportSession
+from nodebox.util import stacktrace
 
 __all__ = ['Sandbox']
 
 Outcome = namedtuple('Outcome', ['ok', 'output'])
 Output = namedtuple('Output', ['isErr', 'data'])
 PLUGIN_DIR = os.path.join(os.getenv("HOME"), "Library", "Application Support", "NodeBox")
-MODULE_ROOT = abspath(dirname(dirname(__file__)))
 
 class Metadata(object):
     __slots__ = 'args', 'virtualenv', 'first', 'next', 'last', 'console', 'running', 'loop'
@@ -254,23 +254,8 @@ class Sandbox(object):
                 # run the code object we were passed
                 method()
             except:
-                # remove the internal nodebox frames from the stacktrace
-                etype, value, tb = sys.exc_info()
-                while tb and MODULE_ROOT in tb.tb_frame.f_code.co_filename:
-                    tb = tb.tb_next
-
-                # make filenames relative to the script's dir
-                errtxt = "".join(traceback.format_exception(etype, value, tb))
-                if self._script:
-                    basedir = dirname(self._script)
-                    def relativize(m):
-                        full = m.group(2)
-                        rel = relpath(m.group(2), basedir)
-                        pth = rel if len(rel)<len(full) else full
-                        return '%sFile "%s"'%(m.group(1), pth)
-                    errtxt = re.sub(r'( +)File "([^"]+)"', relativize, errtxt)
-
                 # print the stacktrace and quit
+                errtxt = stacktrace.prettify(self._script)
                 sys.stderr.write(errtxt)
                 return Outcome(False, output.data)
         finally:
