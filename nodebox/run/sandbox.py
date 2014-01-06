@@ -13,7 +13,7 @@ from nodebox.graphics import NodeBoxError
 from nodebox import util
 from nodebox import graphics
 from nodebox.run.export import MovieExportSession, ImageExportSession
-from nodebox.util import stacktrace
+from nodebox.run import stacktrace
 
 __all__ = ['Sandbox']
 
@@ -250,14 +250,13 @@ class Sandbox(object):
         os.chdir(scriptDir)
 
         try:
-            try:
-                # run the code object we were passed
-                method()
-            except:
-                # print the stacktrace and quit
-                errtxt = stacktrace.prettify(self._script)
-                sys.stderr.write(errtxt)
-                return Outcome(False, output.data)
+            # run the code object we were passed
+            method()
+        except:
+            # print the stacktrace and quit
+            errtxt = stacktrace(self._script)
+            sys.stderr.write(errtxt)
+            return Outcome(False, output.data)
         finally:
             # restore the environment
             sys.stdout, sys.stderr = pipes

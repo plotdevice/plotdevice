@@ -425,7 +425,7 @@ class NodeBoxDocument(NSDocument):
             self.currentView = self.graphicsView
             self.fullScreen = None
             NSMenu.setMenuBarVisible_(True)
-        else:
+        elif self.graphicsView:
             self.graphicsView.recache()
         NSCursor.unhide()
         focus = self.textView or self.graphicsView

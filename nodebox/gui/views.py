@@ -7,7 +7,7 @@ from Foundation import *
 from AppKit import *
 from Quartz import CGColorCreateGenericRGB
 from nodebox import graphics
-from nodebox.util import stacktrace
+from nodebox.run import stacktrace
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.8, NSColor.whiteColor())
 
@@ -118,7 +118,8 @@ class NodeBoxGraphicsView(NSView):
         self.setNeedsDisplay_(True)
 
     def recache(self):
-        self._raster = self.canvas.rasterize(zoom=self.zoom)
+        if self.canvas:
+            self._raster = self.canvas.rasterize(zoom=self.zoom)
 
     def _get_zoom(self):
         return self._zoom
@@ -212,7 +213,7 @@ class NodeBoxGraphicsView(NSView):
             except:
                 # Display the error in the output view.
                 # (this is where invalid args passed to grobs will throw exceptions)
-                errtxt = stacktrace.prettify(self.document.fileName())
+                errtxt = stacktrace(self.document.fileName())
                 document.echo((False, errtxt))
             NSGraphicsContext.currentContext().restoreGraphicsState()
 
