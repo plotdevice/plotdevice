@@ -143,6 +143,7 @@ class NodeBoxDocument(NSDocument):
 
         self.mainView.setFrame_(content)
         win.setContentBorderThickness_forEdge_(thickness, NSMinYEdge)
+        self.footer.setHidden_(not self._showFooter)
 
         if scrollview and style is not None:
             scrollview.setScrollerStyle_(style)
@@ -297,6 +298,7 @@ class NodeBoxDocument(NSDocument):
             self.vm.stop()
             focus = self.textView or self.graphicsView
             focus.window().makeFirstResponder_(focus)
+            self.graphicsView.recache()
 
     def cleanRun(self, method=None):
         self.animationSpinner.startAnimation_(None)
@@ -423,6 +425,8 @@ class NodeBoxDocument(NSDocument):
             self.currentView = self.graphicsView
             self.fullScreen = None
             NSMenu.setMenuBarVisible_(True)
+        else:
+            self.graphicsView.recache()
         NSCursor.unhide()
         focus = self.textView or self.graphicsView
         focus.window().makeFirstResponder_(focus)

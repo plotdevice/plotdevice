@@ -5,7 +5,9 @@ import objc
 
 from Foundation import *
 from AppKit import *
+from Quartz import CGColorCreateGenericRGB
 from nodebox import graphics
+from nodebox.util import stacktrace
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.8, NSColor.whiteColor())
 
@@ -26,12 +28,6 @@ class NodeBoxBackdrop(NSView):
         return True
 
     def isOpaque(self):
-        return True
-
-    def wantsLayer(self):
-        return True
-
-    def canDrawSubviewsIntoLayer(self):
         return True
 
     def setFrame_(self, frame):
@@ -88,7 +84,7 @@ class NodeBoxGraphicsView(NSView):
 
     def awakeFromNib(self):
         self.canvas = None
-        self._dirty = False
+        self._raster = None
         self.mousedown = False
         self.keydown = False
         self.key = None
@@ -103,7 +99,7 @@ class NodeBoxGraphicsView(NSView):
             clipview.setDrawsBackground_(True)
             clipview.setBackgroundColor_(DARK_GREY)
 
-    def setCanvas(self, canvas):
+    def setCanvas(self, canvas, rasterize=False):
         self.canvas = canvas
         if canvas is not None:
             scrollview = self.superview().superview().superview()
@@ -118,7 +114,11 @@ class NodeBoxGraphicsView(NSView):
             half_w = NSWidth(visible) / 2.0
             half_h = NSHeight(visible) / 2.0
             self.scrollPoint_( (x_pct*w-half_w, y_pct*h-half_h) )
-        self.markDirty()
+        self._raster = self.canvas.rasterize(zoom=self.zoom) if rasterize else None
+        self.setNeedsDisplay_(True)
+
+    def recache(self):
+        self._raster = self.canvas.rasterize(zoom=self.zoom)
 
     def _get_zoom(self):
         return self._zoom
@@ -126,7 +126,7 @@ class NodeBoxGraphicsView(NSView):
         self._zoom = zoom
         self.zoomLevel.setTitle_("%i%%" % (self._zoom * 100.0))
         self.zoomSlider.setFloatValue_(self._zoom * 100.0)
-        self.setCanvas(self.canvas)
+        self.setCanvas(self.canvas, rasterize=True)
     zoom = property(_get_zoom, _set_zoom)
 
     @objc.IBAction
@@ -181,13 +181,7 @@ class NodeBoxGraphicsView(NSView):
         factor = min(fw / w, fh / h)
         self.zoom = factor
 
-    def markDirty(self, redraw=True):
-        self._dirty = True
-        if redraw:
-            self.setNeedsDisplay_(True)
-
     def setFrameSize_(self, size):
-        self._image = None
         NSView.setFrameSize_(self, size)
 
     def isOpaque(self):
@@ -197,7 +191,15 @@ class NodeBoxGraphicsView(NSView):
         return True
 
     def drawRect_(self, rect):
-        if self.canvas is not None:
+        if self._raster:
+            # if the script isn't currently running (and we'll be redrawing the same grobs for a while),
+            # use a cached, zoom-specific nsimage for redraws
+            self._raster.drawInRect_fromRect_operation_fraction_respectFlipped_hints_(
+                rect, rect, NSCompositeCopy, 1.0, True, None
+            )
+        elif self.canvas is not None:
+            # if the cached image doesn't exist (most likely to keep the frame rate up in an ongoing animation),
+            # zoom the context appropriately and have the grobs draw themselves to the view itself
             NSGraphicsContext.currentContext().saveGraphicsState()
             try:
                 if self.zoom != 1.0:
@@ -208,22 +210,12 @@ class NodeBoxGraphicsView(NSView):
                     clip.addClip()
                 self.canvas.draw()
             except:
-                # A lot of code just to display the error in the output view.
-                # (though it's unclear what would make things fail here rather
-                # than in the document's animation or export-batch loop)
-                etype, value, tb = sys.exc_info()
-                while tb and 'nodebox/gui' in tb.tb_frame.f_code.co_filename:
-                    tb = tb.tb_next
-                traceback.print_exception(etype, value, tb)
-                data = "".join(traceback.format_exception(etype, value, tb))
-                outputView = self.document.outputView
-                outputView.append(data, stream='err')
+                # Display the error in the output view.
+                # (this is where invalid args passed to grobs will throw exceptions)
+                errtxt = stacktrace.prettify(self.document.fileName())
+                document.echo((False, errtxt))
             NSGraphicsContext.currentContext().restoreGraphicsState()
 
-    def _updateImage(self):
-        if self._dirty:
-            self._image = self.canvas._nsImage
-            self._dirty = False
 
     # pasteboard delegate method
     def pasteboard_provideDataForType_(self, pboard, type):

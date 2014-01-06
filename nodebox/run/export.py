@@ -81,14 +81,14 @@ class ImageExportSession(ExportSession):
         self.batches = [(n, min(n+IMG_BATCH_SIZE-1,last)) for n in range(first, last+1, IMG_BATCH_SIZE)]
         self.writer = ImageSequence.alloc().init()
 
-    def add(self, canvas_or_context, frame):
+    def add(self, canvas, frame):
         if self.cancelled: return
         if self.single_page:
             fn = self.fname
         else:
             basename, ext = os.path.splitext(self.fname)
             fn = "%s-%05d%s" % (basename, frame, ext)
-        image = canvas_or_context._getImageData(self.format)
+        image = canvas._getImageData(self.format)
         self.writer.writeData_toFile_(image, fn)
         self.added += 1
 
@@ -110,9 +110,9 @@ class MovieExportSession(ExportSession):
         self.bitrate = bitrate
         self.batches = [(n, min(n+MOV_BATCH_SIZE-1,last)) for n in range(first, last+1, MOV_BATCH_SIZE)]
 
-    def add(self, canvas_or_context, frame):
+    def add(self, canvas, frame):
         if self.cancelled: return
-        image = canvas_or_context._nsImage
+        image = canvas.rasterize()
         if not self.writer:
             dims = image.size()
             if self.format == 'mov':

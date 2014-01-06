@@ -586,15 +586,17 @@ class Canvas(Grob):
         for grob in self._grobs:
             grob._draw()
             
-    def _get_nsImage(self):
-        img = NSImage.alloc().initWithSize_((self.width, self.height))
+    def rasterize(self, zoom=1.0):
+        img = NSImage.alloc().initWithSize_((self.width*zoom, self.height*zoom))
         img.setFlipped_(True)
         img.lockFocus()
+        trans = NSAffineTransform.transform()
+        trans.scaleBy_(zoom)
+        trans.concat()
         self.draw()
         img.unlockFocus()
         return img
-    _nsImage = property(_get_nsImage)
-    
+
     def _getImageData(self, format):
         if format == 'pdf':
             view = _PDFRenderView.alloc().initWithCanvas_(self)
@@ -610,7 +612,7 @@ class Canvas(Grob):
                         "tiff": NSTIFFFileType}
             if format not in imgTypes:
                 raise NodeBoxError, "Filename should end in .pdf, .eps, .tiff, .gif, .jpg or .png"
-            data = self._nsImage.TIFFRepresentation()
+            data = self.rasterize().TIFFRepresentation()
             if format != 'tiff':
                 imgType = imgTypes[format]
                 rep = NSBitmapImageRep.imageRepWithData_(data)
