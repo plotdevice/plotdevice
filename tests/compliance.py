@@ -53,6 +53,7 @@ def basictext(x, y):
     align(LEFT)
 
 def textblock(x, y):
+    align(LEFT)
     stroke(0)
     nofill()
     rect(x, y-12, 50, 50)
@@ -83,6 +84,8 @@ def textblock(x, y):
     fill(0)
     text("Lorem ipsum dolor sit amet, consectetuer adipiscing elit.", x, y, width=50, height=50)
 
+    align(LEFT)
+    
 def grays(x, y):
     nostroke()
     colormode(RGB)
@@ -131,6 +134,7 @@ def cmykColors(x, y):
     x = _clr(x, y, 1,0,0,0)
     x = _clr(x, y, 1,1,0,0)
     x = _clr(x, y, 0,1,1,0)
+    x = _clr(x, y, 1,0,1,0)
     x = _clr(x, y, 1,1,1,0)
     x = _clr(x, y, 0,0,0,0)
 
