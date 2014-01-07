@@ -3,40 +3,36 @@
 """
 task.py
 
-Headless renderer for command line tasks when run from the module rather than an app bundle. 
+Simple renderer for command line scripts when run from the module rather than an app bundle. 
 
-This is the back-end of the console.py arg parser -- the opts dictionary is passed to the console_view
-function unless an export options was received in which case console_export is run instead.
+This is the back-end of the `nodebox` command line script in the boot subdir of the distribution
+(or the bin directory once installed). It expects the parsed args from the front-end to be passed
+as a json blob piped to stdin.
+
+If an export option was specified, the output file(s) will be generated and the script will terminate
+once disk i/o completes. Otherwise a window will open to display the script's output and will remain
+until dismissed by quitting the app or sending a ctrl-c from the console.
 """
 
 import sys
 import os
 import json
-import objc
 import select
 import signal
+import nodebox # adds pyobjc to sys.path as a side effect...
+import objc # ...otherwise this would fail
 from math import floor
 from os.path import dirname, abspath, exists, join
 from codecs import open
 from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
-
-RSRC = join(abspath(dirname(__file__)), '..', 'rsrc')
-if not exists(RSRC):
-    # hack to run in-place in sdist
-    RSRC = abspath(join(dirname(__file__), '../../build/lib.macosx-10.9-intel-2.7/nodebox/rsrc'))
+from nodebox.run import Sandbox
+from nodebox.gui import *
+from nodebox import resource_path
 STDOUT = sys.stdout
 STDERR = sys.stderr
 ERASER = '\r%s\r'%(' '*80)
-
-lib_dir = abspath('%s/../..'%dirname(__file__))
-sys.path.append(lib_dir)
-from nodebox.run import Sandbox
-from nodebox.gui import *
-
-objc.setVerbose(True)
-from pprint import pprint
 
 class ScriptApp(NSApplication):
     @classmethod
@@ -45,7 +41,7 @@ class ScriptApp(NSApplication):
         if mode=='headless':
             app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         elif mode=='windowed':
-            icon = NSImage.alloc().initWithContentsOfFile_('%s/icon.icns'%RSRC)
+            icon = NSImage.alloc().initWithContentsOfFile_(nodebox.resource_path('icon.icns'))
             app.setApplicationIconImage_(icon)
         return app
 
@@ -67,10 +63,9 @@ class ScriptAppDelegate(NSObject):
     def applicationDidFinishLaunching_(self, note):
         if self.mode=='headless':
             self.script = NodeBoxScript.alloc().initWithOpts_forMode_(self.opts, self.mode)
-            # self.script = HeadlessScript(self.opts['file'])
             self.script.export()
         elif self.mode=='windowed':
-            nib = NSData.dataWithContentsOfFile_('%s/NodeBoxScript.nib'%RSRC)
+            nib = NSData.dataWithContentsOfFile_(nodebox.resource_path('NodeBoxScript.nib'))
             ui = NSNib.alloc().initWithNibData_bundle_(nib, None)
             ok, objs = ui.instantiateNibWithOwner_topLevelObjects_(self, None)
             self.script.initWithOpts_forMode_(self.opts, self.mode)
@@ -114,6 +109,7 @@ class NodeBoxScript(NodeBoxDocument):
         win = self.graphicsView.window()
         win.setAutorecalculatesContentBorderThickness_forEdge_(True,NSMinYEdge)
         win.setContentBorderThickness_forEdge_(22.0,NSMinYEdge)
+        self.toggleStatusBar_(self) # hide status bar by default
         win.makeFirstResponder_(self.graphicsView)
 
     def windowWillClose_(self, note):
@@ -174,7 +170,7 @@ class NodeBoxScript(NodeBoxDocument):
 
     def exportProgress(self, written, total, cancelled):
         if cancelled:
-            msg = u'Export terminated…'
+            msg = u'Cancelling export…'
         else:
             width = 20
             pct = int(floor(width*written/total))

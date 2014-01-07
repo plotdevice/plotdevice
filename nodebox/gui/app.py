@@ -7,7 +7,7 @@ from Foundation import *
 from AppKit import *
 from nodebox.gui.preferences import get_default
 from nodebox.run import CommandListener
-from nodebox import util
+from nodebox import util, bundle_path
 
 class NodeBoxAppDelegate(NSObject):
     examplesMenu = None
@@ -39,7 +39,7 @@ class NodeBoxAppDelegate(NSObject):
         return newlistener.active
 
     def updateExamples(self):
-        examples_folder = os.path.join(NSBundle.mainBundle().bundlePath(), "Contents/Resources/examples")
+        examples_folder = bundle_path("Contents/Resources/examples")
         pyfiles = glob('%s/*/*.py'%examples_folder)
         categories = self.examplesMenu.submenu()
         folders = {}
@@ -80,7 +80,7 @@ class NodeBoxAppDelegate(NSObject):
     @objc.IBAction
     def generateCode_(self, sender):
         """Generate a piece of NodeBox code using OttoBot"""
-        from util.ottobot import genProgram
+        from nodebox.util.ottobot import genProgram
         controller = NSDocumentController.sharedDocumentController()
         doc = controller.newDocument_(sender)
         doc = controller.currentDocument()

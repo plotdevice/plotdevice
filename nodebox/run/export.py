@@ -7,8 +7,8 @@ from math import floor
 try:
     import cIO
 except ImportError:
-    from pprint import pprint
-    pprint(sys.path)
+    notfound = "Couldn't locate C extensions (try running `python setup.py build` before running from the source dist)."
+    raise RuntimeError(notfound)
 
 IMG_BATCH_SIZE = 8
 MOV_BATCH_SIZE = 16

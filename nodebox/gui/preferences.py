@@ -1,8 +1,9 @@
 import re
+import os
 from AppKit import *
 from Foundation import *
 from subprocess import Popen, PIPE
-import os
+from nodebox import bundle_path
 
 def get_default(label, packed=False):
     if not label.startswith('NS'):
@@ -178,9 +179,8 @@ class NodeBoxPreferencesController(NSWindowController):
             if os.path.islink(path):
                 # if it's a symlink, make sure it points to this bundle
                 tool_path = os.path.realpath(path)
-                bundle_path = NSBundle.mainBundle().bundlePath()
                 found = path
-                valid = tool_path.startswith(bundle_path)
+                valid = tool_path.startswith(bundle_path())
                 if valid: break
                 broken.append(path)
             if os.path.exists(path):
@@ -230,8 +230,7 @@ class NodeBoxPreferencesController(NSWindowController):
     def finishInstallation_(self, sender):
         should_install = sender.tag()
         if should_install:
-            bundle_path = NSBundle.mainBundle().bundlePath()
-            console_py = '%s/Contents/SharedSupport/nodebox'%bundle_path
+            console_py = bundle_path('Contents/SharedSupport/nodebox')
             pth = self.toolInstallMenu.selectedItem().title().replace('~',os.environ['HOME'])
             dirname = os.path.dirname(pth)
             try:

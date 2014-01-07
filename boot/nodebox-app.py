@@ -5,11 +5,6 @@ import AppKit
 from os.path import dirname, abspath, join
 from PyObjCTools import AppHelper
 
-# can't really see a downside to directly printing exceptions to the console (vs having main.m try
-# to catch and echo them)
-objc.setVerbose(1)
-
-
 # rather than hijacking PYTHONPATH in the .m loader, add the module + .so directory here
 sys.path.append('%s/Contents/Resources/python'%abspath(Foundation.NSBundle.mainBundle().bundlePath()))
 

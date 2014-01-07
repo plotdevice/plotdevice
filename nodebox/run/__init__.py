@@ -24,7 +24,7 @@ def stacktrace(script=None):
         stack.append(frame)
 
     # return formatted traceback as a single string (with multiple newlines)
-    return "Traceback (most recent call last):\n%s%s" % (format_list(stack), format_exception_only(etype, value))
+    return "Traceback (most recent call last):\n%s" % "".join(format_list(stack) + format_exception_only(etype, value))
 
 # make the main classes from the submodules accessible
 from nodebox.run.export import MovieExportSession, ImageExportSession
