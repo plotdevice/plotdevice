@@ -69,13 +69,14 @@
 
 		// write image data
 		[fileHandle writeData:[NSData dataWithBytesNoCopy:gif+map.data_addr length:map.data_n freeWhenDone:NO]];
-		[self.delegate performSelectorOnMainThread:@selector(_wroteFrame) withObject:nil waitUntilDone:NO];		
 
 		self.frame = nil;
 	}
 }
 
 - (GifMap)_getOffsets:(NSData *)gifData{
+	// build up a map of relevant addresses inside the gif data prepared for this frame. The various chunks
+	// will be layered into the animated gif as the next frame.
 	GifMap map;
 	memset(&map, 0, sizeof map);
 	UInt8 *gif = (UInt8 *)[gifData bytes];
@@ -162,8 +163,8 @@
 					break;
 			}
 		}
-
 	}
+
 	if (cursor[0]==kGifTrailer){
 		// Success!
 	}
@@ -174,7 +175,7 @@
 
 
 @implementation AnimatedGif
-@synthesize framesWritten;
+@synthesize framesWritten, doneWriting;
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps loop:(NSInteger)count{
 	if ((self = [super init])) {
 		if (![[NSFileManager defaultManager] fileExistsAtPath:fileName]) {
@@ -185,7 +186,8 @@
 		frameRate = 100.0/(double)fps;
 		frames = [[NSOperationQueue alloc] init];
 		frames.maxConcurrentOperationCount = 1;
-		
+		self.doneWriting = NO;
+
 		// write header
 		[fileHandle writeData:[NSData dataWithBytes:kGifHeader length:strlen(kGifHeader)]];
 		
@@ -216,10 +218,20 @@
 	gw.frame = gifImage;
 	gw.frameRate = frameRate;
 	[frames addOperation:gw];
+
+	NSInvocationOperation *wrote = [[NSInvocationOperation alloc] initWithTarget:self 
+																			                                selector:@selector(_wroteFrame) 
+																			                                  object:nil];
+	[wrote addDependency:gw];
+	[frames addOperation:wrote];
 }
 
 - (void) _wroteFrame{
 	self.framesWritten++;
+}
+
+- (void)_wroteAll{
+    self.doneWriting = YES;
 }
 
 - (void) closeFile{
@@ -227,6 +239,12 @@
 	gw.fileHandle = fileHandle;
   gw.delegate = self;
 	[frames addOperation:gw];
+
+	NSInvocationOperation *done = [[NSInvocationOperation alloc] initWithTarget:self
+	                                                                    selector:@selector(_wroteAll)
+	                                                                      object:nil];
+	[done addDependency:gw];
+	[frames addOperation:done];
 }
 
 @end

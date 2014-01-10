@@ -32,6 +32,13 @@ class Context(object):
         self._vars = []
         self._resetContext()
 
+        # default to a white background, but otherwise don't change it between iterations
+        # (scripts should be able to set the bg once in setup() and have that persist across frames)
+        self.canvas.background = self.Color(1.0)
+
+        # cache a list of all of the exportable attr names (for use when making namespaces)
+        self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_') or a.endswith('_')))
+
     def _resetContext(self):
         self._outputmode = RGB
         self._colormode = RGB
@@ -41,7 +48,6 @@ class Context(object):
         self._strokewidth = 1.0
         self._capstyle = BUTT
         self._joinstyle = MITER
-        self.canvas.background = getattr(self.canvas, 'background', self.Color(1.0))
         self._path = None
         self._autoclosepath = True
         self._transform = Transform()
@@ -587,6 +593,7 @@ class Canvas(Grob):
             grob._draw()
             
     def rasterize(self, zoom=1.0):
+        """Return an NSImage with the canvas dimensions scaled to the specified zoom level"""
         img = NSImage.alloc().initWithSize_((self.width*zoom, self.height*zoom))
         img.setFlipped_(True)
         img.lockFocus()
@@ -611,7 +618,8 @@ class Canvas(Grob):
                         "png":  NSPNGFileType,
                         "tiff": NSTIFFFileType}
             if format not in imgTypes:
-                raise NodeBoxError, "Filename should end in .pdf, .eps, .tiff, .gif, .jpg or .png"
+                badformat = "Filename should end in .pdf, .eps, .tiff, .gif, .jpg or .png"
+                raise NodeBoxError(badformat)
             data = self.rasterize().TIFFRepresentation()
             if format != 'tiff':
                 imgType = imgTypes[format]
@@ -621,9 +629,9 @@ class Canvas(Grob):
                 return data
 
     def save(self, fname, format=None):
+        """Write the current graphics objects to an image file"""
         if format is None:
-            basename, ext = os.path.splitext(fname)
-            format = ext[1:].lower() # Skip the dot
+            format = fname.rsplit('.',1)[-1].lower()
         data = self._getImageData(format)
         fname = NSString.stringByExpandingTildeInPath(fname)
         data.writeToFile_atomically_(fname, False)

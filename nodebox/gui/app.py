@@ -2,7 +2,7 @@ import sys
 import os
 import objc
 from glob import glob
-
+import nodebox
 from Foundation import *
 from AppKit import *
 from nodebox.gui.preferences import get_default
@@ -27,6 +27,7 @@ class NodeBoxAppDelegate(NSObject):
         except OSError: pass
         except IOError: pass
         self.examplesMenu = NSApp().mainMenu().itemWithTitle_('Examples')
+        nodebox.app = True
 
     def listenOnPort_(self, port):
         if self._listener and self._listener.port == port:

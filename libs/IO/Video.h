@@ -19,14 +19,15 @@
     NSInteger frameCount;
     NSOperationQueue *frames;
     NSInteger framesWritten;
+    BOOL doneWriting;
 }
-@property (nonatomic, assign) NSInteger framesWritten;
+@property (assign) NSInteger framesWritten;
+@property (assign) BOOL doneWriting;
 
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps;
 - (void)addFrame:(NSImage *)frame;
 - (void)closeFile;
-
 - (void)_wroteFrame;
-
+- (void)_wroteAll;
 @end
 

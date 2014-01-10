@@ -3,6 +3,7 @@ from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
 from math import floor
+import nodebox
 
 try:
     import cIO
@@ -31,12 +32,19 @@ class ExportSession(object):
 
     def begin(self, frames=None, pages=None, console=False):
         self.total = frames if frames is not None else pages
-        self.poll = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+        if nodebox.app:
+            # only rely on a runloop if one exists. let nodebox.script invocations handle their own timers
+            self.poll = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
                                     0.1,self,"update:",None,True)
 
+    def count(self):
+        self.written = self.writer.framesWritten()
+        return self.written, self.added
+
     def update_(self, note):
+        self.count()
+
         if self.writer:
-            self.written = self.writer.framesWritten()
             if self._progress:
                 # let the delegate update the progress bar
                 self._progress(self.written, self.total, self.cancelled)
@@ -110,7 +118,7 @@ class MovieExportSession(ExportSession):
         self.bitrate = bitrate
         self.batches = [(n, min(n+MOV_BATCH_SIZE-1,last)) for n in range(first, last+1, MOV_BATCH_SIZE)]
 
-    def add(self, canvas, frame):
+    def add(self, canvas, frame=1):
         if self.cancelled: return
         image = canvas.rasterize()
         if not self.writer:
@@ -123,7 +131,7 @@ class MovieExportSession(ExportSession):
                 self.writer.initWithFile_size_fps_loop_(self.fname, dims, self.fps, self.loop)
             else:
                 NSLog('unrecognized output format: %s' % self.format)
-                self._shutdown()
+                return self._shutdown()
         self.writer.addFrame_(image)
         self.added += 1
 

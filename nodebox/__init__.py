@@ -33,21 +33,38 @@ def resource_path(resource=None):
 
 def _startup():
     """Add the Extras directory to sys.path since every module depends on PyObjC and friends"""
-    global _startup
+    import sys
     try:
         import objc
     except ImportError:
-        import sys
         extras = '/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python'
         sys.path.extend([extras, '%s/PyObjC'%extras])
         import objc
+
+    # make sure we can find the c-extensions when run from the sdist
+    try:
+        import cGeo
+    except ImportError:
+        from os.path import abspath, dirname, join
+        from glob import glob
+        for pth in glob(join(abspath(dirname(__file__)), '../build/lib.*-2.7')):
+            sys.path.append(abspath(pth))
+            break
+        else:
+            notfound = "Couldn't locate C extension (try running `python setup.py build` before running from the source dist)."
+            raise RuntimeError(notfound)
 
     # print python exceptions to the console rather than silently failing
     import objc
     objc.setVerbose(True) 
 
     # cleanup namespace
+    global _startup
     del _startup
+
+
+# flag will be set to true if we're running inside an NSApplication
+app = False
 
 # set up sys.path and enable error logging
 _startup()

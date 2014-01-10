@@ -52,7 +52,6 @@
         if (!ok) {
             NSLog(@"Video export failed: couldn't write frame %li", (long)frameNum);
         }
-        [self.delegate performSelectorOnMainThread:@selector(_wroteFrame) withObject:nil waitUntilDone:NO];
     }
 }
 
@@ -98,7 +97,7 @@
 
 
 @implementation Video
-@synthesize framesWritten;
+@synthesize framesWritten, doneWriting;
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps{
 	if ((self = [super init])) {
 
@@ -134,6 +133,7 @@
         [videoWriter startWriting];
         [videoWriter startSessionAtSourceTime:kCMTimeZero];
         self.framesWritten = 0;
+        self.doneWriting = NO;
     }
     return self;
 }
@@ -148,6 +148,12 @@
     fw.adaptor=adaptor;
     fw.delegate=self;
     [frames addOperation:fw];
+
+    NSInvocationOperation *wrote = [[NSInvocationOperation alloc] initWithTarget:self
+                                                                        selector:@selector(_wroteFrame)
+                                                                          object:nil];
+    [wrote addDependency:fw];
+    [frames addOperation:wrote];
 }
 
 - (void)closeFile{
@@ -155,11 +161,20 @@
     fw.videoWriter = videoWriter;
     fw.videoWriterInput = videoWriterInput;
     [frames addOperation:fw];
-    // [frames waitUntilAllOperationsAreFinished];
+
+    NSInvocationOperation *done = [[NSInvocationOperation alloc] initWithTarget:self
+                                                                        selector:@selector(_wroteAll)
+                                                                          object:nil];
+    [done addDependency:fw];
+    [frames addOperation:done];
 }
         
 - (void)_wroteFrame{
-    self.framesWritten += 1;
+    self.framesWritten++;
+}
+
+- (void)_wroteAll{
+    self.doneWriting = YES;
 }
 
 
