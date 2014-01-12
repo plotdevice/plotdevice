@@ -21,10 +21,10 @@ if nodebox.app:
     __all__ = [] 
 else:
     import time, sys, re
-    from nodebox import graphics
-    from nodebox import util
     from contextlib import contextmanager
     from Quartz.PDFKit import *
+    from nodebox import graphics
+    from nodebox import util
 
     # Trivial subclass of graphics.Canvas that also resets the context when `clear` is called
     class Canvas(graphics.Canvas):

@@ -1,7 +1,7 @@
 size(800,2600)
 
 def header():
-    font("Verdana", 12)
+    font("Helvetica Neue", 12)
     text("NodeBox Compliance Tests", 20, 60)
     stroke(0)
     line(0,60,WIDTH,60)

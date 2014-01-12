@@ -6,7 +6,7 @@ import objc
 
 from nodebox import graphics
 
-MAGICVAR = "__magic_var__"
+MAGICVAR = "_n_o_d_e_b_o_x_"
 
 
 class ValueLadder:
@@ -547,7 +547,7 @@ class ExportSheet(NSObject):
         setattr(self, kind, dict(opts))
         panel.close()
         panel.setAccessoryView_(None)
-        self.document._export(kind, fname, opts)
+        self.document.exportConfig(kind, fname, opts)
 
     @objc.IBAction
     def imageFormatChanged_(self, sender):
