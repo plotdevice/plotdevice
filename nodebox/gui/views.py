@@ -6,13 +6,11 @@ import objc
 from Foundation import *
 from AppKit import *
 from Quartz import CGColorCreateGenericRGB
+from PyObjCTools import AppHelper
 from nodebox import graphics
 from nodebox.run import stacktrace
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.8, NSColor.whiteColor())
-
-class ExportCommand(NSScriptCommand):
-    pass
 
 class NodeBoxBackdrop(NSView):
     """A container that sits between the NSClipView and NodeBoxGraphicsView
@@ -92,6 +90,7 @@ class NodeBoxGraphicsView(NSView):
         self.scrollwheel = False
         self.wheeldelta = 0.0
         self._zoom = 1.0
+        self._volatile = False
         self.setFrameSize_( (graphics.DEFAULT_WIDTH, graphics.DEFAULT_HEIGHT) )
         self.setFocusRingType_(NSFocusRingTypeExterior)
         clipview = self.superview().superview()
@@ -117,9 +116,19 @@ class NodeBoxGraphicsView(NSView):
         self._raster = self.canvas.rasterize(zoom=self.zoom) if rasterize else None
         self.setNeedsDisplay_(True)
 
-    def recache(self):
-        if self.canvas:
-            self._raster = self.canvas.rasterize(zoom=self.zoom)
+    def cache(self):
+        if self.canvas and not self.volatile:
+            try:
+                self._raster = self.canvas.rasterize(zoom=self.zoom)
+            except:
+                # Display the error in the output view.
+                # (this is where invalid args passed to grobs will throw exceptions)
+                # 
+                # wait, really? won't this always be a dupe of something that was
+                # rendered during the volatile phase?
+                # 
+                errtxt = stacktrace(self.document.fileName())
+                self.document.echo([(True, errtxt)])
 
     def _get_zoom(self):
         return self._zoom
@@ -129,6 +138,18 @@ class NodeBoxGraphicsView(NSView):
         self.zoomSlider.setFloatValue_(self._zoom * 100.0)
         self.setCanvas(self.canvas, rasterize=True)
     zoom = property(_get_zoom, _set_zoom)
+
+    def _get_volatile(self):
+        return self._volatile
+    def _set_volatile(self, volatile):
+        if self._volatile == volatile:
+            return
+        self._volatile = volatile
+        if not volatile:
+            AppHelper.callLater(0.2, self.cache)
+        else:
+            self._raster = None
+    volatile = property(_get_volatile, _set_volatile)
 
     @objc.IBAction
     def dragZoom_(self, sender):
@@ -192,7 +213,7 @@ class NodeBoxGraphicsView(NSView):
         return True
 
     def drawRect_(self, rect):
-        if self._raster:
+        if self._raster and not self.volatile:
             # if the script isn't currently running (and we'll be redrawing the same grobs for a while),
             # use a cached, zoom-specific nsimage for redraws
             self._raster.drawInRect_fromRect_operation_fraction_respectFlipped_hints_(
@@ -214,7 +235,7 @@ class NodeBoxGraphicsView(NSView):
                 # Display the error in the output view.
                 # (this is where invalid args passed to grobs will throw exceptions)
                 errtxt = stacktrace(self.document.fileName())
-                document.echo((False, errtxt))
+                self.document.echo([(True, errtxt)])
             NSGraphicsContext.currentContext().restoreGraphicsState()
 
 
@@ -298,6 +319,7 @@ class Footer(NSView):
             return
         incoming = self.progressPanel if mode=='export' else self.zoomPanel
         outgoing = self.zoomPanel if mode=='export' else self.progressPanel
+        self.progressPanel.bar.setIndeterminate_(False)
 
         incoming.setAlphaValue_(0)
         incoming.setHidden_(False)
@@ -314,6 +336,9 @@ class Footer(NSView):
     def setMessage_(self, msg):
         self.progressPanel.message.setStringValue_(msg)
 
+    def wait(self):
+        self.progressPanel.bar.setIndeterminate_(True)
+
     def endModeSwitch_(self, mode):
         incoming = self.progressPanel if mode=='export' else self.zoomPanel
         outgoing = self.zoomPanel if mode=='export' else self.progressPanel
@@ -328,3 +353,85 @@ class ProgressPanel(NSView):
 class ZoomPanel(NSView):
     pass
 
+class FullscreenWindow(NSWindow):
+
+    def initWithRect_(self, fullRect):
+        super(FullscreenWindow, self).initWithContentRect_styleMask_backing_defer_(fullRect, NSBorderlessWindowMask, NSBackingStoreBuffered, True)
+        return self
+
+    def canBecomeKeyWindow(self):
+        return True
+
+class FullscreenView(NSView):
+
+    def init(self):
+        super(FullscreenView, self).init()
+        self.mousedown = False
+        self.keydown = False
+        self.key = None
+        self.keycode = None
+        self.scrollwheel = False
+        self.wheeldelta = 0.0
+        return self
+
+    def setCanvas(self, canvas):
+        self.canvas = canvas
+        self.setNeedsDisplay_(True)
+        if not hasattr(self, "screenRect"):
+            self.screenRect = NSScreen.mainScreen().frame()
+            cw, ch = self.canvas.size
+            sw, sh = self.screenRect[1]
+            self.scalingFactor = calc_scaling_factor(cw, ch, sw, sh)
+            nw, nh = cw * self.scalingFactor, ch * self.scalingFactor
+            self.scaledSize = nw, nh
+            self.dx = (sw - nw) / 2.0
+            self.dy = (sh - nh) / 2.0
+
+    def drawRect_(self, rect):
+        NSGraphicsContext.currentContext().saveGraphicsState()
+        NSColor.blackColor().set()
+        NSRectFill(rect)
+        if self.canvas is not None:
+            t = NSAffineTransform.transform()
+            t.translateXBy_yBy_(self.dx, self.dy)
+            t.scaleBy_(self.scalingFactor)
+            t.concat()
+            clip = NSBezierPath.bezierPathWithRect_( ((0, 0), (self.canvas.width, self.canvas.height)) )
+            clip.addClip()
+            self.canvas.draw()
+        NSGraphicsContext.currentContext().restoreGraphicsState()
+
+    def isFlipped(self):
+        return True
+
+    def mouseDown_(self, event):
+        self.mousedown = True
+
+    def mouseUp_(self, event):
+        self.mousedown = False
+
+    def keyDown_(self, event):
+        self.keydown = True
+        self.key = event.characters()
+        self.keycode = event.keyCode()
+
+        if self.keycode==53: # stop animating on ESC
+            NSApp().sendAction_to_from_('stopScript:', None, self)
+            
+    def keyUp_(self, event):
+        self.keydown = False
+        self.key = event.characters()
+        self.keycode = event.keyCode()
+
+    # def scrollWheel_(self, event):
+    #     self.scrollwheel = True
+    #     self.wheeldelta = event.scrollingDeltaY()
+
+    def canBecomeKeyView(self):
+        return True
+
+    def acceptsFirstResponder(self):
+        return True
+
+def calc_scaling_factor(width, height, maxwidth, maxheight):
+    return min(float(maxwidth) / width, float(maxheight) / height)

@@ -33,12 +33,19 @@ class Metadata(object):
         for k in self.__slots__:
             yield k, getattr(self, k)
 
+class Delegate(object):
+    """No-op sandbox delegate that will be used by default if a delegate isn't specified"""
+    def exportStatus(self, status, canvas=None):
+        pass
+    def exportProgress(self, written, total, cancelled):
+        pass
+
 class Sandbox(object):
 
     def __init__(self, delegate=None):
         self._env = {}          # the base namespace for the script (with all the gfx routines)
         self._meta = None       # runtime opts for the script
-        self._script = None     # file path to the active script
+        self._path = None       # file path to the active script
         self._source = None     # unicode contents of script
         self._code = None       # byte-compiled source
         self.canvas = None      # can be handed off to views or exporters to access the image
@@ -51,24 +58,22 @@ class Sandbox(object):
         # set up the graphics plumbing
         self.canvas = graphics.Canvas()
         self.context = graphics.Context(self.canvas, self.namespace)
-        self.delegate = delegate
+        self.delegate = delegate or Delegate()
 
         # create a clean env to use as a template during runs
-        re_private = re.compile(r'^_|_$')
-        self._env.update( (a,getattr(graphics,a)) for a in graphics.__all__  )
-        self._env.update( (a,getattr(util,a)) for a in util.__all__  )
-        self._env.update( (a,getattr(self.context,a)) for a in dir(self.context) if not re_private.search(a) )
+        for module in graphics, util, self.context:
+            self._env.update( (a,getattr(module,a)) for a in module.__all__  )
         self._env["_ctx"] = self.context
         self._meta = Metadata(args=[], virtualenv=None, first=1, next=1, last=None, running=False, console=None, loop=False)
 
     # .script
-    def _get_script(self):
+    def _get_path(self):
         """Path to the current python script (r/w)"""
-        return self._script
-    def _set_script(self, pth):
-        if pth==self._script: return
-        self._script = pth
-    script = property(_get_script, _set_script)
+        return self._path
+    def _set_path(self, pth):
+        if pth==self._path: return
+        self._path = pth
+    path = property(_get_path, _set_path)
 
     # .source
     def _get_source(self):
@@ -138,7 +143,8 @@ class Sandbox(object):
         if not self._code:
             # Compile the script
             def compileScript():
-                self._code = compile("%s\n\n"%self._source, self._script.encode('ascii', 'ignore'), "exec")
+                scriptname = self._path or "<Untitled>"
+                self._code = compile("%s\n\n"%self._source, scriptname.encode('ascii', 'ignore'), "exec")
             result = self.call(compileScript)
             if not result.ok:
                 return result
@@ -150,10 +156,9 @@ class Sandbox(object):
         return result
 
     def stop(self):
-        """Called once the script has stop running (voluntarily or otherwise)"""
+        """Called once the script has stopped running (voluntarily or otherwise)"""
         # print "stopping at", self._meta.next-1, "of", self._meta.last
         result = Outcome(True, [])
-        # if not self._meta.last or self._meta.next-1 == self._meta.last:
         if self._meta.running:
             result = self.call("stop")
             self._meta.running = False
@@ -177,7 +182,6 @@ class Sandbox(object):
 
         # Initalize the magicvar
         # self.namespace[MAGICVAR] = self.magicvar
-        # print "render frame %i (%s)" % (self._meta.next, method)
 
         # Set the frame/pagenum
         self.namespace['PAGENUM'] = self.namespace['FRAME'] = self._meta.next
@@ -186,15 +190,16 @@ class Sandbox(object):
         result = self.call(method)
 
         if self.animated:
-            # flag that we're starting a new animation
-            if method==None:
-                self._meta.running = True                 
-            # tick the frame ahead after each draw call
+            if method is None:
+                # If no method was specified, we're in the initial pass through the script
+                # so flag the run as having begun
+                self._meta.running = True
             elif method=='draw':
+                # tick the frame ahead after each draw call
                 self._meta.next+=1
                 if self._meta.next > self._meta.last and self._meta.loop:
                     self._meta.next = self._meta.first
-
+        
         return result
 
     def call(self, method=None):
@@ -225,11 +230,11 @@ class Sandbox(object):
         if self.stationery:
             scriptDir = dirname(self.stationery)
             scriptName = basename(self.stationery)
-        elif not self._script:
+        elif not self._path:
             scriptDir = os.getenv("HOME")
             scriptName = "<untitled>"
         else:
-            scriptName = self._script
+            scriptName = self._path
             scriptDir = dirname(scriptName)
 
         # save the external runtime environment
@@ -254,7 +259,7 @@ class Sandbox(object):
             method()
         except:
             # print the stacktrace and quit
-            errtxt = stacktrace(self._script)
+            errtxt = stacktrace(self._path)
             sys.stderr.write(errtxt)
             return Outcome(False, output.data)
         finally:
@@ -330,9 +335,10 @@ class Sandbox(object):
                     return self._finishExport()
                 self.session.add(self.canvas, i)
 
-                # give the runloop a chance to collect events (rather than just beachballing)
-                date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
-                NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
+            # give the runloop a chance to collect events (rather than just beachballing)
+            # though note that this only happens between batches, not within
+            date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
+            NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
 
         if self.session.batches:
             # keep running _runExportBatch until we run out of batches

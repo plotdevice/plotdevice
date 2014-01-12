@@ -99,7 +99,7 @@ class NodeBoxScript(NodeBoxDocument):
         self.opts = opts
         self.windowed = mode=='windowed'
         self.vm = Sandbox(self)
-        self.vm.script = opts['file']
+        self.vm.path = opts['file']
         self.vm.source = self.source()
         return self
 
@@ -116,7 +116,7 @@ class NodeBoxScript(NodeBoxDocument):
         NSApp().terminate_(self)
 
     def fileName(self):
-        return self.vm.script
+        return self.vm.path
 
     def source(self):
         return open(self.opts['file'], encoding='utf-8').read()
@@ -141,14 +141,6 @@ class NodeBoxScript(NodeBoxDocument):
             stream.write(data)
             stream.flush()
 
-    def _export(self, kind, fname, opts):
-        """Override NodeBoxDocument's behavior for windowed mode"""
-        if self.animationTimer is not None:
-            self.stopScript()
-        self.opts.update(opts)
-        self.opts['export'] = fname
-        self.export()
-
     def export(self):
         opts = dict(self.opts)
         fname = opts['export']
@@ -158,6 +150,14 @@ class NodeBoxScript(NodeBoxDocument):
         # pick the right kind of output (single movie vs multiple docs)
         kind = 'movie' if opts['format'] in ('mov','gif') else 'image'
         self.vm.export(kind, fname, opts)
+
+    def exportConfig(self, kind, fname, opts):
+        """Override NodeBoxDocument's behavior for windowed mode"""
+        if self.animationTimer is not None:
+            self.stopScript()
+        self.opts.update(opts)
+        self.opts['export'] = fname
+        self.export()
 
     def exportStatus(self, status, canvas=None):
         if status.ok:
@@ -199,6 +199,7 @@ if __name__ == '__main__':
         print "bad args"
         sys.exit(1)
 
+    nodebox.app = True
     app = ScriptApp.sharedApplicationForMode_(mode)
     delegate = ScriptAppDelegate.alloc().initWithOpts_forMode_(opts, mode)
     app.setDelegate_(delegate)

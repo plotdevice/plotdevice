@@ -15,6 +15,7 @@ from nodebox.run import Sandbox
 from nodebox.gui.editor import PyDETextView, OutputTextView
 from nodebox.gui.preferences import get_default, getBasicTextAttributes
 from nodebox.gui.widgets import DashboardController, ExportSheet, MAGICVAR
+from nodebox.gui.views import FullscreenWindow, FullscreenView
 from nodebox import util, graphics
 
 NSEventGestureAxisVertical = 2
@@ -67,7 +68,7 @@ class NodeBoxDocument(NSDocument):
 
         self.graphicsView.zoomLevel.cell().setHighlightsBy_(NSContentsCellMask)
         self.graphicsView.zoomLevel.cell().setShowsStateBy_(NSContentsCellMask)
-        
+
         # would like to set:
         #   win.setRestorationClass_(NodeBoxDocument)
         # but the built-in pyobjc can't deal with the block arg in:
@@ -88,11 +89,13 @@ class NodeBoxDocument(NSDocument):
         self.outputView.superview().superview().addFloatingSubview_forAxis_(self.animationSpinner,NSEventGestureAxisVertical)
         x = self.outputView.frame().size.width - 17
         self.animationSpinner.setFrame_(((x,3),(16,16)))
+        self.toggleStatusBar_(self)
  
     def autosavesInPlace(self):
         return True
 
     def close(self):
+        self.graphicsView = None
         self.stopScript()
         super(NodeBoxDocument, self).close()
 
@@ -103,7 +106,7 @@ class NodeBoxDocument(NSDocument):
         self.textView.setString_(source)
 
     def cancelOperation_(self, sender):
-        self.stopScript()
+        self.stopScript()        
 
     def _updateWindowAutosave(self):
         if self.path and self.textView: # don't try to access views until fully loaded
@@ -200,7 +203,7 @@ class NodeBoxDocument(NSDocument):
         self.path = url.fileSystemRepresentation()
         self._updateWindowAutosave()
         if self.vm:
-            self.vm.script = self.path
+            self.vm.path = self.path
 
     def readFromFile_ofType_(self, path, tp):
         if self.textView is None:
@@ -225,7 +228,7 @@ class NodeBoxDocument(NSDocument):
             self._updateWindowAutosave()
             self.setSource_(text.decode("utf-8"))
             self.textView.usesTabs = "\t" in text
-            self.vm.script = path
+            self.vm.path = path
             self.vm.source = text.decode("utf-8")
 
     # 
@@ -273,6 +276,9 @@ class NodeBoxDocument(NSDocument):
         if self.animationTimer is not None:
             self.stopScript()
 
+        # disable double buffering during the run (stopScript reënables it)
+        self.graphicsView.volatile = True
+
         # execute the script
         if not self.cleanRun():
             # syntax error. bail out before looping
@@ -292,13 +298,12 @@ class NodeBoxDocument(NSDocument):
             # Start the timer
             self.animationTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
                 1.0 / self.vm.speed, self, objc.selector(self.doFrame, signature="v@:@"), None, True)
+            
             # Start the spinner
             self.animationSpinner.startAnimation_(None)
         else:
-            self.vm.stop()
-            focus = self.textView or self.graphicsView
-            focus.window().makeFirstResponder_(focus)
-            self.graphicsView.recache()
+            # clean up after successful non-animated run
+            self.stopScript()
 
     def cleanRun(self, method=None):
         self.animationSpinner.startAnimation_(None)
@@ -341,7 +346,7 @@ class NodeBoxDocument(NSDocument):
     def doFrame(self):
         ok = self.fastRun("draw")
         if not ok or not self.vm.running:
-            self.stopScript()                
+            self.stopScript()
 
     def echo(self, output):
         """Pass a list of (isStdErr, txt) tuples to the output window"""
@@ -359,11 +364,13 @@ class NodeBoxDocument(NSDocument):
     def exportAsMovie_(self, sender):
         self.exportSheet.beginExport('movie')
 
-    def _export(self, kind, fname, opts):
+    def exportConfig(self, kind, fname, opts):
         """Begin actual export (invoked by self.exportSheet unless sheet was cancelled)"""
         self.vm.source = self.source()
         if self.animationTimer is not None:
             self.stopScript()
+        if not self._showFooter:
+            self.toggleStatusBar_(self)
 
         if kind=='image' and opts['last'] == opts['first']:
             self.runScript()
@@ -384,10 +391,6 @@ class NodeBoxDocument(NSDocument):
         if status.ok:
             # display the canvas
             self.currentView.setCanvas(canvas)
-            self.graphicsView.setNeedsDisplay_(True)
-            # give the runloop a chance to collect events (rather than just beachballing)
-            date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
-            NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
         else:
             # we're done, either because of an error or because the export is complete
             failed = status.ok is False # whereas None means successful
@@ -397,7 +400,8 @@ class NodeBoxDocument(NSDocument):
     def exportProgress(self, written, total, cancelled):
         label = self.footer.progressPanel.message
         if cancelled:
-            self.footer.setMessage_(u'Export terminated…')
+            self.footer.setMessage_(u'Cancelling export…')
+            self.footer.wait()
         else:
             bar = self.footer.progressPanel.bar
             bar.setMaxValue_(total)
@@ -417,6 +421,7 @@ class NodeBoxDocument(NSDocument):
         result = self.vm.stop() 
         self.echo(result.output)
 
+        # disable ui feedback and return from fullscreen (if applicable)
         self.animationSpinner.stopAnimation_(None)
         if self.animationTimer is not None:
             self.animationTimer.invalidate()
@@ -425,15 +430,23 @@ class NodeBoxDocument(NSDocument):
             self.currentView = self.graphicsView
             self.fullScreen = None
             NSMenu.setMenuBarVisible_(True)
-        elif self.graphicsView:
-            self.graphicsView.recache()
         NSCursor.unhide()
-        focus = self.textView or self.graphicsView
-        focus.window().makeFirstResponder_(focus)
-        focus.window().makeKeyAndOrderFront_(self)
 
+        # try to send the cursor to the editor
+        focus = self.textView or self.graphicsView
+        if focus:
+            focus.window().makeFirstResponder_(focus)
         if self.textView:
             self.textView.hideValueLadder()
+
+        # bring the window forward (to recover from fullscreen mode) and re-cache the graphics
+        if self.graphicsView:
+            # note that graphicsView is nulled out in self.close_ before we're called.
+            # otherwise the makeKey will cause a double-flicker before the window disappears
+            focus.window().makeKeyAndOrderFront_(self)
+            self.graphicsView.volatile = False
+
+        # end any ongoing export cleanly
         if self.vm.session:
             self.vm.session.cancel()
 
@@ -483,88 +496,6 @@ class NodeBoxDocument(NSDocument):
         if self.fullScreen is not None: return
         self.graphicsView.zoomToFit_(sender)
 
-class FullscreenWindow(NSWindow):
-
-    def initWithRect_(self, fullRect):
-        super(FullscreenWindow, self).initWithContentRect_styleMask_backing_defer_(fullRect, NSBorderlessWindowMask, NSBackingStoreBuffered, True)
-        return self
-
-    def canBecomeKeyWindow(self):
-        return True
-
-class FullscreenView(NSView):
-
-    def init(self):
-        super(FullscreenView, self).init()
-        self.mousedown = False
-        self.keydown = False
-        self.key = None
-        self.keycode = None
-        self.scrollwheel = False
-        self.wheeldelta = 0.0
-        return self
-
-    def setCanvas(self, canvas):
-        self.canvas = canvas
-        self.setNeedsDisplay_(True)
-        if not hasattr(self, "screenRect"):
-            self.screenRect = NSScreen.mainScreen().frame()
-            cw, ch = self.canvas.size
-            sw, sh = self.screenRect[1]
-            self.scalingFactor = calc_scaling_factor(cw, ch, sw, sh)
-            nw, nh = cw * self.scalingFactor, ch * self.scalingFactor
-            self.scaledSize = nw, nh
-            self.dx = (sw - nw) / 2.0
-            self.dy = (sh - nh) / 2.0
-
-    def drawRect_(self, rect):
-        NSGraphicsContext.currentContext().saveGraphicsState()
-        NSColor.blackColor().set()
-        NSRectFill(rect)
-        if self.canvas is not None:
-            t = NSAffineTransform.transform()
-            t.translateXBy_yBy_(self.dx, self.dy)
-            t.scaleBy_(self.scalingFactor)
-            t.concat()
-            clip = NSBezierPath.bezierPathWithRect_( ((0, 0), (self.canvas.width, self.canvas.height)) )
-            clip.addClip()
-            self.canvas.draw()
-        NSGraphicsContext.currentContext().restoreGraphicsState()
-
-    def isFlipped(self):
-        return True
-
-    def mouseDown_(self, event):
-        self.mousedown = True
-
-    def mouseUp_(self, event):
-        self.mousedown = False
-
-    def keyDown_(self, event):
-        self.keydown = True
-        self.key = event.characters()
-        self.keycode = event.keyCode()
-
-        if self.keycode==53: # stop animating on ESC
-            NSApp().sendAction_to_from_('stopScript:', None, self)
-
-    def keyUp_(self, event):
-        self.keydown = False
-        self.key = event.characters()
-        self.keycode = event.keyCode()
-
-    # def scrollWheel_(self, event):
-    #     self.scrollwheel = True
-    #     self.wheeldelta = event.scrollingDeltaY()
-
-    def canBecomeKeyView(self):
-        return True
-
-    def acceptsFirstResponder(self):
-        return True
-
-def calc_scaling_factor(width, height, maxwidth, maxheight):
-    return min(float(maxwidth) / width, float(maxheight) / height)
 
 def errorAlert(msgText, infoText):
     # Force NSApp initialisation.
