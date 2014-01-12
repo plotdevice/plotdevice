@@ -1,6 +1,8 @@
+import re
+from AppKit import NSFontManager, NSFont, NSMacOSRomanStringEncoding
 from random import choice
 
-__all__ = ('grid', 'random', 'choice', 'files', 'autotext', '_copy_attr', '_copy_attrs')
+__all__ = ('grid', 'random', 'choice', 'files', 'fonts', 'autotext', '_copy_attr', '_copy_attrs')
 
 ### Utilities ###
 
@@ -64,6 +66,27 @@ def files(path="*"):
     if not type(path)==unicode:
         path = path.decode('utf-8')
     return glob(path)
+
+def fonts(like=None, western=True):
+    """Returns a list of all fonts installed on the system (with filtering capabilities)
+
+    If `like` is a string, only fonts whose names contain those characters will be returned.
+
+    If `western` is True (the default), fonts with non-western character sets will be omitted.
+    If False, only non-western fonts will be returned.
+    """
+    def in_region(fontname):
+        # always filter out the system menu fonts
+        if fontname.startswith('.'):
+            return False
+        # filter based on region preference
+        enc = NSFont.fontWithName_size_(fontname, 12).mostCompatibleStringEncoding()
+        if western: return enc==NSMacOSRomanStringEncoding
+        else: return enc!=NSMacOSRomanStringEncoding
+    all_fonts = [f for f in NSFontManager.sharedFontManager().availableFonts() if in_region(f)]
+    if like:
+        return [name for name in all_fonts if like.lower() in name.lower()]
+    return all_fonts
 
 def autotext(sourceFile):
     from nodebox.util.kgp import KantGenerator
