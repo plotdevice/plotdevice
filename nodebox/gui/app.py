@@ -1,3 +1,4 @@
+# encoding: utf-8
 import sys
 import os
 import objc
@@ -5,16 +6,18 @@ from glob import glob
 import nodebox
 from Foundation import *
 from AppKit import *
+from nodebox.util.fsevents import Observer, Stream
 from nodebox.gui.preferences import get_default
 from nodebox.run import CommandListener
 from nodebox import util, bundle_path
+
 
 class NodeBoxAppDelegate(NSObject):
     examplesMenu = None
 
     def awakeFromNib(self):
         self._prefsController = None
-        self._docsController = NSDocumentController.sharedDocumentController()
+        self._docsController = NodeBoxDocumentController.sharedDocumentController()
         self._listener = CommandListener(port=get_default('remote-port'))
         libDir = os.path.join(os.getenv("HOME"), "Library", "Application Support", "NodeBox")
         try:
@@ -27,7 +30,7 @@ class NodeBoxAppDelegate(NSObject):
         except OSError: pass
         except IOError: pass
         self.examplesMenu = NSApp().mainMenu().itemWithTitle_('Examples')
-        nodebox.app = True
+        nodebox.initialize('gui')
 
     def listenOnPort_(self, port):
         if self._listener and self._listener.port == port:
@@ -64,11 +67,7 @@ class NodeBoxAppDelegate(NSObject):
         doc.showWindows()
 
     def applicationWillBecomeActive_(self, note):
-        # check for filesystem changes while the app was inactive
-        for doc in self._docsController.documents():
-            url = doc.fileURL()
-            if url and os.path.exists(url.fileSystemRepresentation()):
-                doc.refresh()
+        # rescan the examples dir every time?
         self.updateExamples()
 
     @objc.IBAction
@@ -102,3 +101,77 @@ class NodeBoxAppDelegate(NSObject):
         self._listener.join()
         import atexit
         atexit._run_exitfuncs()
+
+
+def set_timeout(target, sel, delay, info=None, repeat=False):
+    return NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(delay, target, sel, info, repeat)
+
+class NodeBoxDocumentController(NSDocumentController):
+    _observer = None # fsevents thread
+    _stream = None   # current fsevents session
+    _resume = None   # timer (to update the observer's path list)
+    _update = None   # timer (to stat the files in checklist)
+    watching = {}    # keys are dirs, vals are lists of file paths within the dir
+    checklist = {0}  # files within dirs that had change notifications
+
+    def init(self):
+        nc = NSNotificationCenter.defaultCenter()
+        nc.addObserver_selector_name_object_(self, 'updateWatchList:', 'watch', None)
+        self._observer = Observer()
+        self._observer.start()
+        return super(NodeBoxDocumentController, self).init()
+
+    def addDocument_(self, doc):
+        super(NodeBoxDocumentController, self).addDocument_(doc)
+        self.updateWatchList_(None)
+
+    def removeDocument_(self, doc):
+        super(NodeBoxDocumentController, self).removeDocument_(doc)
+        self.updateWatchList_(None)
+
+    def updateWatchList_(self, note):
+        if self._resume:
+            self._resume.invalidate()
+        self._resume = set_timeout(self, "keepWatching:", 0.2)
+
+    def keepWatching_(self, timer):
+        self._resume = None
+        if self._stream:
+            self._observer.unschedule(self._stream)
+            self._stream = None
+
+        urls = [doc.fileURL() for doc in self.documents()]
+        paths = [u.fileSystemRepresentation() for u in urls if u]
+        self.watching = {}
+        for p in paths:
+            dirname = os.path.dirname(p)
+            files = self.watching.get(dirname, [])
+            self.watching[dirname] = files + [p]
+
+        if self.watching:
+            self._stream = Stream(self.fileEvent, *set(self.watching.keys()))
+            self._observer.schedule(self._stream)
+
+    def fileEvent(self, path, event):
+        path = path.rstrip('/')
+        if path in self.watching:
+            changed = self.watching[path]
+            if not all(p in self.checklist for p in changed):
+                self.checklist.update(changed)
+                if self._update:
+                    self._update.invalidate()
+                self._update = set_timeout(self, "checkFiles:", 0.25)
+
+    def checkFiles_(self, timer):
+        self.performSelectorOnMainThread_withObject_waitUntilDone_("updateCheckList", None, True)
+        self._update = None
+
+    def updateCheckList(self):
+        for doc in self.documents():
+            pth = doc.fileURL().fileSystemRepresentation()
+            if pth in self.checklist:
+                time = os.path.getmtime(pth)
+                if time != doc.mtime:
+                    doc.refresh()
+        self.checklist = set()
+

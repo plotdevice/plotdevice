@@ -48,7 +48,7 @@ class NodeBoxDocument(NSDocument):
         self.currentView = None
         self.stationery = None
         self.__doc__ = {}
-        self._fileMD5 = None
+        self.mtime = None
         self._showFooter = True
         return self
 
@@ -90,7 +90,7 @@ class NodeBoxDocument(NSDocument):
         x = self.outputView.frame().size.width - 17
         self.animationSpinner.setFrame_(((x,3),(16,16)))
         self.toggleStatusBar_(self)
- 
+
     def autosavesInPlace(self):
         return True
 
@@ -179,11 +179,15 @@ class NodeBoxDocument(NSDocument):
         """Reload source from file if it has been modified while the app was inactive"""
         if os.path.exists(self.path):
             try:
-                filehash = md5(file(self.path).read()).digest()
-                if filehash != self._fileMD5:
+                mtime = os.path.getmtime(self.path)
+                if mtime != self.mtime:
+                    print "reload", self.path
+                    url = NSURL.fileURLWithPath_(self.path)
                     self.revertToContentsOfURL_ofType_error_(url, self.fileType(), None)
                     if self._live:
                         self.runScript()
+                else:
+                    print "unchanged"
             except IOError:
                 pass
 
@@ -197,10 +201,16 @@ class NodeBoxDocument(NSDocument):
     # 
     def setFileURL_(self, url):
         super(NodeBoxDocument, self).setFileURL_(url)
+
         if not url: 
             self.path = None
             return
-        self.path = url.fileSystemRepresentation()
+        pth = url.fileSystemRepresentation()
+        if self.path != pth:
+            print "new name for", pth
+            nc = NSNotificationCenter.defaultCenter()
+            nc.postNotificationName_object_("watch", None)
+        self.path = pth
         self._updateWindowAutosave()
         if self.vm:
             self.vm.path = self.path
@@ -216,20 +226,24 @@ class NodeBoxDocument(NSDocument):
 
     def writeToFile_ofType_(self, path, tp):
         text = self.source().encode("utf8")
-        self._fileMD5 = md5(text).digest()
-        with file(path, 'w') as f:
+        with file(path, 'w', 0) as f:
             f.write(text)
         return True
 
     def readFromUTF8(self, path):
         with file(path) as f:
             text = f.read()
-            self._fileMD5 = md5(text).digest()
+            self.mtime = os.path.getmtime(path)
             self._updateWindowAutosave()
             self.setSource_(text.decode("utf-8"))
             self.textView.usesTabs = "\t" in text
             self.vm.path = path
             self.vm.source = text.decode("utf-8")
+
+    def saveToURL_ofType_forSaveOperation_error_(self, url, type, op, err):
+        ok = super(NodeBoxDocument, self).saveToURL_ofType_forSaveOperation_error_(url, type, op, err)
+        self.mtime = os.path.getmtime(self.path)
+        return ok
 
     # 
     # Running the script in the main window
@@ -238,8 +252,6 @@ class NodeBoxDocument(NSDocument):
         self._live = opts['live']
         self.vm.metadata = opts
         # meta = dict( (k, opts[k]) for k in ['args', 'virtualenv', 'live', 'first', 'last', 'console'] )
-        # self._live = meta['live']
-        # self.vm.metadata = meta
         self.refresh()
 
         if opts['fullscreen']:
@@ -282,7 +294,7 @@ class NodeBoxDocument(NSDocument):
         # execute the script
         if not self.cleanRun():
             # syntax error. bail out before looping
-            self.vm.stop()
+            self.vm.stop(live=self._live)
         elif self.vm.animated:
             # Check whether we are dealing with animation
             if 'draw' not in self.vm.namespace:
@@ -418,7 +430,7 @@ class NodeBoxDocument(NSDocument):
 
     def stopScript(self):
         # run stop() method if the script defines one
-        result = self.vm.stop() 
+        result = self.vm.stop(live=self._live)
         self.echo(result.output)
 
         # disable ui feedback and return from fullscreen (if applicable)

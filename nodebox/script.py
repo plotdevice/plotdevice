@@ -20,6 +20,9 @@ if nodebox.app:
     # become a no-op if imported inside the NodeBox app or command line tool
     __all__ = [] 
 else:
+    # configure the module for non-gui use
+    nodebox.initialize('headless')
+
     import time, sys, re
     from contextlib import contextmanager
     from Quartz.PDFKit import *

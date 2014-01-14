@@ -19,11 +19,13 @@ import os
 import json
 import select
 import signal
-import nodebox # adds pyobjc to sys.path as a side effect...
-import objc # ...otherwise this would fail
 from math import floor
 from os.path import dirname, abspath, exists, join
 from codecs import open
+
+import nodebox
+nodebox.initialize('gui') # adds pyobjc to sys.path as a side effect...
+import objc # ...otherwise this would fail
 from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
@@ -77,6 +79,8 @@ class ScriptAppDelegate(NSObject):
             self._wc.setWindowFrameAutosaveName_('nodebox:%s'%self.opts['file'])
             self._wc.showWindow_(self)
 
+            self._watch = NodeBoxScriptReloader.alloc().initWithScript_(self.script)
+
             if opts['activate']:
                 NSApp().activateIgnoringOtherApps_(True)
             AppHelper.callAfter(self.script.runScript)
@@ -93,6 +97,18 @@ class ScriptAppDelegate(NSObject):
     def done(self, quit=False):
         if self.mode=='headless' or quit:
             NSApp().terminate_(None)
+
+from nodebox.gui.app import NodeBoxDocumentController
+class NodeBoxScriptReloader(NodeBoxDocumentController):
+    def initWithScript_(self, doc):
+        self._script = doc
+        self._observer = Observer()
+        self._observer.start()
+        self.updateWatchList_(None)
+        return self
+        
+    def documents(self):
+        return [self._script]
 
 class NodeBoxScript(NodeBoxDocument):
     def initWithOpts_forMode_(self, opts, mode):
@@ -120,6 +136,10 @@ class NodeBoxScript(NodeBoxDocument):
 
     def source(self):
         return open(self.opts['file'], encoding='utf-8').read()
+
+    def refresh(self):
+        if self.opts.get('live'):
+            self.runScript()
 
     def runScript(self):
         self.vm.source = self.source()
@@ -199,7 +219,6 @@ if __name__ == '__main__':
         print "bad args"
         sys.exit(1)
 
-    nodebox.app = True
     app = ScriptApp.sharedApplicationForMode_(mode)
     delegate = ScriptAppDelegate.alloc().initWithOpts_forMode_(opts, mode)
     app.setDelegate_(delegate)

@@ -155,7 +155,7 @@ class Sandbox(object):
         self.canvas.speed = None
         return result
 
-    def stop(self):
+    def stop(self, live=False):
         """Called once the script has stopped running (voluntarily or otherwise)"""
         # print "stopping at", self._meta.next-1, "of", self._meta.last
         result = Outcome(True, [])
@@ -163,7 +163,7 @@ class Sandbox(object):
             result = self.call("stop")
             self._meta.running = False
         self._meta.first, self._meta.last = (1,None)
-        if self._meta.console:
+        if self._meta.console and not live:
             self._meta.console.put(None)
             self._meta.console = None
         return result

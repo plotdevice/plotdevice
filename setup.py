@@ -73,7 +73,8 @@ ext_modules = [
     Extension('cGeo', ['libs/cGeo/cGeo.c'], **quiet),
     Extension('cPathmatics', ['libs/pathmatics/pathmatics.c'], **quiet),
     Extension('cPolymagic', ['libs/polymagic/gpc.c', 'libs/polymagic/polymagic.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation'], **quiet),
-    Extension('cIO', ['libs/IO/module.m','libs/IO/Installer.m', 'libs/IO/ImageSequence.m', 'libs/IO/AnimatedGif.m', 'libs/IO/Video.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation', '-framework', 'Security', '-framework', 'AVFoundation', '-framework', 'CoreMedia', '-framework', 'CoreVideo'], **quiet)
+    Extension('cIO', ['libs/IO/module.m','libs/IO/Installer.m', 'libs/IO/ImageSequence.m', 'libs/IO/AnimatedGif.m', 'libs/IO/Video.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation', '-framework', 'Security', '-framework', 'AVFoundation', '-framework', 'CoreMedia', '-framework', 'CoreVideo'], **quiet),
+    Extension('cEvents', ['libs/macfsevents/_fsevents.c', 'libs/macfsevents/compat.c'], extra_link_args = ["-framework","CoreFoundation", "-framework","CoreServices"], **quiet),
 ]
 
 plist={
@@ -124,6 +125,19 @@ class CleanCommand(Command):
         os.system('rm -rf ./build ./dist')
         os.system('rm -rf ./libs/*/build')
 
+from distutils.command.build_ext import build_ext
+class BuildExtCommand(build_ext):
+    def run(self):
+        # let the real build_ext routine do its thing
+        build_ext.run(self)
+
+        if not BUILD_APP:
+            self.mkpath('%s/nodebox/ext'%self.build_lib)
+            for ext in self.extensions:
+                src = "%s/%s.so"%(self.build_lib, ext.name)
+                dst = "%s/nodebox/ext/%s.so"%(self.build_lib, ext.name)
+                self.move_file(src, dst)
+
 from distutils.command.build_py import build_py
 class BuildCommand(build_py):
     def run(self):
@@ -171,7 +185,8 @@ if BUILD_APP:
             # put the module and .so files in a known location (primarily so the
             # tool can find task.py)
             self.copy_tree('%s/nodebox'%TOP, '%s/python/nodebox'%RSRC)
-            self.copy_tree('%s/lib/python2.7/lib-dynload'%RSRC, '%s/python'%RSRC)
+            # self.mkpath('%s/python/nodebox/ext'%RSRC)
+            self.copy_tree('%s/lib/python2.7/lib-dynload'%RSRC, '%s/python/nodebox/ext'%RSRC)
             # find $TOP/nodebox -name \*pyc -exec rm {} \;
 
             # install the documentation
@@ -245,6 +260,7 @@ if __name__=='__main__':
         cmdclass={
             'clean': CleanCommand,
             'build_py': BuildCommand,
+            'build_ext': BuildExtCommand,
         },
     ))
 

@@ -32,6 +32,7 @@
 		2A294481185E596800E9F650 /* grobs.py in Copy nodebox.graphics */ = {isa = PBXBuildFile; fileRef = 2A29447D185E595000E9F650 /* grobs.py */; };
 		2A294484185E617900E9F650 /* NodeBox Help in Resources */ = {isa = PBXBuildFile; fileRef = 2A294482185E617900E9F650 /* NodeBox Help */; };
 		2A3DB1F7187E85190062635B /* script.py in Copy nodebox root */ = {isa = PBXBuildFile; fileRef = 2A3DB1F5187E85130062635B /* script.py */; };
+		2A4812E71884AF3B00B47700 /* fsevents.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 2A4812E51884AF3100B47700 /* fsevents.py */; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
 		2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */; };
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
@@ -153,6 +154,7 @@
 				611CC57B10BA8FA800B55455 /* ottobot.py in Copy nodebox.util */,
 				611CC57D10BA8FA800B55455 /* PyFontify.py in Copy nodebox.util */,
 				611CC58110BA8FA800B55455 /* vdiff.py in Copy nodebox.util */,
+				2A4812E71884AF3B00B47700 /* fsevents.py in Copy nodebox.util */,
 			);
 			name = "Copy nodebox.util";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -200,6 +202,7 @@
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		2A3DB1F5187E85130062635B /* script.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = script.py; sourceTree = "<group>"; };
+		2A4812E51884AF3100B47700 /* fsevents.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = fsevents.py; sourceTree = "<group>"; };
 		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		2A827CC91859E9FE00A126BA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = ../../../../../../usr/lib/libpython2.7.dylib; sourceTree = "<group>"; };
@@ -412,6 +415,7 @@
 				611CC4DA10BA8C1B00B55455 /* ottobot.py */,
 				611CC4DC10BA8C1B00B55455 /* PyFontify.py */,
 				611CC4E010BA8C1B00B55455 /* vdiff.py */,
+				2A4812E51884AF3100B47700 /* fsevents.py */,
 			);
 			path = util;
 			sourceTree = "<group>";
@@ -557,7 +561,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cp -R -p build/libs/* \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python\"\n";
+			shellScript = "EXT_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/nodebox/ext\"\nmkdir -p $EXT_DIR\ncp -R -p build/libs/* $EXT_DIR\n";
 		};
 		61DB840F10BEABCF003F73B9 /* Make Dist */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -742,7 +746,7 @@
 				INFOPLIST_FILE = "boot/NodeBox-Info.plist";
 				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = NodeBox;
@@ -767,7 +771,7 @@
 				INFOPLIST_FILE = "boot/NodeBox-Info.plist";
 				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = NodeBox;
 			};
