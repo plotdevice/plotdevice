@@ -31,8 +31,17 @@ def resource_path(resource=None):
         return join(rsrc_root, resource)
     return rsrc_root
 
-def _startup():
-    """Add the Extras directory to sys.path since every module depends on PyObjC and friends"""
+app = None
+def initialize(mode='headless'):
+    """Add c-extensions & Extras directories to sys.path and enable error logging"""
+    
+    # make sure repeated calls don't keep running the setup routine
+    global app
+    if app is not None: return
+    app = {'headless':False, 'gui':True}.get(mode)
+    if app is None: return
+
+    # add the Extras directory to sys.path since every module depends on PyObjC and friends    
     import sys
     try:
         import objc
@@ -41,30 +50,21 @@ def _startup():
         sys.path.extend([extras, '%s/PyObjC'%extras])
         import objc
 
+    # add the ext subdir to the path so we can access the c-extensions
+    from os.path import abspath, dirname, join, isdir
+    from glob import glob
+    for extdir in [join(dirname(abspath(__file__)), "ext")] + glob(join(abspath(dirname(__file__)), '../build/lib.*-2.7/nodebox/ext')):
+        if isdir(extdir):
+            sys.path.append(extdir)
+            break
+
     # make sure we can find the c-extensions when run from the sdist
     try:
         import cGeo
     except ImportError:
-        from os.path import abspath, dirname, join
-        from glob import glob
-        for pth in glob(join(abspath(dirname(__file__)), '../build/lib.*-2.7')):
-            sys.path.append(abspath(pth))
-            break
-        else:
-            notfound = "Couldn't locate C extension (try running `python setup.py build` before running from the source dist)."
-            raise RuntimeError(notfound)
+        notfound = "Couldn't locate C extension (try running `python setup.py build` before running from the source dist)."
+        raise RuntimeError(notfound)
 
     # print python exceptions to the console rather than silently failing
     import objc
     objc.setVerbose(True) 
-
-    # cleanup namespace
-    global _startup
-    del _startup
-
-
-# flag will be set to true if we're running inside an NSApplication
-app = False
-
-# set up sys.path and enable error logging
-_startup()
