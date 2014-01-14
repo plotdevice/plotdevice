@@ -128,28 +128,29 @@ class CleanCommand(Command):
 from distutils.command.build_ext import build_ext
 class BuildExtCommand(build_ext):
     def run(self):
-        # let the real build_ext routine do its thing
-        build_ext.run(self)
+        # c-extensions post-build hook:
+        #   - move all the .so files out of the top-level directory
 
-        if not BUILD_APP:
-            self.mkpath('%s/nodebox/ext'%self.build_lib)
-            for ext in self.extensions:
-                src = "%s/%s.so"%(self.build_lib, ext.name)
-                dst = "%s/nodebox/ext/%s.so"%(self.build_lib, ext.name)
-                self.move_file(src, dst)
+        build_ext.run(self) # first let the real build_ext routine do its thing
+        if BUILD_APP: return # py2app moves the libraries to lib-dynload instead
+        self.mkpath('%s/nodebox/ext'%self.build_lib)
+        for ext in self.extensions:
+            src = "%s/%s.so"%(self.build_lib, ext.name)
+            dst = "%s/nodebox/ext/%s.so"%(self.build_lib, ext.name)
+            self.move_file(src, dst)
 
 from distutils.command.build_py import build_py
 class BuildCommand(build_py):
     def run(self):
-        # let the real build_py routine do its thing
-        build_py.run(self)
-
-        # include some ui resources for running a script from the command line
-        if not BUILD_APP:
-            rsrc_dir = '%s/nodebox/rsrc'%self.build_lib
-            self.mkpath(rsrc_dir)
-            self.spawn(['/usr/bin/ibtool','--compile', '%s/NodeBoxScript.nib'%rsrc_dir, "Resources/English.lproj/NodeBoxScript.xib"])
-            self.copy_file("Resources/NodeBoxFile.icns", '%s/icon.icns'%rsrc_dir)
+        # nodebox module post-build hook:
+        #   - include some ui resources for running a script from the command line
+        
+        build_py.run(self) # first let the real build_py routine do its thing
+        if BUILD_APP: return # the app bundle doesn't need the NodeBoxScript nib
+        rsrc_dir = '%s/nodebox/rsrc'%self.build_lib
+        self.mkpath(rsrc_dir)
+        self.spawn(['/usr/bin/ibtool','--compile', '%s/NodeBoxScript.nib'%rsrc_dir, "Resources/English.lproj/NodeBoxScript.xib"])
+        self.copy_file("Resources/NodeBoxFile.icns", '%s/icon.icns'%rsrc_dir)
         
 if BUILD_APP:
     # virtualenv doesn't include pyobjc, py2app, etc. in the sys.path for some reason, so make sure 
@@ -185,7 +186,6 @@ if BUILD_APP:
             # put the module and .so files in a known location (primarily so the
             # tool can find task.py)
             self.copy_tree('%s/nodebox'%TOP, '%s/python/nodebox'%RSRC)
-            # self.mkpath('%s/python/nodebox/ext'%RSRC)
             self.copy_tree('%s/lib/python2.7/lib-dynload'%RSRC, '%s/python/nodebox/ext'%RSRC)
             # find $TOP/nodebox -name \*pyc -exec rm {} \;
 
