@@ -1,3 +1,4 @@
+# encoding: utf-8
 from AppKit import NSFontManager
 
 from nodebox.util import random, choice
@@ -220,6 +221,37 @@ colormode(HSB)
     for i in range(random(10,20)):
         s += genStatement(ctx)
     return s
+
+def genTemplate(kind='sketch'):
+    if kind=='sketch':
+        return """# Welcome to NodeBox
+size(500, 500)
+background(1)
+text("Welcome to NodeBox", 40, 40)
+"""
+    elif kind=='anim':
+        return"""# to create an animation, call speed() with a 
+# frame-rate value. This has the side-effect of
+# running setup, draw, and stop in the pattern
+# described below:
+speed(30)
+
+# runs once before the first frame of animation
+def setup():
+    size(500, 500)
+    background(1)
+    print "start"
+
+# runs repeatedly until you cancel with ⌘.
+def draw():
+    text("Frame %i"%FRAME, 20,40)
+
+# runs once after the animation was cancelled
+def stop():
+    print "done"
+"""
+    elif kind=='ottobot':
+        return genProgram()
 
 if __name__ == '__main__':
     print genProgram()

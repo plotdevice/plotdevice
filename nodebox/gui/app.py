@@ -30,7 +30,6 @@ class NodeBoxAppDelegate(NSObject):
         except OSError: pass
         except IOError: pass
         self.examplesMenu = NSApp().mainMenu().itemWithTitle_('Examples')
-        nodebox.initialize('gui')
 
     def listenOnPort_(self, port):
         if self._listener and self._listener.port == port:
@@ -78,14 +77,14 @@ class NodeBoxAppDelegate(NSObject):
         self._prefsController.showWindow_(sender)
 
     @objc.IBAction
-    def generateCode_(self, sender):
-        """Generate a piece of NodeBox code using OttoBot"""
-        from nodebox.util.ottobot import genProgram
-        controller = NSDocumentController.sharedDocumentController()
-        doc = controller.newDocument_(sender)
-        doc = controller.currentDocument()
-        doc.setSource_(genProgram())
-        doc.runScript()
+    def newSketch_(self, sender):
+        from nodebox.util.ottobot import genTemplate
+        kind = ['sketch','anim','ottobot'][sender.tag()]        
+        doc = self._docsController.newDocument_(sender)
+        doc = self._docsController.currentDocument()
+        doc.setSource_(genTemplate(kind))
+        if kind=='ottobot':
+            doc.runScript()
 
     # @objc.IBAction
     # def showHelp_(self, sender):

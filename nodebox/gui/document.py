@@ -207,7 +207,6 @@ class NodeBoxDocument(NSDocument):
             return
         pth = url.fileSystemRepresentation()
         if self.path != pth:
-            print "new name for", pth
             nc = NSNotificationCenter.defaultCenter()
             nc.postNotificationName_object_("watch", None)
         self.path = pth
@@ -242,7 +241,8 @@ class NodeBoxDocument(NSDocument):
 
     def saveToURL_ofType_forSaveOperation_error_(self, url, type, op, err):
         ok = super(NodeBoxDocument, self).saveToURL_ofType_forSaveOperation_error_(url, type, op, err)
-        self.mtime = os.path.getmtime(self.path)
+        if self.path and os.path.exists(self.path):
+            self.mtime = os.path.getmtime(self.path)
         return ok
 
     # 
