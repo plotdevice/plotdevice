@@ -9,7 +9,7 @@ from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
 from nodebox.graphics import NodeBoxError
-# from nodebox.gui.widgets import MAGICVAR
+from nodebox.gui.widgets import MAGICVAR
 from nodebox import util
 from nodebox import graphics
 from nodebox.run.export import MovieExportSession, ImageExportSession
@@ -55,6 +55,7 @@ class Sandbox(object):
         self.session = None     # the image/movie export session (if any)
         self.stationery = False # whether the script is from the examples folder
         self.delegate = None    # object with exportStatus and exportProgress methods
+        self.magicvar = 0       # used for value ladders
 
         # set up the graphics plumbing
         self.canvas = graphics.Canvas()
@@ -138,8 +139,9 @@ class Sandbox(object):
         # Initialize the namespace
         self.namespace.clear()
         self.namespace.update(dict(self._env))
+        # self.__doc__ = {}
         # self.namespace.update(dict( __doc__=self.__doc__, ))
-        # self.namespace[MAGICVAR] = self.magicvar # Add the magic var
+        self.namespace[MAGICVAR] = self.magicvar # Add the magic var
 
         result = Outcome(True, [])
         if not self._code:
@@ -183,7 +185,7 @@ class Sandbox(object):
         self.context._resetContext()
 
         # Initalize the magicvar
-        # self.namespace[MAGICVAR] = self.magicvar
+        self.namespace[MAGICVAR] = self.magicvar
 
         # Set the frame/pagenum
         self.namespace['PAGENUM'] = self.namespace['FRAME'] = self._meta.next

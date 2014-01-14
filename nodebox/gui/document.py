@@ -14,7 +14,7 @@ from AppKit import *
 from nodebox.run import Sandbox
 from nodebox.gui.editor import PyDETextView, OutputTextView
 from nodebox.gui.preferences import get_default, getBasicTextAttributes
-from nodebox.gui.widgets import DashboardController, ExportSheet, MAGICVAR
+from nodebox.gui.widgets import DashboardController, ExportSheet
 from nodebox.gui.views import FullscreenWindow, FullscreenView
 from nodebox import util, graphics
 
@@ -32,8 +32,6 @@ class NodeBoxDocument(NSDocument):
     mainView = objc.IBOutlet()
     exportSheet = objc.IBOutlet()
 
-    magicvar = 0  # used for value ladders
-    vars = []     # script variables being set by a Dashboard panel
     path = None   # the script file
 
     def windowNibName(self):
@@ -46,7 +44,6 @@ class NodeBoxDocument(NSDocument):
         self.fullScreen = None
         self.currentView = None
         self.stationery = None
-        self.__doc__ = {}
         self.mtime = None
         self._showFooter = True
         return self
