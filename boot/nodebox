@@ -229,7 +229,10 @@ def read_and_echo(sock):
   while response:
     sys.stdout.write(response)
     sys.stdout.flush()
-    response = sock.recv(80)
+    try:
+      response = sock.recv(80)
+    except socket.error, e:
+      break # bail out on ctrl-c
 
 if __name__ == "__main__":
   main()

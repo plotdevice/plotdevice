@@ -167,7 +167,10 @@ class NodeBoxDocumentController(NSDocumentController):
 
     def updateCheckList(self):
         for doc in self.documents():
-            pth = doc.fileURL().fileSystemRepresentation()
+            url = doc.fileURL()
+            if not url: continue
+            
+            pth = url.fileSystemRepresentation()
             if pth in self.checklist:
                 time = os.path.getmtime(pth)
                 if time != doc.mtime:

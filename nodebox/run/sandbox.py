@@ -51,6 +51,7 @@ class Sandbox(object):
         self.canvas = None      # can be handed off to views or exporters to access the image
         self.context = None     # quartz playground
         self.namespace = {}     # a mutable copy of _env with the user script's functions mixed in
+        self.live = False       # whether to keep the output pipe open between runs
         self.session = None     # the image/movie export session (if any)
         self.stationery = False # whether the script is from the examples folder
         self.delegate = None    # object with exportStatus and exportProgress methods
@@ -98,6 +99,7 @@ class Sandbox(object):
         return dict(self._meta.items())
     def _set_meta(self, metadict):
         self._meta.update(metadict)
+        self.live = metadict.get('live', self.live)
     metadata = property(_get_meta, _set_meta)
 
     @property
@@ -155,7 +157,7 @@ class Sandbox(object):
         self.canvas.speed = None
         return result
 
-    def stop(self, live=False):
+    def stop(self):
         """Called once the script has stopped running (voluntarily or otherwise)"""
         # print "stopping at", self._meta.next-1, "of", self._meta.last
         result = Outcome(True, [])
@@ -163,7 +165,7 @@ class Sandbox(object):
             result = self.call("stop")
             self._meta.running = False
         self._meta.first, self._meta.last = (1,None)
-        if self._meta.console and not live:
+        if self._meta.console and not self.live:
             self._meta.console.put(None)
             self._meta.console = None
         return result

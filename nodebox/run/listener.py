@@ -94,7 +94,7 @@ class CommandListener(Thread):
             dc.openDocumentWithContentsOfURL_display_error_(url, True, None)
             for doc in dc.documents():
                 if doc.fileURL() and doc.fileURL().isEqualTo_(url):
-                    doc._live = False
+                    doc.vm.live = False
                     doc.stopScript()
 
 

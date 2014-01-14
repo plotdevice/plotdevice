@@ -32,7 +32,6 @@ class NodeBoxDocument(NSDocument):
     mainView = objc.IBOutlet()
     exportSheet = objc.IBOutlet()
 
-    _live = False # whether to re-render the graphic when the script changes
     magicvar = 0  # used for value ladders
     vars = []     # script variables being set by a Dashboard panel
     path = None   # the script file
@@ -184,7 +183,7 @@ class NodeBoxDocument(NSDocument):
                     print "reload", self.path
                     url = NSURL.fileURLWithPath_(self.path)
                     self.revertToContentsOfURL_ofType_error_(url, self.fileType(), None)
-                    if self._live:
+                    if self.vm.live:
                         self.runScript()
                 else:
                     print "unchanged"
@@ -249,9 +248,7 @@ class NodeBoxDocument(NSDocument):
     # Running the script in the main window
     # 
     def scriptedRun(self, opts):
-        self._live = opts['live']
         self.vm.metadata = opts
-        # meta = dict( (k, opts[k]) for k in ['args', 'virtualenv', 'live', 'first', 'last', 'console'] )
         self.refresh()
 
         if opts['fullscreen']:
@@ -294,7 +291,7 @@ class NodeBoxDocument(NSDocument):
         # execute the script
         if not self.cleanRun():
             # syntax error. bail out before looping
-            self.vm.stop(live=self._live)
+            self.vm.stop()
         elif self.vm.animated:
             # Check whether we are dealing with animation
             if 'draw' not in self.vm.namespace:
@@ -430,7 +427,7 @@ class NodeBoxDocument(NSDocument):
 
     def stopScript(self):
         # run stop() method if the script defines one
-        result = self.vm.stop(live=self._live)
+        result = self.vm.stop()
         self.echo(result.output)
 
         # disable ui feedback and return from fullscreen (if applicable)
