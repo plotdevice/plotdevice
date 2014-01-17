@@ -11,7 +11,7 @@
 # - Mac OS X 10.9+
 # - py2app or xcode or just pip
 # - PyObjC (should be in /System/Library/Frameworks/Python.framework/Versions/2.7/Extras)
-# - cPathMatics, cGeo, cIO, & polymagic (included in the "libs" folder)
+# - cPathMatics, cGeo, cIO, cEvent, & polymagic (included in the "libs" folder)
 
 import sys,os
 from distutils.dir_util import remove_tree
