@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Libraries: photobot.Layer.pixels.convolute()</title>
+  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+
+    <h3>photobot.Layer.pixels.convolute()</h3>
+  </div>
+
+  <div class="article">
+    <h2>Syntax</h2>
+    <pre class="python">canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="s">pixels</span>.<span class="s">convolute</span><span class="s">(</span>kernel, <span class="kw">scale</span>=<span class="kw">None</span>, offset=<span class="s">0</span><span class="s">)</span>
+</pre>
+
+    <h2>Description</h2>
+
+    <p>A <em>convolution kernel</em> is a matrix that transforms pixels. Essentially, such a matrix
+    can be used to define custom filters, the central pixel in the matrix derives its new value
+    from the surrounding pixels multiplied by the weights in the matrix.
+
+    </p><p>The <em>kernel</em> parameter is a list of either 9 (3x3) or 25 (5x5) integer or
+    floating-point numbers.
+
+    </p><h2>Example</h2>
+
+    <p>A simple convolution kernel is the Gaussian blur:
+    </p><pre class="python">kernel = <span class="s">[</span><span class="s">0</span>, <span class="s">1</span>, <span class="s">0</span>,
+          <span class="s">1</span>, <span class="s">4</span>, <span class="s">1</span>,
+          <span class="s">0</span>, <span class="s">1</span>, <span class="s">0</span><span class="s">]</span>
+ 
+<span class="kw">import</span> photobot
+canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
+canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"robot.jpg"</span><span class="s">)</span>
+canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">pixels</span>.<span class="s">convolute</span><span class="s">(</span>kernel<span class="s">)</span>
+</pre>
+  </div>
+
+</body></html>

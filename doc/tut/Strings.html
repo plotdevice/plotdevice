@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Tutorials: Strings</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
+    <h3>Strings</h3>
+
+    <ul class="chapter">
+      <li><a href="Repetition.html">Repetition →</a>
+
+      </li><li>Chapter 7
+
+      </li><li><a href="Lists.html">← Lists</a>
+    </li></ul>
+  </div>
+
+  <div class="article">
+    <p><a href="Variables.html">Variables</a> often store pieces of text, called <em>strings</em>,
+    that will be drawn to the screen.
+
+    </p><p>When a piece of text, a string, is assigned to a variable, it needs to be <strong>wrapped in
+    quotes</strong>; it needs to start and end with a quote. Otherwise NodeBox might think the
+    piece of text is the name of a variable, or something else.
+
+    </p><p>Consider the following example:
+    </p><pre class="python">hello = <span class="s">20</span>
+<span class="s">str</span> = hello
+<span class="kw">print</span> <span class="s">str</span>
+&gt;&gt;&gt; <span class="s">20</span>
+ 
+<span class="s">str</span> = <span class="str">"hello"</span>
+<span class="kw">print</span> <span class="s">str</span>
+&gt;&gt;&gt; hello
+</pre>
+
+    <h2>Strings are lists of characters</h2>
+
+    <p>A string is like a <a href="Lists.html">list</a> of individual characters. This way, you
+    could access each character in the string like any other list. In the example below, I make
+    handy use of this feature by selecting random characters from the <em>chars</em> string with
+    the <a href="../ref/Utility.html#choice()">choice()</a> command and drawing them to the screen
+    <a href="http://www.joshuadavis.com">Joshua Davis</a>-style.
+
+    </p><p> 
+
+    </p><p><span class="media"><img alt="" height="510" src="media/strings-characters.jpg" width="667"/></span>
+
+    </p><p> 
+
+    </p><h2>Manipulating strings</h2>
+
+    <p>Strings have a number of very useful methods:
+
+    </p><ul>
+      <li><em>string</em>.upper(): returns the string in uppercase.
+
+      </li><li><em>string</em>.lower(): returns the string in lowercase.
+
+      </li><li><em>string</em>.capitalize(): returns the string with the first character capitalized.
+
+      </li><li><em>string</em>.find(<em>text</em>, start=0): returns the index position of <em>text</em>
+      in the string.
+
+      </li><li><em>string</em>.replace(<em>old</em>, <em>new</em>): replaces all <em>old</em> text in
+      the string with <em>new</em>
+
+      </li><li><em>string</em>.split(): returns the string as a list of words.
+
+      </li><li><em>string</em>.join(<em>list</em>): concatenates a list of words.
+    </li></ul>
+
+    <p>Strings can be converted to uppercase and lowercase with the <em>upper()</em> and
+    <em>lower()</em> methods, or have the first character capitalized with <em>capitalize</em>.
+    Remember, these are methods, so instead of saying <em>str = upper(str)</em> you need to say
+    <em>str = str.upper()</em>.
+    </p><pre class="python"><span class="s">str</span> = <span class="str">"Kumquats, Kumquats! I must have my Kumquats! - Oscar Wilde"</span>
+<span class="s">str</span> = <span class="s">str</span>.<span class="s">upper</span><span class="s">(</span><span class="s">)</span> 
+<span class="kw">print</span> <span class="s">str</span> 
+&gt;&gt;&gt; KUMQUATS, KUMQUATS! I MUST HAVE MY KUMQUATS! - OSCAR WILDE
+</pre>
+
+    <p>The <em>replace()</em> method is especially useful when you want to filter mistakes from the
+    string, or when you want to alter portions of the content:
+    </p><pre class="python"><span class="s">str</span> = <span class="str">"Something's rotten in the state of Denmark."</span>
+<span class="s">str</span> = <span class="s">str</span>.<span class="s">replace</span><span class="s">(</span><span class="str">"in"</span>, <span class="str">"in, like, "</span><span class="s">)</span>
+<span class="s">str</span> = <span class="s">str</span>.<span class="s">replace</span><span class="s">(</span><span class="str">"."</span>, <span class="str">" dude."</span><span class="s">)</span>
+<span class="s">str</span> = <span class="s">str</span>.<span class="s">replace</span><span class="s">(</span><span class="str">"rotten"</span>, <span class="str">"way uncool"</span><span class="s">)</span>
+<span class="kw">print</span> <span class="s">str</span>
+&gt;&gt;&gt; Something<span class="str">'s way uncool in, like, the state of Denmark dude.</span>
+</pre>
+
+    <h2>Quotes in quotes</h2>
+
+    <p>Text data often contain quotes themselves, especially if the text contains dialogue. When
+    NodeBox examines the string and encounters such a quote, it would logically assume that the
+    string is terminated here.
+
+    </p><p>The following example won't work, NodeBox thinks <em>(On his death bed):</em> needs to be
+    assigned to <em>str</em>, followed by garbage statements it doesn't understand:
+    </p><pre class="python"><span class="s">str</span> = <span class="str">"(On his death bed): "</span>Those curtains are hideous.<span class="str">" - Oscar Wilde"</span>
+</pre>
+
+    <p>Instead, the string needs to be wrapped in triple quotes:
+    </p><pre class="python"><span class="s">str</span> = <span class="str">""</span><span class="str">"(On his death bed): "</span>Those curtains are hideous.<span class="str">" - Oscar Wilde"</span><span class="str">""</span> 
+<span class="kw">print</span> <span class="s">str</span> 
+&gt;&gt;&gt; <span class="s">(</span>On his death bed<span class="s">)</span>: <span class="str">"Those curtains are hideous."</span> - Oscar Wilde
+</pre>
+
+    <h2>File input</h2>
+
+    <p>When you're going to use long paragraphs of text, it's better to store the text in a
+    separate text file and assign that to a variable, this keeps your script clean, and you can
+    edit the text separately from the script.
+
+    </p><p> 
+
+    </p><p><span class="media"><img alt="" height="334" src="media/strings-textedit.jpg" width="653"/></span>
+
+    </p><p><span class="media"><img alt="" height="504" src="media/strings-file.jpg" width="659"/></span>
+
+    </p><p> 
+
+    </p><p>Simply put the text in TextEdit, <strong>make it plain text</strong>, and import it into
+    your script with the <a href="../ref/Utility.html#open()">open()</a> command.
+
+    </p><h2>Unicode characters</h2>
+
+    <p><a href="http://en.wikipedia.org/wiki/Unicode">Unicode</a> is a character system that allows
+    computers to use symbols from all of the writing systems in the world. If you're going to use
+    for example <em>suomi</em> or <em>Hebrew</em> in the output of your script, you'll have to know
+    about Unicode.
+
+    </p><p>The first thing to make sure is that the <strong>typeface</strong> you are going to use
+    includes Unicode characters, so the text can be drawn in the font. Usually, large font families
+    like Helvetica include Unicode for almost any Unicode character.
+
+    </p><p>Next, you'll have to tell NodeBox that a piece of text includes special characters. This is
+    as simple as adding a "<strong>u"</strong> to the front of the string quotes.
+    </p><pre class="python"><span class="s">str</span> = u<span class="str">"?אתה מדבר אנגלית"</span>
+<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">50</span>, <span class="s">200</span><span class="s">)</span>
+</pre>
+
+    <p> 
+
+    </p><p><img alt="strings-unicode1" src="media/strings-unicode1.jpg"/>
+
+    </p><p> 
+
+    </p><p>When you are going to import text from a text file there are two things to look out for.
+    First, the text file needs to <strong>saved as Unicode</strong>. In TextEdit, apply the plain
+    text format and when you save it, select "Unicode (UTF-8)" from the Plain Text Encoding list.
+
+    </p><p> 
+
+    </p><p><img alt="strings-unicode2" src="media/strings-unicode2.jpg"/>
+
+    </p><p> 
+
+    </p><p>Then when you import the contents of the file into NodeBox, you'll have to
+    <strong>decode</strong> the text:
+    </p><pre class="python"><span class="s">str</span> = <span class="kw">open</span><span class="s">(</span><span class="str">"hebrew.txt"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
+<span class="s">str</span> = <span class="s">str</span>.<span class="s">decode</span><span class="s">(</span><span class="str">"utf-8"</span><span class="s">)</span>
+<span class="kw">align</span><span class="s">(</span><span class="kw">RIGHT</span><span class="s">)</span>
+<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">100</span>, <span class="s">200</span><span class="s">)</span>
+</pre>
+
+    <p> 
+  </p></div>
+
+</body></html>

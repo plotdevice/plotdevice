@@ -1,0 +1,490 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Tutorials: Paths</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
+    <h3>Paths</h3>
+
+    <ul class="chapter">
+      <li><a href="Color.html">Color →</a>
+
+      </li><li>Chapter 14
+
+      </li><li><a href="Interaction.html">← Interaction</a>
+    </li></ul>
+  </div>
+
+  <div class="article">
+    <ul>
+      <li><a href="Paths.html#Manipulating_Paths">Manipulating points on a path</a>
+
+      </li><li><a href="Paths.html#Path_Mathematics">Path mathematics</a>
+
+      </li><li><a href="Paths.html#Compound_paths">Compound paths: union, intersection, difference</a>
+
+      </li><li><a href="Paths.html#Clamping_paths">Clamping paths</a><br/>
+
+      </li><li><a href="Path_Filters.html">Applying filter-like effects to paths</a>
+    </li></ul>
+
+    <p>Paths in NodeBox are made up of <a href="http://en.wikipedia.org/wiki/B%e9zier_curve">Bezier
+    curves</a>. Bezier curves are commonly applied in computer graphics to draw curves. A Bezier
+    curve is defined by a starting point, an ending point, and two <i>control handles</i> that
+    describe those points' vector. The first handle describes the forward curvature of the starting
+    point, the second handle the backward curvature of the second point.
+
+    </p><p>For example:
+    </p><pre class="python"><span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+<span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
+<span class="kw">beginpath</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
+<span class="kw">curveto</span><span class="s">(</span><span class="s">150</span>, <span class="s">100</span>, <span class="s">200</span>, <span class="s">200</span>, <span class="s">50</span>, <span class="s">400</span><span class="s">)</span>
+p = <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+</pre>
+
+    <p>Draws the following curve:
+
+    </p><p><br/>
+    <span class="media"><img height="552" src="media/paths-bezier.jpg" width="552"/></span><br/>
+    <br/>
+    The path will be filled and closed by default, without a stroke color.<br/>
+    We use <a href="../ref/Color.html#nofill()">nofill()</a>, <a href="../ref/Path.html#autoclosepath()">autoclosepath()</a> and <a href="../ref/Color.html#stroke()">stroke()</a> to get a plain visualization.<br/>
+
+    </p><h2>Bezier math in NodeBox</h2>
+
+    <p>In NodeBox, you have access to all the points on a path and to all of their control handles.
+    This way, you can transform paths on the fly, and even manipulate type as well (using the
+    <a href="../ref/Typography.html#textpath()">textpath()</a> comand). Additionally, you can
+    perform a number of math operations on paths (for example finding out what the x and y
+    coordinate would be of a point halfway down the path) and unite or intersect different
+    paths.<a id="Manipulating_Paths" name="Manipulating_Paths"></a>
+
+    </p><div class="section">
+      <h3>Manipulating Paths</h3>
+
+      <p>Each of the NodeBox shape commands (<a href="../ref/Primitives.html#oval()">oval()</a>,
+      <a href="../ref/Primitives.html#rect()">rect()</a>, etc.) returns a path. This path is
+      actually <b>a list of points</b>, in which each point (or <a href="../ref/Classes.html#PathElement">PathElement</a>) has certain properties that you can
+      manipulate. This way you can retrieve or edit the coordinates for each point, the coordinates
+      of its control handles, and the kind of points you are dealing with (straight line, curve,
+      pen move).
+
+      </p><p> 
+
+      </p><table border="0">
+        <tbody>
+          <tr>
+            <td><img src="media/paths-transform1.jpg"/><br/>
+            <br/>
+            This is the path and its points returned from the textpath() command, for the character
+            <i>e</i> in the Dolly typeface:
+
+            </td><td><img src="media/paths-transform2.jpg"/><br/>
+            <br/>
+            This is the same path, but modified. The location of each point in the path is
+            translated downwards.
+
+          </td></tr><tr>
+            <td>
+              <pre class="python">
+<span class="kw">font</span><span class="s">(</span><span class="str">"Dolly-Bold"</span>, <span class="s">300</span><span class="s">)</span>
+path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"e"</span>, <span class="s">200</span>, <span class="s">200</span><span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>path<span class="s">)</span>
+</pre>
+
+            </td><td>
+              <pre class="python">
+<span class="kw">font</span><span class="s">(</span><span class="str">"Dolly-Bold"</span>, <span class="s">300</span><span class="s">)</span>
+path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"e"</span>, <span class="s">200</span>, <span class="s">200</span><span class="s">)</span>
+points = <span class="s">[</span><span class="s">]</span>
+<span class="kw">for</span> point <span class="kw">in</span> path:
+  point.<span class="s">y</span> += <span class="s">20</span> 
+  points.<span class="s">append</span><span class="s">(</span>point<span class="s">)</span> 
+  <span class="kw">drawpath</span><span class="s">(</span>points<span class="s">)</span>
+</pre>
+            </td></tr></tbody></table>
+
+      <h2>Looping through all the points</h2>
+
+      <p>As the above example shows, you can easily manipulate a path by looping through all of the
+      points in the path with a <a href="Repetition.html">for-loop</a>, before actually drawing the
+      path.
+      </p><pre class="python">path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"hello"</span>, <span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
+points = <span class="s">[</span><span class="s">]</span>
+<span class="kw">for</span> point <span class="kw">in</span> path:
+  <span class="grey"># --&gt; Manipulate points here</span>
+  points.<span class="s">append</span><span class="s">(</span>point<span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>points<span class="s">)</span>
+</pre>
+      <pre class="python"><span class="kw">beginpath</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
+<span class="kw">curveto</span><span class="s">(</span><span class="s">150</span>, <span class="s">100</span>, <span class="s">200</span>, <span class="s">200</span>, <span class="s">50</span>, <span class="s">400</span><span class="s">)</span>
+path = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw">False</span><span class="s">)</span>
+points = <span class="s">[</span><span class="s">]</span>
+<span class="kw">for</span> point <span class="kw">in</span> path:
+  <span class="grey"># --&gt; Manipulate points here</span>
+  points.<span class="s">append</span><span class="s">(</span>point<span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>points<span class="s">)</span>
+</pre>
+
+      <h2>Manipulating points</h2>
+
+      <p>Each point in the path is a <a href="../ref/Classes.html#PathElement">PathElement</a>
+      object with the following attributes:
+
+      </p><ul>
+        <li><i>point.x</i>: the x-coordinate or horizontal location.
+
+        </li><li><i>point.y</i>: the y-coordinate or vertical location.<br/>
+
+        </li><li><i>point.cmd</i>: the type of line segment, either LINETO, CURVETO, MOVETO or CLOSE,
+
+        </li><li><i>point.ctrl1.x</i>: if CURVETO, the x-coordinate of the first control handle of the
+        curve.<br/>
+
+        </li><li><i>point.ctrl1.y</i>: if CURVETO, the y-coordinate of the first control handle of the
+        curve.<br/>
+
+        </li><li><i>point.ctrl2.x</i>: the x-coordinate of the second control handle.
+
+        </li><li><i>point.ctrl2.y</i>: the y-coordinate of the second control handle.
+      </li></ul>
+
+      <p>The handles are useful for paths that consist of multiple Bezier curves. The <i>ctrl1</i>
+      handle of a point controls how the curve connects to the previous point, the <i>ctrl2</i>
+      handle how the curve connects to the next point.
+
+      </p><p>For example:
+      </p><pre class="python"><span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
+<span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
+<span class="kw">beginpath</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
+<span class="kw">curveto</span><span class="s">(</span><span class="s">150</span>, <span class="s">100</span>, <span class="s">200</span>, <span class="s">200</span>, <span class="s">150</span>, <span class="s">200</span><span class="s">)</span>
+<span class="kw">curveto</span><span class="s">(</span><span class="s">100</span>, <span class="s">200</span>, <span class="s">200</span>, <span class="s">350</span>, <span class="s">300</span>, <span class="s">300</span><span class="s">)</span>
+p = <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">print</span> p<span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">ctrl1</span>.<span class="s">x</span>
+</pre>
+
+      <p> 
+
+      </p><p><span class="media"><img height="256" src="media/paths-ctrl1.jpg" width="341"/></span>
+
+      </p><h2>Example</h2>
+
+      <p>The following example manipulates a text path, letting each curving point <i>droop</i> a
+      bit (let's hope the guys at Underware don't freak when they see what happened their beautiful
+      typeface)! Some more advanced math could create a handwritten variation of the text, or a
+      text in which character looks different each time.
+
+      </p><p><br/>
+      <span class="media"><img height="87" src="media/paths-broken.jpg" width="334"/></span><br/>
+      <br/>
+      </p><pre class="python"><span class="kw">font</span><span class="s">(</span><span class="str">"Dolly-Bold"</span>, <span class="s">100</span><span class="s">)</span>
+path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"broken"</span>, <span class="s">200</span>, <span class="s">200</span><span class="s">)</span>
+ 
+points = <span class="s">[</span><span class="s">]</span>
+<span class="kw">for</span> point <span class="kw">in</span> path:
+ 
+    <span class="kw">if</span> point.<span class="s">cmd</span> == <span class="kw">CURVETO</span>:
+        point.<span class="s">ctrl2</span>.<span class="s">x</span> += <span class="s">5</span>
+        point.<span class="s">ctrl2</span>.<span class="s">y</span> -= <span class="s">10</span>
+        point.<span class="s">y</span> += <span class="s">5</span>
+    points.<span class="s">append</span><span class="s">(</span>point<span class="s">)</span>
+ 
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>points<span class="s">)</span>
+</pre>
+    </div><a id="Path_Mathematics" name="Path_Mathematics"></a>
+
+    <div class="section">
+      <h3>Path Mathematics</h3>
+
+      <p>Paths in NodeBox consist of Bezier curves. Each curve has a starting point and an ending
+      point, and control handles. But what if we want to know the location of a point on the path
+      that is not one of these, but somewhere in between? What is the location of <b>halfway the a
+      curve</b> for example? A <a href="../ref/Classes.html#BezierPath">path</a> in NodeBox has
+      some interesting methods we can use:
+      </p><pre class="python">path.<span class="s">points</span><span class="s">(</span>amount=<span class="s">100</span><span class="s">)</span>
+</pre>
+      <pre class="python">path.<span class="s">point</span><span class="s">(</span>t<span class="s">)</span>
+</pre>
+      <pre class="python">path.<span class="s">addpoint</span><span class="s">(</span>t<span class="s">)</span>
+</pre>
+
+      <p>The <i>path.points()</i> method returns a list containing <i>amount</i> points along the
+      path. In the same way the <i>path.point()</i> method returns a single point at <i>t</i>,
+      which is a number between 0.0 and 1.0 representing the time on the path. The
+      <i>path.addpoint()</i> inserts a new point at <i>t</i> on the path.
+
+      </p><p>A path also has the following properties:
+
+      </p><ul>
+        <li><i>path.length</i>: returns the total length of the path.
+
+        </li><li><i>path.contours</i>: a list of separate contours in the path (these are paths as
+        well).<br/>
+      </li></ul>
+
+      <p>These speed-optimized commands are extremely useful when calculating orbits of animated
+      elements moving down an invisible path in an animation, when creating custom type like the
+      <a href="LetterKnitter.html">LetterKnitter</a>, when <a href="Superfolia">growing grass</a>
+      on shapes, and so on and so on.
+
+      </p><p>A special thanks goes to professor F. De Smedt at the Free University of Brussels for his
+      integration and interpolation algorithms (also check the <a href="http://en.wikipedia.org/wiki/De_Casteljau%27s_algorithm">de Casteljau's algorithm</a>).<br/>
+
+      </p><p><br/>
+      <span class="media"><img height="552" src="media/paths-t.jpg" width="552"/></span><br/>
+
+      </p><h2>Finding points on a path</h2>
+
+      <p>The example above is an illustration of how points on a path can be found with <i>t</i> (a
+      number between 0.0 and 1.0), which represents time on the path. When <i>t</i> is 0.5, this
+      means halfway the path. 0.0 is the origin of the path, 1.0 the end.
+
+      </p><p>The code:
+      </p><pre class="python"><span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+<span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
+<span class="kw">beginpath</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
+<span class="kw">curveto</span><span class="s">(</span><span class="s">150</span>, <span class="s">100</span>, <span class="s">200</span>, <span class="s">150</span>, <span class="s">150</span>, <span class="s">200</span><span class="s">)</span>
+<span class="kw">curveto</span><span class="s">(</span><span class="s">50</span>, <span class="s">250</span>, <span class="s">200</span>, <span class="s">350</span>, <span class="s">400</span>, <span class="s">400</span><span class="s">)</span>
+path = <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+ 
+<span class="kw">for</span> t <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">11</span><span class="s">)</span>:
+    pt = path.<span class="s">point</span><span class="s">(</span><span class="s">0.1</span>*t<span class="s">)</span> 
+    <span class="kw">oval</span><span class="s">(</span>pt.<span class="s">x</span><span class="s">-2</span>, pt.<span class="s">y</span><span class="s">-2</span>, <span class="s">4</span>, <span class="s">4</span><span class="s">)</span>
+</pre>
+
+      <p>And it's even easier like this:
+      </p><pre class="python"><span class="kw">for</span> pt <span class="kw">in</span> path.<span class="s">points</span><span class="s">(</span><span class="s">11</span><span class="s">)</span>:
+    <span class="kw">oval</span><span class="s">(</span>pt.<span class="s">x</span><span class="s">-2</span>, pt.<span class="s">y</span><span class="s">-2</span>, <span class="s">4</span>, <span class="s">4</span><span class="s">)</span>
+</pre>
+
+      <p>It's easy to create <b>path filters</b> this way (in analogy to image filters). Here are
+      some good <a href="Path_Filters.html">examples</a>.<br/>
+
+      </p><h2>Inserting points on a path</h2>
+
+      <p>Injecting new points in the path is equally easy:
+      </p><pre class="python"><span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
+<span class="kw">beginpath</span><span class="s">(</span><span class="s">100</span>, <span class="s">500</span><span class="s">)</span>
+<span class="kw">curveto</span><span class="s">(</span><span class="s">200</span>,<span class="s">250</span>, <span class="s">600</span>,<span class="s">600</span>, <span class="s">400</span>,<span class="s">300</span><span class="s">)</span>
+path = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw">False</span><span class="s">)</span>
+ 
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0.5</span><span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>path<span class="s">)</span>
+ 
+path.<span class="s">addpoint</span><span class="s">(</span><span class="s">0.25</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
+<span class="kw">for</span> point <span class="kw">in</span> path:
+    <span class="kw">oval</span><span class="s">(</span>point.<span class="s">x</span><span class="s">-4</span>, point.<span class="s">y</span><span class="s">-4</span>, <span class="s">8</span>, <span class="s">8</span><span class="s">)</span>
+</pre>
+
+      <p><img alt="pathmatics-split" src="media/pathmatics-split.jpg"/><br/>
+
+      </p><h2>Contours in a path</h2>
+
+      <p>A path is basically made up of <b>segments</b>: two points and the curve in between. A
+      group of segments that has a beginning and an ending, or is closed, is a <b>contour</b>.
+      Character glyphs are a composite of contours (for example: the inner and outer oval of the
+      character "o" are two contours). In typography it's often useful to get the separate
+      contours.
+      </p><pre class="python"><span class="kw">fontsize</span><span class="s">(</span><span class="s">50</span><span class="s">)</span>
+path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"contours"</span>, <span class="s">10</span>, <span class="s">100</span><span class="s">)</span>
+<span class="kw">for</span> contour <span class="kw">in</span> path.<span class="s">contours</span>:
+  <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+  <span class="kw">stroke</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">0.5</span><span class="s">)</span><span class="s">)</span>
+  <span class="kw">drawpath</span><span class="s">(</span>contour<span class="s">)</span>
+</pre>
+
+      <p><img alt="pathmatics-contours" src="media/pathmatics-contours.gif"/>
+    </p></div><a id="Compound_paths" name="Compound_paths"></a>
+
+    <div class="section">
+      <h3>Compound paths</h3>
+
+      <p>Paths in NodeBox support so-called <i>boolean</i> operations. This means you can create a
+      new c<b>ompound path from a combination of other paths</b>. This is useful if you want to
+      create a shape from a combination of other shapes (like ovals and rectangles) and then
+      flatten the group into a single path. Manipulating a single shape is much easier and faster
+      than manipulating a group of shapes.
+      </p><pre class="python">path1.<span class="s">union</span><span class="s">(</span>path2, flatness=<span class="s">0.6</span><span class="s">)</span>
+</pre>
+      <pre class="python">path1.<span class="s">intersect</span><span class="s">(</span>path2, flatness=<span class="s">0.6</span><span class="s">)</span>
+</pre>
+      <pre class="python">path1.<span class="s">difference</span><span class="s">(</span>path2, flatness=<span class="s">0.6</span><span class="s">)</span>
+</pre>
+
+      <p>Each of the three methods returns a new <a href="../ref/Classes.html#BezierPath">path</a>
+      combined from the two given paths. The way in which the new path is traced differs for each
+      method, as you can observe below:
+
+      </p><p> 
+
+      </p><table>
+        <tbody>
+          <tr>
+            <td><img alt="paths-compound1" src="media/paths-compound1.jpg"/>
+
+            </td><td>
+              <p><b>Union</b> traces and merges the two paths, removing any overlapping parts.
+              </p><pre class="python">
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+path1 = <span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
+path2 = <span class="kw">oval</span><span class="s">(</span><span class="s">90</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
+compound = path1.<span class="s">union</span><span class="s">(</span>path2<span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>compound<span class="s">)</span>
+</pre>
+
+          </td></tr><tr>
+            <td><img alt="paths-compound2" src="media/paths-compound2.jpg"/>
+
+            </td><td>
+              <p><b>Intersect</b> traces the overlapping region and removes everything else.
+              </p><pre class="python">
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+path1 = <span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
+path2 = <span class="kw">oval</span><span class="s">(</span><span class="s">90</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
+compound = path1.<span class="s">intersect</span><span class="s">(</span>path2<span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>compound<span class="s">)</span>
+</pre>
+
+              <p> 
+
+          </p></td></tr><tr>
+            <td><img alt="paths-compound3" src="media/paths-compound3.jpg"/><br/>
+
+            </td><td>
+              <p><b>Difference</b> subtracts the second shape from the first shape.
+              </p><pre class="python">
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+path1 = <span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
+path2 = <span class="kw">oval</span><span class="s">(</span><span class="s">90</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
+compound = path1.<span class="s">difference</span><span class="s">(</span>path2<span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>compound<span class="s">)</span>
+</pre>
+
+              <p> 
+
+          </p></td></tr><tr>
+            <td><img alt="paths-compound4b" src="media/paths-compound4b.jpg"/><br/>
+
+            </td><td>
+              <p> <b>XOR</b> traces non-overlapping regions, excluding any areas that overlap.
+              </p><pre class="python">
+<span class="kw">fill</span><span class="s">(</span><span class="s">0.8</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+path1 = <span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
+path2 = <span class="kw">oval</span><span class="s">(</span><span class="s">90</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
+compound = path1.<span class="s">xor</span><span class="s">(</span>path2<span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>compound<span class="s">)</span>
+</pre> 
+            </td></tr></tbody></table>
+
+      <p> 
+
+      </p><p>The returned path can be manipulated like any other path in NodeBox, you can <a href="../ref/Color.html#fill()">fill()</a> and <a href="../ref/Color.html#stroke()">stroke()</a>
+      it, <a href="../ref/Transform.html#rotate()">rotate()</a> it and put it (or multiple copies
+      of it) onscreen with <a href="../ref/Path.html#drawpath()">drawpath()</a>.
+
+      </p><p>One thing to note is that the compound path will not contain any curves, rather, it is
+      made up of numerous straight line segments (we say that the path is <b>flattened</b>)<i>.</i>
+      Each of the compound methods has an optional <i>flatness</i> parameter. The lower it gets,
+      the more line segments will be drawn (and hence the smoother the resulting shape).
+
+      </p><h2>Flattening stack</h2>
+
+      <p>With a for-loop we can keep adding new paths to the compound path. In the example below,
+      we create a number of circles varying in size, and append them to one flattened compound
+      path:
+      </p><pre class="python">compound = <span class="kw">None</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">50</span><span class="s">)</span>:
+    r = <span class="kw">random</span><span class="s">(</span><span class="s">75</span><span class="s">)</span>
+    path = <span class="kw">oval</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">300</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">200</span><span class="s">)</span>, r, r, draw=<span class="kw">False</span><span class="s">)</span>
+    <span class="kw">if</span> <span class="kw">not</span> compound:
+        compound = path
+    compound = compound.<span class="s">union</span><span class="s">(</span>path<span class="s">)</span>
+ 
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>compound<span class="s">)</span>
+</pre> 
+
+      <p><img alt="paths-compound4" src="media/paths-compound4.jpg"/>
+
+      </p><p> 
+
+      </p><h2>Using a Transform object</h2>
+
+      <p>It's easy enough to draw transformed and colored copies of the compound path, but what if
+      we want to <b>rotate and scale the individual shapes</b> before flattening them? We can use
+      the <a href="../ref/Classes.html#Transform">Transform</a> object in NodeBox for this purpose.
+      </p><pre class="python"><span class="grey"># We construct our indivual shape in the top-left corner.</span>
+<span class="grey"># This is where corner-mode transforms originate.</span>
+<span class="grey"># We'll later on place the eventual compound path </span>
+<span class="grey"># where we want it with translate().</span>
+path = <span class="kw">rect</span><span class="s">(</span><span class="s">-10</span>, <span class="s">0</span>, <span class="s">20</span>, <span class="s">100</span>, draw=<span class="kw">False</span><span class="s">)</span>
+ 
+<span class="grey"># Let's chip away small piece of the rectangle:</span>
+path = path.<span class="s">difference</span><span class="s">(</span><span class="kw">rect</span><span class="s">(</span><span class="s">-15</span>, <span class="s">80</span>, <span class="s">20</span>, <span class="s">15</span>, draw=<span class="kw">False</span><span class="s">)</span><span class="s">)</span>
+ 
+compound = path
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">17</span><span class="s">)</span>:
+    
+    <span class="grey"># Before adding the rectangle shape to</span>
+    <span class="grey"># the flattened compound, we rotate it a bit.</span>
+    t = Transform<span class="s">(</span><span class="s">)</span>
+    t.<span class="kw">rotate</span><span class="s">(</span><span class="s">20</span><span class="s">)</span>
+    path = t.<span class="s">transformBezierPath</span><span class="s">(</span>path<span class="s">)</span>
+    
+    compound = compound.<span class="s">union</span><span class="s">(</span>path<span class="s">)</span>
+ 
+<span class="kw">translate</span><span class="s">(</span><span class="s">275</span>, <span class="s">275</span><span class="s">)</span>
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>compound<span class="s">)</span>
+</pre>
+
+      <p><img alt="paths-compound5" src="media/paths-compound5.jpg"/>
+    </p></div><a id="Clamping_paths" name="Clamping_paths"></a>
+
+    <div class="section">
+      <h3>Clamping paths</h3>
+
+      <p>Paths in NodeBox can be <b>forced to fit</b> a bounding box. Then as the size of the box
+      is adjusted the path will stretch accordingly. This reverse logic is useful in some
+      situations where a path needs to exactly fit an area and we don't want to be bothered with
+      creating the shape in exactly the right proportions or at the right position.
+      </p><pre class="python">path.<span class="s">fit</span><span class="s">(</span>x=<span class="kw">None</span>, y=<span class="kw">None</span>, width=<span class="kw">None</span>, height=<span class="kw">None</span>, stretch=<span class="kw">False</span><span class="s">)</span>
+</pre>
+
+      <p>All of the parameters are optional so you can define any combination of them:
+
+      </p><ul>
+        <li><i>x</i>: the path will be positioned at the specified x value.
+
+        </li><li><i>y</i>: the path will be positioned at the specified y value.
+
+        </li><li><i>width</i>: the path will be of the specified width.
+
+        </li><li><i>height</i>: the path will be of the specified height.
+
+        </li><li><i>stretch</i>: if both width and height are defined, either stretch the path or keep
+        the aspect ratio.
+      </li></ul>
+
+      <p> 
+    </p></div>
+  </div>
+
+</body></html>

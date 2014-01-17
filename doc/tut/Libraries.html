@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Tutorials: Libraries</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
+    <h3>Libraries</h3>
+
+    <ul class="chapter">
+      <li><a href="Classes.html">Classes →</a>
+
+      </li><li>Chapter 10
+
+      </li><li><a href="Commands.html">← Commands</a>
+    </li></ul>
+  </div>
+
+  <div class="article">
+    <p>NodeBox can be extended with a wealth of functionality (for example, Google queries, or
+    image manipulation) by importing the right external libraries. All of these tools are kept
+    apart from NodeBox for the simple reason that it would make NodeBox to unwieldy and complex if
+    they would all be included.
+
+    </p><h2>Libraries from the NodeBox site</h2>
+
+    <p>The NodeBox site has a lot of interesting libraries developed in and for NodeBox, for
+    example <a href="../lib/WordNet.html">WordNet</a> functionality, or <a href="../lib/Core_Image.html">Core Image</a>, which offers PhotoShop-like commands. A list of all
+    libraries is <a href="Library">here</a>.
+
+    </p><p>To use one of these libraries, you first need to download it to your computer. Then, you
+    need to put the files somewhere where your NodeBox script can find them: <strong>in the same
+    folder as your NodeBox script</strong> or <strong>in the Application Support folder</strong>
+    <em>(~/Library/Application Support/NodeBox/).</em>
+
+    </p><p>Then, import the library into your script with the <strong>ximport()</strong> command.
+
+    </p><p>Notice how the <em>wordnet.py</em> library and the <em>pywordnet</em> folder (both came from
+    the WordNet download) are in the same folder as the <em>dictionary.py</em> script (which we
+    just created):
+
+    </p><p><br/>
+    <span class="media"><img alt="" height="391" src="media/libraries1.jpg" width="574"/></span>
+    <span class="media"><img alt="" height="520" src="media/libraries2.jpg" width="574"/></span>
+
+    </p><h2>Python libraries</h2>
+
+    <p>The scripts you write in NodeBox is in fact <a href="http://www.python.org/">Python</a>
+    code. Since Python is installed on your Mac by default, you can access and import all of
+    Python's libraries in your NodeBox projects.
+
+    </p><p>Take a look at the list of Python libraries <a href="http://docs.python.org/modindex.html">here</a>.
+
+    </p><p>You can import a library command into your script with the following statement:<br/>
+    </p><pre class="python">variable = <span class="kw">ximport</span><span class="s">(</span><span class="str">"library"</span><span class="s">)</span>
+</pre>
+
+    <p>For example, if you look at the <em>random</em> library on the above list of Python
+    libraries, you see the <em>random</em> library has a <em>shuffle()</em> command to randomly
+    reorder a <a href="Lists.html">list</a>. To use this command in a NodeBox project:
+    </p><pre class="python"><span class="s">list</span> = <span class="s">[</span><span class="s">1</span>, <span class="s">2</span>, <span class="s">3</span>, <span class="s">4</span>, <span class="s">5</span><span class="s">]</span>
+rnd = <span class="kw">ximport</span><span class="s">(</span><span class="str">"random"</span><span class="s">)</span>
+rnd.<span class="s">shuffle</span><span class="s">(</span><span class="s">list</span><span class="s">)</span> 
+<span class="kw">print</span> <span class="s">list</span>  
+&gt;&gt;&gt; <span class="s">[</span><span class="s">3</span>, <span class="s">4</span>, <span class="s">1</span>, <span class="s">5</span>, <span class="s">2</span><span class="s">]</span>
+</pre>
+
+    <p>You don't need to install any files or anything, NodeBox knows where the Python libraries
+    are.
+
+    </p><h2>For techies: why the ximport() command?</h2>
+
+    <p>We prefer <em>ximport()</em> over the <em>import</em> statement, because it takes away a
+    step of having to explain why all commands have brackets, but not <em>import</em>. Furthermore,
+    <em>ximport()</em> passes the drawing context to a referenced library so that library can draw
+    stuff to the screen.
+
+    </p><p>But for standard Python libraries, you can still use <em>import</em> and <em>from a import
+    b</em> if you like.
+  </p></div>
+
+</body></html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Tutorials: LetterKnitter</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
+    <h3>LetterKnitter</h3>
+  </div>
+
+  <div class="article">
+    <p><i>LetterKnitter</i> builds on some interesting NodeBox functionalities that allow you to
+    control each point in a Bézier spline or font glyph individually. The LetterKnitter stitches
+    and knits letters and words together, with an occasional error in the stitching process.
+
+    </p><p>LetterKnitter uses any font and text you supply it; it is not a new font, but a <i>point
+    filter</i> that works on any typeface (Dolly and Arial in the examples below), and looks
+    different each time you use it as well.
+
+    </p><p> 
+
+    </p><p><span class="media"><img height="200" src="media/letterknitter1a.jpg" width="550"/></span>
+
+    </p><p><span class="media"><img height="200" src="media/letterknitter2.jpg" width="550"/></span>
+
+    </p><p><span class="media"><img height="161" src="media/letterknitter-interface.jpg" width="323"/></span>
+
+    </p><p> 
+
+    </p><p><b>Source code:</b>
+    </p><pre class="python"><span class="kw">var</span><span class="s">(</span><span class="str">"typeface"</span>, <span class="kw">TEXT</span>, <span class="str">"Times-Bold"</span><span class="s">)</span>
+<span class="kw">var</span><span class="s">(</span><span class="str">"text"</span>, <span class="kw">TEXT</span>, <span class="str">" LetterKnitter"</span><span class="s">)</span>
+<span class="kw">var</span><span class="s">(</span><span class="str">"size"</span>, <span class="kw">NUMBER</span>, <span class="s">100</span>, <span class="s">10</span>, <span class="s">200</span><span class="s">)</span>
+<span class="kw">var</span><span class="s">(</span><span class="str">"stitches"</span>, <span class="kw">NUMBER</span>, <span class="s">700</span>, <span class="s">10</span>, <span class="s">1000</span><span class="s">)</span>
+ 
+<span class="kw">def</span> <span class="red">stitch</span><span class="s">(</span>txt, x, y, n=<span class="s">1000</span><span class="s">)</span>:
+    
+    <span class="str">""</span><span class="str">" Stitches a given string of text (with n stitches).
+    
+    Creates a text path and finds n points on the path.
+    Connects each consecutive point with a little curve.
+    Sometimes connects to a random point on the path.
+    
+    "</span><span class="str">""</span>
+    
+    p = <span class="kw">textpath</span><span class="s">(</span>txt, x, y<span class="s">)</span>
+    pt0 = p.<span class="s">point</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+    <span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
+    <span class="kw">beginpath</span><span class="s">(</span>pt0.<span class="s">x</span>, pt0.<span class="s">y</span><span class="s">)</span>
+    
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">int</span><span class="s">(</span>n<span class="s">)</span><span class="s">)</span>:    
+        t = <span class="s">float</span><span class="s">(</span>i<span class="s">)</span> / n
+        pt1 = p.<span class="s">point</span><span class="s">(</span>t<span class="s">)</span>
+        d = <span class="kw">fontsize</span><span class="s">(</span><span class="s">)</span> * <span class="s">0.05</span>
+        <span class="kw">curveto</span><span class="s">(</span>
+            pt0.<span class="s">x</span>, 
+            pt1.<span class="s">y</span>, 
+            pt1.<span class="s">x</span> + d, 
+            pt0.<span class="s">y</span> + d, 
+            pt1.<span class="s">x</span>, 
+            pt1.<span class="s">y</span>
+        <span class="s">)</span>
+        
+        <span class="kw">if</span> <span class="kw">random</span><span class="s">(</span><span class="s">)</span> &gt; <span class="s">0.995</span>:
+            pti = p.<span class="s">point</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
+            <span class="kw">curveto</span><span class="s">(</span>
+                pt0.<span class="s">x</span>, 
+                pt1.<span class="s">y</span> + d*<span class="s">10</span>, 
+                pti.<span class="s">x</span> + d, 
+                pti.<span class="s">y</span> + d, 
+                pti.<span class="s">x</span>, 
+                pti.<span class="s">y</span>
+            <span class="s">)</span>
+            
+        pt0.<span class="s">x</span> = pt1.<span class="s">x</span>
+        pt0.<span class="s">y</span> = pt1.<span class="s">y</span>
+ 
+    <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+ 
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
+<span class="kw">strokewidth</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
+ 
+<span class="kw">font</span><span class="s">(</span>typeface, <span class="kw">size</span><span class="s">)</span>
+stitch<span class="s">(</span><span class="kw">text</span>, <span class="s">50</span>, <span class="s">150</span>, n=stitches<span class="s">)</span>
+</pre>
+
+    <p> 
+
+    </p><p>The path math functions used in LetterKnitter are explained in the <a href="Paths.html#Path_Mathematics">tutorial</a>.<br/>
+    Other interesting path filters can be found <a href="Path_Filters.html">here</a>.<br/>
+
+    </p><p>Created by Tom De Smedt.
+  </p></div>
+
+</body></html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Libraries: photobot.Layer.select()</title>
+  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+
+    <h3>photobot.Layer.select()</h3>
+  </div>
+
+  <div class="article">
+    <h2>Syntax</h2>
+    <pre class="python">canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="s">select</span><span class="s">(</span>path, feather=<span class="kw">True</span><span class="s">)</span>
+</pre>
+
+    <h2>Description</h2>
+
+    <p>Applies the polygonal lasso tool on a layer. The <em>path</em> parameter is a list of
+    points, <em>either [x1, y1, x2, y2, x3, y3, ...]</em> or <em>[(x1,y1), (x2,y2), (x3,y3),
+    ...]</em>. The parts of the layer that fall outside this polygonal area are cut (read: masked).
+
+    </p><p>Selections use a <em>feather</em>, setting this parameter to False will result in jaggy
+    aliased edges.
+
+    </p><h2>Example</h2>
+    <pre class="python">photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
+canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
+canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"robot.jpg"</span><span class="s">)</span>
+path = <span class="s">[</span><span class="s">0</span>,<span class="s">0</span>, <span class="kw">random</span><span class="s">(</span><span class="s">100</span><span class="s">)</span>,<span class="kw">random</span><span class="s">(</span><span class="s">100</span><span class="s">)</span>, <span class="s">80</span>,<span class="s">20</span>, <span class="s">0</span>,<span class="s">0</span><span class="s">]</span>
+canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">select</span><span class="s">(</span>path, feather=<span class="kw">False</span><span class="s">)</span>
+</pre>
+
+    <div class="example">
+      <img alt="" height="100" src="../media/photobot-select.jpg" width="100"/>
+    </div>
+  </div>
+
+</body></html>

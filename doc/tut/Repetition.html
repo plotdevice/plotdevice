@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Tutorials: Repetition</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
+    <h3>Repetition</h3>
+
+    <ul class="chapter">
+      <li><a href="Commands.html">Commands →</a>
+
+      </li><li>Chapter 8
+
+      </li><li><a href="Strings.html">← Strings</a>
+    </li></ul>
+  </div>
+
+  <div class="article">
+    <p>Repetition is what computers are really good at; they never grow bored, you can ask them to
+    do the same thing over and over again and they will never stop liking it. And they're fast at
+    calculating too.
+
+    </p><p>This is the main advantage of software such as NodeBox, you don't have to do everything by
+    yourself again and again - <strong>once you get the first time right, just let the computer
+    handle the hundred other times</strong>.
+
+    </p><h2>The for-loop</h2>
+
+    <p>In programming terms, repetition, or doing the same thing multiple times, is generally
+    called a <em>for-loop</em>. A for-loop is like a set of hands counting fingers. But an infinite
+    number of hands, with an infinite number of fingers to count.
+
+    </p><p> 
+
+    </p><p><span class="media"><img alt="" height="511" src="media/repetition1.jpg" width="584"/></span>
+
+    </p><p> 
+
+    </p><p>The statement looks like this:
+    </p><pre class="python"><span class="kw">for</span> variable <span class="kw">in</span> <span class="s">list</span>:
+  do stuff
+</pre>
+
+    <p>Don't forget the little <strong>colon at the end</strong> of the <em>for variable in
+    list:</em> statement!
+
+    </p><h2>The <em>variable</em> part</h2>
+
+    <p>The <em>variable</em> can have any name you like (you already knew if you read about
+    <a href="Variables.html">variables</a>). This variable holds the current count of fingers. A
+    common name for it is <em>i</em>, a residue of basic math where counters are generally named
+    <em>i</em> as well.
+
+    </p><p>It's short, and it's a good convention with a long history.
+
+    </p><h2>The <em>list</em> part</h2>
+
+    <p>The <em>list</em> part is a <a href="Lists.html">list</a> of numbers or elements, of which
+    each element is consecutively assigned to the <em>variable</em>. A for-loop doesn't just count
+    fingers, it can count anhything you like, anything you put inside the list: numbers, <a href="Strings.html">strings</a>, colors, and so on.
+
+    </p><p>So if <em>list</em> where ["apple", "pear", "banana"], the commands in the for-loop would be
+    executed three times, with <em>variable</em> consecutively being <em>apple</em> the first time,
+    <em>pear</em> the second time, and <em>banana</em> the third time. Now we're counting fruit.
+    </p><pre class="python"><span class="kw">for</span> i <span class="kw">in</span> <span class="s">[</span><span class="str">"apple"</span>, <span class="str">"pear"</span>, <span class="str">"banana"</span><span class="s">]</span>:
+  <span class="kw">print</span> i
+&gt;&gt;&gt; apple
+&gt;&gt;&gt; pear
+&gt;&gt;&gt; banana
+</pre>
+
+    <p>A common thing to put here as <em>list</em> is the <strong>range(<em>n</em>)</strong>
+    command, which returns a list with numbers from 0 to <em>n</em>.
+    </p><pre class="python"><span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">3</span><span class="s">)</span>:
+    <span class="kw">print</span> i
+&gt;&gt;&gt; <span class="s">0</span>
+&gt;&gt;&gt; <span class="s">1</span>
+&gt;&gt;&gt; <span class="s">2</span>
+</pre>
+
+    <h2>The <em>do stuff</em> part</h2>
+
+    <p>The <em>do stuff</em> part are the NodeBox commands that need to be executed repeatedly.
+    They go indented (or tabbed) beneath the for-statement. The script is "trapped" in a loop here,
+    keeps executing the indented commands until each element from <em>list</em> has consecutively
+    been assigned to <em>variable</em>.
+
+    </p><p>The great thing is you can (of course) use the <em>variable</em> in each loop. Like in the
+    example above, where we had a little loop that went through all the fruit in the list and
+    printed out each piece of fruit. The <em>print i</em> is an abstract command... when NodeBox
+    goes through the loop <em>i</em> is replaced with each element in the list.
+
+    </p><p>Don't forget the little <strong>colon at the end</strong> of the <em>for variable in
+    list:</em> statement!
+
+    </p><h2>For-loops and random()</h2>
+
+    <p>For-loops and the random() work really well together. You can draw a hundred circles for
+    example, and have NodeBox place each of them at random locations. This way, each time you run
+    the script, you get a different composition of circles.
+
+    </p><p>It's easy to program a "style" with variations this way.
+    </p><pre class="python"><span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">100</span><span class="s">)</span>:
+    x = <span class="kw">random</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>
+    y = <span class="kw">random</span><span class="s">(</span><span class="kw">WIDTH</span><span class="s">)</span>
+    r = <span class="kw">random</span><span class="s">(</span><span class="s">50</span>, <span class="s">100</span><span class="s">)</span>
+    <span class="kw">oval</span><span class="s">(</span>x, y, r, r<span class="s">)</span>
+</pre>
+  </div>
+
+</body></html>

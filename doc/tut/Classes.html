@@ -1,0 +1,336 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Tutorials: Classes</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
+    <h3>Classes</h3>
+
+    <ul class="chapter">
+      <li><a href="Animation.html">Animation →</a>
+
+      </li><li>Chapter 11
+
+      </li><li><a href="Libraries.html">← Libraries</a>
+    </li></ul>
+  </div>
+
+  <div class="article">
+    <p>If you read about <a href="Variables.html">variables</a>, <a href="Repetition.html">repetition</a> and <a href="Commands.html">commands</a> you already know a
+    great deal about how to keep your code tidy and organized. Variables can be used to store data,
+    commands to manipulate data, and for-loops to do things (e.g. traverse <a href="Lists.html">lists</a>) multiple times. As you move on to bigger projects you'll probably want
+    to learn about classes as well. A class is a programming convention that defines a thing (or
+    <b>object</b>) together with all of the thing's <b>properties</b> (e.g. variables) and behavior
+    <b>methods</b> (e.g. commands). If you take a look at the source code of NodeBox libraries
+    you'll notice that they are full of classes.
+
+    </p><p>For example, a <i>Creature</i> class would consist of all the traits shared by different
+    creatures, such as <i>size, position</i>, <i>speed</i> and <i>direction</i> (properties), and
+    <i>avoid_obstacle()</i>, <i>eat_food()</i> (methods).
+
+    </p><p>We can then use the Creature class to define many different <b>instances</b> of a creature.
+    For example, an ant is a small and speedy creature that wanders around randomly looking for
+    food, avoiding obstacles by going around them. A dinosaur is also a creature, but bigger and
+    slower. It eats anything crossing its path and avoids obstacles by crashing through them.
+
+    </p><ul>
+      <li><b>class</b>: the abstract characteristics (properties and methods) of a thing.
+
+      </li><li><b>object</b>: one particular instance of a class.
+
+      </li><li><b>properties</b>: variables tied to an instance of a class.<br/>
+
+      </li><li><b>methods</b>: commands that manipulate an instance's properties.
+    </li></ul>
+
+    <p> 
+    </p><hr size="2" width="100%"/>
+
+    <h2>Class definition and initialization</h2>
+
+    <p>Each class has an <i>__init__()</i> method which is <b>executed once when an instance of the
+    class is created</b>. The <i>__init__()</i> method sets all the starting values for an object's
+    properties.
+
+    </p><p>For example, here's what a simple definition of a Creature class would look like:
+    </p><pre class="python"><span class="kw">class</span> Creature:
+    
+    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, x, y, <span class="kw">speed</span>=<span class="s">1.0</span>, <span class="kw">size</span>=<span class="s">4</span><span class="s">)</span>:
+        
+        <span class="s">self</span>.<span class="s">x</span> = x
+        <span class="s">self</span>.<span class="s">y</span> = y
+        <span class="s">self</span>.<span class="kw">speed</span> = <span class="kw">speed</span>
+        <span class="s">self</span>.<span class="kw">size</span> = <span class="kw">size</span>
+</pre>
+
+    <p>As you can see a creature has <i>x</i> and <i>y</i> properties (the location of the
+    creature) and <i>speed</i> and <i>size</i> properties (which we'll use to move the creature
+    around). All of them can be set when a new creature is "instantiated". The <i>speed</i> and
+    <i>size</i> properties have default values so they are optional.
+    </p><pre class="python">ant = Creature<span class="s">(</span><span class="s">100</span>, <span class="s">100</span>, <span class="kw">speed</span>=<span class="s">2.0</span><span class="s">)</span>
+dinosaur = Creature<span class="s">(</span><span class="s">200</span>, <span class="s">250</span>, <span class="kw">speed</span>=<span class="s">0.25</span>, <span class="kw">size</span>=<span class="s">45</span><span class="s">)</span>
+</pre>
+
+    <p>To change a property value for a creature later on we can simply do:
+    </p><pre class="python">ant.<span class="kw">speed</span> = <span class="s">2.5</span>
+</pre>
+
+    <p><u>Naming conventions:</u>
+
+    </p><ul>
+      <li>Class names use <span class="inline_code">CamelCase</span> notation.
+
+      </li><li>Properties that are only for private use inside the class start with _
+    </li></ul>
+
+    <p> 
+    </p><hr size="2" width="100%"/>
+
+    <h2>Methods and the self parameter</h2>
+
+    <p>Let's add a <i>roam()</i> method to the Creature class to move creatures around randomly. A
+    class method looks exactly like a command definition but it always takes <i>self</i> as the
+    first parameter. The <i>self</i> parameter is the current instance of the class. It allows you
+    to access all of an object's current property values and methods from inside the method.
+    </p><pre class="python"><span class="kw">class</span> Creature: 
+    
+    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, x, y, <span class="kw">speed</span>=<span class="s">1.0</span>, <span class="kw">size</span>=<span class="s">4</span><span class="s">)</span>:
+        
+        <span class="s">self</span>.<span class="s">x</span> = x
+        <span class="s">self</span>.<span class="s">y</span> = y
+        <span class="s">self</span>.<span class="kw">speed</span> = <span class="kw">speed</span>
+        <span class="s">self</span>.<span class="kw">size</span> = <span class="kw">size</span>
+        
+        <span class="s">self</span>._vx = <span class="s">0</span>
+        <span class="s">self</span>._vy = <span class="s">0</span>
+    
+    <span class="kw">def</span> <span class="red">roam</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:
+ 
+        <span class="str">""</span><span class="str">" Creature changes heading aimlessly.
+        "</span><span class="str">""</span>
+        
+        v = <span class="s">self</span>.<span class="kw">speed</span>
+        <span class="s">self</span>._vx += <span class="kw">random</span><span class="s">(</span>-v, v<span class="s">)</span>
+        <span class="s">self</span>._vy += <span class="kw">random</span><span class="s">(</span>-v, v<span class="s">)</span>
+        <span class="s">self</span>._vx = <span class="s">max</span><span class="s">(</span>-v, <span class="s">min</span><span class="s">(</span><span class="s">self</span>._vx, v<span class="s">)</span><span class="s">)</span>
+        <span class="s">self</span>._vy = <span class="s">max</span><span class="s">(</span>-v, <span class="s">min</span><span class="s">(</span><span class="s">self</span>._vy, v<span class="s">)</span><span class="s">)</span> 
+        
+        <span class="s">self</span>.<span class="s">x</span> += <span class="s">self</span>._vx
+        <span class="s">self</span>.<span class="s">y</span> += <span class="s">self</span>._vy
+</pre>
+
+    <p>So now we have added two new properties to the class, <i>_vx</i> and <i>_vy,</i> which store
+    a creature's current heading. Both property names start with an underscore because they are for
+    private use inside the class methods (e.g. no one should directly manipulate <i>ant._dx</i>
+    from the outside).
+
+    </p><p>Each time the <i>roam()</i> method is called we add or subtract something of the creature's
+    speed to the heading, like a compass twirling around randomly. We also make sure the horizontal
+    and vertical heading do not exceed the creature's speed. Otherwise the creature would start
+    going faster and faster which isn't very realistic. Finally, we update the creature's position
+    by moving it to the new heading.
+
+    </p><p>Now we can create two ants (a small fast one and a big slow one). Because their size and
+    speed differ they will roam in different ways.
+    </p><pre class="python">ant1 = Creature<span class="s">(</span><span class="s">300</span>, <span class="s">300</span>, <span class="kw">speed</span>=<span class="s">2.0</span><span class="s">)</span>
+ant2 = Creature<span class="s">(</span><span class="s">300</span>, <span class="s">300</span>, <span class="kw">speed</span>=<span class="s">0.5</span>, <span class="kw">size</span>=<span class="s">8</span><span class="s">)</span>
+ 
+<span class="kw">speed</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>
+<span class="kw">def</span> <span class="red">draw</span><span class="s">(</span><span class="s">)</span>:
+    ant1.<span class="s">roam</span><span class="s">(</span><span class="s">)</span>
+    ant2.<span class="s">roam</span><span class="s">(</span><span class="s">)</span>
+    <span class="kw">oval</span><span class="s">(</span>ant1.<span class="s">x</span>, ant1.<span class="s">y</span>, ant1.<span class="kw">size</span>, ant1.<span class="kw">size</span><span class="s">)</span>
+    <span class="kw">oval</span><span class="s">(</span>ant2.<span class="s">x</span>, ant2.<span class="s">y</span>, ant2.<span class="kw">size</span>, ant2.<span class="kw">size</span><span class="s">)</span>
+</pre>
+
+    <p><img alt="classes-creature1" src="media/classes-creature1.jpg"/>
+
+    </p><p><a href="http://nodebox.net/code/data/media/classes-creature1.mov">Play movie</a>
+
+    </p><p> 
+    </p><hr size="2" width="100%"/>
+
+    <h2>Taking it further: obstacle avoidance</h2>
+
+    <p>Now that we know the basics about classes, properties and methods we can take things a lot
+    further. We can define different classes for different things and have them interact with each
+    other.
+
+    </p><p>If we want to have our little critters avoid obstacles while wandering around, they will
+    need to have some sense of the world around them. Know where the obstacles are located. So
+    we'll need to keep track of obstacle instances. Then we'll introduce the concept of a
+    <b>feeler</b>. A feeler could be the creature's sight, hearing or antennae. Basically it is a
+    point in front of where the creature is heading. If this point falls inside an obstacle, it's
+    time for the creature to change its. direction.
+
+    </p><p><img alt="classes-creature2" src="media/classes-creature2.jpg"/>
+
+    </p><p><i>The creature is heading into an obstacle - it can touch the obstacle with its forward
+    feeler.<br/>
+    It needs to adjust its bearing clockwise to avoid the obstacle.<br/>
+    <br/></i>
+
+    </p><p><span class="orange_box">World class</span>
+
+    </p><p>We'll start out by creating a World class which we can use to store a list of obstacles.
+    Later on we can add all sorts of other stuff to the world (e.g. weather methods, colony
+    location properties, etc...).
+    </p><pre class="python"><span class="kw">class</span> World:    
+    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:        
+        <span class="s">self</span>.<span class="s">obstacles</span> = <span class="s">[</span><span class="s">]</span>
+</pre> 
+
+    <p><span class="orange_box">Obstacle class</span>
+
+    </p><p>Next we'll make an Obstacle class.<br/>
+    An obstacle in the world is a basic object that has a position and a radius.
+    </p><pre class="python"><span class="kw">class</span> Obstacle:    
+    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, x, y, radius<span class="s">)</span>:        
+        <span class="s">self</span>.<span class="s">x</span> = x
+        <span class="s">self</span>.<span class="s">y</span> = y
+        <span class="s">self</span>.<span class="s">radius</span> = radius
+</pre> 
+
+    <p><span class="orange_box">Geometry</span>
+
+    </p><p>To know if a creature is going to run into an obstacle we need to know <b>if the tip of its
+    feeler intersects with an obstacle</b>. Obviously we're going to need some math to calculate
+    the coordinates of the tip of the feeler. Luckily everything we need is already described in
+    the tutorial on <a href="Math.html">math geometry</a>. We can copy-paste the commands and add
+    them to our script:
+    </p><pre class="python"><span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> degrees, atan2
+<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sqrt, <span class="s">pow</span>
+<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> radians, sin, cos
+ 
+<span class="kw">def</span> <span class="red">angle</span><span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>:
+    <span class="str">""</span><span class="str">" Returns the angle between two points.
+    "</span><span class="str">""</span>
+    <span class="kw">return</span> degrees<span class="s">(</span> atan2<span class="s">(</span>y1-y0, x1-x0<span class="s">)</span> <span class="s">)</span>
+ 
+<span class="kw">def</span> <span class="red">distance</span><span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>:
+    <span class="str">""</span><span class="str">" Returns the distance between two points.
+    "</span><span class="str">""</span>        
+    <span class="kw">return</span> sqrt<span class="s">(</span><span class="s">pow</span><span class="s">(</span>x1-x0, <span class="s">2</span><span class="s">)</span> + <span class="s">pow</span><span class="s">(</span>y1-y0, <span class="s">2</span><span class="s">)</span><span class="s">)</span>
+ 
+<span class="kw">def</span> <span class="red">coordinates</span><span class="s">(</span>x0, y0, distance, angle<span class="s">)</span>:
+    <span class="str">""</span><span class="str">" Returns the coordinates of given distance and angle from a point.
+    "</span><span class="str">""</span>
+    <span class="kw">return</span> <span class="s">(</span>x0 + cos<span class="s">(</span>radians<span class="s">(</span>angle<span class="s">)</span><span class="s">)</span> * distance, 
+            y0 + sin<span class="s">(</span>radians<span class="s">(</span>angle<span class="s">)</span><span class="s">)</span> * distance<span class="s">)</span>
+</pre> 
+
+    <p>With the above <i>coordinates()</i> command we can:<br/>
+
+    </p><ul>
+      <li>calculate the location of a point (tip of the feeler)<br/>
+
+      </li><li>at a given distance (feeler length)<br/>
+
+      </li><li>under a given angle (creature heading)<br/>
+
+      </li><li>from a starting point (creature location).
+    </li></ul><br/>
+
+    <p><span class="orange_box">Obstacle avoidance</span>
+
+    </p><p>So first of all we'll need to add a new <i>feeler_length</i> property to the Creature class,
+    and a new <i>heading()</i> method that calculates the angle between a creature's current
+    position and its next position. We also add a new <i>world</i> property to the Creature class.
+    That way each creature has access to all the obstacles in the world. We loop through the list
+    of the world's obstacles in the <i>avoid_obstacles()</i> method.
+
+    </p><p>The <i>avoid_obstacles()</i> method will do the following:
+
+    </p><ul>
+      <li>calculate the direction angle of a creature,
+
+      </li><li>traverse all obstacles in the world,
+
+      </li><li>for each obstacle, check if it is closer than the feeler length,
+
+      </li><li>if it is, check if the coordinates of the tip of the feeler are inside the obstacle,
+
+      </li><li>and if so, steer away in the most logical direction.
+    </li></ul>
+    <pre class="python"><span class="kw">class</span> Creature:
+    
+    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, world, x, y, <span class="kw">speed</span>=<span class="s">1.0</span>, <span class="kw">size</span>=<span class="s">4</span><span class="s">)</span>:
+        
+        <span class="s">self</span>.<span class="s">x</span> = x
+        <span class="s">self</span>.<span class="s">y</span> = y
+        <span class="s">self</span>.<span class="kw">speed</span> = <span class="kw">speed</span>
+        <span class="s">self</span>.<span class="kw">size</span> = <span class="kw">size</span>
+        
+        <span class="s">self</span>.<span class="s">world</span> = world
+        <span class="s">self</span>.<span class="s">feeler_length</span> = <span class="s">25</span>
+        
+        <span class="s">self</span>._vx = <span class="s">0</span>
+        <span class="s">self</span>._vy = <span class="s">0</span>
+    
+    <span class="kw">def</span> <span class="red">heading</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:
+        
+        <span class="str">""</span><span class="str">" Returns the creature's heading as angle in degrees.
+        "</span><span class="str">""</span>
+        
+        <span class="kw">return</span> angle<span class="s">(</span><span class="s">self</span>.<span class="s">x</span>, <span class="s">self</span>.<span class="s">y</span>, <span class="s">self</span>.<span class="s">x</span>+<span class="s">self</span>._vx, <span class="s">self</span>.<span class="s">y</span>+<span class="s">self</span>._vy<span class="s">)</span>
+ 
+    <span class="kw">def</span> <span class="red">avoid_obstacles</span><span class="s">(</span><span class="s">self</span>, m=<span class="s">0.4</span>, perimeter=<span class="s">4</span><span class="s">)</span>:
+ 
+        <span class="grey"># Find out where the creature is going.</span>
+        a = <span class="s">self</span>.<span class="s">heading</span><span class="s">(</span><span class="s">)</span>
+        
+        <span class="kw">for</span> obstacle <span class="kw">in</span> <span class="s">self</span>.<span class="s">world</span>.<span class="s">obstacles</span>:
+            
+            <span class="grey"># Calculate the distance between the creature and the obstacle.</span>
+            d = distance<span class="s">(</span><span class="s">self</span>.<span class="s">x</span>, <span class="s">self</span>.<span class="s">y</span>, obstacle.<span class="s">x</span>, obstacle.<span class="s">y</span><span class="s">)</span>
+            
+            <span class="grey"># Respond faster if the creature is very close to an obstacle.</span>
+            <span class="kw">if</span> d - obstacle.<span class="s">radius</span> &lt; perimeter: m *= <span class="s">10</span>
+            
+            <span class="grey"># Check if the tip of the feeler falls inside the obstacle.</span>
+            <span class="grey"># This is never true if the feeler length </span>
+            <span class="grey"># is smaller than the distance to the obstable.</span>
+            <span class="kw">if</span> d - obstacle.<span class="s">radius</span> &lt;= <span class="s">self</span>.<span class="s">feeler_length</span>:
+                tip_x, tip_y = coordinates<span class="s">(</span><span class="s">self</span>.<span class="s">x</span>, <span class="s">self</span>.<span class="s">y</span>, d, a<span class="s">)</span>    
+                <span class="kw">if</span> distance<span class="s">(</span>obstacle.<span class="s">x</span>, obstacle.<span class="s">y</span>, 
+                            tip_x, tip_y<span class="s">)</span> &lt; obstacle.<span class="s">radius</span>:
+                    
+                    <span class="grey"># Nudge the creature away from the obstacle.</span>
+                    m *= <span class="s">self</span>.<span class="kw">speed</span>
+                    <span class="kw">if</span> tip_x &lt; obstacle.<span class="s">x</span>: <span class="s">self</span>._vx -= <span class="kw">random</span><span class="s">(</span>m<span class="s">)</span>
+                    <span class="kw">if</span> tip_y &lt; obstacle.<span class="s">y</span>: <span class="s">self</span>._vy -= <span class="kw">random</span><span class="s">(</span>m<span class="s">)</span>
+                    <span class="kw">if</span> tip_x &gt; obstacle.<span class="s">x</span>: <span class="s">self</span>._vx += <span class="kw">random</span><span class="s">(</span>m<span class="s">)</span>
+                    <span class="kw">if</span> tip_y &gt; obstacle.<span class="s">y</span>: <span class="s">self</span>._vy += <span class="kw">random</span><span class="s">(</span>m<span class="s">)</span>
+ 
+                    <span class="kw">if</span> d - obstacle.<span class="s">radius</span> &lt; perimeter: <span class="kw">return</span>
+ 
+    <span class="kw">def</span> <span class="red">roam</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:
+ 
+        <span class="str">""</span><span class="str">" Creature changes heading aimlessly.
+        With its feeler it will scan for obstacles and steer away.
+        "</span><span class="str">""</span>
+        
+        <span class="s">self</span>.<span class="s">avoid_obstacles</span><span class="s">(</span><span class="s">)</span>
+        
+        v = <span class="s">self</span>.<span class="kw">speed</span>
+        <span class="s">self</span>._vx += <span class="kw">random</span><span class="s">(</span>-v, v<span class="s">)</span>
+        <span class="s">self</span>._vy += <span class="kw">random</span><span class="s">(</span>-v, v<span class="s">)</span>
+        <span class="s">self</span>._vx = <span class="s">max</span><span class="s">(</span>-v, <span class="s">min</span><span class="s">(</span><span class="s">self</span>._vx, v<span class="s">)</span><span class="s">)</span>
+        <span class="s">self</span>._vy = <span class="s">max</span><span class="s">(</span>-v, <span class="s">min</span><span class="s">(</span><span class="s">self</span>._vy, v<span class="s">)</span><span class="s">)</span> 
+        
+        <span class="s">self</span>.<span class="s">x</span> += <span class="s">self</span>._vx
+        <span class="s">self</span>.<span class="s">y</span> += <span class="s">self</span>._vy
+</pre>
+
+    <p><img alt="classes-creature3" src="media/classes-creature3.jpg"/><br/>
+    <a href="http://nodebox.net/code/data/media/classes-creature3.mov">Play movie</a> | <a href="Obstacle_avoidance.html">view source code</a>
+
+    </p><p>Another easy example of classes is the <a href="Tendrils.html">Tendrils</a> item in the
+    gallery. 
+  </p></div>
+
+</body></html>

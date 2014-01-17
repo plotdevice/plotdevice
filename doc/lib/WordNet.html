@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Libraries: WordNet</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+
+    <h3>WordNet</h3>
+  </div>
+
+  <div class="article">
+    <h2>Description</h2>
+
+    <p><a href="http://www.cogsci.princeton.edu/~wn/">WordNet</a> is a dictionary of nouns, verbs,
+    adverbs, adjectives, and their lexical relations: definition, different interpretations,
+    category, and examples. Wordnet knows that black is the opposite of white, that birds are
+    animals.
+
+    </p><p class="pink_text"><i>This library is part of the NodeBox <a href="Linguistics.html">Linguistics</a> library. If you need more linguistical power we recommend
+    trying out that library.</i>
+
+    </p><h2>Download</h2>
+
+    <table border="0">
+      <tbody>
+        <tr>
+          <td><a href="http://nodebox.net/code/data/media/wordnet2.zip"><img alt="download" height="20" src="media/download.gif" width="20"/></a>
+
+          </td><td><a href="http://nodebox.net/code/data/media/wordnet.zip">wordnet.zip</a> (11.2MB)<br/>
+          <i>Last updated for NodeBox 1.9.2</i>
+        </td></tr></tbody></table>
+
+    <p> 
+    </p><hr/>
+
+    <h2>How to get the library up and running</h2>
+
+    <p>Put the <i>wordnet</i> library folder in the same folder as your script so NodeBox can find
+    the library. You can also put it in <i>~/Library/Application Support/NodeBox/</i> so all
+    scripts can find it.<i><br/></i>
+    </p><pre class="python">wordnet = <span class="kw">ximport</span><span class="s">(</span><span class="str">"wordnet"</span><span class="s">)</span>
+</pre> 
+    <hr/>
+
+    <h2>Documentation</h2>
+
+    <p>WordNet describes semantic relations between synonym sets.
+
+    </p><p>The <i>noun_gloss()</i> command returns the dictionary description of a word:
+    </p><pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_gloss</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
+&gt;&gt;&gt; a written work <span class="kw">or</span> composition that has been published <span class="s">(</span>printed on pages 
+&gt;&gt;&gt; bound together<span class="s">)</span>; <span class="str">"I am reading a good book on economics"</span>
+</pre>
+
+    <p>A word can have multiple senses, for example "tree" can mean a tree in a forest but also a
+    tree diagram, or a person named Sir Herbert Beerbohm Tree. Sense indices start from 0.<br/>
+    </p><pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_senses</span><span class="s">(</span><span class="str">"tree"</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="s">[</span><span class="str">'tree'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'tree'</span>, <span class="str">'tree diagram'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'Tree'</span>, <span class="str">'Sir Beerbohm Tree'</span><span class="s">]</span><span class="s">]</span>
+</pre>
+    <pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_gloss</span><span class="s">(</span><span class="str">"tree"</span>, sense=<span class="s">1</span><span class="s">)</span>
+&gt;&gt;&gt; a figure that branches <span class="kw">from</span> a single root; <span class="str">"genealogical tree"</span>
+</pre>
+
+    <p>The <i>noun_lexname()</i> command returns a categorization for the given word:
+    </p><pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_lexname</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
+&gt;&gt;&gt; communication
+</pre>
+
+    <p>The <i>noun_hyponym()</i> command returns examples of the given word:
+    </p><pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_hyponym</span><span class="s">(</span><span class="str">"vehicle"</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="s">[</span><span class="str">'bumper car'</span>, <span class="str">'Dodgem'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'craft'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'military vehicle'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'rocket'</span>, 
+&gt;&gt;&gt;  <span class="str">'projectile'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'skibob'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'sled'</span>, <span class="str">'sledge'</span>, <span class="str">'sleigh'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'steamroller'</span>, 
+&gt;&gt;&gt;  <span class="str">'road roller'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'wheeled vehicle'</span><span class="s">]</span><span class="s">]</span>
+</pre>
+    <pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_hyponym</span><span class="s">(</span><span class="str">"tree"</span>, sense=<span class="s">1</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="s">[</span><span class="str">'cladogram'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'stemma'</span><span class="s">]</span><span class="s">]</span>
+</pre>
+
+    <p>The <i>noun_hypernym()</i> command returns abstractions of the given word:
+    </p><pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_hypernym</span><span class="s">(</span><span class="str">"earth"</span><span class="s">)</span>
+<span class="kw">print</span> wordnet.<span class="s">noun_hypernym</span><span class="s">(</span><span class="str">"earth"</span>, sense=<span class="s">1</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="s">[</span><span class="str">'terrestrial planet'</span><span class="s">]</span><span class="s">]</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="s">[</span><span class="str">'material'</span>, <span class="str">'stuff'</span><span class="s">]</span><span class="s">]</span>
+</pre>
+
+    <p>You can also execute a deep query with <i>noun_hypernyms()</i> and <i>noun_hyponyms()</i>.
+    Notice how returned values become more and more abstract:
+    </p><pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_hypernyms</span><span class="s">(</span><span class="str">"vehicle"</span>, sense=<span class="s">0</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="s">[</span><span class="str">'vehicle'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'conveyance'</span>, <span class="str">'transport'</span><span class="s">]</span>, 
+&gt;&gt;&gt;  <span class="s">[</span><span class="str">'instrumentality'</span>, <span class="str">'instrumentation'</span><span class="s">]</span>, 
+&gt;&gt;&gt;  <span class="s">[</span><span class="str">'artifact'</span>, <span class="str">'artefact'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'whole'</span>, <span class="str">'unit'</span><span class="s">]</span>, 
+&gt;&gt;&gt;  <span class="s">[</span><span class="str">'object'</span>, <span class="str">'physical object'</span><span class="s">]</span>, 
+&gt;&gt;&gt;  <span class="s">[</span><span class="str">'physical entity'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'entity'</span><span class="s">]</span><span class="s">]</span>
+</pre>
+
+    <p>The <i>noun_holonym()</i> command returns components of the given word:
+    </p><pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_holonym</span><span class="s">(</span><span class="str">"computer"</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="s">[</span><span class="str">'busbar'</span>, <span class="str">'bus'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'cathode-ray tube'</span>, <span class="str">'CRT'</span><span class="s">]</span>, 
+&gt;&gt;&gt;  <span class="s">[</span><span class="str">'central processing unit'</span>, <span class="str">'CPU'</span>, <span class="str">'C.P.U.'</span>, <span class="str">'central processor'</span>, 
+&gt;&gt;&gt;   <span class="str">'processor'</span>, <span class="str">'mainframe'</span><span class="s">]</span> ...
+</pre>
+
+    <p>The <i>noun_meronym()</i> command returns the collection in which the given word can be
+    found:
+    </p><pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_meronym</span><span class="s">(</span><span class="str">"tree"</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="s">[</span><span class="str">'forest'</span>, <span class="str">'wood'</span>, <span class="str">'woods'</span><span class="s">]</span><span class="s">]</span>
+</pre>
+
+    <p>The <i>noun_antonym()</i> returns the semantic opposite of the word:
+    </p><pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_antonym</span><span class="s">(</span><span class="str">"black"</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="s">[</span><span class="str">'white'</span>, <span class="str">'whiteness'</span><span class="s">]</span><span class="s">]</span>
+</pre>
+
+    <p>Find out what two words have in common:
+    </p><pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_meet</span><span class="s">(</span><span class="str">"cat"</span>, <span class="str">"dog"</span>, sense1=<span class="s">0</span>, sense2=<span class="s">0</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="s">[</span><span class="str">'carnivore'</span><span class="s">]</span><span class="s">]</span>
+</pre>
+
+    <p>The <i>noun_absurd_gloss()</i> returns an absurd description for the word:
+    </p><pre class="python"><span class="kw">print</span> wordnet.<span class="s">noun_absurd_gloss</span><span class="s">(</span><span class="str">"typography"</span><span class="s">)</span>
+&gt;&gt;&gt; a business deal on a trivial <span class="kw">scale</span>
+</pre>
+
+    <p>The return value of a WordNet command is usually a list containing other lists of related
+    words. You can use the <i>wordnet.flatten()</i> command to flatten the list:
+    </p><pre class="python"><span class="kw">print</span> wordnet.<span class="s">flatten</span><span class="s">(</span>wordnet.<span class="s">noun_senses</span><span class="s">(</span><span class="str">"tree"</span><span class="s">)</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="str">'tree'</span>, <span class="str">'tree'</span>, <span class="str">'tree diagram'</span>, <span class="str">'Tree'</span>, <span class="str">'Sir Herbert Beerbohm Tree'</span><span class="s">]</span>
+</pre>
+
+    <p>If you want a list of all nouns/verbs/adjectives/adverbs there's the
+    <i>wordnet.all_nouns()</i>, <i>wordnet.all_verbs()</i> ... commands:
+    </p><pre class="python"><span class="kw">print</span> <span class="s">len</span><span class="s">(</span>wordnet.<span class="s">all_nouns</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">117096</span>
+</pre>
+
+    <p>All of the commands shown here for nouns are <b>also available for verbs, adjectives and
+    adverbs</b>, <i>verb_hypernyms("run")</i>, <i>djective_gloss("beautiful")</i> etc. are valid
+    commands.
+
+    </p><p> 
+    </p><hr/>
+
+    <h2>Example</h2>
+
+    <p>The NodeBox WordNet library has a small gizmo bundled in called <b><i>explode</i></b> (you
+    won't find it in the Linguistics library however)<i>.</i> You can use it to quickly visualise
+    WordNet:
+    </p><pre class="python">wordnet = <span class="kw">ximport</span><span class="s">(</span><span class="str">"wordnet"</span><span class="s">)</span>
+<span class="kw">from</span> wordnet <span class="kw">import</span> explode
+<span class="kw">font</span><span class="s">(</span><span class="str">"Georgia-BoldItalic"</span>, <span class="s">10</span><span class="s">)</span>
+<span class="kw">fill</span><span class="s">(</span><span class="s">0.3</span><span class="s">)</span>
+q = <span class="str">"container"</span>
+explode.<span class="s">draw</span><span class="s">(</span>q, wordnet.<span class="s">noun_hyponyms</span><span class="s">(</span>q<span class="s">)</span>, <span class="s">300</span>, <span class="s">300</span>, <span class="s">max</span>=<span class="s">30</span><span class="s">)</span>
+</pre> 
+
+    <p><span class="image_border"><img alt="explode2" height="550" src="media/explode2.jpg" width="550"/></span>
+  </p></div>
+
+</body></html>

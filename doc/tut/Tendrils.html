@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Tutorials: Tendrils</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
+    <h3>Tendrils</h3>
+  </div>
+
+  <div class="article">
+    <p><span class="big_text">I had some code lying around which I thought I'd share with you. It
+    is an adaption of a Processing algorithm by <a href="http://www.artcom.de/process/">ART+COM</a>, visualizing an elegant growing plant.</span>
+
+    </p><p>The source code has been organized in two simple classes so it might help you when learning
+    from the <a href="Classes.html">tutorial on classes</a>. The first class, <i>Tendril</i>,
+    defines a single branch in the plant. As it grows it calculates the position of new segments by
+    steering its current heading a bit to the left or right, hence the spiraling shape. The second
+    class, <i>Plant</i>, defines a group of tendrils. It has some simple methods to grow and draw
+    all the tendrils together.
+
+    </p><p> 
+
+    </p><p><img alt="tendrils1" src="media/tendrils1.jpg"/>
+    </p><pre class="python"><span class="kw">size</span><span class="s">(</span><span class="s">600</span>, <span class="s">600</span><span class="s">)</span>
+ 
+<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> pi, sin, cos, radians
+ 
+<span class="kw">class</span> Tendril:
+    
+    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, x, y, width=<span class="s">15</span><span class="s">)</span>:
+        <span class="str">""</span><span class="str">" A new sinewy tendril at location x and y.
+        Its segment width will gradually become smaller as it grows.
+        "</span><span class="str">""</span>
+        <span class="s">self</span>.<span class="s">x</span> = x
+        <span class="s">self</span>.<span class="s">y</span> = y
+        <span class="s">self</span>.<span class="s">width</span> = width
+        <span class="s">self</span>.<span class="s">angle</span> = <span class="kw">random</span><span class="s">(</span><span class="s">2</span>*pi<span class="s">)</span> - pi <span class="grey"># random angle in radians.</span>
+        <span class="s">self</span>.<span class="s">segments</span> = <span class="s">[</span><span class="s">]</span>
+        <span class="s">self</span>.<span class="s">v</span> = <span class="s">0</span>
+ 
+    <span class="kw">def</span> <span class="red">grow</span><span class="s">(</span><span class="s">self</span>, distance=<span class="s">3.0</span>, curl=<span class="s">1.0</span>, step=<span class="s">0.02</span><span class="s">)</span>:
+        <span class="str">""</span><span class="str">" Tendril segment growth using fluid, spiral sine functions,
+        taken from the ART+COM Tendrils class for Processing.
+        "</span><span class="str">""</span>
+        <span class="grey"># Think of a tendril having a steering compass.</span>
+        <span class="grey"># For each new segment, the compass shifts a bit left or right.</span>
+        <span class="s">self</span>.<span class="s">x</span> += cos<span class="s">(</span><span class="s">self</span>.<span class="s">angle</span><span class="s">)</span> * distance
+        <span class="s">self</span>.<span class="s">y</span> += sin<span class="s">(</span><span class="s">self</span>.<span class="s">angle</span><span class="s">)</span> * distance
+        <span class="s">self</span>.<span class="s">v</span> += <span class="kw">random</span><span class="s">(</span>-step, step<span class="s">)</span>
+        <span class="s">self</span>.<span class="s">v</span> *= <span class="s">0.9</span> + curl*<span class="s">0.1</span>
+        <span class="s">self</span>.<span class="s">angle</span> += <span class="s">self</span>.<span class="s">v</span>
+        <span class="s">self</span>.<span class="s">segments</span>.<span class="s">append</span><span class="s">(</span>
+            <span class="s">(</span><span class="s">self</span>.<span class="s">x</span>, <span class="s">self</span>.<span class="s">y</span>, <span class="s">self</span>.<span class="s">angle</span><span class="s">)</span>
+        <span class="s">)</span>
+        
+    <span class="kw">def</span> <span class="red">draw</span><span class="s">(</span><span class="s">self</span>, path=<span class="kw">None</span><span class="s">)</span>:
+        <span class="str">""</span><span class="str">" Draws all the segments in the tendril,
+        as separate ovals or as a single path if one is supplied.
+        "</span><span class="str">""</span>
+        n = <span class="s">len</span><span class="s">(</span><span class="s">self</span>.<span class="s">segments</span><span class="s">)</span>
+        <span class="kw">for</span> i, <span class="s">(</span>x, y, angle<span class="s">)</span> <span class="kw">in</span> <span class="s">enumerate</span><span class="s">(</span><span class="s">self</span>.<span class="s">segments</span><span class="s">)</span>:
+            r = <span class="s">(</span><span class="s">1</span>-<span class="s">float</span><span class="s">(</span>i<span class="s">)</span>/n<span class="s">)</span> * <span class="s">self</span>.<span class="s">width</span> <span class="grey"># size gradually decreases.</span>
+            <span class="kw">if</span> path != <span class="kw">None</span>:
+                path.<span class="kw">oval</span><span class="s">(</span>x, y, r, r<span class="s">)</span>
+            <span class="kw">else</span>:
+                <span class="kw">oval</span><span class="s">(</span>x, y, r, r<span class="s">)</span>
+        
+<span class="kw">class</span> Plant:
+    
+    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, x, y, tendrils=<span class="s">30</span>, width=<span class="s">15</span><span class="s">)</span>:
+        <span class="str">""</span><span class="str">" A collection of tendrils.
+        "</span><span class="str">""</span>
+        <span class="s">self</span>.<span class="s">x</span> = x
+        <span class="s">self</span>.<span class="s">y</span> = y
+        <span class="s">self</span>.<span class="s">tendrils</span> = <span class="s">[</span><span class="s">]</span>
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span>tendrils<span class="s">)</span>: 
+            <span class="s">self</span>.<span class="s">tendrils</span>.<span class="s">append</span><span class="s">(</span>
+                Tendril<span class="s">(</span><span class="s">self</span>.<span class="s">x</span>, <span class="s">self</span>.<span class="s">y</span>, width<span class="s">)</span>
+            <span class="s">)</span>
+    
+    <span class="kw">def</span> <span class="red">grow</span><span class="s">(</span><span class="s">self</span>, distance=<span class="s">3.0</span>, curl=<span class="s">1.0</span>, step=<span class="s">0.02</span><span class="s">)</span>:
+        <span class="str">""</span><span class="str">" Grow a new segment on each of the plant's tendrils.
+        "</span><span class="str">""</span>
+        <span class="kw">for</span> b <span class="kw">in</span> <span class="s">self</span>.<span class="s">tendrils</span>:
+            b.<span class="s">grow</span><span class="s">(</span>distance, curl, step<span class="s">)</span>
+            
+    <span class="kw">def</span> <span class="red">draw</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:
+        <span class="str">""</span><span class="str">" Draw the plant.
+        "</span><span class="str">""</span>
+        <span class="kw">for</span> tendril <span class="kw">in</span> <span class="s">self</span>.<span class="s">tendrils</span>:
+            tendril.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
+        
+    <span class="kw">def</span> <span class="red">path</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:
+        <span class="str">""</span><span class="str">" Return the plant as a path consisting of ovals.
+        "</span><span class="str">""</span>
+        path = <span class="kw">BezierPath</span><span class="s">(</span><span class="s">)</span>
+        <span class="kw">for</span> tendril <span class="kw">in</span> <span class="s">self</span>.<span class="s">tendrils</span>:
+            tendril.<span class="s">draw</span><span class="s">(</span>path<span class="s">)</span>
+        <span class="kw">return</span> path
+ 
+<span class="kw">background</span><span class="s">(</span><span class="s">0.12</span>, <span class="s">0.12</span>, <span class="s">0.06</span><span class="s">)</span>
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">1</span>, <span class="s">0.5</span><span class="s">)</span>
+<span class="kw">strokewidth</span><span class="s">(</span><span class="s">0.5</span><span class="s">)</span>
+ 
+plant = Plant<span class="s">(</span><span class="kw">WIDTH</span>/<span class="s">2</span>, <span class="kw">HEIGHT</span>/<span class="s">2</span>, tendrils=<span class="s">20</span><span class="s">)</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">200</span><span class="s">)</span>: 
+    plant.<span class="s">grow</span><span class="s">(</span>curl=<span class="s">1.0</span>, step=<span class="s">0.02</span><span class="s">)</span>
+ 
+plant.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
+</pre> 
+    <hr size="2" width="100%"/>
+
+    <h2>Using the plant as a layer in Core Image</h2>
+
+    <p>With a simple adaption we can use the <i>plant.path()</i> method as input for <a href="../lib/Core_Image.html">Core Image</a>. This way we can transform the plant shape as a layer
+    of pixel data. Simply add the lines of code below the image to the bottom of the script, and
+    play around with the <i>curl</i> parameter a bit.
+
+    </p><p> 
+
+    </p><p><img alt="tendrils2" src="media/tendrils2.jpg"/>
+    </p><pre class="python">coreimage = <span class="kw">ximport</span><span class="s">(</span><span class="str">"coreimage"</span><span class="s">)</span>
+canvas = coreimage.<span class="s">canvas</span><span class="s">(</span><span class="kw">WIDTH</span>, <span class="kw">HEIGHT</span><span class="s">)</span>
+layer = canvas.<span class="s">append</span><span class="s">(</span>
+    plant.<span class="s">path</span><span class="s">(</span><span class="s">)</span>, 
+    <span class="kw">fill</span>=<span class="kw">color</span><span class="s">(</span><span class="s">1</span>,<span class="s">0</span><span class="s">)</span>, 
+    <span class="kw">stroke</span>=<span class="kw">color</span><span class="s">(</span><span class="s">1</span>,<span class="s">0.8</span><span class="s">)</span>, 
+    <span class="kw">strokewidth</span>=<span class="s">0.2</span>
+<span class="s">)</span>
+layer.<span class="s">filter</span><span class="s">(</span><span class="str">"zoomblur"</span>, amount=<span class="s">10</span><span class="s">)</span>
+canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
+</pre> 
+
+    <p>Created by Tom De Smedt<br/>
+    Based on the "Tendrils" algorithm by ART+COM<br/>
+  </p></div>
+
+</body></html>

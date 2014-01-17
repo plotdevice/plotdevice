@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Tutorials: Obstacle avoidance</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
+    <h3>Obstacle avoidance</h3>
+  </div>
+
+  <div class="article">
+    <p><img alt="classes-creature3" src="media/classes-creature3.jpg"/>
+    </p><pre class="python"><span class="grey"># --- GEOMETRY --------------------------------------------------------------</span>
+ 
+<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> degrees, atan2
+<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sqrt, <span class="s">pow</span>
+<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> radians, sin, cos
+ 
+<span class="kw">def</span> <span class="red">angle</span><span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>:
+    <span class="str">""</span><span class="str">" Returns the angle between two points.
+    "</span><span class="str">""</span>
+    <span class="kw">return</span> degrees<span class="s">(</span> atan2<span class="s">(</span>y1-y0, x1-x0<span class="s">)</span> <span class="s">)</span>    
+ 
+<span class="kw">def</span> <span class="red">distance</span><span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>:
+    <span class="str">""</span><span class="str">" Returns the distance between two points.
+    "</span><span class="str">""</span>        
+    <span class="kw">return</span> sqrt<span class="s">(</span><span class="s">pow</span><span class="s">(</span>x1-x0, <span class="s">2</span><span class="s">)</span> + <span class="s">pow</span><span class="s">(</span>y1-y0, <span class="s">2</span><span class="s">)</span><span class="s">)</span>
+ 
+<span class="kw">def</span> <span class="red">coordinates</span><span class="s">(</span>x0, y0, distance, angle<span class="s">)</span>:
+    <span class="str">""</span><span class="str">" Returns the coordinates of given distance and angle from a point.
+    "</span><span class="str">""</span>
+    <span class="kw">return</span> <span class="s">(</span>x0 + cos<span class="s">(</span>radians<span class="s">(</span>angle<span class="s">)</span><span class="s">)</span> * distance, 
+            y0 + sin<span class="s">(</span>radians<span class="s">(</span>angle<span class="s">)</span><span class="s">)</span> * distance<span class="s">)</span>
+ 
+<span class="grey"># --- WORLD -----------------------------------------------------------------</span>
+ 
+<span class="kw">class</span> World:
+    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:
+        <span class="s">self</span>.<span class="s">obstacles</span> = <span class="s">[</span><span class="s">]</span>
+ 
+<span class="grey"># --- OBSTACLE --------------------------------------------------------------</span>
+ 
+<span class="kw">class</span> Obstacle:
+    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, x, y, radius<span class="s">)</span>:
+        <span class="s">self</span>.<span class="s">x</span> = x
+        <span class="s">self</span>.<span class="s">y</span> = y
+        <span class="s">self</span>.<span class="s">radius</span> = radius
+ 
+<span class="grey"># --- CREATURE --------------------------------------------------------------</span>
+ 
+<span class="kw">class</span> Creature:    
+ 
+    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, world, x, y, <span class="kw">speed</span>=<span class="s">1.0</span>, <span class="kw">size</span>=<span class="s">4</span><span class="s">)</span>:        
+ 
+        <span class="s">self</span>.<span class="s">x</span> = x
+        <span class="s">self</span>.<span class="s">y</span> = y
+        <span class="s">self</span>.<span class="kw">speed</span> = <span class="kw">speed</span>
+        <span class="s">self</span>.<span class="kw">size</span> = <span class="kw">size</span>        
+ 
+        <span class="s">self</span>.<span class="s">world</span> = world
+        <span class="s">self</span>.<span class="s">feeler_length</span> = <span class="s">25</span>        
+ 
+        <span class="s">self</span>._vx = <span class="s">0</span>
+        <span class="s">self</span>._vy = <span class="s">0</span>    
+ 
+    <span class="kw">def</span> <span class="red">heading</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:        
+ 
+        <span class="str">""</span><span class="str">" Returns the creature's heading as angle in degrees.
+        "</span><span class="str">""</span> 
+ 
+        <span class="kw">return</span> angle<span class="s">(</span><span class="s">self</span>.<span class="s">x</span>, <span class="s">self</span>.<span class="s">y</span>, <span class="s">self</span>.<span class="s">x</span>+<span class="s">self</span>._vx, <span class="s">self</span>.<span class="s">y</span>+<span class="s">self</span>._vy<span class="s">)</span>    
+ 
+    <span class="kw">def</span> <span class="red">avoid_obstacles</span><span class="s">(</span><span class="s">self</span>, m=<span class="s">0.4</span>, collision=<span class="s">4</span><span class="s">)</span>:
+ 
+        <span class="grey"># Find out where the creature is going.</span>
+        a = <span class="s">self</span>.<span class="s">heading</span><span class="s">(</span><span class="s">)</span>        
+ 
+        <span class="kw">for</span> obstacle <span class="kw">in</span> <span class="s">self</span>.<span class="s">world</span>.<span class="s">obstacles</span>:            
+ 
+            <span class="grey"># Calculate the distance between the creature and the obstacle.</span>
+            d = distance<span class="s">(</span><span class="s">self</span>.<span class="s">x</span>, <span class="s">self</span>.<span class="s">y</span>, obstacle.<span class="s">x</span>, obstacle.<span class="s">y</span><span class="s">)</span>            
+ 
+            <span class="grey"># Respond faster if the creature is very close to an obstacle.</span>
+            <span class="kw">if</span> d - obstacle.<span class="s">radius</span> &lt; <span class="s">4</span>: m *= <span class="s">10</span>            
+ 
+            <span class="grey"># Check if the tip of the feeler falls inside the obstacle.</span>
+            <span class="grey"># This is never true if the feeler length </span>
+            <span class="grey"># is smaller than the distance to the obstable.</span>
+            <span class="kw">if</span> d - obstacle.<span class="s">radius</span> &lt;= <span class="s">self</span>.<span class="s">feeler_length</span>:
+                tip_x, tip_y = coordinates<span class="s">(</span><span class="s">self</span>.<span class="s">x</span>, <span class="s">self</span>.<span class="s">y</span>, d, a<span class="s">)</span>    
+                <span class="kw">if</span> distance<span class="s">(</span>obstacle.<span class="s">x</span>, obstacle.<span class="s">y</span>, 
+                            tip_x, tip_y<span class="s">)</span> &lt; obstacle.<span class="s">radius</span>:                    
+ 
+                    <span class="grey"># Nudge the creature away from the obstacle.</span>
+                    m *= <span class="s">self</span>.<span class="kw">speed</span>
+ 
+                    <span class="kw">if</span> tip_x &lt; obstacle.<span class="s">x</span>: <span class="s">self</span>._vx -= <span class="kw">random</span><span class="s">(</span>m<span class="s">)</span>
+                    <span class="kw">if</span> tip_y &lt; obstacle.<span class="s">y</span>: <span class="s">self</span>._vy -= <span class="kw">random</span><span class="s">(</span>m<span class="s">)</span>
+                    <span class="kw">if</span> tip_x &gt; obstacle.<span class="s">x</span>: <span class="s">self</span>._vx += <span class="kw">random</span><span class="s">(</span>m<span class="s">)</span>
+                    <span class="kw">if</span> tip_y &gt; obstacle.<span class="s">y</span>: <span class="s">self</span>._vy += <span class="kw">random</span><span class="s">(</span>m<span class="s">)</span> 
+ 
+                    <span class="kw">if</span> d - obstacle.<span class="s">radius</span> &lt; <span class="s">4</span>: <span class="kw">return</span>
+ 
+    <span class="kw">def</span> <span class="red">roam</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:
+ 
+        <span class="str">""</span><span class="str">" Creature changes heading aimlessly.
+        With its feeler it will scan for obstacles and steer away.
+        "</span><span class="str">""</span>        
+ 
+        <span class="s">self</span>.<span class="s">avoid_obstacles</span><span class="s">(</span><span class="s">)</span>        
+ 
+        v = <span class="s">self</span>.<span class="kw">speed</span>
+        <span class="s">self</span>._vx += <span class="kw">random</span><span class="s">(</span>-v, v<span class="s">)</span>
+        <span class="s">self</span>._vy += <span class="kw">random</span><span class="s">(</span>-v, v<span class="s">)</span>
+        <span class="s">self</span>._vx = <span class="s">max</span><span class="s">(</span>-v, <span class="s">min</span><span class="s">(</span><span class="s">self</span>._vx, v<span class="s">)</span><span class="s">)</span>
+        <span class="s">self</span>._vy = <span class="s">max</span><span class="s">(</span>-v, <span class="s">min</span><span class="s">(</span><span class="s">self</span>._vy, v<span class="s">)</span><span class="s">)</span>         
+ 
+        <span class="s">self</span>.<span class="s">x</span> += <span class="s">self</span>._vx
+        <span class="s">self</span>.<span class="s">y</span> += <span class="s">self</span>._vy
+ 
+<span class="grey"># ---------------------------------------------------------------------------</span>
+ 
+<span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">200</span><span class="s">)</span>
+ 
+<span class="grey"># Create a world with obstacles at random positions.</span>
+world = World<span class="s">(</span><span class="s">)</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">15</span><span class="s">)</span>:
+    obstacle = Obstacle<span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">10</span>, <span class="s">30</span><span class="s">)</span><span class="s">)</span>
+    world.<span class="s">obstacles</span>.<span class="s">append</span><span class="s">(</span>obstacle<span class="s">)</span>
+ 
+<span class="grey"># Create a number of ants.</span>
+ants = <span class="s">[</span><span class="s">]</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">4</span><span class="s">)</span>:
+    ant = Creature<span class="s">(</span>world, <span class="s">225</span>, <span class="s">100</span>, <span class="kw">speed</span>=<span class="s">2.0</span><span class="s">)</span>
+    ants.<span class="s">append</span><span class="s">(</span>ant<span class="s">)</span>
+ 
+<span class="kw">speed</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>
+<span class="kw">def</span> <span class="red">draw</span><span class="s">(</span><span class="s">)</span>:    
+ 
+    <span class="kw">background</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>    
+ 
+    <span class="grey"># Draw all the obstacles in the world.</span>
+    <span class="kw">fill</span><span class="s">(</span><span class="s">0.5</span>, <span class="s">0.5</span><span class="s">)</span>
+    <span class="kw">for</span> obstacle <span class="kw">in</span> world.<span class="s">obstacles</span>:
+        <span class="kw">oval</span><span class="s">(</span>obstacle.<span class="s">x</span> - obstacle.<span class="s">radius</span>,
+             obstacle.<span class="s">y</span> - obstacle.<span class="s">radius</span>,
+             obstacle.<span class="s">radius</span> * <span class="s">2</span>,
+             obstacle.<span class="s">radius</span> * <span class="s">2</span><span class="s">)</span>    
+ 
+    <span class="grey"># Draw each ant and its feeler.</span>
+    <span class="kw">stroke</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
+    <span class="kw">fill</span><span class="s">(</span><span class="s">1</span>, <span class="s">0.5</span><span class="s">)</span>
+    <span class="kw">for</span> ant <span class="kw">in</span> ants:
+        <span class="kw">push</span><span class="s">(</span><span class="s">)</span>
+        <span class="kw">transform</span><span class="s">(</span>CORNER<span class="s">)</span>
+        <span class="kw">translate</span><span class="s">(</span>ant.<span class="s">x</span>, ant.<span class="s">y</span><span class="s">)</span>
+        <span class="kw">rotate</span><span class="s">(</span>-ant.<span class="s">heading</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
+        <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, ant.<span class="s">feeler_length</span>, <span class="s">0</span><span class="s">)</span>
+        <span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
+        <span class="kw">oval</span><span class="s">(</span>ant.<span class="s">x</span>-ant.<span class="kw">size</span>*<span class="s">0.5</span>, ant.<span class="s">y</span>-ant.<span class="kw">size</span>*<span class="s">0.5</span>, ant.<span class="kw">size</span>, ant.<span class="kw">size</span><span class="s">)</span>    
+ 
+    <span class="grey"># Move all the ants around.</span>
+    <span class="kw">for</span> ant <span class="kw">in</span> ants:
+        ant.<span class="s">roam</span><span class="s">(</span><span class="s">)</span>
+</pre>
+  </div>
+
+</body></html>

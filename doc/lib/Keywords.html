@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Libraries: Keywords</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+
+    <h3>Keywords</h3>
+  </div>
+
+  <div class="article">
+    <h2>Description</h2>
+
+    <p>The keywords library filters the most important words from a text. Keywords uses a list of
+    <i>connectives</i> that filters out words like <i>the</i> and <i>because</i>. Tags are stripped
+    as well. Optionally, it queries <a href="WordNet.html">WordNet</a> to filter out any words that
+    are not nouns. The remaining words are counted, for example if the word <i>typography</i>
+    occurs five times in the text and the word <i>workshop</i> occurs three times, and no word
+    occurs more than that, the text will likely be dealing about typography workshops.
+
+    </p><p><i><span class="pink_text">This algorithm is part of the NodeBox <a href="Linguistics.html">Linguistics</a> library. If you need more linguistical power we recommend
+    trying out that library.</span></i>
+
+    </p><h2>Download</h2>
+
+    <table border="0">
+      <tbody>
+        <tr>
+          <td><a href="http://nodebox.net/code/data/media/keywords.zip"><img alt="download" height="20" src="media/download.gif" width="20"/></a>
+
+          </td><td><a href="http://nodebox.net/code/data/media/keywords.zip">keywords.zip</a> (5KB)<br/>
+          <i>Last updated for NodeBox 1.9.0</i>
+        </td></tr></tbody></table>
+
+    <p> 
+    </p><hr/>
+
+    <h2>Documentation</h2>
+
+    <p>First import the library in your project. You can do this by putting the <i>keywords.py</i>
+    file in the same folder as your script or by putting it in <i>~/Library/Application
+    Support/NodeBox</i>/. Then load it:
+    </p><pre class="python">keywords = <span class="kw">ximport</span><span class="s">(</span><span class="str">"keywords"</span><span class="s">)</span>
+</pre>
+
+    <p>The library has a single command, <i>top()</i> which returns a list of 2-tuples, for example
+    [(5,"typography"), (2,"workshop")], representing the most important words in the text
+    <i>str</i>, and their count. The command returns the top <i>n</i> words.<br/>
+    </p><pre class="python">top<span class="s">(</span><span class="s">str</span>, n=<span class="s">10</span>, nouns=<span class="kw">True</span>, singularize=<span class="kw">True</span>, filters=<span class="s">[</span><span class="s">]</span><span class="s">)</span>
+</pre>
+
+    <p>When WordNet is present, the command will return only nouns by default and try to
+    singularize them. Optionally, you also can supply a filters list of words to ignore. For
+    example, here we filter keywords from Lucas Nijs' text on <a href="Keywords/Ideas_from_the_Heart.html">Ideas from the Heart</a>.
+    </p><pre class="python"><span class="kw">import</span> keywords
+<span class="s">str</span> = <span class="kw">open</span><span class="s">(</span><span class="str">"ideasfromtheheart.txt"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
+top = keywords.<span class="s">top</span><span class="s">(</span><span class="s">str</span>, nouns=<span class="kw">True</span><span class="s">)</span>
+<span class="kw">for</span> count, word <span class="kw">in</span> top:
+    <span class="kw">print</span> count, word
+&gt;&gt;&gt; <span class="s">10</span> typography
+&gt;&gt;&gt; <span class="s">7</span> student
+&gt;&gt;&gt; <span class="s">6</span> workshop
+&gt;&gt;&gt; <span class="s">6</span> project
+&gt;&gt;&gt; <span class="s">5</span> teacher
+&gt;&gt;&gt; <span class="s">4</span> idea
+&gt;&gt;&gt; <span class="s">4</span> grade
+&gt;&gt;&gt; <span class="s">4</span> design
+&gt;&gt;&gt; <span class="s">4</span> communication
+&gt;&gt;&gt; <span class="s">3</span> course
+</pre> 
+  </div>
+
+</body></html>

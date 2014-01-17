@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Libraries: Cornu</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+
+    <h3>Cornu</h3>
+  </div>
+
+  <div class="article">
+    <h2>Description</h2>
+
+    <p>The Cornu library adds Raph Levien's elegant cornu curves to NodeBox. Cornu curves (wich are
+    based on the <a href="http://en.wikipedia.org/wiki/Fresnel_integral">Cornu spiral</a>) are a
+    different approach to curves than Bezier paths, generally requiring less points, no control
+    handles, providing more elegant forms, and looking kinda "spiraling". The library uses Mark
+    Meyer's algorithm to transform Cornu spirals to Bézier curves.
+
+    </p><h2>Download</h2>
+
+    <table border="0">
+      <tbody>
+        <tr>
+          <td><a href="http://nodebox.net/code/data/media/cornu.zip"><img alt="download" height="20" src="media/download.gif" width="20"/></a>
+
+          </td><td><a href="http://nodebox.net/code/data/media/cornu.zip">cornu.zip</a> (6KB)<br/>
+          <i>Last updated for NodeBox 1.9.5<br/></i><i>Author: Raph Levien</i><br/>
+        </td></tr></tbody></table>
+
+    <h2>Documentation</h2>
+
+    <ul>
+      <li><a href="#library">How to get the library up and running</a>
+
+      </li><li><a href="#cornu">Working with cornu paths</a>
+    </li></ul>
+
+    <p> 
+    </p><hr/>
+
+    <h2><a id="library" name="library" title="library"></a>How to get the library up and
+    running</h2>
+
+    <p>Put the <i>cornu</i> library folder in the same folder as your script so NodeBox can find
+    the library. You can also put it in ~/Library/Application Support/NodeBox/.
+    </p><pre class="python">cornu = <span class="kw">ximport</span><span class="s">(</span><span class="str">"cornu"</span><span class="s">)</span>
+</pre> 
+    <hr/>
+
+    <h2><a id="cornu" name="cornu" title="cornu"></a>Working with cornu paths</h2>
+    <pre class="python"><span class="kw">drawpath</span><span class="s">(</span>coordinates, close=<span class="kw">False</span>, tweaks=<span class="s">20</span>, points=<span class="kw">False</span>, flat=<span class="kw">False</span><span class="s">)</span>
+</pre>
+
+    <p>The <i>drawpath()</i> command draws a cornu path from a list of (x,y)-tuples. The x and y
+    coordinates range between 0.0 and 1.0, describing a point's position <b>relative</b> to the
+    drawing area's <a href="../ref/Utility.html#size()">size()</a>.
+
+    </p><p>When the <i>close</i> parameter is set to True, draws a closed path. The number of
+    <i>tweaks</i> makes the path more elegant, but slows down the command as well. When
+    <i>points</i> is true, draws the path's control points to the screen. When <i>flat</i> is true,
+    the resulting path will be made up of very small straight line segments (by default the
+    resulting path is made up of Bézier curves).
+    </p><pre class="python"><span class="kw">size</span><span class="s">(</span><span class="s">700</span>,<span class="s">700</span><span class="s">)</span>
+path = <span class="s">[</span><span class="s">(</span><span class="s">0.1</span>,<span class="s">0.1</span><span class="s">)</span>, 
+        <span class="s">(</span><span class="s">0.15</span>,<span class="s">0.35</span><span class="s">)</span>, 
+        <span class="s">(</span><span class="s">0.4</span>, <span class="s">0.2</span><span class="s">)</span>, 
+        <span class="s">(</span><span class="s">0.6</span>, <span class="s">0.6</span><span class="s">)</span>, 
+        <span class="s">(</span><span class="s">0.4</span>, <span class="s">0.4</span><span class="s">)</span><span class="s">]</span>
+ 
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+cornu.<span class="kw">drawpath</span><span class="s">(</span>path, tweaks=<span class="s">100</span>, points=<span class="kw">True</span><span class="s">)</span>
+</pre>
+
+    <p><span><img height="434" src="media/cornu_drawpath.gif" width="569"/></span>
+
+    </p><p> <br/>
+
+    </p><p>The <i>path()</i> command returns a <a href="../ref/Classes.html#BezierPath">path</a> object
+    from a given list of (x,y)-tuples, instead of drawing the path directly to the screen.
+    </p><pre class="python">path<span class="s">(</span>coordinates, close=<span class="kw">False</span>, tweaks=<span class="s">20</span>, flat=<span class="kw">False</span><span class="s">)</span>
+</pre>
+
+    <p>Again, the x and y coordinates in this list range between 0.0 and 1.0, describing a point's
+    position relative to the drawing area's <a href="../ref/Utility.html#size()">size()</a>. The
+    points in the returned path object are absolute positions.<br/>
+
+    </p><p>See the documentation on <a href="../tut/Paths.html">paths</a> to see what you can do with
+    path objects.
+  </p></div>
+
+</body></html>

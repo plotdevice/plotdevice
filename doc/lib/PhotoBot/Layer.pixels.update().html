@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Libraries: photobot.Layer.pixels.update()</title>
+  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+
+    <h3>photobot.Layer.pixels.update()</h3>
+  </div>
+
+  <div class="article">
+    <h2>Syntax</h2>
+    <pre class="python">canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="s">pixels</span>.<span class="s">update</span><span class="s">(</span><span class="s">)</span>
+</pre>
+
+    <h2>Description</h2>
+
+    <p>Updates the pixels array of layer <em>i</em> after it has been modified. To save time,
+    changes to the <a href="PhotoBot/Layer.pixels[].html">Layer.pixels[]</a> pixels array only take
+    effect after calling this command.
+
+    </p><h2>Example</h2>
+
+    <p>Remove all white pixels from the given image, with a feather at the edges of white areas:
+    </p><pre class="python">photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
+canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">200</span>,<span class="s">200</span><span class="s">)</span>
+canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"smurf.gif"</span><span class="s">)</span>
+ 
+w = canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">w</span>
+feather = <span class="s">[</span>-w<span class="s">-1</span>, -w, -w<span class="s">+1</span>, <span class="s">-1</span>, <span class="s">1</span>, w<span class="s">-1</span>, w, w<span class="s">+1</span><span class="s">]</span>
+ 
+pixels = canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">pixels</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">len</span><span class="s">(</span>pixels<span class="s">)</span><span class="s">)</span>:
+    r, g, b, a = pixels<span class="s">[</span>i<span class="s">]</span>
+    <span class="kw">if</span> r == g == b == <span class="s">255</span>: 
+        pixels<span class="s">[</span>i<span class="s">]</span> = r, g, b, <span class="s">0</span>
+        <span class="kw">for</span> j <span class="kw">in</span> feather:
+            r, g, b, a = pixels<span class="s">[</span>i+j<span class="s">]</span>
+            pixels<span class="s">[</span>i+j<span class="s">]</span> = r, g, b, a/<span class="s">2</span>            
+ 
+pixels.<span class="s">update</span><span class="s">(</span><span class="s">)</span>
+</pre>
+  </div>
+
+</body></html>

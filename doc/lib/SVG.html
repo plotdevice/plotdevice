@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Libraries: SVG</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+
+    <h3>SVG</h3>
+  </div>
+
+  <div class="article">
+    <h2>Description</h2>
+
+    <p>The SVG library gives control over vector work imported into NodeBox. Rectangles, circles
+    and paths from an SVG file are imported as native NodeBox paths, so their individual points and
+    colors can be manipulated (see the tutorial on <a href="../tut/Paths.html">Paths</a>).
+
+    </p><p>"SVG" means Scalable Vector Graphics and is an XML format. You can save SVG files from
+    <a href="http://www.inkscape.org/">Inkscape</a> and Illustrator. Hand-draw your shapes there
+    and then manipulate them further in NodeBox.
+
+    </p><p>The SVG library has been tested for the following Illustrator functionalities: rectangles,
+    ellipses, polygons, lines, curves constructed with the pen-tool, fill colors, stroke colors,
+    stroke widths and transparency. Complicated things like gradient fills are ignored.
+
+    </p><h2>Download</h2>
+
+    <table border="0">
+      <tbody>
+        <tr>
+          <td><a href="http://nodebox.net/code/data/media/svg.zip"><img alt="download" height="20" src="media/download.gif" width="20"/></a>
+
+          </td><td><a href="http://nodebox.net/code/data/media/svg.zip">svg.zip</a> (400KB)<br/>
+          <i>Last updated for NodeBox 1.9.4.5<br/></i><i>Licensed under GPL</i><br/>
+          <i>Author: Tom De Smedt</i><br/>
+        </td></tr></tbody></table>
+
+    <h2>Documentation</h2>
+
+    <ul>
+      <li><a href="#library">How to get the library up and running</a>
+
+      </li><li><a href="#export">Preparing SVG files</a>
+
+      </li><li><a href="#parse">Importing SVG files</a>
+
+      </li><li><a href="#furry">A simple path filter</a>
+
+      </li><li><a href="#group_transform">Transforming a group of paths</a><br/>
+    </li></ul>
+
+    <p> 
+    </p><hr/>
+
+    <h2><a id="library" name="library" title="library"></a>How to get the library up and
+    running</h2>
+
+    <p>Put the <i>svg</i> library folder in the same folder as your script so NodeBox can find the
+    library. You can also put it in ~/Library/Application Support/NodeBox/.
+    </p><pre class="python">svg = <span class="kw">ximport</span><span class="s">(</span><span class="str">"svg"</span><span class="s">)</span>
+</pre>         
+    <hr/>
+
+    <h2><a id="export" name="export" title="export"></a>Preparing SVG files</h2>
+
+    <p>To export files as SVG from Adobe Illustrator do the following:
+
+    </p><ul>
+      <li>Choose File &gt; Save As...
+
+      </li><li>In the file dialog, select "SVG (svg)" (not "SVG Compressed" - we can't read compressed
+      files)
+
+      </li><li>In the next window, choose "SVG Tiny 1.2" as the SVG Profile.<br/>
+      The regular SVG format saves all swatches and patterns, which is useless outside of
+      Illustrator. Leave the rest of the settings as-is.
+    </li></ul>
+
+    <p><span class="media"><img height="414" src="media/svg-export.jpg" width="500"/></span>
+    </p><hr/>
+
+    <h2><a id="parse" name="parse" title="parse"></a>Importing SVG files</h2>
+    <pre class="python">parse<span class="s">(</span><span class="s">str</span>, cached=<span class="kw">False</span><span class="s">)</span>
+</pre>
+
+    <p>The <i>parse()</i> command reads SVG source and returns a list of <a href="../tut/Paths.html">paths</a> that are drawable with <a href="../ref/Path.html#drawpath()">drawpath()</a>. The command has an optional <i>cached</i>
+    parameter. When set to <i>True</i>, the SVG source is analyzed only once and the parsed paths
+    stored in memory so they load faster.
+
+    </p><p>Each returned path in the list has the following properties:
+
+    </p><ul>
+      <li><i>path</i>.closed: is set to True when the path is closed
+
+      </li><li><i>path</i>.fill: the fill color of the path in the SVG file
+
+      </li><li><i>path</i>.stroke: the stroke color of the path in the SVG file
+
+      </li><li><i>path</i>.strokewidth: the stroke width of the path in the SVG file.<br/>
+    </li></ul>
+
+    <p>These can be used to copy color information from the original vector drawing. Read the
+    <a href="../tut/Paths.html">tutorial on paths</a> to see what you can do with the points of a
+    path.
+
+    </p><p>For example, here's one of Ludivine Lechat's Illustrator drawings. We can import the paths
+    into NodeBox. Those that have a fill color will retain their original fill.
+
+    </p><p> 
+
+    </p><p><span class="media"><img height="668" src="media/svg-illustrator.jpg" width="634"/></span>
+    </p><pre class="python">data = <span class="kw">open</span><span class="s">(</span><span class="str">"flower.svg"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
+paths = svg.<span class="s">parse</span><span class="s">(</span>data<span class="s">)</span>
+ 
+<span class="kw">for</span> path <span class="kw">in</span> paths:
+  <span class="kw">try</span>:
+    <span class="kw">fill</span><span class="s">(</span>path.<span class="kw">fill</span><span class="s">)</span>
+  <span class="kw">except</span>:
+    <span class="kw">fill</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span>
+  <span class="kw">drawpath</span><span class="s">(</span>path<span class="s">)</span>
+</pre>
+
+    <p><span class="media">In the following example we override the colors in the original
+    document. We only fill paths that are closed, in shades of the same color:</span>
+
+    </p><p> 
+
+    </p><p><span class="media"><img height="647" src="media/svg-nodebox.jpg" width="739"/></span>
+
+    </p><p> 
+    </p><hr/>
+
+    <h2><a id="furry" name="furry" title="furry"></a>A simple path filter</h2>
+
+    <p>Since all of the imported artwork are standard NodeBox paths, I can also manipulate them
+    with <a href="../tut/Paths.html#Path_Mathematics">path mathematics</a>, transform them like the
+    <a href="../tut/LetterKnitter.html">LetterKnitter</a>. After some fumbling with paths and a
+    nice gradient background, here is a hairy version of our flower. The bottom paths are darker to
+    create a sense of depth.
+
+    </p><p> 
+
+    </p><p><span class="media"><img height="647" src="media/svg-pathfilter.jpg" width="739"/></span>
+
+    </p><p>Below is some example code used to alter the path.<br/>
+    You can see it in use in the <a href="http://nodebox.net/code/index.php/Superfolia">Superfolia</a> project in the gallery.
+    </p><pre class="python"><span class="kw">def</span> <span class="rose">draw_furry</span><span class="s">(</span>path<span class="s">)</span>:
+    prev = <span class="kw">None</span>
+    <span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
+    <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+    <span class="kw">for</span> pt <span class="kw">in</span> path.<span class="s">points</span><span class="s">(</span><span class="s">100</span><span class="s">)</span>:
+        <span class="kw">stroke</span><span class="s">(</span><span class="s">1</span>, <span class="s">0.5</span><span class="s">)</span>
+        <span class="kw">strokewidth</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">0.5</span><span class="s">)</span><span class="s">)</span>
+        <span class="kw">if</span> prev != <span class="kw">None</span>:
+            <span class="kw">beginpath</span><span class="s">(</span>prev.<span class="s">x</span>, prev.<span class="s">y</span><span class="s">)</span>
+            <span class="kw">curveto</span><span class="s">(</span>
+                pt.<span class="s">ctrl1</span>.<span class="s">x</span> - <span class="kw">random</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>, 
+                pt.<span class="s">ctrl1</span>.<span class="s">y</span>,
+                pt.<span class="s">ctrl2</span>.<span class="s">x</span>, 
+                pt.<span class="s">ctrl2</span>.<span class="s">y</span> + <span class="kw">random</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>,
+                pt.<span class="s">x</span>, 
+                pt.<span class="s">y</span>
+            <span class="s">)</span>
+            <span class="kw">curveto</span><span class="s">(</span>
+                pt.<span class="s">ctrl1</span>.<span class="s">x</span> + <span class="kw">random</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>, 
+                pt.<span class="s">ctrl1</span>.<span class="s">y</span>,
+                pt.<span class="s">ctrl2</span>.<span class="s">x</span>, 
+                pt.<span class="s">ctrl2</span>.<span class="s">y</span> - <span class="kw">random</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>,
+                pt.<span class="s">x</span> + <span class="kw">random</span><span class="s">(</span><span class="s">-20</span>, <span class="s">20</span><span class="s">)</span>, 
+                pt.<span class="s">y</span> + <span class="kw">random</span><span class="s">(</span><span class="s">-20</span>, <span class="s">20</span><span class="s">)</span>
+            <span class="s">)</span>
+            <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+        prev = pt
+</pre>
+
+    <p>More path filters can be found <a href="../tut/Path_Filters.html">here</a>.
+
+    </p><p> 
+    </p><hr size="2" width="100%"/>
+
+    <h2><a id="group_transform" name="group_transform" title="group_transform"></a>Transforming a
+    group of paths</h2>
+
+    <p>When you import an SVG file a list of paths is returned. All of these paths may make up a
+    single drawing and you may encounter difficulties when <b>rotating and scaling the drawing a
+    whole</b>. Below are two commands to help you along.
+
+    </p><p>The first command, <i>bounds()</i>, calculates the position and total size of a list of
+    paths. The second command, <i>drawpaths()</i>, draws all of the paths rotating and scaling from
+    the given origin. By default origin is (0.5, 0.5) which means the center of the group.
+    </p><pre class="python"><span class="kw">def</span> <span class="rose">bounds</span><span class="s">(</span>paths=<span class="s">[</span><span class="s">]</span><span class="s">)</span>:
+   <span class="str">""</span><span class="str">" Returns (x, y), (width, height) bounds for a group of paths.
+   "</span><span class="str">""</span>
+   <span class="kw">if</span> <span class="s">len</span><span class="s">(</span>paths<span class="s">)</span> == <span class="s">0</span>: 
+       <span class="kw">return</span> <span class="s">(</span><span class="s">0</span>,<span class="s">0</span><span class="s">)</span>, <span class="s">(</span><span class="s">0</span>,<span class="s">0</span><span class="s">)</span>
+   l = t = <span class="s">float</span><span class="s">(</span><span class="str">"inf"</span><span class="s">)</span>
+   r = b = <span class="s">float</span><span class="s">(</span><span class="str">"-inf"</span><span class="s">)</span>
+   <span class="kw">for</span> path <span class="kw">in</span> paths:
+       <span class="s">(</span>x, y<span class="s">)</span>, <span class="s">(</span>w, h<span class="s">)</span> = path.<span class="s">bounds</span>
+       l = <span class="s">min</span><span class="s">(</span>l, x<span class="s">)</span>
+       t = <span class="s">min</span><span class="s">(</span>t, y<span class="s">)</span>
+       r = <span class="s">max</span><span class="s">(</span>r, x+w<span class="s">)</span>
+       b = <span class="s">max</span><span class="s">(</span>b, y+h<span class="s">)</span>
+   <span class="kw">return</span> <span class="s">(</span>l, t<span class="s">)</span>, <span class="s">(</span>r-l, b-t<span class="s">)</span>
+</pre>
+    <pre class="python"><span class="kw">def</span> <span class="rose">drawpaths</span><span class="s">(</span>paths=<span class="s">[</span><span class="s">]</span>, x=<span class="s">0</span>, y=<span class="s">0</span>, <span class="kw">rotate</span>=<span class="s">0</span>, <span class="kw">scale</span>=<span class="s">1.0</span>, origin=<span class="s">(</span><span class="s">0.5</span>,<span class="s">0.5</span><span class="s">)</span><span class="s">)</span>:
+   <span class="str">""</span><span class="str">" Draws a group of paths that rotate and scale from the given origin.
+   "</span><span class="str">""</span>
+   _ctx.<span class="kw">transform</span><span class="s">(</span>CORNER<span class="s">)</span>
+   _ctx.<span class="kw">push</span><span class="s">(</span><span class="s">)</span>
+   _ctx.<span class="kw">translate</span><span class="s">(</span>x, y<span class="s">)</span>
+   _ctx.<span class="kw">rotate</span><span class="s">(</span><span class="kw">rotate</span><span class="s">)</span>
+   _ctx.<span class="kw">scale</span><span class="s">(</span><span class="kw">scale</span><span class="s">)</span>
+   <span class="s">(</span>x, y<span class="s">)</span>, <span class="s">(</span>w, h<span class="s">)</span> = bounds<span class="s">(</span>paths<span class="s">)</span>
+   _ctx.<span class="kw">translate</span><span class="s">(</span><span class="s">(</span>-x-w<span class="s">)</span>*origin<span class="s">[</span><span class="s">0</span><span class="s">]</span>, <span class="s">(</span>-y-h<span class="s">)</span>*origin<span class="s">[</span><span class="s">1</span><span class="s">]</span><span class="s">)</span>
+   <span class="kw">for</span> path <span class="kw">in</span> paths:
+       <span class="grey">#_ctx.fill(path.fill)</span>
+       <span class="grey">#_ctx.stroke(path.stroke)</span>
+       <span class="grey">#_ctx.strokewidth(path.strokewidth)</span>
+       <span class="grey"># Use copies of the paths that adhere to the transformations.</span>
+       _ctx.<span class="kw">drawpath</span><span class="s">(</span>path.<span class="s">copy</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
+   _ctx.<span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
+</pre>        
+    <hr/>
+
+    <p>Finally, remember that when you want to supply one path multiple times to drawpath(), each
+    with its own translation and rotation, you need to <b>feed copies of the path to drawpath</b>:
+    </p><pre class="python">path = svg.<span class="s">parse</span><span class="s">(</span>data<span class="s">)</span><span class="s">[</span><span class="s">0</span><span class="s">]</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">5</span><span class="s">)</span>:
+  <span class="kw">rotate</span><span class="s">(</span>i*<span class="s">10</span><span class="s">)</span>
+  <span class="kw">drawpath</span><span class="s">(</span>path.<span class="s">copy</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
+</pre>
+
+    <p> 
+  </p></div>
+
+</body></html>

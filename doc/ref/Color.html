@@ -1,0 +1,498 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Reference: Color</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
+
+    <h3>Color</h3>
+
+    <ul class="siblings">
+      <li><a href="Primitives.html">Primitives</a>
+
+      </li><li><a href="Path.html">Path</a>
+
+      </li><li><a href="Transform.html">Transform</a>
+
+      </li><li><a href="Typography.html">Typography</a>
+
+      </li><li><a href="Utility.html">Utility</a>
+
+      </li><li><a href="Classes.html">Classes</a>
+    </li></ul>
+  </div>
+
+  <div class="article">
+    <a name="background()"></a>
+
+    <div class="section">
+      <h3>background()</h3>
+
+      <div class="definition">
+        <h2>Syntax</h2>
+
+        <div class="row">
+          <pre class="python"><span class="kw">background</span><span class="s">(</span>r, g, b, a=<span class="s">1.0</span><span class="s">)</span>
+<span class="kw">background</span><span class="s">(</span>h, s, b, a=<span class="s">1.0</span><span class="s">)</span>
+<span class="kw">background</span><span class="s">(</span>c, m, y, k, a=<span class="s">1.0</span><span class="s">)</span>
+<span class="kw">background</span><span class="s">(</span>k, a=<span class="s">1.0</span><span class="s">)</span>
+<span class="kw">background</span><span class="s">(</span><span class="kw">color</span><span class="s">)</span>
+<span class="kw">background</span><span class="s">(</span><span class="kw">None</span><span class="s">)</span>
+</pre>
+        </div>
+
+        <h2>Description</h2>
+
+        <div class="row">
+          Sets the PDF background color. This command works exactly like the <a href="#fill()">fill()</a> or <a href="#stroke()">stroke()</a> command. You can use it to set
+          the PDF background to transparent by supplying None as parameter (so it imports more
+          easily in Photoshop or Illustrator).
+        </div>
+
+        <h2>Returns</h2>
+
+        <div class="row">
+          <a href="Classes.html#Color">Color</a> containing the defined color values<a href="Classes.html#Color"></a>
+        </div>
+
+        <h2>Tutorial</h2>
+
+        <div class="row">
+          <a href="../lib/Colors.html">Colors</a>
+        </div>
+
+        <h2>Example</h2>
+
+        <div class="row">
+          <table border="0">
+            <tbody>
+              <tr>
+                <td><span class="image_border"><img src="media/background.gif"/></span>
+
+                </td><td>
+                  <pre class="python">
+<span class="kw">background</span><span class="s">(</span><span class="kw">None</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
+</pre>
+                </td></tr></tbody></table>
+        </div>
+      </div>
+    </div><a name="color()"></a>
+
+    <div class="section">
+      <h3>color()</h3>
+
+      <div class="definition">
+        <h2>Syntax</h2>
+
+        <div class="row">
+          <pre class="python"><span class="kw">color</span><span class="s">(</span>r, g, b, a<span class="s">)</span>
+<span class="kw">color</span><span class="s">(</span>h, s, b, a<span class="s">)</span>
+<span class="kw">color</span><span class="s">(</span>c, m, y, k, a<span class="s">)</span>
+<span class="kw">color</span><span class="s">(</span>k, a<span class="s">)</span>
+</pre>
+        </div>
+
+        <h2>Description</h2>
+
+        <div class="row">
+          Returns a color. The color is either specified in terms of RGB, HSB, or CMYK depending on
+          the current <a href="#colormode()">colormode()</a>. The default colormode is RGB. Each
+          RGB, HSB, or CMYK parameter ranges between 0.0 and 1.0. The last parameter is optional
+          and sets the alpha (opacity) value. Additionally, color() can be called with just one
+          parameter that sets the gray value. The returned color can be supplied as parameter to
+          the <a href="#fill()">fill()</a> or <a href="#stroke()">stroke()</a> command.
+        </div>
+
+        <h2>Returns</h2>
+
+        <div class="row">
+          <a href="Classes.html#Color">Color</a> containing the defined color values<a href="Classes.html#Color"></a>
+        </div>
+
+        <h2>Tutorial</h2>
+
+        <div class="row">
+          <a href="../lib/Colors.html">Colors</a>
+        </div>
+
+        <h2>Example</h2>
+
+        <div class="row">
+          <table border="0">
+            <tbody>
+              <tr>
+                <td><span class="image_border"><img src="media/color.jpg"/></span>
+
+                </td><td>
+                  <pre class="python">
+clr1 = <span class="kw">color</span><span class="s">(</span><span class="s">1.0</span>, <span class="s">0.0</span>, <span class="s">0.5</span><span class="s">)</span>
+<span class="kw">fill</span><span class="s">(</span>clr1<span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">25</span>, <span class="s">25</span><span class="s">)</span>
+ 
+clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3</span>, <span class="s">0.0</span>, <span class="s">0.4</span><span class="s">)</span>
+<span class="kw">fill</span><span class="s">(</span>clr2<span class="s">)</span>
+<span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
+                </td></tr></tbody></table>
+        </div>
+      </div>
+    </div><a name="colormode()"></a>
+
+    <div class="section">
+      <h3>colormode()</h3>
+
+      <div class="definition">
+        <h2>Syntax</h2>
+
+        <div class="row">
+          <pre class="python"><span class="kw">colormode</span><span class="s">(</span>mode, <span class="s">range</span>=<span class="s">1.0</span><span class="s">)</span>
+</pre>
+        </div>
+
+        <h2>Description</h2>
+
+        <div class="row">
+          Changes the way NodeBox interprets color data. By default, <a href="#fill()">fill()</a>
+          and <a href="#stroke()">stroke()</a> are set by values between 0.0 and 1.0 using the RGB
+          color model. RGB corresponds to Red/Green/Blue. Alternatively HSB
+          (Hue/Saturation/Brightness) or CMYK (Cyan/Magenta/Yellow/Black) can be specified.
+          Regardless of which colormode is specified, PDF's and images are exported in the
+          specified <a href="#outputmode()">outputmode()</a>. The optional range parameter
+          specifies whether color values are defined between 0.0 and 1.0, or something else, 0 and
+          255 for example (range=255).
+        </div>
+
+        <h2>Returns</h2>
+
+        <div class="row">
+          the current color mode (RGB, CMYK or HSB)
+        </div>
+
+        <h2>Tutorial</h2>
+
+        <div class="row">
+          <a href="../lib/Colors.html">Colors</a>
+        </div>
+
+        <h2>Example</h2>
+
+        <div class="row">
+          <table border="0">
+            <tbody>
+              <tr>
+                <td><span class="image_border"><img src="media/colormode.jpg"/></span>
+
+                </td><td>
+                  <pre class="python">
+<span class="kw">colormode</span><span class="s">(</span><span class="kw">RGB</span><span class="s">)</span>
+<span class="kw">fill</span><span class="s">(</span><span class="s">0.25</span>, <span class="s">0.25</span>, <span class="s">0.25</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+ 
+<span class="kw">colormode</span><span class="s">(</span><span class="kw">HSB</span><span class="s">)</span>
+<span class="kw">fill</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">0.25</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">60</span>, <span class="s">10</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
+                </td></tr></tbody></table>
+        </div>
+      </div>
+    </div><a name="fill()"></a>
+
+    <div class="section">
+      <h3>fill()</h3>
+
+      <div class="definition">
+        <h2>Syntax</h2>
+
+        <div class="row">
+          <pre class="python"><span class="kw">fill</span><span class="s">(</span>r, g, b, a<span class="s">)</span>
+<span class="kw">fill</span><span class="s">(</span>h, s, b, a<span class="s">)</span>
+<span class="kw">fill</span><span class="s">(</span>c, m, y, k, a<span class="s">)</span>
+<span class="kw">fill</span><span class="s">(</span>k, a<span class="s">)</span>
+<span class="kw">fill</span><span class="s">(</span><span class="kw">color</span><span class="s">)</span>
+</pre>
+        </div>
+
+        <h2>Description</h2>
+
+        <div class="row">
+          Sets the current fill color. All shapes, paths and text following this command will be
+          drawn in this fill color. The color is either specified in terms of RGB, HSB or CMYK
+          depending on the current <a href="#colormode()">colormode()</a>. Each RGB, HSB or CMYK
+          parameter ranges between 0.0 and 1.0. The default colormode is RGB. The last parameter is
+          optional and sets the alpha (opacity) value. Additionally, fill() can be called with just
+          one parameter that sets the gray value, or with the color value returned from the
+          <a href="#color()">color()</a> command.
+        </div>
+
+        <h2>Returns</h2>
+
+        <div class="row">
+          the current fill <a href="Classes.html#Color">color</a>
+        </div>
+
+        <h2>Example</h2>
+
+        <div class="row">
+          <table border="0">
+            <tbody>
+              <tr>
+                <td><span class="image_border"><img src="media/fill.jpg"/></span>
+
+                </td><td>
+                  <pre class="python">
+<span class="kw">fill</span><span class="s">(</span><span class="s">1.0</span>, <span class="s">0.0</span>, <span class="s">0.5</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">25</span>, <span class="s">25</span><span class="s">)</span>
+<span class="kw">fill</span><span class="s">(</span>.<span class="s">3</span>, <span class="s">0.0</span>, <span class="s">0.4</span><span class="s">)</span>
+<span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
+                </td></tr></tbody></table>
+        </div>
+      </div>
+    </div><a name="nofill()"></a>
+
+    <div class="section">
+      <h3>nofill()</h3>
+
+      <div class="definition">
+        <h2>Syntax</h2>
+
+        <div class="row">
+          <pre class="python"><span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+</pre>
+        </div>
+
+        <h2>Description</h2>
+
+        <div class="row">
+          Disables the current fill color. All shapes, paths and text following this command will
+          be drawn without a fill color.
+        </div>
+
+        <h2>Tutorial</h2>
+
+        <div class="row">
+          <a href="../lib/Colors.html">Colors</a>
+        </div>
+
+        <h2>Example</h2>
+
+        <div class="row">
+          <table border="0">
+            <tbody>
+              <tr>
+                <td><span class="image_border"><img src="media/nofill.jpg"/></span>
+
+                </td><td>
+                  <pre class="python">
+<span class="kw">strokewidth</span><span class="s">(</span><span class="s">1.5</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
+<span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
+                </td></tr></tbody></table>
+        </div>
+      </div>
+    </div><a name="nostroke()"></a>
+
+    <div class="section">
+      <h3>nostroke()</h3>
+
+      <div class="definition">
+        <h2>Syntax</h2>
+
+        <div class="row">
+          <pre class="python"><span class="kw">nostroke</span><span class="s">(</span><span class="s">)</span>
+</pre>
+        </div>
+
+        <h2>Description</h2>
+
+        <div class="row">
+          Disables the current stroke color. All shapes, paths and text following this command will
+          be drawn without a stroke (outline) color.
+        </div>
+
+        <h2>Tutorial</h2>
+
+        <div class="row">
+          <a href="../lib/Colors.html">Colors</a>
+        </div>
+
+        <h2>Example</h2>
+
+        <div class="row">
+          <table border="0">
+            <tbody>
+              <tr>
+                <td><span class="image_border"><img src="media/nostroke.jpg"/></span>
+
+                </td><td>
+                  <pre class="python">
+<span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
+<span class="kw">strokewidth</span><span class="s">(</span><span class="s">6</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">1.0</span>, <span class="s">0.0</span>, <span class="s">0.5</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
+<span class="kw">nostroke</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
+                </td></tr></tbody></table>
+        </div>
+      </div>
+    </div><a name="outputmode()"></a>
+
+    <div class="section">
+      <h3>outputmode()</h3>
+
+      <div class="definition">
+        <h2>Syntax</h2>
+
+        <div class="row">
+          <pre class="python">outputmode<span class="s">(</span>mode<span class="s">)</span>
+</pre>
+        </div>
+
+        <h2>Description</h2>
+
+        <div class="row">
+          Changes the way colors are displayed. While the <a href="#colormode()">colormode()</a>
+          command specifies the input of colors, outpumode() specifies the output. By default, the
+          output mode for colors is RGB, but you can also set it to CMYK so that exported PDF's are
+          ready for print. Output in RGB will look brighter on screen but to validate PDF documents
+          the colors need to be in CMYK.
+        </div>
+
+        <h2>Returns</h2>
+
+        <div class="row">
+          the current output mode (RGB or CMYK)
+        </div>
+
+        <h2>Tutorial</h2>
+
+        <div class="row">
+          <a href="../lib/Colors.html">Colors</a>
+        </div>
+
+        <h2>Example</h2>
+
+        <div class="row">
+          <pre class="python">outputmode<span class="s">(</span><span class="kw">CMYK</span><span class="s">)</span>
+</pre>
+        </div>
+      </div>
+    </div><a name="stroke()"></a>
+
+    <div class="section">
+      <h3>stroke()</h3>
+
+      <div class="definition">
+        <h2>Syntax</h2>
+
+        <div class="row">
+          <pre class="python"><span class="kw">stroke</span><span class="s">(</span>r, g, b, a<span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span>h, s, b, a<span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span>c, m, y, k, a<span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span>k, a<span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="kw">color</span><span class="s">)</span>
+</pre>
+        </div>
+
+        <h2>Description</h2>
+
+        <div class="row">
+          Sets the current stroke color. The stroke color is used to draw lines around shapes,
+          paths and text. All shapes, paths and text following this command will be outlined in
+          this stroke color. The color is either specified in terms of RGB, HSB or CMYK depending
+          on the current <a href="#colormode()">colormode()</a>. Each RGB, HSB or CMYK parameter
+          ranges between 0.0 and 1.0. The default colormode is RGB. The last parameter is optional
+          and sets the alpha (opacity) value. Additionally, stroke() can be called with just one
+          parameter that sets the gray value, or with the color value returned from the <a href="#color()">color()</a> command.
+        </div>
+
+        <h2>Returns</h2>
+
+        <div class="row">
+          <a href="Classes.html#Color">Color</a> containing the defined color values<a href="Classes.html#Color"></a>
+        </div>
+
+        <h2>Tutorial</h2>
+
+        <div class="row">
+          <a href="../lib/Colors.html">Colors</a>
+        </div>
+
+        <h2>Example</h2>
+
+        <div class="row">
+          <table border="0">
+            <tbody>
+              <tr>
+                <td><span class="image_border"><img src="media/stroke.jpg"/></span>
+
+                </td><td>
+                  <pre class="python">
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">strokewidth</span><span class="s">(</span><span class="s">3</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0.3</span>, <span class="s">0.0</span>, <span class="s">0.4</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">1.0</span>, <span class="s">0.0</span>, <span class="s">0.5</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
+                </td></tr></tbody></table>
+        </div>
+      </div>
+    </div><a name="strokewidth()"></a>
+
+    <div class="section">
+      <h3>strokewidth()</h3>
+
+      <div class="definition">
+        <h2>Syntax</h2>
+
+        <div class="row">
+          <pre class="python"><span class="kw">strokewidth</span><span class="s">(</span>width<span class="s">)</span>
+</pre>
+        </div>
+
+        <h2>Description</h2>
+
+        <div class="row">
+          Sets the width of the stroke used for lines around shapes, paths and text.
+        </div>
+
+        <h2>Returns</h2>
+
+        <div class="row">
+          the current stroke width
+        </div>
+
+        <h2>Example</h2>
+
+        <div class="row">
+          <table border="0">
+            <tbody>
+              <tr>
+                <td><span class="image_border"><img src="media/strokewidth.jpg"/></span>
+
+                </td><td>
+                  <pre class="python">
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
+<span class="kw">strokewidth</span><span class="s">(</span><span class="s">1.5</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
+<span class="kw">strokewidth</span><span class="s">(</span><span class="s">3</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
+                </td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body></html>
