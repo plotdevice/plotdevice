@@ -87,8 +87,8 @@ class NodeBoxGraphicsView(NSView):
         self.keydown = False
         self.key = None
         self.keycode = None
-        self.scrollwheel = False
-        self.wheeldelta = 0.0
+        # self.scrollwheel = False
+        # self.wheeldelta = 0.0
         self._zoom = 1.0
         self._volatile = False
         self.setFrameSize_( (graphics.DEFAULT_WIDTH, graphics.DEFAULT_HEIGHT) )
@@ -370,8 +370,8 @@ class FullscreenView(NSView):
         self.keydown = False
         self.key = None
         self.keycode = None
-        self.scrollwheel = False
-        self.wheeldelta = 0.0
+        # self.scrollwheel = False
+        # self.wheeldelta = 0.0
         return self
 
     def setCanvas(self, canvas):

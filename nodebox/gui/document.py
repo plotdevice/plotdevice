@@ -167,8 +167,8 @@ class NodeBoxDocument(NSDocument):
             keydown=self.currentView.keydown,
             key=self.currentView.key,
             keycode=self.currentView.keycode,
-            scrollwheel=self.currentView.scrollwheel,
-            wheeldelta=self.currentView.wheeldelta,
+            # scrollwheel=self.currentView.scrollwheel,
+            # wheeldelta=self.currentView.wheeldelta,
         )
 
     def refresh(self):
@@ -286,7 +286,7 @@ class NodeBoxDocument(NSDocument):
         self.graphicsView.volatile = True
 
         # execute the script
-        if not self.cleanRun():
+        if not self.eval():
             # syntax error. bail out before looping
             self.vm.stop()
         elif self.vm.animated:
@@ -297,13 +297,13 @@ class NodeBoxDocument(NSDocument):
                 return
 
             # Run setup routine
-            self.fastRun("setup")
+            self.invoke("setup")
             window = self.currentView.window()
             window.makeFirstResponder_(self.currentView)
 
             # Start the timer
             self.animationTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-                1.0 / self.vm.speed, self, objc.selector(self.doFrame, signature="v@:@"), None, True)
+                1.0 / self.vm.speed, self, objc.selector(self.step, signature="v@:@"), None, True)
             
             # Start the spinner
             self.animationSpinner.startAnimation_(None)
@@ -311,7 +311,19 @@ class NodeBoxDocument(NSDocument):
             # clean up after successful non-animated run
             self.stopScript()
 
-    def cleanRun(self, method=None):
+    def step(self):
+        """Keep calling the script's draw method until an error occurs or the animation complete."""
+        ok = self.invoke("draw")
+        if not ok or not self.vm.running:
+            self.stopScript()
+
+    def eval(self):
+        """Compile the script and run its global scope.
+
+        For non-animated scripts, this is a whole run since all of their drawing and control
+        flow is at the module level. For animated scripts, this is just a first pass to populate
+        the namespace with the script's variables and particularly the setup/draw/stop functions.
+        """
         self.animationSpinner.startAnimation_(None)
         if (self.outputView):
             self.outputView.clear(timestamp=True)
@@ -323,7 +335,7 @@ class NodeBoxDocument(NSDocument):
             return False
 
         # Run the actual script
-        success = self.fastRun(method)
+        success = self.invoke(None)
         self.animationSpinner.stopAnimation_(None)
 
         if success and self.vm.vars:
@@ -332,7 +344,13 @@ class NodeBoxDocument(NSDocument):
 
         return success
 
-    def fastRun(self, method=None):
+    def invoke(self, method):
+        """Call a method defined in the script's global namespace.
+
+        If `method` exists in the namespace, it is called. If it's undefined, the invocation
+        is ignored and no error is raised. If the method is None, the script's global scope 
+        will be run, but no additional methods will be called.
+        """
         # Run the script
         self.vm.state = self._ui_state()
         result = self.vm.render(method=method)
@@ -348,11 +366,6 @@ class NodeBoxDocument(NSDocument):
             self.currentView.setCanvas(self.vm.canvas)
 
         return result.ok
-
-    def doFrame(self):
-        ok = self.fastRun("draw")
-        if not ok or not self.vm.running:
-            self.stopScript()
 
     def echo(self, output):
         """Pass a list of (isStdErr, txt) tuples to the output window"""
@@ -389,7 +402,9 @@ class NodeBoxDocument(NSDocument):
             self.vm.export(kind, fname, opts)
 
     def exportStatus(self, status, canvas=None):
-        """Handle export-related events (invoked by self.vm.session object)"""
+        """Handle export-related events (invoked by self.vm)
+
+        Called with either a status flag + output text, a rendered canvas, or both."""
         if status.output:
             # print any console messages
             self.echo(status.output)
@@ -404,6 +419,7 @@ class NodeBoxDocument(NSDocument):
             self.stopScript()
 
     def exportProgress(self, written, total, cancelled):
+        """Update the export progress bar (invoked by self.vm.session)"""
         label = self.footer.progressPanel.message
         if cancelled:
             self.footer.setMessage_(u'Cancelling export…')
