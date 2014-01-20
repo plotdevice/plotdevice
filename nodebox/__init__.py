@@ -1,4 +1,5 @@
-__version__='1.9.8'
+__version__='1.10'
+__MAGIC = "_n_o_d_e_b_o_x_"
 
 def get_version():
     return __version__

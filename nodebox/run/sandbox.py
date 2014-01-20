@@ -9,11 +9,11 @@ from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
 from nodebox.graphics import NodeBoxError
-from nodebox.gui.widgets import MAGICVAR
 from nodebox import util
 from nodebox import graphics
 from nodebox.run.export import MovieExportSession, ImageExportSession
 from nodebox.run import stacktrace
+from nodebox import __MAGIC as MAGICVAR
 
 __all__ = ['Sandbox']
 

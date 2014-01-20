@@ -5,9 +5,7 @@ from AppKit import *
 import objc
 
 from nodebox import graphics
-
-MAGICVAR = "_n_o_d_e_b_o_x_"
-
+from nodebox import __MAGIC as MAGICVAR
 
 class ValueLadder:
 
