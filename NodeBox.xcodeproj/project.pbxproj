@@ -22,6 +22,11 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		2A263141188CF4B2000B792A /* __init__.py in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812EA188CF45800B47700 /* __init__.py */; };
+		2A263143188CF4B7000B792A /* context.json in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812ED188CF45800B47700 /* context.json */; };
+		2A263144188CF4B9000B792A /* LICENSE.txt in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812EE188CF45800B47700 /* LICENSE.txt */; };
+		2A263145188CF4BC000B792A /* themes.py in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812F0188CF45800B47700 /* themes.py */; };
+		2A263149188E0D92000B792A /* default.themes in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A263148188E0D87000B792A /* default.themes */; };
 		2A294461185E54F600E9F650 /* export.py in Copy nodebox.run */ = {isa = PBXBuildFile; fileRef = 2A294459185E539400E9F650 /* export.py */; };
 		2A294462185E54F900E9F650 /* task.py in Copy nodebox.run */ = {isa = PBXBuildFile; fileRef = 2A29445A185E539400E9F650 /* task.py */; };
 		2A294463185E550400E9F650 /* __init__.py in Copy nodebox.run */ = {isa = PBXBuildFile; fileRef = 2A294458185E539400E9F650 /* __init__.py */; };
@@ -101,6 +106,21 @@
 				2A294461185E54F600E9F650 /* export.py in Copy nodebox.run */,
 			);
 			name = "Copy nodebox.run";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2A4812E8188CF43500B47700 /* Copy nodebox.graphics.colors */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = python/nodebox/graphics/colors;
+			dstSubfolderSpec = 7;
+			files = (
+				2A263141188CF4B2000B792A /* __init__.py in Copy nodebox.graphics.colors */,
+				2A263145188CF4BC000B792A /* themes.py in Copy nodebox.graphics.colors */,
+				2A263149188E0D92000B792A /* default.themes in Copy nodebox.graphics.colors */,
+				2A263143188CF4B7000B792A /* context.json in Copy nodebox.graphics.colors */,
+				2A263144188CF4B9000B792A /* LICENSE.txt in Copy nodebox.graphics.colors */,
+			);
+			name = "Copy nodebox.graphics.colors";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		2ABDB76F1867D9560069EFC3 /* Copy nodebox tool */ = {
@@ -190,6 +210,7 @@
 /* Begin PBXFileReference section */
 		1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FBA07B3F13500E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
+		2A263148188E0D87000B792A /* default.themes */ = {isa = PBXFileReference; lastKnownFileType = file; path = default.themes; sourceTree = "<group>"; };
 		2A294458185E539400E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		2A294459185E539400E9F650 /* export.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = export.py; sourceTree = "<group>"; };
 		2A29445A185E539400E9F650 /* task.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = task.py; sourceTree = "<group>"; };
@@ -203,6 +224,10 @@
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		2A3DB1F5187E85130062635B /* script.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = script.py; sourceTree = "<group>"; };
 		2A4812E51884AF3100B47700 /* fsevents.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = fsevents.py; sourceTree = "<group>"; };
+		2A4812EA188CF45800B47700 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
+		2A4812ED188CF45800B47700 /* context.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = context.json; sourceTree = "<group>"; };
+		2A4812EE188CF45800B47700 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		2A4812F0188CF45800B47700 /* themes.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = themes.py; sourceTree = "<group>"; };
 		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		2A827CC91859E9FE00A126BA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = ../../../../../../usr/lib/libpython2.7.dylib; sourceTree = "<group>"; };
@@ -359,6 +384,18 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		2A4812E9188CF45800B47700 /* colors */ = {
+			isa = PBXGroup;
+			children = (
+				2A4812EA188CF45800B47700 /* __init__.py */,
+				2A4812F0188CF45800B47700 /* themes.py */,
+				2A4812ED188CF45800B47700 /* context.json */,
+				2A263148188E0D87000B792A /* default.themes */,
+				2A4812EE188CF45800B47700 /* LICENSE.txt */,
+			);
+			path = colors;
+			sourceTree = "<group>";
+		};
 		611CC4AE10BA8C1B00B55455 /* nodebox */ = {
 			isa = PBXGroup;
 			children = (
@@ -385,6 +422,7 @@
 		611CC4BD10BA8C1B00B55455 /* graphics */ = {
 			isa = PBXGroup;
 			children = (
+				2A4812E9188CF45800B47700 /* colors */,
 				611CC4BE10BA8C1B00B55455 /* __init__.py */,
 				611CC4C010BA8C1B00B55455 /* bezier.py */,
 				2A29447C185E595000E9F650 /* context.py */,
@@ -464,6 +502,7 @@
 				611CC59610BA901100B55455 /* Copy nodebox.util */,
 				2A29445E185E54C200E9F650 /* Copy nodebox.run */,
 				611CC59710BA901100B55455 /* Copy nodebox.graphics */,
+				2A4812E8188CF43500B47700 /* Copy nodebox.graphics.colors */,
 				611CC59810BA901100B55455 /* Copy nodebox.geo */,
 				8D15AC300486D014006FF6A4 /* Sources */,
 				8D15AC330486D014006FF6A4 /* Frameworks */,

@@ -62,6 +62,8 @@ class Context(object):
         self._vars = []
 
     def ximport(self, libName):
+        if libName=='colors':
+            return self._ns[libName]
         lib = __import__(libName)
         self._ns[libName] = lib
         lib._ctx = self

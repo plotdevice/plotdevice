@@ -187,6 +187,9 @@ class Sandbox(object):
         # Initalize the magicvar
         self.namespace[MAGICVAR] = self.magicvar
 
+        # Have the colors libarary use our context
+        self.namespace["colors"]._ctx = self.context
+
         # Set the frame/pagenum
         self.namespace['PAGENUM'] = self.namespace['FRAME'] = self._meta.next
         

@@ -26,6 +26,7 @@ else:
     import time, sys, re
     from contextlib import contextmanager
     from Quartz.PDFKit import *
+    from nodebox.graphics import colors
     from nodebox import graphics
     from nodebox import util
 
@@ -310,6 +311,11 @@ else:
     ns = {"export":export}
     canvas = Canvas()
     context = graphics.Context(canvas, ns)
+    colors._ctx = context
+
+    from os import getenv
+    from os.path import join
+    sys.path.append(join(getenv('HOME'), 'Library', 'Application Support', 'NodeBox'))
 
     # set up the standard nodebox global namespace, all tied to the module-level canvas
     # (note that this means you shouldn't `import *` from this in more than one acript file

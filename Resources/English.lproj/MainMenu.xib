@@ -390,6 +390,16 @@
                                     </items>
                                 </menu>
                             </menuItem>
+                            <menuItem title="Colors" id="cpK-4x-mAq">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Colors" id="InS-N9-qGW">
+                                    <items>
+                                        <menuItem title="Item" id="ybB-c5-Uew">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
                             <menuItem title="Grid" id="FSX-gC-0ut">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Grid" id="SeR-GN-MNl">

@@ -36,22 +36,24 @@ __license__   = "GPL"
 import os
 import re
 import difflib
+import json
 from glob import glob
 from math import degrees, radians, sin, cos, atan2, sqrt
 from math import floor, ceil
 from copy import deepcopy
-from xml.dom.minidom import parseString
 from random import random, choice
+from shutil import copyfile
 
 try:
     # NodeBox / Cocoa specific functionality.
     # Our library can still do a lot of interesting stuff without these!
-    from nodebox.graphics import Grob, RGB, HSB, CMYK, CORNER
-    from nodebox.graphics.cocoa import _restore, _save
+    from nodebox.graphics.grobs import Grob, RGB, HSB, CMYK, CORNER, _restore, _save
     from AppKit import NSShadow, NSColor
     from AppKit import CIImage, CIColor, CIFilter, CIVector, NSGraphicsContext
 except:
     class Grob: pass
+
+CONFIG_DIR = os.path.join(os.getenv('HOME'), 'Library', 'Application Support', 'NodeBox', 'colors')
 
 try: import favorites as _favorites
 except:
@@ -91,7 +93,9 @@ def hex_to_rgb(hex):
     """
 
     hex = hex.lstrip("#")
-    if len(hex) < 6:
+    if len(hex) == 3:
+        hex = "".join(map("".join, zip(hex,hex)))
+    elif len(hex) < 6:
         hex += hex[-1] * (6-len(hex))
         
     r, g, b = hex[0:2], hex[2:4], hex[4:]
@@ -405,16 +409,26 @@ named_colors = {
 
 # The context is a dictionary of colors mapped to associated words,
 # e.g. "red" is commonly associated with passion, love, heat, etc. 
+# Default associations lists are stored in context.json which is 
+# mirrored to the app_support directory for user modification. The
+# contents of the json file are lazy-loaded on first access of the 
+# dict's contents.
 
-#__file__ = ""
-context = {}
-path = os.path.join(os.path.dirname(__file__), "context", "*.txt")
-for f in glob(path):
-    name = os.path.basename(f)[:-4]
-    tags = open(f).read()
-    tags = [tag.strip() for tag in tags.split(",")]
-    tags.sort()
-    context[name] = tags
+class ColorContext(dict):
+    def __init__(self):
+        self.pth = None
+    def __getitem__(self, key):
+        if not self.pth:
+            self.pth = '%s/context.json'%CONFIG_DIR
+            if not os.path.exists(self.pth):
+                copyfile('%s/context.json'%os.path.dirname(__file__), self.pth)
+            try:
+                self.update({col:sorted(lst) for col, lst in json.load(file(self.pth)).items()})
+            except ValueError as e:
+                e.args = ("Error decoding %s"%self.pth.replace(os.getenv('HOME'),'~'),)+e.args
+                raise
+        return super(ColorContext, self).__getitem__(key)
+context = ColorContext()
 
 #### BASE COLOR ######################################################################################
 
@@ -2561,440 +2575,9 @@ def shader(x, y, dx, dy, radius=300, angle=0, spread=90):
 #    fill(0.84+d*0.1, 1, 0.2+0.8*d, d)
 #    oval(x, y, r, r)
 
-#### COLOR AGGREGATE #################################################################################
-
-DEFAULT_CACHE = os.path.join(os.path.dirname(__file__), "aggregated")
-
-_aggregated_name = ""
-_aggregated_dict = {}
-def aggregated(cache=DEFAULT_CACHE):
-    
-    """ A dictionary of all aggregated words.
-    
-    They keys in the dictionary correspond to subfolders in the aggregated cache.
-    Each key has a list of words. Each of these words is the name of an XML-file
-    in the subfolder. The XML-file contains color information harvested from the web
-    (or handmade).
-    
-    """
-    
-    global _aggregated_name, _aggregated_dict
-    if _aggregated_name != cache:
-        _aggregated_name = cache
-        _aggregated_dict = {}
-        for path in glob(os.path.join(cache, "*")):
-            if os.path.isdir(path):
-                p = os.path.basename(path)
-                _aggregated_dict[p] = glob(os.path.join(path, "*"))
-                _aggregated_dict[p] = [os.path.basename(f)[:-4] for f in _aggregated_dict[p]]
-     
-    return _aggregated_dict
-
-class ColorThemeNotFound(Exception): pass
-
-class ColorTheme(_list):
-    
-    def __init__(self, name="", ranges=[], top=5, cache=DEFAULT_CACHE, blue="blue", guess=False, length=100):
-
-        """ A set of weighted ranges linked to colors.
-        
-        A ColorTheme is a set of allowed colors (e.g. red, black)
-        and ranges (e.g. dark, intense) for these colors.
-        These are supplied as lists of (color, range, weight) tuples.
-        Ranges with a greater weight will occur more in the combined range.
-        
-        A ColorTheme is expected to have a name,
-        so it can be stored and retrieved in the XML cache.
-        
-        The blue parameter denotes a color correction.
-        Since most web aggregated results will yield "blue" instead of "azure" or "cyan",
-        we may never see these colors (e.g. azure beach will not propagate).
-        So instead of true blue we pass "dodgerblue", which will yield more all-round shades of blue.
-        To ignore this, set blue="blue".
-        
-        """
-
-        self.name = name
-        self.ranges = []
-        self.cache = cache
-        self.top = top
-        self.tags = []
-        self.blue = blue
-        self.guess = False
-        self.length = 100
-        
-        self.group_swatches = False
-
-        # See if we can load data from cache first.
-        # Check subfolders in the cache as well.
-        # If the query is in a  subfolder, adjust the cache path.
-        path = os.path.join(self.cache, self.name+".xml")
-        if os.path.exists(path):
-            self._load(self.top, self.blue)
-        else:
-            a = aggregated(self.cache)
-            for key in a:
-                if self.name != "" and self.name in a[key]:
-                    self.cache = os.path.join(self.cache, key)
-                    self._load(self.top, self.blue)
-                    self.tags.append(key.replace("_"," "))
-                    self.group_swatches = True
-                    break
-            
-        # Otherwise, we expect some parameters to specify the data.
-        if len(ranges) > 0:
-            self.ranges = ranges
-
-        # Nothing in the cache matches the query
-        # and no parameters were specified, so we're going to guess.
-        # This works reasonably well for obvious things like
-        # abandon -> abandoned, frail -> fragile
-        if len(self.ranges) == 0 and guess:
-            a = aggregated(self.cache)
-            for key in a:
-                m = difflib.get_close_matches(self.name, a[key], cutoff=0.8)
-                if len(m) > 0:
-                    self.name = m[0]
-                    self.cache = os.path.join(self.cache, key)
-                    self._load(top, blue)
-                    self.tags.append(key.replace("_"," "))
-                    self.group_swatches = True
-                    self.guess = True
-                    break
-                    
-        if self.name != "" and len(self.ranges) == 0:
-            raise ColorThemeNotFound
-
-    def add_range(self, range, clr=None, weight=1.0):
-        
-        # You can also supply range and color as a string,
-        # e.g. "dark ivory".
-        if isinstance(range, str) and clr == None:
-            for word in range.split(" "):
-                if word in named_hues \
-                or word in named_colors:
-                    clr = named_color(word)
-                if shade(word) != None:
-                    range = shade(word)
-                    
-        self.ranges.append((color(clr), range, weight))
-
-    def copy(self):
-        
-        t = ColorTheme(
-            name = self.name,
-            ranges = [(clr.copy(), rng.copy(), wgt) for clr, rng, wgt in self],
-            top = self.top,
-            cache = self.cache,
-            blue = self.blue,
-            guess = self.guess,
-            lenght = self.length
-        )
-        t.tags = self.tags
-        t.group_swatches = self.group_swatches
-        return t
-        
-    def _weight_by_hue(self):
-        
-        """ Returns a list of (hue, ranges, total weight, normalized total weight)-tuples.
-        
-        ColorTheme is made up out of (color, range, weight) tuples.
-        For consistency with XML-output in the old Prism format
-        (i.e. <color>s made up of <shade>s) we need a group
-        weight per different hue.
-        
-        The same is true for the swatch() draw method.
-        Hues are grouped as a single unit (e.g. dark red, intense red, weak red)
-        after which the dimensions (rows/columns) is determined.
-        
-        """
-        
-        grouped = {}
-        weights = []
-        for clr, rng, weight in self.ranges:
-            h = clr.nearest_hue(primary=False)
-            if grouped.has_key(h):
-                ranges, total_weight = grouped[h]
-                ranges.append((clr, rng, weight))
-                total_weight += weight
-                grouped[h] = (ranges, total_weight)
-            else:
-                grouped[h] = ([(clr, rng, weight)], weight)
-
-        # Calculate the normalized (0.0-1.0) weight for each hue,
-        # and transform the dictionary to a list.
-        s = 1.0 * sum([w for r, w in grouped.values()])
-        grouped = [(grouped[h][1], grouped[h][1]/s, h, grouped[h][0]) for h in grouped]
-        grouped.sort()
-        grouped.reverse()
-
-        return grouped
-
-    @property
-    def xml(self):
-
-        """ Returns the color information as XML.
-        
-        The XML has the following structure:
-        <colors query="">
-            <color name="" weight="" />
-                <rgb r="" g="" b="" />
-                <shade name="" weight="" />
-            </color>
-        </colors>
-        
-        Notice that ranges are stored by name and retrieved in the _load()
-        method with the shade() command - and are thus expected to be
-        shades (e.g. intense, warm, ...) unless the shade() command would
-        return any custom ranges as well. This can be done by appending custom
-        ranges to the shades list.
-        
-        """
-
-        grouped = self._weight_by_hue()
-        
-        xml = "<colors query=\""+self.name+"\" tags=\""+", ".join(self.tags)+"\">\n\n"
-        for total_weight, normalized_weight, hue, ranges in grouped:
-            if hue == self.blue: hue = "blue"
-            clr = color(hue)
-            xml += "\t<color name=\""+clr.name+"\" weight=\""+str(normalized_weight)+"\">\n "
-            xml += "\t\t<rgb r=\""+str(clr.r)+"\" g=\""+str(clr.g)+"\" "
-            xml += "b=\""+str(clr.b)+"\" a=\""+str(clr.a)+"\" />\n "
-            for clr, rng, wgt in ranges:
-                xml += "\t\t<shade name=\""+str(rng)+"\" weight=\""+str(wgt/total_weight)+"\" />\n "
-            xml = xml.rstrip(" ") + "\t</color>\n\n"
-        xml += "</colors>"
-        
-        return xml
-
-    def _save(self):
-        
-        """ Saves the color information in the cache as XML.        
-        """
-
-        if not os.path.exists(self.cache):
-            os.makedirs(self.cache)
-        
-        path = os.path.join(self.cache, self.name+".xml")
-        f = open(path, "w")
-        f.write(self.xml)
-        f.close()
-    
-    def _load(self, top=5, blue="blue"):
-
-        """ Loads a theme from aggregated web data.
-       
-        The data must be old-style Prism XML: <color>s consisting of <shade>s.
-        Colors named "blue" will be overridden with the blue parameter.
-        
-        """
-        
-        path = os.path.join(self.cache, self.name+".xml")
-        xml = open(path).read()
-        dom = parseString(xml).documentElement
-        
-        attr = lambda e, a: e.attributes[a].value
-        
-        for e in dom.getElementsByTagName("color")[:top]:
-            w = float(attr(e, "weight")) 
-            try:
-                rgb = e.getElementsByTagName("rgb")[0]
-                clr = color(
-                    float(attr(rgb, "r")),
-                    float(attr(rgb, "g")),
-                    float(attr(rgb, "b")),
-                    float(attr(rgb, "a")),
-                    mode="rgb"
-                )
-                try: 
-                    clr.name = attr(e, "name")
-                    if clr.name == "blue": clr = color(blue)
-                except: 
-                    pass
-            except:
-                name = attr(e, "name")
-                if name == "blue": name = blue
-                clr = color(name)
-               
-            for s in e.getElementsByTagName("shade"):
-                self.ranges.append((
-                    clr, 
-                    shade(attr(s, "name")),
-                    w * float(attr(s, "weight"))                
-                ))
-                
-    def color(self, d=0.035):
-
-        """ Returns a random color within the theme.
-        
-        Fetches a random range (the weight is taken into account,
-        so ranges with a bigger weight have a higher chance of propagating)
-        and hues it with the associated color.
-        
-        """
-
-        s = sum([w for clr, rng, w in self.ranges])
-        r = random()
-        for clr, rng, weight in self.ranges:
-            if weight/s >= r: break
-            r -= weight/s
-        
-        return rng(clr, d)  
-        
-    def colors(self, n=10, d=0.035):
-      
-        """ Returns a number of random colors from the theme.
-        """
-      
-        s = sum([w for clr, rng, w in self.ranges])
-        colors = colorlist()
-        for i in _range(n):
-            r = random()
-            for clr, rng, weight in self.ranges:
-                if weight/s >= r: break
-                r -= weight/s
-            colors.append(rng(clr, d))
-        
-        return colors
-    
-    colorlist = colors
-
-    def contains(self, clr):
-        for c, rng, weight in self.ranges:
-            if clr in rng: return True
-        return False
-    
-    # You can do: if clr in aggregate.
-    
-    def __contains__(self, clr):
-        return self.contains(clr)
-
-    # Behaves as a list.
-
-    def __len__(self):
-        return self.length
-    
-    def __getitem__(self, i):
-        return self.color()
-        
-    def __getslice__(self, i, j):
-        j = min(len(self), j)
-        n = min(len(self), j-i)
-        return colorlist([self.color() for i in _range(n)])
-    
-    def __iter__(self):
-        colors = [self.color() for i in _range(len(self))]
-        return iter(colors)
-    
-    # You can do + and += operations.
-    
-    def __add__(self, theme):
-        t = self.copy()
-        t.ranges.extend(theme.ranges)
-        t.tags.extend(theme.tags)
-        return t
-        
-    def __iadd__(self, theme):
-        return self.__add__(theme)
-        
-    # Callable as a stateless function.
-    
-    def __call__(self, n=1, d=0.035):
-        if n > 1:
-            return self.colors(n, d)
-        else:
-            return self.color(d)
-        
-    # Behaves as a string.
-    
-    def __str__(self):
-        return self.name
-    
-    def __repr__(self):
-        return self.name
-    
-    def recombine(self, other, d=0.7):
-        
-        """ Genetic recombination of two themes using cut and splice technique.
-        """
-        
-        a, b = self, other
-        d1  = max(0, min(d, 1))
-        d2 = d1
-        
-        c = ColorTheme(
-            name = a.name[:int(len(a.name)*d1) ] + 
-                   b.name[ int(len(b.name)*d2):],
-            ranges = a.ranges[:int(len(a.ranges)*d1) ] + 
-                     b.ranges[ int(len(b.ranges)*d2):],
-            top = a.top,
-            cache = os.path.join(DEFAULT_CACHE, "recombined"),
-            blue = a.blue,
-            length = a.length*d1 + b.length*d2
-        )
-        c.tags  = a.tags[:int(len(a.tags)*d1) ] 
-        c.tags += b.tags[ int(len(b.tags)*d2):]
-        return c
-
-    def swatch(self, x, y, w=35, h=35, padding=4, roundness=0, n=12, d=0.035, grouped=None):
-        
-        """ Draws a weighted swatch with approximately n columns and rows.
-        
-        When the grouped parameter is True, colors are grouped in blocks of the same hue
-        (also see the _weight_by_hue() method).
-        
-        """
-        
-        if grouped == None: # should be True or False
-            grouped = self.group_swatches
-        
-        # If we dont't need to make groups,
-        # just display an individual column for each weight
-        # in the (color, range, weight) tuples.
-        if not grouped:
-            s = sum([wgt for clr, rng, wgt in self.ranges])
-            for clr, rng, wgt in self.ranges:
-                cols = max(1, int(wgt/s*n))
-                for i in _range(cols):
-                    rng.colors(clr, n=n, d=d).swatch(x, y, w, h, padding=padding, roundness=roundness)
-                    x += w+padding
-            
-            return x, y+n*(h+padding)
-        
-        # When grouped, combine hues and display them
-        # in batches of rows, then moving on to the next hue.
-        grouped = self._weight_by_hue()
-        for total_weight, normalized_weight, hue, ranges in grouped:
-            dy = y
-            rc = 0
-            for clr, rng, weight in ranges:
-                dx = x
-                cols = int(normalized_weight*n)
-                cols = max(1, min(cols, n-len(grouped)))
-                if clr.name == "black": rng = rng.black
-                if clr.name == "white": rng = rng.white
-                for i in _range(cols):
-                    rows = int(weight/total_weight*n)
-                    rows = max(1, rows)
-                    # Each column should add up to n rows,
-                    # if not due to rounding errors, add a row at the bottom.
-                    if (clr, rng, weight) == ranges[-1] and rc+rows < n: rows += 1
-                    rng.colors(clr, n=rows, d=d).swatch(dx, dy, w, h, padding=padding, roundness=roundness)
-                    dx += w + padding
-                dy += (w+padding) * rows #+ padding
-                rc = rows
-            x += (w+padding) * cols + padding
-
-        return x, dy
-
-    draw = swatch
-    
-    def swarm(self, x, y, r=100):
-        colors = self.colors(100)
-        colors.swarm(x, y, r)
-
-def theme(name="", ranges=[], top=5, cache=DEFAULT_CACHE, blue="dodgerblue", guess=False):
-    return ColorTheme(name, ranges, top, cache, blue, guess)
+import themes
+def theme(name="", ranges=[], top=5, cache=None, blue="dodgerblue", guess=False):
+    return themes.ColorTheme(name, ranges, top, cache, blue, guess)
     
 aggregate = theme
 
@@ -3020,7 +2603,7 @@ aggregate = theme
 #### COLORS FROM WEB #################################################################################
 
 def search_engine(query, top=5, service="google", license=None, 
-                  cache=os.path.join(DEFAULT_CACHE, "google")):
+                  cache="google"):
     
     """ Return a color aggregate from colors and ranges parsed from the web.
     T. De Smedt, http://nodebox.net/code/index.php/Prism
@@ -3065,21 +2648,21 @@ def search_engine(query, top=5, service="google", license=None,
     n2 = sum([w for s, w in sorted_shades[:3]])
     sorted_shades = [(shade(f(s)), w/n2) for s, w in sorted_shades[:3]]
 
+    # construct a ColorTheme and cache it in the db before returning it
     a = theme(cache=cache)
     a.name = query
     for clr, w1 in sorted_colors:
         for rng, w2 in sorted_shades:
             a.add_range(rng, clr, w1*w2)
-    
     a._save()
     return a
 
-def google(query, top=5, license=None, cache=os.path.join(DEFAULT_CACHE, "google")):
+def google(query, top=5, license=None, cache="google"):
     return search_engine(query, top, "google", license, cache)
 
 prism = google
 
-def yahoo(query, top=5, license=None, cache=os.path.join(DEFAULT_CACHE, "yahoo")):
+def yahoo(query, top=5, license=None, cache="yahoo"):
     return search_engine(query, top, "yahoo", license, cache)
 
 #a = yahoo("love") #rust sky
