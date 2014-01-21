@@ -86,10 +86,10 @@ class NodeBoxAppDelegate(NSObject):
         if kind=='ottobot':
             doc.runScript()
 
-    # @objc.IBAction
-    # def showHelp_(self, sender):
-    #     url = NSURL.URLWithString_("http://nodebox.net/code/index.php/Reference")
-    #     NSWorkspace.sharedWorkspace().openURL_(url)
+    @objc.IBAction
+    def showHelp_(self, sender):
+        url = NSURL.fileURLWithPath_(bundle_path('Contents/Resources/doc/manual.html'))
+        opened = NSWorkspace.sharedWorkspace().openURL_(url)
 
     @objc.IBAction
     def showSite_(self, sender):

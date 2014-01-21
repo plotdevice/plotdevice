@@ -500,9 +500,9 @@
                 <menuItem title="Help" id="103">
                     <menu key="submenu" title="Help" id="106">
                         <items>
-                            <menuItem title="NodeBox Reference" keyEquivalent="?" id="111">
+                            <menuItem title="NodeBox Manual" keyEquivalent="?" id="111">
                                 <connections>
-                                    <action selector="showHelp:" target="-3" id="BDb-qz-eEL"/>
+                                    <action selector="showHelp:" target="472" id="mV6-eM-nIj"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="NodeBox Site" id="470">
