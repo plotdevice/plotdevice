@@ -1,30 +1,22 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Libraries: photobot.Layer.color()</title>
   <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
-
     <h3>photobot.Layer.color()</h3>
   </div>
-
   <div class="article">
     <h2>Syntax</h2>
     <pre class="python">canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="kw">color</span><span class="s">(</span><span class="s">)</span>
 </pre>
-
     <h2>Description</h2>
-
     <p>Sets the blend mode of layer <em>i</em> to <em>color</em>. Replaces the hue and saturation
     of the bottom layer with the hue and saturation of the hued layer, while retaining the bottom
     layer's brightness.
-
     </p><p>Colorizing works significantly slower than other blend modes, because it is a blend mode
     native to PhotoBot and not of the underlying Python Imaging Library.
-
     </p><h2>Example</h2>
     <pre class="python">photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
 canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
@@ -32,10 +24,8 @@ canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"ro
 i = canvas.<span class="kw">fill</span><span class="s">(</span><span class="s">(</span><span class="s">185</span>,<span class="s">255</span>,<span class="s">0</span><span class="s">)</span><span class="s">)</span>
 canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="kw">color</span><span class="s">(</span><span class="s">)</span>
 </pre>
-
     <div class="example">
       <img alt="" height="100" src="../media/photobot-color.jpg" width="100"/>
     </div>
   </div>
-
 </body></html>

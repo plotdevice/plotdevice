@@ -1,66 +1,46 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Reference: Typography</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
-
     <h3>Typography</h3>
-
     <ul class="siblings">
       <li><a href="Primitives.html">Primitives</a>
-
       </li><li><a href="Path.html">Path</a>
-
       </li><li><a href="Transform.html">Transform</a>
-
       </li><li><a href="Color.html">Color</a>
-
       </li><li><a href="Utility.html">Utility</a>
-
       </li><li><a href="Classes.html">Classes</a>
     </li></ul>
   </div>
-
   <div class="article">
     <a name="align()"></a>
-
     <div class="section">
       <h3>align()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">align</span><span class="s">(</span><span class="kw">align</span>=<span class="kw">LEFT</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Sets the alignment of text in a block. Text in a block wraps across multiple lines when
           the width parameter of the <a href="#text()">text()</a> command is specified. The
           parameter for align() can be either LEFT, RIGHT, CENTER, JUSTIFY.
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           the current alignment
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/align.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -73,41 +53,31 @@ quip = <span class="str">"If it ain't fun make it fun"</span>
         </div>
       </div>
     </div><a name="font()"></a>
-
     <div class="section">
       <h3>font()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">font</span><span class="s">(</span>fontname, <span class="kw">fontsize</span>=<span class="kw">None</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Sets the current font. The first parameter is the valid name of a font installed on the
           system. The valid name is the name as it appears in the Font Book application as
           "Postscript Name". The second parameter is optional and specifies the font size, in the
           same way as when calling the <a href="#fontsize()">fontsize()</a> command. All <a href="#text()">text()</a> commands following the font() command will be drawn in this font.
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           the name of the current font
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/font.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -118,20 +88,15 @@ quip = <span class="str">"If it ain't fun make it fun"</span>
         </div>
       </div>
     </div><a name="fonts()"></a>
-
     <div class="section">
       <h3>fonts()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">fonts</span><span class="s">(</span>like=<span class="kw">None</span>, western=<span class="kw">True</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           The fonts() command searches the fonts installed on the system and can filter the list in
           a few ways. When called with no arguments, the list contains all fonts on the system with
@@ -139,15 +104,11 @@ quip = <span class="str">"If it ain't fun make it fun"</span>
           parameter. To filter the list through a (case-insensitive) font name match, pass a
           substring as the like parameter.
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           a list of “Postscript Names” which can be used as arguments for the <a href="#font()">font()</a> command
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <pre class="python">romans = <span class="kw">fonts</span><span class="s">()</span> <span class="grey"># Get a list of all the text-friendly fonts on the system</span>
 jenson = <span class="kw">fonts</span><span class="s">(like=<span class="str">"jenson"</span>)</span> <span class="grey"># all installed weights of Adobe Jenson.</span>
@@ -158,40 +119,30 @@ kozuka = <span class="kw">fonts</span><span class="s">(western=<span class="kw">
         </div>
       </div>
     </div><a name="fontsize()"></a>
-
     <div class="section">
       <h3>fontsize()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">fontsize</span><span class="s">(</span><span class="kw">fontsize</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Sets the current font size. All <a href="#text()">text()</a> commands following the
           fontsize() command will be drawn in this font size. Font size is measured in units of
           points.
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           the current font size
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/fontsize.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -203,44 +154,33 @@ kozuka = <span class="kw">fonts</span><span class="s">(western=<span class="kw">
         </div>
       </div>
     </div><a name="lineheight()"></a>
-
     <div class="section">
       <h3>lineheight()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">lineheight</span><span class="s">(</span>height=<span class="kw">None</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Sets the line spacing of text in a block. Text in a block wraps across multiple lines
           when the width parameter of the <a href="#text()">text()</a> command is specified. The
           default lineheight is 1.2 (120 percent of font size).
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           the current lineheight
         </div>
-
         <div class="row">
            
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table>
             <tbody>
               <tr>
                 <td><span class="image_border"><img alt="GCD" src="media/lineheight.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -253,20 +193,15 @@ quip = <span class="str">"If it ain't fun make it fun"</span>
         </div>
       </div>
     </div><a name="text()"></a>
-
     <div class="section">
       <h3>text()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">text</span><span class="s">(</span>txt, x, y, width=<span class="kw">None</span>, height=<span class="s">1000000</span>, outline=<span class="kw">False</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Draws text to the screen. The first parameter sets the string of text to display ("always
           between quotes"). The following two parameters set the location of the text's baseline.
@@ -275,27 +210,20 @@ quip = <span class="str">"If it ain't fun make it fun"</span>
           multiple lines. The alignment for text in a block can be set with the <a href="#align()">align()</a> command. By default, text is not outlined when saved as a PDF.
           Optionally, a sixth parameter outline=True can be supplied so text will be outlined.
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           <a href="Classes.html#Text">Text</a> being drawn
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Strings.html">Strings</a>
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/text.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -307,34 +235,25 @@ quip = <span class="str">"If it ain't fun make it fun"</span>
         </div>
       </div>
     </div><a name="textheight()"></a>
-
     <div class="section">
       <h3>textheight()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">textheight</span><span class="s">(</span>txt, width=<span class="kw">None</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Returns what would be the height of a text block drawn with the <a href="#text()">text()</a> command, in the current <a href="#font()">font()</a>, <a href="#fontsize()">fontsize()</a> and <a href="#lineheight()">lineheight()</a>. The first
           parameter sets the text string to measure, the second parameter sets the width of a line
           of text in block.
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           the height of the text block, as a floating point number
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
@@ -349,34 +268,25 @@ h = <span class="kw">textheight</span><span class="s">(</span><span class="str">
         </div>
       </div>
     </div><a name="textmetrics()"></a>
-
     <div class="section">
       <h3>textmetrics()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">textmetrics</span><span class="s">(</span>txt, width=<span class="kw">None</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Returns what would be the width and height of a text block drawn with the <a href="#text()">text()</a> command, in the current <a href="#font()">font()</a>, <a href="#fontsize()">fontsize()</a> and <a href="#lineheight()">lineheight()</a>. The first
           parameter sets the text string to measure, the second parameter sets the width of a line
           of text in block.
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           a tuple containing the width and height of the text block
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
@@ -392,46 +302,34 @@ w, h = <span class="kw">textmetrics</span><span class="s">(</span><span class="s
         </div>
       </div>
     </div><a name="textpath()"></a>
-
     <div class="section">
       <h3>textpath()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">textpath</span><span class="s">(</span>txt, x, y, width=<span class="kw">None</span>, height=<span class="s">1000000</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Works exactly like the <a href="#text()">text()</a> command, except it returns a path
           that can be used with <a href="Path.html#drawpath()">drawpath()</a>, <a href="Path.html#beginclip()">beginclip()</a> and <a href="Path.html#endclip()">endclip()</a>
           instead of drawing text to the screen.
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           <a href="Classes.html#BezierPath">BezierPath</a> containing the given text as outlines
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Paths.html">Paths</a>, <a href="../tut/Strings.html">Strings</a>
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/textpath.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fontsize</span><span class="s">(</span><span class="s">65</span><span class="s">)</span>
@@ -444,33 +342,24 @@ path = <span class="kw">textpath</span><span class="s">(</span><span class="str"
         </div>
       </div>
     </div><a name="textwidth()"></a>
-
     <div class="section">
       <h3>textwidth()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">textwidth</span><span class="s">(</span>txt, width=<span class="kw">None</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Returns what would be the width of a text block drawn with the <a href="#text()">text()</a> command, in the current <a href="#font()">font()</a>, <a href="#fontsize()">fontsize()</a> and <a href="#lineheight()">lineheight()</a>. The parameter
           sets the text string to measure.
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           the width of the text block, as a floating point number
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
@@ -486,5 +375,4 @@ w = <span class="kw">textwidth</span><span class="s">(</span><span class="str">"
       </div>
     </div>
   </div>
-
 </body></html>

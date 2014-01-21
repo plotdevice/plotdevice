@@ -1,31 +1,23 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Tutorials: Path Filters</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
-
     <h3>Path Filters</h3>
   </div>
-
   <div class="article">
     <p>In analogy to filter effects that manipulate pixels in an image, NodeBox provides the
     <a href="Paths.html">path mathematics</a> to create <b>filter effects that manipulate vector
     curves</b>. Below is some example code.
-
     </p><p> 
     </p><hr size="2" width="100%"/>
-
     <h2>Hairs</h2>
-
     <p>A path filter that grows hair on each point in a contour. We measure the length of each
     contour and then calculate a number of points on it, based on the length (so longer segments
     will get more hairs and shorter segments will get less). On each point we draw some wiggly
     curves.
-
     </p><p><img alt="pathfilter1" src="media/pathfilter1.jpg"/>
     </p><pre class="python"><span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span><span class="s">0.23</span>, <span class="s">0.21</span>, <span class="s">0.15</span><span class="s">)</span>
@@ -65,17 +57,13 @@ path = <span class="kw">textpath</span><span class="s">(</span><span class="str"
  
         prev = pt
 </pre> 
-
     <p> 
     </p><hr size="2" width="100%"/>
-
     <h2>Spider</h2>
-
     <p>A path filter that weaves a web between the points in each contour. Depending on the length
     of a contour, a number of points are calculated along the contour. Then points are connected
     randomly with straight lines (as long as the distance between them is smaller than some given
     number, fontsize() / 5 in this case).
-
     </p><p><img alt="pathfilter2" src="media/pathfilter2.jpg"/>
     </p><pre class="python"><span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sqrt
  
@@ -109,17 +97,13 @@ m = <span class="s">2.0</span>
             pt2.<span class="s">y</span> + <span class="kw">random</span><span class="s">(</span>-m, m<span class="s">)</span>
         <span class="s">)</span>
 </pre> 
-
     <p> 
     </p><hr size="2" width="100%"/>
-
     <h2>Draft</h2>
-
     <p>A path filter that sketches a piece of text by drawing different layers of (gradually
     optimizing) paths on top of each other. For each contour a number of points are calculated. Two
     points are roughly connected by a straight line. The connection gets more accurate as more
     layers are drawn.
-
     </p><p><img alt="pathfilter3" src="media/pathfilter3.jpg"/>
     </p><pre class="python"><span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span><span class="s">0.23</span>, <span class="s">0.21</span>, <span class="s">0.15</span><span class="s">)</span>
@@ -157,18 +141,14 @@ m = <span class="s">15</span>
  
             prev = pt
 </pre> 
-
     <p> 
     </p><hr size="2" width="100%"/>
-
     <h2>Spiked</h2>
-
     <p>A path filter that draws perpendicular spikes along each contour. A spike is calculated from
     the angle between to consecutive points. Subtracting 90 degrees from this angle gives us the
     perpendicular angle jutting outwards from the curve. We then find the point halfway between the
     starting and ending point and push it upwards. If we connect a curve from the starting point to
     this point, and a curve from this point to the ending point, we get a spike connecting the two.
-
     </p><p><img alt="pathfilter4" src="media/pathfilter4.jpg"/><br/>
     </p><pre class="python"><span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> degrees, atan2
 <span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sqrt, <span class="s">pow</span>
@@ -232,14 +212,10 @@ c = <span class="s">0.8</span> <span class="grey"># spike curvature</span>
         prev = pt 
     <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
 </pre> 
-
     <p> 
     </p><hr size="2" width="100%"/>
-
     <h2>Trashed</h2>
-
     <p>A path filter that trashes the path by inserting random line segments between two points.
-
     </p><p><img alt="pathfilter5" src="media/pathfilter5.jpg"/><br/>
     </p><pre class="python"><span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span><span class="s">0.23</span>, <span class="s">0.21</span>, <span class="s">0.15</span><span class="s">)</span> 
@@ -298,5 +274,4 @@ extensions = <span class="s">[</span><span class="s">]</span>
 <span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span>
 </pre> 
   </div>
-
 </body></html>

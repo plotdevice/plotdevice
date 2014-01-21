@@ -1,16 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Libraries: L-system</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
-
     <h3>L-system</h3>
   </div>
-
   <div class="article">
     <p>An <a href="http://en.wikipedia.org/wiki/L-system">L-system</a> (or Lindenmayer system) is a
     set of rules and symbols used to model growth processes. L-systems are recursive in nature,
@@ -19,100 +15,71 @@
     branches again sprouts smaller branches and so on. If we know what one branch looks like, we
     can model a whole tree. For an elegant environment based on recursion rules, also have a look
     at <a href="http://www.contextfreeart.org/">ContextFree</a>.
-
     </p><p>The L-system library for NodeBox offers an easy way to work with recursion and rulesets. It
     is based on code by Frederik De Bleser and Mark Meyer (also see the <a href="L-system/Dryad.html">Dryad</a> example and <a href="L-system/Mark_Meyer.html">Mark Meyer's
     L-system</a> in the gallery).
-
     </p><h2>Download</h2>
-
     <table border="0">
       <tbody>
         <tr>
           <td><a href="http://nodebox.net/code/data/media/lsystem.zip"><img alt="download" height="20" src="media/download.gif" width="20"/></a>
-
           </td><td><a href="http://nodebox.net/code/data/media/lsystem.zip">L-system</a> (5KB)<br/>
           <i>Last updated for NodeBox 1.9.3<br/></i><i>Author: Frederik De Bleser, Mark Meyer, Tom
           De Smedt<br/></i>
         </td></tr></tbody></table>
-
     <h2>Documentation</h2>
-
     <ul>
       <li><a href="Graph.html#loading_the_library">How to get the library up and running</a>
-
       </li><li><a href="#create">Creating a new L-system</a>
-
       </li><li><a href="#rules">Growing rules</a>
-
       </li><li><a href="#segment">Custom segments</a>
-
       </li><li><a href="#commands">Custom commands</a><br/>
-
       </li><li><a href="#rulesets">Predefined tree systems</a><br/>
     </li></ul>
-
     <p> 
     </p><hr size="2" width="100%"/>
-
     <h2><a id="loading_the_library" name="loading_the_library" title="loading_the_library"></a>How
     to get the library up and running</h2>
-
     <p>Put the <i>lsystem</i> library folder in the same folder as your script so NodeBox can find
     the library. You can also put it in <i>~/Library/Application Support/NodeBox/.</i>
     </p><pre class="python">lsystem = <span class="kw">ximport</span><span class="s">(</span><span class="str">"lsystem"</span><span class="s">)</span>
 </pre> 
     <hr size="2" width="100%"/>
-
     <h2><a id="create" name="create" title="create"></a>Creating a new L-system</h2>
     <pre class="python">create<span class="s">(</span>angle=<span class="s">20</span>, segmentlength=<span class="s">40</span>, rules=<span class="s">{</span><span class="s">}</span>, root=<span class="kw">None</span><span class="s">)</span>
 </pre>
-
     <p>The <i>create()</i> command returns a new L-system object that will grow on the canvas from
     the given <i>x</i> and <i>y</i> position. The object has the following properties:
-
     </p><ul>
       <li><i>lsystem.angle</i>: the rotation angle used for the <span class="inline_code">+</span>
       and <span class="inline_code">-</span> rule symbols.<br/>
-
       </li><li><i>lsystem.segmentlength</i>: the length or size of a single segment.<br/>
-
       </li><li><i>lsystem.decrease</i>: the decrease in segment length as the system grows (0.7 by
       default).
-
       </li><li><i>lsystem.threshold</i>: stop drawing segments when they get smaller than this (3.0 by
       default).
-
       </li><li><i>lsystem.root</i>: the starting rule to grow (rule with key "1" by default).<br/>
-
       </li><li><i>lsystem.rules</i>: a dictionary of rules, the "DNA" of the system.<br/>
-
       </li><li><i>lsystem.commands</i>: a dictionary of custom command symbols.
-
       </li><li><i>lsystem.cost</i>: the amount of time it costs to draw a single segment (0.25 by
       default).
     </li></ul>
-
     <p>The L-system object has two methods used for drawing:
     </p><pre class="python">lsystem.<span class="s">draw</span><span class="s">(</span>x, y, generation, <span class="s">time</span>=<span class="kw">None</span>, ease=<span class="kw">None</span><span class="s">)</span>
 </pre>
     <pre class="python">lsystem.<span class="s">segment</span><span class="s">(</span>length, generation, <span class="s">time</span>=<span class="kw">None</span>, <span class="s">id</span>=<span class="kw">None</span><span class="s">)</span>
 </pre>
-
     <p>The <i>lsystem.draw()</i> method draws the growth pattern at the given position. The
     <i>generation</i> parameter determines how deep the pattern goes. For our tree-is-a-big-branch
     example, generation 3 would mean: draw a branch (1) that sprouts branches (1) who all sprout
     branches (3). More and more segments will be grown until there are no generations left or the
     segments become smaller than <i>lsystem.threshold</i>.
-
     </p><p>The <i>time</i> parameter can be used in an animation. When a segment is drawn, it chips
     away a bit of time equal to <i>lsystem.cost</i>. When <i>time</i> starts from zero in an
     animation and gradually increases, segments become bigger and more of them get drawn (as there
     is gradually more time to pay the cost).
-
     </p><p>A second optional parameter <i>ease</i> can be used to progress the rotation angle. It is
     usually some number between 4 and 20 you can use to "unfold" the growth pattern.
-
     </p><p>The <i>lsystem.segment()</i> method contains the code for drawing a single segment. If you
     want your own custom segment (like a leaf) you need to redefine this method. We'll have a look
     at that later on.
@@ -120,55 +87,35 @@
 </pre>
     <pre class="python">lsystem.<span class="s">duration</span><span class="s">(</span>generation<span class="s">)</span>
 </pre>
-
     <p>The <i>lsystem.segments()</i> method returns the number of segments grown for a given number
     of generations (and for a given amount of time).
-
     </p><p>The <i>lsystem.duration()</i> calculates the total amount of time needed to draw all the
     segments, based on the current <i>lsystem.cost</i>.<br/>
-
     </p><p> 
     </p><hr size="2" width="100%"/>
-
     <h2><a id="rules" name="rules" title="rules"></a>Growing rules</h2>
-
     <p>The shape your L-system will take depends on its set of rules. A rule is a string of
     predefined <b>symbols</b> that each represent a transformation command (like <a href="../ref/Transform.html#scale()">scale()</a> or <a href="../ref/Transform.html#scale()">rotate()</a>). So a rule is a bit like a DNA-string
     representing a piece of NodeBox code. Here are all the symbols:
-
     </p><ul>
       <li><b class="inline_code">F</b> : the system draws a segment here (a rectangle by default).
-
       </li><li><b class="inline_code">f</b> : move to the next position without drawing a segment
-
       </li><li><b class="inline_code">+</b> : rotate counterclockwise by <i>lsystem.angle</i>.
-
       </li><li><b class="inline_code">-</b> : rotate clockwise by <i>lsystem.angle</i>.
-
       </li><li><b class="inline_code">|</b> : rotate 180 degrees.
-
       </li><li><b class="inline_code">[</b> : works like the <a href="../ref/Transform.html#push()">push()</a> command, starting a subbranch.
-
       </li><li><span class="inline_code"><b>]</b></span> : works like the <a href="../ref/Transform.html#pop()">pop()</a> command, ending the subbranch.
-
       </li><li><span class="inline_code">!</span> : reverses the rotation angle.<br/>
-
       </li><li><b class="inline_code">(</b> : increases the rotation angle to 110%.
-
       </li><li><b class="inline_code">)</b> : decreases the rotation angle to 90%.
-
       </li><li><b class="inline_code">&lt;</b> : increases the segment length to 110%.
-
       </li><li><b class="inline_code">&gt;</b> : decreases the segment length to 90%.
     </li></ul>
-
     <p> 
-
     <table>
       <tbody>
         <tr>
           <td><img alt="lsystem-rule1" height="150" src="media/lsystem-rule1.jpg" width="150"/>
-
           </td><td>
             Let's try out some of the symbols! Here the rule is simply:<br/>
             "draw three segments".
@@ -177,10 +124,8 @@ tree = lsystem.<span class="s">create</span><span class="s">(</span><span class=
 tree.<span class="s">rules</span><span class="s">[</span><span class="str">"1"</span><span class="s">]</span> = <span class="str">"FFF"</span> 
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">50</span>, <span class="s">150</span>, <span class="s">1</span><span class="s">)</span>
 </pre>
-
         </td></tr><tr>
           <td><img alt="lsystem-rule2" height="150" src="media/lsystem-rule2.jpg" width="150"/>
-
           </td><td>
             Draw two segments, rotate clockwise, then draw another segment:
             <pre class="python">
@@ -188,10 +133,8 @@ tree = lsystem.<span class="s">create</span><span class="s">(</span><span class=
 tree.<span class="s">rules</span><span class="s">[</span><span class="str">"1"</span><span class="s">]</span> = <span class="str">"FF-F"</span> 
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">50</span>, <span class="s">150</span>, <span class="s">1</span><span class="s">)</span>
 </pre>
-
         </td></tr><tr>
           <td><img alt="lsystem-rule3" height="150" src="media/lsystem-rule3.jpg" width="150"/>
-
           </td><td>
             Here the rule is: draw two segments, rotate clockwise, then draw <i>the rule</i>.
             Notice how we reference the rule's key from inside the symbol string so we can spawn
@@ -201,10 +144,8 @@ tree = lsystem.<span class="s">create</span><span class="s">(</span><span class=
 tree.<span class="s">rules</span><span class="s">[</span><span class="str">"1"</span><span class="s">]</span> = <span class="str">"FF-1"</span> 
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">50</span>, <span class="s">150</span>, <span class="s">6</span><span class="s">)</span>
 </pre>
-
         </td></tr><tr>
           <td><img alt="lsystem-rule4" height="150" src="media/lsystem-rule4.jpg" width="150"/>
-
           </td><td>
             At the point where the recursion branch occurs, rotate counterclockwise, draw a
             segment, rotate counterclockwise, and draw another segment.
@@ -213,10 +154,8 @@ tree = lsystem.<span class="s">create</span><span class="s">(</span><span class=
 tree.<span class="s">rules</span><span class="s">[</span><span class="str">"1"</span><span class="s">]</span> = <span class="str">"FF-[1]++F+F"</span> 
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">50</span>, <span class="s">150</span>, <span class="s">6</span><span class="s">)</span>
 </pre>
-
         </td></tr><tr>
           <td><img alt="lsystem-rule5" height="150" src="media/lsystem-rule5.jpg" width="150"/>
-
           </td><td>
             More recursion on the branches:
             <pre class="python">
@@ -224,10 +163,8 @@ tree = lsystem.<span class="s">create</span><span class="s">(</span><span class=
 tree.<span class="s">rules</span><span class="s">[</span><span class="str">"1"</span><span class="s">]</span> = <span class="str">"FF-[1]++F+F+1"</span> 
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">50</span>, <span class="s">150</span>, <span class="s">6</span><span class="s">)</span>
 </pre>
-
         </td></tr><tr>
           <td><img alt="lsystem-rule6" height="150" src="media/lsystem-rule6.jpg" width="150"/>
-
           </td><td>
             A more elaborate ruleset with rules for individual branches:
             <pre class="python">
@@ -240,12 +177,9 @@ tree.<span class="s">rules</span> = <span class="s">{</span>
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">50</span>, <span class="s">150</span>, <span class="s">6</span><span class="s">)</span>
 </pre>
           </td></tr></tbody></table>
-
     </p><p> 
     </p><hr size="2" width="100%"/>
-
     <h2><a id="segment" name="segment" title="segment"></a>Custom segments</h2>
-
     <p>By default, the system will use rectangles connected by lines for segments. To get a new
     look you will have to write your own segment command. The default segment command looks like
     this:
@@ -256,21 +190,17 @@ tree.<span class="s">draw</span><span class="s">(</span><span class="s">50</span
     <span class="kw">rect</span><span class="s">(</span>-length/<span class="s">2</span>, -length, length, length<span class="s">)</span>
     <span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
 </pre>
-
     <p>An L-system uses <a href="../tut/Graphics_State.html">corner-mode</a> <a href="../ref/Transform.html#translate()">translate()</a> commands to move from segment to segment.
     It just takes some twiddling with the <i>length</i> parameter to position a segment correctly.
     You can use the <i>generation</i>, <i>time</i> and <i>id</i> parameters to devise color schemes
     or select segment shapes.
-
     </p><p>In an animation, the <i>time</i> parameter is the <b>current time</b> when the segment is
     drawn. Time spreads equally through all branches. If you divide the time by
     <i>lsystem.duration()</i> you get a number from 1.0 to 0.0 which you can use as an alpha value
     for example.
-
     </p><p>The <i>id</i> parameter is a number from 0 to <i>lsystem.segments().</i> Since it is
     different for each individual segment, you could use it to select a different image at each
     segment (like <a href="http://organisms.be/index.php/Fortis_Tree">here</a> for example).
-
     </p><p>Now let's define our own segment command!
     </p><pre class="python"><span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">400</span><span class="s">)</span>
  
@@ -314,11 +244,8 @@ tree.<span class="s">segmentlength</span> = w - <span class="s">15</span>
 tree.<span class="s">segment</span> = segment
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">275</span>, <span class="s">400</span>, generations, <span class="s">time</span>=done<span class="s">)</span>
 </pre>
-
     <p><a href="http://nodebox.net/code/data/media/lsystem-animation.mov"><img alt="lsystem-segment" height="400" src="media/lsystem-segment.jpg" width="550"/><br/></a>
-
     </p><p><a href="http://nodebox.net/code/data/media/lsystem-animation.mov">Play movie</a>
-
     </p><p>To render the movie frames I can then put the tree's drawing method inside NodeBox' draw()
     command and use the FRAME variable as progressive time for each frame:
     </p><pre class="python"><span class="kw">speed</span><span class="s">(</span><span class="s">20</span><span class="s">)</span>
@@ -328,14 +255,11 @@ tree.<span class="s">draw</span><span class="s">(</span><span class="s">275</spa
     canvas.<span class="s">save</span><span class="s">(</span><span class="s">str</span><span class="s">(</span>FRAME<span class="s">+100</span><span class="s">)</span>+<span class="str">".jpg"</span><span class="s">)</span>
 </pre> 
     <hr size="2" width="100%"/>
-
     <h2><a id="commands" name="commands" title="commands"></a>Custom commands</h2>
-
     <p>Aside from creating your own drawing segments you can also define your own transformation
     rules. To accomplish this we have to add a new command symbol to the lsystem.commands
     dictionary and link it to a command that takes <i>lsystem</i>, <i>generation</i>, <i>rule</i>,
     <i>angle</i>, <i>length</i> and <i>time</i> parameters.
-
     </p><p>For example, we can extend the first example in the library download folder with a wind
     function that makes our plant sway a bit:
     </p><pre class="python"><span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sin
@@ -345,115 +269,89 @@ tree.<span class="s">draw</span><span class="s">(</span><span class="s">275</spa
     
 tree.<span class="s">commands</span><span class="s">[</span><span class="str">"w"</span><span class="s">]</span> = wind
 </pre>
-
     <p>Here we defined a new <span class="inline_code">w</span> symbol which we can include in our
     growth pattern:
     </p><pre class="python">tree.<span class="s">rules</span><span class="s">[</span><span class="str">"1"</span><span class="s">]</span> = <span class="str">"w[-FF-FF1][+FF+FF1]"</span>
 </pre> 
     <hr size="2" width="100%"/>
-
     <h2><a id="rulesets" name="rulesets" title="rulesets"></a>Predefined tree systems</h2>
-
     <p>The library includes a number of predefined tree systems with interesting rulesets for you
     to play around with. Below is a short overview. There are many other things that can be
     modelled with L-systems besides trees. The growth pattern is only limited to your own
     creativity. Check the <a href="#_http://en.wikipedia.org/wiki/Penrose_tiling">Penrose
     tiling</a> example in the library folder for example.
-
     </p><p> 
-
     <table>
       <tbody>
         <tr>
           <td><span class="image_border"><img alt="lsystem-predefined1" height="150" src="media/lsystem-predefined1.jpg" width="150"/></span>
-
           </td><td>
             <pre class="python">
 tree = lsystem.<span class="s">gnarled</span><span class="s">(</span><span class="s">)</span>
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">300</span>, <span class="s">400</span>, <span class="s">7</span><span class="s">)</span>
 </pre>
-
             <p><span class="inline_code">"1" : "FF[++FF[2][+FF2]][-FF3]"<br/>
             "2" : "F-F-F+[2]F+F+F+F+&gt;[2]"<br/>
             "3" : "F+F+F-[2]F-F-F-F-&gt;[2]"</span><br/>
-
         </p></td></tr><tr>
           <td><span class="image_border"><img alt="lsystem-predefined2" height="150" src="media/lsystem-predefined2.jpg" width="150"/></span>
-
           </td><td>
             <pre class="python">
 tree = lsystem.<span class="s">tall</span><span class="s">(</span><span class="s">)</span>
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">300</span>, <span class="s">400</span>, <span class="s">7</span><span class="s">)</span>
 </pre>
-
             <p><span class="inline_code">"1" : "FF[-2][3][+3]"<br/>
             "2" : "FF+F-F-F[FFF3][+3]-F-F3"<br/>
             "3" : "FF-F+F+F[2][-2]+F+F2"</span><br/>
-
         </p></td></tr><tr>
           <td><span class="image_border"><img alt="lsystem-predefined3" height="150" src="media/lsystem-predefined3.jpg" width="150"/></span>
-
           </td><td>
             <pre class="python">
 tree = lsystem.<span class="s">great</span><span class="s">(</span><span class="s">)</span>
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">300</span>, <span class="s">400</span>, <span class="s">7</span><span class="s">)</span>
 </pre>
-
             <p><span class="inline_code">"</span><span class="inline_code">1" :
             "F-F+F[++2][F+2][F-2][--2]"<br/>
             "2" : "F+FF-F[++3][+3][-4][--4]"<br/>
             "3" : "-[4]F-FF-FF-FF-F[4]"<br/>
             "4" : "+[3]F+FF+FF+FF+F[3]"</span>
-
         </p></td></tr><tr>
           <td><span class="image_border"><img alt="lsystem-predefined4" height="150" src="media/lsystem-predefined4.jpg" width="150"/></span>
-
           </td><td>
             <pre class="python">
 tree = lsystem.<span class="s">old</span><span class="s">(</span><span class="s">)</span>
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">300</span>, <span class="s">400</span>, <span class="s">7</span><span class="s">)</span>
 </pre>
-
             <p><span class="inline_code">"</span><span class="inline_code">1" :
             "F-F+F+F[(+2]-FF-F[(-2](2"<br/>
             "2" : "F+F-FF[(+1]-FFF[(-1](1"</span>
-
         </p></td></tr><tr>
           <td><span class="image_border"><img alt="lsystem-predefined5" height="150" src="media/lsystem-predefined5.jpg" width="150"/></span>
-
           </td><td>
             <pre class="python">
 tree = lsystem.<span class="s">crooked</span><span class="s">(</span><span class="s">)</span>
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">300</span>, <span class="s">400</span>, <span class="s">6</span><span class="s">)</span>
 </pre>
-
             <p><span class="inline_code">"1" : "F-F+2"<br/>
             "2" : "F-[[-F-F+F+FF2]+FF2]+F[+F+F+FF2]-FF+F-F2"</span><br/>
-
         </p></td></tr><tr>
           <td><span class="image_border"><img alt="lsystem-predefined6" height="150" src="media/lsystem-predefined6.jpg" width="150"/></span>
-
           </td><td>
             <pre class="python">
 tree = lsystem.<span class="s">slender</span><span class="s">(</span><span class="s">)</span>
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">300</span>, <span class="s">400</span>, <span class="s">7</span><span class="s">)</span>
 </pre>
-
             <p><span class="inline_code">"1" : "FFF+[2]F+(&gt;[---1]"<br/>
             "2" : "FFF[1]+[1]+[1]+[1]"</span><br/>
-
         </p></td></tr><tr>
           <td><span class="image_border"><img alt="lsystem-predefined7" height="150" src="media/lsystem-predefined7.jpg" width="150"/></span>
-
           </td><td>
             <pre class="python">
 tree = lsystem.<span class="s">strong</span><span class="s">(</span><span class="s">)</span>
 tree.<span class="s">draw</span><span class="s">(</span><span class="s">300</span>, <span class="s">400</span>, <span class="s">7</span><span class="s">)</span>
 </pre>
-
             <p><span class="inline_code">"1" : "FFF-[-F+F[2]-[1]]+[+F+F[1]-[1]]"<br/>
             "2" : "FF-[-F+F]+[+F+F2]"</span><br/>
           </p></td></tr></tbody></table>
   </p></div>
-
 </body></html>

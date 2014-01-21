@@ -1,24 +1,17 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Tutorials: Primitives</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
-
     <h3>Primitives</h3>
-
     <ul class="chapter">
       <li><a href="Graphics_State.html">Graphics State →</a>
-
       </li><li>Chapter 3
-
       </li><li><a href="Environment.html">← Environment</a>
     </li></ul>
   </div>
-
   <div class="article">
     <p>The <em>drawing primitives</em> are the basic shapes available in NodeBox: rectangles,
     ovals, lines, curves, text and images. It's a small set of programming
@@ -27,52 +20,38 @@
     primitives: each of the commands and their usage is discussed thoroughly there. The reference
     is something you'll want to keep close by when you start learning NodeBox. After a bit of
     experimenting you'll know all the drawing primitives by heart.
-
     </p><h2>Syntax</h2>
-
     <p>Take a look at the <a href="../ref/Primitives.html#rect()">rect()</a> command for example.
     This command (logically) draws a rectangle in NodeBox. You'll see a description of it's
     <em>syntax</em>, in other words, how exaclty you need to write down the command in NodeBox for
     it to work.
-
     </p><p>In case of the rect() command the syntax is:
     </p><pre class="python"><span class="kw">rect</span><span class="s">(</span>x, y, width, height, roundness=<span class="s">0.0</span>, draw=<span class="kw">True</span><span class="s">)</span>
 </pre>
-
     <p>All commands in NodeBox look like this: you have the <strong>name</strong> of the command
     (<em>rect</em> for example) which gives you a hint of what the command will do, and some stuff
     <strong>between brackets</strong>. The stuff between brackets we call
     <strong>parameters</strong>.
-
     </p><h2>Parameters</h2>
-
     <p>Now <em>rectangle</em> could mean a lot of things. Imagine a rectangle with an equal width
     and height, this would be a square. We could have a <em>square()</em> command in NodeBox.
     Imagine you would like a small rectangle at the bottom of the canvas... we could have a
     <em>smallbottomrect()</em> command... we could define an infinite number of commands for
     rectangles in all sizes and flavors!
-
     </p><p>Instead of defining a tangle of commands, there is a single rect() command with
     <em>parameters</em>. Parameters are things you can customize. You can supply numbers, <a href="Variables.html">variables</a>, <a href="Strings.html">strings</a> and other things as
     parameters to a command to have it look exactly the way you want it to.
-
     </p><p>For example, to draw a square in the top left of the canvas:
     </p><pre class="python"><span class="kw">rect</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
 </pre>
-
     <p>Notice how we replaced the <em>x</em>, <em>y</em>, <em>width</em> and <em>height</em> from
     the syntax description with real numbers. These number parameters describe how our rectangle
     will look: it is positioned in the top left (x is 0 and y is 0) and has an equal width and
     height of 40.
-
     </p><p> 
-
     </p><p><span class="media"><img alt="" height="515" src="media/primitives1.jpg" width="577"/></span>
-
     </p><p> 
-
     </p><h2>Optional parameters</h2>
-
     <p>You'll notice some other parameters in the rect() syntax which we didn't define, the
     <em>roundness=0.0</em> for example. If a parameter description has an <em>=something</em> next
     to it, this means it is optional. If we don't define this parameter in our script, it's default
@@ -80,26 +59,17 @@
     default, unless we explicitly say:
     </p><pre class="python"><span class="kw">rect</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">40</span>, <span class="s">40</span>, roundness=<span class="s">0.5</span><span class="s">)</span>
 </pre>
-
     <p>Now we have a rectangle with 50% round corners.
-
     </p><p> 
-
     </p><p><span class="media"><img alt="" height="513" src="media/primitives2.jpg" width="583"/></span>
-
     </p><p> 
-
     </p><h2>Throttle</h2>
-
     <p>The reference describes what kind of values you can use for each parameter in each command.
     If these are numbers, you can use the <em>throttle</em> to quickly change them, as described in
     the <a href="Environment.html">environment</a> tutorial. This is an easy way to play around
     with number parameters.
-
     </p><h2>Defining your own commands</h2>
-
     <p>It's not that difficult to create your own commands in NodeBox, in the <a href="Commands.html">templating</a> tutorial you'll see an example of how to create your own
     <em>flower()</em> command for example.
   </p></div>
-
 </body></html>

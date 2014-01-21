@@ -1,48 +1,35 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Tutorials: Environment</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
-
     <h3>Environment</h3>
-
     <ul class="chapter">
       <li><a href="Primitives.html">Primitives →</a>
-
       </li><li>Chapter 2
-
       </li><li><a href="Introduction.html">← Introduction</a>
     </li></ul>
   </div>
-
   <div class="article">
     <p>NodeBox is a Mac OS X application in which you can write Python scripts, programming code,
     that produces visual output you can save as a PDF, an image or a Quicktime movie <a href="Animation.html">animation</a>. Each script opened in NodeBox has a separate window divided
     into three parts.
-
     </p><p><br/>
     <span class="media"><img alt="" height="525" src="media/environment1.jpg" width="580"/></span>
-
     </p><h2>Code, output, and messages</h2>
-
     <p>The three parts are for code, output, and messages:
-
     </p><ul>
       <li>
         <p>The <strong>code</strong> you write goes in the top right area. Any keywords are
         automatically colored (for example, all of the NodeBox commands in <a href="Reference">the
         reference</a>).
-
       </p></li><li>
         <p>Once you have a script going, you can press <em>apple-R</em> to have NodeBox examine
         your script and generate visual <strong>output</strong>, in the left area. Don't hesitate
         to press <em>apple-r</em> as often as you like, seeing what output your script produces is
         the best way to learn what it does.
-
       </p></li><li>
         <p>The lower right area is for <strong>messages</strong>: remarks that NodeBox has about
         any errors in your script, or any output from the <em>print</em> command. NodeBox isn't
@@ -50,79 +37,58 @@
         recognises commands and statements when they are written in exactly the right way (or
         <em>syntax</em>).
       </p></li></ul>
-
     <p>Errors in scripts are common, and you will encounter a lot of them at first. Errors are an
     unavoidable part of the programmatic design process. Don't let them discourage you - instead,
     find out what is going wrong in your script so you won't make the same mistake next time.
-
     </p><h2>Exporting</h2>
-
     <p>Once you are satisfied with the output of your script, you can export it to one or more
     PDF's or images: press <em>apple-E</em> (or choose Export to Image from the File menu). Here
     you can select the number of pages you want to export. Each page results in a separate PDF or
     image document. For each page, NodeBox reruns the script - this is especially useful if your
     script contains <a href="../ref/Utility.html#random()">random()</a> commands, since the output
     will then be different for each page.
-
     </p><p><br/>
     <span class="media"><img alt="" height="520" src="media/environment2.jpg" width="574"/></span>
-
     </p><p> 
-
     </p><p>A multiple-page export of this example script generates random output. This is an important
     part of the NodeBox-philosophy: you define the general <em>style</em> of the output in your
     script, while having the option to retain a range of freedom in which choices are left up to
     NodeBox. In this way, you can quickly develop a consistent style that looks different each
     time, quickly test and asses your creations.
-
     </p><p>A different composition of ovals could be used on each page, with the same ease as creating
     only a single page:
-
     </p><p><br/>
     <span class="media"><img alt="" height="132" src="media/environment-balls1.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls2.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls3.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls4.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls5.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls6.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls7.jpg" width="132"/></span>
     <span class="media"><img alt="" height="132" src="media/environment-balls8.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls9.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls10.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls11.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls12.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls13.jpg" width="132"/></span>
     <span class="media"><img alt="" height="132" src="media/environment-balls14.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls15.jpg" width="132"/></span> <span class="media"><img alt="" height="132" src="media/environment-balls16.jpg" width="132"/></span>
-
     </p><p><br/>
     PDF documents can be opened in Adobe Illustrator (for example), where you can ungroup the
     composition and transform and scale the individual elements without loss of quality.
-
     </p><h2>Saving</h2>
-
     <p>When you save your work, you save the script, not the output. In fact, you save the
     <em>recipe</em> or template style. You can open your script again later on, make changes, or
     apply it to different shapes or images for example. The script is a piece of your
     way-of-working stored on disk. Moreover, the script takes much less space on disk than the
     actual output.
-
     </p><h2>The coordinate system</h2>
-
     <p>When you place an element on the canvas, you define its positions in terms of <em>x</em> and
     <em>y</em> coordinates. The <em>x</em> is the horizontal position measured from the left of the
     canvas, the <em>y</em> the vertical position measured from the top.
-
     </p><p>NodeBox has an inverted coordinate system which might be confusing to DrawBot users. In math
     <em>going down</em> would mean that <em>y</em> becomes negative, while in NodeBox <em>y</em>
     gets bigger. I think this keeps things comprehensible when creating page layouts; because pages
     work from top to bottom as well.
-
     </p><p><br/>
     <span class="media"><img alt="" height="520" src="media/environment3.jpg" width="574"/></span>
-
     </p><h2>Throttle</h2>
-
     <p>The throttle appears when you click the mouse on any numeric value in your script while
     pressing down the apple-key. Drag the mouse left and right to decrease or increase the value.
     Values increase or decrease by 1, unless you hold down the shift-key as well, in which case the
     increment will be 0.1 - or you can hold down the alt-key for increments by 10.
-
     </p><p><br/>
     <span class="media"><img alt="" height="57" src="media/throttle.gif" width="195"/></span>
-
     </p><h2>Interrupt a running script</h2>
-
     <p>Sometimes a running script takes a long time to render it's output. You can then stop
     NodeBox by pressing command-period. NodeBox will still render the partially finished output.
   </p></div>
-
 </body></html>

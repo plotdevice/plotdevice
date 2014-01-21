@@ -106,10 +106,8 @@ a.noexternal { background-image:none !important; padding-right: 0; }
 }
 
 .toc.tut{ margin-top:48px; }
-.toc.ref{ 
-  margin-bottom:0;
-  min-height:270px;
-}
+.toc.ref{ margin-bottom:0; min-height:270px; }
+
 
 .toc h1{
   position:absolute;
@@ -133,6 +131,7 @@ a.noexternal { background-image:none !important; padding-right: 0; }
 }
 .toc.ref .section{ min-height:250px; }
 .toc.lib .section{ min-height:180px; }
+.toc.tut .section{ min-height:140px; }
 
 .toc .section ul{
   list-style-type:none;

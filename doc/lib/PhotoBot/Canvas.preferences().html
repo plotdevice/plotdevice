@@ -1,30 +1,22 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Libraries: photobot.Canvas.preferences()</title>
   <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
-
     <h3>photobot.Canvas.preferences()</h3>
   </div>
-
   <div class="article">
     <h2>Syntax</h2>
-
     <p><em>canvas</em>.preferences(interpolation=BILINEAR)
-
     </p><h2>Description</h2>
-
     <p>Sets a number of preferences that influences how layers are processed on this canvas.
     Currently, only defines the image interpolation, which can be set to NEAREST, BICUBIC or
     BILINEAR. Image interpolation controls how pixels are manipulated when rotating and scaling
     layers for example: with NEAREST being a fast but lossy interpolation, and BILINEAR being a
     more accurate yet slower interpolation. Image interpolation is set to BILINEAR (best) by
     default.
-
     </p><h2>Syntax</h2>
     <pre class="python">photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
 canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">200</span>,<span class="s">200</span><span class="s">)</span>
@@ -33,5 +25,4 @@ canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"ro
 canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="kw">rotate</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>
 </pre>
   </div>
-
 </body></html>

@@ -1,41 +1,29 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Tutorials: Console</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
-
     <h3>Console</h3>
   </div>
-
   <div class="article">
     <h1>Using NodeBox in another application</h1>
-
     <p>The NodeBox core is now split off from the UI functionality, so you can use it in any
     project. There are a few different ways of using NodeBox.
-
     </p><h2>1. The easy way: from NodeBox itself</h2>
-
     <p>One of the new features in NodeBox is that you can access the canvas object. It's a
     list-like structure, containing all your graphical objects ("grobs"). The canvas also has a
     "save" method, so anywhere in your script you can do:
     </p><pre class="python">canvas.<span class="s">save</span><span class="s">(</span><span class="str">"partial.pdf"</span><span class="s">)</span>
 </pre>
-
     <p>And it will save what it has drawn <em>up until that point.</em> Do it at the end of your
     script, and you get the full output.
-
     </p><p>After saving, you might want to clear out the canvas. You can:
     </p><pre class="python">canvas.<span class="s">clear</span><span class="s">(</span><span class="s">)</span>
 </pre>
-
     <p>This will remove all grobs already on the canvas; they will not show up in the render.
-
     </p><h2>2. Installing the NodeBox module</h2>
-
     <p>If you want to use NodeBox from the command line, you will have to install it. We currently
     recommend using <a href="http://subversion.tigris.org/" title="Subversion">Subversion</a> to
     grab a copy:
@@ -55,11 +43,8 @@ python setup.<span class="s">py</span> install
 <span class="s">cd</span> src
 python setup.<span class="s">py</span> install
 </pre>
-
     <p>The only outside dependency is <a href="http://pyobjc.sourceforge.net/" title="PyObjC">PyObjC</a>. We recommend the latest version from Subversion.
-
     </p><h2>3. Using the console runner</h2>
-
     <p>When you have a set of NodeBox scripts that you want to run to generate images or a movie,
     use the following commands:
     </p><pre class="python"><span class="kw">from</span> nodebox <span class="kw">import</span> console
@@ -67,12 +52,9 @@ source = <span class="str">"size(200,200)<span class="s">\n</span>rect(random(WI
 console.<span class="s">make_image</span><span class="s">(</span>source, <span class="str">"rect.png"</span><span class="s">)</span>
 console.<span class="s">make_movie</span><span class="s">(</span>source, <span class="str">"rect.mov"</span>, <span class="s">20</span>, fps=<span class="s">30</span><span class="s">)</span>
 </pre>
-
     <p>Currently, there is no way to run the console from the command line, but we're working on
     that.
-
     </p><h2>4. Accessing the context directly</h2>
-
     <p>If you want to have direct access to NodeBox's drawing context, you can import everything
     directly. The API remains the same, but you have to prefix everything with the context. Note
     also the initialization of Cocoa, necessary for using the API.
@@ -86,7 +68,6 @@ ctx.<span class="kw">size</span><span class="s">(</span><span class="s">200</spa
 ctx.<span class="kw">rect</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span>ctx.<span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span>ctx.<span class="kw">HEIGHT</span><span class="s">)</span>, <span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
 ctx.<span class="s">save</span><span class="s">(</span><span class="str">"test.png"</span><span class="s">)</span>
 </pre>
-
     <p>You can also make movies this way:
     </p><pre class="python"><span class="kw">from</span> AppKit <span class="kw">import</span> NSApplication
 NSApplication.<span class="s">sharedApplication</span><span class="s">(</span><span class="s">)</span>.<span class="s">activateIgnoringOtherApps_</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
@@ -103,9 +84,7 @@ movie = Movie<span class="s">(</span><span class="str">"rects.mov"</span><span c
   movie.<span class="s">add</span><span class="s">(</span>ctx<span class="s">)</span>
 movie.<span class="s">save</span><span class="s">(</span><span class="s">)</span>
 </pre>
-
     <h2>5. Drawing in a Cocoa drawRect method</h2>
-
     <p>If you want to implement your existing drawing using NodeBox, you can do the following in
     your class's drawRect: method:
     </p><pre class="python"><span class="kw">def</span> <span class="red">drawRect_</span><span class="s">(</span><span class="s">self</span>, <span class="kw">rect</span><span class="s">)</span>:
@@ -115,19 +94,14 @@ movie.<span class="s">save</span><span class="s">(</span><span class="s">)</span
  ctx.<span class="kw">rect</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span>ctx.<span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span>ctx.<span class="kw">HEIGHT</span><span class="s">)</span>, <span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
   ctx.<span class="s">canvas</span>.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
 </pre>
-
     <p>Note that creating the Context and drawing it are two separate steps:
-
     </p><ul>
       <li>First, the context is created; all drawing commands are translated into graphic objects
       ("grobs") that are stored on the canvas.
-
       </li><li>Then, the canvas is drawn; each grob now renders itself on the current Cocoa graphics
       context.
     </li></ul>
-
     <p>This also means you can cache the context (or the canvas) and use it in a drawRect method
     during a later stage.
   </p></div>
-
 </body></html>

@@ -1,28 +1,20 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Libraries: photobot.Canvas.export()</title>
   <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
-
     <h3>photobot.Canvas.export()</h3>
   </div>
-
   <div class="article">
     <h2>Syntax</h2>
-
     <p><em>canvas</em>.export(<em>filename</em>)
-
     </p><h2>Description</h2>
-
     <p>Flattens the canvas by calling the <a href="PhotoBot/Canvas.flatten().html">Canvas.flatten()</a> command, and saves it as an image using
     the given <em>filename</em>. Flattened layers retain any transparency when saved as a .png
     file, since the canvas has a transparent background by default. Other options are .jpg and
     .gif.
-
     </p><h2>Example</h2>
     <pre class="python">photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
 canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
@@ -31,5 +23,4 @@ canvas.<span class="kw">fill</span><span class="s">(</span><span class="s">(</sp
 canvas.<span class="s">export</span><span class="s">(</span><span class="str">"images/orange-robot.png"</span><span class="s">)</span>
 </pre>
   </div>
-
 </body></html>

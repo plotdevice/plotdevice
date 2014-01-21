@@ -1,66 +1,48 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Tutorials: Variables</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
-
     <h3>Variables</h3>
-
     <ul class="chapter">
       <li><a href="Lists.html">Lists →</a>
-
       </li><li>Chapter 5
-
       </li><li><a href="Graphics_State.html">← Graphics State</a>
     </li></ul>
   </div>
-
   <div class="article">
     <p>A variable is a place to store a <i>value</i> in computer memory. You could think of a
     variable as a cardboard box. You can put something inside the box, put it away for storage, and
     later on retrieve the item from the box. Usually, people put labels or some kind of code on
     boxes to remember what is inside.
-
     </p><p>It's the same with variables. Each variable has a <i>name</i>, and a <i>value</i>. The name
     is like the label on a box: it's a quick reminder of what item, or value, is inside the
     variable. Just like boxes, variables can hold all sorts of stuff useful in a NodeBox script:
     pieces of text, an important number, the name of a font, a <a href="Lists.html">list</a> of
     colors, and so on.
-
     </p><p>Another way to look at variables is to think of them as a sticky note.
-
     </p><h2>Why use variables</h2>
-
     <p>You store things in variables when you plan to <b>reuse</b> them. If each of ten rectangles
     you're going to draw is a hundred pixels wide, it's a good idea to declare a <i>width</i>
     variable that stores the number <i>100</i>, and tell each rectangle to go look what's inside
     this <i>width</i> variable.
-
     </p><p>This way, when you change your mind about the rectangle's width, you only need to change the
     contents of the <i>width</i> variable, since each rectangle is looking over there for it's
     width.
-
     </p><p>Don't worry, things will clear up once we try some examples!
-
     </p><h2>Declaring variables</h2>
-
     <p>You can declare a variable at any point in your script, and give it <b>any name you
     like</b>, except for names that NodeBox has already claimed (like <i>rect</i>, or <i>for</i>).
     Usually, you pick a name that tells something about what kind of information the variable is
     storing.
-
     </p><p>Try to come up with good, short names. No one likes to type <i>theWidthOfAllRectangles</i>
     an dozen times, <i>width</i> says enough.
-
     </p><table border="0">
       <tbody>
         <tr>
           <td><img src="media/variables-width1.jpg"/>
-
           </td><td>
             <br/>
             <br/>
@@ -73,17 +55,13 @@ width = <span class="s">100</span>
 </pre>Variables can be used as parameters. <b>NodeBox looks up what value it contains</b>. In this
 example, a rectangle is drawn at (10,10), with width of 100 and height of 30.
           </td></tr></tbody></table>
-
     <h2>Changing variables</h2>
-
     <p>You can change the value of a variable during the course of a script. When this happens, the
     old value is thrown away, and from now on the variable contains the new value.
-
     </p><table border="0">
       <tbody>
         <tr>
           <td><img src="media/variables-width2.jpg"/>
-
           </td><td>
             <br/>
             <br/>
@@ -97,29 +75,22 @@ width = <span class="s">20</span>
 <span class="kw">rect</span><span class="s">(</span><span class="s">120</span>, <span class="s">10</span>, width, <span class="s">30</span><span class="s">)</span>
 <span class="kw">rect</span><span class="s">(</span><span class="s">330</span>, <span class="s">10</span>, width, <span class="s">30</span><span class="s">)</span>
 </pre>
-
         </td></tr><tr>
           <td style="text-align: center"><img src="media/variables-width3.jpg"/>
-
           </td><td>The resulting output in NodeBox.
         </td></tr></tbody></table>
-
     <h2>Calculations with variables</h2>
-
     <p>When you store numbers in variables, you can perform math operations on them, multiply them,
     increase them, and so on. This is essential when positioning text for example: you don't want
     to calculate the position of each piece of text by yourself. Rather, paragraph text should go
     neatly below the title - and when the title font size changes, the paragraph text should move
     along by itself.
-
     </p><p>Thus, the paragraph's vertical position should be <b>dependant</b> on the title's vertical
     position.
-
     </p><table border="0">
       <tbody>
         <tr>
           <td><img src="media/variables-math1.jpg"/>
-
           </td><td>
             <pre class="python">
 count = <span class="s">10</span>
@@ -130,10 +101,8 @@ count += <span class="s">5</span>
 <span class="kw">print</span> count
 &gt;&gt;&gt; <span class="s">15</span>
 </pre>
-
         </td></tr><tr>
           <td><img src="media/variables-math2.jpg"/>
-
           </td><td>
             <pre class="python">
 x = <span class="s">30</span>
@@ -145,77 +114,50 @@ quote = <span class="str">"Nicely below each other"</span>
 <span class="kw">text</span><span class="s">(</span>quote, x, y<span class="s">)</span>
 </pre>
           </td></tr></tbody></table>
-
     <h2>Where do variables live?</h2>
-
     <p>Each script has its own memory storage, it's own warehouse of boxes and sticky notes. The
     specific value of a variable is therefore only known inside the script where it is used, not in
     other scripts.
-
     </p><h2>Predefined variables</h2>
-
     <p>NodeBox has a set of predefined variables that contain information about the state of your
     script. These variables can only be looked at, not modified.
-
     </p><ul>
       <li>WIDTH: the width of the drawing area
-
       </li><li>HEIGHT: the height of the drawing area
-
       </li><li>PAGENUM: the current page being exported in a multi-page export.
-
       </li><li>FRAME: the current frame in an <a href="Animation.html">animation</a>.<br/>
     </li></ul>
-
     <p>Some variables can be used to create interactive animations:
-
     </p><ul>
       <li>MOUSEX: the horizontal location of the mouse cursor
-
       </li><li>MOUSEY: the vertical location of the mouse cursor
-
       </li><li>mousedown: is True when the mouse button is pressed, False otherwise
-
       </li><li>keydown: is True when a key is being pressed, False otherwise
-
       </li><li>key: the last key pressed
-
       </li><li>keycode: the integer keycode of the last key pressed
-
       </li><li>KEY_UP, KEY_DOWN_ KEY_LEFT, KEY_RIGHT, KEY_BACKSPACE contain the keycodes for the arrow
       keys and the backspace key.
     </li></ul>
-
     <h2>The variable panel</h2>
-
     <p>The variable panel displays script variables visually as sliders, fields, or check boxes.
     When you drag variable sliders, its values change on the fly, changing the output in the
     drawing area. Any <a href="../ref/Utility.html#random()">random()</a> values in your script are
     retained as long as you don't re-run your script. In other words, random values change when you
     run a script, but not when you change values or drag sliders in the variable panel.
-
     </p><p><br/>
     <span class="media"><img height="523" src="media/variables.jpg" width="622"/></span>
-
     </p><p>The command to add variables to the variable panel is the <b>var()</b> command.
-
     </p><ul>
       <li>var(<i>name</i>, NUMBER, <i>default</i>, <i>min</i>, <i>max</i>)
-
       </li><li>var(<i>name</i>, TEXT, <i>default="hello"</i>)
-
       </li><li>var(<i>name</i>, BOOLEAN)
-
       </li><li>var(<i>command</i>, BUTTON)
     </li></ul>
-
     <p>You can then use the <i>name</i> variable in your script like any other variable. Numbers
     produce a slider, text an input field and booleans (<i>True</i> or <i>False</i>) a checkbox.
     The <i>command</i> parameter for buttons is the name of a command in your script to call when
     the button is pressed.
-
     </p><p>The variable panel is inspired on <a href="http://just.letterror.com/ltrwiki/BobIppolito">Bob Ippolito's widget drawer</a> in the
     original DrawBot.
   </p></div>
-
 </body></html>

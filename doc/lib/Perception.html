@@ -1,41 +1,31 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Libraries: Perception</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
-
     <h3>Perception</h3>
   </div>
-
   <div class="article">
     <h2>Description</h2>
-
     <p>The purpose of the NodeBox Perception module is to incorporate commonsense knowledge into
     NodeBox of how things look, feel, smell and relate to other things. The data is organized in a
     so-called <a href="http://en.wikipedia.org/wiki/Semantic_network">semantic network</a> (like
     WordNet). Concepts in a semantic network are connected to each other with semantic relations.
     For example: <i>red is-property-of rose.</i>
-
     </p><p>The module has two parts: <a href="http://nodebox.net/perception">an online application</a>
     where you can add new rules to the network, and a NodeBox library to retrieve clusters of rules
     and analyze them. The library uses the functionality in the <a href="Graph.html">Graph</a>
     library to find shortest paths and strong concepts in the network. It also contains a
     <i>simile</i> search technique as discussed by Dr. Tony Veale and Yanfen Hao in their paper
     [<a href="http://afflatus.ucd.ie/Papers/LearningFigurative_CogSci07.pdf">1</a>].<br/>
-
     </p><p class="pink_text">The library introduces some advanced programming concepts.
-
     </p><h2>Download</h2>
-
     <table border="0">
       <tbody>
         <tr>
           <td><img alt="download" height="20" src="media/download.gif" width="20"/>
-
           </td><td>
             <p><b>Application</b>: <a href="http://nodebox.net/perception">http://nodebox.net/perception</a><br/>
             <b>Library</b>: <a href="http://nodebox.net/code/data/media/perception.zip">perception.zip</a> (250KB)<br/>
@@ -43,85 +33,57 @@
             Beta version<br/></i><i>Licensed under GPL</i><br/>
             <i>Authors: Tom De Smedt, Frederik De Bleser<br/></i>
           </p></td></tr></tbody></table>
-
     <h2>Documentation</h2>
-
     <ul>
       <li><a href="#relations">Semantic relations</a>
-
       </li><li><a href="#extend">Extending the network</a>
-
       </li><li><a href="#library">How to get the library up and running</a>
-
       </li><li><a href="#query">Perception queries inside NodeBox<br/></a>
-
       </li><li><a href="#cluster">Perception clusters inside NodeBox</a>
-
       </li><li><a href="#range">Working with concept ranges</a>
-
       </li><li><a href="#index">Working with the cached index</a>
-
       </li><li><a href="#solver">Working with the solver</a>
-
       </li><li><a href="#heuristic">Pathfinding heuristics</a><br/>
-
       </li><li><a href="#api">REST API</a>
-
       </li><li><a href="#widget">Widget</a><br/>
     </li></ul>
-
     <p> 
-
     </p><p><a class="noexternal" href="http://nodebox.net/perception"><img alt="perception1" height="418" src="media/perception1.jpg" width="600"/></a><br/>
     Screenshot from <a class="noexternal" href="http://nodebox.net/perception">http://nodebox.net/perception</a>.<br/>
     The application is built to work with the Safari and Firefox browsers.
-
     </p><p> 
     </p><hr size="2" width="100%"/>
-
     <h2><a id="relations" name="relations" title="relations"></a>Semantic relations</h2>
-
     <p>Concepts in the Perception network are connected to each other with semantic relations. The
     advantage of using these semantic rules is that they make sense to both people and machines.
-
     </p><p>There are lots of existing and well-known semantic networks (WordNet and Wikipedia to name
     two). Our purpose is not to recreate these - instead, in the Perception network we <b>focus on
     the <i>is-property-of</i> relation</b> which describes what something looks or feels like. This
     will yield the sort of sensory, emotional, subjective knowledge we want in a visualization tool
     like NodeBox.<br/>
-
     </p><p>The network supports six different relations:
-
     </p><ul>
       <li><b>is-a</b>: shorthand for <i>is-a-type-of</i>. This relation is called a
       hyponym-hypernym relation. It connects a specific concept to a larger class of similar
       concepts, e.g. <i>Helvetica</i> <i>is-a sans-serif.</i>
-
       </li><li><b>is-part-of</b>: this relation is called a meronym-holonym relation. It defines the
       parts of a whole, components, members, substances, e.g. <i>typography is-part-of layout</i>.
-
       </li><li><b>is-opposite-of</b>: this relation is called an antonymy. It defines opposites, e.g.
       <i>legibility is-opposite-of illegiblity</i>.
-
       </li><li><b>is-property-of</b>: shorthand for <i>is-sensory-property-of.</i> The concept on the
       left tells something about how the word of the right looks, feels, sounds, smells, or is
       processed emotionally. For example: <i>dark is-property-of night</i>, <i>sharp is-property-of
       knife.</i> We call this a perceptonymy.
-
       </li><li><b>is-related-to</b>: an associative relation. Two concepts linked in this way are
       psychologically related, e.g. <i>David Carson is-related-to grunge</i>.
-
       </li><li><b>is-same-as</b>: this relation is called a synonymy, both related concepts are equals,
       e.g. <i>font is-same-as typeface</i>.<br/>
       <br/>
     </li></ul>
-
     <p><span class="grey_box">Properties</span><br/>
-
     </p><p>Everything that has an <i>is-property-of</i> relation to another concept is regarded as a
     sensory property. Properties are at the heart of the network because we can use them to
     <b>translate language to visual output</b> (which is the main goal of the Perception module).
-
     </p><p>At one end we have people using conceptual constraints like <i>bright and trendy colors</i>,
     at the other end we have machines with technological possibilities like a <i>HSB color
     model</i>. We can easily define <i>bright</i> in terms of saturation and brightness, and
@@ -130,60 +92,42 @@
     sensory go-betweens. When we start tagging other concepts with these properties (e.g <i>bright
     is-property-of sun</i>) we are basically teaching machines something about aesthetics and the
     visual world.
-
     </p><p>If you open up the "from property" window in the web app you'll notice that some properties
     are highlighted. These are properties we think are good candidates to connect to pieces of
     NodeBox code to generate associated visual output.<br/>
     <br/>
-
     </p><p><span class="grey_box">Context</span>
-
     </p><p>Sets of related rules are organized in a context, like <i>nature</i> or <i>culture</i>.
     Contexts can be used as a filter to narrow down the rules being displayed.<br/>
-
     </p><p> 
     </p><hr size="2" width="100%"/>
-
     <h2><a id="extend" name="extend" title="extend"></a>Extending the network</h2>
-
     <p><span class="grey_box">Authorship</span>
-
     </p><p>When you <a href="http://nodebox.net/perception">add your own rules</a> to the network you
     are encouraged to <b>leave an e-mail address</b> or some other identification code. This way,
     your own set of rules can be set apart from all the other rules - you can filter for your ID so
     you only get to see your own data, regardless of what anyone else is saying.
-
     </p><p>We encourage you to use your e-mail address. If the tool catches on and lots of people are
     going to be adding rules, we may want to contact you to learn something about your cultural
     background.<br/>
     <br/>
-
     </p><p><span class="grey_box">Editing</span><br/>
-
     </p><p>At this point you can only <i>add</i> rules in the online application. If you are planning
     on getting your hands dirty you may need to be able to edit existing rules to reorganize or
     restructure clusters in the network. If this is the case, contact us and we'll set you up with
     some editing rights.<br/>
     <br/>
-
     </p><p><span class="grey_box">Where to start?</span>
-
     </p><p>If you don't know where to start, here are some good clusters of knowledge in the
     network:<br/>
-
     <table>
       <tbody>
         <tr>
           <td><b>Nature</b>
-
           </td><td><b>Culture</b>
-
           </td><td><b>Emotion</b>
-
           </td><td><b>Media</b>
-
           </td><td><b>Graphics<br/></b>
-
         </td></tr><tr>
           <td><a href="http://nodebox.net/perception?animal">animal<br/></a><a href="http://nodebox.net/perception?plant">plant</a><br/>
           <a href="http://nodebox.net/perception?tree">tree</a><br/>
@@ -191,144 +135,103 @@
           <a href="http://nodebox.net/perception?sky">sky</a><br/>
           <a href="http://nodebox.net/perception?weather">weather</a><br/>
           <a href="http://nodebox.net/perception?body">body</a><br/>
-
           </td><td><a href="http://nodebox.net/perception?state">state</a><br/>
           <a href="http://nodebox.net/perception?science">science</a><br/>
           <a href="http://nodebox.net/perception?religion">religion</a><br/>
           <a href="http://nodebox.net/perception?leisure">leisure</a><br/>
           <a href="http://nodebox.net/perception?structure">structure</a>
-
           </td><td><a href="http://nodebox.net/perception?facial_expression">facial expression</a><br/>
           <a href="http://nodebox.net/perception?behavior">behavior</a><br/>
-
           </td><td><a href="http://nodebox.net/perception?book">book</a><br/>
           <a href="http://nodebox.net/perception?movie">movie</a><br/>
           <a href="http://nodebox.net/perception?genre">genre</a>
-
           </td><td><a href="http://nodebox.net/perception?color">color</a><br/>
           <a href="http://nodebox.net/perception?text">text</a>
         </td></tr></tbody></table>
-
     </p><p> 
-
     </p><p><span class="grey_box">How to start?</span><br/>
-
     </p><p>Think of a central concept that interests you. Start adding rules to it (and remember to add
     some <i>is-property-of</i> rules). Then start thinking about the new concepts that were
     introduced in your rules. You'll quickly have a good cluster of knowledge.
-
     </p><p>For example:
-
     </p><ul>
       <li>Yoda <i>is-a</i> muppet<br/>
-
       </li><li>Yoda <i>is-part-of</i> Star Wars
-
       </li><li>The Force <i>is-part-of</i> Yoda
-
       </li><li>green <i>is-property-of</i> Yoda
-
       </li><li>small <i>is-property-of</i> Yoda
-
       </li><li>powerful <i>is-property-of</i> The Force
-
       </li><li>Star Wars <i>is-a</i> movie 
     </li></ul><br/>
     <br/>
     <span class="grey_box">Robots</span><br/>
-
     <p>The Perception module has a number of robots that help us out with finding new rules. One of
     the robots is developed at the department of Computer Linguistics at the University of Antwerp
     (Belgium) and has gathered over two hundred thousand <i>is-property-of</i> rules from various
     text sources. 
-
     <table>
       <tbody>
         <tr>
           <td><img alt="perception3" height="381" src="media/perception3.jpg" width="250"/>
-
           </td><td>
             <p>When you click the <b>suggest</b> link in the <i>Add rule</i> panel you can review
             them and activate those you think make sense.
-
             </p><p>You can browse the rules starting from a property (e.g. voracious
             <i>is-property-of</i> predator) or by searching for concepts (e.g. predator
             <i>has-property</i> voracious). You can switch modes by clicking "property" or
             "concept" at the top of the widget.
-
             </p><p>Then simply select the rules that make senses and they'll be activated in the
             Perception network.<br/>
           </p></td></tr></tbody></table>
-
     </p><p> 
     </p><hr size="2" width="100%"/>
-
     <h2><a id="library" name="library" title="library"></a>How to get the library up and
     running</h2>
-
     <p>Put the <i>perception</i> library folder in the same folder as your script so NodeBox can
     find the library. You can also put it in <i>~/Library/Application Support/NodeBox/.</i> You'll
     also need the <a href="Graph.html">Graph</a> library installed. Put it in <i>Application
     Support</i> as well, or inside the <i>perception</i> library folder.
     </p><pre class="python">perception = <span class="kw">ximport</span><span class="s">(</span><span class="str">"perception"</span><span class="s">)</span>
 </pre>
-
     <p class="small_text">Outside of NodeBox you can also just do <i>import perception.</i>
-
     </p><p> 
     </p><hr size="2" width="100%"/>
-
     <h2><a id="query" name="query" title="query"></a>Perception queries inside NodeBox</h2>
-
     <p>The simplest way to retrieve rules from the online Perception database is with the
     <i>query()</i> command. A list of rules will be returned - all of them involving the given
     <i>concept</i>, with the given <i>relation</i>, in the given <i>context</i> and/or from the
     given <i>author</i>.
     </p><pre class="python">query<span class="s">(</span>concept, relation=<span class="kw">None</span>, context=<span class="kw">None</span>, author=<span class="kw">None</span>, depth=<span class="s">1</span><span class="s">)</span>
 </pre>
-
     <p>If the optional <i>depth</i> is 1 the command simply returns all the rules that match. If
     <i>depth</i> is between 1 and 4, it returns a cluster of interconnected concepts.
-
     </p><p>This is useful because if there is a <i>wet is-property-of fog</i> rule and a <i>fog
     is-related-to autumn</i> rule, the command will also retrieve the <i>wet is-property-of
     autumn</i> rule even though we were only querying for <i>fog</i> rules. This results in much
     more meaningful data to put in a small "fog-graph".
-
     </p><p>Note that you can also set the author once in the AUTHOR variable. It will then be used in
     all queries throughout the library.
     </p><pre class="python">perception.<span class="s">AUTHOR</span> = <span class="str">"alice@wonderland.com"</span>
 </pre>
-
     <p>Each <i>Rule</i> object in the returned list has the following properties:
-
     </p><ul>
       <li><i>rule.concept1</i>: the "from" concept in the rule, for example <i>wet</i>.<br/>
-
       </li><li><i>rule.relation</i>: the semantic relation defining the rule, for example
       <i>is-property-of</i>.
-
       </li><li><i>rule.concept2</i>: the "to" concept in the rule, for example <i>fog</i>.
-
       </li><li><i>rule.context</i>: the rule's context, for example <i>nature</i>.<br/>
-
       </li><li><i>rule.author</i>: the author's ID.<br/>
-
       </li><li><i>rule.date</i>: rule creation date.<br/>
       <br/>
     </li></ul>
-
     <p><span class="grey_box">Local cache</span><br/>
-
     </p><p>When you execute a query, the library attempts to connect to the online Perception database.
     The result is then cached locally so the next time you run the same query it will respond
     quicker. At some point you may want to empty the local cache:
     </p><pre class="python">cache_clear<span class="s">(</span><span class="s">)</span>
 </pre>            
     <hr size="2" width="100%"/>
-
     <h2><a id="cluster" name="cluster" title="cluster"></a>Perception clusters inside NodeBox</h2>
-
     <p>Obviously, the next fun thing to do is to cluster related concepts in a small graph (like in
     the web application). The library builds on the <a href="Graph.html">Graph</a> library to
     accomplish this. The <i>cluster()</i> command returns a graph object that has all of the
@@ -336,15 +239,12 @@
     start if you are new to graph networks.
     </p><pre class="python">cluster<span class="s">(</span>concept, relation=<span class="kw">None</span>, context=<span class="kw">None</span>, author=<span class="kw">None</span>, depth=<span class="s">2</span><span class="s">)</span>
 </pre>
-
     <p>So, it's easy enough to visualize a cluster of rules:
-
     <table>
       <tbody>
         <tr>
           <td>
             <p><img alt="perception-cluster" height="150" src="media/perception-cluster.jpg" width="150"/>
-
           </p></td><td>
             <pre class="python">
 g = perception.<span class="s">cluster</span><span class="s">(</span><span class="str">"fog"</span><span class="s">)</span>
@@ -354,9 +254,7 @@ g.<span class="s">solve</span><span class="s">(</span><span class="s">)</span>
 g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
 </pre>
           </td></tr></tbody></table><br/>
-
     </p><p><span class="grey_box">Concept node methods and properties</span>
-
     </p><p>Nodes (e.g. individual concepts) in the cluster graph have all the standard node properties
     and methods, and some additional functionality that pertains to the Perception network:
     </p><pre class="python">node.<span class="s">is_a</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span>
@@ -377,7 +275,6 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
 </pre>
     <pre class="python">node.<span class="s">has_property</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span>
 </pre>
-
     <p>Each of these methods returns <i>True</i> or <i>False</i>, depending on whether the two
     nodes are directly with the given relation. If <i>direct</i> is <i>False</i>, intermediary
     nodes are allowed as long as the relation stays the same. For example:
@@ -385,13 +282,11 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">print</span> g.<span class="s">albatross</span>.<span class="s">is_a</span><span class="s">(</span><span class="str">"animal"</span>, direct=<span class="kw">False</span><span class="s">)</span>
 &gt;&gt;&gt; <span class="kw">True</span>
 </pre>
-
     <p>In this case, <i>True</i> is returned because an albatross is a bird and a bird is an
     animal. So albatross is an animal. Note that if the cluster query would have been executed with
     a <i>depth</i> of 2, the <i>animal</i> concept would have been out of reach and <i>False</i>
     would have been returned. Deeper clusters yield more intelligence, yet slower and more
     cluttered visualizations.
-
     </p><p>The following methods return a list of connected nodes by relation type:
     </p><pre class="python">node.<span class="s">hyponyms</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>     <span class="grey"># specific: tree =&gt; evergeen, deciduous</span>
 </pre>
@@ -409,20 +304,15 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
 </pre>
     <pre class="python">node.<span class="s">objects</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>      <span class="grey"># illustrate property: strong =&gt; horse, tree, ...</span>
 </pre>
-
     <p>With a <i>depth</i> of 1, only directly connected nodes are returned. With a <i>depth</i> of
     2 nodes connected to directly connected nodes are also returned, and so on.
-
     </p><p>Nodes in a cluster graph have one extra property:
-
     </p><ul>
       <li><i>node.is_property</i>: <i>True</i> if it is a word like <i>dark</i>, <i>big</i>, or
       <i>pleasant</i>.<br/>
       <br/>
     </li></ul>
-
     <p><span class="grey_box">Concept cluster methods and properties</span>
-
     </p><p>A concept cluster graph has all the methods and properties any other graph object has, and
     some additional semantic functionality:
     </p><pre class="python">graph.<span class="s">hyponyms</span><span class="s">(</span>proper=<span class="kw">False</span>, fringe=<span class="s">1</span><span class="s">)</span> <span class="grey"># specify: tree =&gt; oak, linden</span>
@@ -431,7 +321,6 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
 </pre>
     <pre class="python">graph.<span class="s">objects</span><span class="s">(</span>distance=<span class="s">2</span><span class="s">)</span>    <span class="grey"># illustrate: wild =&gt; anger, sea, rodeo</span>
 </pre>
-
     <p>The <i>graph.hyponyms()</i> method analyzes the cluster and returns a list of node objects
     that are concrete examples of the graph's root. If proper is <i>True</i>, only proper names are
     returned (e.g. "God" but not "god"). The <i>fringe</i> determines how close to the perimeter of
@@ -441,12 +330,10 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">print</span> g.<span class="s">hyponyms</span><span class="s">(</span><span class="s">)</span>
 &gt;&gt;&gt; <span class="s">[</span>rivulet, brook<span class="s">]</span>
 </pre>
-
     <p>The <i>graph.properties()</i> method analyzes the cluster and returns a list of property
     nodes relevant to the graph root. The <i>graph.objects()</i> method does the reverse: it
     returns concrete, tangible nodes if the graph's root is a property. The <i>distance</i>
     determines how far away from the root these nodes can be.
-
     </p><p>At this point you may wonder about the difference between using the <i>properties()</i>
     method on a single node or using it on a cluster graph. The difference is that the latter is
     <b>more elaborate</b>: it derives (or <b>infers</b>) additional knowledge from strong nodes
@@ -460,28 +347,21 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
      orange, intense, passionate, exotic, mysterious, dangerous, organic, 
      dry, fast, chaotic, blond, important, warm<span class="s">]</span>
 </pre>
-
     <p>The returned list contains node objects. A simple way to get to a list of strings:
     </p><pre class="python">g = perception.<span class="s">cluster</span><span class="s">(</span><span class="str">"sun"</span>, depth=<span class="s">3</span><span class="s">)</span>
 <span class="kw">print</span> <span class="s">[</span>node.<span class="s">id</span> <span class="kw">for</span> node <span class="kw">in</span> g.<span class="s">sun</span>.<span class="s">properties</span><span class="s">(</span><span class="s">)</span><span class="s">]</span>
 &gt;&gt;&gt; <span class="s">[</span><span class="str">"yellow"</span>, <span class="str">"red"</span>, <span class="str">"hot"</span>, <span class="str">"round"</span>, <span class="str">"bright"</span><span class="s">]</span>
 </pre>
-
     <p>A cluster graph object has two additional properties:
-
     </p><ul>
       <li><i>graph.proper_nouns</i>: a list of nodes in the graph that are proper nouns (e.g.
       "NodeBox").<br/>
-
       </li><li><i>graph.proper_leaves</i>: a list of nodes in the graph that are both leaves and proper
       nouns.
     </li></ul>
-
     <p> 
     </p><hr size="2" width="100%"/>
-
     <h2><a id="range" name="range" title="range"></a>Working with concept ranges</h2>
-
     <p>Ranges are very different from clusters. While a cluster focuses on the details of one
     concept, a range is an enumeration of similar concepts. For example: <i>all the trees in
     Perception</i>, or <i>all the movies in Perception</i>. Such ranges are derived from
@@ -491,49 +371,39 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
 </pre>
     <pre class="python"><span class="s">range</span><span class="s">(</span><span class="s">type</span><span class="s">)</span>
 </pre>
-
     <p>The <i>range()</i> command returns a list of concepts that are of the given <i>type</i>. The
     <i>type</i> is expected to be a singular word, so you query for a <i>movie range</i> instead of
     a <i>movies range</i>. For example:
     </p><pre class="python"><span class="kw">print</span> perception.<span class="s">range</span><span class="s">(</span><span class="str">"movie"</span><span class="s">)</span> 
 &gt;&gt;&gt; <span class="s">[</span><span class="str">'Conan The Barbarian'</span>, <span class="str">'Dawn of the Dead'</span>, <span class="str">'Star Wars'</span>, <span class="str">'The Matrix'</span><span class="s">]</span>
 </pre>
-
     <p>One special range is the <i>properties range</i>. It contains all the concepts from
     Perception that fall within the properties context:
     </p><pre class="python"><span class="kw">print</span> perception.<span class="s">range</span><span class="s">(</span><span class="str">"properties"</span><span class="s">)</span><span class="s">[</span>:<span class="s">5</span><span class="s">]</span>
 &gt;&gt;&gt; <span class="s">[</span><span class="str">'abstract'</span>, <span class="str">'agile'</span>, <span class="str">'angry'</span>, <span class="str">'angular'</span>, <span class="str">'annoying'</span><span class="s">]</span>
 </pre>
-
     <p>Often, the rules that define what goes into the same range need to be tweaked a little bit
     to get the best results. You can do this with the <i>range.append()</i> command:
     </p><pre class="python"><span class="s">range</span>.<span class="s">append</span><span class="s">(</span>name, concept, context, fringe=<span class="s">2</span>, proper=<span class="kw">False</span><span class="s">)</span>
 </pre>
-
     <p>Now what does this do? It tells the <i>range()</i> command that there exists a range with
     the given <i>name</i>. This range is made up of concepts that are connected to the ancestor
     <i>concept</i> with <i>is-a</i> relations, in the given <i>context</i>. All of these concepts
     are located in the given <i>fringe</i> of the taxonomy. If <i>proper</i> is <i>True</i>, they
     furthermore need to be proper nouns.
-
     </p><p>Wow, what was all of that! Let's try to clarify things with an example:
     </p><pre class="python">perception.<span class="s">range</span>.<span class="s">append</span><span class="s">(</span><span class="str">"font"</span>, <span class="str">"typeface"</span>, <span class="str">"graphics"</span>, fringe=<span class="s">2</span>, proper=<span class="kw">True</span><span class="s">)</span>
 <span class="kw">print</span> perception.<span class="s">range</span><span class="s">(</span><span class="str">"font"</span><span class="s">)</span>
 &gt;&gt;&gt; <span class="s">[</span><span class="str">'Arial'</span>, <span class="str">'Beowolf'</span>, <span class="str">'Comic Sans MS'</span>, <span class="str">'Courier'</span>, ... <span class="s">]</span>
 </pre>
-
     <p>What the above rule means is that a font is a concept with a proper name that has typeface
     as an ancestor. We only look in the graphics context - this avoids ambuigity - and define a
     rather narrow fringe to avoid that font category names (e.g. "Serif") also end up in the range.
-
     </p><p>All of the tweaked range rules are stored in the <i>range.rules</i> dictionary. So you can
     find out what ranges have already been defined by printing out <i>range.rules.keys()</i>.
-
     </p><p> 
     </p><hr size="2" width="100%"/>
-
     <h2><a id="index" name="index" title="index"></a>Working with the cached index</h2>
-
     <p>So far we have looked at how to retrieve a lists of rules from the Perception database,
     construct and analyze a cluster of related rules and retrieve a range of concept siblings.
     Let's take it a step further and look at how we can find paths between different, unrelated
@@ -544,32 +414,26 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
 </pre>
     <pre class="python">index.<span class="s">sort_by_distance</span><span class="s">(</span>root, concepts<span class="s">)</span>
 </pre>
-
     <p>The <i>index.shortest_path()</i> command returns a list of concepts describing how to get
     from <i>concept1</i> to <i>concept2</i> in the quickest way. The <i>index.nearest()</i> command
     returns the concept from the list of <i>concepts</i> that is nearest to the <i>root</i>
     concept. The <i>index.sort_by_distance()</i> command returns the list of <i>concepts</i> sorted
     by distance from the <i>root</i> concept.
-
     </p><p>For example, which is darker: being happy or being sad?
     </p><pre class="python"><span class="kw">print</span> perception.<span class="s">index</span>.<span class="s">nearest</span><span class="s">(</span><span class="str">"dark"</span>, <span class="s">[</span><span class="str">"happy"</span>, <span class="str">"sad"</span><span class="s">]</span><span class="s">)</span> 
 &gt;&gt;&gt; sad
 </pre>
-
     <p>Note that since <i>index</i> itself is a dictionary you can also do <i>index.has_key()</i>,
     <i>index.keys()</i>, etc.
-
     </p><p>Now how does this index work on the inside? Obviously, finding a good path between two
     random concepts takes quite a bit of time and effort. For this reason, the index is cached
     locally on your machine instead of requesting shortest paths from the online application. Check
     out the <i>index/</i> folder inside the library. You'll notice a "properties" file. This is the
     cached set we are currently using: it contains all the shortest paths between all of the
     properties in Perception.
-
     </p><p>You can also create your own custom sets:
     </p><pre class="python">index.<span class="s">build</span><span class="s">(</span>name, concepts=<span class="s">[</span><span class="s">]</span>, heuristic=<span class="kw">None</span><span class="s">)</span>
 </pre>
-
     <p>This will create a new file with the given name, containing the shortest paths between all
     the concepts in the given list. Below is an example script of how to build a new properties
     set. Be aware that even for 100-200 concepts it might very well take an hour to build the new
@@ -580,22 +444,17 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
     perception.<span class="s">cost</span><span class="s">(</span><span class="kw">None</span>, <span class="s">{</span><span class="str">"is-property-of"</span>:<span class="s">-0.25</span>,<span class="str">"is-opposite-of"</span>:<span class="s">10</span><span class="s">}</span><span class="s">)</span>
 <span class="s">)</span>
 </pre>
-
     <p>You may wonder about the heuristic parameter - we'll get to that in the <a href="#heuristics">heuristics</a> chapter below.<br/>
-
     </p><p>To switch between different cached sets, simply change the index name:
     </p><pre class="python">perception.<span class="s">index</span>.<span class="s">name</span> = <span class="str">"properties"</span>
 </pre>            
     <hr size="2" width="100%"/>
-
     <h2><a id="solver" name="solver" title="solver"></a>Working with the solver</h2>
-
     <p>The solver combines clusters, ranges and the index to make decisions about the real world.
     The <i>solver.find()</i> command will filter and sort the list of given concepts according to
     how relevant they are to the <i>given</i> root concept.<br/>
     </p><pre class="python">solver.<span class="s">find</span><span class="s">(</span>root, concepts<span class="s">)</span>
 </pre>
-
     <p>For example, we could use it to find a typeface that matches a certain feel:
     </p><pre class="python">concepts = perception.<span class="s">range</span><span class="s">(</span><span class="str">"font"</span><span class="s">)</span>
 <span class="kw">print</span> perception.<span class="s">solver</span>.<span class="s">find</span><span class="s">(</span><span class="str">"funny"</span>, concepts<span class="s">)</span>
@@ -613,23 +472,17 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">print</span> perception.<span class="s">solver</span>.<span class="s">find</span><span class="s">(</span><span class="str">"dark"</span>, concepts<span class="s">)</span>
 &gt;&gt;&gt; <span class="s">[</span><span class="str">'disgust'</span>, <span class="str">'sadness'</span>, <span class="str">'pride'</span>, <span class="str">'fear'</span>, <span class="str">'anger'</span><span class="s">]</span> <span class="grey"># dark emotions?</span>
 </pre>
-
     <p>Note that there is no randomness involved except when the solver needs to make a choice
     between two exactly equal concepts. The process is entirely dependent on the rules people have
     added to the Perception database (so obviously, at times you will disagree with the solver's
     suggestions). In short, this is what happens behind the scenes:
-
     </p><ul>
       <li>For each concept in the list, create a cluster.
-
       </li><li>Analyze the cluster for strong properties that best describe this concept.
-
       </li><li>Find the shortest path between the best of these properties and the given <i>root</i>
       property.<br/>
-
       </li><li>If it's shorter than the best candidate so far, add it to the list of candidates.
     </li></ul>
-
     <p>If you want to use the solver with something else besides properties, you will need to
     create your own index. Also, the cluster graph needs a method that returns the concepts you
     want. In a hypothetical example, you could redefine the workings of the solver as follows:<br/>
@@ -643,21 +496,16 @@ perception.<span class="s">graph</span>.<span class="s">add_method</span><span c
 perception.<span class="s">solver</span>.<span class="s">index</span> = <span class="str">"properties"</span>
 perception.<span class="s">solver</span>.<span class="s">method</span> = <span class="str">"my_analysis"</span>
 </pre>
-
     <p>That said, let's have a look at pathfinding heuristics used in the library.
-
     </p><p> 
     </p><hr size="2" width="100%"/>
-
     <h2><a id="heuristic" name="heuristic" title="heuristic"></a>Pathfinding heuristics</h2>
-
     <p>When building a cached index, we may want to discourage certain type of relations. For
     example, a shortest path that has an <i>is-opposite-of</i> in it somewhere is probably not a
     path that makes much sense. Consider that a tree is "organic", and that "artificial" is the
     opposite of organic, and that a computer is artificial. This makes the distance between trees
     and computers very short, but that's not really a good thing when we want to compare trees to
     other organic things (which - obviously - computers are not).
-
     </p><p>We can pass an optional <i>heuristic</i> parameter to the <i>index.build()</i> command. This
     heuristic (i.e. loosely defined search rule) is a command that takes two node id's and returns
     a cost, usually a number between -1.0 and 1.0. Links that cost less are preferred over more
@@ -665,7 +513,6 @@ perception.<span class="s">solver</span>.<span class="s">method</span> = <span c
     offers a handy <i>heuristic()</i> builder to construct search rules:
     </p><pre class="python">heuristic<span class="s">(</span>costs=<span class="s">{</span><span class="s">}</span>, graph=<span class="kw">None</span><span class="s">)</span>
 </pre>
-
     <p>The <i>heuristic()</i> command returns something you can pass to <i>index.build()</i>. The
     <i>costs</i> parameter is a dictionary of relations linking to costs. This way you can tax
     individual relations. For example, to build a decent index that ignores <i>is-opposite-of</i>
@@ -677,66 +524,48 @@ perception.<span class="s">index</span>.<span class="s">build</span><span class=
     heuristic=h
 <span class="s">)</span>
 </pre>
-
     <p>Note that the <i>graph.properties()</i> and <i>graph.objects()</i> methods also have an
     optional heuristic parameter to tweak the returned results.
-
     </p><p>With the combination of the online input module, clusters, ranges, customizable indexes and
     the solver you can start doing anything you want. If you feel like getting your hands dirty,
     pop open the library's source code and see what else is possible.
-
     </p><p> 
     </p><hr size="2" width="100%"/>
-
     <h2><a id="api" name="api" title="api"></a>REST API</h2>
-
     <p>If you require data from the Perception network outside of NodeBox, that's possible with the
     simple query API. You can direct your software to the Perception URL, add some query arguments
     and retrieve clusters of rules in plain text, JSON or XML format.
     </p><pre class="python">http://nodebox.<span class="s">net</span>/perception?<span class="s">[</span>concept<span class="s">]</span>
 </pre>
-
     <p>Arguments:
-
     </p><ul>
       <li><span class="inline_code">format</span>: either <span class="inline_code">txt</span>,
       <span class="inline_code">json</span> or <span class="inline_code">xml</span>.<br/>
-
       </li><li><span class="inline_code">relation</span>: only return rules involving the given
       relation.
-
       </li><li><span class="inline_code">context</span>: only return rules in the given context.
-
       </li><li><span class="inline_code">author</span>: only return rules from the given author.
-
       </li><li><span class="inline_code">user</span>: the e-mail address you use as your author
       identification. When data is returned you won't be able to see the ID's other authors use,
       but you can supply your own one as user to ensure it isn't obfuscated.
-
       </li><li><span class="inline_code">depth</span>: without this argument you simply get a list of
       all the rules in the network that match the above criteria. With a depth argument (between 2
       and 4), you get a <i>cluster</i> of relevant concepts surrounding your given query concept.
       Clusters are useful to analyze as graphs.
     </li></ul>
-
     <p>For example, to get some properties regarding flowers:
     </p><pre class="python">http://nodebox.<span class="s">net</span>/perception/?flower&amp;format=txt&amp;relation=is-property-of
 </pre>
-
     <p>This will yield something like the result below:
     </p><pre class="python"><span class="str">'feminine'</span>, <span class="str">'is-property-of'</span>, <span class="str">'flower'</span>, <span class="str">'nature'</span>, <span class="str">'author1'</span>, <span class="str">'2008-04-17'</span>
 <span class="str">'naive'</span>, <span class="str">'is-property-of'</span>, <span class="str">'flower'</span>, <span class="str">'nature'</span>, <span class="str">'author1'</span>, <span class="str">'2008-04-17'</span>
 <span class="str">'elegant'</span>, <span class="str">'is-property-of'</span>, <span class="str">'flower'</span>, <span class="str">'nature'</span>, <span class="str">'author1'</span>, <span class="str">'2008-04-17'</span>
 </pre>       <br/>
     <hr size="2" width="100%"/>
-
     <h2><a id="widget" name="widget" title="widget"></a>Widget</h2>
-
     <p><a href="http://nodebox.net/code/data/media/NodeBoxPerception.wdgt.zip">Download</a> the
     Dashboard widget to keep track of updates to the Perception module:<br/>
-
     </p><p><iframe scrolling="no" src="/perception/widget.php">&amp;amp;amp;amp;amp;lt;br
     /&amp;amp;amp;amp;amp;gt;&amp;amp;amp;amp;amp;lt;/p&amp;amp;amp;amp;amp;gt;</iframe>
   </p></div>
-
 </body></html>

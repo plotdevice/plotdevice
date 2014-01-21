@@ -1,47 +1,35 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Libraries: photobot.Canvas.layer()</title>
   <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
-
     <h3>photobot.Canvas.layer()</h3>
   </div>
-
   <div class="article">
     <h2>Syntax</h2>
     <pre class="python">canvas.<span class="s">layer</span><span class="s">(</span><span class="kw">image</span>, x=<span class="s">0</span>, y=<span class="s">0</span>, name=<span class="str">""</span><span class="s">)</span>
 </pre>
-
     <h2>Description</h2>
-
     <p>Creates a new layer on the canvas from <em>image</em>, which is either the path of an image
     file (.jpg, .gif, .png) or a copied layer, or a PIL Image object. The image is positioned on
     the canvas horizontally at <em>x</em> pixels and vertically at <em>y</em> pixels measured from
     the top left corner. You can supply a <em>name</em> for the layer.
-
     </p><p>Returns the new layer index. Indices start at 1, this means the first layer is
     <em>canvas</em>.layers[1], the layer above <em>canvas</em>.layers[2] and so on. The bottom
     layer is reserved for the transparent background and must remain untouched.
-
     </p><h2>Example</h2>
-
     <p>Adds the image file <em>robot.jpg</em> as the top layer of <em>canvas</em>.
     </p><pre class="python">photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
 canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
 canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"images/robot.jpg"</span><span class="s">)</span>
 </pre>
-
     <p>Sets the opacity of the lowest layer in <em>canvas</em>.
     </p><pre class="python">canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">opacity</span><span class="s">(</span><span class="s">60</span><span class="s">)</span>
 </pre>
-
     <div class="example">
       <img alt="" height="100" src="../media/photobot-layer.jpg" width="100"/>
     </div>
   </div>
-
 </body></html>

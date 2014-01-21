@@ -1,29 +1,20 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Libraries: photobot.Layer.copy()</title>
   <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
-
     <h3>photobot.Layer.copy()</h3>
   </div>
-
   <div class="article">
     <h2>Syntax</h2>
-
     <p><em>canvas</em>.layers[<em>i</em>].copy()
-
     </p><h2>Description</h2>
-
     <p>Returns a copy of layer <em>i</em> on the canvas. This is different from the <a href="PhotoBot/Layer.duplicate().html">Layer.duplicate()</a> command, which duplicates the layer as
     a new layer on the canvas. The Layer.copy() command returns a copy of the layer object, that
     can be added to a different canvas with the <a href="PhotoBot/Canvas.layer().html">Canvas.layer()</a> command.
-
     </p><h2>Example</h2>
-
     <p>This example shows how you can automate tasks by creating functions that return a processed
     layer copy. The <em>brighten()</em> function brightens any image you pass to it, and returns a
     layer copy. More complex functions could manipulate an image in this way without having to
@@ -41,5 +32,4 @@ canvas.<span class="s">layer</span><span class="s">(</span>brighten<span class="
 canvas.<span class="s">layer</span><span class="s">(</span>brighten<span class="s">(</span><span class="str">"penguin.jpg"</span><span class="s">)</span><span class="s">)</span>
 </pre>
   </div>
-
 </body></html>

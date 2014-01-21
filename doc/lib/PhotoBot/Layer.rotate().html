@@ -1,30 +1,22 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Libraries: photobot.Layer.rotate()</title>
   <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
-
     <h3>photobot.Layer.rotate()</h3>
   </div>
-
   <div class="article">
     <h2>Syntax</h2>
     <pre class="python">canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">)</span>.<span class="kw">rotate</span><span class="s">(</span>angle<span class="s">]</span>
 </pre>
-
     <h2>Description</h2>
-
     <p>Rotates layer <em>i</em>. Rotates the layer by given <em>angle</em> (1 to 360). Positive
     numbers rotate counter-clockwise, negative numbers rotate clockwise. Rotate commands are
     executed instantly, so many subsequent rotates will distort the image.
-
     </p><p><span style="display:none">The rotate command is off sometimes by a single pixel - this will
     be fixed in later versions of PhotoBot.</span>
-
     </p><h2>Example</h2>
     <pre class="python">photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
 canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
@@ -34,10 +26,8 @@ canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</s
   canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">duplicate</span><span class="s">(</span><span class="s">)</span>
   canvas.<span class="s">layers</span><span class="s">[</span><span class="s">2</span>+i<span class="s">]</span>.<span class="kw">rotate</span><span class="s">(</span><span class="s">10</span>*i<span class="s">)</span>
 </pre>
-
     <div class="example">
       <img alt="" height="100" src="../media/photobot-rotate.jpg" width="100"/>
     </div>
   </div>
-
 </body></html>

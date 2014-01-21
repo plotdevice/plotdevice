@@ -1,29 +1,22 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Tutorials: Tendrils</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
-
     <h3>Tendrils</h3>
   </div>
-
   <div class="article">
     <p><span class="big_text">I had some code lying around which I thought I'd share with you. It
     is an adaption of a Processing algorithm by <a href="http://www.artcom.de/process/">ART+COM</a>, visualizing an elegant growing plant.</span>
-
     </p><p>The source code has been organized in two simple classes so it might help you when learning
     from the <a href="Classes.html">tutorial on classes</a>. The first class, <i>Tendril</i>,
     defines a single branch in the plant. As it grows it calculates the position of new segments by
     steering its current heading a bit to the left or right, hence the spiraling shape. The second
     class, <i>Plant</i>, defines a group of tendrils. It has some simple methods to grow and draw
     all the tendrils together.
-
     </p><p> 
-
     </p><p><img alt="tendrils1" src="media/tendrils1.jpg"/>
     </p><pre class="python"><span class="kw">size</span><span class="s">(</span><span class="s">600</span>, <span class="s">600</span><span class="s">)</span>
  
@@ -114,15 +107,11 @@ plant = Plant<span class="s">(</span><span class="kw">WIDTH</span>/<span class="
 plant.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
 </pre> 
     <hr size="2" width="100%"/>
-
     <h2>Using the plant as a layer in Core Image</h2>
-
     <p>With a simple adaption we can use the <i>plant.path()</i> method as input for <a href="../lib/Core_Image.html">Core Image</a>. This way we can transform the plant shape as a layer
     of pixel data. Simply add the lines of code below the image to the bottom of the script, and
     play around with the <i>curl</i> parameter a bit.
-
     </p><p> 
-
     </p><p><img alt="tendrils2" src="media/tendrils2.jpg"/>
     </p><pre class="python">coreimage = <span class="kw">ximport</span><span class="s">(</span><span class="str">"coreimage"</span><span class="s">)</span>
 canvas = coreimage.<span class="s">canvas</span><span class="s">(</span><span class="kw">WIDTH</span>, <span class="kw">HEIGHT</span><span class="s">)</span>
@@ -135,9 +124,7 @@ layer = canvas.<span class="s">append</span><span class="s">(</span>
 layer.<span class="s">filter</span><span class="s">(</span><span class="str">"zoomblur"</span>, amount=<span class="s">10</span><span class="s">)</span>
 canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
 </pre> 
-
     <p>Created by Tom De Smedt<br/>
     Based on the "Tendrils" algorithm by ART+COM<br/>
   </p></div>
-
 </body></html>

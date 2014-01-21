@@ -1,74 +1,52 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Reference: Path</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
-
     <h3>Path</h3>
-
     <ul class="siblings">
       <li><a href="Primitives.html">Primitives</a>
-
       </li><li><a href="Transform.html">Transform</a>
-
       </li><li><a href="Color.html">Color</a>
-
       </li><li><a href="Typography.html">Typography</a>
-
       </li><li><a href="Utility.html">Utility</a>
-
       </li><li><a href="Classes.html">Classes</a>
     </li></ul>
   </div>
-
   <div class="article">
     <a name="autoclosepath()"></a>
-
     <div class="section">
       <h3>autoclosepath()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">autoclosepath</span><span class="s">(</span>close=<span class="kw">True</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           The autoclosepath() command defines whether custom shapes created between <a href="#beginpath()">beginpath()</a> and <a href="#endpath()">endpath()</a> are automatically
           closed by connecting the last point and the first point in the path with a line. It takes
           one parameter which is a boolean (True or False). All shapes created with beginpath()
           following this command will adhere to the setting.
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Paths.html">Paths</a>
         </div>
       </div>
     </div><a name="beginclip()"></a>
-
     <div class="section">
       <h3>beginclip()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">beginclip</span><span class="s">(</span>path<span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Using the beginclip() and <a href="#endclip()">endclip()</a> commands define a clipping
           mask. The supplied parameter defines the path to be used as a clipping mask. Each of the
@@ -77,21 +55,16 @@
           Any shapes, paths, texts and images between beginclip() and endclip() are clipped, this
           means that any part that falls outside the clipping mask path is not drawn.
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           <a href="Classes.html#ClippingPath">ClippingPath</a> containing the mask
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img alt="superfolia" src="media/beginclip.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
@@ -103,20 +76,15 @@ p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span
         </div>
       </div>
     </div><a name="beginpath()"></a>
-
     <div class="section">
       <h3>beginpath()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">beginpath</span><span class="s">(</span>x=<span class="kw">None</span>, y=<span class="kw">None</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Using the beginpath() and <a href="#endpath()">endpath()</a> commands allows creating
           custom shapes. The two parameters of beginpath() set the location of the first point
@@ -125,21 +93,16 @@ p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span
           After calling the beginpath() command, a series of other path commands usually follow,
           for example moveto(), <a href="#lineto()">lineto()</a>, or <a href="#curveto()">curveto()</a>. Finally, the endpath() command draws the path to the screen.
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Paths.html">Paths</a>
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/beginpath.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -151,20 +114,15 @@ p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span
         </div>
       </div>
     </div><a name="curveto()"></a>
-
     <div class="section">
       <h3>curveto()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">curveto</span><span class="s">(</span>h1x, h1y, h2x, h2y, x, y<span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           The curveto() command must be called between <a href="#beginpath()">beginpath()</a> and
           <a href="#endpath()">endpath()</a>. Draws a curve between the current point in the path
@@ -173,21 +131,16 @@ p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span
           location of the two control points of the curve. These control points, or handles, define
           the edge and slant of the curve.
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Paths.html">Paths</a>
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/curveto.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
@@ -200,46 +153,35 @@ p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span
         </div>
       </div>
     </div><a name="drawpath()"></a>
-
     <div class="section">
       <h3>drawpath()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">drawpath</span><span class="s">(</span>path<span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Draws a path to the screen. A path is a series of lines and curves defined between
           <a href="#beginpath()">beginpath()</a> and <a href="#endpath()">endpath()</a>. Normally,
           endpath() draws the path to the screen, unless when calling endpath(draw=False). The path
           can then be assigned to a variable, and this variable used as a parameter for drawpath().
-
           <p><u>Note</u>: if you have one path that you want to draw multiple times with
           drawpath(), for example each with its own rotation and position, you need to supply a
           copy:<br/>
           <span style="font-family: Courier">drawpath(path.copy())</span>
         </p></div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Paths.html">Paths</a>
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/drawpath.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -252,20 +194,15 @@ p = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw"
         </div>
       </div>
     </div><a name="endclip()"></a>
-
     <div class="section">
       <h3>endclip()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">endclip</span><span class="s">(</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           The endclip() command is the companion to <a href="#beginclip()">beginclip()</a> and may
           only be called after the latter. When endclip() is called, subsequent shapes, paths,
@@ -273,20 +210,15 @@ p = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw"
         </div>
       </div>
     </div><a name="endpath()"></a>
-
     <div class="section">
       <h3>endpath()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw">True</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           The endpath() command is the companion to <a href="#beginpath()">beginpath()</a> and may
           only be called after the later. When endpath() is called, the path defined between
@@ -296,27 +228,20 @@ p = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw"
           Check the <a href="../tut/Paths.html">tutorial on paths</a> for other possibilities with
           paths.
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           <a href="Classes.html#BezierPath">BezierPath</a> containing the constructed path
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Paths.html">Paths</a>
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/endpath.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -334,47 +259,35 @@ p = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw"
         </div>
       </div>
     </div><a name="findpath()"></a>
-
     <div class="section">
       <h3>findpath()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">findpath</span><span class="s">(</span><span class="s">list</span>, curvature =<span class="s">1.0</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Constructs a fluid path from a list of coordinates. Each element in the list is a 2-tuple
           defining the x-coordinate and the y-coordinate. If the curve has more than three points,
           the <i>curvature</i> parameter offers some control on how separate segments are stitched
           together: from straight lines (0.0) to smooth curves (1.0).
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           <a href="Classes.html#BezierPath">BezierPath</a> containing the constructed path
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Paths.html">Paths</a>
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/findpath.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 points = <span class="s">[</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>, <span class="s">(</span><span class="s">90</span>, <span class="s">90</span><span class="s">)</span>, <span class="s">(</span><span class="s">350</span>, <span class="s">200</span><span class="s">)</span><span class="s">]</span>
@@ -391,41 +304,31 @@ path = <span class="kw">findpath</span><span class="s">(</span>points<span class
         </div>
       </div>
     </div><a name="lineto()"></a>
-
     <div class="section">
       <h3>lineto()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">lineto</span><span class="s">(</span>x, y<span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           The lineto() command must be called between <a href="#beginpath()">beginpath()</a> and
           <a href="#endpath()">endpath()</a>. Draws a line between the current point in the path
           and a new destination point. The two parameters set the location of the new destination
           point.
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Paths.html">Paths</a>
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/lineto.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
@@ -439,41 +342,31 @@ path = <span class="kw">findpath</span><span class="s">(</span>points<span class
         </div>
       </div>
     </div><a name="moveto()"></a>
-
     <div class="section">
       <h3>moveto()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">moveto</span><span class="s">(</span>x, y<span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           The moveto() command must be called between <a href="#beginpath()">beginpath()</a> and
           <a href="#endpath()">endpath()</a>. The two parameters set the location of a new origin
           point for the path. This would be the same as lifting the pen from a paper and putting it
           down somewhere else to continue drawing.
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Paths.html">Paths</a>
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/moveto.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -488,5 +381,4 @@ path = <span class="kw">findpath</span><span class="s">(</span>points<span class
       </div>
     </div>
   </div>
-
 </body></html>

@@ -1,27 +1,20 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Libraries: photobot.Layer.translate()</title>
   <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
-
     <h3>photobot.Layer.translate()</h3>
   </div>
-
   <div class="article">
     <h2>Syntax</h2>
     <pre class="python">canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="kw">translate</span><span class="s">(</span>x, y<span class="s">)</span>
 </pre>
-
     <h2>Description</h2>
-
     <p>Positions layer <em>i</em> at the given coordinates. The <em>x</em> and <em>y</em>
     parameters define where to position the top left corner of the layer, measured from the top
     left of the canvas, in pixels.
-
     </p><h2>Example</h2>
     <pre class="python">photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
 canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
@@ -30,10 +23,8 @@ canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"ro
   canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">duplicate</span><span class="s">(</span><span class="s">)</span>
   canvas.<span class="s">layers</span><span class="s">[</span><span class="s">2</span>+i<span class="s">]</span>.<span class="kw">translate</span><span class="s">(</span><span class="s">0</span>,<span class="s">1</span>+i<span class="s">)</span>
 </pre>
-
     <div class="example">
       <img alt="" height="100" src="../media/photobot-translate.jpg" width="100"/>
     </div>
   </div>
-
 </body></html>

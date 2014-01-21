@@ -1,46 +1,31 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Reference: Transform</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
-
     <h3>Transform</h3>
-
     <ul class="siblings">
       <li><a href="Primitives.html">Primitives</a>
-
       </li><li><a href="Path.html">Path</a>
-
       </li><li><a href="Color.html">Color</a>
-
       </li><li><a href="Typography.html">Typography</a>
-
       </li><li><a href="Utility.html">Utility</a>
-
       </li><li><a href="Classes.html">Classes</a>
     </li></ul>
   </div>
-
   <div class="article">
     <a name="pop()"></a>
-
     <div class="section">
       <h3>pop()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           NodeBox is a so-called state-machine. For example, once rotate(45) is called, all
           subsequent shapes, paths, text and images are rotated 45 degrees. The rotation state is
@@ -50,21 +35,16 @@
           rotate(45) means a rotation state of 15 degrees until pop() is called and the rotation
           state becomes 45 degrees again.
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Graphics_State.html">Graphics State</a> 
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/pop.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -83,20 +63,15 @@
         </div>
       </div>
     </div><a name="push()"></a>
-
     <div class="section">
       <h3>push()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">push</span><span class="s">(</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           NodeBox is a so-called state-machine. For example, once rotate(45) is called, all
           subsequent shapes, paths, text and images are rotated 45 degrees. The rotation state is
@@ -106,21 +81,16 @@
           rotate(45) means a rotation state of 15 degrees until pop() is called and the rotation
           state becomes 45 degrees again.
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Graphics_State.html">Graphics State</a> 
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/push.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -139,20 +109,15 @@
         </div>
       </div>
     </div><a name="reset()"></a>
-
     <div class="section">
       <h3>reset()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">reset</span><span class="s">(</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Resets all transformations to their default values. NodeBox is a so-called state-machine.
           For example, once rotate(90) is called, all subsequent shapes, paths, text and images are
@@ -161,21 +126,16 @@
           Once reset() is called, the rotation state becomes 0 degrees (the default rotation)
           again.
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Graphics_State.html">Graphics State</a> 
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img alt="GCD" src="media/reset.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -191,20 +151,15 @@
         </div>
       </div>
     </div><a name="rotate()"></a>
-
     <div class="section">
       <h3>rotate()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">rotate</span><span class="s">(</span>degrees=<span class="s">0</span>, radians=<span class="s">0</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Rotates all subsequent shape, path, text, image commands. The rotate() command is called
           with one parameter, by default specifying the angle in degrees. Optionally, the angle can
@@ -212,21 +167,16 @@
           works incremental: if you call rotate(30), and later on call rotate(60), all commands
           following that second rotate() will be rotated 90 degrees (30+60).
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Graphics_State.html">Graphics State</a> 
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/rotate.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -237,20 +187,15 @@
         </div>
       </div>
     </div><a name="scale()"></a>
-
     <div class="section">
       <h3>scale()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">scale</span><span class="s">(</span>x, y=<span class="kw">None</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Increases, decreases or streches the size of all subsequent shape, path, text, image
           commands. The first parameter sets the horizontal scale, the second parameter the
@@ -260,21 +205,16 @@
           scale(0.5), and later on call scale(0.2), all commands following that second scale() will
           be sized to 10 percent (0.2 of 0.5).
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Graphics_State.html">Graphics State</a> 
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/scale.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -286,41 +226,31 @@
         </div>
       </div>
     </div><a name="skew()"></a>
-
     <div class="section">
       <h3>skew()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">skew</span><span class="s">(</span>x, y=<span class="kw">None</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Slants the direction of all subsequent shape, path, text, image commands. The first
           parameter sets the horizontal skew. The second parameter is optional and sets the
           vertical skew. The skew() command works incremental: if you call skew(10), and later on
           call skew(20), all commands following that second skew() will be skewed by 30 (10+20).
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Graphics_State.html">Graphics State</a> 
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/skew.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -331,53 +261,39 @@
         </div>
       </div>
     </div><a name="transform()"></a>
-
     <div class="section">
       <h3>transform()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">transform</span><span class="s">(</span>mode=<span class="kw">CENTER</span><span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Sets the registration point - the offset for <a href="#rotate()">rotate()</a>, <a href="#scale()">scale()</a> and <a href="#skew()">skew()</a> commands. By default, shapes,
           paths, text and images rotate around their own centerpoint. Optionally, transform() can
           be called with mode=CORNER to rotate and skew around the canvas' upper left corner.
         </div>
-
         <h2>Returns</h2>
-
         <div class="row">
           the current transform mode (CORNER or CENTER)
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Graphics_State.html">Graphics State</a>
         </div>
       </div>
     </div><a name="translate()"></a>
-
     <div class="section">
       <h3>translate()</h3>
-
       <div class="definition">
         <h2>Syntax</h2>
-
         <div class="row">
           <pre class="python"><span class="kw">translate</span><span class="s">(</span>x, y<span class="s">)</span>
 </pre>
         </div>
-
         <h2>Description</h2>
-
         <div class="row">
           Specifies the amount to move a subsequent shape, path, text, image on the screen. The
           first parameter sets the horizontal offset, the second parameter the vertical offset.
@@ -386,21 +302,16 @@
           Once called, all commands following translate() are repositioned, which makes translate()
           useful for positioning whole compositions of multiple elements.
         </div>
-
         <h2>Tutorial</h2>
-
         <div class="row">
           <a href="../tut/Graphics_State.html">Graphics State</a>
         </div>
-
         <h2>Example</h2>
-
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/translate.jpg"/></span>
-
                 </td><td>
                   <pre class="python">
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -413,5 +324,4 @@
       </div>
     </div>
   </div>
-
 </body></html>

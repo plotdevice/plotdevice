@@ -1,31 +1,23 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Libraries: photobot.Canvas.gradient()</title>
   <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
-
     <h3>photobot.Canvas.gradient()</h3>
   </div>
-
   <div class="article">
     <h2>Syntax</h2>
     <pre class="python">canvas.<span class="s">gradient</span><span class="s">(</span>style, w=<span class="s">1.0</span>, h=<span class="s">1.0</span>, name=<span class="str">""</span><span class="s">)</span>
 </pre>
-
     <h2>Description</h2>
-
     <p>Creates a grayscale gradient layer, that is usually used together with the <a href="PhotoBot/Layer.mask().html">Layer.mask()</a> command. All the imaging commands work on
     gradients, so they can easily be flipped, rotated, scaled, inverted, made brighter or darker.
     The <em>style</em> can be either LINEAR, RADIAL and DIAMOND. The gradient <em>w</em> (width)
     and <em>h</em> (height) can be supplied as percentages or in pixels. They fill the canvas by
     default. You can supply a <em>name</em> for the gradient layer.
-
     </p><h2>Example</h2>
-
     <p>Assigns a linear gradient to the alpha channel of <em>robot.jpg</em>, making the image go
     from transparent (left) to opaque (right).
     </p><pre class="python">photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
@@ -34,10 +26,8 @@ canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"im
 canvas.<span class="s">gradient</span><span class="s">(</span>photobot.<span class="s">LINEAR</span><span class="s">)</span>
 canvas.<span class="s">layers</span><span class="s">[</span><span class="s">2</span><span class="s">]</span>.<span class="s">mask</span><span class="s">(</span><span class="s">)</span>
 </pre>
-
     <div class="example">
       <img alt="" height="100" src="../media/photobot-gradient.jpg" width="100"/>
     </div>
   </div>
-
 </body></html>

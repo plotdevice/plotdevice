@@ -1,16 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-
   <title>NodeBox Libraries: Colors</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
-
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
-
     <h3>Colors</h3>
   </div>
-
   <div class="article">
     <p>The NodeBox Colors library offers a set of tools to work with color more conveniently. You
     can use the library to create colors by name (like <i>red</i> or <i>ivory</i>), from pixels in
@@ -19,83 +15,54 @@
     complementary or analogous), create lists of gradient colors, work with drop shadows and
     gradient fills for paths, define powerful <i>indefinite</i> color ranges (like <i>bright
     red</i> or <i>purplishgreenish</i>), aggregate color information from Yahoo!, and more!<br/>
-
     </p><p>There's a lot of stuff to explain but luckily most principles in the Colors library are
     easy.<br/>
     Some central themes are:
-
     </p><ul>
       <li><b>Colors:</b> enhanced color objects with many predefined instances.
-
       </li><li><b>Color lists:</b> sets of colors which can be manipulated as a whole.
-
       </li><li><b>Rules:</b> color theory rules that generate lists of colors.<br/>
-
       </li><li><b>Color ranges:</b> variable sets of colors whose HSB values are constrained between a
       minimum and a maximum value.
-
       </li><li><b>Color themes:</b> groups of ranges.
-
       </li><li><b>Depth:</b> lighting, shadows and gradients.<br/>
     </li></ul>
-
     <p>My personal favorites are <a href="#shade">shades</a> and <a href="#shadow">shadows and
     gradient fills</a>.
-
     </p><h2>Download</h2>
-
     <table border="0">
       <tbody>
         <tr>
           <td><a href="http://nodebox.net/code/data/media/colors.zip"><img alt="download" height="20" src="media/download.gif" width="20"/></a>
-
           </td><td><a href="http://nodebox.net/code/data/media/colors.zip">colors.zip</a> (1.95MB)<br/>
           <i>Last updated for NodeBox 1.9.4.9<br/>
           Licensed under GPL<br/></i><i>Authors: Tom De Smedt, Frederik De Bleser</i><br/>
         </td></tr></tbody></table>
-
     <h2>Documentation</h2>
-
     <ul>
       <li><a href="#library">How to get the library up and running</a>
-
       </li><li><a href="#color">Colors</a>
-
       </li><li><a href="#colorlist">Color lists</a>
-
       </li><li><a href="#rules">Color lists from harmony rules</a> (complementary, analogous, ...)
-
       </li><li><a href="#gradient">Color lists from gradients</a>
-
       </li><li><a href="#range">Color ranges</a>
-
       </li><li><a href="#shade">Predefines color ranges: shades</a> (dark, bright, cool, ...)
-
       </li><li><a href="#theme">Grouping ranges into themes</a>
-
       </li><li><a href="#web">Aggregating colors from the web</a>
-
       </li><li><a href="#shader">Using a shader for lighting effects</a>
-
       </li><li><a href="#shadow">Using dropshadows and gradient fills</a><br/>
     </li></ul>
-
     <p> 
     </p><hr/>
-
     <h2>How to get the library up and running</h2>
-
     <p>Put the <i>colors</i> library folder in the same folder as your script so NodeBox can find
     the library. You can also put it in <i>~/Library/Application Support/NodeBox/.</i>
     </p><pre class="python">colors = <span class="kw">ximport</span><span class="s">(</span><span class="str">"colors"</span><span class="s">)</span>
 </pre><span class="small_text">Outside of NodeBox you can also just do <i>import colors</i>. Color
 lists from image pixels then work with PIL.</span>
-
     <p> 
     </p><hr/>
-
     <h2><a id="color" name="color" title="color"></a>Colors<br/></h2>
-
     <p>The Colors library has a number of commands that create a new color you can use with
     <a href="../ref/Color.html#fill()">fill()</a> or <a href="../ref/Color.html#fill()">stroke()</a>.
     </p><pre class="python">rgb<span class="s">(</span>r, g, b, a=<span class="kw">None</span>, <span class="s">range</span>=<span class="s">1.0</span>, name=<span class="str">""</span><span class="s">)</span>
@@ -108,18 +75,14 @@ lists from image pixels then work with PIL.</span>
 </pre>
     <pre class="python"><span class="s">hex</span><span class="s">(</span><span class="s">str</span>, name=<span class="str">""</span><span class="s">)</span>
 </pre>
-
     <p>With the <i>range</i> parameter you can define how you want to supply the channel values.
     For example, if you want to define <i>r</i>, <i>g</i> and <i>b</i> between 0 and 255 instead of
     between 0.0 and 1.0, set <i>range</i> to 255.
-
     </p><p>The optional <i>name</i> parameter lets you define a name for the color. Otherwise, a name
     will be guessed using the <i>clr.nearest_hue()</i> method (see below).
-
     </p><p>The <i>hex()</i> command creates a color from a hexadecimal string (e.g. "#30343D").<br/>
     </p><pre class="python">named_color<span class="s">(</span><span class="s">str</span><span class="s">)</span>
 </pre>
-
     <p>The <i>named_color()</i> command creates a color from a name like "olive" or "maroon" or
     "antiquewhite". A list of all the named colors the command will recognize is <a href="Colors/named_colors.html">here</a>. The really great thing is that <b>each of these named
     colors is also a command</b> in the Colors library. So the two colors in the example below are
@@ -127,65 +90,41 @@ lists from image pixels then work with PIL.</span>
     </p><pre class="python">clr1 = colors.<span class="s">named_color</span><span class="s">(</span><span class="str">"olive"</span><span class="s">)</span>
 clr2 = colors.<span class="s">olive</span><span class="s">(</span><span class="s">)</span>
 </pre>
-
     <p> 
     </p><hr/>
-
     <p><span class="grey_box">Color properties</span>
-
     </p><p>Each of the above commands returns a <i>Color</i> object. It has all the standard properties
     a color created with the NodeBox <a href="../ref/Color.html#color()">color()</a> command also
     has. You can use these to find out the color's R, B and B values, or its C, M, Y and K values,
     or its H, S and B values:
-
     </p><ul>
       <li><i>clr.r</i>: the red value in RGB.
-
       </li><li><i>clr</i><i>.g</i>: the green value in RGB.
-
       </li><li><i>clr</i><i>.b</i>: the blue value in RGB.
-
       </li><li><i>clr</i><i>.a</i>: the alpha value (opacity).
-
       </li><li><i>clr</i><i>.c</i>: the cyan value in CMYK.
-
       </li><li><i>clr</i><i>.m</i>: the magenta value in CMYK.
-
       </li><li><i>clr</i><i>.y</i>: the yellow value in CMYK.
-
       </li><li><i>clr</i><i>.k</i>: the black value in CMYK.
-
       </li><li><i>clr</i><i>.hue</i>: the hue of the color in HSB.
-
       </li><li><i>clr</i><i>.saturation</i>: the saturation (grayness) of the color in HSB.
-
       </li><li><i>clr</i><i>.brightness</i>: the brightness of the color in HSB.
     </li></ul>
-
     <p>The <i>Color</i> object in the Colors Library has some additional properties:
-
     </p><ul>
       <li><i>clr</i><i>.name</i>: the name of this color.<br/>
-
       </li><li><i>clr</i><i>.is_black</i>: will be <i>True</i> when the color's R, G and B values are 0.
-
       </li><li><i>clr</i><i>.is_white</i>: will be <i>True</i> when the color's R, G and B values are 1.
-
       </li><li><i>clr</i><i>.is_gray</i>: will be <i>True</i> when the color's R, G and B values are the
       same.
-
       </li><li><i>clr</i><i>.is_transparent</i>: will be <i>True</i> when the color is completely
       transparent.<br/>
-
       </li><li><i>clr</i><i>.complement</i>: the complementary color (i.e. 180 degrees across the color
       wheel) of this color.<br/>
     </li></ul>
-
     <p> 
     </p><hr/>
-
     <p><span class="grey_box">Color methods</span>
-
     </p><p>Each color has a range of methods to manipulate it. Each of these returns a <b>copy</b> of
     the color.
     </p><pre class="python">clr.<span class="s">copy</span><span class="s">(</span><span class="s">)</span>
@@ -204,25 +143,20 @@ clr2 = colors.<span class="s">olive</span><span class="s">(</span><span class="s
 </pre>
     <pre class="python">clr.<span class="s">adjust_hsb</span><span class="s">(</span>h=<span class="s">0.0</span>, s=<span class="s">0.0</span>, b=<span class="s">0.0</span>, a=<span class="s">0.0</span><span class="s">)</span>
 </pre>
-
     <p>What is interesting about these methods is that you can also apply them to <a href="#colorlist">color lists</a>. This way you can quickly manipulate sets of colors without having
     to change each color individually.
-
     </p><p>The <i>clr.blend()</i> command returns a mixture from this color and another color:
     </p><pre class="python">clr.<span class="s">blend</span><span class="s">(</span>clr, factor=<span class="s">0.5</span><span class="s">)</span>
 </pre>
-
     <p>The <i>clr.rotate()</i> command returns a color that is <i>angle</i> degrees across the
     color wheel. So when <i>angle</i> is 180, this returns the complementary color.
     </p><pre class="python">clr.<span class="kw">rotate</span><span class="s">(</span>angle=<span class="s">180</span><span class="s">)</span>
 </pre>
-
     <p>The <i>clr.analog()</i> command returns hues that are next to this one on the color wheel,
     separated by <i>angle</i>. The additional <i>d</i> parameter will slightly vary the color's
     brightness and saturation for more variation.<br/>
     </p><pre class="python">clr.<span class="s">analog</span><span class="s">(</span>angle=<span class="s">20</span>, d=<span class="s">0.5</span><span class="s">)</span>
 </pre>
-
     <p>Another interesting method is <i>clr.nearest_hue()</i>. This returns the name of the name of
     a well-known hue this color resembles most (<i>red, orange, yellow, lime, green, teal, cyan,
     azure, blue, violet, purple or pink</i>). When the <i>primary</i> parameter is <i>True</i>, the
@@ -230,24 +164,19 @@ clr2 = colors.<span class="s">olive</span><span class="s">(</span><span class="s
     pink</i>.
     </p><pre class="python">clr.<span class="s">nearest_hue</span><span class="s">(</span>primary=<span class="kw">False</span><span class="s">)</span>
 </pre>
-
     <p>To get the distance between two colors as a number there's the <i>clr.distance()</i> method.
     It returns a number between 0.0 and 1.0 representing the distance as if colors were arranged on
     a sphere (e.g. a disc of hues with the less saturated colors in the centre, darker discs in the
     sphere are at the bottom).
     </p><pre class="python">clr.<span class="s">distance</span><span class="s">(</span>clr<span class="s">)</span>
 </pre>
-
     <p>The <i>clr.swatch()</i> command draws a rectangle to the canvas filled with the color. The
     rectangle is located at <i>x</i> and <i>y</i> and has width <i>w</i> and height <i>h</i>.
     </p><pre class="python">clr.<span class="s">swatch</span><span class="s">(</span>x, y, w=<span class="s">35</span>, h=<span class="s">35</span>, roundness=<span class="s">0</span><span class="s">)</span>
 </pre>    
-
     <p> 
     </p><hr/>
-
     <h2><a id="colorlist" name="colorlist" title="colorlist"></a>Color lists</h2>
-
     <p>The functionality of the Colors library becomes more interesting when we get down to working
     with lists of colors. You can store different colors in a list and then manipulate the entire
     collection. For example, make all of the colors darker, retrieve the lightest color, or even
@@ -262,12 +191,9 @@ clr2 = colors.<span class="s">olive</span><span class="s">(</span><span class="s
 </pre>
     <pre class="python"><span class="s">list</span><span class="s">(</span>Web.<span class="s">KulerTheme</span><span class="s">)</span>
 </pre>
-
     <p>Lists can be created from a number of indivdual colors, another list of colors, the pathname
     of an image from which to grab pixel values (you need to have the <a href="Core_Image.html">Core Image</a> library installed), a word, or a kuler theme from the <a href="Web.html#kuler">web.kuler.search()</a> command in the NodeBox Web library.
-
     </p><p>Optionally you can supply a <i>name</i> and a list of <i>tags</i> for the list.
-
     </p><p>Accessing each individual color in the list works the same as with any other list:
     </p><pre class="python">sea = colors.<span class="s">list</span><span class="s">(</span><span class="str">"sea.jpg"</span>, n=<span class="s">20</span><span class="s">)</span>
 x = <span class="s">0</span>
@@ -275,39 +201,25 @@ x = <span class="s">0</span>
     <span class="kw">rect</span><span class="s">(</span>x, <span class="s">0</span>, <span class="s">20</span>, <span class="s">20</span>, <span class="kw">fill</span>=clr<span class="s">)</span>
     x += <span class="s">20</span>
 </pre>
-
     <p><img alt="colors_colorlist1" height="27" src="media/colors_colorlist1.jpg" width="550"/>
-
     </p><p>You can also use the <a href="../ref/Utility.html#choice()">choice()</a> command to get a
     random colors from the list.
-
     </p><p> 
     </p><hr/>
-
     <p><span class="grey_box">Color list properties</span>
-
     </p><p>Each of the above commands returns a <i>ColorList</i> object with a number of properties:
-
     </p><ul>
       <li><i>list.name</i>: the name of the set of colors.
-
       </li><li><i>list</i><i>.tags</i>: a list of associations.
-
       </li><li><i>list</i><i>.darkest</i>: the darkest color in the list (useful as a background or a
       text color for example).
-
       </li><li><i>list</i><i>.lightest</i>: the lightest color in the list.
-
       </li><li><i>list</i><i>.average</i>: the average (mean) color of all the colors in the list.
-
       </li><li><i>list</i><i>.complement</i>: the complementary color list.<br/>
     </li></ul>
-
     <p> 
     </p><hr/>
-
     <p><span class="grey_box">Color list methods</span><br/>
-
     </p><p>Some methods to manipulate the list. All of these will return a <b>copy</b> of the list.<br/>
     </p><pre class="python"><span class="s">list</span>.<span class="s">reverse</span><span class="s">(</span><span class="s">)</span>
 </pre>
@@ -315,12 +227,9 @@ x = <span class="s">0</span>
 </pre>
     <pre class="python"><span class="s">list</span>.<span class="s">repeat</span><span class="s">(</span><span class="s">self</span>, n=<span class="s">2</span>, oscillate=<span class="kw">False</span>, callback=<span class="kw">None</span><span class="s">)</span>
 </pre>
-
     <p>The <i>list.reverse()</i> method returns a copy with all the colors in reversed order.
-
     </p><p>The <i>list</i><i>.sort()</i> method returns a copy with the colors sorted from dark to
     light.
-
     </p><p>The <i>list</i><i>.repeat()</i> method returns a repetition of the list: if the list
     contains a <i>red</i>, <i>green</i> and a <i>yellow</i> color, <i>list</i><i>.repeat()</i> will
     contain <i>red, green, yellow, red, green, yellow</i>. When <i>oscillate</i> is <i>True</i> it
@@ -328,14 +237,11 @@ x = <span class="s">0</span>
     gradient colors.
     </p><pre class="python"><span class="s">list</span>.<span class="s">swarm</span><span class="s">(</span>x, y, r=<span class="s">100</span><span class="s">)</span>
 </pre>
-
     <p>The <i>list.swarm()</i> method draws a small visualization of all the colors in the list.
-
     <table border="0">
       <tbody>
         <tr>
           <td><span class="image_border"><img alt="colors_colorlist2" height="101" src="media/colors_colorlist2.jpg" width="100"/></span>
-
           </td><td>
             <pre class="python">
 sea = colors.<span class="s">list</span><span class="s">(</span><span class="str">"sea.jpg"</span>, n=<span class="s">20</span><span class="s">)</span>
@@ -343,7 +249,6 @@ sea = colors.<span class="s">list</span><span class="s">(</span><span class="str
 sea.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
 </pre>
           </td></tr></tbody></table>
-
     </p><p>All of the methods that work on a single color also work on a list of colors. They will
     transform all the individual colors in the list:
     </p><pre class="python"><span class="s">list</span>.<span class="s">copy</span><span class="s">(</span><span class="s">)</span>
@@ -368,12 +273,9 @@ sea.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span
 </pre>
     <pre class="python"><span class="s">list</span>.<span class="s">swatch</span><span class="s">(</span>x, y, w=<span class="s">35</span>, h=<span class="s">35</span>, padding=<span class="s">0</span>, roundness=<span class="s">0</span><span class="s">)</span>
 </pre>
-
     <p> 
     </p><hr size="2" width="100%"/>
-
     <p><span class="grey_box">Color list sorting</span>
-
     </p><p>The colors in a list can be sorted in various ways:
     </p><pre class="python"><span class="s">list</span>.<span class="s">sort</span><span class="s">(</span>comparison=<span class="str">"hue"</span>, <span class="s">reversed</span>=<span class="kw">False</span><span class="s">)</span>
 </pre>
@@ -381,25 +283,18 @@ sea.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span
 </pre>
     <pre class="python"><span class="s">list</span>.<span class="s">cluster</span><span class="s">(</span>cmp1=<span class="str">"hue"</span>, cmp2=<span class="str">"brightness"</span>, <span class="s">reversed</span>=<span class="kw">False</span>, n=<span class="s">12</span><span class="s">)</span>
 </pre>
-
     <p>The basic <i>list.sort()</i> method allows you to sort by any color property (hue,
     brightness, red, magenta, ...)
-
     </p><p>The <i>list.cluster()</i> method sorts the list by the first given property, then cuts it
     into <i>n</i> pieces and sorts each of the pieces by the second given property.
-
     </p><p> 
     </p><hr/>
-
     <p><span class="grey_box">Color list math</span><br/>
-
     </p><p>Individual colors (or lists of colors) can be added to a list with the + operator:
-
     <table border="0">
       <tbody>
         <tr>
           <td><span class="image_border"><img alt="colors_colorlist3" height="100" src="media/colors_colorlist3.jpg" width="100"/></span>
-
           </td><td>
             <pre class="python">
 clrs = colors.<span class="s">list</span><span class="s">(</span>
@@ -410,26 +305,19 @@ clrs += colors.<span class="s">violet</span><span class="s">(</span><span class=
 clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
 </pre>
           </td></tr></tbody></table>
-
     </p><p>Also, the * operator is equivalent to the <i>list.repeat()</i> method.<br/>
-
     </p><p> 
     </p><hr/>
-
     <p><span class="grey_box">Color context</span><br/>
-
     </p><p>There's one additional <i>list.context</i> property which is a list of words associated with
     the colors in the list. For example, red is commonly associated with things like anger and
     passion, while black is associated with death, grief, modernism.
-
     </p><p>If you put them together in a color list, its context will contain words like anger, drama
     and power.
-
     <table border="0">
       <tbody>
         <tr>
           <td><span class="image_border"><img alt="colors_colorlist4" height="100" src="media/colors_colorlist4.jpg" width="100"/></span>
-
           </td><td>
             <pre class="python">
 clrs = colors.<span class="s">list</span><span class="s">(</span> colors.<span class="s">red</span><span class="s">(</span><span class="s">)</span>, colors.<span class="s">black</span><span class="s">(</span><span class="s">)</span> <span class="s">)</span>
@@ -438,42 +326,29 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
 &gt;&gt;&gt; <span class="s">[</span><span class="str">'anger'</span>, <span class="str">'devil'</span>, <span class="str">'drama'</span>, <span class="str">'power'</span>, <span class="str">'sex'</span>, <span class="str">'strength'</span><span class="s">]</span>
 </pre>
           </td></tr></tbody></table>
-
     </p><p>The data is drawn from the files in the <i>/context</i> subfolder in the library. You can
     adjust them to your own needs. There's also a dictionary with all the information:
     </p><pre class="python"><span class="kw">print</span> colors.<span class="s">context</span><span class="s">[</span><span class="str">"red"</span><span class="s">]</span>
 </pre>    
     <hr/>
-
     <h2><a id="rules" name="rules" title="rules"></a>Color lists from harmony rules</h2>
-
     <p>Color theory provides a visual guidance to color mixing and the visual impact of specific
     color combinations. With the Colors library you can create schemes from the following rules:
-
     </p><ul>
       <li><b>complementary:</b> colors that are opposite of each other on the color wheel.
-
       </li><li><b>split complement:</b> a combination of left complement and right complement.
-
       </li><li><b>left complement:</b> a variation with colors a bit to the left of the actual
       complement.
-
       </li><li><b>right complement:</b> a variation with colors a bit to the right of the actual
       complement.
-
       </li><li><b>analogous:</b> colors that are next to each other on the color wheel. These yield
       natural schemes, like shades of water or grass).
-
       </li><li><b>monochrome:</b> colors in the same hue that vary in brightness and saturation.
-
       </li><li><b>triad:</b> a color and two other colors that make up an equilateral triangle on the
       color wheel.
-
       </li><li><b>tetrad:</b> four colors that make up a cross on the color wheel.
-
       </li><li><b>compound:</b> a color with its complement and some analogs of those colors.
     </li></ul>
-
     <p> 
     </p><pre class="python">complement<span class="s">(</span>clr<span class="s">)</span>
 </pre>
@@ -495,12 +370,10 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
 </pre>
     <pre class="python">compound<span class="s">(</span>clr, flip=<span class="kw">False</span><span class="s">)</span>
 </pre>
-
     <p>All of the commands take a base <i>clr</i> from which a scheme is then derived. A <a href="#colorlist">color list</a> is returned, usually containing three to six matching colors
     (except <i>complement()</i>, which just returns the original color and its complement). Notice
     that some commands have an <i>angle</i> parameter. This controls how far colors are apart on
     the color wheel. Making it bigger for the <i>analogous()</i> scheme introduces more variation.
-
     </p><p>There's also a <i>rule()</i> command where you can supply the rule name as a string. All of
     the rule names are stored in the <i>rules</i> list.<br/>
     </p><pre class="python">rule<span class="s">(</span>name, clr, angle=<span class="kw">None</span>, contrast=<span class="s">0.3</span>, flip=<span class="kw">False</span><span class="s">)</span>
@@ -510,7 +383,6 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
 &gt;&gt;&gt;  <span class="str">'right complement'</span>, <span class="str">'analogous'</span>, <span class="str">'monochrome'</span>, <span class="str">'triad'</span>, <span class="str">'tetrad'</span>, 
 &gt;&gt;&gt;  <span class="str">'compound'</span>, <span class="str">'flipped compound'</span><span class="s">]</span>
 </pre>
-
     <p>With the <i>rule()</i> command we can quickly display all the possibilities for a color:
     </p><pre class="python">clr = colors.<span class="s">rgb</span><span class="s">(</span><span class="s">0.0</span>, <span class="s">0.4</span>, <span class="s">0.6</span><span class="s">)</span>
 x = <span class="s">10</span>
@@ -519,20 +391,15 @@ x = <span class="s">10</span>
     scheme.<span class="s">swatch</span><span class="s">(</span>x, <span class="s">10</span><span class="s">)</span>
     x += <span class="s">40</span>
 </pre>
-
     <p><img alt="colors-rules0" height="230" src="media/colors-rules0.jpg" width="460"/>
-
     </p><p> 
     </p><hr/>
-
     <p>Here are some individual schemes:<br/>
-
     <table border="0">
       <tbody>
         <tr>
           <td class="image_border"><img alt="colors-rules1" height="150" src="media/colors-rules1.jpg" width="150"/><br/>
           <br/>
-
           </td><td>
             <p>Complementary scheme:
             </p><pre class="python">
@@ -541,11 +408,9 @@ scheme = colors.<span class="s">complementary</span><span class="s">(</span>clr<
 scheme.<span class="s">swarm</span><span class="s">(</span><span class="s">75</span>, <span class="s">75</span><span class="s">)</span>
 scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, w=<span class="s">25</span>, h=<span class="s">25</span><span class="s">)</span>
 </pre>
-
         </td></tr><tr>
           <td class="image_border"><img alt="colors-rules3" height="150" src="media/colors-rules3.jpg" width="150"/><br/>
           <br/>
-
           </td><td>
             <p>Left complementary:
             </p><pre class="python">
@@ -554,11 +419,9 @@ scheme = colors.<span class="s">left_complement</span><span class="s">(</span>cl
 scheme.<span class="s">swarm</span><span class="s">(</span><span class="s">75</span>, <span class="s">75</span><span class="s">)</span>
 scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, w=<span class="s">25</span>, h=<span class="s">25</span><span class="s">)</span>
 </pre>
-
         </td></tr><tr>
           <td class="image_border"><img alt="colors-rules5" height="150" src="media/colors-rules5.jpg" width="150"/><br/>
           <br/>
-
           </td><td>
             <p>Analogous:
             </p><pre class="python">
@@ -567,10 +430,8 @@ scheme = colors.<span class="s">analogous</span><span class="s">(</span>clr<span
 scheme.<span class="s">swarm</span><span class="s">(</span><span class="s">75</span>, <span class="s">75</span><span class="s">)</span>
 scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, w=<span class="s">25</span>, h=<span class="s">25</span><span class="s">)</span>
 </pre>
-
         </td></tr><tr>
           <td><span class="image_border"><img alt="colors-rules10" height="150" src="media/colors-rules10.jpg" width="150"/></span><br/>
-
           </td><td>
             <p>Flipped compound:
             </p><pre class="python">
@@ -580,19 +441,14 @@ scheme.<span class="s">swarm</span><span class="s">(</span><span class="s">75</s
 scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, w=<span class="s">25</span>, h=<span class="s">25</span><span class="s">)</span>
 </pre>
           </td></tr></tbody></table>
-
     </p><p> 
-
     </p><p>Techies may want to note that calculations for the rules are performed on an <i>artistic
     color wheel</i> based on <a href="http://en.wikipedia.org/wiki/RYB_color_model">RYB</a> instead
     of RGB. This system predates scientific color theory and is mathematically incorrect - but it
     does produce better color schemes.
-
     </p><p> 
     </p><hr/>
-
     <p><span class="grey_box">Analog color scheme</span><br/>
-
     </p><p>When you want a <b>realistic, organic feel</b> to your composition you can work with
     <b>analogous</b> schemes. Remember how a <a href="#color">color</a> object in the Colors
     library has an <i>analog()</i> method? It's very easy to use in a loop so that each element is
@@ -632,29 +488,22 @@ colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s
         <span class="s">)</span>
         <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
 </pre>
-
     <p><img alt="colors-rules11" height="550" src="media/colors-rules11.jpg" width="550"/><br/>
-
     </p><p>You can find this script fully documented in the library download.
-
     </p><p> 
     </p><hr/>
-
     <h2><a id="gradient" name="gradient" title="gradient"></a>Color lists from gradients</h2>
-
     <p>The Colors library has a handy <i>gradient()</i> command that takes a couple of colors and
     calculates all the intermediary steps between them.
     </p><pre class="python">gradient<span class="s">(</span><span class="s">[</span>clr1, clr2, clr3, ...<span class="s">]</span>, steps=<span class="s">100</span>, spread=<span class="s">0.5</span><span class="s">)</span>
 </pre>
     <pre class="python">gradient<span class="s">(</span>clr1, clr2, clr3, ..., steps=<span class="s">100</span>, spread=<span class="s">0.5</span><span class="s">)</span>
 </pre>
-
     <p>You can supply base colors either as a list or simply as an enumeration of parameters. A
     <a href="#colorlist">color list</a> is returned with additional colors that form a smooth
     transistion between the given base colors. The command has two optional parameters:
     <i>steps</i> which defines the number of colors in the returned list, and <i>spread</i>, which
     defines the midpoint of the gradient.
-
     </p><p>For example, here we create a gradient list from light blue to dark blue. For each color in
     the list an oval is drawn that zooms inward. So we draw 60 ovals that go from light blue to
     dark blue:<br/>
@@ -667,9 +516,7 @@ g = colors.<span class="s">gradient</span><span class="s">(</span>clr1, clr2, st
     r = <span class="s">700</span>-i*<span class="s">10</span>
     <span class="kw">oval</span><span class="s">(</span><span class="s">-75</span>+i*<span class="s">5</span>, <span class="s">-180</span>+i*<span class="s">5</span>, r, r<span class="s">)</span>
 </pre>
-
     <p><span class="image_border"><img alt="colors-gradientlist1" height="330" src="media/colors-gradientlist1.jpg" width="550"/></span>
-
     </p><p>Let's add a nice spiral to the composition. As you can see in the example below, I can reset
     the number of <i>steps</i> in the gradient list (the number of colors is updated accordingly) -
     I don't need to create a new gradient. The same goes for the gradient <i>spread</i>.
@@ -687,26 +534,19 @@ colors.<span class="s">shadow</span><span class="s">(</span>blur=<span class="s"
     <span class="kw">rotate</span><span class="s">(</span><span class="s">3</span><span class="s">)</span>
     <span class="kw">oval</span><span class="s">(</span>i*<span class="s">0.5</span>, i*<span class="s">0.5</span>, <span class="s">200</span>-i, <span class="s">200</span>-i<span class="s">)</span>
 </pre>
-
     <p><span class="image_border"><img alt="colors-gradientlist2" height="330" src="media/colors-gradientlist2.jpg" width="550"/></span>
-
     </p><p>My personal favorite is the one with all the different hues of blue mixed up. It reminds me
     of Alice in Wonderland. Replace the above <i>fill()</i> command with:
     </p><pre class="python"><span class="kw">fill</span><span class="s">(</span><span class="kw">choice</span><span class="s">(</span>g<span class="s">)</span><span class="s">)</span>
 </pre>
-
     <p><img alt="colors-gradientlist3" height="330" src="media/colors-gradientlist3.jpg" width="550"/><br/>
-
     </p><p> 
     </p><hr/>
-
     <p><span class="grey_box">Gradient outlines</span>
-
     </p><p>Finally, the Colors library has an <i>outline()</i> command which works extremely well with
     <i>gradient()</i>. The command colorizes the stroke of a path with the colors in a given list:
     </p><pre class="python">outline<span class="s">(</span>path, colors, precision=<span class="s">0.4</span>, continuous=<span class="kw">True</span><span class="s">)</span>
 </pre>
-
     <p>Outlines a <i>path</i> with the colors in the list. When <i>continuous</i> is False, each
     contour in the path starts with the first color in the list, and ends with the last color in
     the list. Because each line segment is drawn separately, the command works only with a
@@ -717,34 +557,26 @@ g = colors.<span class="s">gradient</span><span class="s">(</span><span class="k
  
 colors.<span class="s">outline</span><span class="s">(</span>p, g<span class="s">)</span>
 </pre>
-
     <p><img alt="colors-gradientlist4" height="80" src="media/colors-gradientlist4.jpg" width="550"/>
-
     </p><p> 
     </p><hr/>
-
     <h2><a id="range" name="range" title="range"></a>Color ranges</h2>
-
     <p>A color range is a set of indefinite <b>colors that have their hue, saturation and
     brightness constrained</b> between a minimum and maximum value. You can use color ranges to
     quickly describe fuzzy concepts like <i>dark</i> and <i>bright</i>.
     </p><pre class="python"><span class="s">range</span><span class="s">(</span>h=<span class="s">(</span><span class="s">0.0</span>,<span class="s">1.0</span><span class="s">)</span>, s=<span class="s">(</span><span class="s">0.0</span>,<span class="s">1.0</span><span class="s">)</span>, b=<span class="s">(</span><span class="s">0.0</span>,<span class="s">1.0</span><span class="s">)</span>, a=<span class="s">(</span><span class="s">1.0</span>,<span class="s">1.0</span><span class="s">)</span>, 
       grayscale=<span class="kw">False</span>, name=<span class="str">""</span>, length=<span class="s">100</span><span class="s">)</span>
 </pre>
-
     <p>The <i>h</i>, <i>s</i>, <i>b</i> and <i>a</i> parameters are (min, max) tuples with
     <i>min</i> and <i>max</i> ranging between 0.0 and 1.0. A color range behaves like a list of
     <i>length</i> individual colors - although the colors will be <b>different</b> each time you
     draw them from the range.
-
     </p><p>For example, the following range contains colors with all sorts of saturation and
     brightness, but their hues are limited between red and limegreen:
-
     <table border="0">
       <tbody>
         <tr>
           <td><span class="image_border"><img alt="colors-colorrange1" height="100" src="media/colors-colorrange1.jpg" width="100"/></span>
-
           </td><td>
             <pre class="python">
 r = colors.<span class="s">range</span><span class="s">(</span>h=<span class="s">(</span><span class="s">0</span>,<span class="s">0.2</span><span class="s">)</span><span class="s">)</span>
@@ -754,7 +586,6 @@ r.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,
      Color<span class="s">(</span><span class="s">0.089</span>, <span class="s">0.064</span>, <span class="s">0.026</span>, <span class="s">1.000</span><span class="s">)</span><span class="s">]</span>
 </pre>
           </td></tr></tbody></table>
-
     </p><p>Color ranges often yield surprising results with a minimum amount of code:
     </p><pre class="python">r = colors.<span class="s">range</span><span class="s">(</span>h=<span class="s">(</span><span class="s">0</span>,<span class="s">0.2</span><span class="s">)</span><span class="s">)</span>
 <span class="kw">transform</span><span class="s">(</span>CORNER<span class="s">)</span>
@@ -763,14 +594,10 @@ r.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,
     <span class="kw">fill</span><span class="s">(</span><span class="kw">choice</span><span class="s">(</span>r<span class="s">)</span><span class="s">)</span>
     <span class="kw">rect</span><span class="s">(</span>-<span class="kw">WIDTH</span>, i*<span class="s">15</span>, <span class="kw">WIDTH</span>*<span class="s">2</span>, <span class="s">20</span><span class="s">)</span>
 </pre>
-
     <p><span class="image_border"><img alt="colors-colorrange2" height="550" src="media/colors-colorrange2.jpg" width="550"/></span>
-
     </p><p> 
     </p><hr/>
-
     <p><span class="grey_box">Color range methods, properties and calls</span>
-
     </p><p>A color range has the following methods:
     </p><pre class="python"><span class="s">range</span>.<span class="s">constrain_hue</span><span class="s">(</span><span class="s">min</span>, <span class="s">max</span>=<span class="kw">None</span><span class="s">)</span>
 </pre>
@@ -780,7 +607,6 @@ r.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,
 </pre>
     <pre class="python"><span class="s">range</span>.<span class="s">constrain_alpha</span><span class="s">(</span><span class="s">min</span>, <span class="s">max</span>=<span class="kw">None</span><span class="s">)</span>
 </pre>
-
     <p>More complex ranges including gaps can be created by assigning a list of (<i>min</i>,
     <i>max</i>) tuples to a property directly:
     </p><pre class="python">high_contrast_reds = colors.<span class="s">range</span><span class="s">(</span><span class="s">)</span>
@@ -788,72 +614,48 @@ high_contrast_reds.<span class="s">h</span> = <span class="s">0</span>
 high_contrast_reds.<span class="s">s</span> = <span class="s">(</span><span class="s">0.5</span>, <span class="s">1.0</span><span class="s">)</span>
 high_contrast_reds.<span class="s">b</span> = <span class="s">[</span><span class="s">(</span><span class="s">0.1</span>,<span class="s">0.2</span><span class="s">)</span>, <span class="s">(</span><span class="s">0.9</span>,<span class="s">1.0</span><span class="s">)</span><span class="s">]</span>
 </pre>
-
     <p>Since a color range behaves like a <a href="#colorlist">color list</a> it also has
     <i>copy()</i>, <i>adjust_rgb()</i>, <i>repeat()</i>, <i>swatch()</i> ... methods.
-
     </p><p>If you need a single color from the range you can use the <i>range.color()</i> method:
     </p><pre class="python"><span class="s">range</span>.<span class="kw">color</span><span class="s">(</span>clr=<span class="kw">None</span>, d=<span class="s">0.035</span><span class="s">)</span>
 </pre>
     <pre class="python"><span class="s">range</span>.<span class="s">colors</span><span class="s">(</span>clr=<span class="kw">None</span>, n=<span class="s">10</span>, d=<span class="s">0.035</span><span class="s">)</span>
 </pre>
-
     <p>However, you can also directly <b>call</b> a range like a command:
     </p><pre class="python">yellowgreenish = colors.<span class="s">range</span><span class="s">(</span>h=<span class="s">(</span><span class="s">0.1</span>,<span class="s">0.2</span><span class="s">)</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span> yellowgreenish<span class="s">(</span><span class="s">)</span> <span class="s">)</span>
 </pre>
-
     <p>When you call a color range like this you can supply three optional parameters:
-
     </p><ul>
       <li><i>clr</i>: a color to which hue is used to constrain anything drawn from the range.
-
       </li><li><i>d</i>: a small deviation to hue and brightness.
-
       </li><li><i>n</i>: if larger than 1 a color list of n elements is returned.
     </li></ul>
-
     <p>Last but not least, you can use the + operator to combine two ranges.
-
     </p><p> 
     </p><hr/>
-
     <h2><a id="shade" name="shade" title="shade"></a>Predefined color ranges: shades<br/></h2>
-
     <p>We've already included some predefined color range variables in the library for you. We call
     them <b>shades</b>. These includes useful concepts such as <i>light</i> and <i>dark</i>,
     defined by a combination of saturation and brightness.
-
     </p><p>All of the shades are in the <i>shades</i> list:
     </p><pre class="python"><span class="kw">print</span> colors.<span class="s">shades</span>
 &gt;&gt;&gt; <span class="s">[</span>light, dark, bright, weak, neutral, fresh, soft, hard, warm, 
 &gt;&gt;&gt;  cool, intense<span class="s">]</span>
 </pre>    
-
     <ul>
       <li><b>light:</b> bright and light colors.
-
       </li><li><b>dark:</b> deep and colorfully saturated.
-
       </li><li><b>bright:</b> colorful and friendly.
-
       </li><li><b>weak:</b> neither light, soft nor neutral.
-
       </li><li><b>neutral:</b> desaturated and neither bright nor dark.
-
       </li><li><b>fresh:</b> light and friendly with a higher saturation than soft shades.
-
       </li><li><b>soft:</b> gentle pastel colors with small difference in saturation.
-
       </li><li><b>hard:</b> powerful colors but lighter than intense shades.
-
       </li><li><b>warm:</b> gently saturated and gently bright.
-
       </li><li><b>cool:</b> cold, bright and desaturated.
-
       </li><li><b>intense:</b> powerful deep/bright contrasts.<br/>
     </li></ul>
-
     <p>Here's a visual overview of all the shades. The <i>shades</i> list is traversed. Each
     individual shade is then called as a command (remember we can call color ranges like commands)
     and limited to a yellow hue. Since we also call the range with the <i>n</i> parameter, a
@@ -866,16 +668,12 @@ y = <span class="s">20</span>
     clr.<span class="s">swatch</span><span class="s">(</span>x, y<span class="s">)</span>
     x += <span class="s">45</span>
 </pre>    
-
     <p><img alt="colors-shades0" height="400" src="media/colors-shades0.jpg" width="550"/><br/>
-
     </p><p>The <i>shade()</i> command returns a shade by name:
-
     <table border="0">
       <tbody>
         <tr>
           <td><span class="image_border"><img alt="colors-shades1" height="100" src="media/colors-shades1.jpg" width="100"/></span>
-
           </td><td>
             <pre class="python">
 clrs = colors.<span class="s">shade</span><span class="s">(</span><span class="str">"intense"</span><span class="s">)</span>
@@ -883,31 +681,23 @@ clrs = clrs<span class="s">(</span>colors.<span class="s">yellow</span><span cla
 clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,<span class="s">50</span><span class="s">)</span>
 </pre>
           </td></tr></tbody></table>
-
     </p><p> 
-
     </p><p>You can also use shade variables directly. Here's a dark indigo color:<br/>
-
     <table border="0">
       <tbody>
         <tr>
           <td><span class="image_border"><img alt="colors-shades2" height="100" src="media/colors-shades2.jpg" width="100"/></span>
-
           </td><td>
             <pre class="python">
 <span class="kw">background</span><span class="s">(</span>colors.<span class="s">dark</span><span class="s">(</span>colors.<span class="s">indigo</span><span class="s">(</span><span class="s">)</span><span class="s">)</span><span class="s">)</span>
 </pre>
           </td></tr></tbody></table>
-
     </p><p> 
-
     </p><p>Intense colors of any hue by simply calling the intense range without any parameter:<br/>
-
     <table>
       <tbody>
         <tr>
           <td><img alt="colors-shades3" height="100" src="media/colors-shades3.jpg" width="100"/>
-
           </td><td>
             <pre class="python">
 <span class="kw">transform</span><span class="s">(</span>CORNER<span class="s">)</span>
@@ -917,12 +707,9 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
     <span class="kw">rect</span><span class="s">(</span>-<span class="kw">WIDTH</span>, i*<span class="s">10</span>, <span class="kw">WIDTH</span>*<span class="s">2</span>, <span class="s">20</span><span class="s">)</span>
 </pre>
           </td></tr></tbody></table>
-
     </p><p> 
     </p><hr/>
-
     <p><span class="grey_box">Color shade inference</span>
-
     </p><p>Now that we have learned about shades it is easy to deduce some information from individual
     colors. First of all, we can check if a colors falls within a certain shade range (check if a
     color is dark or bright for example):
@@ -930,50 +717,38 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
 <span class="kw">print</span> clr <span class="kw">in</span> colors.<span class="s">bright</span>
 &gt;&gt;&gt; <span class="kw">True</span> <span class="grey"># red is a bright color.</span>
 </pre>
-
     <p>And since we can find out if a color is dark, bright, neutral, cool, etc. we can guess a
     name for it:
     </p><pre class="python"><span class="kw">print</span> colors.<span class="s">guess_name</span><span class="s">(</span> <span class="kw">color</span><span class="s">(</span><span class="s">1</span>, <span class="s">0</span>, <span class="s">0.5</span><span class="s">)</span> <span class="s">)</span>
 &gt;&gt;&gt; bright pink
 </pre>    
     <hr/>
-
     <h2><a id="theme" name="theme" title="theme"></a>Grouping ranges into color themes</h2>
-
     <p>We can group different <a href="#range">color ranges</a> into a color theme. Each of the
     color ranges in a theme has a hue associated with it and a weight which determines its
     frequency in the theme. Simply put, a <i>sand</i> theme would be made up of combinations like
     <i>50% soft ivory</i>, 25% <i>dark goldenrod</i> and <i>25% warm brown</i>.
     </p><pre class="python">theme<span class="s">(</span>name=<span class="str">""</span>, guess=<span class="kw">False</span>, length=<span class="s">100</span><span class="s">)</span>
 </pre>
-
     <p>The theme command returns a <i>ColorTheme</i> object with the following properties:
-
     </p><ul>
       <li><i>theme.name</i>: the name of the theme.
-
       </li><li><i>theme.ranges</i>: a list of (color, range, weight)-tuples.
-
       </li><li><i>theme.tags</i>: a list of associated keywords.
-
       </li><li><i>theme.length</i>: the number of colors returned in a for-loop.
     </li></ul>
-
     <p><br/>
     To add a color range to the theme you use the <i>theme.add_range()</i> method:
     </p><pre class="python">theme.<span class="s">add_range</span><span class="s">(</span><span class="s">range</span>, clr=<span class="kw">None</span>, weight=<span class="s">1.0</span><span class="s">)</span>
 </pre>
-
     <p>You can supply <a href="#shade">shades</a>, your own color ranges, or a <i>shade + named
     color</i> string to the <i>range</i> parameter. The following two themes are the same (by "the
     same" we mean that they contain the same ranges - however, their output may vary as ranges do
     not contain fixed colors).
-
     <table border="0">
       <tbody>
         <tr>
           <td><img alt="colors-range1" height="100" src="media/colors-range1.jpg" width="100"/>
-
           </td><td>
             <pre class="python">
 sand = colors.<span class="s">theme</span><span class="s">(</span><span class="s">)</span>
@@ -982,10 +757,8 @@ sand.<span class="s">add_range</span><span class="s">(</span>colors.<span class=
 sand.<span class="s">add_range</span><span class="s">(</span>colors.<span class="s">warm</span>, colors.<span class="s">brown</span><span class="s">(</span><span class="s">)</span>, weight=<span class="s">0.25</span><span class="s">)</span>
 sand.<span class="s">swatch</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span>, w=<span class="s">7</span>, h=<span class="s">7</span>, padding=<span class="s">1</span><span class="s">)</span>
 </pre>
-
         </td></tr><tr>
           <td><img alt="colors-range2" height="100" src="media/colors-range2.jpg" width="100"/>
-
           </td><td>
             <pre class="python">
 sand = colors.<span class="s">theme</span><span class="s">(</span><span class="s">)</span>
@@ -995,7 +768,6 @@ sand.<span class="s">add_range</span><span class="s">(</span><span class="str">"
 sand.<span class="s">swatch</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span>, w=<span class="s">7</span>, h=<span class="s">7</span>, padding=<span class="s">1</span><span class="s">)</span>
 </pre>
           </td></tr></tbody></table>
-
     </p><p>You can retrieve an individual (random) color from the theme with the <i>theme.color()</i>
     method, or a color list with the <i>theme.colors()</i> method. The weight of each range is
     taken into account - heavier ranges will output more colors.
@@ -1003,9 +775,7 @@ sand.<span class="s">swatch</span><span class="s">(</span><span class="s">2</spa
 </pre>
     <pre class="python">theme.<span class="s">colors</span><span class="s">(</span>n=<span class="s">10</span>, d=<span class="s">0.035</span><span class="s">)</span>
 </pre>
-
     <p>The optional <i>d</i> parameter provides a slight variation in brightness and saturation.
-
     </p><p>To retrieve a single color you can also simply call the theme as a command. Or to retrieve
     multiple colors you can treat it as a list containing <i>length</i> colors (the <i>length</i>
     parameter in the <i>theme()</i> command).<br/>
@@ -1020,49 +790,37 @@ colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s
     <span class="kw">skew</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>
     <span class="kw">rect</span><span class="s">(</span><span class="s">0</span>, <span class="s">-40</span>, <span class="s">400</span>, <span class="s">400</span><span class="s">)</span>
 </pre>
-
     <p><span class="image_border"><img alt="colors-range3" height="275" src="media/colors-range3.jpg" width="550"/></span>
-
     </p><p>A color theme also has the standard <i>copy()</i>, <i>swatch()</i> and <i>swarm()</i>
     methods. The <i>swatch()</i> method has an additional <i>grouped</i> parameter. When set to
     <i>True</i>, provides a more compact layout.
-
     </p><p>You can use the + operator to add two themes together or test if a color is part of a theme
     with the <i>in</i> operator.
-
     </p><p>Another interesting method is theme.recombine(). You can use it to create a new generation
     from two parent themes using a cut-and-splice techniques. Check the examples included in the
     library.
     </p><pre class="python">theme1.<span class="s">recombine</span><span class="s">(</span>theme2, d=<span class="s">0.7</span><span class="s">)</span>
 </pre>
-
     <p> 
     </p><hr/>
-
     <p><span class="grey_box">Aggregated themes</span><br/>
-
     </p><p>The Colors library comes bundled with more than four thousand color themes, grouped into
     four categories: emotion, nature, adjectives, and basic english words. These themes have been
     harvested from the web using the technique explained in the <a href="http://nodebox.net/code/index.php/Prism">Prism</a> example. Some of them look great, others
     decent, others bad. But it's a good source to get inspiration nonetheless.
-
     </p><p>To load an aggregated theme, <b>create a theme with a name</b>:
-
     <table border="0">
       <tbody>
         <tr>
           <td><span class="image_border"><img alt="colors-range4" height="100" src="media/colors-range4.jpg" width="100"/></span>
-
           </td><td>
             <pre class="python">
 t = colors.<span class="s">theme</span><span class="s">(</span><span class="str">"sky"</span>, guess=<span class="kw">True</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span> colors.<span class="s">list</span><span class="s">(</span>t<span class="s">)</span>.<span class="s">darkest</span><span class="s">)</span>
 t.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
 </pre>
-
         </td></tr><tr>
           <td><span class="image_border"><img alt="colors-range5" height="100" src="media/colors-range5.jpg" width="100"/></span>
-
           </td><td>
             <pre class="python">
 t = colors.<span class="s">theme</span><span class="s">(</span><span class="str">"love"</span>, guess=<span class="kw">True</span><span class="s">)</span>
@@ -1070,19 +828,14 @@ t = colors.<span class="s">theme</span><span class="s">(</span><span class="str"
 t.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
 </pre>
           </td></tr></tbody></table>
-
     </p><p>Adjectives and emotions work best. If a word is not found an exception will be raised. When
     the optional <i>guess</i> parameter is <i>True</i>, a theme will be returned for a word that
     closely matches the given name.
-
     </p><p>Here are some additional sets you can install:<br/>
     <a href="http://nodebox.net/code/data/media/geography.zip">geography</a> | <a href="http://nodebox.net/code/data/media/people.zip">people</a> | <a href="http://nodebox.net/code/data/media/music_genre.zip">music genres</a>
-
     </p><p> 
     </p><hr/>
-
     <h2><a id="web" name="web" title="web"></a>Aggregating colors from the web</h2>
-
     <p>If you also have the <a href="Web.html">Web library</a> installed, you can expand the
     database of aggregated themes with your own queries. The <i>google()</i> and <i>yahoo()</i>
     commands will query the web and return a color theme based on the top colors and shades that
@@ -1091,40 +844,31 @@ t.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,
 </pre>
     <pre class="python">yahoo<span class="s">(</span>query, license=<span class="kw">None</span><span class="s">)</span>
 </pre>
-
     <p>The command returns a <a href="#theme">color theme</a>. With the <i>yahoo()</i> command, you
     can specify your own <a href="Web.html#yahoo">Yahoo! license key</a> with the optional
     <i>license</i> parameter. It will take some time to retrieve all the information from the web
     the first time. After that, the search query is stored locally and can be retrieved instantly.
-
     </p><p>Another way to get color information (with good results) is by measuring pixels in online
     images. The morguefile() command will scan thumbnails in the <a href="http://morguefile.com">morgueFile</a> archive for colors:
     </p><pre class="python">morguefile<span class="s">(</span>query, n<span class="s">)</span>
 </pre>
-
     <p>The command will return a <a href="#colorlist">color list</a> with <i>n</i> colors.
-
     </p><p> 
     </p><hr/>
-
     <h2><a id="shader" name="shader" title="shader"></a>Using a shader for lighting effects</h2>
-
     <p>The Colors library has a useful <i>shader()</i> command that <b>simulates a source of
     light</b>. You can control the source of the light, its direction and strength across the
     canvas to determine the colors of onscreen elements.
     </p><pre class="python">shader<span class="s">(</span>x, y, dx, dy, radius=<span class="s">300</span>, angle=<span class="s">0</span>, spread=<span class="s">90</span><span class="s">)</span>
 </pre>
-
     <p>The x and y is the position of an element on the canvas. The <i>dx</i> and <i>dy</i> is the
     position of the lightsource. Based on the distance between the two a number from 0.0 (no light)
     to 1.0 (full light) is returned, representing how much light the element receives. The
     <i>radius</i> determines the strength of the light (how far it reaches), <i>angle</i>
     determines the direction in which light is shining (<i>None</i> if it shines equally in all
     directions) and <i>spread</i> determines the extent of the beam (wide or narrow).
-
     </p><p>In this example a light source is positioned in the lower right corner. The value returned
     from the <i>shader()</i> command is used to modify each oval's brightness.<br/>
-
     </p><p><img alt="colors-shader1" height="300" src="media/colors-shader1.jpg" width="550"/>
     </p><pre class="python"><span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span><span class="s">0.1</span>,<span class="s">0</span>,<span class="s">0.05</span><span class="s">)</span>
@@ -1139,18 +883,13 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
     <span class="kw">fill</span><span class="s">(</span><span class="s">0.84</span>+d*<span class="s">0.1</span>, <span class="s">1</span>, <span class="s">0.2</span><span class="s">+0.8</span>*d, d<span class="s">)</span>
     <span class="kw">oval</span><span class="s">(</span>x, y, r, r<span class="s">)</span>
 </pre>
-
     <p>We can get different effects by modifying the position, radius and spread of the light:
     </p><pre class="python">d = colors.<span class="s">shader</span><span class="s">(</span>x, y, <span class="s">275</span>, <span class="s">300</span>, radius=<span class="s">200</span>, angle=<span class="s">90</span>, spread=<span class="s">180</span><span class="s">)</span>
 </pre>
-
     <p><img alt="colors-shader2" height="300" src="media/colors-shader2.jpg" width="550"/>
-
     </p><p> 
-
     </p><p>When used together with <i>shadow()</i> and <i>gradientpath()</i>, we can now create
     compositions with a realistic sense of <b>depth</b>:
-
     </p><p><img alt="colors-shader3" height="370" src="media/colors-shader3.jpg" width="550"/>
     </p><pre class="python"><span class="grey"># Deep green gradient background.</span>
 <span class="kw">size</span><span class="s">(</span><span class="s">400</span>, <span class="s">400</span><span class="s">)</span>
@@ -1176,7 +915,6 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
     clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">0</span>, d<span class="s">)</span>
     colors.<span class="s">gradientpath</span><span class="s">(</span>p, clr1, clr2, alpha=<span class="s">0.5</span>+d, dx=r, dy=r<span class="s">)</span>
 </pre>
-
     <p>Let's just add a few more bells to the script! For each oval at the edge of the nucleus,
     we'll draw some curves bending inward.
     </p><pre class="python"><span class="grey">#   add to the script above:</span>
@@ -1191,7 +929,6 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
             <span class="kw">curveto</span><span class="s">(</span>x, y, x+<span class="kw">random</span><span class="s">(</span>-v,v<span class="s">)</span>, y+<span class="kw">random</span><span class="s">(</span>-v,v<span class="s">)</span>, <span class="s">200</span>, <span class="s">200</span><span class="s">)</span>
             <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
 </pre>
-
     <p>With the <a href="Supershape.html">Supershape</a> library we can draw all sorts of organic
     forms. Let's use it to add a pattern to each oval.
     </p><pre class="python"><span class="grey">#   add to the script above:</span>
@@ -1201,14 +938,10 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
         p = supershape.<span class="s">path</span><span class="s">(</span>x+r, y+r, r, r, <span class="s">10</span>, <span class="s">1.5</span>, <span class="s">-0.5</span>, <span class="s">1.5</span><span class="s">)</span>
         <span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span>
 </pre>
-
     <p><img alt="colors-shader5" height="550" src="media/colors-shader5.jpg" width="550"/><br/>
-
     </p><p> 
     </p><hr/>
-
     <h2><a id="shadow" name="shadow" title="shadow"></a>Using dropshadows and gradient fills</h2>
-
     <p>The Colors library has a <i>shadow()</i> command and a <i>gradientfill()</i> to add depth to
     your compositions. Shadows influence all the elements on the canvas while gradients are applied
     to a given <a href="../ref/Classes.html#BezierPath">path</a>.
@@ -1219,27 +952,22 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
     <pre class="python">gradientfill<span class="s">(</span>path, clr1, clr2, <span class="s">type</span>=<span class="str">"radial"</span>, 
              dx=<span class="s">0</span>, dy=<span class="s">0</span>, spread=<span class="s">1.0</span>, angle=<span class="s">0</span>, alpha=<span class="s">1.0</span><span class="s">)</span>
 </pre>
-
     <p>The <i>shadow()</i> and <i>noshadow()</i> commands work like <a href="../ref/Color.html#fill()">fill()</a> and <a href="../ref/Color.html#nofill()">nofill()</a>.
     Once you set a shadow all the subsequent elements you draw to the canvas will have a dropshadow
     (or until <i>nofill()</i> is called). The <i>dx</i> and <i>dy</i> define the shadow's offset,
     <i>alpha</i> the shadow's opacity and <i>blur</i> its sharpness.
-
     </p><p>The <i>gradientfill()</i> command takes a given <i>path</i> just like <a href="../ref/Path.html#drawpath()">drawpath()</a> and draws it to the screen filled with a gradient
     ranging between <a href="../ref/Color.html#color()">colors</a> <i>clr1</i> and <i>clr2</i>. The
     <i>type</i> of gradient can be "radial" or "linear".
-
     </p><p>The <i>spread</i> parameter is the distance between the two colors. It can be a relative
     float number between 0.0 and 1.0 or an absolute int. In the case of a float, 1.0 represents the
     highest of either width and height for radial gradients, and the lowest of width and height for
     linear gradients.
-
     </p><p>It's also useful to note the <i>alpha</i> parameter. When a gradient fill is drawn, the path
     is first filled with an opaque color, and the gradient mask is then drawn on top of that. While
     <i>clr1</i> and <i>clr2</i> can have their individual alpha value, <i>alpha</i> controls the
     opacity of the opaque underground. When you hide the opaque underground, no shadows will be
     rendered for this layer - so it's bit of tweaking to combine shadows and gradients.<br/>
-
     </p><p>An example with shadows and gradient supershapes:<br/>
     </p><pre class="python"><span class="grey"># Enable dropshadows</span>
 colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s">0.75</span><span class="s">)</span>
@@ -1263,8 +991,6 @@ colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s
         alpha=<span class="s">0.25</span>
     <span class="s">)</span>
 </pre>
-
     <p><img alt="colors-gradient1" height="519" src="media/colors-gradient1.jpg" width="550"/><br/>
   </p></div>
-
 </body></html>
