@@ -1,0 +1,241 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>NodeBox Reference: Globals</title>
+  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
+</head><body><div class="link" id="nav">
+    <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
+
+    <h3>Globals</h3>
+
+    <ul class="siblings">
+      <li><a href="Primitives.html">Primitives</a>
+      </li><li><a href="Path.html">Path</a>
+      </li><li><a href="Transform.html">Transform</a>
+      </li><li><a href="Color.html">Color</a>
+      </li><li><a href="Typography.html">Typography</a>
+      </li><li><a href="Utility.html">Utility</a>
+      </li><li><a href="Classes.html">Classes</a>
+    </li></ul>
+  </div>
+
+  <div class="article">
+    <a id="Constants" name="Constants"></a>
+
+    <div class="section">
+      <h3>Constants</h3>
+
+      <div class="definition">
+        <h2>Named parameter values</h2>
+
+        <p>Scale factors used to set non-pixel dimensions with <a href="Utility.html#size()"><code>size()</code></a></p>
+        <pre><span class="red">inch, cm, mm</span></pre>
+
+
+        <p>Color modes used by <a href="Color.html#colormode()"><code>colormode()</code></a>,
+        <a href="Color.html#outputmode()"><code>outputmode()</code></a>, and others</p>
+        <pre><span class="red">RGB, HSB, CMYK</span></pre>
+
+
+        <p>alignment modes used by <a href="Typography.html#align()"><code>align()</code></a> and
+        <a href="Transform.html#transform()"><code>transform()</code></a></p>
+        <pre><span class="red">CENTER<span class="s">, </span>CORNER
+LEFT<span class="s">, </span>RIGHT<span class="s">, </span>CENTER<span class="s">, </span>JUSTIFY</span></pre>
+
+
+        <p>Types of <a href="Classes.html#PathElement">PathElement</a></p>
+        <pre><span class="red">MOVETO<span class="s">, </span>LINETO<span class="s">, </span>CURVETO<span class="s">, </span>CLOSE</span></pre>
+
+
+        <p><code>joinstyle</code>s</p>
+        <pre><span class="red">MITER<span class="s">, </span>ROUND<span class="s">, </span>BEVEL<span class="s">, </span>BUTT<span class="s">, </span>SQUARE</span></pre>
+
+
+        <p>Styles for the <a href="Primitives.html#arrow()"><code>arrow()</code></a> primitive</p>
+        <pre><span class="red">NORMAL<span class="s">, </span>FORTYFIVE</span></pre>
+
+
+        <p>Datatypes for specifying a dynamic <a href="Utility.html#var()"><code>var()</code></a></p>
+        <pre><span class="red">NUMBER<span class="s">, </span>TEXT<span class="s">, </span>BOOLEAN<span class="s">, </span>BUTTON</span></pre>
+
+
+        <h2>Global state</h2>
+
+        <p>The current size of the canvas in the wake of the most recent <a href="Utility.html#size()"><code>size()</code></a> call</p>
+        <pre><span class="red">WIDTH<span class="s">, </span>HEIGHT</span></pre>
+
+
+        <p>The current iteration count in an <a href="../tut/Animation.html">animation</a> (note
+        that these are synonyms for the same value, counting up from 1)</p>
+        <pre><span class="red">FRAME<span class="s">, </span>PAGE</span></pre>
+
+      </div>
+    </div><a id="canvas" name="canvas"></a>
+
+    <div class="section">
+      <h3>canvas</h3>
+
+      <div class="definition">
+        <h2>Object Description</h2>
+
+        <div class="row">
+          The <code>canvas</code> object accumulates a list of graphic objects as a side effect of
+          calls to the various nodebox drawing commands. It can save the image to an output file
+          and can clear itself if you have more drawing to do.
+        </div>
+
+        <h2>Properties</h2>
+
+        <div class="row">
+          <pre>canvas.<span class="kw">size</span>   <span class="grey"># returns (w, h) based on prior call to size()</span>
+canvas.<span class="kw">_grobs</span> <span class="grey"># list of objects to be called when canvas.save() is called</span></pre>
+
+        </div>
+
+        <h2>Methods</h2>
+
+        <div class="row">
+          <pre>canvas.<span class="kw">clear</span>()        <span class="grey"># erases all objects on the canvas and resets drawing state</span>
+canvas.<span class="kw">save</span>(filename) <span class="grey"># name must end with pdf, eps, png, tiff, jpg, gif, or mov</span></pre>
+
+        </div>
+      </div>
+    </div><a id="colors" name="colors"></a>
+
+    <div class="section">
+      <h3>colors</h3>
+
+      <div class="definition">
+        <h2>Module Description</h2>
+
+        <p class="pink_text">Prior to version 1.10 this object was accessed through the external
+        Colors library, but it is now available to your scripts without any additional imports.</p>
+        <div class="row">
+          The <code>colors</code> object offers a set of convenience methods for advanced color
+          manipulation, the creation of color palettes and more.
+        </div>
+
+        <h2>Full documentation</h2>
+
+        <div class="row">
+          <a href="../lib/Colors.html">Colors</a><br/>
+          <a href="../lib/Colors/named_colors.html">List of all named colors</a>
+        </div>
+      </div>
+    </div><a name="export()"></a>
+
+    <div class="section">
+      <h3>export()</h3>
+
+      <div class="definition">
+        <p class="pink_text">The <code>export</code> function is only of use to scripts that are
+        using NodeBox externally via a <code><a href="../tut/Scripting.html#nodebox.script">from
+        nodebox.script import *</a></code> line. For scripts run within the application, use the
+        Export as… commands in the file menu. Exports can also be batched using the <a href="../tut/nodebox.html"><code>nodebox</code></a> command.</p>
+        <h2>Generating output from external scripts</h2>
+
+        <p>The <code>export</code> function returns a <a href="http://docs.python.org/2/reference/compound_stmts.html#the-with-statement">context
+        manager</a> that takes care of canvas-setup and file-generation for both single images and
+        animations. By enclosing your drawing code in a <code>with</code> block, you can ensure
+        that the correct sequence of <code>clear</code> and <code>save</code> calls are made to the
+        <code>canvas</code> automatically. For instance these two methods of generating a png are
+        equivalent:</p>
+        <pre><span class="kw">from</span> <span class="nn">nodebox.script</span> <span class="kw">import</span> <span class="o">*</span>
+
+<span class="grey"># export an image</span>
+<span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span>
+<span class="o">...</span> <span class="grey"># (do some drawing)</span>
+<span class="kw">canvas</span><span class="o">.</span><span class="kw">save</span><span class="s">(</span><span class="str">'output.png'</span><span class="s">)</span>
+
+<span class="grey"># export an image</span>
+<span class="grey"># (with the context manager clearing and saving the canvas automatically)</span>
+<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'output.png'</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">image</span><span class="s">:</span>
+    <span class="o">...</span> <span class="grey"># (do some drawing)</span></pre>
+
+
+        <h2><a class="anchor" href="#animations" id="animations" name="animations"></a>Animations</h2>
+
+        <p>If you specify a filename ending in <code>mov</code> (or <code>gif</code> if you also
+        pass a <code>loop</code> or <code>fps</code> argument), the <code>export</code> context
+        manager will return a <code>Movie</code> object. Each time you call its <code>add</code>
+        method, a new frame with the contents of the canvas will be added to the end of the
+        animation. Once you've added the final frame, you must call <code>finish</code> to wait for
+        the video encoder thread to complete its work.</p>
+        <p>As with the single-image version of the <code>export</code> call, you can use the
+        <code>with</code> statement in your code to tidy up some of the frame-drawing boilerplate.
+        All three examples are equivalent (note the use of a nested <code>with</code> statement in
+        the final example):</p>
+        <pre><span class="grey"># export a 100-frame movie</span>
+<span class="kw">movie</span> <span class="o">=</span> <span class="kw">export</span><span class="s">(</span><span class="str">'anim.mov'</span><span class="s">,</span> <span class="kw">fps</span><span class="o">=</span><span class="mi">50</span><span class="s">,</span> <span class="kw">bitrate</span><span class="o">=</span><span class="mf">1.8</span><span class="s">)</span>
+<span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
+    <span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span> <span class="grey"># erase the previous frame from the canvas</span>
+    <span class="o">...</span>            <span class="grey"># (do some drawing)</span>
+    <span class="kw">movie</span><span class="o">.</span><span class="kw">add</span><span class="s">()</span>    <span class="grey"># add the canvas to the movie</span>
+<span class="kw">movie</span><span class="o">.</span><span class="kw">finish</span><span class="s">()</span>     <span class="grey"># wait for i/o to complete</span>
+
+<span class="grey"># export a movie (with the context manager closing the file when done)</span>
+<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'anim.mov'</span><span class="s">,</span> <span class="kw">fps</span><span class="o">=</span><span class="mi">50</span><span class="s">,</span> <span class="kw">bitrate</span><span class="o">=</span><span class="mf">1.8</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">movie</span><span class="s">:</span>
+    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
+        <span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span> <span class="grey"># erase the previous frame from the canvas</span>
+        <span class="o">...</span>            <span class="grey"># (do some drawing)</span>
+        <span class="kw">movie</span><span class="o">.</span><span class="kw">add</span><span class="s">()</span>    <span class="grey"># add the canvas to the movie</span>
+
+<span class="grey"># export a movie</span>
+<span class="grey"># (with the movie.frame context manager clearing and adding the frame)</span>
+<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'anim.mov'</span><span class="s">,</span> <span class="kw">fps</span><span class="o">=</span><span class="mi">50</span><span class="s">,</span> <span class="kw">bitrate</span><span class="o">=</span><span class="mf">1.8</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">movie</span><span class="s">:</span>
+    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
+        <span class="kw">with</span> <span class="kw">movie</span><span class="o">.</span><span class="kw">frame</span><span class="s">:</span>
+            <span class="o">...</span> <span class="grey"># draw the next frame</span></pre>
+
+
+        <h2><a class="anchor" href="#multi-page-pdfs" id="multi-page-pdfs" name="multi-page-pdfs"></a>Multi-page PDFs</h2>
+
+        <p>Creating PDF documents works the same way, letting you either manually
+        <code>clear</code>, <code>add</code> and <code>finish</code> the export or take advantage
+        of the <code>with</code> statement to hide the repetitive bits. Note that PDF exports use
+        the <code>page</code> attribute rather than <code>frame</code>:</p>
+        <pre><span class="grey"># export a five-page pdf document</span>
+<span class="kw">pdf</span> <span class="o">=</span> <span class="kw">export</span><span class="s">(</span><span class="str">'multipage.pdf'</span><span class="s">)</span>
+<span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">5</span><span class="s">):</span>
+    <span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span> <span class="grey"># erase the previous page's graphics from the canvas</span>
+    <span class="o">...</span>            <span class="grey"># (do some drawing)</span>
+    <span class="kw">pdf</span><span class="o">.</span><span class="kw">add</span><span class="s">()</span>      <span class="grey"># add the canvas to the pdf as a new page</span>
+<span class="kw">pdf</span><span class="o">.</span><span class="kw">finish</span><span class="s">()</span>       <span class="grey"># write the pdf document to disk</span>
+
+<span class="grey"># export a pdf document more succinctly</span>
+<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'multipage.pdf'</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">pdf</span><span class="s">:</span>
+    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">5</span><span class="s">):</span>
+        <span class="kw">with</span> <span class="kw">pdf</span><span class="o">.</span><span class="kw">page</span><span class="s">:</span>
+            <span class="o">...</span> <span class="grey"># draw the next page</span></pre>
+
+
+        <h2><a class="anchor" href="#image-sequences" id="image-sequences" name="image-sequences"></a>Image sequences</h2>
+
+        <p>If you're generating a series of images, <code>export</code> will automatically give
+        them consecutive names derived from the filename you pass as an argument. If the filename
+        is a simple <code class="str">"name.ext"</code> string, the sequence number will be
+        appended with 4 characters of padding (<code class="str">"name-0001.ext"</code>,
+        <code class="str">"name-0002.ext"</code>, etc.). If the filename contains a block of
+        <code>###</code> characters, they will be replaced with the sequence number and zero padded
+        to the same width:</p>
+        <pre><span class="grey"># export a sequence of images to output-0001.png, output-0002.png, ...</span>
+<span class="grey">#                                output-0099.png, output-0100.png</span>
+<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'output.png'</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">image</span><span class="s">:</span>
+    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
+        <span class="kw">with</span> <span class="kw">image</span><span class="o">.</span><span class="kw">sequence</span><span class="s">:</span>
+            <span class="o">...</span> <span class="grey"># draw the next image in the sequence</span>
+
+<span class="grey"># export a sequence of images to 01-img.png, 02-img.png, ...</span>
+<span class="grey">#                                99-img.png, 100-img.png</span>
+<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'##-img.png'</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">image</span><span class="s">:</span>
+    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
+        <span class="kw">with</span> <span class="kw">image</span><span class="o">.</span><span class="kw">sequence</span><span class="s">:</span>
+            <span class="o">...</span> <span class="grey"># draw the next image in the sequence</span></pre>
+
+      </div>
+    </div>
+  </div>
+
+</body></html>

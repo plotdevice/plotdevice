@@ -33,7 +33,8 @@
 <span class="o">(</span>env<span class="o">)</span><span class="kw">$ </span>pip install requests envoy bs4 <span class="grey"># some other useful packages</span></pre>
 
 
-    <h3>Initializing a graphics context with <code>nodebox.script</code></h3>
+    <h2><a href="#nodebox.script" id="nodebox.script" name="nodebox.script"></a>Initializing a
+    graphics context with <code>nodebox.script</code></h2>
 
     <p>The <code>nodebox.script</code> module initializes your script's namespace with one
     identical to a script running with the app or command line tool. For instance, the following
@@ -41,7 +42,7 @@
     <pre><span class="grey">#!/usr/bin/env python</span>
 <span class="kw">from</span> <span class="nn">nodebox.script</span> <span class="kw">import</span> <span class="o">*</span>
 <span class="kw">for</span> <span class="kw">x</span><span class="s">,</span> <span class="kw">y</span> <span class="ow">in</span> <span class="kw">grid</span><span class="s">(</span><span class="mi">10</span><span class="s">,</span><span class="mi">10</span><span class="s">,</span><span class="mi">12</span><span class="s">,</span><span class="mi">12</span><span class="s">):</span>
-<span class="kw">rect</span><span class="s">(</span><span class="kw">x</span><span class="s">,</span><span class="kw">y</span><span class="s">,</span> <span class="mi">10</span><span class="s">,</span><span class="mi">10</span><span class="s">)</span></pre>
+    <span class="kw">rect</span><span class="s">(</span><span class="kw">x</span><span class="s">,</span><span class="kw">y</span><span class="s">,</span> <span class="mi">10</span><span class="s">,</span><span class="mi">10</span><span class="s">)</span></pre>
 
 
     <p>You can then generate output files using the global <code>canvas</code> object. Its
@@ -51,108 +52,12 @@
     <pre><span class="kw">canvas</span><span class="o">.</span><span class="kw">save</span><span class="s">(</span><span class="str">'~/Pictures/output.pdf'</span><span class="s">)</span></pre>
 
 
-    <p>If you plan to generate multiple images, be sure to reset the graphics state in between
-    frames:</p>
+    <p>If you're generating multiple images, be sure to reset the graphics state in between frames:</p>
     <pre><span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span></pre>
 
 
-    <h3><a class="anchor" href="#the-export-context-manager" id="the-export-context-manager" name="the-export-context-manager"></a>The <code>export</code> context manager</h3>
-
-    <p>The <code>export</code> function returns a <a href="http://docs.python.org/2/reference/compound_stmts.html#the-with-statement">context manager</a>
-    that encapsulates this clear/draw/save cycle for both single images and animations. By
-    enclosing your drawing code in a <code>with</code> block, you can ensure that the correct
-    sequence of <code>clear</code> and <code>save</code> calls is generated automatically. For
-    instance these two methods of generating a png are equivalent:</p>
-    <pre><span class="kw">from</span> <span class="nn">nodebox.script</span> <span class="kw">import</span> <span class="o">*</span>
-
-<span class="grey"># export an image</span>
-<span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span>
-<span class="o">...</span> <span class="grey"># (do some drawing)</span>
-<span class="kw">canvas</span><span class="o">.</span><span class="kw">save</span><span class="s">(</span><span class="str">'output.png'</span><span class="s">)</span>
-
-<span class="grey"># export an image</span>
-<span class="grey"># (with the context manager clearing and saving the canvas automatically)</span>
-<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'output.png'</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">image</span><span class="s">:</span>
-    <span class="o">...</span> <span class="grey"># (do some drawing)</span></pre>
-
-
-    <h2><a class="anchor" href="#animations" id="animations" name="animations"></a>Animations</h2>
-
-    <p>If you specify a filename ending in <code>mov</code> (or <code>gif</code> if you also pass a
-    <code>loop</code> or <code>fps</code> argument), the <code>export</code> context manager will
-    return a <code>Movie</code> object. Each time you call its <code>add</code> method, a new frame
-    with the contents of the canvas will be added to the end of the animation. Once you've added
-    the final frame, you must call <code>finish</code> to wait for the video encoder thread to
-    complete its work.</p>
-    <p>As with the single-image version of the <code>export</code> call, you can use the
-    <code>with</code> statement in your code to tidy up some of the frame-drawing boilerplate. All
-    three examples are equivalent (note the use of a nested <code>with</code> statement in the
-    final example):</p>
-    <pre><span class="grey"># export a 100-frame movie</span>
-<span class="kw">movie</span> <span class="o">=</span> <span class="kw">export</span><span class="s">(</span><span class="str">'anim.mov'</span><span class="s">,</span> <span class="kw">fps</span><span class="o">=</span><span class="mi">50</span><span class="s">,</span> <span class="kw">bitrate</span><span class="o">=</span><span class="mf">1.8</span><span class="s">)</span>
-<span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
-    <span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span> <span class="grey"># erase the previous frame from the canvas</span>
-    <span class="o">...</span>            <span class="grey"># (do some drawing)</span>
-    <span class="kw">movie</span><span class="o">.</span><span class="kw">add</span><span class="s">()</span>    <span class="grey"># add the canvas to the movie</span>
-<span class="kw">movie</span><span class="o">.</span><span class="kw">finish</span><span class="s">()</span>     <span class="grey"># wait for i/o to complete</span>
-
-<span class="grey"># export a movie (with the context manager closing the file when done)</span>
-<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'anim.mov'</span><span class="s">,</span> <span class="kw">fps</span><span class="o">=</span><span class="mi">50</span><span class="s">,</span> <span class="kw">bitrate</span><span class="o">=</span><span class="mf">1.8</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">movie</span><span class="s">:</span>
-    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
-        <span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span> <span class="grey"># erase the previous frame from the canvas</span>
-        <span class="o">...</span>            <span class="grey"># (do some drawing)</span>
-        <span class="kw">movie</span><span class="o">.</span><span class="kw">add</span><span class="s">()</span>    <span class="grey"># add the canvas to the movie</span>
-
-<span class="grey"># export a movie</span>
-<span class="grey"># (with the movie.frame context manager clearing and adding the frame)</span>
-<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'anim.mov'</span><span class="s">,</span> <span class="kw">fps</span><span class="o">=</span><span class="mi">50</span><span class="s">,</span> <span class="kw">bitrate</span><span class="o">=</span><span class="mf">1.8</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">movie</span><span class="s">:</span>
-    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
-        <span class="kw">with</span> <span class="kw">movie</span><span class="o">.</span><span class="kw">frame</span><span class="s">:</span>
-            <span class="o">...</span> <span class="grey"># draw the next frame</span></pre>
-
-
-    <h2><a class="anchor" href="#multi-page-pdfs" id="multi-page-pdfs" name="multi-page-pdfs"></a>Multi-page PDFs</h2>
-
-    <p>Creating PDF documents works the same way, letting you either manually <code>clear</code>,
-    <code>add</code> and <code>finish</code> the export or take advantage of the <code>with</code>
-    statement to hide the repetitive bits. Note that PDF exports use the <code>page</code>
-    attribute rather than <code>frame</code>:</p>
-    <pre><span class="grey"># export a five-page pdf document</span>
-<span class="kw">pdf</span> <span class="o">=</span> <span class="kw">export</span><span class="s">(</span><span class="str">'multipage.pdf'</span><span class="s">)</span>
-<span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">5</span><span class="s">):</span>
-    <span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span> <span class="grey"># erase the previous page's graphics from the canvas</span>
-    <span class="o">...</span>            <span class="grey"># (do some drawing)</span>
-    <span class="kw">pdf</span><span class="o">.</span><span class="kw">add</span><span class="s">()</span>      <span class="grey"># add the canvas to the pdf as a new page</span>
-<span class="kw">pdf</span><span class="o">.</span><span class="kw">finish</span><span class="s">()</span>       <span class="grey"># write the pdf document to disk</span>
-
-<span class="grey"># export a pdf document more succinctly</span>
-<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'multipage.pdf'</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">pdf</span><span class="s">:</span>
-    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">5</span><span class="s">):</span>
-        <span class="kw">with</span> <span class="kw">pdf</span><span class="o">.</span><span class="kw">page</span><span class="s">:</span>
-            <span class="o">...</span> <span class="grey"># draw the next page</span></pre>
-
-
-    <h2><a class="anchor" href="#image-sequences" id="image-sequences" name="image-sequences"></a>Image sequences</h2>
-
-    <p>If you're generating a series of images, <code>export</code> will automatically give them
-    consecutive names derived from the filename you pass as an argument. If the filename is a
-    simple <code class="str">"name.ext"</code> string, the sequence number will be appended with 4
-    characters of padding (<code class="str">"name-0001.ext"</code>, <code class="str">"name-0002.ext"</code>, etc.). If the filename contains a block of <code>###</code>
-    characters, they will be replaced with the sequence number and zero padded to the same width:</p>
-    <pre><span class="grey"># export a sequence of images to output-0001.png, output-0002.png, ...</span>
-<span class="grey">#                                output-0099.png, output-0100.png</span>
-<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'output.png'</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">image</span><span class="s">:</span>
-    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
-        <span class="kw">with</span> <span class="kw">image</span><span class="o">.</span><span class="kw">sequence</span><span class="s">:</span>
-            <span class="o">...</span> <span class="grey"># draw the next image in the sequence</span>
-
-<span class="grey"># export a sequence of images to 01-img.png, 02-img.png, ...</span>
-<span class="grey">#                                99-img.png, 100-img.png</span>
-<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'##-img.png'</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">image</span><span class="s">:</span>
-    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
-        <span class="kw">with</span> <span class="kw">image</span><span class="o">.</span><span class="kw">sequence</span><span class="s">:</span>
-            <span class="o">...</span> <span class="grey"># draw the next image in the sequence</span></pre>
-
+    <p>But if you plan to do more than generate a one-off, you'll likely find the <a href="../ref/Globals.html#export"><code>export()</code></a> function more convenient. It provides
+    convenience methods for writing images, vector documents, and even animations.</p>
   </div>
 
 </body></html>
