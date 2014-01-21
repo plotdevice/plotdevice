@@ -1,58 +1,70 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Tutorials: Extending</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
     <h3>Extending NodeBox</h3>
+
     <ul class="chapter">
       <li><a href="Scripting.html">Scripting →</a>
       </li><li>Chapter 17
       </li><li><a href="Math.html">← Math</a>
     </li></ul>
   </div>
+
   <div class="article">
     <p>NodeBox is built on <a href="http://pyobjc.sourceforge.net/">PyObjC</a>, a bridge between
     the Python and Objective-C programming languages. The primary usage of PyObjC is writing
     <a href="http://developer.apple.com/cocoa/">Cocoa</a> applications for Mac OS X in pure python.
     Cocoa is the programming environment on Mac OS X that allows developers to create graphical
-    applications with a typical Apple-look-and-feel.
-    </p><p>Cocoa's two main libraries (<em>Foundation Kit</em> and <em>Application Kit</em>) are
+    applications with a typical Apple-look-and-feel.</p>
+    <p>Cocoa's two main libraries (<em>Foundation Kit</em> and <em>Application Kit</em>) are
     bundled with NodeBox. If you know a little PyObjC it's easy to start playing around with all
-    the magic in Mac OS X, right from your NodeBox script.
-    </p><p class="pink_text"><em>This tutorial contains advanced material.</em>
-    </p><hr/>
+    the magic in Mac OS X, right from your NodeBox script.</p>
+    <p class="pink_text"><em>This tutorial contains advanced material.</em></p>
+    <hr/>
+
     <h2>AppKit manual</h2>
+
     <p>The first thing you'll notice about AppKit is that it has a <em>lot</em> of <em>long</em>
     and <em>odd</em> objects all beginning with <em>NS</em>: NSBezierPath, NSRect, NSImage, and so
     on (the <em>NS</em> stems from the fact that AppKit is a direct descendant of NeXTSTEP, Steve
-    Jobs' technology that revived Apple).
-    </p><p>Commands like <em>layoutManager.drawGlyphsForGlyphRange_atPoint_(glyphRange,
+    Jobs' technology that revived Apple).</p>
+    <p>Commands like <em>layoutManager.drawGlyphsForGlyphRange_atPoint_(glyphRange,
     (x-dx,y-dy-self.font.defaultLineHeightForFont()))</em> are common. So the first thing to do is
     get a manual. If you've installed Xcode, it provides a totally reasonable documentation viewer
     accessible through the Help menu. On the web you can find Apple's <a href="https://developer.apple.com/library/mac/documentation/cocoa/reference/applicationkit/objc_classic/_index.html">
     AppKit</a> &amp; <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/ObjC_classic/_index.html">
-    Foundation</a> references.
-    </p><hr/>
+    Foundation</a> references.</p>
+    <hr/>
+
     <h2>AppKit rules of thumb</h2>
+
     <p>Apple's documentation lists all of the objects in their Objective-C form. To use them in
     Python, a good rule of thumb is to <strong>replace the colon with an underscore</strong> (e.g.
-    <em>setShadowBlurRadius:(float)val</em> becomes <em>setShadowBlurRadius_(floatval)</em> ).
-    </p><p>Another good thing to know is that you create AppKit objects with <em>object.alloc()</em>
+    <em>setShadowBlurRadius:(float)val</em> becomes <em>setShadowBlurRadius_(floatval)</em> ).</p>
+    <p>Another good thing to know is that you create AppKit objects with <em>object.alloc()</em>
     and then initialise them with <em>object.init()</em> or
-    <em>object.initWithARangeOfParamaters()</em>.
-    </p><p>Also note that some things that are in Foundation like NSSize or NSRect can usually be
-    substituted by simple Python tuples.
-    </p><p>To start using AppKit in NodeBox simply import the library:
-    </p><pre class="python"><span class="kw">from</span> Appkit <span class="kw">import</span> *
-</pre>
-    <p>I'll show you some examples of what you can do with AppKit.
-    </p><hr/>
+    <em>object.initWithARangeOfParamaters()</em>.</p>
+    <p>Also note that some things that are in Foundation like NSSize or NSRect can usually be
+    substituted by simple Python tuples.</p>
+    <p>To start using AppKit in NodeBox simply import the library:</p>
+    <pre><span class="kw">from</span> Appkit <span class="kw">import</span> *</pre>
+
+
+    <p>I'll show you some examples of what you can do with AppKit.</p>
+    <hr/>
+
     <h2>Playing sounds in NodeBox</h2>
+
     <p>The NSSound object in AppKit provides a very easy way to play AIFF and WAV sound files in
-    Mac applications. The class below is a NodeBox wrapper for NSSound.
-    </p><pre class="python"><span class="kw">from</span> AppKit <span class="kw">import</span> NSSound
+    Mac applications. The class below is a NodeBox wrapper for NSSound.</p>
+    <pre><span class="kw">from</span> AppKit <span class="kw">import</span> NSSound
  
 <span class="kw">class</span> sound:
     <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, <span class="s">file</span><span class="s">)</span>:
@@ -60,21 +72,23 @@
         <span class="s">self</span>._sound.<span class="s">initWithContentsOfFile_byReference_</span><span class="s">(</span><span class="s">file</span>, <span class="kw">True</span><span class="s">)</span>
     <span class="kw">def</span> <span class="red">play</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>: <span class="s">self</span>._sound.<span class="s">play</span><span class="s">(</span><span class="s">)</span>
     <span class="kw">def</span> <span class="red">stop</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>: <span class="s">self</span>._sound.<span class="s">stop</span><span class="s">(</span><span class="s">)</span>
-    <span class="kw">def</span> <span class="red">is_playing</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>: <span class="kw">return</span> <span class="s">self</span>._sound.<span class="s">isPlaying</span><span class="s">(</span><span class="s">)</span>
-</pre>
+    <span class="kw">def</span> <span class="red">is_playing</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>: <span class="kw">return</span> <span class="s">self</span>._sound.<span class="s">isPlaying</span><span class="s">(</span><span class="s">)</span></pre>
+
+
     <p>As you can see our <em>sound()</em> command takes a <em>file</em> parameter (that is the
-    location of your sound file) and returns an object with a number of properties:
-    </p><ul>
+    location of your sound file) and returns an object with a number of properties:</p>
+    <ul>
       <li><em>sound.play()</em>: start playing the sound
       </li><li><em>sound.stop()</em>: stop playing
       </li><li><em>sound.is_playing()</em>: returns True when playing
     </li></ul>
-    <pre class="python">woof = sound<span class="s">(</span><span class="str">"dog.aiff"</span><span class="s">)</span>
-woof.<span class="s">play</span><span class="s">(</span><span class="s">)</span>
-</pre>
+    <pre>woof = sound<span class="s">(</span><span class="str">"dog.aiff"</span><span class="s">)</span>
+woof.<span class="s">play</span><span class="s">(</span><span class="s">)</span></pre>
+
+
     <p>The following class defines a simple sound mixer/timeline. It has a number of channels that
-    play sounds at a defined time.
-    </p><pre class="python"><span class="kw">from</span> <span class="s">time</span> <span class="kw">import</span> <span class="s">time</span>
+    play sounds at a defined time.</p>
+    <pre><span class="kw">from</span> <span class="s">time</span> <span class="kw">import</span> <span class="s">time</span>
  
 <span class="kw">class</span> mixer:   
     <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, channels=<span class="s">4</span><span class="s">)</span>:
@@ -95,25 +109,29 @@ woof.<span class="s">play</span><span class="s">(</span><span class="s">)</span>
         <span class="kw">for</span> sound <span class="kw">in</span> <span class="s">self</span>.<span class="s">playing</span>:
             sound.<span class="s">stop</span><span class="s">(</span><span class="s">)</span>
         <span class="s">self</span>.<span class="s">playing</span> = <span class="s">[</span><span class="s">]</span>
-        <span class="s">self</span>.<span class="s">channels</span> = <span class="s">[</span><span class="s">[</span><span class="s">]</span> <span class="kw">for</span> ch <span class="kw">in</span> <span class="s">self</span>.<span class="s">channels</span><span class="s">]</span>
-</pre>
-    <p>Queueing multiple sounds is now very easy:<br/>
-    </p><pre class="python">m = mixer<span class="s">(</span><span class="s">2</span><span class="s">)</span>
+        <span class="s">self</span>.<span class="s">channels</span> = <span class="s">[</span><span class="s">[</span><span class="s">]</span> <span class="kw">for</span> ch <span class="kw">in</span> <span class="s">self</span>.<span class="s">channels</span><span class="s">]</span></pre>
+
+
+    <p>Queueing multiple sounds is now very easy:<br/></p>
+    <pre>m = mixer<span class="s">(</span><span class="s">2</span><span class="s">)</span>
 m.<span class="s">queue</span><span class="s">(</span><span class="s">0</span>, <span class="s">0.0</span>, <span class="str">"woof.aiff"</span><span class="s">)</span>
 m.<span class="s">queue</span><span class="s">(</span><span class="s">0</span>, <span class="s">0.4</span>, <span class="str">"woof.aiff"</span><span class="s">)</span>
 m.<span class="s">queue</span><span class="s">(</span><span class="s">0</span>, <span class="s">0.8</span>, <span class="str">"woof.aiff"</span><span class="s">)</span>
 m.<span class="s">queue</span><span class="s">(</span><span class="s">0</span>, <span class="s">1.2</span>, <span class="str">"woof.aiff"</span><span class="s">)</span>
 m.<span class="s">queue</span><span class="s">(</span><span class="s">1</span>, <span class="s">0.4</span>, <span class="str">"meow.aiff"</span><span class="s">)</span>
-m.<span class="s">queue</span><span class="s">(</span><span class="s">1</span>, <span class="s">1.2</span>, <span class="str">"meow.aiff"</span><span class="s">)</span>
-</pre>
-    <p> 
-    </p><hr/>
+m.<span class="s">queue</span><span class="s">(</span><span class="s">1</span>, <span class="s">1.2</span>, <span class="str">"meow.aiff"</span><span class="s">)</span></pre>
+
+
+    <p> </p>
+    <hr/>
+
     <h2>BabbleBox: speech synthesis in NodeBox</h2>
+
     <p>The example below wraps the NSSpeechSynthesizer in two NodeBox commands. The
     <em>voices()</em> command returns a list of all available voices. The <em>say()</em> command
     makes NodeBox speak out a sentence. The optional <em>voice</em> parameter sets the voice you
-    want to use.<br/>
-    </p><pre class="python"><span class="kw">from</span> AppKit <span class="kw">import</span> NSSpeechSynthesizer
+    want to use.<br/></p>
+    <pre><span class="kw">from</span> AppKit <span class="kw">import</span> NSSpeechSynthesizer
  
 <span class="kw">def</span> <span class="red">voices</span><span class="s">(</span><span class="s">)</span>:
     voices = NSSpeechSynthesizer.<span class="s">availableVoices</span><span class="s">(</span><span class="s">)</span>
@@ -126,22 +144,26 @@ m.<span class="s">queue</span><span class="s">(</span><span class="s">1</span>, 
     <span class="kw">else</span>:
         voice = NSSpeechSynthesizer.<span class="s">defaultVoice</span><span class="s">(</span><span class="s">)</span>
     speech = NSSpeechSynthesizer.<span class="s">alloc</span><span class="s">(</span><span class="s">)</span>.<span class="s">initWithVoice_</span><span class="s">(</span>voice<span class="s">)</span>
-    speech.<span class="s">startSpeakingString_</span><span class="s">(</span>txt<span class="s">)</span>
-</pre>
-    <p>Now say <em>hello</em> in a random voice:
-    </p><pre class="python">say<span class="s">(</span><span class="str">"hello"</span>, voice=<span class="kw">choice</span><span class="s">(</span>voices<span class="s">(</span><span class="s">)</span><span class="s">)</span><span class="s">)</span>
-</pre><br/>
+    speech.<span class="s">startSpeakingString_</span><span class="s">(</span>txt<span class="s">)</span></pre>
+
+
+    <p>Now say <em>hello</em> in a random voice:</p>
+    <pre>say<span class="s">(</span><span class="str">"hello"</span>, voice=<span class="kw">choice</span><span class="s">(</span>voices<span class="s">(</span><span class="s">)</span><span class="s">)</span><span class="s">)</span></pre>
+<br/>
     <hr/>
+
     <h2>All the fonts on your system</h2>
+
     <p>The command below wraps the NSFontManager object. It returns a list with the PostScript name
-    of each font installed on your system. Thanks to Mark for this one.
-    </p><pre class="python"><span class="kw">from</span> AppKit <span class="kw">import</span> NSFontManager
+    of each font installed on your system. Thanks to Mark for this one.</p>
+    <pre><span class="kw">from</span> AppKit <span class="kw">import</span> NSFontManager
  
 <span class="kw">def</span> <span class="red">fonts</span><span class="s">(</span><span class="s">)</span>:
-    <span class="kw">return</span> NSFontManager.<span class="s">sharedFontManager</span><span class="s">(</span><span class="s">)</span>.<span class="s">availableFonts</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <p>Now you can do lots of fun typography:
-    </p><pre class="python"><span class="kw">background</span><span class="s">(</span><span class="s">0.15</span>, <span class="s">0.1</span>, <span class="s">0.1</span><span class="s">)</span>
+    <span class="kw">return</span> NSFontManager.<span class="s">sharedFontManager</span><span class="s">(</span><span class="s">)</span>.<span class="s">availableFonts</span><span class="s">(</span><span class="s">)</span></pre>
+
+
+    <p>Now you can do lots of fun typography:</p>
+    <pre><span class="kw">background</span><span class="s">(</span><span class="s">0.15</span>, <span class="s">0.1</span>, <span class="s">0.1</span><span class="s">)</span>
  
 x, y, h = <span class="s">0</span>, <span class="s">0</span>, <span class="s">0</span>
 <span class="kw">lineheight</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
@@ -164,38 +186,44 @@ x, y, h = <span class="s">0</span>, <span class="s">0</span>, <span class="s">0<
  
     <span class="grey"># Line height is equal to biggest font </span>
     h = <span class="s">max</span><span class="s">(</span>h, <span class="kw">textheight</span><span class="s">(</span>f<span class="s">)</span><span class="s">)</span>
-    x += <span class="kw">textwidth</span><span class="s">(</span>f<span class="s">)</span>
-</pre>
-    <p><img alt="pyobjc-fonts" src="media/pyobjc-fonts.jpg"/><br/>
-    </p><p> 
-    </p><hr/>
+    x += <span class="kw">textwidth</span><span class="s">(</span>f<span class="s">)</span></pre>
+
+
+    <p><img alt="pyobjc-fonts" src="media/pyobjc-fonts.jpg"/><br/></p>
+    <p> </p>
+    <hr/>
+
     <h2>Dashed lines</h2>
+
     <p>Obviously all of the commands in NodeBox are wrappers to AppKit calls. In most cases you can
     still manipulate them directly with PyObjC. For example, a BezierPath object has a
     <em>path</em> property containing the actual NSBezierPath. This we can manipulate to create
-    some custom effects.<br/>
-    </p><pre class="python"><span class="kw">def</span> <span class="red">linedash</span><span class="s">(</span>path, segment=<span class="s">10</span>, gap=<span class="s">5</span><span class="s">)</span>:
+    some custom effects.<br/></p>
+    <pre><span class="kw">def</span> <span class="red">linedash</span><span class="s">(</span>path, segment=<span class="s">10</span>, gap=<span class="s">5</span><span class="s">)</span>:
     path.<span class="s">path</span>.<span class="s">setLineDash_count_phase_</span><span class="s">(</span><span class="s">[</span>segment, gap<span class="s">]</span>, <span class="s">2</span>, <span class="s">0</span><span class="s">)</span>
-    <span class="kw">return</span> path
-</pre>
-    <pre class="python">p = <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">200</span>, <span class="s">200</span>, draw=<span class="kw">False</span><span class="s">)</span>
+    <span class="kw">return</span> path</pre>
+
+    <pre>p = <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">200</span>, <span class="s">200</span>, draw=<span class="kw">False</span><span class="s">)</span>
 linedash<span class="s">(</span>p, segment=<span class="s">5</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span>
-</pre>
-    <p><img alt="pyobjc-linedash" src="media/pyobjc-linedash.jpg"/><br/>
-    </p><p> 
-    </p><hr/>
+<span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span></pre>
+
+
+    <p><img alt="pyobjc-linedash" src="media/pyobjc-linedash.jpg"/><br/></p>
+    <p> </p>
+    <hr/>
+
     <h2>Dropshadows in NodeBox</h2>
+
     <p>Here I create a wrapper for NSShadow. The result are two commands, <em>shadow()</em> and
     <em>noshadow()</em> that work like <a href="../ref/Color.html#fill()">fill()</a> and <a href="../ref/Color.html#nofill()">nofill()</a>: every drawing command defined after
-    <em>shadow()</em> will have a dropshadow until you call <em>noshadow()</em>.
-    </p><p>Note that the shadow class inherits from something called <em>Grob</em>. This is short for
+    <em>shadow()</em> will have a dropshadow until you call <em>noshadow()</em>.</p>
+    <p>Note that the shadow class inherits from something called <em>Grob</em>. This is short for
     <em>Graphic Object</em>. A Grob executes its <em>_draw()</em> method the moment it is drawn.
     You need to initialise it with the current context (canvas) to draw in, that's why we pass the
-    global <em>_ctx</em> to Grob.__init__(). The <em>_ctx</em> contains the current context.
-    </p><p>This is a typical example of what NodeBox drawing commands look like (also see the <a href="http://dev.nodebox.net/browser/nodebox/trunk/src/DrawingPrimitives.py">source</a>).
-    </p><pre class="python"><span class="kw">from</span> AppKit <span class="kw">import</span> NSShadow, NSColor
+    global <em>_ctx</em> to Grob.__init__(). The <em>_ctx</em> contains the current context.</p>
+    <p>This is a typical example of what NodeBox drawing commands look like (also see the <a href="http://dev.nodebox.net/browser/nodebox/trunk/src/DrawingPrimitives.py">source</a>).</p>
+    <pre><span class="kw">from</span> AppKit <span class="kw">import</span> NSShadow, NSColor
 <span class="kw">from</span> nodebox.<span class="s">graphics</span> <span class="kw">import</span> <span class="kw">Grob</span>
  
 <span class="kw">class</span> shadow<span class="s">(</span><span class="kw">Grob</span><span class="s">)</span>:
@@ -210,18 +238,21 @@ linedash<span class="s">(</span>p, segment=<span class="s">5</span><span class="
         <span class="s">self</span>._shadow.<span class="s">set</span><span class="s">(</span><span class="s">)</span>
         
 <span class="kw">def</span> <span class="red">noshadow</span><span class="s">(</span><span class="s">)</span>:
-    shadow<span class="s">(</span>alpha=<span class="s">0</span><span class="s">)</span>
-</pre>
-    <p>Shadows work very well to create a feeling of depth:<br/>
-    </p><pre class="python">shadow<span class="s">(</span>blur=<span class="s">10.0</span><span class="s">)</span>
+    shadow<span class="s">(</span>alpha=<span class="s">0</span><span class="s">)</span></pre>
+
+
+    <p>Shadows work very well to create a feeling of depth:<br/></p>
+    <pre>shadow<span class="s">(</span>blur=<span class="s">10.0</span><span class="s">)</span>
  
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>:
     <span class="kw">fill</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">0.75</span><span class="s">)</span>, <span class="s">0</span>, <span class="kw">random</span><span class="s">(</span><span class="s">0.25</span>,<span class="s">0.75</span><span class="s">)</span><span class="s">)</span>
     r = <span class="kw">random</span><span class="s">(</span><span class="s">50</span><span class="s">)</span>
-    <span class="kw">oval</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>, r, r<span class="s">)</span>
-</pre> 
-    <p><img alt="pybobjc-shadow" src="media/pyobjc-shadow1.jpg"/>
-    </p><p> 
-    </p><p><img alt="pyobjc-shadow2" src="media/pyobjc-shadow2.jpg"/><br/>
-  </p></div>
+    <span class="kw">oval</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>, r, r<span class="s">)</span></pre>
+ 
+
+    <p><img alt="pybobjc-shadow" src="media/pyobjc-shadow1.jpg"/></p>
+    <p> </p>
+    <p><img alt="pyobjc-shadow2" src="media/pyobjc-shadow2.jpg"/><br/></p>
+  </div>
+
 </body></html>

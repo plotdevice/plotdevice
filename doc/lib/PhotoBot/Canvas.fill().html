@@ -1,32 +1,41 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Libraries: photobot.Canvas.fill()</title>
   <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+
     <h3>photobot.Canvas.fill()</h3>
   </div>
+
   <div class="article">
     <h2>Syntax</h2>
-    <pre class="python">canvas.<span class="kw">fill</span><span class="s">(</span>rgb, x=<span class="s">0</span>, y=<span class="s">0</span>, w=<span class="kw">None</span>, h=<span class="kw">None</span>, name=<span class="str">""</span><span class="s">)</span>
-</pre>
+    <pre>canvas.<span class="kw">fill</span><span class="s">(</span>rgb, x=<span class="s">0</span>, y=<span class="s">0</span>, w=<span class="kw">None</span>, h=<span class="kw">None</span>, name=<span class="str">""</span><span class="s">)</span></pre>
+
+
     <h2>Description</h2>
+
     <p>Creates a new layer filled with the given <em>rgb</em> color. The <em>rgb</em> parameter is
     a tuple with three values (red, green, blue) ranging between 0 and 255. For example,
     fill((255,0,0)) creates a red fill. The layer fills the entire canvas by default, or you can
     set its position and size with the <em>x</em>, <em>y</em>, <em>w</em> (width) and <em>h</em>
-    (height) parameters. You can supply a <em>name</em> for the fill layer.
-    </p><h2>Example</h2>
-    <p>This puts the <em>robot.jpg</em> image at 95% opacity on an orange background .
-    </p><pre class="python">photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
+    (height) parameters. You can supply a <em>name</em> for the fill layer.</p>
+    <h2>Example</h2>
+
+    <p>This puts the <em>robot.jpg</em> image at 95% opacity on an orange background .</p>
+    <pre>photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
 canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">200</span>,<span class="s">200</span><span class="s">)</span>
 canvas.<span class="kw">fill</span><span class="s">(</span><span class="s">(</span><span class="s">255</span>,<span class="s">128</span>,<span class="s">0</span><span class="s">)</span><span class="s">)</span>
 canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"images/robot.jpg"</span><span class="s">)</span>
-canvas.<span class="s">layers</span><span class="s">[</span><span class="s">2</span><span class="s">]</span>.<span class="s">opacity</span><span class="s">(</span><span class="s">95</span><span class="s">)</span>
-</pre>
+canvas.<span class="s">layers</span><span class="s">[</span><span class="s">2</span><span class="s">]</span>.<span class="s">opacity</span><span class="s">(</span><span class="s">95</span><span class="s">)</span></pre>
+
+
     <div class="example">
       <img alt="" height="100" src="../media/photobot-fill.jpg" width="100"/>
     </div>
   </div>
+
 </body></html>

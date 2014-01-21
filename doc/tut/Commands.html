@@ -1,42 +1,49 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Tutorials: Commands</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
     <h3>Commands</h3>
+
     <ul class="chapter">
       <li><a href="Libraries.html">Libraries →</a>
       </li><li>Chapter 9
       </li><li><a href="Repetition.html">← Repetition</a>
     </li></ul>
   </div>
+
   <div class="article">
     <p>Aside from the predefined commands in the NodeBox <a href="Reference">reference</a> you can
     also define your own custom commands. Creating a command is a design strategy in which you
-    re-use certain actions or pieces of your script.
-    </p><p><span class="media"><img alt="" height="509" src="media/templating1.jpg" width="652"/></span>
-    </p><p>For example, in the above example all the actions to draw a flower (ten red-pinkish ovals
+    re-use certain actions or pieces of your script.</p>
+    <p><span class="media"><img alt="" height="509" src="media/templating1.jpg" width="652"/></span></p>
+    <p>For example, in the above example all the actions to draw a flower (ten red-pinkish ovals
     connected by lines) are grouped in a handy flower() command. This command can then be called
     one time, a hundred times, or a thousand times. We only need to define the actions to draw a
     flower <strong>once</strong>. If we want to modify the way a flower is drawn, we only need to
-    modify the code <strong>at one location</strong>.
-    </p><p>Defining your own commands is like composing your own <strong>toolbox</strong>, with a set
-    of tools that you can apply to your creations over and over.<br/>
-    </p><h2>Command definition<br/></h2>
-    <p>As a simple example I've defined my own <em>header()</em> command below:
-    </p><pre class="python"><span class="kw">def</span> <span class="red">header</span><span class="s">(</span>txt, x, y<span class="s">)</span>:
+    modify the code <strong>at one location</strong>.</p>
+    <p>Defining your own commands is like composing your own <strong>toolbox</strong>, with a set
+    of tools that you can apply to your creations over and over.<br/></p>
+    <h2>Command definition</h2>
+
+    <p>As a simple example I've defined my own <em>header()</em> command below:</p>
+    <pre><span class="kw">def</span> <span class="red">header</span><span class="s">(</span>txt, x, y<span class="s">)</span>:
   <span class="kw">fill</span><span class="s">(</span><span class="s">1</span>, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span>
   <span class="kw">font</span><span class="s">(</span><span class="str">"Dolly-Bold"</span>, <span class="s">18</span><span class="s">)</span>
-  <span class="kw">text</span><span class="s">(</span>txt, x, y<span class="s">)</span>
-</pre>
+  <span class="kw">text</span><span class="s">(</span>txt, x, y<span class="s">)</span></pre>
+
+
     <p>The definition of a command starts with <strong>def</strong>, followed by the name of the
     command (pick a relevant name), and a list of <em>parameters</em>. Don't forget the colon at
     the end of the line - this tells NodeBox that the intented statements below are what the
-    command does.
-    </p><p><u>Naming conventions:</u>
-    </p><ul>
+    command does.</p>
+    <p><u>Naming conventions:</u></p>
+    <ul>
       <li>Use a simple and relevant word that describes what the command does.
       </li><li>Use <span class="inline_code">lower_case_with_underscores</span> (except for essential
       commands like <span class="inline_code">imagesize</span>).
@@ -45,39 +52,45 @@
       <span class="inline_code">is_big</span>, ...
       </li><li>Commands that <em>change and return</em> a value use a verb: <span class="inline_code">adjust_contrast</span>, <span class="inline_code">strip_tags</span>, ...<br/>
     </li></ul>
+
     <h2>Parameters</h2>
+
     <p>Command definitions are not executed by themselves: you are instead teaching NodeBox
     something, for example, what a header is. Command definitions need to be <em>called</em> from
     somewhere else in the script. This is where parameters come in: notice how the definition of
     <em>header()</em> uses a <em>txt</em>, a <em>x</em>, and a <em>y</em> parameter. Theses are
     used like <a href="Variables.html">variables</a> inside the definition. Once the command is
-    called, you supply real values for <em>txt</em>, <em>x</em> and <em>y</em>.
-    </p><pre class="python">header<span class="s">(</span><span class="str">"Templating"</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
-</pre>
+    called, you supply real values for <em>txt</em>, <em>x</em> and <em>y</em>.</p>
+    <pre>header<span class="s">(</span><span class="str">"Templating"</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span></pre>
+
+
     <p>NodeBox would now execute all of the code in the <em>header()</em> definition, with
-    <em>txt</em> being "Templating", <em>x</em> being 20, and <em>y</em> being 40.
-    </p><h2>Return value</h2>
+    <em>txt</em> being "Templating", <em>x</em> being 20, and <em>y</em> being 40.</p>
+    <h2>Return value</h2>
+
     <p>You may have noticed that some commands in NodeBox have a return value that you can store in
     a variable. For example, <em>textheight(txt, w)</em> returns the height of a paragraph
-    displaying <em>txt</em> with a width of <em>w</em>.
-    </p><pre class="python"><span class="kw">def</span> <span class="red">paragraph</span><span class="s">(</span>txt, x, y, w<span class="s">)</span>:
+    displaying <em>txt</em> with a width of <em>w</em>.</p>
+    <pre><span class="kw">def</span> <span class="red">paragraph</span><span class="s">(</span>txt, x, y, w<span class="s">)</span>:
   <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
   <span class="kw">font</span><span class="s">(</span><span class="str">"Dolly-Roman"</span>, <span class="s">14</span><span class="s">)</span>
   <span class="kw">text</span><span class="s">(</span>txt, x, y, w<span class="s">)</span>
-  <span class="kw">return</span> <span class="kw">textheight</span><span class="s">(</span>txt, w<span class="s">)</span>
-</pre>
+  <span class="kw">return</span> <span class="kw">textheight</span><span class="s">(</span>txt, w<span class="s">)</span></pre>
+
+
     <p>The <strong>return</strong> statement inside a definition returns a value. This can be any
-    number of things, a number, a <a href="Strings.html">string</a>, a <a href="Lists.html">list</a>. The return statement always comes last inside the definition.
-    </p><h2>Example</h2>
+    number of things, a number, a <a href="Strings.html">string</a>, a <a href="Lists.html">list</a>. The return statement always comes last inside the definition.</p>
+    <h2>Example</h2>
+
     <p>In the example below, we put two identical scripts next to each other, one using plain
     top-to-bottom scripting and one using templates. The first script is in fact less code, but
     imagine it would draw not two but twenty paragraphs... then you would have to define fonts and
     colors over and over again, and probably end up feeling like a robot trying to explain
-    something to another robot.
-    </p><p>Moreover, changing the header color or the horizontal margin is much easier in the second
+    something to another robot.</p>
+    <p>Moreover, changing the header color or the horizontal margin is much easier in the second
     script because we have to do it only once: by changing the code in the <em>header()</em>
-    definition or by changing the value of the <em>x</em> variable.
-    </p><p> 
+    definition or by changing the value of the <em>x</em> variable.</p>
+    <p> 
     <table border="0">
       <tbody>
         <tr>
@@ -89,7 +102,7 @@
           The same script with templates.
         </td></tr><tr>
           <td>
-            <pre class="python">
+            <pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">1</span>, <span class="s">0</span>, <span class="s">0.25</span><span class="s">)</span>
 <span class="kw">font</span><span class="s">(</span><span class="str">"Dolly-Bold"</span>, <span class="s">14</span><span class="s">)</span>
 txt = <span class="str">"Without templating"</span>
@@ -108,10 +121,10 @@ txt = <span class="str">"Messy"</span>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">font</span><span class="s">(</span><span class="str">"Dolly-Roman"</span>, <span class="s">14</span><span class="s">)</span>
 txt = <span class="str">"This makes your script...."</span>
-<span class="kw">text</span><span class="s">(</span>txt, <span class="s">20</span>, <span class="s">140</span>, <span class="s">200</span><span class="s">)</span>
-</pre>
+<span class="kw">text</span><span class="s">(</span>txt, <span class="s">20</span>, <span class="s">140</span>, <span class="s">200</span><span class="s">)</span></pre>
+
           </td><td>
-            <pre class="python">
+            <pre>
 <span class="kw">def</span> <span class="red">header</span><span class="s">(</span>txt, x, y<span class="s">)</span>:
     <span class="kw">fill</span><span class="s">(</span><span class="s">1</span>, <span class="s">0</span>, <span class="s">0.25</span><span class="s">)</span>
     <span class="kw">font</span><span class="s">(</span><span class="str">"Dolly-Bold"</span>, <span class="s">14</span><span class="s">)</span>
@@ -134,8 +147,9 @@ y += paragraph<span class="s">(</span>txt, x, y, w<span class="s">)</span> + <sp
  
 y += header<span class="s">(</span><span class="str">"Clean"</span>, x, y<span class="s">)</span>
 txt = <span class="str">"This keeps your script..."</span>
-paragraph<span class="s">(</span>txt, x, y, w<span class="s">)</span>
-</pre>
-          </td></tr></tbody></table>
-  </p></div>
+paragraph<span class="s">(</span>txt, x, y, w<span class="s">)</span></pre>
+
+          </td></tr></tbody></table></p>
+  </div>
+
 </body></html>

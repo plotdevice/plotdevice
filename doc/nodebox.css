@@ -55,11 +55,11 @@ iframe { border: 0; }
 
 /* Code */
 pre { margin: 0; }
-pre.python { background:#eaeada; border: 1px solid #ddd; color: #555; padding: 2px 5px 2px 5px; }
+pre { background:#eaeada; border: 1px solid #ddd; color: #555; padding: 2px 5px 2px 5px; }
 ul+pre { margin-top: 10px; }
 td pre { margin-top: 5px; margin-bottom: 5px; }
-pre+pre { margin-top: 5px; background:red;}
-pre.python { margin: 10px 0 10px 0; }
+pre+pre { margin-top: 5px;}
+pre { margin: 10px 0 10px 0; }
 code.box { background:#eaeada; color:#665; border: 1px solid #ddd;}
 
 /* Syntax colors */
@@ -301,7 +301,7 @@ a.noexternal { background-image:none !important; padding-right: 0; }
   margin-bottom:13px;
 }
 
-.article .definition .row pre.python{
+.article .definition .row pre{
   margin-top:0;
 }
 

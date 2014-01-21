@@ -1,23 +1,29 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Libraries: Database</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+
     <h3>Database</h3>
   </div>
+
   <div class="article">
     <h2>Description</h2>
+
     <p>The NodeBox Database library offers a very easy way to store data and browse through it. The
     commands are simple and straightforward (no knowledge of SQL is needed) but the
     database-capabilities limited. The library builds upon <a href="http://pysqlite.org">PySQLite</a>, and the data itself is stored in a portable SQLite
     database. This means the database is just another file in your project folder that you can copy
-    and redistribute along with your NodeBox-scripts.
-    </p><p>If you need a viewer application for the SQLite database you can download the free <a href="http://sqlitebrowser.sourceforge.net/">SQLite Database Browser</a> and bundle it with your
+    and redistribute along with your NodeBox-scripts.</p>
+    <p>If you need a viewer application for the SQLite database you can download the free <a href="http://sqlitebrowser.sourceforge.net/">SQLite Database Browser</a> and bundle it with your
     project. There's also a <a href="https://addons.mozilla.org/en-US/firefox/addon/5817">Firefox
-    extension</a>.<br/>
-    </p><h2>Download</h2>
+    extension</a>.<br/></p>
+    <h2>Download</h2>
+
     <table border="0">
       <tbody>
         <tr>
@@ -25,7 +31,9 @@
           </td><td><a href="http://nodebox.net/code/data/media/database-ppc.zip">PowerPC</a> | <a href="http://nodebox.net/code/data/media/database-intel.zip">Intel</a> (140KB)<br/>
           <i>Last updated for NodeBox 1.9.2<br/></i><i>Author: Tom De Smedt</i><br/>
         </td></tr></tbody></table>
+
     <h2>Documentation</h2>
+
     <ul>
       <li><a href="#load">How to get the library up and running</a>
       </li><li><a href="#createdatabase">Creating a database</a>
@@ -37,128 +45,150 @@
       </li><li><a href="#xml">Exporting the database to XML</a>
       </li><li><a href="#sql">Executing raw SQL queries</a><br/>
     </li></ul>
-    <p> 
-    </p><hr/>
+
+    <p> </p>
+    <hr/>
+
     <h2><a id="load" name="load" title="load"></a>How to get the library up and running</h2>
+
     <p>Put the downloaded <i>database</i> folder in <i>~/Library/Application Support/NodeBox/</i>
     or in the same folder as your script so NodeBox can find the library. Then import the library
-    in your script:<br/>
-    </p><pre class="python">database = <span class="kw">ximport</span><span class="s">(</span><span class="str">"database"</span><span class="s">)</span>
-</pre><br/>
+    in your script:<br/></p>
+    <pre>database = <span class="kw">ximport</span><span class="s">(</span><span class="str">"database"</span><span class="s">)</span></pre>
+<br/>
     <br/>
     <hr/>
+
     <h2><a id="createdatabase" name="createdatabase" title="createdatabase"></a>Creating a
     database</h2>
-    <pre class="python">db = database.<span class="s">create</span><span class="s">(</span>name, overwrite=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <pre class="python">db = database.<span class="s">connect</span><span class="s">(</span>name<span class="s">)</span>
-</pre>
+    <pre>db = database.<span class="s">create</span><span class="s">(</span>name, overwrite=<span class="kw">True</span><span class="s">)</span></pre>
+
+    <pre>db = database.<span class="s">connect</span><span class="s">(</span>name<span class="s">)</span></pre>
+
+
     <p>The <i>create()</i> command starts a new database file with the given <i>name</i> in the
     current folder (a <i>.db</i> file extension is added automatically). The <i>connect()</i>
     command opens an existing database file. Both commands return a <i>Database</i> object which
-    you can use in your script to create tables or retrieve data.
-    </p><p> 
-    </p><hr/>
+    you can use in your script to create tables or retrieve data.</p>
+    <p> </p>
+    <hr/>
+
     <h2><a id="createtable" name="createtable" title="createtable"></a>Creating tables and
     indexes</h2>
+
     <p>A database is organised in tables that hold different records of data. For example, a
     <i>persons</i> table could store <i>name</i>, <i>address</i>, <i>age</i> and <i>email</i>
-    information for each person in the table.
-    </p><pre class="python">db.<span class="s">create_table</span><span class="s">(</span>name, fields=<span class="s">[</span><span class="s">]</span>, key=<span class="str">"id"</span><span class="s">)</span>
-</pre>
-    <pre class="python">db.<span class="s">create_index</span><span class="s">(</span>table, field, unique=<span class="kw">False</span>, ascending=<span class="kw">True</span><span class="s">)</span>
-</pre>
+    information for each person in the table.</p>
+    <pre>db.<span class="s">create_table</span><span class="s">(</span>name, fields=<span class="s">[</span><span class="s">]</span>, key=<span class="str">"id"</span><span class="s">)</span></pre>
+
+    <pre>db.<span class="s">create_index</span><span class="s">(</span>table, field, unique=<span class="kw">False</span>, ascending=<span class="kw">True</span><span class="s">)</span></pre>
+
+
     <p>Once you have a <i>Database</i> object returned from <i>create()</i> or <i>open()</i> you
     can use its <i>create_table()</i> method to start new tables. You need to supply a <i>name</i>
     for the table and list of <i>fields</i> in the table. The optional <i>key</i> parameter defines
-    the name of an id-field. An id stores a unique number for each record of data.
-    </p><p>Aside from the id-field you can create your own indexes on a table with the
+    the name of an id-field. An id stores a unique number for each record of data.</p>
+    <p>Aside from the id-field you can create your own indexes on a table with the
     <i>create_index()</i> method. Indexes in a database makes things go faster: if we are going to
     perform a lot of search queries on the <i>age</i> field in the <i>persons</i> table it's a good
     idea to index that field. When you define the <i>unique</i> parameter as <i>True</i>, the
-    indexed field must be a <b>unique value for each record</b> in the table.
-    </p><pre class="python">book = database.<span class="s">create</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
+    indexed field must be a <b>unique value for each record</b> in the table.</p>
+    <pre>book = database.<span class="s">create</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
 book.<span class="s">create_table</span><span class="s">(</span><span class="str">"pages"</span>, <span class="s">[</span><span class="str">"title"</span>, <span class="str">"text"</span>, <span class="str">"image"</span>, <span class="str">"pagenumber"</span><span class="s">]</span><span class="s">)</span>
-book.<span class="s">create_index</span><span class="s">(</span><span class="str">"pages"</span>, <span class="str">"title"</span><span class="s">)</span>
-</pre>
-    <p>Find out what tables are in the database with a for-loop:
-    </p><pre class="python"><span class="kw">for</span> table <span class="kw">in</span> book:
+book.<span class="s">create_index</span><span class="s">(</span><span class="str">"pages"</span>, <span class="str">"title"</span><span class="s">)</span></pre>
+
+
+    <p>Find out what tables are in the database with a for-loop:</p>
+    <pre><span class="kw">for</span> table <span class="kw">in</span> book:
     <span class="kw">print</span> table.<span class="s">name</span>
-&gt;&gt;&gt; pages
-</pre>
-    <p> 
-    </p><hr/>
+&gt;&gt;&gt; pages</pre>
+
+
+    <p> </p>
+    <hr/>
+
     <h2><a id="retrievetable" name="retrievetable" title="retrievetable"></a>Retrieving a table
     from the database</h2>
+
     <p>Once the database has one or more tables you can retrieve these as <i>Table</i> objects.
-    <i>Table</i> objects have various methods to add, edit and retrieve data.
-    </p><pre class="python">table = db.<span class="s">table_name</span>
-</pre>
-    <pre class="python">table =  db<span class="s">[</span>table_name<span class="s">]</span>
-</pre>
+    <i>Table</i> objects have various methods to add, edit and retrieve data.</p>
+    <pre>table = db.<span class="s">table_name</span></pre>
+
+    <pre>table =  db<span class="s">[</span>table_name<span class="s">]</span></pre>
+
+
     <p>You can retrieve a <i>Table</i> object by accessing the database as a list or by directly
-    typing the name of the table after the dot:
-    </p><pre class="python">book = database.<span class="s">create</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
+    typing the name of the table after the dot:</p>
+    <pre>book = database.<span class="s">create</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
 book.<span class="s">create_table</span><span class="s">(</span><span class="str">"pages"</span>, <span class="s">[</span><span class="str">"title"</span>, <span class="str">"text"</span>, <span class="str">"image"</span>, <span class="str">"pagenumber"</span><span class="s">]</span><span class="s">)</span>
 pages = book<span class="s">[</span><span class="str">"pages"</span><span class="s">]</span>
-pages = book.<span class="s">pages</span> <span class="grey"># this is even easier</span>
-</pre>
-    <p> 
-    </p><hr/>
+pages = book.<span class="s">pages</span> <span class="grey"># this is even easier</span></pre>
+
+
+    <p> </p>
+    <hr/>
+
     <h2><a id="addedit" name="addedit" title="addedit"></a>Adding and editing records of data in a
     table</h2>
-    <pre class="python">table.<span class="s">append</span><span class="s">(</span>fields<span class="s">)</span>
-</pre>
-    <pre class="python">table.<span class="s">edit</span><span class="s">(</span><span class="s">id</span>, fields<span class="s">)</span>
-</pre>
-    <pre class="python">table.<span class="s">remove</span><span class="s">(</span><span class="s">id</span>, <span class="s">operator</span>=<span class="str">"="</span>, key=<span class="kw">None</span><span class="s">)</span>
-</pre>
+    <pre>table.<span class="s">append</span><span class="s">(</span>fields<span class="s">)</span></pre>
+
+    <pre>table.<span class="s">edit</span><span class="s">(</span><span class="s">id</span>, fields<span class="s">)</span></pre>
+
+    <pre>table.<span class="s">remove</span><span class="s">(</span><span class="s">id</span>, <span class="s">operator</span>=<span class="str">"="</span>, key=<span class="kw">None</span><span class="s">)</span></pre>
+
+
     <p>The <i>append()</i> method adds a new record with the given <i>fields</i> of data to the
     table. The <i>fields</i> can be a dictionary or a number of parameters specifying the names of
     the fields and the data in each field. You don't need to supply a value for the id-field - this
-    is a number that is automatically incremented.
-    </p><pre class="python">book = database.<span class="s">create</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
+    is a number that is automatically incremented.</p>
+    <pre>book = database.<span class="s">create</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
 book.<span class="s">create_table</span><span class="s">(</span><span class="str">"pages"</span>, <span class="s">[</span><span class="str">"title"</span>, <span class="str">"text"</span>, <span class="str">"image"</span>, <span class="str">"pagenumber"</span><span class="s">]</span><span class="s">)</span>
 book.<span class="s">pages</span>.<span class="s">append</span><span class="s">(</span><span class="s">{</span>
     <span class="str">"title"</span>: <span class="str">"Chapter One"</span>, 
     <span class="str">"text"</span>: <span class="str">"A short intro on databases in NodeBox"</span>, 
     <span class="str">"pagenumber"</span>: <span class="s">2</span>
-<span class="s">}</span><span class="s">)</span>
-</pre>
-    <p>Here we used a dictionary to supply the field data, but named parameters are even easier:
-    </p><pre class="python">book.<span class="s">pages</span>.<span class="s">append</span><span class="s">(</span>title=<span class="str">"Chapter Two"</span>, <span class="kw">text</span>=<span class="str">""</span>, pagenumber=<span class="s">3</span><span class="s">)</span>
-</pre>
+<span class="s">}</span><span class="s">)</span></pre>
+
+
+    <p>Here we used a dictionary to supply the field data, but named parameters are even easier:</p>
+    <pre>book.<span class="s">pages</span>.<span class="s">append</span><span class="s">(</span>title=<span class="str">"Chapter Two"</span>, <span class="kw">text</span>=<span class="str">""</span>, pagenumber=<span class="s">3</span><span class="s">)</span></pre>
+
+
     <p>Editing works in a similar way. You can supply fields to update as a dictionary or as named
-    parameters:<br/>
-    </p><pre class="python">book.<span class="s">pages</span>.<span class="s">edit</span><span class="s">(</span><span class="s">1</span>, pagenumber=<span class="s">1</span><span class="s">)</span>
-</pre>
+    parameters:<br/></p>
+    <pre>book.<span class="s">pages</span>.<span class="s">edit</span><span class="s">(</span><span class="s">1</span>, pagenumber=<span class="s">1</span><span class="s">)</span></pre>
+
+
     <p>The <i>remove()</i> method deletes the record with the given <i>id</i> from the table. The
     <i>operator</i> parameter allows you to specify a different comparison than =, &gt;= or &lt;
-    for example. The <i>key</i> parameter allows you to specify a different field to search in.
-    </p><pre class="python"><span class="grey"># Delete the record with id 2: </span>
+    for example. The <i>key</i> parameter allows you to specify a different field to search in.</p>
+    <pre><span class="grey"># Delete the record with id 2: </span>
 book.<span class="s">pages</span>.<span class="s">remove</span><span class="s">(</span><span class="s">2</span><span class="s">)</span>
 <span class="grey"># Delete all pages beyond the first:</span>
-book.<span class="s">pages</span>.<span class="s">delete</span><span class="s">(</span><span class="s">2</span>, comparison=<span class="str">"&gt;="</span>, key=<span class="str">"pagenumber"</span><span class="s">)</span>
-</pre>
-    <p>Find out what fields are in the table with the <i>fields()</i> method:
-    </p><pre class="python"><span class="kw">print</span> book.<span class="s">pages</span>.<span class="s">fields</span><span class="s">(</span><span class="s">)</span>
-&gt;&gt;&gt; <span class="s">[</span><span class="str">"id"</span>, <span class="str">"title"</span>, <span class="str">"text"</span>, <span class="str">"image"</span>, <span class="str">"pagenumber"</span><span class="s">]</span>
-</pre>
+book.<span class="s">pages</span>.<span class="s">delete</span><span class="s">(</span><span class="s">2</span>, comparison=<span class="str">"&gt;="</span>, key=<span class="str">"pagenumber"</span><span class="s">)</span></pre>
+
+
+    <p>Find out what fields are in the table with the <i>fields()</i> method:</p>
+    <pre><span class="kw">print</span> book.<span class="s">pages</span>.<span class="s">fields</span><span class="s">(</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="str">"id"</span>, <span class="str">"title"</span>, <span class="str">"text"</span>, <span class="str">"image"</span>, <span class="str">"pagenumber"</span><span class="s">]</span></pre>
+
     <hr/>
+
     <h2><a id="find" name="find" title="find"></a>Retrieving data from a table</h2>
-    <pre class="python">table.<span class="s">find</span><span class="s">(</span>q, <span class="s">operator</span>=<span class="str">"="</span>, fields=<span class="str">"*"</span>, key=<span class="kw">None</span><span class="s">)</span>
-</pre>
-    <pre class="python">table.<span class="s">all</span><span class="s">(</span><span class="s">)</span>
-</pre>
+    <pre>table.<span class="s">find</span><span class="s">(</span>q, <span class="s">operator</span>=<span class="str">"="</span>, fields=<span class="str">"*"</span>, key=<span class="kw">None</span><span class="s">)</span></pre>
+
+    <pre>table.<span class="s">all</span><span class="s">(</span><span class="s">)</span></pre>
+
+
     <p>The <i>find()</i> method returns records from the table that match a given query. By
     default, it returns the record whose id is equal to <i>q</i>. The <i>operator</i> parameter
     allows you to specify a different comparison. The <i>key</i> parameter allows you to specify a
-    different field to search in.
-    </p><p>By default, all fields from the record are returned, or you can define a list of field names
-    in the <i>fields</i> parameter.<br/>
-    </p><p>The <i>q</i> parameter can contain an asterisk (*) at the start or at the end as a
-    <b>wildcard</b> character.
-    </p><pre class="python">book = db.<span class="s">connect</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
+    different field to search in.</p>
+    <p>By default, all fields from the record are returned, or you can define a list of field names
+    in the <i>fields</i> parameter.<br/></p>
+    <p>The <i>q</i> parameter can contain an asterisk (*) at the start or at the end as a
+    <b>wildcard</b> character.</p>
+    <pre>book = db.<span class="s">connect</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
 r = book.<span class="s">pages</span>.<span class="s">find</span><span class="s">(</span><span class="str">"Chapter *"</span> key=<span class="str">"title"</span><span class="s">)</span>
 <span class="kw">for</span> record <span class="kw">in</span> r:
   <span class="kw">print</span> record
@@ -170,50 +200,60 @@ r = book.<span class="s">pages</span>.<span class="s">find</span><span class="s"
 <span class="kw">for</span> <span class="s">id</span>, title, <span class="kw">text</span>, <span class="kw">image</span>, pagenumber  <span class="kw">in</span> r:
   <span class="kw">print</span> title
 &gt;&gt;&gt; Chapter One
-&gt;&gt;&gt; Chapter Two
-</pre>
-    <p>You can also query fields directly. For example, this does exactly the same as above:
-    </p><pre class="python">r = book.<span class="s">pages</span>.<span class="s">title</span><span class="s">(</span><span class="str">"Chapter *"</span><span class="s">)</span>
-</pre>
-    <p>To get all the records in the table you can use the <i>all()</i> method.
-    </p><p> 
-    </p><hr/>
+&gt;&gt;&gt; Chapter Two</pre>
+
+
+    <p>You can also query fields directly. For example, this does exactly the same as above:</p>
+    <pre>r = book.<span class="s">pages</span>.<span class="s">title</span><span class="s">(</span><span class="str">"Chapter *"</span><span class="s">)</span></pre>
+
+
+    <p>To get all the records in the table you can use the <i>all()</i> method.</p>
+    <p> </p>
+    <hr/>
+
     <h2><a id="batch" name="batch" title="batch"></a>Batch transactions</h2>
+
     <p>It's faster to write records to disk in batches of, say, 10 000, than writing each record to
     the database file individually. Automated scripts that process a lot of records can make use of
-    the <i>commit()</i> method for a significant speed increase:
-    </p><pre class="python">db.<span class="s">commit</span><span class="s">(</span>each=<span class="s">0</span><span class="s">)</span>
-</pre>
+    the <i>commit()</i> method for a significant speed increase:</p>
+    <pre>db.<span class="s">commit</span><span class="s">(</span>each=<span class="s">0</span><span class="s">)</span></pre>
+
+
     <p>When called without parameters, commits any pending transactions. A transaction is a call to
     a table's <i>append()</i>, <i>edit()</i> or <i>remove()</i> method, or the database's
-    <i>sql()</i> method.
-    </p><p>When commit() is called with the <i>each</i> parameter, sets the batch size. By default,
+    <i>sql()</i> method.</p>
+    <p>When commit() is called with the <i>each</i> parameter, sets the batch size. By default,
     transactions are committed instantly, but <b>if you plan to add a lot of records at the same
-    time it's better to commit them in batch</b>.
-    </p><p>Do not forget to <b>close the database</b> when you are done with it. This commits any
-    pending transaction that have not yet been written to disk.
-    </p><pre class="python">db.<span class="s">close</span><span class="s">(</span><span class="s">)</span>
-</pre>
+    time it's better to commit them in batch</b>.</p>
+    <p>Do not forget to <b>close the database</b> when you are done with it. This commits any
+    pending transaction that have not yet been written to disk.</p>
+    <pre>db.<span class="s">close</span><span class="s">(</span><span class="s">)</span></pre>
+
     <hr/>
+
     <h2><a id="xml" name="xml" title="xml"></a>Exporting the database to XML</h2>
-    <pre class="python">db.<span class="s">dump</span><span class="s">(</span><span class="s">)</span>
-</pre>
+    <pre>db.<span class="s">dump</span><span class="s">(</span><span class="s">)</span></pre>
+
+
     <p>The <i>dump()</i> method generates an <a href="http://en.wikipedia.org/wiki/Xml">XML</a>-file with all the database's contents. XML is a
     standardized format to hold data. It's pretty human readable and supported by many
-    applications.
-    </p><pre class="python">book = database.<span class="s">connect</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
+    applications.</p>
+    <pre>book = database.<span class="s">connect</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
 book.<span class="s">dump</span><span class="s">(</span><span class="s">)</span>
 <span class="s">xml</span> = <span class="kw">open</span><span class="s">(</span><span class="str">"book.xml"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">print</span> <span class="s">xml</span>
-</pre>
+<span class="kw">print</span> <span class="s">xml</span></pre>
+
     <hr/>
+
     <h2><a id="sql" name="sql" title="sql"></a>Executing raw SQL queries</h2>
-    <pre class="python">db.<span class="s">sql</span><span class="s">(</span>query<span class="s">)</span>
-</pre>
+    <pre>db.<span class="s">sql</span><span class="s">(</span>query<span class="s">)</span></pre>
+
+
     <p>Executes an <a href="http://en.wikipedia.org/wiki/Sql">SQL</a>-statement on the database.
-    For example, a SELECT-query returns the list of records found.
-    </p><pre class="python">book = db.<span class="s">connect</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
-book.<span class="s">sql</span><span class="s">(</span><span class="str">"select * from pages"</span><span class="s">)</span>
-</pre>
+    For example, a SELECT-query returns the list of records found.</p>
+    <pre>book = db.<span class="s">connect</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
+book.<span class="s">sql</span><span class="s">(</span><span class="str">"select * from pages"</span><span class="s">)</span></pre>
+
   </div>
+
 </body></html>

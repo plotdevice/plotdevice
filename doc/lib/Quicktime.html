@@ -1,18 +1,24 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Libraries: Quicktime</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+
     <h3>Quicktime</h3>
   </div>
+
   <div class="article">
     <h2>Description</h2>
+
     <p>The NodeBox Quicktime library adds movie (and audio) support to NodeBox. You can use it to
     grab image frames from a movie and display them in NodeBox or manipulate them with <a href="Core_Image.html">Core Image</a>. Furthermore, you can use the library to play audio in
-    NodeBox, make audio selections, and control the volume and rate from your script.<br/>
-    </p><h2>Download</h2>
+    NodeBox, make audio selections, and control the volume and rate from your script.<br/></p>
+    <h2>Download</h2>
+
     <table border="0">
       <tbody>
         <tr>
@@ -21,7 +27,9 @@
           (1.5MB)<br/>
           <em>Last updated for NodeBox 1.9.0<br/></em><em>Author: Tom De Smedt</em><br/>
         </td></tr></tbody></table>
+
     <h2>Documentation</h2>
+
     <ul>
       <li><a href="#load">How to get the library up and running</a>
       </li><li><a href="#movie">Movie frames</a>
@@ -29,22 +37,28 @@
       </li><li><a href="#audio">Audio playback</a>
       </li><li><a href="#selections">Copying and pasting selections</a>
     </li></ul>
-    <p> 
-    </p><hr/>
+
+    <p> </p>
+    <hr/>
+
     <h2><a id="load" name="load" title="load"></a>How to get the library up and running</h2>
+
     <p>Put the downloaded <em>quicktime</em> folder in <em>~/Library/Application
     Support/NodeBox/</em> or in the same folder as your script so NodeBox can find the library.
-    Then import the library in your script:<br/>
-    </p><pre class="python">quicktime = <span class="kw">ximport</span><span class="s">(</span><span class="str">"quicktime"</span><span class="s">)</span>
-</pre> 
+    Then import the library in your script:<br/></p>
+    <pre>quicktime = <span class="kw">ximport</span><span class="s">(</span><span class="str">"quicktime"</span><span class="s">)</span></pre>
+ 
     <hr/>
+
     <h2><a id="movie" name="movie" title="movie"></a>Movie frames</h2>
+
     <p>The library has a <em>movie()</em> command that opens a movie from a given location. You can
-    open any type of movie you could normally open with the Quicktime application:
-    </p><pre class="python">movie<span class="s">(</span>path<span class="s">)</span>
-</pre>
-    <p>The command returns a <em>Movie</em> object with a number of useful properties:
-    </p><ul>
+    open any type of movie you could normally open with the Quicktime application:</p>
+    <pre>movie<span class="s">(</span>path<span class="s">)</span></pre>
+
+
+    <p>The command returns a <em>Movie</em> object with a number of useful properties:</p>
+    <ul>
       <li><em>movie.path</em>: the source path.<br/>
       </li><li><em>movie.duration</em>: the length of the movie in seconds.
       </li><li><em>movie.has_video</em>: <em>True</em> if the movie has a video track.
@@ -52,39 +66,44 @@
       </li><li><em>movie.width</em>: the width of the movie in pixels.
       </li><li><em>movie.height</em>: the height of the movie in pixels.
     </li></ul>
-    <p>The returned movie object has two methods to grab image frames:
-    </p><pre class="python">movie.<span class="s">frame</span><span class="s">(</span><span class="s">time</span><span class="s">)</span>
-</pre>
-    <pre class="python">movie.<span class="s">frames</span><span class="s">(</span>n=<span class="s">10</span>, start=<span class="s">0</span>, stop=<span class="kw">None</span><span class="s">)</span>
-</pre>
+
+    <p>The returned movie object has two methods to grab image frames:</p>
+    <pre>movie.<span class="s">frame</span><span class="s">(</span><span class="s">time</span><span class="s">)</span></pre>
+
+    <pre>movie.<span class="s">frames</span><span class="s">(</span>n=<span class="s">10</span>, start=<span class="s">0</span>, stop=<span class="kw">None</span><span class="s">)</span></pre>
+
+
     <p>The <em>frame()</em> method returns a <em>MovieFrame</em> object with image data at the
     given <em>time</em> (in seconds) in the movie. The <em>frames()</em> command returns a list of
     n <em>MovieFrame</em> objects between the given <em>start</em> and stop <em>time</em> (in
-    seconds). The start and stop parameters are optional.
-    </p><p>A movie frame object has the following properties:
-    </p><ul>
+    seconds). The start and stop parameters are optional.</p>
+    <p>A movie frame object has the following properties:</p>
+    <ul>
       <li><em>frame.data</em>: the image data which can be passed to the <a href="../ref/Primitives.html#image()">image()</a> command.<br/>
       </li><li><em>frame.time</em>: the time where the frame appears in the movie.
       </li><li><em>frame.src</em>: the source path of the movie to which this frame belongs.
       </li><li><em>frame.width</em>
       </li><li><em>frame.height</em>
     </li></ul>
+
     <p>Displaying frames in NodeBox is really very easy. The following script loops through all the
-    frames in an animation:
-    </p><pre class="python">movie = quicktime.<span class="s">movie</span><span class="s">(</span><span class="str">"twisted_world.mp4"</span><span class="s">)</span>
+    frames in an animation:</p>
+    <pre>movie = quicktime.<span class="s">movie</span><span class="s">(</span><span class="str">"twisted_world.mp4"</span><span class="s">)</span>
 <span class="kw">size</span><span class="s">(</span>movie.<span class="s">width</span>, movie.<span class="s">height</span><span class="s">)</span>
 <span class="kw">speed</span><span class="s">(</span><span class="s">50</span><span class="s">)</span>
 <span class="kw">def</span> <span class="rose">draw</span><span class="s">(</span><span class="s">)</span>:
     frame = movie.<span class="s">frame</span><span class="s">(</span>FRAME*<span class="s">0.1</span><span class="s">)</span>
-    <span class="kw">image</span><span class="s">(</span><span class="kw">None</span>, <span class="s">0</span>, <span class="s">0</span>, data=frame.<span class="s">data</span>, width=frame.<span class="s">width</span><span class="s">)</span>
-</pre> 
+    <span class="kw">image</span><span class="s">(</span><span class="kw">None</span>, <span class="s">0</span>, <span class="s">0</span>, data=frame.<span class="s">data</span>, width=frame.<span class="s">width</span><span class="s">)</span></pre>
+ 
     <hr/>
+
     <h2><a id="coreimage" name="coreimage" title="coreimage"></a>Movie frames in Core Image</h2>
+
     <p>The Quicktime library and the Core Image library play really well together. A MovieFrame
     object returned from <em>movie.frame()</em> or the <em>movie.frames()</em> list can be passed
     to the <em>canvas.layer()</em> method in Core Image. Then you can apply all sorts of filters
-    and effects to it:
-    </p><pre class="python">coreimage = <span class="kw">ximport</span><span class="s">(</span><span class="str">"coreimage"</span><span class="s">)</span>
+    and effects to it:</p>
+    <pre>coreimage = <span class="kw">ximport</span><span class="s">(</span><span class="str">"coreimage"</span><span class="s">)</span>
 quicktime = <span class="kw">ximport</span><span class="s">(</span><span class="str">"quicktime"</span><span class="s">)</span>
  
 movie = quicktime.<span class="s">movie</span><span class="s">(</span><span class="str">"twisted_world.mp4"</span><span class="s">)</span>
@@ -93,17 +112,21 @@ frame = movie.<span class="s">frame</span><span class="s">(</span><span class="s
 canvas = coreimage.<span class="s">canvas</span><span class="s">(</span>movie.<span class="s">width</span>, movie.<span class="s">height</span><span class="s">)</span>
 l = canvas.<span class="s">layer</span><span class="s">(</span>frame<span class="s">)</span>
 l.<span class="s">filter_zoomblur</span><span class="s">(</span><span class="s">)</span>
-canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
-</pre> 
-    <p> 
-    </p><hr/>
+canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></pre>
+ 
+
+    <p> </p>
+    <hr/>
+
     <h2><a id="audio" name="audio" title="audio"></a>Audio playback</h2>
+
     <p>The library has an <em>audio()</em> command that opens a sound from a given location. You
-    can open any type of sound you could normally open with the Quicktime application:
-    </p><pre class="python">audio<span class="s">(</span>path<span class="s">)</span>
-</pre>
-    <p>The command returns an <em>Audio</em> object with a number of useful properties:
-    </p><ul>
+    can open any type of sound you could normally open with the Quicktime application:</p>
+    <pre>audio<span class="s">(</span>path<span class="s">)</span></pre>
+
+
+    <p>The command returns an <em>Audio</em> object with a number of useful properties:</p>
+    <ul>
       <li><em>audio.path</em>: the source path.<br/>
       </li><li><em>audio</em><em>.duration</em>: the length of the movie in seconds.
       </li><li><em>audio</em><em>.has_video</em>: <em>True</em> if the movie has a video track.
@@ -114,39 +137,45 @@ canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</spa
       5.0).
       </li><li><em>audio.paused</em>: True when the audio playback is paused, but not stopped.
     </li></ul>
-    <p>The returned audio object also has a number of methods that control the playback:
-    </p><pre class="python">audio.<span class="s">play</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <pre class="python">audio.<span class="s">stop</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <pre class="python">audio.<span class="s">pause</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <pre class="python">audio.<span class="s">is_playing</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <pre class="python">audio.<span class="kw">reset</span><span class="s">(</span><span class="s">)</span>
-</pre>
+
+    <p>The returned audio object also has a number of methods that control the playback:</p>
+    <pre>audio.<span class="s">play</span><span class="s">(</span><span class="s">)</span></pre>
+
+    <pre>audio.<span class="s">stop</span><span class="s">(</span><span class="s">)</span></pre>
+
+    <pre>audio.<span class="s">pause</span><span class="s">(</span><span class="s">)</span></pre>
+
+    <pre>audio.<span class="s">is_playing</span><span class="s">(</span><span class="s">)</span></pre>
+
+    <pre>audio.<span class="kw">reset</span><span class="s">(</span><span class="s">)</span></pre>
+
+
     <p>The <em>audio.is_playing()</em> method returns <em>True</em> as long as the sound is playing
     in NodeBox. While the sound is playing you can adjust its <em>volume</em> and <em>rate</em>. It
     will begin playing at its <em>time</em> property. The <em>audio.reset()</em> method resets the
-    volume, time and rate to the default values (0, 0 and 1 respectively).
-    </p><p>The library does not have any functionality to export audio from NodeBox.
-    </p><p> 
-    </p><hr/>
+    volume, time and rate to the default values (0, 0 and 1 respectively).</p>
+    <p>The library does not have any functionality to export audio from NodeBox.</p>
+    <p> </p>
+    <hr/>
+
     <h2><a id="selections" name="selections" title="selections"></a>Copying and pasting
     selections</h2>
+
     <p>Sometimes you may want to work with a selection of a movie instead of the whole movie, or a
     one-second sample of the audio that you are going to loop. For these purposes, both the
-    <em>Movie</em> and the <em>Audio</em> object have a selection() method:
-    </p><pre class="python">media.<span class="s">selection</span><span class="s">(</span>start=<span class="s">0</span>, stop=<span class="kw">None</span><span class="s">)</span>
-</pre>
+    <em>Movie</em> and the <em>Audio</em> object have a selection() method:</p>
+    <pre>media.<span class="s">selection</span><span class="s">(</span>start=<span class="s">0</span>, stop=<span class="kw">None</span><span class="s">)</span></pre>
+
+
     <p>It returns a new movie or a new audio object ranged between the given <em>start</em> and
-    <em>stop</em> time. For example, here's how to create a short loop from an audio fragment:<br/>
-    </p><pre class="python">audio = quicktime.<span class="s">audio</span><span class="s">(</span><span class="str">"modron_cube.mp3"</span><span class="s">)</span>
+    <em>stop</em> time. For example, here's how to create a short loop from an audio fragment:<br/></p>
+    <pre>audio = quicktime.<span class="s">audio</span><span class="s">(</span><span class="str">"modron_cube.mp3"</span><span class="s">)</span>
 audio = audio.<span class="s">selection</span><span class="s">(</span>start=<span class="s">0</span>, stop=<span class="s">7.2</span><span class="s">)</span>
 <span class="kw">speed</span><span class="s">(</span><span class="s">100</span><span class="s">)</span>
 <span class="kw">def</span> <span class="rose">draw</span><span class="s">(</span><span class="s">)</span>:
     <span class="kw">if</span> <span class="kw">not</span> audio.<span class="s">is_playing</span>:
-        audio.<span class="s">play</span><span class="s">(</span><span class="s">)</span>
-</pre>
+        audio.<span class="s">play</span><span class="s">(</span><span class="s">)</span></pre>
+
   </div>
+
 </body></html>

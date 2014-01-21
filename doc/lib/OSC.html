@@ -1,20 +1,25 @@
 <!DOCTYPE html>
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Libraries: OSC</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+
     <h3>OSC</h3>
   </div>
+
   <div class="article">
     <p>OSC (<i>OpenSoundControl</i>, <a href="http://opensoundcontrol.org/">http://opensoundcontrol.org/</a>) is a communication protocol
     which allows you to share (typically music performance) data in real-time over a network. OSC
     is similar to MIDI and allows musical instruments, controllers and multimedia devices but also
     software to communicate via a standard home or studio network (TCP/IP, ethernet) or via the
-    internet.
-    </p><p>Some NodeBox libraries already use OSC (<a href="WiiNode.html">wiiNode</a>, <a href="TUIO.html">Reactivivision</a>) but we thought it might be useful as a library in itself.
-    </p><h2>Download</h2>
+    internet.</p>
+    <p>Some NodeBox libraries already use OSC (<a href="WiiNode.html">wiiNode</a>, <a href="TUIO.html">Reactivivision</a>) but we thought it might be useful as a library in itself.</p>
+    <h2>Download</h2>
+
     <table border="0" height="74" width="550">
       <tbody>
         <tr>
@@ -25,59 +30,74 @@
           Authors: Daniel Holth, Clinton McChesney, <a href="http://www.ixi-software.net/">ixi-software</a></i><br/>
           <i>Examples</i>/<i>EMG</i>
         </td></tr></tbody></table>
+
     <h2>Documentation</h2>
+
     <ul>
       <li><a href="#howto">How to get the library up and running</a>
       </li><li><a href="#sending">Sending data</a>
       </li><li><a href="#recieve">Recieving data</a>
       </li><li><a href="#alot">A lot of possibilities</a>
     </li></ul>
+
     <h2><a name="howto" title="howto"></a>How to get the library running</h2>
+
     <p>Put the "osc" library folder in the download in the same folder as your script so NodeBox
-    can find the library. You can also put it in ~/Library/Application Support/NodeBox/.
-    </p><pre class="python">osc = <span class="kw">ximport</span><span class="s">(</span><span class="str">"osc"</span><span class="s">)</span>
-</pre>
+    can find the library. You can also put it in ~/Library/Application Support/NodeBox/.</p>
+    <pre>osc = <span class="kw">ximport</span><span class="s">(</span><span class="str">"osc"</span><span class="s">)</span></pre>
+
+
     <p><span class="small_text">Have a look at test.py to see a simple <i>'pure-data talks to
-    nodebox and back'</i> example.</span><br/>
-    </p><h2><a name="sending" title="sending"></a>Sending data</h2>
+    nodebox and back'</i> example.</span><br/></p>
+    <h2><a name="sending" title="sending"></a>Sending data</h2>
+
     <p>Before sending or receiving data OSC should be initialized. The process initializes the
-    callback manager and the out-socket.
-    </p><pre class="python">osc.<span class="s">init</span><span class="s">(</span><span class="s">)</span>
-</pre>
+    callback manager and the out-socket.</p>
+    <pre>osc.<span class="s">init</span><span class="s">(</span><span class="s">)</span></pre>
+
+
     <p>Sending data over osc has different possibilities. You can send a single message or a bundle
-    that stores several messages.<br/>
-    </p><p>A single message:
-    </p><pre class="python">message = osc.<span class="s">createBinaryMsg</span><span class="s">(</span>osc_address, data_list<span class="s">)</span>
-</pre>
-    <pre class="python">osc.<span class="s">sendOSC</span><span class="s">(</span>message, ip_address, port<span class="s">)</span>
-</pre>
-    <p>or in one line:
-    </p><pre class="python">osc.<span class="s">sendMsg</span><span class="s">(</span>osc_address, data_list, ip_address, port<span class="s">)</span>
-</pre>
+    that stores several messages.<br/></p>
+    <p>A single message:</p>
+    <pre>message = osc.<span class="s">createBinaryMsg</span><span class="s">(</span>osc_address, data_list<span class="s">)</span></pre>
+
+    <pre>osc.<span class="s">sendOSC</span><span class="s">(</span>message, ip_address, port<span class="s">)</span></pre>
+
+
+    <p>or in one line:</p>
+    <pre>osc.<span class="s">sendMsg</span><span class="s">(</span>osc_address, data_list, ip_address, port<span class="s">)</span></pre>
+
+
     <p>As for bundles, the above can be used because the data sent is a <a href="../tut/Lists.html">list</a> that can contain more than one message. There are options to
-    create and send a bundle in a different way.
-    </p><p>Methods for making a bundle, adding items to it and sending it:
-    </p><pre class="python">bundle = osc.<span class="s">createBundle</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <pre class="python">osc.<span class="s">appendToBundle</span><span class="s">(</span>bundle, osc_address, data_list<span class="s">)</span>
-</pre>
-    <pre class="python">osc.<span class="s">sendBundle</span><span class="s">(</span>bundle, ip_address, port<span class="s">)</span>
-</pre>
+    create and send a bundle in a different way.</p>
+    <p>Methods for making a bundle, adding items to it and sending it:</p>
+    <pre>bundle = osc.<span class="s">createBundle</span><span class="s">(</span><span class="s">)</span></pre>
+
+    <pre>osc.<span class="s">appendToBundle</span><span class="s">(</span>bundle, osc_address, data_list<span class="s">)</span></pre>
+
+    <pre>osc.<span class="s">sendBundle</span><span class="s">(</span>bundle, ip_address, port<span class="s">)</span></pre>
+
+
     <h2><a name="recieve" title="recieve"></a>Receiving data</h2>
-    <p>To receive data over OSC an in-socket should be set up.<br/>
-    </p><pre class="python">in_socket = osc.<span class="s">createListener</span><span class="s">(</span>ip_address, port<span class="s">)</span>
-</pre>
-    <p>The in-socket can be used to get incoming OSC to send it to the callback manager.
-    </p><pre class="python">osc.<span class="s">getOSC</span><span class="s">(</span>in_socket<span class="s">)</span>
-</pre>
-    <p>A final command can bind OSC addresses with commands in the sketch.<br/>
-    </p><pre class="python">osc.<span class="s">bind</span><span class="s">(</span>nodebox_command, osc_address<span class="s">)</span>
-</pre>
+
+    <p>To receive data over OSC an in-socket should be set up.<br/></p>
+    <pre>in_socket = osc.<span class="s">createListener</span><span class="s">(</span>ip_address, port<span class="s">)</span></pre>
+
+
+    <p>The in-socket can be used to get incoming OSC to send it to the callback manager.</p>
+    <pre>osc.<span class="s">getOSC</span><span class="s">(</span>in_socket<span class="s">)</span></pre>
+
+
+    <p>A final command can bind OSC addresses with commands in the sketch.<br/></p>
+    <pre>osc.<span class="s">bind</span><span class="s">(</span>nodebox_command, osc_address<span class="s">)</span></pre>
+
+
     <h2><a name="alot" title="alot"></a>A lot of possibilities</h2>
+
     <p>OSC has been implemented in a variety of software. The library contains a few examples in
     <a href="http://puredata.info/">Pure Data</a> and <a href="http://www.processing.org/">Processing</a> but many other applications like Max, Quartz
-    Composer, Bidule have OSC-implementations. For a full list go to <a href="http://opensoundcontrol.org/implementations">this page</a>.
-    </p><ul>
+    Composer, Bidule have OSC-implementations. For a full list go to <a href="http://opensoundcontrol.org/implementations">this page</a>.</p>
+    <ul>
       <li><i>test.py + test.pd</i> illustrates the two way communication between NodeBox and Pure
       Data.<br/>
       </li><li><i>fft.py + fft.pd</i> visualizes the sound spectrum. (talk to it)
@@ -86,11 +106,13 @@
       FFT-animation.<br/>
       The code needed for the Processing script is at the bottom within the source.<br/>
     </li></ul>
+
     <p><br/>
     <object height="344" width="425">
       <param name="movie" value="http://www.youtube.com/v/FMpcVEEmuns"></param>
       <param name="allowFullScreen" value="true"></param>
       <embed height="344" src="http://www.youtube.com/v/FMpcVEEmuns" width="425"></embed>
-    </object>
-  </p></div>
+    </object></p>
+  </div>
+
 </body></html>

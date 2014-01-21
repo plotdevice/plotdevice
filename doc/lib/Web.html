@@ -1,30 +1,36 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Libraries: Web</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+
     <h3>Web</h3>
   </div>
+
   <div class="article">
     <h2>Description</h2>
+
     <p>The NodeBox Web library offers a collection of services to retrieve content from the
     internet. You can use the library to query <a href="http://www.yahoo.com">Yahoo!</a> for links,
     images, news and spelling suggestions, to read RSS and Atom newsfeeds, to retrieve articles
     from <a href="http://en.wikipedia.org">Wikipedia</a>, to collect quality images from <a href="http://www.morguefile.com">morgueFile</a> or <a href="http://www.flickr.com">Flickr</a>, to
     get color themes from <a href="http://kuler.adobe.com">kuler</a> or <a href="http://www.colr.org">Colr</a>, to browse through HTML documents, to clean up HTML, to validate
-    URL's, to create GIF images from math equations using <a href="http://www.forkosh.com/mimetex.html">mimeTeX</a>, to get ironic word definitions from <a href="http://www.urbandictionary.com">Urban Dictionary</a>.<br/>
-    </p><p>The NodeBox Web library works with a caching mechanism that stores things you download from
+    URL's, to create GIF images from math equations using <a href="http://www.forkosh.com/mimetex.html">mimeTeX</a>, to get ironic word definitions from <a href="http://www.urbandictionary.com">Urban Dictionary</a>.<br/></p>
+    <p>The NodeBox Web library works with a caching mechanism that stores things you download from
     the web, so they can be retrieved faster the next time. Many of the services also work
     asynchronously. This means you can use the library in an animation that keeps on running while
-    new content is downloaded in the background.
-    </p><p>The library bundles Leonard Richardson's <a href="http://www.crummy.com/software/BeautifulSoup/">Beautiful Soup</a> to parse HTM, Mark Pilgrim's
+    new content is downloaded in the background.</p>
+    <p>The library bundles Leonard Richardson's <a href="http://www.crummy.com/software/BeautifulSoup/">Beautiful Soup</a> to parse HTM, Mark Pilgrim's
     <a href="http://www.feedparser.org/">Universal Feed Parser</a> for newsfeeds, a connection to
     John Forkosh's mathTeX server (thanks Cedric Foellmi), Leif K-Brooks entity replace algorithm,
     <a href="http://code.google.com/p/simplejson/">simplejson</a>, and patches for Debian from the
-    people at <a href="http://indywiki.sourceforge.net/">Indywiki</a>.<br/>
-    </p><h2>Download</h2>
+    people at <a href="http://indywiki.sourceforge.net/">Indywiki</a>.<br/></p>
+    <h2>Download</h2>
+
     <table border="0">
       <tbody>
         <tr>
@@ -33,7 +39,9 @@
           <i>Last updated for NodeBox 1.9.4.6<br/>
           Licensed under GPL<br/></i><i>Author: Tom De Smedt</i><br/>
         </td></tr></tbody></table>
+
     <h2>Documentation</h2>
+
     <ul>
       <li><a href="#library">How to get the library up and running</a>
       </li><li><a href="#validation">Validating web content</a><br/>
@@ -57,94 +65,105 @@
       </li><li><a href="#cache">Clearing the cache</a>
       </li><li><a href="#json">Reading JSON</a><br/>
     </li></ul>
-    <p> 
-    </p><hr/>
+
+    <p> </p>
+    <hr/>
+
     <h2><a id="library" name="library" title="library"></a>How to get the library up and
     running</h2>
+
     <p>Put the <i>web</i> library folder in the same folder as your script so NodeBox can find the
     library.<br/>
-    You can also put it in <i>~/Library/Application Support/NodeBox/.</i>
-    </p><pre class="python">web = <span class="kw">ximport</span><span class="s">(</span><span class="str">"web"</span><span class="s">)</span>
-</pre>
-    <p><span class="small_text">Outside of NodeBox you can also just do <i>import web</i>.</span>
-    </p><p><span class="grey_box">Proxy servers</span> <br/>
-    </p><p>If you are behind a proxy server the library may not be able to connect to the internet.<br/>
-    In that case you need to inform the library with the <i>set_proxy()</i> command:
-    </p><pre class="python">web.<span class="s">set_proxy</span><span class="s">(</span><span class="str">"https://www.myproxyserver.com:80"</span>, <span class="s">type</span>=<span class="str">"https"</span><span class="s">)</span>
-</pre>                                          
+    You can also put it in <i>~/Library/Application Support/NodeBox/.</i></p>
+    <pre>web = <span class="kw">ximport</span><span class="s">(</span><span class="str">"web"</span><span class="s">)</span></pre>
+
+
+    <p><span class="small_text">Outside of NodeBox you can also just do <i>import web</i>.</span></p>
+    <p><span class="grey_box">Proxy servers</span> <br/></p>
+    <p>If you are behind a proxy server the library may not be able to connect to the internet.<br/>
+    In that case you need to inform the library with the <i>set_proxy()</i> command:</p>
+    <pre>web.<span class="s">set_proxy</span><span class="s">(</span><span class="str">"https://www.myproxyserver.com:80"</span>, <span class="s">type</span>=<span class="str">"https"</span><span class="s">)</span></pre>
+                                          
     <hr/>
+
     <h2><a id="validation" name="validation" title="validation"></a>Validating web content</h2>
+
     <p>Web content is accessed with a URL, the address you use to connect to a place on the
     internet. The library has a number of commands to find out what type of content (e.g. web page,
-    image, ...) is associated with a given URL.
-    </p><p>The most basic command, <i>is_url()</i> checks whether a given string is a grammatically
+    image, ...) is associated with a given URL.</p>
+    <p>The most basic command, <i>is_url()</i> checks whether a given string is a grammatically
     correct URL (e.g. <i>http://nodebox.net</i> but not <i>htp://nodebox.net</i>). It takes a wait
     parameter indicating the number of seconds after which the library should stop connecting to
-    the internet and give up.
-    </p><pre class="python">web.<span class="s">is_url</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span>
-</pre>
+    the internet and give up.</p>
+    <pre>web.<span class="s">is_url</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span></pre>
+
+
     <p>Even if a URL is valid, it might not refer to actual content on the internet. We can check
-    if a URL exists with the <i>not_found()</i> command:
-    </p><pre class="python">web.<span class="s">url</span>.<span class="s">not_found</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span>
-</pre>
+    if a URL exists with the <i>not_found()</i> command:</p>
+    <pre>web.<span class="s">url</span>.<span class="s">not_found</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span></pre>
+
+
     <p>The following commands are useful to find out what content is associated with the URL. We
     can discern between HTML web pages which we can parse with <i><a href="#html">page.parse()</a></i>, newsfeeds which we can parse with <i><a href="#newsfeed">newsfeed.parse()</a></i>, images, audio and video etc. which we can download with
-    <i><a href="#url">url.retrieve()</a></i>.
-    </p><pre class="python">web.<span class="s">url</span>.<span class="s">is_webpage</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">url</span>.<span class="s">is_stylesheet</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">url</span>.<span class="s">is_plaintext</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">url</span>.<span class="s">is_pdf</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">url</span>.<span class="s">is_newsfeed</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">url</span>.<span class="s">is_image</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">url</span>.<span class="s">is_audio</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">url</span>.<span class="s">is_video</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">url</span>.<span class="s">is_archive</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span>
-</pre>                                                        
+    <i><a href="#url">url.retrieve()</a></i>.</p>
+    <pre>web.<span class="s">url</span>.<span class="s">is_webpage</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">url</span>.<span class="s">is_stylesheet</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">url</span>.<span class="s">is_plaintext</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">url</span>.<span class="s">is_pdf</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">url</span>.<span class="s">is_newsfeed</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">url</span>.<span class="s">is_image</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">url</span>.<span class="s">is_audio</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">url</span>.<span class="s">is_video</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">url</span>.<span class="s">is_archive</span><span class="s">(</span>url, wait=<span class="s">10</span><span class="s">)</span></pre>
+                                                        
     <hr/>
+
     <h2><a id="url" name="url" title="url"></a>Working with URL's</h2>
+
     <p>A <a href="http://en.wikipedia.org/wiki/Url">URL</a> is  the address you use to connect
     to a page on the internet, for example: <i>http://nodebox.net</i>. The NodeBox Web library can
     do three different things with a URL: download the content associated with it, parse it (find
     out which parts make up the URL) and construct it from scratch (a simple way to create a URL
-    with HTTP GET or HTTP POST data).
-    </p><pre class="python">web.<span class="s">download</span><span class="s">(</span>url, wait=<span class="s">60</span>, cache=<span class="kw">None</span>, <span class="s">type</span>=<span class="str">".html"</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">save</span><span class="s">(</span>url, path=<span class="str">""</span>, wait=<span class="s">60</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">url</span>.<span class="s">retrieve</span><span class="s">(</span>url, wait=<span class="s">60</span>, asynchronous=<span class="kw">False</span>, cache=<span class="kw">None</span>, <span class="s">type</span>=<span class="str">".html"</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">url</span>.<span class="s">parse</span><span class="s">(</span>url<span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">url</span>.<span class="s">create</span><span class="s">(</span>url=<span class="str">""</span>, method=<span class="str">"get"</span><span class="s">)</span>
-</pre>
+    with HTTP GET or HTTP POST data).</p>
+    <pre>web.<span class="s">download</span><span class="s">(</span>url, wait=<span class="s">60</span>, cache=<span class="kw">None</span>, <span class="s">type</span>=<span class="str">".html"</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">save</span><span class="s">(</span>url, path=<span class="str">""</span>, wait=<span class="s">60</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">url</span>.<span class="s">retrieve</span><span class="s">(</span>url, wait=<span class="s">60</span>, asynchronous=<span class="kw">False</span>, cache=<span class="kw">None</span>, <span class="s">type</span>=<span class="str">".html"</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">url</span>.<span class="s">parse</span><span class="s">(</span>url<span class="s">)</span></pre>
+
+    <pre>web.<span class="s">url</span>.<span class="s">create</span><span class="s">(</span>url=<span class="str">""</span>, method=<span class="str">"get"</span><span class="s">)</span></pre>
+
+
     <p>The <i>download()</i> command returns the content associated with the given web address. The
     command has an optional parameter <i>wait</i> that determines <b>how long to wait for a
-    download</b>. If the time is exceeded, the download is aborted.
-    </p><p>The last two parameters can be used to <b>cache downloaded content locally</b>, so it
+    download</b>. If the time is exceeded, the download is aborted.</p>
+    <p>The last two parameters can be used to <b>cache downloaded content locally</b>, so it
     doesn't have to downloaded again in the future. The <i>cache</i> parameter is a string with the
     name of a subfolder in /cache where to store content. The <i>type</i> parameter is the file
-    extension of the downloaded content.
-    </p><p>The <i>save()</i> command stores the URL's content at the given local path. If no path is
+    extension of the downloaded content.</p>
+    <p>The <i>save()</i> command stores the URL's content at the given local path. If no path is
     given it will attempt to extract a filename from the URL and store that in the current working
-    directory. The path to the saved file is returned.
-    </p><p>The Web library also has easier ways to deal with specific web content like HTML
+    directory. The path to the saved file is returned.</p>
+    <p>The Web library also has easier ways to deal with specific web content like HTML
     (<i>page.parse()</i> command) or Wikipedia articles (<i>wikipedia.search()</i> command) for
-    example.
-    </p><p>The <i>download()</i> command is actually an alias of the <i>url.retrieve()</i> command.
+    example.</p>
+    <p>The <i>download()</i> command is actually an alias of the <i>url.retrieve()</i> command.
     This command has an additional <i>asynchronous</i> parameter useful to <b>download stuff in the
     background</b> while an animation keeps on running. We'll see about asynchronous downloads
     later on. The <i>url.retrieve()</i> command returns an object with a <i>data</i> property
     containing a string with the downloaded content. If you don't need anything that complicated
-    just use the easy <i>download()</i> command:<br/>
-    </p><pre class="python"><span class="grey"># Download an image from the NodeBox Gallery.</span>
+    just use the easy <i>download()</i> command:<br/></p>
+    <pre><span class="grey"># Download an image from the NodeBox Gallery.</span>
 url = <span class="str">"http://nodebox.net/code/data/media/twisted-final.jpg"</span>
 img = web.<span class="s">download</span><span class="s">(</span>url<span class="s">)</span>
  
@@ -154,13 +173,14 @@ img = web.<span class="s">download</span><span class="s">(</span>url<span class=
 <span class="grey"># Write the image data to a file.</span>
 <span class="s">file</span> = <span class="kw">open</span><span class="s">(</span><span class="str">"twisted.jpg"</span>, <span class="str">"w"</span><span class="s">)</span>
 <span class="s">file</span>.<span class="s">write</span><span class="s">(</span>img<span class="s">)</span>
-<span class="s">file</span>.<span class="s">close</span><span class="s">(</span><span class="s">)</span>
-</pre>        
-    <p><img alt="web_url1" height="390" src="media/web_url1.jpg" width="550"/><br/>
-    </p><p> 
-    </p><p>The <i>url.parse()</i> command splits a given url into its components. The returned objects
-    has the following properties:
-    </p><ul>
+<span class="s">file</span>.<span class="s">close</span><span class="s">(</span><span class="s">)</span></pre>
+        
+
+    <p><img alt="web_url1" height="390" src="media/web_url1.jpg" width="550"/><br/></p>
+    <p> </p>
+    <p>The <i>url.parse()</i> command splits a given url into its components. The returned objects
+    has the following properties:</p>
+    <ul>
       <li><i>url.protocol</i>: the type of internet service, usually <i>http</i>
       </li><li><i>url.domain</i>: the domain name, for example, <i>nodebox.net</i><br/>
       </li><li><i>url.username</i>: a username for a secure connection<br/>
@@ -173,31 +193,35 @@ img = web.<span class="s">download</span><span class="s">(</span>url<span class=
       }</i><br/>
       </li><li><i>url.method</i>: the query string method either "get" or "post"<br/>
     </li></ul>
+
     <p>In the same way the <i>url.create()</i> command returns an object with these properties.
     This command is useful to, for example, construct URL's with a POST query and pass that to
-    <i>url.retrieve()</i> or <i>page.parse()</i>.
-    </p><p>For example. this script retrieves the first 10 forum pages from NodeBox:
-    </p><pre class="python">url = web.<span class="s">url</span>.<span class="s">create</span><span class="s">(</span><span class="str">"http://nodebox.net/code/index.php/Share"</span><span class="s">)</span>
+    <i>url.retrieve()</i> or <i>page.parse()</i>.</p>
+    <p>For example. this script retrieves the first 10 forum pages from NodeBox:</p>
+    <pre>url = web.<span class="s">url</span>.<span class="s">create</span><span class="s">(</span><span class="str">"http://nodebox.net/code/index.php/Share"</span><span class="s">)</span>
 url.<span class="s">query</span><span class="s">[</span><span class="str">"p"</span><span class="s">]</span> = <span class="s">1</span>
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>:
     <span class="kw">print</span> web.<span class="s">url</span>.<span class="s">retrieve</span><span class="s">(</span>url<span class="s">)</span>.<span class="s">data</span>
-    url.<span class="s">query</span><span class="s">[</span><span class="str">"p"</span><span class="s">]</span> += <span class="s">1</span>
-</pre>                                                                         
+    url.<span class="s">query</span><span class="s">[</span><span class="str">"p"</span><span class="s">]</span> += <span class="s">1</span></pre>
+                                                                         
     <hr/>
+
     <h2><a id="html" name="html" title="html"></a>Working with HTML</h2>
+
     <p>The NodeBox Web library uses Leonard Richardson's <a href="http://www.crummy.com/software/BeautifulSoup/">Beautiful Soup</a> to parse HTML content. This
     means you can search and loop through all the tags in the HTML. For example, you might want to
     download a HTML page from the internet, find all the links in it and then download all those
     links. Or find all the image tags in the source and then retrieve all those images with
-    <i>download()</i>.
-    </p><p>The <i>page.parse()</i> command takes a URL as input and returns a Beautiful Soup object.
+    <i>download()</i>.</p>
+    <p>The <i>page.parse()</i> command takes a URL as input and returns a Beautiful Soup object.
     The optional <i>cached</i> parameter determines if downloaded pages should be cached locally
-    for faster retrieval.
-    </p><pre class="python">web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span>url, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
+    for faster retrieval.</p>
+    <pre>web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span>url, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+
     <p>You can get the meta information in the HTML header with the returned object's <i>title</i>,
-    <i>description</i> and <i>keywords</i> properties:
-    </p><pre class="python">html = web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span><span class="str">"http://nodebox.net"</span><span class="s">)</span>
+    <i>description</i> and <i>keywords</i> properties:</p>
+    <pre>html = web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span><span class="str">"http://nodebox.net"</span><span class="s">)</span>
  
 <span class="kw">print</span> html.<span class="s">description</span>
 &gt;&gt;&gt; NodeBox <span class="kw">is</span> a Mac OS X application that lets you create 2D visuals 
@@ -206,12 +230,13 @@ url.<span class="s">query</span><span class="s">[</span><span class="str">"p"</s
 &gt;&gt;&gt; <span class="kw">and</span> well-documented.
  
 <span class="kw">print</span> html.<span class="s">keywords</span>
-&gt;&gt;&gt;<span class="s">[</span>u<span class="str">'NodeBox'</span>, u<span class="str">'Home'</span><span class="s">]</span>
-</pre>
+&gt;&gt;&gt;<span class="s">[</span>u<span class="str">'NodeBox'</span>, u<span class="str">'Home'</span><span class="s">]</span></pre>
+
+
     <p>You can easily get all the links in the HTML with the <i>links()</i> method. It takes an
     optional <i>external</i> parameter which when True, returns only links to other
-    domains/websites.
-    </p><pre class="python">html = web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span><span class="str">"http://nodebox.net/code/index.php/About"</span><span class="s">)</span>
+    domains/websites.</p>
+    <pre>html = web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span><span class="str">"http://nodebox.net/code/index.php/About"</span><span class="s">)</span>
 <span class="kw">print</span> html.<span class="s">links</span><span class="s">(</span><span class="s">)</span>
 &gt;&gt;&gt; <span class="s">[</span>u<span class="str">'http://research.nodebox.net'</span>, 
 &gt;&gt;&gt;  u<span class="str">'http://www.opensource.org/licenses/mit-license.php'</span>, 
@@ -220,11 +245,12 @@ url.<span class="s">query</span><span class="s">[</span><span class="str">"p"</s
 &gt;&gt;&gt;  u<span class="str">'http://processing.org'</span>, 
 &gt;&gt;&gt;  u<span class="str">'http://www.freelists.org/archives/the_posthumans/'</span>, 
 &gt;&gt;&gt;  u<span class="str">'http://research.nodebox.net'</span>
-&gt;&gt;&gt; <span class="s">]</span>
-</pre>
+&gt;&gt;&gt; <span class="s">]</span></pre>
+
+
     <p>The <i>find_all()</i> method returns a list of specific tags. The <i>find()</i> method just
-    returns the first tag:
-    </p><pre class="python">html = web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span><span class="str">"http://nodebox.net/"</span><span class="s">)</span>
+    returns the first tag:</p>
+    <pre>html = web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span><span class="str">"http://nodebox.net/"</span><span class="s">)</span>
  
 <span class="kw">print</span> html.<span class="s">find</span><span class="s">(</span><span class="str">"title"</span><span class="s">)</span>.<span class="s">string</span>
 &gt;&gt;&gt; NodeBox | Home
@@ -250,13 +276,14 @@ content = html.<span class="s">find</span><span class="s">(</span><span class="s
 &gt;&gt;&gt; 
 &gt;&gt;&gt; * Interactivity
 &gt;&gt;&gt; * Stop running scripts by hitting command-dot.
-&gt;&gt;&gt; ...
-</pre>
-    <p>As you can see you can supply tag names or attribute-value pairs to the find methods.
-    </p><p>The <i>find()</i> and <i>find_all()</i> methods return <i>Tag</i> objects that each have
+&gt;&gt;&gt; ...</pre>
+
+
+    <p>As you can see you can supply tag names or attribute-value pairs to the find methods.</p>
+    <p>The <i>find()</i> and <i>find_all()</i> methods return <i>Tag</i> objects that each have
     <i>find()</i> and <i>find_all()</i> too. Alternatively, you can also find tags more directly,
-    for example: <i>html.body.p</i> returns a list of all p tags.
-    </p><pre class="python">html = web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span><span class="str">"http://nodebox.net/"</span><span class="s">)</span>
+    for example: <i>html.body.p</i> returns a list of all p tags.</p>
+    <pre>html = web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span><span class="str">"http://nodebox.net/"</span><span class="s">)</span>
  
 <span class="s">list</span> = html.<span class="s">find</span><span class="s">(</span><span class="s">id</span>=<span class="str">"content"</span><span class="s">)</span>.<span class="s">find</span><span class="s">(</span><span class="str">"ul"</span><span class="s">)</span>
 <span class="kw">print</span> web.<span class="s">html</span>.<span class="s">plain</span><span class="s">(</span><span class="s">list</span><span class="s">)</span>
@@ -268,81 +295,88 @@ content = html.<span class="s">find</span><span class="s">(</span><span class="s
  
 <span class="grey"># These statements retrieve exactly the same.</span>
 <span class="s">list</span> = html.<span class="s">body</span><span class="s">(</span><span class="s">id</span>=<span class="str">"content"</span><span class="s">)</span><span class="s">[</span><span class="s">0</span><span class="s">]</span>.<span class="s">ul</span>
-<span class="s">list</span> = html.<span class="s">body</span>.<span class="s">ul</span>
-</pre>
-    <p>If you need to retrieve tags by their CSS classname, use the <i>find_class()</i> method.<br/>
-    </p><p>To get attributes from a tag, address it as a dictionary:
-    </p><pre class="python">html = web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span><span class="str">"http://nodebox.net/"</span><span class="s">)</span>
+<span class="s">list</span> = html.<span class="s">body</span>.<span class="s">ul</span></pre>
+
+
+    <p>If you need to retrieve tags by their CSS classname, use the <i>find_class()</i> method.<br/></p>
+    <p>To get attributes from a tag, address it as a dictionary:</p>
+    <pre>html = web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span><span class="str">"http://nodebox.net/"</span><span class="s">)</span>
 html.<span class="s">body</span>.<span class="s">a</span><span class="s">[</span><span class="str">"href"</span><span class="s">]</span> <span class="grey"># the first link's href attribute</span>
-&gt;&gt;&gt; Home
-</pre>                                                                 
+&gt;&gt;&gt; Home</pre>
+                                                                 
     <hr/>
-    <p>The NodeBox Web library has various commands to clean up HTML.
-    </p><pre class="python"><span class="grey"># Replaces HTML special characters by readable characters.</span>
-web.<span class="s">html</span>.<span class="s">replace_entities</span><span class="s">(</span><span class="s">unicode</span>, placeholder=<span class="str">" "</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="grey"># Removes all tags from HTML except those in the exclude list.</span>
+
+    <p>The NodeBox Web library has various commands to clean up HTML.</p>
+    <pre><span class="grey"># Replaces HTML special characters by readable characters.</span>
+web.<span class="s">html</span>.<span class="s">replace_entities</span><span class="s">(</span><span class="s">unicode</span>, placeholder=<span class="str">" "</span><span class="s">)</span></pre>
+
+    <pre><span class="grey"># Removes all tags from HTML except those in the exclude list.</span>
 web.<span class="s">html</span>.<span class="s">strip_tags</span><span class="s">(</span>html, exclude=<span class="s">[</span><span class="s">]</span>, linebreaks=<span class="kw">False</span>, 
-                    blocks=<span class="str">"<span class="s">\n</span>"</span>, breaks=<span class="str">"<span class="s">\n</span>"</span>, columns=<span class="str">"<span class="s">\n</span>"</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">html</span>.<span class="s">strip_javascript</span><span class="s">(</span>html<span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">html</span>.<span class="s">strip_inline_css</span><span class="s">(</span>html<span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">html</span>.<span class="s">strip_comments</span><span class="s">(</span>html<span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">html</span>.<span class="s">strip_forms</span><span class="s">(</span>html<span class="s">)</span>
-</pre>
-    <pre class="python"><span class="grey"># If there are 10 consecutive spaces, 9 of them are removed.</span>
-web.<span class="s">html</span>.<span class="s">collapse_spaces</span><span class="s">(</span><span class="s">str</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="grey"># Allow only a maximum of max linebreaks to build up.</span>
-web.<span class="s">html</span>.<span class="s">collapse_linebreaks</span><span class="s">(</span><span class="s">str</span>, <span class="s">max</span>=<span class="s">2</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="grey"># Converts tabs to spaces, optionally leaving the left indentation unmodified.</span>
-web.<span class="s">html</span>.<span class="s">collapse_tabs</span><span class="s">(</span><span class="s">str</span>, indent=<span class="kw">False</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="grey"># Combines all of the above.</span>
-web.<span class="s">html</span>.<span class="s">plain</span><span class="s">(</span>html<span class="s">)</span>
-</pre>                                                                                                                            
+                    blocks=<span class="str">"<span class="s">\n</span>"</span>, breaks=<span class="str">"<span class="s">\n</span>"</span>, columns=<span class="str">"<span class="s">\n</span>"</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">html</span>.<span class="s">strip_javascript</span><span class="s">(</span>html<span class="s">)</span></pre>
+
+    <pre>web.<span class="s">html</span>.<span class="s">strip_inline_css</span><span class="s">(</span>html<span class="s">)</span></pre>
+
+    <pre>web.<span class="s">html</span>.<span class="s">strip_comments</span><span class="s">(</span>html<span class="s">)</span></pre>
+
+    <pre>web.<span class="s">html</span>.<span class="s">strip_forms</span><span class="s">(</span>html<span class="s">)</span></pre>
+
+    <pre><span class="grey"># If there are 10 consecutive spaces, 9 of them are removed.</span>
+web.<span class="s">html</span>.<span class="s">collapse_spaces</span><span class="s">(</span><span class="s">str</span><span class="s">)</span></pre>
+
+    <pre><span class="grey"># Allow only a maximum of max linebreaks to build up.</span>
+web.<span class="s">html</span>.<span class="s">collapse_linebreaks</span><span class="s">(</span><span class="s">str</span>, <span class="s">max</span>=<span class="s">2</span><span class="s">)</span></pre>
+
+    <pre><span class="grey"># Converts tabs to spaces, optionally leaving the left indentation unmodified.</span>
+web.<span class="s">html</span>.<span class="s">collapse_tabs</span><span class="s">(</span><span class="s">str</span>, indent=<span class="kw">False</span><span class="s">)</span></pre>
+
+    <pre><span class="grey"># Combines all of the above.</span>
+web.<span class="s">html</span>.<span class="s">plain</span><span class="s">(</span>html<span class="s">)</span></pre>
+                                                                                                                            
     <hr/>
+
     <h2><a id="yahoo" name="yahoo" title="yahoo"></a>Querying Yahoo! for links, images and
     news</h2>
+
     <p>Before you can use the Web library to query the Yahoo! search engine, you need to obtain
-    <b>a license key</b>: <a href="http://developer.yahoo.com/search/">http://developer.yahoo.com/search/</a>
-    </p><p>Click  "get an application ID". Fill out the form and you'll end up with a long string
+    <b>a license key</b>: <a href="http://developer.yahoo.com/search/">http://developer.yahoo.com/search/</a></p>
+    <p>Click  "get an application ID". Fill out the form and you'll end up with a long string
     of numbers and characters which is your Yahoo! license key. It entitles you to 5000 queries a
-    day. Now register your license key in your NodeBox script:<br/>
-    </p><pre class="python">web.<span class="s">yahoo</span>.<span class="s">license_key</span><span class="s">(</span><span class="str">"myID"</span><span class="s">)</span>
+    day. Now register your license key in your NodeBox script:<br/></p>
+    <pre>web.<span class="s">yahoo</span>.<span class="s">license_key</span><span class="s">(</span><span class="str">"myID"</span><span class="s">)</span>
 <span class="kw">print</span> web.<span class="s">yahoo</span>.<span class="s">license_key</span><span class="s">(</span><span class="s">)</span>
-&gt;&gt;&gt; myID
-</pre>
+&gt;&gt;&gt; myID</pre>
+
+
     <p>Note that you can query Yahoo! without setting a license key, in which case you are using a
-    default key that you share with all the other NodeBox users who work with the Web library.
-    </p><p>Use the <i>yahoo.search()</i>, <i>yahoo.search_images()</i> and <i>yahoo.search_news()</i>
-    commands to query Yahoo! for links to relevant webpages/images/news:
-    </p><pre class="python">web.<span class="s">yahoo</span>.<span class="s">search</span><span class="s">(</span>q, start=<span class="s">1</span>, count=<span class="s">10</span>, context=<span class="kw">None</span>, cached=<span class="kw">False</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">yahoo</span>.<span class="s">search_images</span><span class="s">(</span>q, start=<span class="s">1</span>, count=<span class="s">10</span>, cached=<span class="kw">False</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">yahoo</span>.<span class="s">search_news</span><span class="s">(</span>q, start=<span class="s">1</span>, count=<span class="s">10</span>, cached=<span class="kw">False</span><span class="s">)</span>
-</pre>
+    default key that you share with all the other NodeBox users who work with the Web library.</p>
+    <p>Use the <i>yahoo.search()</i>, <i>yahoo.search_images()</i> and <i>yahoo.search_news()</i>
+    commands to query Yahoo! for links to relevant webpages/images/news:</p>
+    <pre>web.<span class="s">yahoo</span>.<span class="s">search</span><span class="s">(</span>q, start=<span class="s">1</span>, count=<span class="s">10</span>, context=<span class="kw">None</span>, cached=<span class="kw">False</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">yahoo</span>.<span class="s">search_images</span><span class="s">(</span>q, start=<span class="s">1</span>, count=<span class="s">10</span>, cached=<span class="kw">False</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">yahoo</span>.<span class="s">search_news</span><span class="s">(</span>q, start=<span class="s">1</span>, count=<span class="s">10</span>, cached=<span class="kw">False</span><span class="s">)</span></pre>
+
+
     <p>The commands take a <i>q</i> query parameter, and optional <i>start</i>, <i>count</i> and
     <i>cached</i> parameters. The <i>start</i> parameter defines the first link to return,
     <i>count</i> defines the total amount of links to return. The <i>cached</i> parameter defines
-    if Yahoo queries are cached locally (so they can be retrieved faster in the future).
-    </p><pre class="python">results = web.<span class="s">yahoo</span>.<span class="s">search</span><span class="s">(</span><span class="str">"nodebox"</span>, start=<span class="s">1</span>, count=<span class="s">5</span>, cached=<span class="kw">False</span><span class="s">)</span>
+    if Yahoo queries are cached locally (so they can be retrieved faster in the future).</p>
+    <pre>results = web.<span class="s">yahoo</span>.<span class="s">search</span><span class="s">(</span><span class="str">"nodebox"</span>, start=<span class="s">1</span>, count=<span class="s">5</span>, cached=<span class="kw">False</span><span class="s">)</span>
 <span class="kw">for</span> item <span class="kw">in</span> results:
     <span class="kw">print</span> item.<span class="s">title</span>
 &gt;&gt;&gt; NodeBox | Home 
 &gt;&gt;&gt; NodeBox | Features 
 &gt;&gt;&gt; visualcomplexity.<span class="s">com</span> | NodeBox 
 &gt;&gt;&gt; NodeBox - Wikipedia, the free encyclopedia 
-&gt;&gt;&gt; Nodebox - SWiK
-</pre>
+&gt;&gt;&gt; Nodebox - SWiK</pre>
+
+
     <p>Each item in the list of results is a <i>YahooResult</i> object with the following
-    properties:
-    </p><ul>
+    properties:</p>
+    <ul>
       <li><i>result.url</i>: the URL of the linked page
       </li><li><i>result.title</i>: the title of the linked page
       </li><li><i>result.description</i>: a short description for the page
@@ -354,19 +388,22 @@ web.<span class="s">html</span>.<span class="s">plain</span><span class="s">(</s
       </li><li><i>result.source</i>: for news items, the source of the article
       </li><li><i>result.language</i>: for news items, the language used<br/>
     </li></ul>
+
     <p>The list of results has a <i>total</i> property containing the total number of results
-    Yahoo! has for your query:
-    </p><pre class="python"><span class="kw">print</span> results.<span class="s">total</span>
-&gt;&gt;&gt; <span class="s">37200</span>
-</pre>                                                                                                                      
+    Yahoo! has for your query:</p>
+    <pre><span class="kw">print</span> results.<span class="s">total</span>
+&gt;&gt;&gt; <span class="s">37200</span></pre>
+                                                                                                                      
     <hr/>
+
     <h2><a id="yahoocontextual" name="yahoocontextual" title="yahoocontextual"></a>Improving Yahoo!
     results with a contextual search</h2>
+
     <p>Suppose you are querying Yahoo! for <i>apple</i>. Most likely Yahoo! will return links to
     pages relating to the Apple Computer company. But perhaps you wanted links to apples as in
     <i>fruit</i>. The <i>yahoo.search()</i> command has an optional <i>context</i> parameter which
-    you can supply a description of what you mean exactly with <i>apple</i>:
-    </p><pre class="python">ctx = <span class="str">''</span><span class="str">'
+    you can supply a description of what you mean exactly with <i>apple</i>:</p>
+    <pre>ctx = <span class="str">''</span><span class="str">'
 The apple tree was perhaps the earliest tree to be cultivated, 
 and apples have remained an important food in all cooler climates. 
 To a greater degree than other tree fruit, except possibly citrus, 
@@ -381,55 +418,65 @@ results = web.<span class="s">yahoo</span>.<span class="s">search</span><span cl
 &gt;&gt;&gt; Apple Core
 &gt;&gt;&gt; Apple - Free Encyclopedia
 &gt;&gt;&gt; Apple : Apple <span class="s">(</span>fruit<span class="s">)</span>
-&gt;&gt;&gt; About the Apple -- Fruit
-</pre>
-    <p> 
-    </p><hr/>
+&gt;&gt;&gt; About the Apple -- Fruit</pre>
+
+
+    <p> </p>
+    <hr/>
+
     <h2><a id="yahoospelling" name="yahoospelling" title="yahoospelling"></a>Using Yahoo! to
-    suggest spelling corrections<br/></h2>
+    suggest spelling corrections</h2>
+
     <p>To get spelling suggestions from Yahoo, use the <i>yahoo.suggest_spelling()</i> command. It
-    returns a list of suggested spelling corrections:
-    </p><pre class="python">corrections = web.<span class="s">yahoo</span>.<span class="s">suggest_spelling</span> <span class="s">(</span><span class="str">"amazoon"</span>, cached=<span class="kw">False</span><span class="s">)</span>
+    returns a list of suggested spelling corrections:</p>
+    <pre>corrections = web.<span class="s">yahoo</span>.<span class="s">suggest_spelling</span> <span class="s">(</span><span class="str">"amazoon"</span>, cached=<span class="kw">False</span><span class="s">)</span>
 <span class="kw">print</span> corrections
-&gt;&gt;&gt; <span class="s">[</span><span class="str">'amazon'</span><span class="s">]</span>
-</pre>     
-    <p>               
-    </p><hr/>
+&gt;&gt;&gt; <span class="s">[</span><span class="str">'amazon'</span><span class="s">]</span></pre>
+     
+
+    <p>               </p>
+    <hr/>
+
     <h2><a id="yahoosort" name="yahoosort" title="yahoosort"></a>Using Yahoo! to sort
     associatively</h2>
+
     <p>You can use Yahoo! to sort concepts according to association. Is <i>sky</i> more
-    <i>green</i>, <i>red</i> or <i>blue</i>?
-    </p><pre class="python">colors = <span class="s">[</span><span class="str">"green"</span>, <span class="str">"blue"</span>, <span class="str">"red"</span><span class="s">]</span>
+    <i>green</i>, <i>red</i> or <i>blue</i>?</p>
+    <pre>colors = <span class="s">[</span><span class="str">"green"</span>, <span class="str">"blue"</span>, <span class="str">"red"</span><span class="s">]</span>
 <span class="s">sorted</span> = web.<span class="s">yahoo</span>.<span class="s">sort</span><span class="s">(</span>colors, <span class="str">"sky"</span>, strict=<span class="kw">False</span>, cached=<span class="kw">True</span><span class="s">)</span>
 <span class="kw">for</span> word, weight <span class="kw">in</span> <span class="s">sorted</span>:
     <span class="kw">print</span> word, weight
 &gt;&gt;&gt; blue sky <span class="s">0.396039408425</span>
 &gt;&gt;&gt; red sky <span class="s">0.33604773392</span>
-&gt;&gt;&gt; green sky <span class="s">0.267912857655</span>
-</pre>
+&gt;&gt;&gt; green sky <span class="s">0.267912857655</span></pre>
+
+
     <p>In this example, Yahoo! is queried for <i>green sky</i>, <i>blue sky</i> and <i>red sky</i>.
     The result is a sorted list of (<i>query</i>, <i>weight</i>) tuples. We learn that <i>blue</i>
-    is the color best associated with <i>sky</i>.
-    </p><p>The <a href="http://nodebox.net/code/index.php/Prism">Prism</a> algorithm roughly works in
-    this way.
-    </p><p> 
-    </p><hr size="2" width="100%"/>
+    is the color best associated with <i>sky</i>.</p>
+    <p>The <a href="http://nodebox.net/code/index.php/Prism">Prism</a> algorithm roughly works in
+    this way.</p>
+    <p> </p>
+    <hr size="2" width="100%"/>
+
     <h2><a id="google" name="google" title="google"></a>Querying Google</h2>
+
     <p>You can run <a href="http://www.google.com">Google</a> queries in the same way as <a href="#yahoo">querying Yahoo!</a>.<br/>
-    The library has the following commands available:
-    </p><pre class="python">web.<span class="s">google</span>.<span class="s">search</span><span class="s">(</span>q, start=<span class="s">0</span>, cached=<span class="kw">False</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">google</span>.<span class="s">search_images</span><span class="s">(</span>q, start=<span class="s">0</span>, <span class="kw">size</span>=<span class="str">""</span>, cached=<span class="kw">False</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">google</span>.<span class="s">search_news</span><span class="s">(</span>q, start=<span class="s">0</span>, cached=<span class="kw">False</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">google</span>.<span class="s">search_blogs</span><span class="s">(</span>q, start=<span class="s">0</span>, cached=<span class="kw">False</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">google</span>.<span class="s">sort</span><span class="s">(</span>words, context=<span class="str">""</span>, strict=<span class="kw">True</span>, cached=<span class="kw">False</span><span class="s">)</span>
-</pre>
+    The library has the following commands available:</p>
+    <pre>web.<span class="s">google</span>.<span class="s">search</span><span class="s">(</span>q, start=<span class="s">0</span>, cached=<span class="kw">False</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">google</span>.<span class="s">search_images</span><span class="s">(</span>q, start=<span class="s">0</span>, <span class="kw">size</span>=<span class="str">""</span>, cached=<span class="kw">False</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">google</span>.<span class="s">search_news</span><span class="s">(</span>q, start=<span class="s">0</span>, cached=<span class="kw">False</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">google</span>.<span class="s">search_blogs</span><span class="s">(</span>q, start=<span class="s">0</span>, cached=<span class="kw">False</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">google</span>.<span class="s">sort</span><span class="s">(</span>words, context=<span class="str">""</span>, strict=<span class="kw">True</span>, cached=<span class="kw">False</span><span class="s">)</span></pre>
+
+
     <p>The search commands return a list of results. This list has an additional <i>total</i>
-    property. Each item in the list is a <i>GoogleResult</i> object with the following properties:
-    </p><ul>
+    property. Each item in the list is a <i>GoogleResult</i> object with the following properties:</p>
+    <ul>
       <li><i>result.url</i>: the URL of the linked page
       </li><li><i>result.title</i>: the title of the linked page
       </li><li><i>result.description</i>: a short description for the page
@@ -437,20 +484,24 @@ results = web.<span class="s">yahoo</span>.<span class="s">search</span><span cl
       </li><li><i>result.author</i>: for news and blogs search.
       </li><li><i>result.location</i>: for news search.
     </li></ul>
+
     <p>Per search, a list of 8 items is returned from the given <i>start</i> item. Google will only
-    ever return the first 32 results, so the maximum value for <i>start</i> is 24.
-    </p><p>When searching for images, the results can be filtered for image <i>size</i> with the
+    ever return the first 32 results, so the maximum value for <i>start</i> is 24.</p>
+    <p>When searching for images, the results can be filtered for image <i>size</i> with the
     optional size parameter.<br/>
-    Acceptable values are "small", "medium", "large" and "wallpaper".<br/>
-    </p><p> 
-    </p><hr/>
+    Acceptable values are "small", "medium", "large" and "wallpaper".<br/></p>
+    <p> </p>
+    <hr/>
+
     <h2><a id="newsfeed" name="newsfeed" title="newsfeed"></a>Reading newsfeeds</h2>
+
     <p>The <i>newsfeed.read()</i> command returns information from <a href="http://en.wikipedia.org/wiki/Rss">RSS</a> or <a href="http://en.wikipedia.org/wiki/Atom_%28standard%29">Atom</a> newsfeeds as a collection of news
-    items with a title, link, description, and more.
-    </p><pre class="python">web.<span class="s">newsfeed</span>.<span class="s">parse</span><span class="s">(</span>url, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <p>The returned newsfeed object has the following properties:
-    </p><ul>
+    items with a title, link, description, and more.</p>
+    <pre>web.<span class="s">newsfeed</span>.<span class="s">parse</span><span class="s">(</span>url, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+
+    <p>The returned newsfeed object has the following properties:</p>
+    <ul>
       <li><i>newsfeed.title</i>: the title of the newsfeed<br/>
       </li><li><i>newsfeed.description</i>: a short description for the newsfeed<br/>
       </li><li><i>newsfeed.link</i>: a link to the homepage of the news channel<br/>
@@ -458,15 +509,16 @@ results = web.<span class="s">yahoo</span>.<span class="s">search</span><span cl
       </li><li><i>newsfeed.encoding</i>: the text encoding used (usually Unicode)<br/>
       </li><li><i>newsfeed.items</i>: a list of news items<br/>
     </li></ul>
-    <p>The <i>items</i> property is a list in which each item object has properties of its own:
-    </p><ul>
+
+    <p>The <i>items</i> property is a list in which each item object has properties of its own:</p>
+    <ul>
       <li><i>item.title</i>: the title of the news item<br/>
       </li><li><i>item.link</i>: a link to the full article online
       </li><li><i>item.description</i>: a short description of the news item
       </li><li><i>item.date</i>: the publication date of the news item<br/>
       </li><li><i>item.author</i>: the author of the news item
     </li></ul><br/>
-    <pre class="python">newsfeed = web.<span class="s">newsfeed</span>.<span class="s">parse</span><span class="str">"http://www.whitehouse.gov/rss/news.xml"</span><span class="s">)</span>
+    <pre>newsfeed = web.<span class="s">newsfeed</span>.<span class="s">parse</span><span class="str">"http://www.whitehouse.gov/rss/news.xml"</span><span class="s">)</span>
  
 <span class="kw">print</span> <span class="str">"Channel:"</span>, newsfeed.<span class="s">title</span>
 <span class="kw">print</span> <span class="str">"Channel description:"</span>, newsfeed.<span class="s">description</span>
@@ -476,37 +528,41 @@ results = web.<span class="s">yahoo</span>.<span class="s">search</span><span cl
     <span class="kw">print</span> <span class="str">"Link:"</span>, item.<span class="s">link</span>
     <span class="kw">print</span> <span class="str">"Description"</span>, item.<span class="s">description</span>    
     <span class="kw">print</span> <span class="str">"Date:"</span>, item.<span class="s">date</span>
-    <span class="kw">print</span> <span class="str">"Author:"</span>, item.<span class="s">author</span>
-</pre>
+    <span class="kw">print</span> <span class="str">"Author:"</span>, item.<span class="s">author</span></pre>
+
+
     <p><br/>
     There are other properties as well, like <i>item.date_parsed</i>, <i>item.author_detail</i> and
     <i>item.author_detail.email</i>. See the <a href="http://www.feedparser.org/">Universal Feed
-    Parser</a> documentation for more information.
-    </p><p>The address of some well-known newsfeeds can be found in the <i>newsfeed.favorites</i>
-    dictionary or with the <i>newsfeed.favorite_url()</i> command:
-    </p><pre class="python"><span class="kw">print</span> web.<span class="s">newsfeed</span>.<span class="s">favorite_url</span><span class="s">(</span><span class="str">"apple"</span><span class="s">)</span>
-&gt;&gt;&gt; http://images.<span class="s">apple</span>.<span class="s">com</span>/main/rss/hotnews/hotnews.<span class="s">rss</span>
-</pre>                                          
+    Parser</a> documentation for more information.</p>
+    <p>The address of some well-known newsfeeds can be found in the <i>newsfeed.favorites</i>
+    dictionary or with the <i>newsfeed.favorite_url()</i> command:</p>
+    <pre><span class="kw">print</span> web.<span class="s">newsfeed</span>.<span class="s">favorite_url</span><span class="s">(</span><span class="str">"apple"</span><span class="s">)</span>
+&gt;&gt;&gt; http://images.<span class="s">apple</span>.<span class="s">com</span>/main/rss/hotnews/hotnews.<span class="s">rss</span></pre>
+                                          
     <hr/>
+
     <h2><a id="wikipedia" name="wikipedia" title="wikipedia"></a>Retrieving articles from
     Wikipedia</h2>
+
     <p><a href="http://en.wikipedia.org/">Wikipedia</a> is a multilingual, web-based, free content
     encyclopedia project. Wikipedia is written collaboratively by volunteers; the vast majority of
-    its articles can be edited by anyone with access to the Internet.
-    </p><p>The <i>wikipedia.search()</i> command retrieves articles from Wikipedia. It parses an
+    its articles can be edited by anyone with access to the Internet.</p>
+    <p>The <i>wikipedia.search()</i> command retrieves articles from Wikipedia. It parses an
     article corresponding to the given query into lists of related articles and paragraphs of plain
-    text without any HTML or other markup in it:
-    </p><pre class="python">web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span>q, language=<span class="str">"en"</span>, light=<span class="kw">False</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
+    text without any HTML or other markup in it:</p>
+    <pre>web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span>q, language=<span class="str">"en"</span>, light=<span class="kw">False</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+
     <p>The command takes a <i>q</i> query parameter and, optionally, the <i>language</i> the
     article should be written in. When <i>light</i> is True, only a <i>title</i>, <i>links</i> to
     other articles, <i>categories</i> and <i>disambiguation</i> will be parsed from the article
-    (it's faster than a full parse).
-    </p><p>Note that the <i>q</i> parameter is case-insenstive - this gives the best chance of
+    (it's faster than a full parse).</p>
+    <p>Note that the <i>q</i> parameter is case-insenstive - this gives the best chance of
     retrieving an article.<br/>
-    If you do want case-sensitivity use <i>search(q, case_sensitive=True)</i>.
-    </p><p>The return value is an article object with the following properties:
-    </p><ul>
+    If you do want case-sensitivity use <i>search(q, case_sensitive=True)</i>.</p>
+    <p>The return value is an article object with the following properties:</p>
+    <ul>
       <li><i>article.title</i>: the title of the article<br/>
       </li><li><i>article</i><i>.links</i>: a list of titles of related articles
       </li><li><i>article</i><i>.categories</i>: a list of categories this article belongs to<br/>
@@ -523,12 +579,14 @@ results = web.<span class="s">yahoo</span>.<span class="s">search</span><span cl
       article<br/>
       </li><li><i>article</i><i>.markup</i>: the source text of the article in <a href="http://www.mediawiki.org/wiki/MediaWiki">MediaWiki</a> markup
     </li></ul>
-    <p> 
-    </p><hr/>
-    <p><span class="grey_box">Article links</span>
-    </p><p>Each of the titles in the <i>article.links</i> list can be supplied to
-    <i>wikipedia.search()</i> to get more information on that topic.
-    </p><pre class="python">article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span><span class="str">"nodebox"</span><span class="s">)</span>
+
+    <p> </p>
+    <hr/>
+
+    <p><span class="grey_box">Article links</span></p>
+    <p>Each of the titles in the <i>article.links</i> list can be supplied to
+    <i>wikipedia.search()</i> to get more information on that topic.</p>
+    <pre>article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span><span class="str">"nodebox"</span><span class="s">)</span>
 <span class="kw">print</span> article.<span class="s">title</span>
 <span class="kw">print</span> article.<span class="s">links</span>
 &gt;&gt;&gt; NodeBox
@@ -540,14 +598,15 @@ results = web.<span class="s">yahoo</span>.<span class="s">search</span><span cl
 &gt;&gt;&gt;  u<span class="str">'Python (programming language)'</span>, u<span class="str">'QuickTime'</span>, u<span class="str">'RGB'</span>, u<span class="str">'SVG'</span>, 
 &gt;&gt;&gt;  u<span class="str">'WordNet'</span>, u<span class="str">'alpha transparency'</span>, u<span class="str">'artificial intelligence'</span>, 
 &gt;&gt;&gt;  u<span class="str">'collage'</span>, u<span class="str">'graphic design'</span>
-&gt;&gt;&gt; <span class="s">]</span>
-</pre>                                                                                                      
+&gt;&gt;&gt; <span class="s">]</span></pre>
+                                                                                                      
     <hr/>
-    <p><span class="grey_box">Article paragraphs</span>
-    </p><p>Each paragraph object in <i>article.paragraphs</i>  is a list of plain text blocks.
+
+    <p><span class="grey_box">Article paragraphs</span></p>
+    <p>Each paragraph object in <i>article.paragraphs</i>  is a list of plain text blocks.
     Furthermore, a paragraph has a number of  properties. This code snippet loops through all
-    the paragraphs:
-    </p><pre class="python">article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span><span class="str">"nodebox"</span><span class="s">)</span>
+    the paragraphs:</p>
+    <pre>article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span><span class="str">"nodebox"</span><span class="s">)</span>
 <span class="kw">for</span> paragraph <span class="kw">in</span> article.<span class="s">paragraphs</span>:    
     <span class="grey"># A paragraph's depth determines</span>
     <span class="grey"># if it's a subparagraph or a top-level paragraph.</span>
@@ -558,21 +617,24 @@ results = web.<span class="s">yahoo</span>.<span class="s">search</span><span cl
     <span class="kw">print</span> paragraph.<span class="s">title</span> + <span class="str">"<span class="s">\n</span>"</span>
     <span class="grey"># Each paragraph is a list of separate blocks of text:</span>
     <span class="kw">for</span> textblock <span class="kw">in</span> paragraph:
-        <span class="kw">print</span> textblock + <span class="str">"<span class="s">\n</span>"</span>
-</pre>
+        <span class="kw">print</span> textblock + <span class="str">"<span class="s">\n</span>"</span></pre>
+
+
     <p>To display a paragraph with the <a href="../ref/Typography.html#text()">text()</a> command
-    you can loop over all the textblocks individually:
-    </p><pre class="python"><span class="kw">fontsize</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>
+    you can loop over all the textblocks individually:</p>
+    <pre><span class="kw">fontsize</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>
 x, y, w = <span class="s">20</span>, <span class="s">20</span>, <span class="s">300</span>
 <span class="kw">for</span> textblock <span class="kw">in</span> article.<span class="s">paragraphs</span><span class="s">[</span><span class="s">0</span><span class="s">]</span>:
     <span class="kw">text</span><span class="s">(</span>textblock, x, y, width=w<span class="s">)</span>
-    y += <span class="kw">textheight</span><span class="s">(</span>textblock, width=w<span class="s">)</span> + <span class="s">10</span>
-</pre>
-    <p>Or simply use the Python <i>str()</i> command on the entire list:
-    </p><pre class="python"><span class="kw">text</span><span class="s">(</span><span class="s">str</span><span class="s">(</span>article.<span class="s">paragraphs</span><span class="s">[</span><span class="s">0</span><span class="s">]</span><span class="s">)</span>, <span class="s">20</span>, <span class="s">20</span>, width=<span class="s">300</span><span class="s">)</span>
-</pre>
-    <p>A paragraph object has the following properties:
-    </p><ul>
+    y += <span class="kw">textheight</span><span class="s">(</span>textblock, width=w<span class="s">)</span> + <span class="s">10</span></pre>
+
+
+    <p>Or simply use the Python <i>str()</i> command on the entire list:</p>
+    <pre><span class="kw">text</span><span class="s">(</span><span class="s">str</span><span class="s">(</span>article.<span class="s">paragraphs</span><span class="s">[</span><span class="s">0</span><span class="s">]</span><span class="s">)</span>, <span class="s">20</span>, <span class="s">20</span>, width=<span class="s">300</span><span class="s">)</span></pre>
+
+
+    <p>A paragraph object has the following properties:</p>
+    <ul>
       <li><i>paragraph.title</i>: the title or heading of this paragraph<br/>
       </li><li><i>paragraph.depth</i>: the depth of the paragraph<br/>
       </li><li><i>paragraph.parent</i>: a <i>WikipediaParagraph</i> object containing this subparagraph
@@ -583,30 +645,34 @@ x, y, w = <span class="s">20</span>, <span class="s">20</span>, <span class="s">
       </li><li><i>paragraph.tables</i>: a list of <i>WikipediaTable</i> objects found in this
       paragraph<br/>
     </li></ul>
-    <p> 
-    </p><hr/>
-    <p><span class="grey_box">Article images</span>
-    </p><p>Image objects in the <i>article.images</i> list have properties (like a description) that
-    can help in discerning what is being displayed in the image:
-    </p><pre class="python">article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span><span class="str">"computer"</span><span class="s">)</span>
+
+    <p> </p>
+    <hr/>
+
+    <p><span class="grey_box">Article images</span></p>
+    <p>Image objects in the <i>article.images</i> list have properties (like a description) that
+    can help in discerning what is being displayed in the image:</p>
+    <pre>article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span><span class="str">"computer"</span><span class="s">)</span>
 <span class="kw">for</span> img <span class="kw">in</span> article.<span class="s">images</span>:
     <span class="kw">print</span> img.<span class="s">description</span>
 &gt;&gt;&gt; The NASA Columbia Supercomputer.
 &gt;&gt;&gt; A computer <span class="kw">in</span> a wristwatch.
 &gt;&gt;&gt; The Jacquard loom was one of the first programmable devices.
-&gt;&gt;&gt; ...
-</pre>
-    <p>An image object has the following properties:
-    </p><ul>
+&gt;&gt;&gt; ...</pre>
+
+
+    <p>An image object has the following properties:</p>
+    <ul>
       <li><i>image.path</i>: the image's filename
       </li><li><i>image.description</i>: a description parsed from the source content
       </li><li><i>image.links</i>: a list of related article titles
       </li><li><i>image properties</i>: a list of properties parsed from the source (e.g. <i>left</i>,
       <i>thumb</i>, ...)<br/>
     </li></ul>
+
     <p><br/>
-    Finally, here is a little web mash-up to draw article images in NodeBox:
-    </p><pre class="python"><span class="grey"># 1) Get the image filename from the article.</span>
+    Finally, here is a little web mash-up to draw article images in NodeBox:</p>
+    <pre><span class="grey"># 1) Get the image filename from the article.</span>
 article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span><span class="str">"computer"</span><span class="s">)</span>
 img = article.<span class="s">images</span><span class="s">[</span><span class="s">0</span><span class="s">]</span>
  
@@ -623,16 +689,18 @@ html = web.<span class="s">page</span>.<span class="s">parse</span><span class="
 <span class="grey"># 4) Download the image link.</span>
 <span class="grey">#    Pass the downloaded data to the image() command.</span>
 img = web.<span class="s">download</span><span class="s">(</span>img<span class="s">)</span>
-<span class="kw">image</span><span class="s">(</span><span class="kw">None</span>, <span class="s">0</span>, <span class="s">0</span>, data=img<span class="s">)</span>
-</pre>                                                                                                  
-    <p><img alt="web-wikipedia1" height="326" src="media/web-wikipedia1.jpg" width="550"/><br/>
-    </p><p> 
-    </p><hr/>
-    <p><span class="grey_box">Article tables</span><br/>
-    </p><p>Tables parsed from an article can be accessed from the <i>article.tables</i> list or from
+<span class="kw">image</span><span class="s">(</span><span class="kw">None</span>, <span class="s">0</span>, <span class="s">0</span>, data=img<span class="s">)</span></pre>
+                                                                                                  
+
+    <p><img alt="web-wikipedia1" height="326" src="media/web-wikipedia1.jpg" width="550"/><br/></p>
+    <p> </p>
+    <hr/>
+
+    <p><span class="grey_box">Article tables</span><br/></p>
+    <p>Tables parsed from an article can be accessed from the <i>article.tables</i> list or from
     <i>article.paragraph[i].tables</i>. A table object is a list of rows. Each row is a list of
-    cells:
-    </p><pre class="python">article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span><span class="str">"computer"</span><span class="s">)</span>
+    cells:</p>
+    <pre>article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span><span class="str">"computer"</span><span class="s">)</span>
 table = article.<span class="s">tables</span><span class="s">[</span><span class="s">0</span><span class="s">]</span>
 <span class="kw">print</span> table.<span class="s">paragraph</span>.<span class="s">title</span>
 <span class="kw">print</span> table.<span class="s">title</span>, <span class="str">"("</span>+table.<span class="s">properties</span>+<span class="str">")"</span>
@@ -640,32 +708,36 @@ table = article.<span class="s">tables</span><span class="s">[</span><span class
     <span class="kw">print</span> <span class="str">"-"</span>*<span class="s">50</span>
     <span class="kw">print</span> row.<span class="s">properties</span>
     <span class="kw">for</span> cell <span class="kw">in</span> row:
-        <span class="kw">print</span> cell, <span class="str">"("</span>+cell.<span class="s">properties</span>+<span class="str">")"</span>
-</pre>
+        <span class="kw">print</span> cell, <span class="str">"("</span>+cell.<span class="s">properties</span>+<span class="str">")"</span></pre>
+
+
     <p>As you can see, tables, rows and cells all have <i>properties.</i> Tables also have a
     <i>title</i> property and a <i>paragraph</i> property linking to the paragraph object in which
-    this table was found.
-    </p><p> 
-    </p><hr/>
-    <p><span class="grey_box">Article references</span><br/>
-    </p><p>Text blocks in a Wikipedia paragraph can contain numerous references to websites, journal
-    and footnotes. They are marked as a number between square brackets, e.g. [15].
-    </p><p>For example:
-    </p><pre class="python">&gt;&gt;&gt; A key component common to all CPUs <span class="kw">is</span> the program counter, 
+    this table was found.</p>
+    <p> </p>
+    <hr/>
+
+    <p><span class="grey_box">Article references</span><br/></p>
+    <p>Text blocks in a Wikipedia paragraph can contain numerous references to websites, journal
+    and footnotes. They are marked as a number between square brackets, e.g. [15].</p>
+    <p>For example:</p>
+    <pre>&gt;&gt;&gt; A key component common to all CPUs <span class="kw">is</span> the program counter, 
 &gt;&gt;&gt; a special memory cell <span class="s">(</span>a register<span class="s">)</span> that keeps track of which 
-&gt;&gt;&gt; location <span class="kw">in</span> memory the next instruction <span class="kw">is</span> to be read <span class="kw">from</span>. <span class="s">[</span><span class="s">11</span><span class="s">]</span>
-</pre>
+&gt;&gt;&gt; location <span class="kw">in</span> memory the next instruction <span class="kw">is</span> to be read <span class="kw">from</span>. <span class="s">[</span><span class="s">11</span><span class="s">]</span></pre>
+
+
     <p>corresponds to <i>article.references[10]</i> - keeping in mind that list indices start from
-    0:
-    </p><pre class="python"><span class="kw">print</span> article.<span class="s">references</span><span class="s">[</span><span class="s">10</span><span class="s">]</span>
+    0:</p>
+    <pre><span class="kw">print</span> article.<span class="s">references</span><span class="s">[</span><span class="s">10</span><span class="s">]</span>
 &gt;&gt;&gt; Instructions often occupy more than one memory address, 
 &gt;&gt;&gt; so the program counters usually increases by the number of 
-&gt;&gt;&gt; memory locations required to store one instruction
-</pre>
+&gt;&gt;&gt; memory locations required to store one instruction</pre>
+
+
     <p>Each reference object in the <i>article.references</i> list has a number of properties. In
     the worst case all of the information is stored in <i>reference.note</i>, in the best case the
-    reference has data for all of the folllowing properties:
-    </p><ul>
+    reference has data for all of the folllowing properties:</p>
+    <ul>
       <li><i>reference.title</i>: a title of a publication<br/>
       </li><li><i>reference.url</i>: a link to a web page<br/>
       </li><li><i>reference.author</i>: the author of a publication<br/>
@@ -678,61 +750,70 @@ table = article.<span class="s">tables</span><span class="s">[</span><span class
       </li><li><i>reference.id</i>: an ISBN book number
       </li><li><i>reference.note</i>: footnotes and descriptions
     </li></ul>
-    <p> 
-    </p><hr/>
-    <p><span class="grey_box">Article translations</span>
-    </p><p>Here's an example script how to get the translated version of an article:
-    </p><pre class="python">article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span><span class="str">"computer"</span><span class="s">)</span>
+
+    <p> </p>
+    <hr/>
+
+    <p><span class="grey_box">Article translations</span></p>
+    <p>Here's an example script how to get the translated version of an article:</p>
+    <pre>article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span><span class="str">"computer"</span><span class="s">)</span>
 language = <span class="str">"fr"</span>
 <span class="kw">if</span> article.<span class="s">translations</span>.<span class="s">has_key</span><span class="s">(</span>language<span class="s">)</span>:
     translation = article.<span class="s">translations</span><span class="s">[</span>language<span class="s">]</span>
     article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span>translation, language<span class="s">)</span>
     <span class="kw">print</span> article.<span class="s">title</span> 
-&gt;&gt;&gt; Ordinateur
-</pre>
-    <p>The dictionary of all languages used in Wikipedia:
-    </p><pre class="python"><span class="kw">print</span> web.<span class="s">wikipedia</span>.<span class="s">languages</span>
-</pre>                                                                                            
+&gt;&gt;&gt; Ordinateur</pre>
+
+
+    <p>The dictionary of all languages used in Wikipedia:</p>
+    <pre><span class="kw">print</span> web.<span class="s">wikipedia</span>.<span class="s">languages</span></pre>
+                                                                                            
     <hr/>
+
     <h2><a id="wikipediahelpers" name="wikipediahelpers" title="wikipediahelpers"></a>Some helper
     commands to draw Wikipedia content in NodeBox</h2>
+
     <p>A number of commands in the library can help you find out how to display content from
-    Wikipedia in NodeBox. There are commands to draw lists, math equations and tables.
-    </p><pre class="python"><span class="grey"># Returns True if a given text block str in a paragraph </span>
+    Wikipedia in NodeBox. There are commands to draw lists, math equations and tables.</p>
+    <pre><span class="grey"># Returns True if a given text block str in a paragraph </span>
 <span class="grey"># is preformatted text, e.g. a programming code example.</span>
-web.<span class="s">wikipedia</span>.<span class="s">is_preformatted</span><span class="s">(</span><span class="s">str</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="grey"># Returns True if a text block in a paragraph is a (numbered) list.</span>
-web.<span class="s">wikipedia</span>.<span class="s">is_list</span><span class="s">(</span><span class="s">str</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="grey"># Returns True if a text block in a paragraph is a math equation.</span>
-web.<span class="s">wikipedia</span>.<span class="s">is_math</span><span class="s">(</span><span class="s">str</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="grey"># Draws a list text block at x, y coordinates in NodeBox.</span>
-web.<span class="s">wikipedia</span>.<span class="s">draw_list</span><span class="s">(</span><span class="s">str</span>, x, y, w, padding=<span class="s">5</span>, callback=<span class="kw">None</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="grey"># Use mimeTeX to draw an image of a math equation at x, y.</span>
-web.<span class="s">wikipedia</span>.<span class="s">draw_math</span><span class="s">(</span><span class="s">str</span>, x, y, alpha=<span class="s">1.0</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="grey"># Draws WikipediaTable object in NodeBox; works very poorly.</span>
-web.<span class="s">wikipedia</span>.<span class="s">draw_table</span><span class="s">(</span>table, x, y, w, padding=<span class="s">5</span><span class="s">)</span>
-</pre>                                                                                    
-    <p><img alt="web_wikipedia2" height="324" src="media/web_wikipedia2.jpg" width="550"/>
-    </p><p>    
-    </p><hr/>
+web.<span class="s">wikipedia</span>.<span class="s">is_preformatted</span><span class="s">(</span><span class="s">str</span><span class="s">)</span></pre>
+
+    <pre><span class="grey"># Returns True if a text block in a paragraph is a (numbered) list.</span>
+web.<span class="s">wikipedia</span>.<span class="s">is_list</span><span class="s">(</span><span class="s">str</span><span class="s">)</span></pre>
+
+    <pre><span class="grey"># Returns True if a text block in a paragraph is a math equation.</span>
+web.<span class="s">wikipedia</span>.<span class="s">is_math</span><span class="s">(</span><span class="s">str</span><span class="s">)</span></pre>
+
+    <pre><span class="grey"># Draws a list text block at x, y coordinates in NodeBox.</span>
+web.<span class="s">wikipedia</span>.<span class="s">draw_list</span><span class="s">(</span><span class="s">str</span>, x, y, w, padding=<span class="s">5</span>, callback=<span class="kw">None</span><span class="s">)</span></pre>
+
+    <pre><span class="grey"># Use mimeTeX to draw an image of a math equation at x, y.</span>
+web.<span class="s">wikipedia</span>.<span class="s">draw_math</span><span class="s">(</span><span class="s">str</span>, x, y, alpha=<span class="s">1.0</span><span class="s">)</span></pre>
+
+    <pre><span class="grey"># Draws WikipediaTable object in NodeBox; works very poorly.</span>
+web.<span class="s">wikipedia</span>.<span class="s">draw_table</span><span class="s">(</span>table, x, y, w, padding=<span class="s">5</span><span class="s">)</span></pre>
+                                                                                    
+
+    <p><img alt="web_wikipedia2" height="324" src="media/web_wikipedia2.jpg" width="550"/></p>
+    <p>    </p>
+    <hr/>
+
     <h2><a id="morguefile" name="morguefile" title="morguefile"></a>Querying morgueFile for
     images</h2>
+
     <p><a href="http://www.morguefile.com">morgueFile</a> contains photographs freely contributed
-    by many artists to be used in creative projects by visitors to the site.
-    </p><p>The <i>morguefile.search()</i> command returns a list of images on morgueFile that
+    by many artists to be used in creative projects by visitors to the site.</p>
+    <p>The <i>morguefile.search()</i> command returns a list of images on morgueFile that
     correspond to a given query. It has an optional parameter <i>max</i> specifying the maximum
-    number of images to return:
-    </p><pre class="python">web.<span class="s">morguefile</span>.<span class="s">search</span><span class="s">(</span>q, <span class="s">max</span>=<span class="s">100</span>, wait<span class="s">-10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">morguefile</span>.<span class="s">search_by_author</span><span class="s">(</span>q, <span class="s">max</span>=<span class="s">100</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <p>Each image object in the returned list has the following properties:
-    </p><ul>
+    number of images to return:</p>
+    <pre>web.<span class="s">morguefile</span>.<span class="s">search</span><span class="s">(</span>q, <span class="s">max</span>=<span class="s">100</span>, wait<span class="s">-10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">morguefile</span>.<span class="s">search_by_author</span><span class="s">(</span>q, <span class="s">max</span>=<span class="s">100</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+
+    <p>Each image object in the returned list has the following properties:</p>
+    <ul>
       <li><i>img.id</i>: the unique morgueFile ID for the image
       </li><li><i>img.category</i>: the category the image belongs to
       </li><li><i>img.author</i>: the name of the author
@@ -742,7 +823,7 @@ web.<span class="s">wikipedia</span>.<span class="s">draw_table</span><span clas
       </li><li><i>img.height</i>: the image height in pixels
       </li><li><i>img.date</i>: the date the image was added to morgueFile
     </li></ul><br/>
-    <pre class="python">images = web.<span class="s">morguefile</span>.<span class="s">search</span><span class="s">(</span><span class="str">"leaf"</span>, <span class="s">max</span>=<span class="s">10</span><span class="s">)</span>
+    <pre>images = web.<span class="s">morguefile</span>.<span class="s">search</span><span class="s">(</span><span class="str">"leaf"</span>, <span class="s">max</span>=<span class="s">10</span><span class="s">)</span>
 <span class="kw">for</span> img <span class="kw">in</span> images:
     <span class="kw">print</span> img.<span class="s">name</span>, img.<span class="s">views</span>
 &gt;&gt;&gt; IMG_1662_d.<span class="s">JPG</span> 
@@ -754,54 +835,62 @@ web.<span class="s">wikipedia</span>.<span class="s">draw_table</span><span clas
 &gt;&gt;&gt; Target_spot_disease_on_maple.<span class="s">JPG</span> 
 &gt;&gt;&gt; IMG_1664.<span class="s">JPG</span> 
 &gt;&gt;&gt; bumpy_leaf.<span class="s">JPG</span> 
-&gt;&gt;&gt; Aztec_Grass.<span class="s">JPG</span>
-</pre>
+&gt;&gt;&gt; Aztec_Grass.<span class="s">JPG</span></pre>
+
+
     <p>Each image object in the list has a <i>download()</i> method that stores the image file
     locally in cache. It has an optional parameter <i>size</i>, which can be set to "small" (image
-    thumbnail) or "large" (default):
-    </p><pre class="python">img = images<span class="s">[</span><span class="s">0</span><span class="s">]</span>
+    thumbnail) or "large" (default):</p>
+    <pre>img = images<span class="s">[</span><span class="s">0</span><span class="s">]</span>
 img.<span class="s">download</span><span class="s">(</span><span class="kw">size</span>=<span class="str">"large"</span>, wait=<span class="s">60</span><span class="s">)</span>
 <span class="kw">image</span><span class="s">(</span>img.<span class="s">path</span>, <span class="s">0</span>, <span class="s">0</span>, width=img.<span class="s">width</span>, height=img.<span class="s">height</span><span class="s">)</span>
 <span class="kw">print</span> img.<span class="s">author</span>, img.<span class="s">path</span>
-&gt;&gt;&gt; Filiford cache/morguefile/240060eb1e1a0628ae32aff811b167ef.<span class="s">JPG</span>
-</pre>                                                                                
-    <p><img alt="web_morguefile2" height="366" src="media/web_morguefile2.jpg" width="550"/>
-    </p><p> 
-    </p><hr size="2" width="100%"/>
+&gt;&gt;&gt; Filiford cache/morguefile/240060eb1e1a0628ae32aff811b167ef.<span class="s">JPG</span></pre>
+                                                                                
+
+    <p><img alt="web_morguefile2" height="366" src="media/web_morguefile2.jpg" width="550"/></p>
+    <p> </p>
+    <hr size="2" width="100%"/>
+
     <h2><a id="flickr" name="flickr" title="flickr"></a>Querying Flickr for images</h2>
+
     <p><a href="http://www.flickr.com">Flickr</a> is an online photo management and sharing
     application.<br/>
-    You can query it for images in the same way as <a href="#morguefile">querying morgueFile</a>.
-    </p><pre class="python">web.<span class="s">flickr</span>.<span class="s">search</span><span class="s">(</span>q, start=<span class="s">1</span>, count=<span class="s">100</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">flickr</span>.<span class="s">recent</span><span class="s">(</span>start=<span class="s">1</span>, count=<span class="s">100</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
+    You can query it for images in the same way as <a href="#morguefile">querying morgueFile</a>.</p>
+    <pre>web.<span class="s">flickr</span>.<span class="s">search</span><span class="s">(</span>q, start=<span class="s">1</span>, count=<span class="s">100</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">flickr</span>.<span class="s">recent</span><span class="s">(</span>start=<span class="s">1</span>, count=<span class="s">100</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+
     <p>The <i>flickr.search()</i> command has two optional parameters: <i>sort</i> and
     <i>match</i>. The sort order can be set either to "interest", "relevance" (default) or "date".
     The <i>match</i> parameter can be either "all" (image tags must include all of the search
-    words) or "any" (default).
-    </p><p>Each image object in the returned list has a <i>download()</i> method like the morgueFile
+    words) or "any" (default).</p>
+    <p>Each image object in the returned list has a <i>download()</i> method like the morgueFile
     interface. The <i>download()</i> method has an optional <i>size</i> parameter which can be
     "square", "small", "medium", "large" and "wallpaper". This way you can specify the size of the
-    image to download.<br/>
-    </p><p> 
-    </p><hr/>
+    image to download.<br/></p>
+    <p> </p>
+    <hr/>
+
     <h2><a id="kuler" name="kuler" title="kuler"></a>Querying kuler for color themes</h2>
+
     <p><a href="http://kuler.adobe.com/">kuler</a> is an Adobe web-application that allows users to
-    construct and share color themes.
-    </p><p>The <i>kuler.search()</i> command returns a list of color themes on kuler that correspong to
+    construct and share color themes.</p>
+    <p>The <i>kuler.search()</i> command returns a list of color themes on kuler that correspong to
     a given query. It has an optional <i>page</i> parameter defining the starting page (each page
-    has 30 themes).
-    </p><pre class="python">web.<span class="s">kuler</span>.<span class="s">search</span><span class="s">(</span>q, page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">kuler</span>.<span class="s">search_by_id</span><span class="s">(</span><span class="s">id</span>, page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">kuler</span>.<span class="s">search_by_popularity</span><span class="s">(</span>page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">kuler</span>.<span class="s">search_by_rating</span><span class="s">(</span>page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <p>Each theme object in the returned list has the following properties:
-    </p><ul>
+    has 30 themes).</p>
+    <pre>web.<span class="s">kuler</span>.<span class="s">search</span><span class="s">(</span>q, page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">kuler</span>.<span class="s">search_by_id</span><span class="s">(</span><span class="s">id</span>, page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">kuler</span>.<span class="s">search_by_popularity</span><span class="s">(</span>page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">kuler</span>.<span class="s">search_by_rating</span><span class="s">(</span>page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+
+    <p>Each theme object in the returned list has the following properties:</p>
+    <ul>
       <li><i>theme.id</i>: the unique kuler id for the theme
       </li><li><i>theme.author</i>: the name of the author<br/>
       </li><li><i>theme.label</i>: the title of the theme<br/>
@@ -810,96 +899,112 @@ img.<span class="s">download</span><span class="s">(</span><span class="kw">size
       </li><li><i>theme.darkest</i>: a tuple of (R, G, B) values for the darkest color in the theme<br/>
       </li><li><i>theme.lightest</i>: a tuple of (R, G, B) values the lightest color in the theme<br/>
     </li></ul>
+
     <p>You can loop through a theme object as a list. Each item in the theme is a tuple of (R, G,
-    B) values, which you can supply to <a href="../ref/Color.html#fill()">fill()</a> or <a href="../ref/Color.html#stroke()">stroke()</a> in NodeBox.
-    </p><pre class="python">themes = web.<span class="s">kuler</span>.<span class="s">search</span><span class="s">(</span><span class="str">"banana"</span><span class="s">)</span>
+    B) values, which you can supply to <a href="../ref/Color.html#fill()">fill()</a> or <a href="../ref/Color.html#stroke()">stroke()</a> in NodeBox.</p>
+    <pre>themes = web.<span class="s">kuler</span>.<span class="s">search</span><span class="s">(</span><span class="str">"banana"</span><span class="s">)</span>
 <span class="kw">for</span> r, g, b <span class="kw">in</span> themes<span class="s">[</span><span class="s">0</span><span class="s">]</span>:
     <span class="kw">print</span> r, g, b
  
 <span class="grey"># The kuler.preview() command gives you an idea of the theme's colors. </span>
-web.<span class="s">kuler</span>.<span class="s">preview</span><span class="s">(</span>themes<span class="s">[</span><span class="s">0</span><span class="s">]</span><span class="s">)</span>
-</pre>                                                                               
-    <p><img alt="web_kuler1" height="394" src="media/web_kuler1.jpg" width="550"/><br/>
-    </p><p> 
-    </p><p>Each theme also has a draw() method that displays the colors in the theme in NodeBox:
-    </p><pre class="python">themes = web.<span class="s">kuler</span>.<span class="s">search</span><span class="s">(</span><span class="str">"banana"</span><span class="s">)</span>
-themes<span class="s">[</span><span class="s">0</span><span class="s">]</span>.<span class="s">draw</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span>, w=<span class="s">40</span>, h=<span class="s">120</span><span class="s">)</span>
-</pre>                                                                    
-    <p><img alt="web_kuler2" height="299" src="media/web_kuler2.jpg" width="549"/><br/>
-    </p><p> 
-    </p><hr size="2" width="100%"/>
-    <h2><a id="colr" name="colr" title="colr"></a>Querying Colr for color themes<br/></h2>
+web.<span class="s">kuler</span>.<span class="s">preview</span><span class="s">(</span>themes<span class="s">[</span><span class="s">0</span><span class="s">]</span><span class="s">)</span></pre>
+                                                                               
+
+    <p><img alt="web_kuler1" height="394" src="media/web_kuler1.jpg" width="550"/><br/></p>
+    <p> </p>
+    <p>Each theme also has a draw() method that displays the colors in the theme in NodeBox:</p>
+    <pre>themes = web.<span class="s">kuler</span>.<span class="s">search</span><span class="s">(</span><span class="str">"banana"</span><span class="s">)</span>
+themes<span class="s">[</span><span class="s">0</span><span class="s">]</span>.<span class="s">draw</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span>, w=<span class="s">40</span>, h=<span class="s">120</span><span class="s">)</span></pre>
+                                                                    
+
+    <p><img alt="web_kuler2" height="299" src="media/web_kuler2.jpg" width="549"/><br/></p>
+    <p> </p>
+    <hr size="2" width="100%"/>
+
+    <h2><a id="colr" name="colr" title="colr"></a>Querying Colr for color themes</h2>
+
     <p><a href="http://www.colr.org">Colr</a> is an online tool by Lloyd Dalton to let people
     fiddle around with colors.<br/>
-    You can query it for color themes in the same way as querying <a href="#kuler">kuler</a>.
-    </p><pre class="python">web.<span class="s">colr</span>.<span class="s">search</span><span class="s">(</span>q, page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">colr</span>.<span class="s">search_by_id</span><span class="s">(</span><span class="s">id</span>, page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">colr</span>.<span class="s">latest</span><span class="s">(</span>page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">colr</span>.<span class="kw">random</span><span class="s">(</span>page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <p>You can manipulate each theme object in the returned list as with the kuler interface.<br/>
-    </p><p> 
-    </p><hr/>
+    You can query it for color themes in the same way as querying <a href="#kuler">kuler</a>.</p>
+    <pre>web.<span class="s">colr</span>.<span class="s">search</span><span class="s">(</span>q, page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">colr</span>.<span class="s">search_by_id</span><span class="s">(</span><span class="s">id</span>, page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">colr</span>.<span class="s">latest</span><span class="s">(</span>page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">colr</span>.<span class="kw">random</span><span class="s">(</span>page=<span class="s">0</span>, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+
+    <p>You can manipulate each theme object in the returned list as with the kuler interface.<br/></p>
+    <p> </p>
+    <hr/>
+
     <h2><a id="math" name="math" title="math"></a> Creating PNG or GIF images from math
     equations</h2>
+
     <p>John Forkosh has a <a href="http://www.forkosh.com/mathtex.html">mathTeX server</a> that
-    creates PNG or GIF images from math equations.
-    </p><pre class="python">web.<span class="s">mathtext</span>.<span class="s">png</span><span class="s">(</span>equation, dpi=<span class="s">120</span>, <span class="kw">color</span>=<span class="str">""</span><span class="s">)</span>
-</pre>
-    <pre class="python">web.<span class="s">mathtext</span>.<span class="s">gif</span><span class="s">(</span>equation, dpi=<span class="s">120</span>, <span class="kw">color</span>=<span class="str">""</span><span class="s">)</span>
-</pre>
+    creates PNG or GIF images from math equations.</p>
+    <pre>web.<span class="s">mathtext</span>.<span class="s">png</span><span class="s">(</span>equation, dpi=<span class="s">120</span>, <span class="kw">color</span>=<span class="str">""</span><span class="s">)</span></pre>
+
+    <pre>web.<span class="s">mathtext</span>.<span class="s">gif</span><span class="s">(</span>equation, dpi=<span class="s">120</span>, <span class="kw">color</span>=<span class="str">""</span><span class="s">)</span></pre>
+
+
     <p>The optional <i>dpi</i> parameter sets the image resolution, while <i>color</i> can be the
-    name of a primary color (e.g. blue, green, red, ...)
-    </p><pre class="python">equation = r<span class="str">"E = hf = <span class="s">\f</span>rac{hc}{<span class="s">\l</span>ambda} <span class="s">\,</span><span class="s">\!</span> "</span>
+    name of a primary color (e.g. blue, green, red, ...)</p>
+    <pre>equation = r<span class="str">"E = hf = <span class="s">\f</span>rac{hc}{<span class="s">\l</span>ambda} <span class="s">\,</span><span class="s">\!</span> "</span>
 img = web.<span class="s">mathtex</span>.<span class="s">gif</span><span class="s">(</span>equation<span class="s">)</span>
-<span class="kw">image</span><span class="s">(</span>img, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span>
-</pre>                                                                          
-    <p><img alt="web_mimetex1" height="35" src="media/web_mimetex1.jpg" width="153"/>
-    </p><p> 
-    </p><hr/>
+<span class="kw">image</span><span class="s">(</span>img, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span></pre>
+                                                                          
+
+    <p><img alt="web_mimetex1" height="35" src="media/web_mimetex1.jpg" width="153"/></p>
+    <p> </p>
+    <hr/>
+
     <h2><a id="urbandictionary" name="urbandictionary" title="urbandictionary"></a>Word definitions
-    from Urban Dictionary<br/></h2>
+    from Urban Dictionary</h2>
+
     <p><a href="http://www.urbandictionary.com">Urban Dictionary</a> is a slang dictionary with
     user-defined description for words. You can often get some humorous (or cruel and childish)
-    results from it.
-    </p><p>The <i>urbandictionary.search()</i> command returns a list of definitions for a given word.
-    </p><pre class="python">web.<span class="s">urbandictionary</span>.<span class="s">search</span><span class="s">(</span>q, cached=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <p>Each definition object in the returned list has the following properties:
-    </p><ul>
+    results from it.</p>
+    <p>The <i>urbandictionary.search()</i> command returns a list of definitions for a given word.</p>
+    <pre>web.<span class="s">urbandictionary</span>.<span class="s">search</span><span class="s">(</span>q, cached=<span class="kw">True</span><span class="s">)</span></pre>
+
+
+    <p>Each definition object in the returned list has the following properties:</p>
+    <ul>
       <li><i>definition.description</i>: a description of the given word
       </li><li><i>definition.example</i>: example usage of the word in a sentence
       </li><li><i>definition.author</i>: the author who came up with the definition
       </li><li><i>definition.links</i>: a list of words linked to the definition
       </li><li><i>definition.url</i>: the web page where the definition can be found
     </li></ul>
-    <pre class="python">definitions = web.<span class="s">urbandictionary</span>.<span class="s">search</span><span class="s">(</span><span class="str">"life"</span><span class="s">)</span>
+    <pre>definitions = web.<span class="s">urbandictionary</span>.<span class="s">search</span><span class="s">(</span><span class="str">"life"</span><span class="s">)</span>
 <span class="kw">print</span> definitions<span class="s">[</span><span class="s">0</span><span class="s">]</span>.<span class="s">description</span>
-&gt;&gt;&gt; A sexually-transmitted, terminal disease.
-</pre>                                              
+&gt;&gt;&gt; A sexually-transmitted, terminal disease.</pre>
+                                              
     <hr/>
+
     <h2><a id="asynchronous" name="asynchronous" title="asynchronous"></a>Working with asynchronous
     downloads</h2>
+
     <p>Downloading content from the internet may take a moment to complete. When running an
     animation in NodeBox, you don't want it to halt while NodeBox waits for the download to
     complete. The Web library offers you the capability to download <i>asynchronously</i>.
     N<b>odeBox will then continue running with the download taking place in the background
-    memory</b>. Once it is done you can start manipulating the retrieved data.
-    </p><p>The <i>url.retrieve()</i> command has some optional parameters to do asynchronous downloads:
-    </p><pre class="python">web.<span class="s">url</span>.<span class="s">retrieve</span><span class="s">(</span>url, wait=<span class="s">60</span>, asynchronous=<span class="kw">False</span>, cache=<span class="kw">None</span>, <span class="s">type</span>=<span class="str">".html"</span><span class="s">)</span>
-</pre>
+    memory</b>. Once it is done you can start manipulating the retrieved data.</p>
+    <p>The <i>url.retrieve()</i> command has some optional parameters to do asynchronous downloads:</p>
+    <pre>web.<span class="s">url</span>.<span class="s">retrieve</span><span class="s">(</span>url, wait=<span class="s">60</span>, asynchronous=<span class="kw">False</span>, cache=<span class="kw">None</span>, <span class="s">type</span>=<span class="str">".html"</span><span class="s">)</span></pre>
+
+
     <p>With <i>asynchronous</i> set to True, the download will occur in the background. The
     returned object has a <i>done</i> property which is True when downloading has terminated. The
-    object's <i>data</i> property then contains the source data.
-    </p><p>You can also set a <i>wait</i> amount of seconds that is the maximum amount of time NodeBox
+    object's <i>data</i> property then contains the source data.</p>
+    <p>You can also set a <i>wait</i> amount of seconds that is the maximum amount of time NodeBox
     will connect to the internet. When the limit is exceeded and no data was fully recovered, the
     returned object will have an <i>error</i> property set. When something else went wrong
     <i>error</i> will be set as well by the way, usually with a <i>URLTimeout</i>, a
-    <i>HTTPError</i> or a <i>HTTP404NotFound</i> exception. 
-    </p><pre class="python">data = web.<span class="s">url</span>.<span class="s">retrieve</span><span class="s">(</span><span class="str">"http://nodebox.net"</span>, asynchronous=<span class="kw">True</span><span class="s">)</span>
+    <i>HTTPError</i> or a <i>HTTP404NotFound</i> exception. </p>
+    <pre>data = web.<span class="s">url</span>.<span class="s">retrieve</span><span class="s">(</span><span class="str">"http://nodebox.net"</span>, asynchronous=<span class="kw">True</span><span class="s">)</span>
 <span class="kw">import</span> <span class="s">time</span>
 <span class="kw">while</span> <span class="kw">not</span> data.<span class="s">done</span>:
     <span class="s">time</span>.<span class="s">sleep</span><span class="s">(</span><span class="s">0.1</span><span class="s">)</span>
@@ -909,16 +1014,17 @@ img = web.<span class="s">mathtex</span>.<span class="s">gif</span><span class="
 &gt;&gt;&gt; downloading...
 &gt;&gt;&gt; downloading...
 &gt;&gt;&gt; downloading...
-&gt;&gt;&gt; done!
-</pre>
+&gt;&gt;&gt; done!</pre>
+
+
     <p>Since all of the services in the Web library build upon <i>url.retrieve()</i>, you can also
     use the <i>asynchronous</i> parameter with <i>page.parse()</i>, <i>yahoo.search()</i>,
     <i>newsfeed.parse()</i>, <i>wikipedia.search()</i>, <i>morguefile.search()</i>,
-    <i>morguefile_image.download()</i> and <i>kuler.search()</i>.
-    </p><p>An exception is the Urban Dictionary which uses SOAP instead of <i>url.retrieve()</i>.
-    </p><p>Here's a quick mash-up of an interactive link browser. It starts out with some links from
-    Yahoo! and when you click on a link, it displays the links in that web page, and so on.
-    </p><pre class="python"><span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sin
+    <i>morguefile_image.download()</i> and <i>kuler.search()</i>.</p>
+    <p>An exception is the Urban Dictionary which uses SOAP instead of <i>url.retrieve()</i>.</p>
+    <p>Here's a quick mash-up of an interactive link browser. It starts out with some links from
+    Yahoo! and when you click on a link, it displays the links in that web page, and so on.</p>
+    <pre><span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sin
 <span class="kw">import</span> web
  
 <span class="grey"># Get links from Yahoo!</span>
@@ -977,37 +1083,45 @@ retrieving = <span class="kw">None</span>
     <span class="grey"># We are busy downloading.</span>
     <span class="kw">if</span> retrieving != <span class="kw">None</span> <span class="kw">and</span> <span class="kw">not</span> retrieving.<span class="s">done</span>:
         <span class="kw">fill</span><span class="s">(</span><span class="s">1</span>, <span class="s">1</span>, <span class="s">0</span><span class="s">)</span>
-        <span class="kw">text</span><span class="s">(</span><span class="str">"please wait...."</span>, <span class="s">10</span>, <span class="s">20</span><span class="s">)</span>
-</pre>                                                  
-    <p><img alt="web_asynchronous1" height="387" src="media/web_asynchronous1.jpg" width="550"/><br/>
-    </p><p> 
-    </p><hr/>
+        <span class="kw">text</span><span class="s">(</span><span class="str">"please wait...."</span>, <span class="s">10</span>, <span class="s">20</span><span class="s">)</span></pre>
+                                                  
+
+    <p><img alt="web_asynchronous1" height="387" src="media/web_asynchronous1.jpg" width="550"/><br/></p>
+    <p> </p>
+    <hr/>
+
     <h2><a id="cache" name="cache" title="cache"></a>Clearing the cache</h2>
+
     <p>Most of the content you retrieve with the Web library is cached for faster retrieval in the
     future. At some point you may want to empty the cache (it can grow quite large). This is easy -
-    to erase the cache completely just do:<br/>
-    </p><pre class="python">web.<span class="s">clear_cache</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <p>To clear individual caches:
-    </p><pre class="python">web.<span class="s">yahoo</span>.<span class="s">clear_cache</span><span class="s">(</span><span class="s">)</span>
+    to erase the cache completely just do:<br/></p>
+    <pre>web.<span class="s">clear_cache</span><span class="s">(</span><span class="s">)</span></pre>
+
+
+    <p>To clear individual caches:</p>
+    <pre>web.<span class="s">yahoo</span>.<span class="s">clear_cache</span><span class="s">(</span><span class="s">)</span>
 web.<span class="s">wikipedia</span>.<span class="s">clear_cache</span><span class="s">(</span><span class="s">)</span>
 web.<span class="s">morguefile</span>.<span class="s">clear_cache</span><span class="s">(</span><span class="s">)</span> 
-<span class="grey"># etc... clear_cache() is available for each service in the library</span>
-</pre>                
+<span class="grey"># etc... clear_cache() is available for each service in the library</span></pre>
+                
     <hr size="2" width="100%"/>
+
     <h2><a id="json" name="json" title="json"></a>Reading JSON</h2>
+
     <p><a href="http://json.org/">JSON</a> (JavaScript Object Notation) is a lightweight
     data-interchange format. If you have some JSON data you need to parse into a Python dictionary
-    you can use the bundled and super-easy library by Patrick D. Logan:
-    </p><pre class="python">colr_data = web.<span class="s">json</span>.<span class="s">read</span><span class="s">(</span>colr_data<span class="s">)</span>
+    you can use the bundled and super-easy library by Patrick D. Logan:</p>
+    <pre>colr_data = web.<span class="s">json</span>.<span class="s">read</span><span class="s">(</span>colr_data<span class="s">)</span>
 <span class="kw">for</span> theme <span class="kw">in</span> colr_data<span class="s">[</span><span class="str">"schemes"</span><span class="s">]</span>:
-    theme_id = theme<span class="s">[</span><span class="str">"id"</span><span class="s">]</span>
-</pre>                
+    theme_id = theme<span class="s">[</span><span class="str">"id"</span><span class="s">]</span></pre>
+                
+
     <p>
-                    
-    </p><hr/>
-    <p>The NodeBox Web library addresses the following API's:
-    </p><ul>
+                    </p>
+    <hr/>
+
+    <p>The NodeBox Web library addresses the following API's:</p>
+    <ul>
       <li>Yahoo!: <a href="http://developer.yahoo.com/search/">http://developer.yahoo.com/search/</a>
       </li><li>Wikipedia: <a href="http://www.mediawiki.org/wiki/API">http://www.mediawiki.org/wiki/API</a><br/>
       </li><li>morgueFile: <a href="http://www.morguefile.com/wiki/index.php/Morguefile_api_">http://www.morguefile.com/wiki/index.php/Morguefile_api</a>
@@ -1017,6 +1131,8 @@ web.<span class="s">morguefile</span>.<span class="s">clear_cache</span><span cl
       </li><li>mimeTeX: <a href="http://www.forkosh.com/mimetex.html">http://www.forkosh.com/mimetex.html</a>
       </li><li>Urban Dictionary: <a href="http://www.urbandictionary.com/api.php">http://www.urbandictionary.com/api.php</a>
     </li></ul>
-    <p> 
-  </p></div>
+
+    <p> </p>
+  </div>
+
 </body></html>

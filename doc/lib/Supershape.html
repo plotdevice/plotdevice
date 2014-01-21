@@ -1,21 +1,27 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Libraries: Supershape</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+
     <h3>Supershape</h3>
   </div>
+
   <div class="article">
     <h2>Description</h2>
+
     <p>The Supershape library implements Johan Gielis' superformula in NodeBox. Gielis suggested
     that the formula can be used to describe many complex shapes and curves that are found in
     nature. You can use the tools in this lbrary to create anything from a circle or a square to a
-    flower or an amoeba, or to transform other paths, like text.
-    </p><p>Note that the Supershape library is only available for non-commercial purposes.
-    </p><p>A special thanks goes to Johan Gielis.
-    </p><h2>Download</h2>
+    flower or an amoeba, or to transform other paths, like text.</p>
+    <p>Note that the Supershape library is only available for non-commercial purposes.</p>
+    <p>A special thanks goes to Johan Gielis.</p>
+    <h2>Download</h2>
+
     <table border="0">
       <tbody>
         <tr>
@@ -25,57 +31,67 @@
           <i>Last updated for NodeBox 1.9.4<br/></i><i>Author: Johan Gielis, Frederik De
           Bleser</i><br/>
         </td></tr></tbody></table>
+
     <h2>Documentation</h2>
+
     <ul>
       <li><a href="#library">How to get the library up and running</a>
       </li><li><a href="#create">Creating a supershape path</a>
       </li><li><a href="#transform">Transform a path</a>
     </li></ul>
-    <p> 
-    </p><hr/>
+
+    <p> </p>
+    <hr/>
+
     <h2><a id="library" name="library" title="library"></a>How to get the library up and
     running</h2>
+
     <p>Put the <i>supershape</i> library folder in the same folder as your script so NodeBox can
-    find the library. You can also put it in ~/Library/Application Support/NodeBox/.
-    </p><pre class="python">supershape = <span class="kw">ximport</span><span class="s">(</span><span class="str">"supershape"</span><span class="s">)</span>
-</pre> 
+    find the library. You can also put it in ~/Library/Application Support/NodeBox/.</p>
+    <pre>supershape = <span class="kw">ximport</span><span class="s">(</span><span class="str">"supershape"</span><span class="s">)</span></pre>
+ 
     <hr/>
+
     <h2><a id="create" name="create" title="create"></a>Creating a supershape path</h2>
-    <pre class="python">path<span class="s">(</span>x, y, w, h, m, n1, n2, n3, points=<span class="s">1000</span>, percentage=<span class="s">1.0</span>, <span class="s">range</span>=pi*<span class="s">2</span><span class="s">)</span>
-</pre>
+    <pre>path<span class="s">(</span>x, y, w, h, m, n1, n2, n3, points=<span class="s">1000</span>, percentage=<span class="s">1.0</span>, <span class="s">range</span>=pi*<span class="s">2</span><span class="s">)</span></pre>
+
+
     <p>The <i>path()</i> command returns a supershape as a <a href="../ref/Classes.html#BezierPath">path</a> drawable with <a href="../ref/Path.html#drawpath()">drawpath()</a>. The first four parameters (<i>x, y, w, h</i>)
     define the path's origin, width and height. The next four (<i>m</i>, <i>n1</i>, <i>n2</i> and
-    <i>n3</i>) define the path's shape.
-    </p><p>Increasing <i>m</i> adds rotational symmetry to the shape: when <i>m</i> is 0 you get a
+    <i>n3</i>) define the path's shape.</p>
+    <p>Increasing <i>m</i> adds rotational symmetry to the shape: when <i>m</i> is 0 you get a
     circle, <i>m</i>=2 is an ellipse. <i>m</i>=4 is a square and so on. As the <i>n</i>'s are kept
     equal but reduced the form becomes increasingly pinched. When <i>m</i>=5 and all the <i>n</i>'s
     are 1 you get a pentagon, reducing all the <i>n</i>'s to 0.3 you get a five-pointed star. If
     <i>n1</i> is slightly larger than <i>n2</i> and <i>n3</i> then bloated forms result. See
     <a href="http://local.wasp.uwa.edu.au/~pbourke/curves/supershape/">http://local.wasp.uwa.edu.au/~pbourke/curves/supershape/</a>
-    for more information.
-    </p><pre class="python"><span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+    for more information.</p>
+    <pre><span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
 <span class="kw">strokewidth</span><span class="s">(</span><span class="s">0.5</span><span class="s">)</span>
  
 x = y = <span class="s">100</span>
 w = h = <span class="s">100</span>
 p = supershape.<span class="s">path</span><span class="s">(</span>x, y, w, h, <span class="s">5</span>, <span class="s">0.3</span>, <span class="s">0.3</span>, <span class="s">0.3</span><span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span>
-</pre>
-    <p><span class="media"><img height="205" src="media/supershape-path.gif" width="210"/></span>
-    </p><p>Remember that when you want to supply one path multiple times to drawpath(), each with its
+<span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span></pre>
+
+
+    <p><span class="media"><img height="205" src="media/supershape-path.gif" width="210"/></span></p>
+    <p>Remember that when you want to supply one path multiple times to drawpath(), each with its
     own translation and rotation, you need to convert it to a list of points before you start
-    feeding it to drawpath:
-    </p><pre class="python">path = <span class="s">[</span>pt <span class="kw">for</span> pt <span class="kw">in</span> path<span class="s">]</span>
-</pre> 
+    feeding it to drawpath:</p>
+    <pre>path = <span class="s">[</span>pt <span class="kw">for</span> pt <span class="kw">in</span> path<span class="s">]</span></pre>
+ 
     <hr/>
+
     <h2><a id="transform" name="transform" title="transform"></a>Transforming a path</h2>
-    <pre class="python"><span class="kw">transform</span><span class="s">(</span>path, m, n1, n2, n3, points=<span class="s">1000</span>, <span class="s">range</span>=pi*<span class="s">2</span><span class="s">)</span>
-</pre>
+    <pre><span class="kw">transform</span><span class="s">(</span>path, m, n1, n2, n3, points=<span class="s">1000</span>, <span class="s">range</span>=pi*<span class="s">2</span><span class="s">)</span></pre>
+
+
     <p>The transform() command returns a copy of the given <i>path</i> supertransformed by
     <i>m</i>, <i>n1</i>, <i>n2</i> and <i>n3</i>. You can supertransform anything from rectangles
-    and circles to <a href="../ref/Typography.html#textpath()">texpaths</a> and <a href="SVG.html">SVG</a>.<br/>
-    </p><pre class="python"><span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+    and circles to <a href="../ref/Typography.html#textpath()">texpaths</a> and <a href="SVG.html">SVG</a>.<br/></p>
+    <pre><span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
  
 <span class="kw">font</span><span class="s">(</span><span class="str">"Times"</span>, <span class="s">100</span><span class="s">)</span>
@@ -83,14 +99,17 @@ path = <span class="kw">textpath</span><span class="s">(</span><span class="str"
  
 <span class="kw">for</span> contour <span class="kw">in</span> path.<span class="s">contours</span>:
   contour = supershape.<span class="kw">transform</span><span class="s">(</span>contour, <span class="s">50</span>, <span class="s">0.25</span>, <span class="s">3.5</span>, <span class="s">3.5</span><span class="s">)</span>
-  <span class="kw">drawpath</span><span class="s">(</span>contour<span class="s">)</span>
-</pre>
-    <p><span class="media"><img height="112" src="media/supershape-transform.gif" width="254"/></span>
-    </p><p> 
-    </p><hr/>
-    <p>Another example with an animated text path:
-    </p><p> 
-    </p><p><span class="image_border"><a href="http://nodebox.net/code/data/media/supershape.mov"><img height="288" src="media/supershape.gif" width="288"/></a></span><br/>
-    <a href="http://nodebox.net/code/data/media/supershape.mov">Play movie</a>
-  </p></div>
+  <span class="kw">drawpath</span><span class="s">(</span>contour<span class="s">)</span></pre>
+
+
+    <p><span class="media"><img height="112" src="media/supershape-transform.gif" width="254"/></span></p>
+    <p> </p>
+    <hr/>
+
+    <p>Another example with an animated text path:</p>
+    <p> </p>
+    <p><span class="image_border"><a href="http://nodebox.net/code/data/media/supershape.mov"><img height="288" src="media/supershape.gif" width="288"/></a></span><br/>
+    <a href="http://nodebox.net/code/data/media/supershape.mov">Play movie</a></p>
+  </div>
+
 </body></html>

@@ -1,11 +1,15 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Reference: Utility</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
+
     <h3>Utility</h3>
+
     <ul class="siblings">
       <li><a href="Primitives.html">Primitives</a>
       </li><li><a href="Path.html">Path</a>
@@ -15,134 +19,174 @@
       </li><li><a href="Classes.html">Classes</a>
     </li></ul>
   </div>
+
   <div class="article">
     <a name="autotext()"></a>
+
     <div class="section">
       <h3>autotext()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">autotext</span><span class="s">(</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">autotext</span><span class="s">(</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Generates random text from an XML-document. Autotext is a very powerful feature once you
           learn how to use it. NodeBox has a built-in implementation of the Kant Generator Pro.
           XML-files for the Kant Generator have a specified structure. Further information can be
           found at http://diveintopython.org/xml_processing/
         </div>
+
         <h2>Returns</h2>
+
         <div class="row">
           a string containing automatically generated text
         </div>
+
         <h2>Tutorial</h2>
+
         <div class="row">
           <a href="../tut/Strings.html">Strings</a>
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/autotext.jpg"/></span>
                 </td><td>
-                  <pre class="python">
+                  <pre>
 <span class="kw">fontsize</span><span class="s">(</span><span class="s">9</span><span class="s">)</span>
 <span class="kw">lineheight</span><span class="s">(</span><span class="s">0.8</span><span class="s">)</span>
 txt = <span class="kw">autotext</span><span class="s">(</span><span class="str">"kant.xml"</span><span class="s">)</span>
-<span class="kw">text</span><span class="s">(</span>txt, <span class="s">5</span>, <span class="s">10</span>, width=<span class="s">110</span><span class="s">)</span>
-</pre>
+<span class="kw">text</span><span class="s">(</span>txt, <span class="s">5</span>, <span class="s">10</span>, width=<span class="s">110</span><span class="s">)</span></pre>
+
                 </td></tr></tbody></table>
         </div>
+
         <div class="row">
            
         </div>
+
         <h2>Download</h2>
+
         <div class="row">
           <a href="../tut/media/kant.xml">kant.xml</a>
         </div>
       </div>
     </div><a name="choice()"></a>
+
     <div class="section">
       <h3>choice()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">choice</span><span class="s">(</span><span class="s">list</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">choice</span><span class="s">(</span><span class="s">list</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Returns one random item from the list supplied as parameter. Using the choice() command
           is an alternative to the obscure list[random(len(list)] command.
         </div>
+
         <h2>Returns</h2>
+
         <div class="row">
           a random item from the given list
         </div>
+
         <h2>Tutorial</h2>
+
         <div class="row">
           <a href="../tut/Lists.html">Lists</a>
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td>
-                  <pre class="python">
+                  <pre>
 words = <span class="s">[</span><span class="str">"NodeBox"</span>, <span class="str">"Ekky-ekky!"</span>, <span class="str">"z'Boing!"</span><span class="s">]</span>
 c = <span class="kw">choice</span><span class="s">(</span>words<span class="s">)</span> 
  
 <span class="grey"># Variable c contains a random item from the words list</span>
 <span class="grey"># So variable c might now be "NodeBox"...</span>
 <span class="grey"># or "Ekky-ekky!"...</span>
-<span class="grey"># or "z'Boing!"</span>
-</pre>
+<span class="grey"># or "z'Boing!"</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div><a name="files()"></a>
+
     <div class="section">
       <h3>files()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">files</span><span class="s">(</span>path<span class="s">)</span>
-</pre>
+          <pre><span class="kw">files</span><span class="s">(</span>path<span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Retrieves all files from a given path and returns their names as a list.
         </div>
+
         <h2>Returns</h2>
+
         <div class="row">
           a list with the names of the files in the given path
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td>
-                  <pre class="python">
+                  <pre>
 f = <span class="kw">files</span><span class="s">(</span><span class="str">"images/*.jpg"</span><span class="s">)</span>
-<span class="kw">image</span><span class="s">(</span><span class="kw">choice</span><span class="s">(</span>f<span class="s">)</span>, <span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
-</pre>
+<span class="kw">image</span><span class="s">(</span><span class="kw">choice</span><span class="s">(</span>f<span class="s">)</span>, <span class="s">10</span>, <span class="s">10</span><span class="s">)</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div><a name="grid()"></a>
+
     <div class="section">
       <h3>grid()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">grid</span><span class="s">(</span>cols, rows, colsize=<span class="s">1</span>, rowsize=<span class="s">1</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">grid</span><span class="s">(</span>cols, rows, colsize=<span class="s">1</span>, rowsize=<span class="s">1</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           The grid() command returns an iteratable object, something that can be traversed in a
           for-loop (like the range() command for example). The grid() is a more complex, but very
@@ -151,55 +195,70 @@ f = <span class="kw">files</span><span class="s">(</span><span class="str">"imag
           the grid. Each iteration in a for-loop, the offset for the current column and row is
           returned.
         </div>
+
         <h2>Returns</h2>
+
         <div class="row">
           tuples of x/y coordinates that can be used in a for-loop
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/grid.jpg"/></span>
                 </td><td>
-                  <pre class="python">
+                  <pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">for</span> x, y <span class="kw">in</span> <span class="kw">grid</span><span class="s">(</span><span class="s">7</span>, <span class="s">5</span>, <span class="s">12</span>, <span class="s">12</span><span class="s">)</span>:
-    <span class="kw">rect</span><span class="s">(</span><span class="s">10</span>+x, <span class="s">10</span>+y, <span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
-</pre>
+    <span class="kw">rect</span><span class="s">(</span><span class="s">10</span>+x, <span class="s">10</span>+y, <span class="s">10</span>, <span class="s">10</span><span class="s">)</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div><a name="open()"></a>
+
     <div class="section">
       <h3>open()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">open</span><span class="s">(</span>path<span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">open</span><span class="s">(</span>path<span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           The open() command opens a file specified by the path parameter. The open() command can
           be used in two ways: open(path).read(), which returns the file's text content as a
           string, or, alternatively, open(path).readlines(), which returns a list of text lines.
         </div>
+
         <h2>Returns</h2>
+
         <div class="row">
           the file's text content, as a string
         </div>
+
         <h2>Tutorial</h2>
+
         <div class="row">
           <a href="../tut/Strings.html">Strings</a>
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td>
-                  <pre class="python">
+                  <pre>
 <span class="grey"># Prints the contents of sample.txt as a whole</span>
 txt = <span class="kw">open</span><span class="s">(</span><span class="str">"sample.txt"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">print</span> txt
@@ -207,21 +266,26 @@ txt = <span class="kw">open</span><span class="s">(</span><span class="str">"sam
 <span class="grey"># Prints the contents line per line</span>
 txt = <span class="kw">open</span><span class="s">(</span><span class="str">"sample.txt"</span><span class="s">)</span>.<span class="s">readlines</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">for</span> <span class="kw">line</span> <span class="kw">in</span> txt:
-    <span class="kw">print</span> <span class="kw">line</span>
-</pre>
+    <span class="kw">print</span> <span class="kw">line</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div><a name="random()"></a>
+
     <div class="section">
       <h3>random()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">random</span><span class="s">(</span>v1=<span class="kw">None</span>, v2=<span class="kw">None</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">random</span><span class="s">(</span>v1=<span class="kw">None</span>, v2=<span class="kw">None</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Returns a random number that can be assigned to a variable or a parameter. When no
           parameters are supplied, returns a floating-point (decimal) number between 0.0 and 1.0
@@ -229,26 +293,33 @@ txt = <span class="kw">open</span><span class="s">(</span><span class="str">"sam
           this parameter. When two parameters are supplied, returns a number between the first and
           the second parameter. The random() command is useful for all sorts of operations, from
           random colors to lines with a random width.
+
           <p>Note: new random values are returned each time the script runs. The variation can be
           locked by supplying a custom random seed:<br/>
           <span class="inline_code">from random import seed<br/>
-          seed(0)</span><br/>
-        </p></div>
+          seed(0)</span><br/></p>
+        </div>
+
         <h2>Returns</h2>
+
         <div class="row">
           a random number (either an integer or floating-point) within the given boundaries
         </div>
+
         <h2>Tutorial</h2>
+
         <div class="row">
           <a href="../tut/Repetition.html">Repetition</a>
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td>
-                  <pre class="python">
+                  <pre>
 r = <span class="kw">random</span><span class="s">(</span><span class="s">)</span> <span class="grey"># returns a float between 0 and 1</span>
 r = <span class="kw">random</span><span class="s">(</span><span class="s">2.5</span><span class="s">)</span> <span class="grey"># returns a float between 0 and 2.5 </span>
 r = <span class="kw">random</span><span class="s">(</span><span class="s">-1.0</span>, <span class="s">1.0</span><span class="s">)</span> <span class="grey"># returns a float between -1.0 and 1.0</span>
@@ -257,21 +328,26 @@ r = <span class="kw">random</span><span class="s">(</span><span class="s">1</spa
  
 <span class="grey"># sets the fill to anything from </span>
 <span class="grey"># black (0.0,0,0) to red (1.0,0,0)</span>
-<span class="kw">fill</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span>
-</pre>
+<span class="kw">fill</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div><a name="size()"></a>
+
     <div class="section">
       <h3>size()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">size</span><span class="s">(</span>w, h<span class="s">)</span>
-</pre>
+          <pre><span class="kw">size</span><span class="s">(</span>w, h<span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Sets the size of the canvas in points. The first parameter sets the width, the second
           parameter the height. If this command is used, it should be the first line in a script -
@@ -279,67 +355,81 @@ r = <span class="kw">random</span><span class="s">(</span><span class="s">1</spa
           multiplied by "inch", "cm" or "mm". The predefined WIDTH and HEIGHT variables can be used
           to obtain the canvas size.
         </div>
+
         <h2>Tutorial</h2>
+
         <div class="row">
           <a href="../tut/Variables.html">Variables</a>
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td>
-                  <pre class="python">
+                  <pre>
 <span class="kw">size</span><span class="s">(</span><span class="s">400</span>, <span class="s">600</span><span class="s">)</span>
 <span class="grey"># the canvas is 400 X 600 points</span>
 <span class="kw">print</span> <span class="kw">WIDTH</span> <span class="grey"># prints 400</span>
-<span class="kw">print</span> <span class="kw">HEIGHT</span> <span class="grey"># prints 600</span>
-</pre>
-                  <pre class="python">
+<span class="kw">print</span> <span class="kw">HEIGHT</span> <span class="grey"># prints 600</span></pre>
+
+                  <pre>
 <span class="kw">size</span><span class="s">(</span><span class="s">20</span>*<span class="kw">cm</span>, <span class="s">20</span>*<span class="kw">cm</span><span class="s">)</span>
-<span class="grey"># the canvas is 20 x 20 cm</span>
-</pre>
+<span class="grey"># the canvas is 20 x 20 cm</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div><a name="var()"></a>
+
     <div class="section">
       <h3>var()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">var</span><span class="s">(</span>name, <span class="s">type</span>, default, <span class="s">min</span>, <span class="s">max</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">var</span><span class="s">(</span>name, <span class="s">type</span>, default, <span class="s">min</span>, <span class="s">max</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           The variables sheet creates connections between a variable and a user interface control,
           such as a slider, textfield or check box. The most convenient way of creating variables
           is through the Python &gt; Variables menu. Variables created like this become part of the
           global namespace, meaning you can access them just like any other variable.
         </div>
+
         <h2>Tutorial</h2>
+
         <div class="row">
           <a href="../tut/Variables.html">Variables</a>
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/var.jpg"/></span>
                 </td><td>
-                  <pre class="python">
+                  <pre>
 <span class="kw">var</span><span class="s">(</span><span class="str">"amount"</span>, <span class="kw">NUMBER</span>, <span class="s">30</span>, <span class="s">0</span>, <span class="s">100</span><span class="s">)</span>
  
 <span class="kw">background</span><span class="s">(</span><span class="s">0.1</span>, <span class="s">0</span>, <span class="s">0.0</span><span class="s">)</span>
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">int</span><span class="s">(</span>amount<span class="s">)</span><span class="s">)</span>:
     <span class="kw">rotate</span><span class="s">(</span><span class="s">15</span><span class="s">)</span>
-    <span class="kw">image</span><span class="s">(</span><span class="str">"10.png"</span>, <span class="s">5</span>, <span class="s">5</span>, alpha=<span class="s">0.25</span><span class="s">)</span>
-</pre>
+    <span class="kw">image</span><span class="s">(</span><span class="str">"10.png"</span>, <span class="s">5</span>, <span class="s">5</span>, alpha=<span class="s">0.25</span><span class="s">)</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div>
   </div>
+
 </body></html>

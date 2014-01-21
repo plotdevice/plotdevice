@@ -1,45 +1,53 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Tutorials: Color</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
     <h3>Color</h3>
+
     <ul class="chapter">
       <li><a href="Math.html">Math →</a>
       </li><li>Chapter 15
       </li><li><a href="Paths.html">← Paths</a>
     </li></ul>
   </div>
+
   <div class="article">
     <p>Colors returned from the <a href="../ref/Color.html#color()">color()</a> command in NodeBox
     have a few useful attributes that allow you to think in different color spaces at the same
     time. For example, if we wanted to draw a grid of lines in random colors, we would use the
-    following code:
-    </p><pre class="python"><span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>:
+    following code:</p>
+    <pre><span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>:
   c = <span class="kw">color</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
   <span class="kw">stroke</span><span class="s">(</span>c<span class="s">)</span>
   <span class="kw">strokewidth</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
-  <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, i, <span class="kw">WIDTH</span>, i<span class="s">)</span>
-</pre>
+  <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, i, <span class="kw">WIDTH</span>, i<span class="s">)</span></pre>
+
+
     <p>However, since each line now has a random stroke, some lines will tend to look dull and
     light. To crank up the colors, we can easily adjust the lines' saturation without switching to
     a different color space. For the same reason, a stroke width of two is used instead of one,
-    overlapping the lines makes them appear brighter as well.
-    </p><pre class="python"><span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>:
+    overlapping the lines makes them appear brighter as well.</p>
+    <pre><span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>:
   c = <span class="kw">color</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
   c.<span class="s">saturation</span> = <span class="s">1.0</span>
   <span class="kw">stroke</span><span class="s">(</span>c<span class="s">)</span>   
   <span class="kw">strokewidth</span><span class="s">(</span><span class="s">2</span><span class="s">)</span>
-  <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, i, <span class="kw">WIDTH</span>, i<span class="s">)</span>
-</pre>
-    <p> 
-    </p><p><span class="media"><img height="522" src="media/color-lines.jpg" width="579"/></span>
-    </p><h2>Color attributes</h2>
+  <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, i, <span class="kw">WIDTH</span>, i<span class="s">)</span></pre>
+
+
+    <p> </p>
+    <p><span class="media"><img height="522" src="media/color-lines.jpg" width="579"/></span></p>
+    <h2>Color attributes</h2>
+
     <p>Colors returned from the color() command (or the fill() or stroke() command for that matter)
-    have the following attributes:
-    </p><ul>
+    have the following attributes:</p>
+    <ul>
       <li><i>color</i>.r: the RGB red component
       </li><li><i>color</i>.g: the RGB green component
       </li><li><i>color</i>.b: the RGB blue component
@@ -52,54 +60,62 @@
       </li><li><i>color</i>.saturation: the HSB saturation component
       </li><li><i>color</i>.brightness: the HSB brightness component
     </li></ul>
-    <p>All of these can be used at any time in the script, NodeBox calculates the exact color.
-    </p><h2>CMYK output?</h2>
+
+    <p>All of these can be used at any time in the script, NodeBox calculates the exact color.</p>
+    <h2>CMYK output?</h2>
+
     <p>But then what colorspace is used for output? In whatever way you use a <a href="../ref/Color.html#colormode()">colormode()</a> in your script, the output adhers to <a href="../ref/Color.html#outputmode()">outputmode()</a>. This makes it easy when working with print
     documents as you don't need to worry about the technical details, but can instead focus on the
-    colors you like. Keep in mind that not all RGB colors are printable though.
-    </p><h2>Colors are stored in the graphics state<br/></h2>
+    colors you like. Keep in mind that not all RGB colors are printable though.</p>
+    <h2>Colors are stored in the graphics state</h2>
+
     <p>NodeBox remembers the last color you defined, and keeps on using that fill or stroke color,
-    until you define a different one.
-    </p><h2>Harmonious colors</h2>
+    until you define a different one.</p>
+    <h2>Harmonious colors</h2>
+
     <p>The trick to generating harmonious and consistent colors is not to make them entirely
     random, but limit them to a certain range. A common pitfall is to use ALL of the colors, since,
-    <i>we can</i>. But often this does not generate consistent design.
-    </p><p>The HSB color mode is excellent to create color harmony.
-    </p><p>Consider the following example:
-    </p><pre class="python"><span class="kw">colormode</span><span class="s">(</span><span class="kw">HSB</span><span class="s">)</span>
+    <i>we can</i>. But often this does not generate consistent design.</p>
+    <p>The HSB color mode is excellent to create color harmony.</p>
+    <p>Consider the following example:</p>
+    <pre><span class="kw">colormode</span><span class="s">(</span><span class="kw">HSB</span><span class="s">)</span>
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>:
   c = <span class="kw">color</span><span class="s">(</span><span class="s">0.5</span>, <span class="kw">random</span><span class="s">(</span><span class="s">0.5</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">0.5</span>,<span class="s">1.0</span><span class="s">)</span><span class="s">)</span>
   <span class="kw">stroke</span><span class="s">(</span>c<span class="s">)</span>
   <span class="kw">strokewidth</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">50</span><span class="s">)</span><span class="s">)</span>
   radius = <span class="kw">random</span><span class="s">(</span><span class="s">200</span><span class="s">)</span>
-  <span class="kw">oval</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>, radius, radius<span class="s">)</span>
-</pre>
+  <span class="kw">oval</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>, radius, radius<span class="s">)</span></pre>
+
+
     <p>The hue is always the same, 0.5 or a hue of 180, which is cyan. Only the saturation and
     brightness are varied a bit. This ensures we always have shades of blue, so they all fit
     together. Saturation is limited between 0.0 and 0.5, for a faded look. The brightness is
     furthermore limited between 0.5 and 1.0 (fifty to a hundred percent) so we get bright colors.
     Take a look at the <a href="../lib/Colors.html">Colors</a> library which has excellent support
-    for these kind of "color ranges".<br/>
-    </p><p> 
-    </p><p><span class="media"><img height="132" src="media/color-hue1.jpg" width="132"/></span>
+    for these kind of "color ranges".<br/></p>
+    <p> </p>
+    <p><span class="media"><img height="132" src="media/color-hue1.jpg" width="132"/></span>
     <span class="media"><img height="132" src="media/color-hue2.jpg" width="132"/></span>
     <span class="media"><img height="132" src="media/color-hue3.jpg" width="132"/></span>
-    <span class="media"><img height="132" src="media/color-hue4.jpg" width="132"/></span>
-    </p><h2>Gradients</h2>
+    <span class="media"><img height="132" src="media/color-hue4.jpg" width="132"/></span></p>
+    <h2>Gradients</h2>
+
     <p>You can create gradients in NodeBox by drawing lines in a for-loop and increasing the
     transparency of each line. In the example below color <i>c</i>'s alpha transparency ranges from
-    0.0 to 1.0 (notice how we multiply by 1.0 to get a floating point number).
-    </p><pre class="python"><span class="kw">colormode</span><span class="s">(</span><span class="kw">HSB</span><span class="s">)</span>
+    0.0 to 1.0 (notice how we multiply by 1.0 to get a floating point number).</p>
+    <pre><span class="kw">colormode</span><span class="s">(</span><span class="kw">HSB</span><span class="s">)</span>
 c = <span class="kw">color</span><span class="s">(</span><span class="s">0.5</span>, <span class="s">1</span>, <span class="s">1</span><span class="s">)</span>
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>:
   c.<span class="s">a</span> = <span class="s">1.0</span> * i / <span class="kw">HEIGHT</span>
   <span class="kw">stroke</span><span class="s">(</span>c<span class="s">)</span> 
-  <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, i, <span class="kw">WIDTH</span>, i<span class="s">)</span>
-</pre>
-    <p> 
-    </p><p><span class="media"><img height="520" src="media/color-gradient.jpg" width="581"/></span>
-    </p><p> 
-    </p><p>The Colors library has a handy gradient command that handles more complex gradients.
-  </p></div>
+  <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, i, <span class="kw">WIDTH</span>, i<span class="s">)</span></pre>
+
+
+    <p> </p>
+    <p><span class="media"><img height="520" src="media/color-gradient.jpg" width="581"/></span></p>
+    <p> </p>
+    <p>The Colors library has a handy gradient command that handles more complex gradients.</p>
+  </div>
+
 </body></html>

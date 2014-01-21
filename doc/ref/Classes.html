@@ -1,11 +1,15 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Reference: Classes</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
+
     <h3>Classes</h3>
+
     <ul class="siblings">
       <li><a href="Primitives.html">Primitives</a>
       </li><li><a href="Path.html">Path</a>
@@ -15,17 +19,23 @@
       </li><li><a href="Utility.html">Utility</a>
     </li></ul>
   </div>
+
   <div class="article">
     <a id="BezierPath" name="BezierPath"></a>
+
     <div class="section">
       <h3>BezierPath</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">BezierPath</span><span class="s">(</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">BezierPath</span><span class="s">(</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Each path in NodeBox (see for example, <a href="Primitives.html#rect()">rect()</a>,
           <a href="Primitives.html#oval()">oval()</a>, <a href="Path.html#endpath()">endpath()</a>,
@@ -33,78 +43,95 @@
           has a number of properties to manipulate indivdual points in the path and can be passed
           to the <a href="Path.html#drawpath()">drawpath()</a> command to draw it on the canvas.
         </div>
+
         <h2>Properties</h2>
+
         <div class="row">
-          <pre class="python">path.<span class="s">bounds</span>
+          <pre>path.<span class="s">bounds</span>
 path.<span class="s">length</span>
-path.<span class="s">contours</span>
-</pre>
+path.<span class="s">contours</span></pre>
+
         </div>
+
         <h2>Methods</h2>
+
         <div class="row">
-          <pre class="python">path<span class="s">[</span>i<span class="s">]</span>
+          <pre>path<span class="s">[</span>i<span class="s">]</span>
 path.<span class="kw">moveto</span><span class="s">(</span>x, y<span class="s">)</span>
 path.<span class="kw">lineto</span><span class="s">(</span>x, y<span class="s">)</span>
 path.<span class="kw">curveto</span><span class="s">(</span>h1x, h1y, h2x, h2y, x, y<span class="s">)</span>
 path.<span class="kw">closepath</span><span class="s">(</span><span class="s">)</span>
 path.<span class="kw">rect</span><span class="s">(</span>x, y, width, height<span class="s">)</span>
-path.<span class="kw">oval</span><span class="s">(</span>x, y, width, height<span class="s">)</span>
-</pre>
-          <pre class="python">path.<span class="s">contains</span><span class="s">(</span>x, y<span class="s">)</span>
-</pre>
-          <pre class="python">path.<span class="s">point</span><span class="s">(</span>t<span class="s">)</span>
+path.<span class="kw">oval</span><span class="s">(</span>x, y, width, height<span class="s">)</span></pre>
+
+          <pre>path.<span class="s">contains</span><span class="s">(</span>x, y<span class="s">)</span></pre>
+
+          <pre>path.<span class="s">point</span><span class="s">(</span>t<span class="s">)</span>
 path.<span class="s">points</span><span class="s">(</span>amount=<span class="s">100</span><span class="s">)</span>
 path.<span class="s">addpoint</span><span class="s">(</span>t<span class="s">)</span>
-path.<span class="s">segmentlengths</span><span class="s">(</span>relative=<span class="kw">False</span>, n=<span class="s">10</span><span class="s">)</span>
-</pre>
-          <pre class="python">path.<span class="s">intersects</span><span class="s">(</span>path<span class="s">)</span>
+path.<span class="s">segmentlengths</span><span class="s">(</span>relative=<span class="kw">False</span>, n=<span class="s">10</span><span class="s">)</span></pre>
+
+          <pre>path.<span class="s">intersects</span><span class="s">(</span>path<span class="s">)</span>
 path.<span class="s">intersect</span><span class="s">(</span>path, flatness=<span class="s">0.6</span><span class="s">)</span>
 path.<span class="s">union</span><span class="s">(</span>path, flatness=<span class="s">0.6</span><span class="s">)</span>
-path.<span class="s">difference</span><span class="s">(</span>path, flatness=<span class="s">0.6</span><span class="s">)</span>
-</pre>
-          <pre class="python">path.<span class="s">fit</span><span class="s">(</span>x=<span class="kw">None</span>, y=<span class="kw">None</span>, width=<span class="kw">None</span>, height=<span class="kw">None</span>, stretch=<span class="kw">False</span><span class="s">)</span>
-</pre>
-          <pre class="python">path.<span class="s">copy</span><span class="s">(</span><span class="s">)</span>
-</pre>
+path.<span class="s">difference</span><span class="s">(</span>path, flatness=<span class="s">0.6</span><span class="s">)</span></pre>
+
+          <pre>path.<span class="s">fit</span><span class="s">(</span>x=<span class="kw">None</span>, y=<span class="kw">None</span>, width=<span class="kw">None</span>, height=<span class="kw">None</span>, stretch=<span class="kw">False</span><span class="s">)</span></pre>
+
+          <pre>path.<span class="s">copy</span><span class="s">(</span><span class="s">)</span></pre>
+
+
           <p>See the <a href="../tut/Paths.html">tutorial on paths</a> to learn about all the
-          methods.
-          </p><p>With the <i>segmentlengths()</i> method you can define the math precision for
+          methods.</p>
+          <p>With the <i>segmentlengths()</i> method you can define the math precision for
           <i>point()</i> and <i>points()</i> by making <i>n</i> a higher value (usually 10 is
-          fine).<br/>
-          </p><p>When you loop over a path it returns a list of <a href="#PathElement">PathElement</a>
-          objects.<br/>
-        </p></div>
+          fine).<br/></p>
+          <p>When you loop over a path it returns a list of <a href="#PathElement">PathElement</a>
+          objects.<br/></p>
+        </div>
       </div>
     </div><a id="ClippingPath" name="ClippingPath"></a>
+
     <div class="section">
       <h3>ClippingPath</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">ClippingPath</span><span class="s">(</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">ClippingPath</span><span class="s">(</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Each clipping mask in NodeBox (see <a href="Path.html#beginclip()">beginclip()</a>) is a
           ClippingPath object.
         </div>
+
         <h2>Properties</h2>
+
         <div class="row">
-          <pre class="python">clip.<span class="s">path</span>
-</pre>The <i>path</i> property contains a <a href="#BezierPath">BezierPath</a>.
+          <pre>clip.<span class="s">path</span></pre>
+The <i>path</i> property contains a <a href="#BezierPath">BezierPath</a>.
         </div>
       </div>
     </div><a id="Color" name="Color"></a>
+
     <div class="section">
       <h3>Color</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python">Color<span class="s">(</span><span class="s">)</span>
-</pre>
+          <pre>Color<span class="s">(</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           The color commands in NodeBox (see for example, <a href="Color.html#color()">color()</a>,
           <a href="Color.html#fill()">fill()</a>, <a href="Color.html#stroke()">stroke()</a>,
@@ -112,16 +139,20 @@ path.<span class="s">difference</span><span class="s">(</span>path, flatness=<sp
           has a number of properties to manipulate indivdual color values in different spaces and
           can be passed to the fill() and stroke() command.
         </div>
+
         <h2>Methods</h2>
+
         <div class="row">
-          <pre class="python">clr.<span class="s">blend</span><span class="s">(</span>clr<span class="s">)</span>
-</pre>
-          <pre class="python">clr.<span class="s">copy</span><span class="s">(</span><span class="s">)</span>
-</pre>
+          <pre>clr.<span class="s">blend</span><span class="s">(</span>clr<span class="s">)</span></pre>
+
+          <pre>clr.<span class="s">copy</span><span class="s">(</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Properties</h2>
+
         <div class="row">
-          <pre class="python">clr.<span class="s">r</span>
+          <pre>clr.<span class="s">r</span>
 clr.<span class="s">g</span>
 clr.<span class="s">b</span>
 clr.<span class="s">a</span>
@@ -131,104 +162,129 @@ clr.<span class="s">brightness</span>
 clr.<span class="s">c</span>
 clr.<span class="s">m</span>
 clr.<span class="s">y</span>
-clr.
-</pre>
+clr.</pre>
+
+
           <p>See the <a href="../tut/Color.html">tutorial on colors</a> to learn about all the
-          properties.
-          </p><p>With the <i>blend()</i> method you can create an in-between of two colors.<br/>
-        </p></div>
+          properties.</p>
+          <p>With the <i>blend()</i> method you can create an in-between of two colors.<br/></p>
+        </div>
       </div>
     </div><a id="PathElement" name="PathElement"></a>
+
     <div class="section">
       <h3>PathElement</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">PathElement</span><span class="s">(</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">PathElement</span><span class="s">(</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Each point in a <a href="#BezierPath">BezierPath</a> is a PathElement object. This object
           has a number of properties that describe the coordinates and handles of the path point.
         </div>
+
         <h2>Properties</h2>
+
         <div class="row">
-          <pre class="python">point.<span class="s">cmd</span>
+          <pre>point.<span class="s">cmd</span>
 point.<span class="s">x</span>
 point.<span class="s">y</span>
 point.<span class="s">ctrl1</span>.<span class="s">x</span>
 point.<span class="s">ctrl1</span>.<span class="s">y</span>
 point.<span class="s">ctrl2</span>.<span class="s">x</span>
-point.<span class="s">ctrl2</span>.<span class="s">y</span>
-</pre>
+point.<span class="s">ctrl2</span>.<span class="s">y</span></pre>
+
+
           <p>The point.cmd property describes the type of curve this point belongs to. Its value
-          can be MOVETO, LINETO, CURVETO or CLOSE.<br/>
-          </p><p>See the <a href="../tut/Paths.html">tutorial on paths</a> to learn about all the
-          properties.
-        </p></div>
+          can be MOVETO, LINETO, CURVETO or CLOSE.<br/></p>
+          <p>See the <a href="../tut/Paths.html">tutorial on paths</a> to learn about all the
+          properties.</p>
+        </div>
       </div>
     </div><a id="Text" name="Text"></a>
+
     <div class="section">
       <h3>Text</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python">Text<span class="s">(</span><span class="s">)</span>
-</pre>
+          <pre>Text<span class="s">(</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           The <a href="Typography.html#text()">text()</a> command in NodeBox returns a Text object
           representing the text being drawn. This object has a number of properties to manipulate:
         </div>
+
         <h2>Properties</h2>
+
         <div class="row">
-          <pre class="python">txt.<span class="s">x</span>
+          <pre>txt.<span class="s">x</span>
 txt.<span class="s">y</span>
 txt.<span class="kw">text</span>
 txt.<span class="s">metrics</span>
 txt.<span class="s">path</span>
-txt.<span class="s">copy</span><span class="s">(</span><span class="s">)</span>
-</pre>The metrics property is a tuple containing the width and height of the text block.
+txt.<span class="s">copy</span><span class="s">(</span><span class="s">)</span></pre>
+The metrics property is a tuple containing the width and height of the text block.
         </div>
       </div>
     </div><a id="Transform" name="Transform"></a>
+
     <div class="section">
       <h3>Transform</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python">Transform<span class="s">(</span><span class="s">)</span>
-</pre>
+          <pre>Transform<span class="s">(</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           A personal transformation state you can use to apply translation, rotation, scaling and
           skewing to a path before drawing it.
         </div>
+
         <h2>Methods</h2>
+
         <div class="row">
-          <pre class="python">t.<span class="kw">translate</span><span class="s">(</span>x=<span class="s">0</span>, y=<span class="s">0</span><span class="s">)</span>
+          <pre>t.<span class="kw">translate</span><span class="s">(</span>x=<span class="s">0</span>, y=<span class="s">0</span><span class="s">)</span>
 t.<span class="kw">rotate</span><span class="s">(</span>degrees=<span class="s">0</span>, radians=<span class="s">0</span><span class="s">)</span>
 t.<span class="kw">scale</span><span class="s">(</span>x=<span class="s">1</span>, y=<span class="kw">None</span><span class="s">)</span>
 t.<span class="kw">skew</span><span class="s">(</span>x=<span class="s">0</span>, y=<span class="s">0</span><span class="s">)</span>
-t.<span class="s">invert</span><span class="s">(</span><span class="s">)</span>
-</pre>
-          <pre class="python">t.<span class="s">append</span><span class="s">(</span>t<span class="s">)</span>
-t.<span class="s">prepend</span><span class="s">(</span>t<span class="s">)</span>
-</pre>
-          <pre class="python">t.<span class="s">transformPoint</span><span class="s">(</span>point<span class="s">)</span>
-t.<span class="s">transformBezierPath</span><span class="s">(</span>path<span class="s">)</span>
-</pre>
-          <pre class="python">t.<span class="s">copy</span><span class="s">(</span><span class="s">)</span>
-</pre>
+t.<span class="s">invert</span><span class="s">(</span><span class="s">)</span></pre>
+
+          <pre>t.<span class="s">append</span><span class="s">(</span>t<span class="s">)</span>
+t.<span class="s">prepend</span><span class="s">(</span>t<span class="s">)</span></pre>
+
+          <pre>t.<span class="s">transformPoint</span><span class="s">(</span>point<span class="s">)</span>
+t.<span class="s">transformBezierPath</span><span class="s">(</span>path<span class="s">)</span></pre>
+
+          <pre>t.<span class="s">copy</span><span class="s">(</span><span class="s">)</span></pre>
+
+
           <p>See the <a href="../tut/Paths.html">tutorial on paths</a> to learn more about the
-          methods.
-          </p><p>The <i>transformBezierPath()</i> method returns a new path with the defined
-          transformations applied to it.<br/>
-        </p></div>
+          methods.</p>
+          <p>The <i>transformBezierPath()</i> method returns a new path with the defined
+          transformations applied to it.<br/></p>
+        </div>
       </div>
     </div>
   </div>
+
 </body></html>

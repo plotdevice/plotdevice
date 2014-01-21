@@ -1,11 +1,15 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Reference: Primitives</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
+
     <h3>Primitives</h3>
+
     <ul class="siblings">
       <li><a href="Path.html">Path</a>
       </li><li><a href="Transform.html">Transform</a>
@@ -15,55 +19,72 @@
       </li><li><a href="Classes.html">Classes</a>
     </li></ul>
   </div>
+
   <div class="article">
     <a name="arrow()"></a>
+
     <div class="section">
       <h3>arrow()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">arrow</span><span class="s">(</span>x, y, width, <span class="s">type</span>=<span class="kw">NORMAL</span>, draw=<span class="kw">True</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">arrow</span><span class="s">(</span>x, y, width, <span class="s">type</span>=<span class="kw">NORMAL</span>, draw=<span class="kw">True</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Draws an arrow to the screen. The first two parameters set the location (measured from
           the arrow's head), the third sets the width. Optionally you can define the arrow type
           with the fourth parameter. By default the arrow type is NORMAL, but there is also a
           trendier FORTYFIVE version.
         </div>
+
         <h2>Returns</h2>
+
         <div class="row">
           <a href="Classes.html#BezierPath">BezierPath</a> containing the arrow
         </div>
+
         <h2>Tutorial</h2>
+
         <div class="row">
           <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/arrow.jpg"/></span>
                 </td><td>
-                  <pre class="python">
+                  <pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">arrow</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
-</pre>
+<span class="kw">arrow</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span>, <span class="s">50</span><span class="s">)</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div><a name="image()"></a>
+
     <div class="section">
       <h3>image()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">image</span><span class="s">(</span>path, x, y, width=<span class="kw">None</span>, height=<span class="kw">None</span>, alpha=<span class="s">1.0</span>, data=<span class="kw">None</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">image</span><span class="s">(</span>path, x, y, width=<span class="kw">None</span>, height=<span class="kw">None</span>, alpha=<span class="s">1.0</span>, data=<span class="kw">None</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Draws an image to the screen. An image is a JPEG-, GIF-, PNG-, AI-, EPS-, TIF-, PSD-, or
           PDF-file stored on disk. For vector works, EPS is the best format to use. The first
@@ -75,62 +96,78 @@
           the image. This value ranges between 0.0 and 1.0. The last optional parameter is used
           when supplying an image as a data stream instead of a file path.
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img alt="superfolia" height="125" src="media/superfolia.jpg" width="125"/></span>
                 </td><td>
-                  <pre class="python">
-<span class="kw">image</span><span class="s">(</span><span class="str">"superfolia.jpg"</span>, <span class="s">50</span>, <span class="s">0</span><span class="s">)</span>
-</pre>
+                  <pre>
+<span class="kw">image</span><span class="s">(</span><span class="str">"superfolia.jpg"</span>, <span class="s">50</span>, <span class="s">0</span><span class="s">)</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div><a name="imagesize()"></a>
+
     <div class="section">
       <h3>imagesize()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">imagesize</span><span class="s">(</span>path<span class="s">)</span>
-</pre>
+          <pre><span class="kw">imagesize</span><span class="s">(</span>path<span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Returns the dimensions (width and height) of an image located at the given path.
           Obtaining the size of an image is useful when the image needs to scaled to an exact size,
           for example. The return value is a list with the image's width and the image's height.
         </div>
+
         <h2>Returns</h2>
+
         <div class="row">
           a tuple with the width and height of the given image
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td>
-                  <pre class="python">
+                  <pre>
 w, h = <span class="kw">imagesize</span><span class="s">(</span><span class="str">"superfolia.jpg"</span><span class="s">)</span>
 <span class="kw">print</span> w
-<span class="kw">print</span> h
-</pre>
+<span class="kw">print</span> h</pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div><a name="line()"></a>
+
     <div class="section">
       <h3>line()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">line</span><span class="s">(</span>x1, y1, x2, y2, draw=<span class="kw">True</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">line</span><span class="s">(</span>x1, y1, x2, y2, draw=<span class="kw">True</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Draws a line to the screen. A line is a straight path between two points. The first two
           parameters set the location of the first point (origin), the following two parameters set
@@ -138,140 +175,180 @@ w, h = <span class="kw">imagesize</span><span class="s">(</span><span class="str
           <a href="Color.html#stroke()">stroke()</a> is the same as the background color, or if the
           line's <a href="Color.html#strokewidth()">strokewidth()</a> is zero.
         </div>
+
         <h2>Returns</h2>
+
         <div class="row">
           <a href="Classes.html#BezierPath">BezierPath</a> containing the line
         </div>
+
         <h2>Tutorial</h2>
+
         <div class="row">
           <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/line.jpg"/></span>
                 </td><td>
-                  <pre class="python">
+                  <pre>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">strokewidth</span><span class="s">(</span><span class="s">2</span><span class="s">)</span>
-<span class="kw">line</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">80</span>, <span class="s">80</span><span class="s">)</span>
-</pre>
+<span class="kw">line</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">80</span>, <span class="s">80</span><span class="s">)</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div><a name="oval()"></a>
+
     <div class="section">
       <h3>oval()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">oval</span><span class="s">(</span>x, y, width, height, draw=<span class="kw">True</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">oval</span><span class="s">(</span>x, y, width, height, draw=<span class="kw">True</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Draws an oval (ellipse) to the screen. An oval with an equal width and height makes a
           circle. The first two parameters set the location (measured from the oval's top-left),
           the third sets the width, and the fourth sets the height.
         </div>
+
         <h2>Returns</h2>
+
         <div class="row">
           <a href="Classes.html#BezierPath">BezierPath</a> containing the oval
         </div>
+
         <h2>Tutorial</h2>
+
         <div class="row">
           <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/oval.jpg"/></span>
                 </td><td>
-                  <pre class="python">
+                  <pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">oval</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
-</pre>
+<span class="kw">oval</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div><a name="rect()"></a>
+
     <div class="section">
       <h3>rect()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">rect</span><span class="s">(</span>x, y, width, height, roundness=<span class="s">0.0</span>, draw=<span class="kw">True</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">rect</span><span class="s">(</span>x, y, width, height, roundness=<span class="s">0.0</span>, draw=<span class="kw">True</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Draws a rectangle to the screen. The first two parameters set the location (measured from
           the rectangle's top-left corner), the third sets the width, and the fourth sets the
           height. An optional fifth parameter controls the corner roundness of the rectangle.
         </div>
+
         <h2>Returns</h2>
+
         <div class="row">
           <a href="Classes.html#BezierPath">BezierPath</a> containing the rectangle
         </div>
+
         <h2>Tutorial</h2>
+
         <div class="row">
           <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/rect.jpg"/></span>
                 </td><td>
-                  <pre class="python">
+                  <pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">60</span>, <span class="s">40</span><span class="s">)</span>
-</pre>
+<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">60</span>, <span class="s">40</span><span class="s">)</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div><a name="star()"></a>
+
     <div class="section">
       <h3>star()</h3>
+
       <div class="definition">
         <h2>Syntax</h2>
+
         <div class="row">
-          <pre class="python"><span class="kw">star</span><span class="s">(</span>x, y, points=<span class="s">20</span>, outer=<span class="s">100</span>, inner=<span class="s">50</span>, draw=<span class="kw">True</span><span class="s">)</span>
-</pre>
+          <pre><span class="kw">star</span><span class="s">(</span>x, y, points=<span class="s">20</span>, outer=<span class="s">100</span>, inner=<span class="s">50</span>, draw=<span class="kw">True</span><span class="s">)</span></pre>
+
         </div>
+
         <h2>Description</h2>
+
         <div class="row">
           Draws a star to the screen. The first two parameters set the location, measured from the
           star's center. There are three optional parameters that set the number of points, the
           outer radius and the inner radius (the fill radius).
         </div>
+
         <h2>Returns</h2>
+
         <div class="row">
           <a href="Classes.html#BezierPath">BezierPath</a> containing the star
         </div>
+
         <h2>Tutorial</h2>
+
         <div class="row">
           <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
         </div>
+
         <h2>Example</h2>
+
         <div class="row">
           <table border="0">
             <tbody>
               <tr>
                 <td><span class="image_border"><img src="media/star.jpg"/></span>
                 </td><td>
-                  <pre class="python">
+                  <pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">star</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span>, <span class="s">9</span>, <span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
-</pre>
+<span class="kw">star</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span>, <span class="s">9</span>, <span class="s">40</span>, <span class="s">10</span><span class="s">)</span></pre>
+
                 </td></tr></tbody></table>
         </div>
       </div>
     </div>
   </div>
+
 </body></html>

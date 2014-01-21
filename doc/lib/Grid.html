@@ -1,12 +1,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Libraries: Grid</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+
     <h3>Grid</h3>
   </div>
+
   <div class="article">
     <p>The NodeBox Grid library offers a number of tools to work with rows and columns in a page
     layout. It's like having a combination of InDesign and Excel available in NodeBox. You can use
@@ -14,9 +18,9 @@
     proportions between cells in the grid, create spreadsheet tables with (simple) statistics,
     define reusable visual styles in a CSS-like way. Numerous of text commands help you for example
     determine good, legible column widths, apply widow/orphan control to paragraphs, generate
-    <i>lorem ipsum</i> placeholder text.
-    </p><p>Central concepts in this library are:
-    </p><ul>
+    <i>lorem ipsum</i> placeholder text.</p>
+    <p>Central concepts in this library are:</p>
+    <ul>
       <li><b>Grid</b>: rows and columns containing cells. Each cell can be a new grid.
       </li><li><b>Content</b>: a text or a list of images that is divided among the rows and columns in
       a grid.
@@ -24,9 +28,11 @@
       </li><li><b>Style</b>: a description of colors, typography, whitespace that can be attached to
       cells.
     </li></ul>
+
     <p>The library has a caching mechanism that allows you to create multi-page documents (e.g. a
-    book), keeping track of the text and images that have already been drawn along the way.
-    </p><h2>Download</h2>
+    book), keeping track of the text and images that have already been drawn along the way.</p>
+    <h2>Download</h2>
+
     <table border="0">
       <tbody>
         <tr>
@@ -35,7 +41,9 @@
           <i>Last updated for NodeBox 1.9.4.2</i><br/>
           <i>Licensed under GPL<br/></i><i>Author: Tom De Smedt</i>
         </td></tr></tbody></table>
+
     <h2>Documentation</h2>
+
     <ul>
       <li><a href="#library">How to get the library up and running</a>
       </li><li><a href="#create">Creating a grid</a><br/>
@@ -48,26 +56,32 @@
       </li><li><a href="#statistics">Spreadsheet statistics</a>
       </li><li><a href="#pages">Multiple pages</a><br/>
     </li></ul>
-    <p> 
-    </p><hr size="2" width="100%"/>
+
+    <p> </p>
+    <hr size="2" width="100%"/>
+
     <h2><a id="library" name="library" title="library"></a>How to get the library up and
     running</h2>
+
     <p>Put the <i>grid</i> library folder in the same folder as your script so NodeBox can find the
-    library. You can also put it in <i>~/Library/Application Support/NodeBox/.</i>
-    </p><pre class="python"><span class="kw">grid</span> = <span class="kw">ximport</span><span class="s">(</span><span class="str">"grid"</span><span class="s">)</span>
-</pre>
-    <p> 
-    </p><hr size="2" width="100%"/>
+    library. You can also put it in <i>~/Library/Application Support/NodeBox/.</i></p>
+    <pre><span class="kw">grid</span> = <span class="kw">ximport</span><span class="s">(</span><span class="str">"grid"</span><span class="s">)</span></pre>
+
+
+    <p> </p>
+    <hr size="2" width="100%"/>
+
     <h2><a id="create" name="create" title="create"></a>Creating a grid</h2>
-    <pre class="python">create<span class="s">(</span>rows=<span class="s">1</span>, columns=<span class="s">1</span>, width=<span class="kw">None</span>, height=<span class="kw">None</span><span class="s">)</span>
-</pre>
+    <pre>create<span class="s">(</span>rows=<span class="s">1</span>, columns=<span class="s">1</span>, width=<span class="kw">None</span>, height=<span class="kw">None</span><span class="s">)</span></pre>
+
+
     <p>The <i>create()</i> command returns a new grid object, by default encompassing the entire
     drawing canvas. You can define the number of rows and columns in the grid and a different width
     and/or height. A grid also has lots of properties and methods to make life easier. We'll
-    briefly summarize them here and discuss them in detail later on.
-    </p><p>The returned <i>grid</i> object has the following properties:
-    </p><p><span class="grey_box">Navigation</span>
-    </p><ul>
+    briefly summarize them here and discuss them in detail later on.</p>
+    <p>The returned <i>grid</i> object has the following properties:</p>
+    <p><span class="grey_box">Navigation</span></p>
+    <ul>
       <li><i>grid.name</i>: the name of the grid.
       </li><li><i>grid.parent</i>: the grid in which this grid is a cell, <i>None</i> for the top-level
       grid.
@@ -80,8 +94,9 @@
       </li><li><i>grid.left</i>: the column or cell at the utmost left in the grid.
       </li><li><i>grid.right</i>: the column or cell at the utmost right in grid.
     </li></ul>
-    <p><span class="grey_box">Position and size</span><br/>
-    </p><ul>
+
+    <p><span class="grey_box">Position and size</span><br/></p>
+    <ul>
       <li><i>grid.x</i>: the horizontal offset of a cell.<br/>
       </li><li><i>grid.y</i>: the vertical offset of a cell.<br/>
       </li><li><i>grid.width</i>: a cell's width in pixels.<br/>
@@ -93,44 +108,52 @@
       </li><li><i>grid.fixed</i>: <i>True</i> when this cell does not harmoniously rescale to make room
       for other cells.<br/>
     </li></ul>
-    <p><span class="grey_box">Content</span><br/>
-    </p><ul>
+
+    <p><span class="grey_box">Content</span><br/></p>
+    <ul>
       <li><i>grid.content</i>: the content for the grid, divided among the rows and columns.
       </li><li><i>grid.content_width</i>: the actual width available for content, minus whitespace.
       </li><li><i>grid.content_height</i>: the actual height available for content, minus whitespace.
       </li><li><i>grid.flow</i>: a list of cells in the grid, defining the flow of content.
     </li></ul>
-    <p><span class="grey_box">Style and proportion</span><br/>
-    </p><ul>
+
+    <p><span class="grey_box">Style and proportion</span><br/></p>
+    <ul>
       <li><i>grid.style</i>: the name of the current visual style.
       </li><li><i>grid.styles</i>: a dictionary of available styles.
       </li><li><i>grid.proportion</i>: a collection of properties defining how cells are spaced in
       relation to each other.
     </li></ul>
+
     <p>Each <b>row</b> and <b>column</b> in the grid has the <b>same properties</b> available, with
     the exception of <i>rows</i>, <i>columns</i>, <i>proportion</i> and <i>flow</i>. This enables
-    you to set the size, style or content for all the cells in a row or column in one go.
-    </p><p>The <i>grid.draw()</i> method draws the grid to the canvas, calculating text flow and
+    you to set the size, style or content for all the cells in a row or column in one go.</p>
+    <p>The <i>grid.draw()</i> method draws the grid to the canvas, calculating text flow and
     applying styles.<br/>
-    The <i>grid.copy()</i> method returns a new grid object that is an exact copy of this one.<br/>
-    </p><pre class="python"><span class="kw">grid</span>.<span class="s">draw</span><span class="s">(</span>x=<span class="s">0</span>, y=<span class="s">0</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">copy</span><span class="s">(</span>parent=<span class="kw">None</span><span class="s">)</span>
-</pre>
-    <p>You can loop through the grid like a list of cells:
-    </p><pre class="python"><span class="kw">for</span> cell <span class="kw">in</span> <span class="kw">grid</span>:
-    <span class="kw">print</span> cell.<span class="s">name</span>
-</pre>   
-    <p> 
-    </p><hr size="2" width="100%"/>
+    The <i>grid.copy()</i> method returns a new grid object that is an exact copy of this one.<br/></p>
+    <pre><span class="kw">grid</span>.<span class="s">draw</span><span class="s">(</span>x=<span class="s">0</span>, y=<span class="s">0</span><span class="s">)</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">copy</span><span class="s">(</span>parent=<span class="kw">None</span><span class="s">)</span></pre>
+
+
+    <p>You can loop through the grid like a list of cells:</p>
+    <pre><span class="kw">for</span> cell <span class="kw">in</span> <span class="kw">grid</span>:
+    <span class="kw">print</span> cell.<span class="s">name</span></pre>
+   
+
+    <p> </p>
+    <hr size="2" width="100%"/>
+
     <h2><a id="split" name="split" title="split"></a>Splitting and navigating the grid</h2>
+
     <p>The grid object has a <i>grid.split()</i> method that divides the grid into rows and columns
     of cells. It can be supplied an optional <a href="#proportion">proportion</a> and <a href="#style">style</a> name. The <i>grid.clear()</i> method removes all cells (but it retains the
-    grid's style, proportion and content).
-    </p><pre class="python"><span class="kw">grid</span>.<span class="s">split</span><span class="s">(</span>rows, columns, proportion=<span class="kw">None</span>, style=<span class="kw">None</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">clear</span><span class="s">(</span><span class="s">)</span>
-</pre>
+    grid's style, proportion and content).</p>
+    <pre><span class="kw">grid</span>.<span class="s">split</span><span class="s">(</span>rows, columns, proportion=<span class="kw">None</span>, style=<span class="kw">None</span><span class="s">)</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">clear</span><span class="s">(</span><span class="s">)</span></pre>
+
+
     <p>To fully grasp the way a grid works you need to understand its recursive nature. A grid is
     made up of cells, arranged into rows and columns. <b>Each cell is a new grid object</b>. Take a
     look at the example below. We split a grid into two rows and two columns. Since the top-level
@@ -140,9 +163,9 @@
       <tbody>
         <tr>
           <td>
-            <p><img alt="grid1" height="150" src="media/grid1.jpg" width="150"/>
-          </p></td><td>
-            <pre class="python">
+            <p><img alt="grid1" height="150" src="media/grid1.jpg" width="150"/></p>
+          </td><td>
+            <pre>
 g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span>, <span class="s">150</span>, <span class="s">150</span><span class="s">)</span>
 g.<span class="s">cell</span><span class="s">(</span><span class="s">0</span>,<span class="s">0</span><span class="s">)</span>.<span class="s">split</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span><span class="s">)</span>
 g.<span class="s">styles</span>.<span class="s">margin</span> = <span class="s">1</span>
@@ -150,27 +173,28 @@ g.<span class="s">styles</span>.<span class="kw">background</span> = <span class
     <span class="kw">color</span><span class="s">(</span><span class="s">0.5</span>, <span class="s">0.55</span>, <span class="s">0.6</span><span class="s">)</span>, 
     <span class="kw">color</span><span class="s">(</span><span class="s">0.4</span>, <span class="s">0.45</span>, <span class="s">0.5</span><span class="s">)</span>
 <span class="s">)</span>
-g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
-</pre>
-          </td></tr></tbody></table>
-    </p><p> 
-    </p><p><span class="grey_box">Navigation</span><br/>
-    </p><p>A grid has the following methods to retrieve a row, column or single cell:
-    </p><pre class="python"><span class="kw">grid</span>.<span class="s">row</span><span class="s">(</span>i<span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">column</span><span class="s">(</span>j<span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">cell</span><span class="s">(</span>i,j<span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span><span class="s">(</span>i,j<span class="s">)</span>
-</pre>
+g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></pre>
+
+          </td></tr></tbody></table></p>
+    <p> </p>
+    <p><span class="grey_box">Navigation</span><br/></p>
+    <p>A grid has the following methods to retrieve a row, column or single cell:</p>
+    <pre><span class="kw">grid</span>.<span class="s">row</span><span class="s">(</span>i<span class="s">)</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">column</span><span class="s">(</span>j<span class="s">)</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">cell</span><span class="s">(</span>i,j<span class="s">)</span></pre>
+
+    <pre><span class="kw">grid</span><span class="s">(</span>i,j<span class="s">)</span></pre>
+
+
     <p>Just as with lists the supplied indices start from zero (so the first row has index 0 and
-    not 1). You can also use the <i>rows</i> and <i>columns</i> properties, which are both lists.
-    </p><p>The <i>top</i>, <i>left</i>, <i>bottom</i> and <i>right</i> properties are also very useful
+    not 1). You can also use the <i>rows</i> and <i>columns</i> properties, which are both lists.</p>
+    <p>The <i>top</i>, <i>left</i>, <i>bottom</i> and <i>right</i> properties are also very useful
     to retrieve rows and columns at the edge of the grid. You may already have guessed that the
     recursive structure of a grid can go very deep, leading to unwieldy statements such as:<br/>
-    <span class="inline_code">grid.left[0].column(1).cell(2, 2)</span>
-    </p><p>Luckily, like the grid object, each row and column also has the <i>top</i>, <i>left</i>,
+    <span class="inline_code">grid.left[0].column(1).cell(2, 2)</span></p>
+    <p>Luckily, like the grid object, each row and column also has the <i>top</i>, <i>left</i>,
     <i>bottom</i>, <i>right</i> properties.<br/>
     Here are some examples:
     <table>
@@ -178,83 +202,89 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
         <tr>
           <td class="small_text"><img alt="grid2" height="75" src="media/grid2.jpg" width="75"/><br/>
           </td><td>
-            <pre class="python">
+            <pre>
 g.<span class="s">column</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
-g.<span class="s">left</span>
-</pre>   
+g.<span class="s">left</span></pre>
+   
           </td><td><img alt="grid4" height="75" src="media/grid4.jpg" width="75"/>
           </td><td>
-            <pre class="python">
-g.<span class="s">top</span>.<span class="s">right</span>
-</pre>
+            <pre>
+g.<span class="s">top</span>.<span class="s">right</span></pre>
+
         </td></tr><tr>
           <td><img alt="grid3" height="75" src="media/grid3.jpg" width="75"/>
           </td><td>
-            <pre class="python">
+            <pre>
 g.<span class="s">row</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
-g.<span class="s">top</span>
-</pre>
+g.<span class="s">top</span></pre>
+
           </td><td><img alt="grid5" height="75" src="media/grid5.jpg" width="75"/>
           </td><td>
-            <pre class="python">
-g.<span class="s">top</span>.<span class="s">left</span>.<span class="s">bottom</span>
-</pre>
+            <pre>
+g.<span class="s">top</span>.<span class="s">left</span>.<span class="s">bottom</span></pre>
+
         </td></tr><tr>
           <td><img alt="grid6" height="125" src="media/grid6.jpg" width="75"/>
           </td><td>
-            <pre class="python">
-g.<span class="s">rows</span>.<span class="s">second</span>
-</pre>
+            <pre>
+g.<span class="s">rows</span>.<span class="s">second</span></pre>
+
           </td><td> 
           </td><td> 
-        </td></tr></tbody></table>
-    </p><p>As demonstrated in the final example, some other handy aliases are the <i>first</i>,
+        </td></tr></tbody></table></p>
+    <p>As demonstrated in the final example, some other handy aliases are the <i>first</i>,
     <i>second</i>, <i>third</i>, ... <i>sixth</i> properties. They will work on a grid, a row, a
-    column and even on a list of rows or columns.
-    </p><p>Another good idea is to <b>label distinct sections in the grid</b>. For example, you may
+    column and even on a list of rows or columns.</p>
+    <p>Another good idea is to <b>label distinct sections in the grid</b>. For example, you may
     want to call the top part "header" and work with that label from there on. Each named section
     in the grid (cell, row, column) automatically becomes available as a property. You can also
-    retrieve named sections with the <i>grid.find()</i> method.<br/>
-    </p><pre class="python">g.<span class="s">top</span>.<span class="s">name</span> = <span class="str">"header"</span>
+    retrieve named sections with the <i>grid.find()</i> method.<br/></p>
+    <pre>g.<span class="s">top</span>.<span class="s">name</span> = <span class="str">"header"</span>
 g.<span class="s">header</span>.<span class="s">style</span> = <span class="str">"header_style"</span>
 s = g.<span class="s">styles</span>.<span class="s">create</span><span class="s">(</span><span class="str">"header_style"</span><span class="s">)</span> 
-s.<span class="kw">fontsize</span> = <span class="s">20</span>
-</pre>
-    <pre class="python">cell = g.<span class="s">find</span><span class="s">(</span><span class="str">"header"</span><span class="s">)</span>
-</pre>   
-    <p><span class="grey_box">Highlight helper</span>
-    </p><p>The Grid library has a <i>highlight()</i> command that can help you out navigating to the
+s.<span class="kw">fontsize</span> = <span class="s">20</span></pre>
+
+    <pre>cell = g.<span class="s">find</span><span class="s">(</span><span class="str">"header"</span><span class="s">)</span></pre>
+   
+
+    <p><span class="grey_box">Highlight helper</span></p>
+    <p>The Grid library has a <i>highlight()</i> command that can help you out navigating to the
     structure of a grid. You call it after drawing the grid to the canvas. It will overlay the grid
     with indicators marking all the cells. When the optional <i>recursive</i> parameter is
-    <i>True</i>, it will keep highlighting cells in cells, and so on.<br/>
-    </p><pre class="python">highlight<span class="s">(</span><span class="kw">grid</span>, clr=<span class="kw">None</span>, recursive=<span class="kw">False</span><span class="s">)</span>
-</pre>
-    <p><img alt="grid8" height="295" src="media/grid8.jpg" width="550"/><br/>
-    </p><p>As you can see in the above example, you supply a grid object (or a column or row) to the
+    <i>True</i>, it will keep highlighting cells in cells, and so on.<br/></p>
+    <pre>highlight<span class="s">(</span><span class="kw">grid</span>, clr=<span class="kw">None</span>, recursive=<span class="kw">False</span><span class="s">)</span></pre>
+
+
+    <p><img alt="grid8" height="295" src="media/grid8.jpg" width="550"/><br/></p>
+    <p>As you can see in the above example, you supply a grid object (or a column or row) to the
     command and it will indicate the suffix you need to add in your code to reference a particular
-    cell in it.
-    </p><p> 
-    </p><hr size="2" width="100%"/>
+    cell in it.</p>
+    <p> </p>
+    <hr size="2" width="100%"/>
+
     <h2><a id="add_content" name="add_content" title="add_content"></a>Adding content</h2>
+
     <p>You can fill a grid with text, images or your own drawing command. Simply assign it to the
     <i>grid.content</i> property. The content automatically gets distributed among the grid's rows
     and columns, following a "depletion"-approach: cells are filled until there is no content left.
-    The <i>grid.flow</i> list determines which cells get content first (column-first by default).
-    </p><pre class="python">g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">1</span>, <span class="s">3</span>, width=<span class="s">550</span>, height=<span class="s">200</span><span class="s">)</span>
+    The <i>grid.flow</i> list determines which cells get content first (column-first by default).</p>
+    <pre>g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">1</span>, <span class="s">3</span>, width=<span class="s">550</span>, height=<span class="s">200</span><span class="s">)</span>
 g.<span class="s">content</span> = <span class="kw">open</span><span class="s">(</span><span class="str">"alice.txt"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span> <span class="grey"># text from a file</span>
-g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <p><img alt="grid7" height="200" src="media/grid7.jpg" width="550"/><br/>
-    </p><p>The following types of content can be added to the grid:
-    </p><ul>
+g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></pre>
+
+
+    <p><img alt="grid7" height="200" src="media/grid7.jpg" width="550"/><br/></p>
+    <p>The following types of content can be added to the grid:</p>
+    <ul>
       <li><b>text</b>: a <a href="../tut/Strings.html">string</a> of text<br/>
       </li><li><b>image</b>: a single image filename or a <a href="../tut/Lists.html">list</a> of image
       filenames
       </li><li><b>command</b>: a custom drawing <a href="../tut/Commands.html">command</a>
       </li><li><b>number</b>
     </li></ul>
-    <p>After you set the content, the following properties become available:
-    </p><ul>
+
+    <p>After you set the content, the following properties become available:</p>
+    <ul>
       <li><i>grid.content.widows</i>: how many stray lines at the end to move to the next cell (1
       by default)<br/>
       </li><li><i>grid.content.orphans</i>: how many stray lines at the start to move the previous cell
@@ -263,71 +293,75 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
       cells are filled.
       </li><li><i>grid.content.remainder</i>: the excess content that wasn't drawn.<br/>
     </li></ul><br/>
-    <p>Some methods you can use to retrieve content:
-    </p><pre class="python"><span class="kw">grid</span>.<span class="s">content</span>.<span class="s">is_text</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">content</span>.<span class="s">is_number</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">content</span>.<span class="s">is_image</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">content</span>.<span class="s">is_command</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="s">str</span><span class="s">(</span><span class="kw">grid</span>.<span class="s">content</span><span class="s">)</span>   <span class="grey"># retrieve the text content</span>
-</pre>
-    <pre class="python"><span class="s">int</span><span class="s">(</span><span class="kw">grid</span>.<span class="s">content</span><span class="s">)</span>   <span class="grey"># retrieve numeric content</span>
-</pre>
-    <pre class="python"><span class="s">float</span><span class="s">(</span><span class="kw">grid</span>.<span class="s">content</span><span class="s">)</span> <span class="grey"># retrieve numeric content</span>
-</pre>
-    <pre class="python"><span class="s">list</span><span class="s">(</span><span class="kw">grid</span>.<span class="s">content</span><span class="s">)</span>  <span class="grey"># retrieve the list of images</span>
-</pre>
+
+    <p>Some methods you can use to retrieve content:</p>
+    <pre><span class="kw">grid</span>.<span class="s">content</span>.<span class="s">is_text</span><span class="s">(</span><span class="s">)</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">content</span>.<span class="s">is_number</span><span class="s">(</span><span class="s">)</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">content</span>.<span class="s">is_image</span><span class="s">(</span><span class="s">)</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">content</span>.<span class="s">is_command</span><span class="s">(</span><span class="s">)</span></pre>
+
+    <pre><span class="s">str</span><span class="s">(</span><span class="kw">grid</span>.<span class="s">content</span><span class="s">)</span>   <span class="grey"># retrieve the text content</span></pre>
+
+    <pre><span class="s">int</span><span class="s">(</span><span class="kw">grid</span>.<span class="s">content</span><span class="s">)</span>   <span class="grey"># retrieve numeric content</span></pre>
+
+    <pre><span class="s">float</span><span class="s">(</span><span class="kw">grid</span>.<span class="s">content</span><span class="s">)</span> <span class="grey"># retrieve numeric content</span></pre>
+
+    <pre><span class="s">list</span><span class="s">(</span><span class="kw">grid</span>.<span class="s">content</span><span class="s">)</span>  <span class="grey"># retrieve the list of images</span></pre>
+
+
     <p>Again, keep in mind that since each cell in a grid row or column is itself a grid object,
-    you can add content (titles, subtitles, images, ...) to any individual cell.
-    </p><pre class="python"><span class="kw">grid</span>.<span class="s">has_content</span><span class="s">(</span><span class="s">)</span>
-</pre>
+    you can add content (titles, subtitles, images, ...) to any individual cell.</p>
+    <pre><span class="kw">grid</span>.<span class="s">has_content</span><span class="s">(</span><span class="s">)</span></pre>
+
+
     <p>The <i>grid.has_content()</i> returns <i>True</i> if a cell has content, <i>False</i> if it
-    is simply inheriting content from a parent grid.
-    </p><p> 
-    </p><p><span class="grey_box">Flowing content</span><br/>
-    </p><p>When a grid is drawn, the content is distributed among its rows and columns. For text
+    is simply inheriting content from a parent grid.</p>
+    <p> </p>
+    <p><span class="grey_box">Flowing content</span><br/></p>
+    <p>When a grid is drawn, the content is distributed among its rows and columns. For text
     content, this means that a piece is cut off from the start of the text so that it matches the
     size of the current cell (taking into account whitespace, font size and alignment). The
     remainder of the text is then passed on to the next cell in the flow. Content can flow
     vertically from top to bottom (column-first), horizontally from left to right (row-first) or in
-    your own custom way.
-    </p><p>The grid object has two methods for setting the flow:
-    </p><pre class="python"><span class="kw">grid</span>.<span class="s">flow_vertical</span><span class="s">(</span>recursive=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">flow_horizontal</span><span class="s">(</span>recursive=<span class="kw">True</span><span class="s">)</span>
-</pre>
+    your own custom way.</p>
+    <p>The grid object has two methods for setting the flow:</p>
+    <pre><span class="kw">grid</span>.<span class="s">flow_vertical</span><span class="s">(</span>recursive=<span class="kw">True</span><span class="s">)</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">flow_horizontal</span><span class="s">(</span>recursive=<span class="kw">True</span><span class="s">)</span></pre>
+
+
     <p>Additionally, any cells in a grid you add to the <i>grid.flow</i> list will get content
-    first.
-    </p><p> 
-    </p><p><span class="grey_box">Fitting content</span><br/>
-    </p><p>In some situations you don't want content to flow from cell to cell, you want it to <b>match
+    first.</p>
+    <p> </p>
+    <p><span class="grey_box">Fitting content</span><br/></p>
+    <p>In some situations you don't want content to flow from cell to cell, you want it to <b>match
     the size of this cell</b> as best as possible. This is especially true for grids containing
     images and titles. We may want the image in a cell to stretch so it fits the cell comfortably,
     avoiding gaps. We may want the title to take up all the available space so we can then resize
-    and experiment with the grid without having to worry about fontsize anymore.
-    </p><p>To accomplish this we give the cell a <a href="#style">style</a> which has its
+    and experiment with the grid without having to worry about fontsize anymore.</p>
+    <p>To accomplish this we give the cell a <a href="#style">style</a> which has its
     <i>style.fit</i> property set to <i>True</i>:
     <table>
       <tbody>
         <tr>
           <td>
-            <p><img alt="grid9" height="90" src="media/grid9.jpg" width="250"/>
-          </p></td><td>
-            <pre class="python">
+            <p><img alt="grid9" height="90" src="media/grid9.jpg" width="250"/></p>
+          </td><td>
+            <pre>
 g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">1</span>, <span class="s">1</span>, <span class="s">250</span>, <span class="s">90</span><span class="s">)</span>
 g.<span class="s">styles</span>.<span class="s">default</span>.<span class="s">fit</span> = <span class="kw">True</span>
 g.<span class="s">styles</span>.<span class="s">default</span>.<span class="kw">align</span> = <span class="str">"center"</span>
 g.<span class="s">content</span> = <span class="str">"heading"</span>
-g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
-</pre>
+g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></pre>
+
         </td></tr><tr>
           <td>
-            <p><img alt="grid10" height="250" src="media/grid10.jpg" width="250"/>
-          </p></td><td>
-            <pre class="python">
+            <p><img alt="grid10" height="250" src="media/grid10.jpg" width="250"/></p>
+          </td><td>
+            <pre>
 g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span>, <span class="s">250</span>, <span class="s">250</span><span class="s">)</span>
 g.<span class="s">top</span>.<span class="s">left</span>.<span class="s">split</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span><span class="s">)</span>
 g.<span class="s">top</span>.<span class="s">left</span>.<span class="s">bottom</span>.<span class="s">right</span>.<span class="s">split</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span><span class="s">)</span>
@@ -341,25 +375,26 @@ g.<span class="s">content</span>.<span class="s">repeat</span> = <span class="kw
  
 g.<span class="s">styles</span>.<span class="s">margin</span> = <span class="s">1</span>
 g.<span class="s">styles</span>.<span class="s">fit</span> = <span class="kw">True</span>
-g.<span class="s">styles</span>.<span class="kw">align</span> = <span class="str">"center"</span>, <span class="str">"bottom"</span>
-</pre>
-          </td></tr></tbody></table>
-    </p><p> 
-    </p><p><span class="grey_box">Custom content</span>
-    </p><p>Instead of adding text or images to the grid, you can also add a custom command as content.
+g.<span class="s">styles</span>.<span class="kw">align</span> = <span class="str">"center"</span>, <span class="str">"bottom"</span></pre>
+
+          </td></tr></tbody></table></p>
+    <p> </p>
+    <p><span class="grey_box">Custom content</span></p>
+    <p>Instead of adding text or images to the grid, you can also add a custom command as content.
     This is great if you want to showcase different versions of generative artwork, add
     embellishments to the layout or document code, for example. The custom command takes the
-    following form:
-    </p><pre class="python">custom_content<span class="s">(</span>x, y, width, height, style=<span class="kw">None</span><span class="s">)</span>
-</pre>
+    following form:</p>
+    <pre>custom_content<span class="s">(</span>x, y, width, height, style=<span class="kw">None</span><span class="s">)</span></pre>
+
+
     <p>It receives the grid's position, size and style as input parameters.
     <table>
       <tbody>
         <tr>
           <td>
-            <p><img alt="grid11" height="250" src="media/grid11.jpg" width="250"/>
-          </p></td><td>
-            <pre class="python">
+            <p><img alt="grid11" height="250" src="media/grid11.jpg" width="250"/></p>
+          </td><td>
+            <pre>
 <span class="kw">def</span> <span class="rose">ovals</span><span class="s">(</span>x, y, w, h, style=<span class="kw">None</span><span class="s">)</span>:
     <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">20</span><span class="s">)</span>:
         r = <span class="kw">random</span><span class="s">(</span><span class="s">5</span>, <span class="s">40</span><span class="s">)</span>
@@ -376,72 +411,79 @@ g.<span class="s">styles</span>.<span class="s">margin</span> = <span class="s">
 g.<span class="s">styles</span>.<span class="kw">stroke</span> = <span class="kw">color</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 g.<span class="s">styles</span>.<span class="kw">strokewidth</span> = <span class="s">0.5</span>
 g.<span class="s">content</span> = ovals <span class="grey"># custom content!</span>
-g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
-</pre>
-          </td></tr></tbody></table>
-    </p><p> 
-    </p><hr size="2" width="100%"/>
+g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></pre>
+
+          </td></tr></tbody></table></p>
+    <p> </p>
+    <hr size="2" width="100%"/>
+
     <h2><a id="text" name="text" title="text"></a>Working with text</h2>
+
     <p>At the heart of the Grid library is the text module. It contains many useful commands for
     working with paragraphs of text, even outside the Grid library. These commands are likely to be
-    in constant development.<br/>
-    </p><pre class="python"><span class="kw">text</span>.<span class="s">split</span><span class="s">(</span>txt, width, height, widows=<span class="s">1</span>, orphans=<span class="s">1</span>, forward=<span class="kw">True</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">text</span>.<span class="s">divide</span><span class="s">(</span>txt, width, height, widows=<span class="s">1</span>, orphans=<span class="s">1</span>, forward=<span class="kw">True</span><span class="s">)</span>
-</pre>
+    in constant development.<br/></p>
+    <pre><span class="kw">text</span>.<span class="s">split</span><span class="s">(</span>txt, width, height, widows=<span class="s">1</span>, orphans=<span class="s">1</span>, forward=<span class="kw">True</span><span class="s">)</span></pre>
+
+    <pre><span class="kw">text</span>.<span class="s">divide</span><span class="s">(</span>txt, width, height, widows=<span class="s">1</span>, orphans=<span class="s">1</span>, forward=<span class="kw">True</span><span class="s">)</span></pre>
+
+
     <p>The <i>text.split()</i> command returns a (<i>block</i>, <i>remainder</i>) tuple in which
     <i>block</i> is the first portion of the given <i>txt</i> string that will fit inside a box of
     the given <i>width</i> and <i>height</i>. The <i>text.divide()</i> command works in the same
-    way, except it returns a list of strings that all fit inside a box of the given size.
-    </p><p>The three optional parameters are concerned with <b>widow/orphan control</b>. Widows and
+    way, except it returns a list of strings that all fit inside a box of the given size.</p>
+    <p>The three optional parameters are concerned with <b>widow/orphan control</b>. Widows and
     orphans are stray lines at the beginning or end of a block of text. We try to avoid these for
     aesthetic purposes. The <i>widows</i> parameter is the threshold for stray lines at the end to
     cut off, <i>orphans</i> for stray lines at the start. If <i>forward</i> is <i>True</i>, orphans
     will never be moved back to the previous block. Instead, more text is cut off from the end of
-    the previous block and moved forward.
-    </p><p>Note that widow/orphan control won't work with lists (i.e. single lines of text separated by
-    a carriage return), so then you'll need to turn it off.
-    </p><pre class="python"><span class="kw">text</span>.<span class="s">legible_width</span><span class="s">(</span>txt, chars=<span class="s">70</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">text</span>.<span class="s">fit_fontsize</span><span class="s">(</span><span class="s">str</span>, width, height<span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">text</span>.<span class="s">fit_lineheight</span><span class="s">(</span><span class="s">str</span>, width, height<span class="s">)</span>
-</pre>
+    the previous block and moved forward.</p>
+    <p>Note that widow/orphan control won't work with lists (i.e. single lines of text separated by
+    a carriage return), so then you'll need to turn it off.</p>
+    <pre><span class="kw">text</span>.<span class="s">legible_width</span><span class="s">(</span>txt, chars=<span class="s">70</span><span class="s">)</span></pre>
+
+    <pre><span class="kw">text</span>.<span class="s">fit_fontsize</span><span class="s">(</span><span class="s">str</span>, width, height<span class="s">)</span></pre>
+
+    <pre><span class="kw">text</span>.<span class="s">fit_lineheight</span><span class="s">(</span><span class="s">str</span>, width, height<span class="s">)</span></pre>
+
+
     <p>The <i>text.legible_width()</i> command returns a <b>good column width</b> for the given
     <i>txt</i> set in the current font. Here we follow the rule of thumb in graphic design that 70
     characters per line at fontsize 10pt is optimal. When the fontsize becomes smaller, you'll
     likely need smaller columns to keep the reader's attention. Smaller lineheight furthermore
-    decreases the column width.
-    </p><p>The <i>text.fit_fontsize()</i> command returns a good fontsize so that the given <i>str</i>
+    decreases the column width.</p>
+    <p>The <i>text.fit_fontsize()</i> command returns a good fontsize so that the given <i>str</i>
     fits a box of the given <i>width</i> and <i>height</i>. In the same way,
     <i>text.fit_lineheight()</i> returns a good line spacing for the text to fit the box
-    vertically.
-    </p><p> 
-    </p><p><span class="grey_box">Placeholder text</span>
-    </p><p>If you don't have any text lying around, you can generate paragraphs of <a href="http://en.wikipedia.org/wiki/Lorem_ipsum">lorem ipsum</a> placeholder text right from the text
+    vertically.</p>
+    <p> </p>
+    <p><span class="grey_box">Placeholder text</span></p>
+    <p>If you don't have any text lying around, you can generate paragraphs of <a href="http://en.wikipedia.org/wiki/Lorem_ipsum">lorem ipsum</a> placeholder text right from the text
     module. Each command below returns a string of text containing words of different length,
-    yielding a good visual representation of a real text will look like:
-    </p><pre class="python"><span class="kw">text</span>.<span class="s">placeholder</span><span class="s">(</span>n=<span class="s">10</span><span class="s">)</span>                        <span class="grey"># a text with n paragraphs</span>
-</pre>
-    <pre class="python"><span class="kw">text</span>.<span class="s">placeholder</span>.<span class="s">paragraph</span><span class="s">(</span>n=<span class="s">10</span>, first=<span class="kw">False</span><span class="s">)</span> <span class="grey"># a paragraph with n lines</span>
-</pre>
-    <pre class="python"><span class="kw">text</span>.<span class="s">placeholder</span>.<span class="s">sentence</span><span class="s">(</span>n=<span class="s">6</span><span class="s">)</span>                <span class="grey"># a line of n words</span>
-</pre>
-    <pre class="python"><span class="kw">print</span> <span class="kw">grid</span>.<span class="kw">text</span>.<span class="s">placeholder</span>.<span class="s">sentence</span><span class="s">(</span><span class="s">)</span> 
-&gt;&gt;&gt; Consectetur dolore sunt nisi, amet deserunt.
-</pre>
-    <p>The text.placeholder.english() command generates readable text from the <a href="../ref/Utility.html#autotext()">Kant Generator</a>:<br/>
-    </p><pre class="python"><span class="kw">text</span>.<span class="s">placeholder</span>.<span class="s">english</span><span class="s">(</span><span class="s">)</span>
-</pre>
+    yielding a good visual representation of a real text will look like:</p>
+    <pre><span class="kw">text</span>.<span class="s">placeholder</span><span class="s">(</span>n=<span class="s">10</span><span class="s">)</span>                        <span class="grey"># a text with n paragraphs</span></pre>
+
+    <pre><span class="kw">text</span>.<span class="s">placeholder</span>.<span class="s">paragraph</span><span class="s">(</span>n=<span class="s">10</span>, first=<span class="kw">False</span><span class="s">)</span> <span class="grey"># a paragraph with n lines</span></pre>
+
+    <pre><span class="kw">text</span>.<span class="s">placeholder</span>.<span class="s">sentence</span><span class="s">(</span>n=<span class="s">6</span><span class="s">)</span>                <span class="grey"># a line of n words</span></pre>
+
+    <pre><span class="kw">print</span> <span class="kw">grid</span>.<span class="kw">text</span>.<span class="s">placeholder</span>.<span class="s">sentence</span><span class="s">(</span><span class="s">)</span> 
+&gt;&gt;&gt; Consectetur dolore sunt nisi, amet deserunt.</pre>
+
+
+    <p>The text.placeholder.english() command generates readable text from the <a href="../ref/Utility.html#autotext()">Kant Generator</a>:<br/></p>
+    <pre><span class="kw">text</span>.<span class="s">placeholder</span>.<span class="s">english</span><span class="s">(</span><span class="s">)</span></pre>
+
+
     <p><br/>
-    <span class="grey_box">Symbols</span><br/>
-    </p><p>To create superscript numbers for footnotes, you can use the <i>text.superscript()</i>
-    command. The text module also contains a small set of symbols that may be of use.
-    </p><pre class="python"><span class="kw">print</span> <span class="str">"footnote"</span> + <span class="kw">grid</span>.<span class="kw">text</span>.<span class="s">superscript</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
-</pre>
-    <pre class="python"><span class="kw">print</span> <span class="str">"we "</span> + <span class="kw">grid</span>.<span class="kw">text</span>.<span class="s">heart</span> + <span class="str">" you"</span>
-&gt;&gt;&gt; we ❤ you
-</pre>
+    <span class="grey_box">Symbols</span><br/></p>
+    <p>To create superscript numbers for footnotes, you can use the <i>text.superscript()</i>
+    command. The text module also contains a small set of symbols that may be of use.</p>
+    <pre><span class="kw">print</span> <span class="str">"footnote"</span> + <span class="kw">grid</span>.<span class="kw">text</span>.<span class="s">superscript</span><span class="s">(</span><span class="s">1</span><span class="s">)</span></pre>
+
+    <pre><span class="kw">print</span> <span class="str">"we "</span> + <span class="kw">grid</span>.<span class="kw">text</span>.<span class="s">heart</span> + <span class="str">" you"</span>
+&gt;&gt;&gt; we ❤ you</pre>
+
+
     <ul>
       <li><b>Arrows</b>: <i>arrow1, arrow2</i>
       </li><li><b>Bullets</b>: <i>bullet, heart, check, cross</i>
@@ -451,34 +493,41 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
       </li><li><b>Legal</b>: <i>copyright, trademark, registered</i>
       </li><li><b>Danger</b>: <i>warning, toxic, radiation, biohazard, recycling</i>
     </li></ul>
-    <p> 
-    </p><hr size="2" width="100%"/>
+
+    <p> </p>
+    <hr size="2" width="100%"/>
+
     <h2><a id="style" name="style" title="style"></a>Working with styles</h2>
+
     <p>The Grid library uses the same styling mechanism as the <a href="Graph.html">Graph</a>
     library, so if you are already familiar with that library you will find many similarities here.
     Essentially, you can customize the look and feel of the grid down to the bottom. The
     <i>grid.styles</i> dictionary contains different <b>styles</b>, each with a name and some
     color, font and whitespace properties. Each grid (or cell) has a <i>style</i> property which
     you can assign <b>the name of a style</b>. You can easily modify existing styles and create new
-    ones.
-    </p><p>The <i>styles</i> dictionary has one predefined style:
-    </p><pre class="python"><span class="kw">print</span> <span class="kw">grid</span>.<span class="s">styles</span>.<span class="s">keys</span><span class="s">(</span><span class="s">)</span>
-&gt;&gt;&gt; <span class="s">[</span><span class="str">'default'</span><span class="s">]</span>
-</pre>
-    <p>You can change the properties of each of the individual style objects:
-    </p><pre class="python"><span class="kw">grid</span>.<span class="s">styles</span>.<span class="s">default</span>.<span class="kw">fontsize</span> = <span class="s">10</span>
-</pre>
-    <p>Or set a property on all styles:
-    </p><pre class="python"><span class="kw">grid</span>.<span class="s">styles</span>.<span class="s">margin</span> = <span class="s">5</span>
-</pre>
+    ones.</p>
+    <p>The <i>styles</i> dictionary has one predefined style:</p>
+    <pre><span class="kw">print</span> <span class="kw">grid</span>.<span class="s">styles</span>.<span class="s">keys</span><span class="s">(</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="str">'default'</span><span class="s">]</span></pre>
+
+
+    <p>You can change the properties of each of the individual style objects:</p>
+    <pre><span class="kw">grid</span>.<span class="s">styles</span>.<span class="s">default</span>.<span class="kw">fontsize</span> = <span class="s">10</span></pre>
+
+
+    <p>Or set a property on all styles:</p>
+    <pre><span class="kw">grid</span>.<span class="s">styles</span>.<span class="s">margin</span> = <span class="s">5</span></pre>
+
+
     <p>Here's an example of how to add your own custom style. Note the optional <i>template</i>
-    parameter: we are creating a new style based on a copy of the default style:
-    </p><pre class="python">s = <span class="kw">grid</span>.<span class="s">styles</span>.<span class="s">create</span><span class="s">(</span><span class="str">"header"</span>, template=<span class="str">"default"</span><span class="s">)</span>
-s.<span class="kw">background</span> = <span class="kw">color</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
-</pre>   
-    <p><span class="grey_box">Style properties</span><br/>
-    </p><p>A <i>style</i> object has the following properties:<br/>
-    </p><ul>
+    parameter: we are creating a new style based on a copy of the default style:</p>
+    <pre>s = <span class="kw">grid</span>.<span class="s">styles</span>.<span class="s">create</span><span class="s">(</span><span class="str">"header"</span>, template=<span class="str">"default"</span><span class="s">)</span>
+s.<span class="kw">background</span> = <span class="kw">color</span><span class="s">(</span><span class="s">0</span><span class="s">)</span></pre>
+   
+
+    <p><span class="grey_box">Style properties</span><br/></p>
+    <p>A <i>style</i> object has the following properties:<br/></p>
+    <ul>
       <li><i>style.background</i>: cell background <a href="../ref/Color.html#color()">color</a>.
       </li><li><i>style.fill</i>: fill color for cell text.
       </li><li><i>style.stroke</i>: stroke color for the cell border.
@@ -497,19 +546,21 @@ s.<span class="kw">background</span> = <span class="kw">color</span><span class=
       </li><li><i>style.delegate</i>: when <i>True</i> (default), distribute style properties to child
       cells.<br/>
     </li></ul>
-    <p> 
-    </p><p><span class="grey_box">Background</span><br/>
-    </p><p>The background of a cell can be a <b>fill color</b>, an <b>image</b>, or a <b>gradient</b>.
+
+    <p> </p>
+    <p><span class="grey_box">Background</span><br/></p>
+    <p>The background of a cell can be a <b>fill color</b>, an <b>image</b>, or a <b>gradient</b>.
     You can assign it a single color, a tuple of two colors for a gradient or an image filename. If
     you want to draw a gradient you'll need to have the <a href="Colors.html">Colors</a> library
-    installed.
-    </p><p>For more complex gradients, use the following method:
-    </p><pre class="python">style.<span class="kw">background</span>.<span class="s">gradientfill</span><span class="s">(</span><span class="s">self</span>, clr1, clr2, <span class="s">type</span>=<span class="str">"radial"</span>, 
-                              dx=<span class="s">0</span>, dy=<span class="s">0</span>, spread=<span class="s">1.0</span>, angle=<span class="s">0</span>, alpha=<span class="s">1.0</span><span class="s">)</span>
-</pre>
+    installed.</p>
+    <p>For more complex gradients, use the following method:</p>
+    <pre>style.<span class="kw">background</span>.<span class="s">gradientfill</span><span class="s">(</span><span class="s">self</span>, clr1, clr2, <span class="s">type</span>=<span class="str">"radial"</span>, 
+                              dx=<span class="s">0</span>, dy=<span class="s">0</span>, spread=<span class="s">1.0</span>, angle=<span class="s">0</span>, alpha=<span class="s">1.0</span><span class="s">)</span></pre>
+
+
     <p>The <i>style.background</i> also has some properties to define how background images are
-    attached:
-    </p><ul>
+    attached:</p>
+    <ul>
       <li><i>style.background.align</i>: see below.<br/>
       </li><li><i>style.background.scale</i>: scale factor for the background image (1.0 by
       default).<br/>
@@ -517,51 +568,54 @@ s.<span class="kw">background</span> = <span class="kw">color</span><span class=
       </li><li><i>style.background.y</i>: vertical offset.<br/>
       </li><li><i>style.background.opacity</i>: alpha transparency (1.0 by default).<br/>
     </li></ul>
-    <p> 
-    </p><p><span class="grey_box">Alignment</span>
-    </p><p>The <i>style.align</i> property determines how content in a cell is arranged.
-    </p><ul>
+
+    <p> </p>
+    <p><span class="grey_box">Alignment</span></p>
+    <p>The <i>style.align</i> property determines how content in a cell is arranged.</p>
+    <ul>
       <li>For text, applicable values are LEFT, CENTER, RIGHT and JUSTIFY.<br/>
       </li><li>For images, you can supply either a single value or a (horizontal, vertical) tuple.<br/>
       Additional values here are "top" and "bottom".
     </li></ul>
-    <p> 
-    </p><p><span class="grey_box">Whitespace</span><br/>
-    </p><p>The style has <b>margin, padding</b> and <b>stroke</b> properties to define whitespace and
+
+    <p> </p>
+    <p><span class="grey_box">Whitespace</span><br/></p>
+    <p>The style has <b>margin, padding</b> and <b>stroke</b> properties to define whitespace and
     cell border. Each of these can be assigned a single number, or a (<i>left</i>, <i>top,</i>
     <i>right</i>, <i>bottom</i>)-tuple of values. You can also set the individual spacing with
-    properties:
-    </p><ul>
+    properties:</p>
+    <ul>
       <li><i>style.margin.left</i>: left margin width (or padding/stroke).<br/>
       </li><li><i>style.margin.top</i>: top margin height (or padding/stroke).
       </li><li><i>style.margin.right</i>: right margin width (or padding/stroke).
       </li><li><i>style.margin.bottom</i>: bottom margin height (or padding/stroke).
     </li></ul>
+
     <p> 
     <table>
       <tbody>
         <tr>
           <td>
-            <p><img alt="grid13" height="250" src="media/grid13.jpg" width="250"/>
-          </p></td><td>
-            <p><b>Cell box model</b>
-            </p><p>This illustration shows how a cell's whitespace is organized. Assume that the blue
-            box is a cell. It's total size is defined by <i>cell.width</i> and <i>cell.height</i>.
-            </p><p>Margin space goes around the cell border.<br/>
-            The border goes around the cell padding.
-            </p><p>The inner rectangle defines the space available to draw text and images
-            (<i>cell.content_width</i> and <i>cell.content_height</i>).
-          </p></td></tr></tbody></table>
-    </p><p> 
-    </p><p><span class="grey_box">Style delegation</span><br/>
-    </p><p>When you set the style for a grid, all of the cells in the grid will inherit the same style.
+            <p><img alt="grid13" height="250" src="media/grid13.jpg" width="250"/></p>
+          </td><td>
+            <p><b>Cell box model</b></p>
+            <p>This illustration shows how a cell's whitespace is organized. Assume that the blue
+            box is a cell. It's total size is defined by <i>cell.width</i> and <i>cell.height</i>.</p>
+            <p>Margin space goes around the cell border.<br/>
+            The border goes around the cell padding.</p>
+            <p>The inner rectangle defines the space available to draw text and images
+            (<i>cell.content_width</i> and <i>cell.content_height</i>).</p>
+          </td></tr></tbody></table></p>
+    <p> </p>
+    <p><span class="grey_box">Style delegation</span><br/></p>
+    <p>When you set the style for a grid, all of the cells in the grid will inherit the same style.
     We say that this grid is an invisible <b>container</b>, and instead of appyling styling to
-    itself, it <b>delegates</b> the styling to all of its children.
-    </p><p>This works intuitively in most cases. Take a look at the example below. I've created a
+    itself, it <b>delegates</b> the styling to all of its children.</p>
+    <p>This works intuitively in most cases. Take a look at the example below. I've created a
     default style, and a style for the header. All the cells in the header assume the same "header"
-    style.
-    </p><p><img alt="grid12" height="170" src="media/grid12.jpg" width="550"/>
-    </p><pre class="python">g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">3</span>, <span class="s">1</span>, <span class="kw">WIDTH</span>, <span class="kw">HEIGHT</span><span class="s">)</span>
+    style.</p>
+    <p><img alt="grid12" height="170" src="media/grid12.jpg" width="550"/></p>
+    <pre>g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">3</span>, <span class="s">1</span>, <span class="kw">WIDTH</span>, <span class="kw">HEIGHT</span><span class="s">)</span>
  
 g.<span class="s">top</span>.<span class="s">name</span> = <span class="str">"header"</span>
 g.<span class="s">header</span>.<span class="s">split</span><span class="s">(</span><span class="s">1</span>, <span class="s">5</span><span class="s">)</span>
@@ -580,25 +634,29 @@ g.<span class="s">styles</span>.<span class="s">header</span>.<span class="kw">b
     <span class="kw">color</span><span class="s">(</span><span class="s">0.35</span>, <span class="s">0.4</span>, <span class="s">0.5</span><span class="s">)</span>
 <span class="s">)</span>
  
-g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
-</pre>
+g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></pre>
+
+
     <p>In some case however, style delegation works counter-intuitively. Suppose you wanted to
     define one background image for the entire header. You would set the header style's
     <i>background</i> property to an image, which would then be delegated to all the cells in the
-    header. Result: each cell gets its own copy of the image.
-    </p><p>To counter this, set <i>style.delegate</i> to <i>False</i>. The image (or color or border)
+    header. Result: each cell gets its own copy of the image.</p>
+    <p>To counter this, set <i>style.delegate</i> to <i>False</i>. The image (or color or border)
     is then applied only to the container. You'll now have to create a second style for all the
-    individual cells in the container though.
-    </p><pre class="python"><span class="kw">grid</span>.<span class="s">has_style</span><span class="s">(</span><span class="s">)</span>
-</pre>
+    individual cells in the container though.</p>
+    <pre><span class="kw">grid</span>.<span class="s">has_style</span><span class="s">(</span><span class="s">)</span></pre>
+
+
     <p>The <i>grid.has_style()</i> returns <i>True</i> if a cell has a style set, <i>False</i> if
-    it is simply inheriting a style from a parent grid.
-    </p><p> 
-    </p><hr size="2" width="100%"/>
+    it is simply inheriting a style from a parent grid.</p>
+    <p> </p>
+    <hr size="2" width="100%"/>
+
     <h2><a id="proportion" name="proportion" title="proportion"></a>Working with proportions</h2>
+
     <p>Proportion is the <b>relationship in terms of size</b> between rows and columns. The library
-    offers a set of automated proportions to quickly create nice-looking layouts:
-    </p><ul>
+    offers a set of automated proportions to quickly create nice-looking layouts:</p>
+    <ul>
       <li><b>even</b>: (default) all columns are evenly wide, all rows evenly high.
       </li><li><b>fib</b>: rows and columns are proportioned according to the <b>golden ratio</b>
       (1.618).<br/>
@@ -607,11 +665,12 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
       </li><li><b>contrast</b>: a few wide columns, many narrow columns (mainly useful for
       experimenting).
     </li></ul>
+
     <p>A golden ratio means that if the width of one column would be 1, the width of the next
     column would approximate 1.618. The distribution between the two columns is roughly 3/8 and
     5/8. Throughout history, artists and architects have believed this proportion to be visually
-    pleasing.
-    </p><p>The golden ratio can also be found in various natural arrangements (such as shells and
+    pleasing.</p>
+    <p>The golden ratio can also be found in various natural arrangements (such as shells and
     branches). A mathematical solution to generate a sequence of numbers with a golden proportion
     is the Fibonacci algorithm: <span class="inline_code">fib(n) = fib(n-1) + fib(n-2)</span> with
     <span class="inline_code">fib(0)=0</span> and <span class="inline_code">fib(1)=1</span><br/>
@@ -622,36 +681,37 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
           <td><img alt="grid14" height="125" src="media/grid14.jpg" width="125"/>
           </td><td>
             The easiest way set a grid proportion:
-            <pre class="python">
+            <pre>
 g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">3</span>, <span class="s">1</span>, width=<span class="s">125</span>, height=<span class="s">125</span><span class="s">)</span>
-g.<span class="s">proportion</span> = <span class="str">"fib"</span>
-</pre>
+g.<span class="s">proportion</span> = <span class="str">"fib"</span></pre>
+
         </td></tr><tr>
           <td><img alt="grid15" height="125" src="media/grid15.jpg" width="125"/><br/>
           </td><td>
             You can also supply a (<i>horizontal</i>, <i>vertical</i>) tuple. In this example we
             use a golden proportion for the rows, and an even proportion for the columns:
-            <pre class="python">
+            <pre>
 g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">3</span>, <span class="s">2</span>, width=<span class="s">125</span>, height=<span class="s">125</span><span class="s">)</span>
-g.<span class="s">proportion</span> = <span class="str">"even, "</span>fib<span class="str">"</span>
-</pre>
-          </td></tr></tbody></table>
-    </p><p> 
-    </p><p><span class="grey_box">Custom proportions</span>
-    </p><p>When you need something more elaborate (but not that elaborate that you're going to define
+g.<span class="s">proportion</span> = <span class="str">"even, "</span>fib<span class="str">"</span></pre>
+
+          </td></tr></tbody></table></p>
+    <p> </p>
+    <p><span class="grey_box">Custom proportions</span></p>
+    <p>When you need something more elaborate (but not that elaborate that you're going to define
     the width and height for each row and column yourself) you can work with the custom
-    <i>proportion()</i> command:
-    </p><pre class="python">proportion<span class="s">(</span>distribution=<span class="str">"even"</span>, 
+    <i>proportion()</i> command:</p>
+    <pre>proportion<span class="s">(</span>distribution=<span class="str">"even"</span>, 
            <span class="s">sorted</span>=<span class="kw">False</span>, <span class="s">reversed</span>=<span class="kw">False</span>, shuffled=<span class="kw">False</span>, mirrored=<span class="kw">False</span>, 
-           repetition=<span class="s">1</span>, n=<span class="kw">None</span><span class="s">)</span>
-</pre>
+           repetition=<span class="s">1</span>, n=<span class="kw">None</span><span class="s">)</span></pre>
+
+
     <p>The command will return something you can assign to the <i>grid.proportion</i> property (or
     two of them in a tuple). When <i>sorted</i> is <i>True</i>, the sequence will be ordered from
     small to large (vice versa if <i>reversed</i> is <i>True</i>). When <i>mirrored</i> is
     <i>True</i>, small values in the sequence will be grouped in the middle surrounded by the
-    larger ones. The <i>repetition</i> parameter defines how many times to repeat the pattern.
-    </p><p>For example:
-    </p><pre class="python">g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">1</span>, <span class="s">7</span>, width=<span class="s">550</span>, height=<span class="s">150</span><span class="s">)</span>
+    larger ones. The <i>repetition</i> parameter defines how many times to repeat the pattern.</p>
+    <p>For example:</p>
+    <pre>g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">1</span>, <span class="s">7</span>, width=<span class="s">550</span>, height=<span class="s">150</span><span class="s">)</span>
 g.<span class="s">proportion</span> = <span class="kw">grid</span>.<span class="s">proportion</span><span class="s">(</span><span class="str">"fib"</span>, mirrored=<span class="kw">True</span>, repetition=<span class="s">2</span><span class="s">)</span> 
 g.<span class="s">styles</span>.<span class="s">default</span>.<span class="s">margin</span> = <span class="s">1</span>
 g.<span class="s">styles</span>.<span class="s">default</span>.<span class="kw">background</span>.<span class="s">gradientfill</span><span class="s">(</span>
@@ -660,20 +720,24 @@ g.<span class="s">styles</span>.<span class="s">default</span>.<span class="kw">
     <span class="s">type</span>=<span class="str">"linear"</span>,
     spread=<span class="s">int</span><span class="s">(</span>g.<span class="s">height</span><span class="s">)</span>
 <span class="s">)</span>
-g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
-</pre>
-    <p><img alt="grid16" height="150" src="media/grid16.jpg" width="550"/><br/>
-    </p><p> 
-    </p><hr size="2" width="100%"/>
+g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></pre>
+
+
+    <p><img alt="grid16" height="150" src="media/grid16.jpg" width="550"/><br/></p>
+    <p> </p>
+    <hr size="2" width="100%"/>
+
     <h2><a id="resize" name="resize" title="resize"></a>Resizing cells</h2>
+
     <p>You can resize cells, rows and columns either by an <b>absolute</b> value or by a
     <b>relative</b> value between 0.0 and 1.0. For example: the total relative width of all the
     columns in a grid is 1.0 (or 100%). If there are four even columns in the grid each column's
-    relative width is 0.25 (25%).<br/>
-    </p><pre class="python"><span class="kw">grid</span>.<span class="kw">size</span><span class="s">(</span>width, height, fixed=<span class="kw">False</span>, relative=<span class="kw">False</span><span class="s">)</span>
-</pre>
-    <p>The following properties can also be used to resize a cell, column or row:
-    </p><ul>
+    relative width is 0.25 (25%).<br/></p>
+    <pre><span class="kw">grid</span>.<span class="kw">size</span><span class="s">(</span>width, height, fixed=<span class="kw">False</span>, relative=<span class="kw">False</span><span class="s">)</span></pre>
+
+
+    <p>The following properties can also be used to resize a cell, column or row:</p>
+    <ul>
       <li><i>grid.width</i>: a cell's width in pixels.<br/>
       </li><li><i>grid.height</i>: a cell's height in pixels.<br/>
       </li><li><i>grid.relative_width</i>: a cell's width as a number between 0.0 and 1.0, relative to
@@ -683,48 +747,53 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
       </li><li><i>grid.fixed</i>: <i>True</i> when this cell does not automatically rescale to make room
       for other cells.
     </li></ul>
-    <p>For example:
-    </p><pre class="python">g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span>, <span class="kw">WIDTH</span>, <span class="kw">HEIGHT</span><span class="s">)</span>
-g.<span class="s">top</span>.<span class="s">relative_height</span> += <span class="s">0.25</span>
-</pre>
+
+    <p>For example:</p>
+    <pre>g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span>, <span class="kw">WIDTH</span>, <span class="kw">HEIGHT</span><span class="s">)</span>
+g.<span class="s">top</span>.<span class="s">relative_height</span> += <span class="s">0.25</span></pre>
+
+
     <p>When you resize a cell in a grid, the other cells in the same row or column will contract or
     expand evenly to make room. The grid's proportion will be respected as best as possible in the
     course.<a href="http://nodebox.net/code/data/media/grid17.mov"><br/>
-    View demo</a><br/>
-    </p><p>However, if a cell has its <i>fixed</i> property set to <i>True</i>, it will always retain
-    the size you give it.
-    </p><p> 
-    </p><hr size="2" width="100%"/>
+    View demo</a><br/></p>
+    <p>However, if a cell has its <i>fixed</i> property set to <i>True</i>, it will always retain
+    the size you give it.</p>
+    <p> </p>
+    <hr size="2" width="100%"/>
+
     <h2><a id="statistics" name="statistics" title="statistics"></a>Spreadsheet statistics</h2>
+
     <p>Each grid, row and column has a number of properties for doing simple statistics on
-    numerical cells:<br/>
-    </p><pre class="python"><span class="kw">grid</span>.<span class="s">count</span>    <span class="grey"># the number of cells</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">used</span>     <span class="grey"># the number of cells that have content</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">empty</span>    <span class="grey"># the number of empty cells</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">numeric</span>  <span class="grey"># the number of numeric cells in the grid</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">numbers</span>  <span class="grey"># list of numerical values</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">sum</span>      <span class="grey"># sum of all numerical values</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">avg</span>      <span class="grey"># average</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">min</span>      <span class="grey"># lowest number in the set</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">max</span>      <span class="grey"># highest number in the set</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">variance</span> <span class="grey"># how spread out is the distribution?</span>
-</pre>
-    <pre class="python"><span class="kw">grid</span>.<span class="s">stdev</span>    <span class="grey"># standard deviation</span>
-</pre>
+    numerical cells:<br/></p>
+    <pre><span class="kw">grid</span>.<span class="s">count</span>    <span class="grey"># the number of cells</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">used</span>     <span class="grey"># the number of cells that have content</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">empty</span>    <span class="grey"># the number of empty cells</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">numeric</span>  <span class="grey"># the number of numeric cells in the grid</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">numbers</span>  <span class="grey"># list of numerical values</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">sum</span>      <span class="grey"># sum of all numerical values</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">avg</span>      <span class="grey"># average</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">min</span>      <span class="grey"># lowest number in the set</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">max</span>      <span class="grey"># highest number in the set</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">variance</span> <span class="grey"># how spread out is the distribution?</span></pre>
+
+    <pre><span class="kw">grid</span>.<span class="s">stdev</span>    <span class="grey"># standard deviation</span></pre>
+
+
     <p>This allows you to quickly calculate the content of cells based on the numbers in other
     cells. The advantage is that you can create a spreadsheet template once, and then reuse it with
-    other data or other visual cells.
-    </p><p><img alt="grid18" height="60" src="media/grid18.jpg" width="550"/>
-    </p><pre class="python">downloads = <span class="s">{</span>
+    other data or other visual cells.</p>
+    <p><img alt="grid18" height="60" src="media/grid18.jpg" width="550"/></p>
+    <pre>downloads = <span class="s">{</span>
     <span class="str">"2007"</span>: <span class="s">[</span><span class="s">622</span>, <span class="s">3384</span>, <span class="s">3856</span>, <span class="s">2024</span>, <span class="s">2027</span>, <span class="s">1593</span>, 
              <span class="s">1352</span>, <span class="s">1326</span>, <span class="s">1309</span>, <span class="s">4822</span>, <span class="s">2988</span>, <span class="s">1536</span><span class="s">]</span>,
     <span class="str">"2008"</span>: <span class="s">[</span><span class="s">961</span>, <span class="s">5207</span>, <span class="s">10980</span>, <span class="s">7221</span>, <span class="s">7797</span>, <span class="s">1975</span><span class="s">]</span>
@@ -762,22 +831,26 @@ g.<span class="s">right</span>.<span class="s">relative_width</span> = <span cla
 g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span> 
  
 g.<span class="s">column</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>.<span class="s">name</span> = <span class="str">"jan"</span>
-<span class="kw">print</span> g.<span class="s">jan</span>.<span class="s">avg</span>
-</pre>   
-    <p> 
-    </p><hr size="2" width="100%"/>
+<span class="kw">print</span> g.<span class="s">jan</span>.<span class="s">avg</span></pre>
+   
+
+    <p> </p>
+    <hr size="2" width="100%"/>
+
     <h2><a id="pages" name="pages" title="pages"></a>Multiple pages</h2>
-    <p>The library has two commands to <b>store a grid in memory and reload it</b>:
-    </p><pre class="python"><span class="kw">grid</span>.<span class="s">save</span><span class="s">(</span>grid_object<span class="s">)</span>
-</pre>
-    <pre class="python">g = <span class="kw">grid</span>.<span class="s">load</span><span class="s">(</span><span class="s">)</span>
-</pre>
+
+    <p>The library has two commands to <b>store a grid in memory and reload it</b>:</p>
+    <pre><span class="kw">grid</span>.<span class="s">save</span><span class="s">(</span>grid_object<span class="s">)</span></pre>
+
+    <pre>g = <span class="kw">grid</span>.<span class="s">load</span><span class="s">(</span><span class="s">)</span></pre>
+
+
     <p>This is especially useful because the <i>grid.content.remainder</i> property will contain
-    any content that hasn't been drawn - and therefore should be drawn on the next page.
-    </p><p>In the simple example below we create a grid with some content for the first page. The next
+    any content that hasn't been drawn - and therefore should be drawn on the next page.</p>
+    <p>In the simple example below we create a grid with some content for the first page. The next
     pages we export (File &gt; Export as Image &gt; Number of Pages) will start from the remainder
-    of text for which no room was left on the previous page.
-    </p><pre class="python"><span class="kw">grid</span> =  <span class="kw">ximport</span><span class="s">(</span><span class="str">"grid"</span><span class="s">)</span>
+    of text for which no room was left on the previous page.</p>
+    <pre><span class="kw">grid</span> =  <span class="kw">ximport</span><span class="s">(</span><span class="str">"grid"</span><span class="s">)</span>
 <span class="kw">size</span><span class="s">(</span><span class="s">400</span>, <span class="s">400</span><span class="s">)</span>
  
 <span class="kw">if</span> PAGENUM == <span class="s">1</span>:
@@ -792,7 +865,8 @@ g.<span class="s">column</span><span class="s">(</span><span class="s">1</span><
     g.<span class="s">split</span><span class="s">(</span><span class="s">1</span>, <span class="kw">random</span><span class="s">(</span><span class="s">1</span>,<span class="s">3</span><span class="s">)</span><span class="s">)</span>
  
 g.<span class="s">draw</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span><span class="s">)</span>
-<span class="kw">grid</span>.<span class="s">save</span><span class="s">(</span>g<span class="s">)</span>
-</pre>   
+<span class="kw">grid</span>.<span class="s">save</span><span class="s">(</span>g<span class="s">)</span></pre>
+   
   </div>
+
 </body></html>

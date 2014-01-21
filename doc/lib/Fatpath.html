@@ -1,31 +1,40 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Libraries: Fatpath</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+
     <h3>Fatpath</h3>
   </div>
+
   <div class="article">
     <h2>Description</h2>
+
     <p>Fatpath does mathematics on path points. In essence, it adds text paths together. The
-    formula is as follows:
-    </p><pre class="python">p1 + <span class="s">(</span>p2 - p1<span class="s">)</span> * fatness
-</pre>
+    formula is as follows:</p>
+    <pre>p1 + <span class="s">(</span>p2 - p1<span class="s">)</span> * fatness</pre>
+
+
     <p>This function results in text forms that can vary between light and bold (like a
     multiple-master font), but that can also go <em>over</em> the edges, and calculate extreme bold
-    or extreme light fonts.
-    </p><h2>Screenshot</h2>
+    or extreme light fonts.</p>
+    <h2>Screenshot</h2>
+
     <p><img alt="" class="border" height="597" src="media/fatpath.jpg" width="708"/> <em>The bottom
-    text path is calculated from the two top paths</em>
-    </p><h2>Restrictions</h2>
+    text path is calculated from the two top paths</em></p>
+    <h2>Restrictions</h2>
+
     <p>Fatpath is rather dumb: paths have to match <strong>exactly</strong>, point-for-point, or
     the algorithm doesn't work. This means (in general) that you can only use fonts of the same
     family, and even then, there is no guarantee that letters match. Letters with curves are
     especially troublesome. A special button, letters<em>that</em>work, shows which letters you can
-    use for the given fonts.
-    </p><h2>Download</h2>
+    use for the given fonts.</p>
+    <h2>Download</h2>
+
     <table border="0">
       <tbody>
         <tr>
@@ -33,9 +42,12 @@
           </td><td>
             <p><a href="http://nodebox.net/code/data/media/fatpath-0.5.py">fatpath-0.5.py</a>
             (8KB)<br/>
-            <em>Last updated for NodeBox 1.0rc7.<br/></em><em>Author: Frederik De Bleser</em><br/>
-          </p></td></tr></tbody></table>
+            <em>Last updated for NodeBox 1.0rc7.<br/></em><em>Author: Frederik De Bleser</em><br/></p>
+          </td></tr></tbody></table>
+
     <h2>Contact</h2>
-    <p>frederik (at) pandora (dot) be
-  </p></div>
+
+    <p>frederik (at) pandora (dot) be</p>
+  </div>
+
 </body></html>

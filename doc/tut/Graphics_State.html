@@ -1,114 +1,126 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Tutorials: Graphics State</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
     <h3>Graphics State</h3>
+
     <ul class="chapter">
       <li><a href="Variables.html">Variables →</a>
       </li><li>Chapter 4
       </li><li><a href="Primitives.html">← Primitives</a>
     </li></ul>
   </div>
+
   <div class="article">
     <p>The graphics state stores your current color and transformation settings. You could think of
     it as painting. When painting, you can hold one type of brush and put one color of paint on it.
     All the lines you then paint on the canvas have the same color. And the same texture according
     to the thickness and softness of the brush. Naturally, you could paint with both hands and feet
-    holding multiple brushes with multiple colors. But then things become chaotic.
-    </p><p>So in NodeBox you "paint" with one color. All of the elements you draw have the same color,
-    until you switch to a different color. Then all subsequent elements you draw have that color.
-    </p><h2>State commands</h2>
+    holding multiple brushes with multiple colors. But then things become chaotic.</p>
+    <p>So in NodeBox you "paint" with one color. All of the elements you draw have the same color,
+    until you switch to a different color. Then all subsequent elements you draw have that color.</p>
+    <h2>State commands</h2>
+
     <p>When you run a script, NodeBox reads the code from <b>top to bottom, like a recipe</b>. When
     it encounters certain commands, it changes the current state. All subsequent elements
-    (primitives, paths, text and images) you draw then adhere to the current state.
-    </p><p>Color commands that change the state:<br/>
+    (primitives, paths, text and images) you draw then adhere to the current state.</p>
+    <p>Color commands that change the state:<br/>
     <a href="../ref/Color.html#colormode()">colormode()</a>, <a href="../ref/Color.html#fill()">fill()</a>, <a href="../ref/Color.html#stroke()">stroke()</a>,
-    <a href="../ref/Color.html#strokewidth()">strokewidth()</a>, <a href="../ref/Color.html#nofill()">nofill()</a>, <a href="../ref/Color.html#nostroke()">nostroke()</a>
-    </p><p>Transformation commands that change the state:<br/>
-    <a href="../ref/Transform.html#transform()">transform()</a>, <a href="../ref/Transform.html#translate()">translate()</a>, <a href="../ref/Transform.html#rotate()">rotate()</a>, <a href="../ref/Transform.html#scale()">scale()</a>, <a href="../ref/Transform.html#skew()">skew()</a>
-    </p><p>Text commands that change the state:<br/>
-    <a href="../ref/Typography.html#font()">font()</a>, <a href="../ref/Typography.html#font()">fontsize()</a>
-    </p><p>For example, observe the following script. We start by setting the current fill to red and
+    <a href="../ref/Color.html#strokewidth()">strokewidth()</a>, <a href="../ref/Color.html#nofill()">nofill()</a>, <a href="../ref/Color.html#nostroke()">nostroke()</a></p>
+    <p>Transformation commands that change the state:<br/>
+    <a href="../ref/Transform.html#transform()">transform()</a>, <a href="../ref/Transform.html#translate()">translate()</a>, <a href="../ref/Transform.html#rotate()">rotate()</a>, <a href="../ref/Transform.html#scale()">scale()</a>, <a href="../ref/Transform.html#skew()">skew()</a></p>
+    <p>Text commands that change the state:<br/>
+    <a href="../ref/Typography.html#font()">font()</a>, <a href="../ref/Typography.html#font()">fontsize()</a></p>
+    <p>For example, observe the following script. We start by setting the current fill to red and
     draw three red ovals. Then we set the current stroke to black and change the fill color to
-    transparent and draw two ovals with a black outline and a transparent fill:
-    </p><p><img alt="graphics_state1" src="media/graphics_state1.gif"/><br/>
-    </p><p>By default, the current fill color is black. The default strokewidth is 1. However, stroke
-    colors won't show until you define a current stroke color, which is transparent by default.
-    </p><h2>Transformation state</h2>
+    transparent and draw two ovals with a black outline and a transparent fill:</p>
+    <p><img alt="graphics_state1" src="media/graphics_state1.gif"/><br/></p>
+    <p>By default, the current fill color is black. The default strokewidth is 1. However, stroke
+    colors won't show until you define a current stroke color, which is transparent by default.</p>
+    <h2>Transformation state</h2>
+
     <p>You can think of the transformation state along the same lines as when painting. The NodeBox
     drawing canvas has an <b>origin point</b> at the top left corner (horizontal x=0 and vertical
     y=0). The <a href="../ref/Transform.html#translate()">translate()</a> command lifts up the
-    brush and puts it somewhere else. It changes the origin point.
-    </p><p>When you say:
-    </p><pre class="python"><span class="kw">rect</span><span class="s">(</span><span class="s">20</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span><span class="s">)</span>
-</pre>
+    brush and puts it somewhere else. It changes the origin point.</p>
+    <p>When you say:</p>
+    <pre><span class="kw">rect</span><span class="s">(</span><span class="s">20</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span><span class="s">)</span></pre>
+
+
     <p>a rectangle with a width and a height of 80 will be positioned 20 to the right and 40 down
-    from the top left corner of the canvas.
-    </p><p>But when you say:
-    </p><pre class="python"><span class="kw">translate</span><span class="s">(</span><span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">20</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span><span class="s">)</span>
-</pre>
+    from the top left corner of the canvas.</p>
+    <p>But when you say:</p>
+    <pre><span class="kw">translate</span><span class="s">(</span><span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
+<span class="kw">rect</span><span class="s">(</span><span class="s">20</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span><span class="s">)</span></pre>
+
+
     <p>the origin point is no longer at the top left (x=0 and y=0). We translated it to x=100 and
     y=100. So the rectangle will be drawn 20 to the right and 40 down of the <i>new</i> origin
     point. The rectangle ends up at x=120 and y=140. The translate() command <i>displaces the
-    current origin point relative to the previous origin point.</i>
-    </p><p><img alt="graphics_state2" src="media/graphics_state2.gif"/><br/>
-    </p><p> 
-    </p><p>Rotation, scaling and skewing work <b>incremental</b> as well. If you first rotate by 40
+    current origin point relative to the previous origin point.</i></p>
+    <p><img alt="graphics_state2" src="media/graphics_state2.gif"/><br/></p>
+    <p> </p>
+    <p>Rotation, scaling and skewing work <b>incremental</b> as well. If you first rotate by 40
     degrees, all the elements you subsequently draw will be rotated by 40 degrees. If you then
     rotate by 30 degrees, the current rotation becomes 70 (40 + 30). All subsequent elements will
-    be rotated by 70 degrees.
-    </p><p><img alt="graphics_state3" src="media/graphics_state3.gif"/>
-    </p><p>Likewise, if you keep putting <span class="inline_code">scale(0.8)</span> in your script the
+    be rotated by 70 degrees.</p>
+    <p><img alt="graphics_state3" src="media/graphics_state3.gif"/></p>
+    <p>Likewise, if you keep putting <span class="inline_code">scale(0.8)</span> in your script the
     elements on the canvas become smaller and smaller. The second time you scale, the current scale
-    becomes 0.64 (0.8 x 0.8), the third time it becomes 0.512 (0.64 x 0.8) and so on.
-    </p><h2>Corner mode transformations</h2>
+    becomes 0.64 (0.8 x 0.8), the third time it becomes 0.512 (0.64 x 0.8) and so on.</p>
+    <h2>Corner mode transformations</h2>
+
     <p>We haven't discussed the <a href="../ref/Transform.html#transform()">transform()</a> command
     yet. As you may have already read in the reference you can switch it between CENTER and CORNER.
     Centered transformation means that all shapes, paths, text and images rotate scale and skew
     around their own center. As we would probably expect them to. Corner mode transformations means
     that elements <b>transform around the current origin point</b>. This can be a difficult concept
-    to grasp.
-    </p><p>Take a look at stars and planets. The sun is a star in space and our Earth orbits around it.
+    to grasp.</p>
+    <p>Take a look at stars and planets. The sun is a star in space and our Earth orbits around it.
     You could think of the sun as the current origin point on the canvas (remember that this is not
     necessarily the top left) and the Earth as an oval that is rotating around it using a corner
-    mode transform.
-    </p><p>In the example below, we move the origin point to x=100 and y=100 and have three pieces of
+    mode transform.</p>
+    <p>In the example below, we move the origin point to x=100 and y=100 and have three pieces of
     text rotate around it. Without the corner mode transform, they would rotate around their own
-    center and it would be a lot more difficult to position them.<br/>
-    </p><p><img alt="graphics_state4" src="media/graphics_state4.gif"/>
-    </p><p> 
-    </p><p>The <a href="../ref/Transform.html#reset()">reset()</a> command will reset all
-    transformations from that point onward in your script.
-    </p><h2>State in a state?</h2>
+    center and it would be a lot more difficult to position them.<br/></p>
+    <p><img alt="graphics_state4" src="media/graphics_state4.gif"/></p>
+    <p> </p>
+    <p>The <a href="../ref/Transform.html#reset()">reset()</a> command will reset all
+    transformations from that point onward in your script.</p>
+    <h2>State in a state?</h2>
+
     <p>Two other transformation commands are <a href="../ref/Transform.html#push()">push()</a> and
     <a href="../ref/Transform.html#push()">pop()</a>. You can use these to create a state in a
     state. They sort of do what brackets do in language: in the middle of the sentence, they can
     sidetrack, then go back to the main sentence. Once you call the push() command, all subsequent
     translate(), rotate(), scale() and skew() commands are valid until you call pop() in your
     script. Then the transformation state reverts to how things where before push(). This way you
-    can <b>transform groups of elements that need to stay together</b>.
-    </p><p>Color and text commands are not affected by push() and pop().<br/>
-    </p><p>Here's a short example. Note that the last rectangle isn't rotated. That's because the
-    rotation happens between the push and pop "brackets".
-    </p><pre class="python"><span class="kw">rect</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+    can <b>transform groups of elements that need to stay together</b>.</p>
+    <p>Color and text commands are not affected by push() and pop().<br/></p>
+    <p>Here's a short example. Note that the last rectangle isn't rotated. That's because the
+    rotation happens between the push and pop "brackets".</p>
+    <pre><span class="kw">rect</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
 <span class="kw">push</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">rotate</span><span class="s">(</span><span class="s">45</span><span class="s">)</span>
 <span class="kw">rect</span><span class="s">(</span><span class="s">120</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
 <span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">220</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
-</pre>
+<span class="kw">rect</span><span class="s">(</span><span class="s">220</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span></pre>
+
+
     <p>Again using our analogy and planets, the push() and pop() command are a bit like a moon
     orbiting around a planet. Each plant is orbiting around a certain origin point (the sun), but
     regardless of where this is, the moon is always orbiting around the planet. A planet is a local
-    origin point for the moon.
-    </p><p> 
-    </p><p><span class="image_border"><img alt="graphics_state5" src="media/graphics_state5.gif"/></span><br/>
-    <a href="http://nodebox.net/code/data/media/graphics_state5.mov">Play movie</a>
-    </p><pre class="python"><span class="kw">size</span><span class="s">(</span><span class="s">450</span>, <span class="s">450</span><span class="s">)</span>
+    origin point for the moon.</p>
+    <p> </p>
+    <p><span class="image_border"><img alt="graphics_state5" src="media/graphics_state5.gif"/></span><br/>
+    <a href="http://nodebox.net/code/data/media/graphics_state5.mov">Play movie</a></p>
+    <pre><span class="kw">size</span><span class="s">(</span><span class="s">450</span>, <span class="s">450</span><span class="s">)</span>
 <span class="kw">speed</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>
  
 <span class="kw">def</span> <span class="red">draw</span><span class="s">(</span><span class="s">)</span>:
@@ -144,31 +156,37 @@
         <span class="kw">text</span><span class="s">(</span><span class="str">"moon"</span>, <span class="s">32</span>, <span class="s">0</span><span class="s">)</span>
         
         <span class="grey"># Move the origin back to the sun.</span>
-        <span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
-</pre>  
+        <span class="kw">pop</span><span class="s">(</span><span class="s">)</span></pre>
+  
+
     <h2>Breaking the state</h2>
+
     <p>If necessary, you can break away from the state and colorize and transform elements
     individually. Each of the primitive commands (line(), rect(), oval(), star(), arrow()),
     beginpath(), drawpath() and text() have three optional parameters: <i>fill</i>, <i>stroke</i>
-    and <i>strokewidth</i>.
-    </p><p>So you could do:
-    </p><pre class="python"><span class="kw">rect</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span>, <span class="s">100</span>, <span class="s">100</span>, <span class="kw">fill</span>=<span class="s">(</span><span class="s">1</span>, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span><span class="s">)</span>
-</pre>
-    <p>which is the same as
-    </p><pre class="python">r = <span class="kw">rect</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span>, <span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
-r.<span class="kw">fill</span> = <span class="kw">color</span><span class="s">(</span><span class="s">1</span>, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span>
-</pre>
-    <p>and instantly draws a red rectangle regardless of the current state fill color.
-    </p><p>Likewise you could also:
-    </p><pre class="python">r.<span class="kw">translate</span><span class="s">(</span>x, y=<span class="kw">None</span><span class="s">)</span>
+    and <i>strokewidth</i>.</p>
+    <p>So you could do:</p>
+    <pre><span class="kw">rect</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span>, <span class="s">100</span>, <span class="s">100</span>, <span class="kw">fill</span>=<span class="s">(</span><span class="s">1</span>, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span><span class="s">)</span></pre>
+
+
+    <p>which is the same as</p>
+    <pre>r = <span class="kw">rect</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span>, <span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
+r.<span class="kw">fill</span> = <span class="kw">color</span><span class="s">(</span><span class="s">1</span>, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span></pre>
+
+
+    <p>and instantly draws a red rectangle regardless of the current state fill color.</p>
+    <p>Likewise you could also:</p>
+    <pre>r.<span class="kw">translate</span><span class="s">(</span>x, y=<span class="kw">None</span><span class="s">)</span>
 r.<span class="kw">rotate</span><span class="s">(</span>degrees=<span class="s">0</span>, radians=<span class="s">0</span><span class="s">)</span>
 r.<span class="kw">scale</span><span class="s">(</span>x, y=<span class="kw">None</span><span class="s">)</span>
-r.<span class="kw">skew</span><span class="s">(</span>x, y=<span class="kw">None</span><span class="s">)</span>
-</pre>
-    <p>The transformations are then applied only to rectangle r.
-    </p><p>With the text() command you can also use the state-less <i>font</i> and <i>fontsize</i>
-    parameters:
-    </p><pre class="python"><span class="kw">text</span><span class="s">(</span><span class="str">"hello"</span>, <span class="s">20</span>, <span class="s">20</span>, <span class="kw">font</span>=<span class="str">"Helvetica"</span><span class="s">)</span>
-</pre>
+r.<span class="kw">skew</span><span class="s">(</span>x, y=<span class="kw">None</span><span class="s">)</span></pre>
+
+
+    <p>The transformations are then applied only to rectangle r.</p>
+    <p>With the text() command you can also use the state-less <i>font</i> and <i>fontsize</i>
+    parameters:</p>
+    <pre><span class="kw">text</span><span class="s">(</span><span class="str">"hello"</span>, <span class="s">20</span>, <span class="s">20</span>, <span class="kw">font</span>=<span class="str">"Helvetica"</span><span class="s">)</span></pre>
+
   </div>
+
 </body></html>

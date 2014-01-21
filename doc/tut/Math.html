@@ -1,64 +1,75 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
   <title>NodeBox Tutorials: Math</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+
 </head><body><div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+
     <h3>Math</h3>
+
     <ul class="chapter">
       <li><a href="Extending.html">Extending →</a>
       </li><li>Chapter 16
       </li><li><a href="Color.html">← Color</a>
     </li></ul>
   </div>
+
   <div class="article">
     <p>More often than not programming scripts in NodeBox involves a little bit of mathematics.
     Things like fluid motion, orbitting behavior and easing in and out all require math formulas.
     Since most of us probably weren't paying any attention during math class, this document
-    explains some useful math techniques.<a id="Geometry" name="Geometry"></a>
-    </p><div class="section">
+    explains some useful math techniques.<a id="Geometry" name="Geometry"></a></p>
+    <div class="section">
       <h3>Geometry</h3>
+
       <p>Sometimes you have the location of two points and you want to know the angle between them.
       Or the distance. Or you have the coordinates of one point and want to know the location of
       the second point based on an angle and a distance. The following math commands might be of
-      help. You can also find the basics about sines and cosines <a href="#Trigonometry">below</a>.<br/>
-      </p><p>The angle between two points:
-      </p><pre class="python"><span class="kw">def</span> <span class="red">angle</span><span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>:
+      help. You can also find the basics about sines and cosines <a href="#Trigonometry">below</a>.<br/></p>
+      <p>The angle between two points:</p>
+      <pre><span class="kw">def</span> <span class="red">angle</span><span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>:
     <span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> degrees, atan2
     a = degrees<span class="s">(</span> atan2<span class="s">(</span>y1-y0, x1-x0<span class="s">)</span> <span class="s">)</span>
-    <span class="kw">return</span> a
-</pre>
-      <p>The distance between two points:
-      </p><pre class="python"><span class="kw">def</span> <span class="red">distance</span><span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>:
+    <span class="kw">return</span> a</pre>
+
+
+      <p>The distance between two points:</p>
+      <pre><span class="kw">def</span> <span class="red">distance</span><span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>:
     <span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sqrt, <span class="s">pow</span>
-    <span class="kw">return</span> sqrt<span class="s">(</span><span class="s">pow</span><span class="s">(</span>x1-x0, <span class="s">2</span><span class="s">)</span> + <span class="s">pow</span><span class="s">(</span>y1-y0, <span class="s">2</span><span class="s">)</span><span class="s">)</span>
-</pre>
-      <p>The location of a point based on angle and distance:
-      </p><pre class="python"><span class="kw">def</span> <span class="red">coordinates</span><span class="s">(</span>x0, y0, distance, angle<span class="s">)</span>:
+    <span class="kw">return</span> sqrt<span class="s">(</span><span class="s">pow</span><span class="s">(</span>x1-x0, <span class="s">2</span><span class="s">)</span> + <span class="s">pow</span><span class="s">(</span>y1-y0, <span class="s">2</span><span class="s">)</span><span class="s">)</span></pre>
+
+
+      <p>The location of a point based on angle and distance:</p>
+      <pre><span class="kw">def</span> <span class="red">coordinates</span><span class="s">(</span>x0, y0, distance, angle<span class="s">)</span>:
     <span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> radians, sin, cos
     x1 = x0 + cos<span class="s">(</span>radians<span class="s">(</span>angle<span class="s">)</span><span class="s">)</span> * distance
     y1 = y0 + sin<span class="s">(</span>radians<span class="s">(</span>angle<span class="s">)</span><span class="s">)</span> * distance
-    <span class="kw">return</span> x1, y1
-</pre>
-      <p>The reflection of a point through an origin point:
-      </p><pre class="python"><span class="kw">def</span> <span class="red">reflect</span><span class="s">(</span>x0, y0, x1, y1, d=<span class="s">1.0</span>, a=<span class="s">180</span><span class="s">)</span>:
+    <span class="kw">return</span> x1, y1</pre>
+
+
+      <p>The reflection of a point through an origin point:</p>
+      <pre><span class="kw">def</span> <span class="red">reflect</span><span class="s">(</span>x0, y0, x1, y1, d=<span class="s">1.0</span>, a=<span class="s">180</span><span class="s">)</span>:
     d *= distance<span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>
     a += angle<span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>
     x, y = coordinates<span class="s">(</span>x0, y0, d, a<span class="s">)</span>
-    <span class="kw">return</span> x, y
-</pre>
-      <p>To use these commands in your script, simply import them:
-      </p><pre class="python"><span class="kw">from</span> nodebox.<span class="s">geo</span> <span class="kw">import</span> angle, distance, coordinates, reflect
-</pre> 
-      <p>Some examples:
-      </p><table border="0">
+    <span class="kw">return</span> x, y</pre>
+
+
+      <p>To use these commands in your script, simply import them:</p>
+      <pre><span class="kw">from</span> nodebox.<span class="s">geo</span> <span class="kw">import</span> angle, distance, coordinates, reflect</pre>
+ 
+
+      <p>Some examples:</p>
+      <table border="0">
         <tbody>
           <tr>
             <td><img alt="math-angle" src="media/math-angle.jpg"/>
             </td><td>
-              <p>The direction from the center of random points.
-              </p><pre class="python">
+              <p>The direction from the center of random points.</p>
+              <pre>
 x0, y0, r = <span class="kw">WIDTH</span>/<span class="s">2</span>, <span class="kw">HEIGHT</span>/<span class="s">2</span>, <span class="s">2</span>
  
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">5</span><span class="s">)</span>:
@@ -70,13 +81,13 @@ x0, y0, r = <span class="kw">WIDTH</span>/<span class="s">2</span>, <span class=
     <span class="kw">translate</span><span class="s">(</span>x0, y0<span class="s">)</span>
     <span class="kw">rotate</span><span class="s">(</span>-a<span class="s">)</span>
     <span class="kw">arrow</span><span class="s">(</span><span class="s">30</span>, <span class="s">0</span>, <span class="s">10</span><span class="s">)</span>
-    <span class="kw">reset</span><span class="s">(</span><span class="s">)</span>
-</pre>
+    <span class="kw">reset</span><span class="s">(</span><span class="s">)</span></pre>
+
           </td></tr><tr>
             <td><img alt="math-coordinates" src="media/math-coordinates.jpg"/>
             </td><td>
-              <p>Orbiting around(x0, y0).
-              </p><pre class="python">
+              <p>Orbiting around(x0, y0).</p>
+              <pre>
 x0, y0, r = <span class="kw">WIDTH</span>/<span class="s">2</span>, <span class="kw">HEIGHT</span>/<span class="s">2</span>, <span class="s">2</span>
 <span class="kw">oval</span><span class="s">(</span>x0-r, y0-r, r*<span class="s">2</span>, r*<span class="s">2</span><span class="s">)</span>
  
@@ -84,14 +95,14 @@ x0, y0, r = <span class="kw">WIDTH</span>/<span class="s">2</span>, <span class=
     a = <span class="s">36</span>*i
     x1, y1 = coordinates<span class="s">(</span>x0, y0, <span class="s">85</span>, a<span class="s">)</span>
     <span class="kw">oval</span><span class="s">(</span>x1-r, y1-r, r*<span class="s">2</span>, r*<span class="s">2</span><span class="s">)</span>
-    <span class="kw">line</span><span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>
-</pre>
+    <span class="kw">line</span><span class="s">(</span>x0, y0, x1, y1<span class="s">)</span></pre>
+
           </td></tr><tr>
             <td><img alt="math-perpendicular" src="media/math-perpendicular.jpg"/>
             </td><td>
               <p>Perpendicular lines on a circle path:<br/>
-              angle between a point and its handle - 90 degrees.
-              </p><pre class="python">
+              angle between a point and its handle - 90 degrees.</p>
+              <pre>
 path = <span class="kw">oval</span><span class="s">(</span><span class="s">100</span>, <span class="s">100</span>, <span class="s">105</span>, <span class="s">105</span><span class="s">)</span>
 <span class="kw">for</span> t <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">50</span><span class="s">)</span>:
     pt = path.<span class="s">point</span><span class="s">(</span><span class="s">float</span><span class="s">(</span>t<span class="s">)</span> / <span class="s">50</span><span class="s">)</span>
@@ -102,20 +113,23 @@ path = <span class="kw">oval</span><span class="s">(</span><span class="s">100</
     <span class="kw">translate</span><span class="s">(</span>pt.<span class="s">x</span>, pt.<span class="s">y</span><span class="s">)</span>
     <span class="kw">rotate</span><span class="s">(</span>-a<span class="s">+90</span><span class="s">)</span>
     <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">35</span>, <span class="s">0</span><span class="s">)</span>
-    <span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
-</pre>
+    <span class="kw">pop</span><span class="s">(</span><span class="s">)</span></pre>
+
             </td></tr></tbody></table><br/>
-      <p> 
-    </p></div><a id="Sequences" name="Sequences"></a>
+
+      <p> </p>
+    </div><a id="Sequences" name="Sequences"></a>
+
     <div class="section">
       <h3>Sequences</h3>
+
       <p>Sometimes you want to give a position and/or size to objects in such a way that they
       interrelate to each other, that there is some kind of ordering or harmony between them. Sine
       waves for example are great to describe motion because they ease in and out. Another
       interesting proportional principle is the <i>golden ratio</i>, the 3-5-8 rule. It has been
       around in aesthetics for a long long time. The great thing about it is that it can be
-      expressed as a mathematical series (Fibonacci sequence).
-      </p><pre class="python"><span class="kw">def</span> <span class="red">fib</span><span class="s">(</span>n<span class="s">)</span>:
+      expressed as a mathematical series (Fibonacci sequence).</p>
+      <pre><span class="kw">def</span> <span class="red">fib</span><span class="s">(</span>n<span class="s">)</span>:
     <span class="kw">if</span> n == <span class="s">0</span>: <span class="kw">return</span> <span class="s">0</span>
     <span class="kw">if</span> n == <span class="s">1</span>: <span class="kw">return</span> <span class="s">1</span>
     <span class="kw">if</span> n &gt;= <span class="s">2</span>: <span class="kw">return</span> fib<span class="s">(</span>n<span class="s">-1</span><span class="s">)</span> + fib<span class="s">(</span>n<span class="s">-2</span><span class="s">)</span>
@@ -124,15 +138,16 @@ path = <span class="kw">oval</span><span class="s">(</span><span class="s">100</
     <span class="grey"># Returns two proportional numbers whose sum is n.</span>
     f = <span class="s">max</span><span class="s">(</span><span class="s">1</span>, <span class="s">min</span><span class="s">(</span>f, <span class="s">10</span><span class="s">)</span><span class="s">)</span>
     n /= <span class="s">float</span><span class="s">(</span>fib<span class="s">(</span>f<span class="s">+2</span><span class="s">)</span><span class="s">)</span>
-    <span class="kw">return</span> n*fib<span class="s">(</span>f<span class="s">+1</span><span class="s">)</span>, n*fib<span class="s">(</span>f<span class="s">)</span>
-</pre> 
-      <p>Colored rectangles proportioned with the golden ratio:
-      </p><table border="0">
+    <span class="kw">return</span> n*fib<span class="s">(</span>f<span class="s">+1</span><span class="s">)</span>, n*fib<span class="s">(</span>f<span class="s">)</span></pre>
+ 
+
+      <p>Colored rectangles proportioned with the golden ratio:</p>
+      <table border="0">
         <tbody>
           <tr>
             <td><img alt="math-fib1" src="media/math-fib1.jpg"/>
             </td><td>
-              <pre class="python">
+              <pre>
 w1, w2 = goldenratio<span class="s">(</span><span class="s">260</span><span class="s">)</span>
 h1, h2 = goldenratio<span class="s">(</span><span class="s">260</span><span class="s">)</span>
 b1, b2 = goldenratio<span class="s">(</span><span class="s">1.0</span><span class="s">)</span>
@@ -145,12 +160,12 @@ b3, b4 = goldenratio<span class="s">(</span>b1<span class="s">)</span>
 <span class="kw">rect</span><span class="s">(</span>w1, <span class="s">0</span>, w2, h1<span class="s">)</span>
  
 <span class="kw">fill</span><span class="s">(</span><span class="s">0</span>, b4/<span class="s">2</span>, b4<span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">0</span>, h1, w1+w2, h2<span class="s">)</span>
-</pre>
+<span class="kw">rect</span><span class="s">(</span><span class="s">0</span>, h1, w1+w2, h2<span class="s">)</span></pre>
+
           </td></tr><tr>
             <td><img alt="math-fib2" src="media/math-fib2.jpg"/>
             </td><td>
-              <pre class="python">
+              <pre>
 x, y = <span class="s">0</span>, <span class="s">0</span>
 w, h = <span class="s">260</span>, <span class="s">260</span>
  
@@ -162,75 +177,79 @@ bh = <span class="s">0</span> <span class="grey"># bottom height</span>
     <span class="kw">fill</span><span class="s">(</span><span class="s">0</span>, v/<span class="s">2</span>, v<span class="s">)</span>
     <span class="kw">rect</span><span class="s">(</span>x, y, w, th<span class="s">)</span>
     y += th
-    th = bh
-</pre>
+    th = bh</pre>
+
             </td></tr></tbody></table>
-      <p> 
-    </p></div><a id="Trigonometry" name="Trigonometry"></a>
+
+      <p> </p>
+    </div><a id="Trigonometry" name="Trigonometry"></a>
+
     <div class="section">
       <h3>Trigonometry</h3>
+
       <p><span class="big_text">A sine calculates the vertical offset between two points based on
-      the angle. A cosine calculates the horizontal distance.</span>
-      </p><p> 
-      </p><table border="0">
+      the angle. A cosine calculates the horizontal distance.</span></p>
+      <p> </p>
+      <table border="0">
         <tbody>
           <tr>
             <td><img alt="math-trig1" src="media/math-trig1.jpg"/>
             </td><td>
-              <p>Let's say we have two points, <em>a</em> and <em>b</em>, connected by a line.
-          </p></td></tr><tr>
+              <p>Let's say we have two points, <em>a</em> and <em>b</em>, connected by a line.</p>
+          </td></tr><tr>
             <td><img alt="math-trig2" src="media/math-trig2.jpg"/>
             </td><td>
               <p>Now let's assume <em>a</em> is at the origin (or center) of a circle. The circle
-              has a radius equal to the length of the line connecting <em>a</em> and <em>b</em>.
-              </p><p>So <em>b</em> is located somewhere on the circle's circumference.
-          </p></td></tr><tr>
+              has a radius equal to the length of the line connecting <em>a</em> and <em>b</em>.</p>
+              <p>So <em>b</em> is located somewhere on the circle's circumference.</p>
+          </td></tr><tr>
             <td><img alt="math-trig3" src="media/math-trig3.jpg"/>
             </td><td>
-              <p>There is a horizontal and vertical distance between <em>a</em> and <em>b</em>.
-              </p><p>We can use <em>sine</em> and <em>cosine</em> to determine those distances.
-          </p></td></tr><tr>
+              <p>There is a horizontal and vertical distance between <em>a</em> and <em>b</em>.</p>
+              <p>We can use <em>sine</em> and <em>cosine</em> to determine those distances.</p>
+          </td></tr><tr>
             <td><img alt="math-trig4" src="media/math-trig4.jpg"/>
             </td><td>
               <p>Each line from <em>a</em> to a point on the circle's circumference (for example,
-              <em>b</em>) has an angle.
-              </p><p>Measured counterclockwise, starting from 0°, a circle has a total circumference of
-              360°. So a line from <em>a</em> going straight up would have an angle of 90°.
-              </p><p>In the case of the line between <em>a</em> and <em>b</em>, the angle is 60°.
-          </p></td></tr><tr>
+              <em>b</em>) has an angle.</p>
+              <p>Measured counterclockwise, starting from 0°, a circle has a total circumference of
+              360°. So a line from <em>a</em> going straight up would have an angle of 90°.</p>
+              <p>In the case of the line between <em>a</em> and <em>b</em>, the angle is 60°.</p>
+          </td></tr><tr>
             <td><img alt="math-trig5" src="media/math-trig5.jpg"/>
             </td><td>
               <p>The cosine function calculates the <strong>horizontal</strong> distance between
-              <em>a</em> and <em>b</em> based on the angle.
-              </p><p>The sine function calculates the <strong>vertical</strong> distance between
-              <em>a</em> and <em>b</em>.
-              </p><p>In the case of an angle of 60°, the sine yields 0.5. So the horizontal distance
+              <em>a</em> and <em>b</em> based on the angle.</p>
+              <p>The sine function calculates the <strong>vertical</strong> distance between
+              <em>a</em> and <em>b</em>.</p>
+              <p>In the case of an angle of 60°, the sine yields 0.5. So the horizontal distance
               between <em>a</em> and <em>b</em> is half the length of the line between <em>a</em>
-              and <em>b</em>.
-          </p></td></tr><tr>
+              and <em>b</em>.</p>
+          </td></tr><tr>
             <td><img alt="math-trig6" src="media/math-trig6.jpg"/>
             </td><td>
               <p>With sine and cosine we can calculate the distance between <em>a</em> and
-              <em>b</em>.
-              </p><p>This is useful if we have position coordinates for <em>a</em> and we need to
-              calculate the position of a point <em>b</em> that is orbiting around it.
-              </p><p>For 60°, the sine yields 0.5, meaning half the length of the distance between
+              <em>b</em>.</p>
+              <p>This is useful if we have position coordinates for <em>a</em> and we need to
+              calculate the position of a point <em>b</em> that is orbiting around it.</p>
+              <p>For 60°, the sine yields 0.5, meaning half the length of the distance between
               <em>a</em> and <em>b</em>. So the horizontal distance between <em>a</em> and
-              <em>b</em> is 70 * 0.5 = 35.
-              </p><p>So <em>b</em>'s x equals <em>a</em>'s x plus 35.<br/>
-          </p></td></tr><tr>
+              <em>b</em> is 70 * 0.5 = 35.</p>
+              <p>So <em>b</em>'s x equals <em>a</em>'s x plus 35.<br/></p>
+          </td></tr><tr>
             <td><img alt="math-trig7" src="media/math-trig7.jpg"/>
             </td><td>
-              <p>The command in NodeBox would look like this:
-              </p><pre class="python">
+              <p>The command in NodeBox would look like this:</p>
+              <pre>
 <span class="kw">def</span> <span class="red">coordinates</span><span class="s">(</span>x0, y0, distance, angle<span class="s">)</span>:
     <span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> radians, sin, cos
     angle = radians<span class="s">(</span>angle<span class="s">)</span>
     x1 = x0 + cos<span class="s">(</span>angle<span class="s">)</span> * distance
     y1 = y0 + sin<span class="s">(</span>angle<span class="s">)</span> * distance
-    <span class="kw">return</span> x1, y1
-</pre> 
+    <span class="kw">return</span> x1, y1</pre>
+ 
             </td></tr></tbody></table>
     </div>
   </div>
+
 </body></html>
