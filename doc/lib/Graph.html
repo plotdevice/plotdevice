@@ -26,7 +26,7 @@
     </li></ul>
 
     <p>The NodeBox Graph library includes algorithms from <a href="https://networkx.lanl.gov/wiki">NetworkX</a> for betweenness centrality and eigenvector
-    centrality, Connelly Barnes' implementation of Dijksta shortest paths (<a href="http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/119466">here</a>) and the spring
+    centrality, Connelly Barnes’ implementation of Dijksta shortest paths (<a href="http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/119466">here</a>) and the spring
     layout for JavaScript by Aslak Hellesoy and Dave Hoover (<a href="http://snipplr.com/view/1950/graph-javascript-framework-version-001/">here</a>). The goal of
     this library is visualization of small graphs (&lt;200 elements), if you need something more
     robust we recommend using NetworkX.</p>
@@ -91,8 +91,8 @@
     network. At the same time, there are connections (or <b>edges</b>) that keep nodes together.
     The greater the weight of an edge the stronger it is in pulling two nodes together. This is the
     <i>attractive force</i> in the network. You can also set the <i>layout</i> parameter to
-    "circle" to use a simple circle-based layout.<br/></p>
-    <p>The forces in the network need to be calculated several times in order for the nodes'
+    ‘circle’ to use a simple circle-based layout.<br/></p>
+    <p>The forces in the network need to be calculated several times in order for the nodes’
     positions to stabilize. The higher the number of <i>iterations</i> the better (but slower) the
     layout.
     <table>
@@ -115,7 +115,7 @@
       </li><li><i>graph.edges</i>: a list of all the <i>edge</i> objects in the graph.
       </li><li><i>graph.leaves</i>: a list of all the nodes with only one connection.<br/>
       </li><li><i>graph.root</i>: the root node in the graph.
-      </li><li><i>graph.done</i>: <i>True</i> when the graph's layout is completely calculated.
+      </li><li><i>graph.done</i>: <i>True</i> when the graph’s layout is completely calculated.
       </li><li><i>graph.distance</i>: the scale of the graph when drawn (usually a number between 0.5
       and 2.0).<br/>
     </li></ul><br/>
@@ -148,11 +148,11 @@
     <p>You can add nodes (e.g. blocks of information you want to connect) to the graph with the
     <i>graph.add_node()</i> method. The <i>id</i> parameter <b>uniquely</b> identifies each node,
     it will appear as a label on each node once the graph is visualized. When the <i>root</i>
-    parameter is <i>True</i> it will set this node as the graph's root.</p>
+    parameter is <i>True</i> it will set this node as the graph’s root.</p>
     <p>The <i>graph.add_node()</i> method returns a node object with the following properties:</p>
     <ul>
-      <li><i>node.id</i>: the node's unique id.
-      </li><li><i>node.r</i>: the node's radius.<br/>
+      <li><i>node.id</i>: the node’s unique id.
+      </li><li><i>node.r</i>: the node’s radius.<br/>
       </li><li><i>node.style</i>: the name of the style used to colorize and draw the node.<br/>
       </li><li><i>node.category</i>: a category this node belongs to.
       </li><li><i>node.label</i>: displayed when the node is drawn (by default, its id).
@@ -167,7 +167,7 @@
     </li></ul><br/>
 
     <ul>
-      <li><i>node.weight</i>: a number between 0.0 and 1.0 reflecting the node's relevance in the
+      <li><i>node.weight</i>: a number between 0.0 and 1.0 reflecting the node’s relevance in the
       graph.
       </li><li><i>node.traffic</i>: a number between 0.0 and 1.0 reflecting the amount of shortest
       paths.
@@ -175,8 +175,8 @@
       </li><li><i>node.betweenness</i>:identical to <i>node.traffic</i>.<br/>
     </li></ul>
 
-    <p>We'll look at the details of a node's weight and traffic in the section on <a href="#proximity">graph proximity</a>.</p>
-    <p>You can connect two nodes with the <i>graph.add_edge()</i> method. It takes two node id's,
+    <p>We’ll look at the details of a node’s weight and traffic in the section on <a href="#proximity">graph proximity</a>.</p>
+    <p>You can connect two nodes with the <i>graph.add_edge()</i> method. It takes two node id’s,
     an optional <i>weight</i> (ranging between 0.0 and 1.0) and an optional <i>label</i> to display
     near the edge when it is drawn.<br/></p>
     <p>An <i>edge</i> object is returned. It has the following properties:</p>
@@ -212,7 +212,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
 
     <p>The <i>graph</i> object has <i>graph.nodes</i> and <i>graph.edges</i> properties that list
     all of the nodes and connections it contains. It also has a <i>graph.node()</i> and a
-    <i>graph.edge()</i> method that returns nodes and edges based on id's:</p>
+    <i>graph.edge()</i> method that returns nodes and edges based on id’s:</p>
     <pre>graph.<span class="s">node</span><span class="s">(</span><span class="s">id</span><span class="s">)</span></pre>
 
     <pre>graph.<span class="s">edge</span><span class="s">(</span>id1, id2<span class="s">)</span></pre>
@@ -224,7 +224,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
 
 
     <p>To remove nodes and edges you can use the methods below. The <i>graph.clear()</i> method
-    removes all nodes and all edges and resets the graph's layout. This is useful when you want to
+    removes all nodes and all edges and resets the graph’s layout. This is useful when you want to
     dynamically reload a graph.</p>
     <pre>graph.<span class="s">remove_node</span><span class="s">(</span><span class="s">id</span><span class="s">)</span></pre>
 
@@ -259,7 +259,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     <p>The <i>graph.update()</i> method calculates a portion the total iterations. This is useful
     in an animation when you want the graph to slowly unfold. When the entire layout has been
     calculated, the <i>graph.done</i> property will be <i>True</i>.</p>
-    <p>The <i>graph.solve()</i> method does all the iterations at once. If you're not running an
+    <p>The <i>graph.solve()</i> method does all the iterations at once. If you’re not running an
     animation you usually use this method before drawing the graph.</p>
     <p>The <i>graph.draw()</i> method draws the graph to the canvas. It will originate from the
     canvas center (although you can nudge it horizontally or vertically with optional <i>dx</i> and
@@ -269,15 +269,15 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
       <tbody>
         <tr>
           <td><img alt="graph_draw1" height="100" src="media/graph_draw1.jpg" width="100"/>
-          </td><td>The optional <i>weighted</i> parameter indicates an edge's weight by adding a subtle
+          </td><td>The optional <i>weighted</i> parameter indicates an edge’s weight by adding a subtle
           shadow to it when set to <i>True</i>.
         </td></tr><tr>
           <td><img alt="graph_draw2" height="100" src="media/graph_draw2.jpg" width="100"/>
-          </td><td>The optional <i>directed</i> parameters indicates an edge's direction with an arrow
+          </td><td>The optional <i>directed</i> parameters indicates an edge’s direction with an arrow
           when set to <i>True</i>.
         </td></tr><tr>
           <td><img alt="graph_draw3" height="100" src="media/graph_draw3.jpg" width="100"/>
-          </td><td>The optional <i>highlight</i> parameter indicates a path between two nodes. Node id's
+          </td><td>The optional <i>highlight</i> parameter indicates a path between two nodes. Node id’s
           in the path are supplied as a list. Usually this is a value returned from the
           <i>graph.shortest_path()</i> method.
         </td></tr><tr>
@@ -288,7 +288,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
         </td></tr></tbody></table></p>
     <p> </p>
     <p><span class="grey_box">Layout</span></p>
-    <p>If you're using the graph in an animation, you can use the <i>graph.layout.refresh()</i>
+    <p>If you’re using the graph in an animation, you can use the <i>graph.layout.refresh()</i>
     method to trigger some new iterations. This is useful when you are for example dynamically
     adding new nodes after the layout has stopped. The <i>graph.layout.reset()</i> restarts the
     layout from scratch.</p>
@@ -332,7 +332,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     for how to apply them.</p>
     <p> </p>
     <p><span class="grey_box">Predefined styles</span></p>
-    <p>Let's have a look at the different styles in a graph:
+    <p>Let’s have a look at the different styles in a graph:
     <table>
       <tbody>
         <tr>
@@ -381,7 +381,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     <pre>graph.<span class="s">styles</span>.<span class="kw">stroke</span> = <span class="kw">color</span><span class="s">(</span><span class="s">1</span><span class="s">)</span></pre>
 
 
-    <p>Here's an example of how to add your own custom style:</p>
+    <p>Here’s an example of how to add your own custom style:</p>
     <pre>s = g.<span class="s">styles</span>.<span class="s">create</span><span class="s">(</span><span class="str">"red"</span><span class="s">)</span>
 s.<span class="kw">fill</span> = <span class="kw">color</span><span class="s">(</span><span class="s">1</span>, <span class="s">0</span>, <span class="s">0.25</span>, <span class="s">0.75</span><span class="s">)</span></pre>
 
@@ -400,7 +400,7 @@ s.<span class="kw">fill</span> = <span class="kw">color</span><span class="s">(<
       </li><li><i>style.text</i>: text color used for node and edge labels.
       </li><li><i>style.font</i>: font used for node and edge labels.
       </li><li><i>style.fontsize</i>: fontsize for node and edge labels.
-      </li><li><i>style.textwidth</i>: if the label 's width exceeds this number it gets wrapped to the
+      </li><li><i>style.textwidth</i>: if the label ’s width exceeds this number it gets wrapped to the
       next line.
       </li><li><i>style.align</i>: aligns the node label either RIGHT or CENTER.<br/>
       </li><li><i>style.depth</i>: True when this style uses the Colors library to render dropshadows.
@@ -408,15 +408,15 @@ s.<span class="kw">fill</span> = <span class="kw">color</span><span class="s">(<
 
     <p> <span class="grey_box">Styleguide</span></p>
     <p>You can assign the name of a style to <i>node.style</i> and then when the network is drawn
-    the node will be visualized using the style's properties and drawing methods.</p>
-    <p>You can assign styles by hand - for example, here's how to make all nodes with a weight of
-    more than 0.6 "important":</p>
+    the node will be visualized using the style’s properties and drawing methods.</p>
+    <p>You can assign styles by hand - for example, here’s how to make all nodes with a weight of
+    more than 0.6 ‘important’:</p>
     <pre><span class="kw">for</span> node <span class="kw">in</span> graph.<span class="s">nodes</span>:
     <span class="kw">if</span> node.<span class="s">weight</span> &gt; <span class="s">0.6</span>:
         node.<span class="s">style</span> = <span class="str">"important"</span></pre>
 
 
-    <p>Rules like these (<i>"heavy nodes are important"</i>) can also be bundled in the styleguide
+    <p>Rules like these (<i>’heavy nodes are important’</i>) can also be bundled in the styleguide
     dictionary:</p>
     <pre>graph.<span class="s">styles</span>.<span class="s">guide</span>.<span class="s">append</span><span class="s">(</span><span class="str">"important"</span>, <span class="kw">lambda</span> graph, node: node.<span class="s">weight</span> &gt; <span class="s">0.6</span><span class="s">)</span></pre>
 
@@ -454,13 +454,13 @@ graph.<span class="s">styles</span>.<span class="s">guide</span>.<span class="s"
     <pre>graph.<span class="s">styles</span>.<span class="s">apply</span><span class="s">(</span><span class="s">)</span></pre>
 
 
-    <p>There's a <i>graph.styles.guide.order</i> property (which is a list of style names) that
-    defines the sequence in which style rules will be applied. There's also a
+    <p>There’s a <i>graph.styles.guide.order</i> property (which is a list of style names) that
+    defines the sequence in which style rules will be applied. There’s also a
     <i>graph.styles.clear()</i> method to remove all the rules.</p>
     <p> </p>
     <p><span class="grey_box">Style drawing methods</span></p>
     <p>A <i>style</i> has customizable drawing methods. We will only go into this briefly here.
-    Developers can check the source code in the <i>style.py</i> file in the library. Here's a quick
+    Developers can check the source code in the <i>style.py</i> file in the library. Here’s a quick
     example of how we add our own custom patch for edges:
     <table>
       <tbody>
@@ -510,7 +510,7 @@ graph.<span class="s">draw</span><span class="s">(</span><span class="s">)</span
             <p><img alt="graph-drag" height="170" src="media/graph-drag.jpg" width="150"/></p>
           </td><td>
             <p>When you hover over a node the <i>graph.events.hover()</i> method fires. It will try
-            to display a description of the node's id from WordNet (if you have the <a href="Linguistics.html">Linguistics</a> or <a href="WordNet.html">WordNet</a> library
+            to display a description of the node’s id from WordNet (if you have the <a href="Linguistics.html">Linguistics</a> or <a href="WordNet.html">WordNet</a> library
             installed). To display your own popup text for a given node, register it in the
             <i>graph.events.popup_text</i> dictionary:</p>
             <pre>
@@ -520,7 +520,7 @@ graph.<span class="s">events</span>.<span class="s">popup_text</span><span class
             you want it. The graph will stabilize by itself.</p>
             <p>Last but not least, if you click on a node <i>graph.events.click()</i> will fire.
             This method takes one <i>node</i> parameter and does nothing by default, so if you want
-            clicking behavior you'll have to assign your own command:</p>
+            clicking behavior you’ll have to assign your own command:</p>
             <pre>
 <span class="kw">def</span> <span class="rose">click</span><span class="s">(</span>node<span class="s">)</span>: <span class="kw">print</span> node.<span class="s">id</span>+<span class="str">" clicked"</span>
 graph.<span class="s">events</span>.<span class="s">click</span> = click</pre>
@@ -552,16 +552,16 @@ graph.<span class="s">events</span>.<span class="s">click</span> = click</pre>
     <p>Graphs are not only useful to visualize data, but to analyze it as well. Knowing what the
     shortest path is, how to get from one node to another, can tell us something of how those nodes
     relate to each other.</p>
-    <p><a href="http://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">Dijkstra's shortest path
+    <p><a href="http://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">Dijkstra’s shortest path
     algorithm</a> is a way to find the closest route from one node to another in the network. For
     example, if the nodes in the network represent cities and their strength represent driving
-    distances between pairs of cities connected by a direct road, Dijkstra's algorithm can be used
+    distances between pairs of cities connected by a direct road, Dijkstra’s algorithm can be used
     to find the shortest route between two cities.</p>
     <pre>graph.<span class="s">shortest_path</span><span class="s">(</span>id1, id2, heuristic=<span class="kw">None</span>, directed=<span class="kw">False</span><span class="s">)</span></pre>
 
 
-    <p>The <i>graph.shortest_path()</i> method returns a list of node id's connecting the two nodes
-    with the given id's. If no connection can be found it will return <i>None</i>.</p>
+    <p>The <i>graph.shortest_path()</i> method returns a list of node id’s connecting the two nodes
+    with the given id’s. If no connection can be found it will return <i>None</i>.</p>
     <pre>path = graph.<span class="s">shortest_path</span><span class="s">(</span><span class="s">119</span>, <span class="s">381</span><span class="s">)</span>
 graph.<span class="s">draw</span><span class="s">(</span>highlight=path, weighted=<span class="kw">True</span><span class="s">)</span>
 <span class="kw">print</span> path
@@ -576,7 +576,7 @@ graph.<span class="s">draw</span><span class="s">(</span>highlight=path, weighte
     travel by. Likewise, a straight connection may be abandoned in favor of a detour on heavier
     edges.</p>
     <p>Optionally you can also supply your own <a href="http://en.wikipedia.org/wiki/Heuristic">heuristic</a> function to tweak the pathfinder. It is
-    a command that takes two node id's as its parameters and returns a number (usually between -1
+    a command that takes two node id’s as its parameters and returns a number (usually between -1
     and +1). The lower this number gets the more <i>interesting</i> the connection between the two
     nodes becomes. For example, in a game environment you could use edge weight to represent the
     quality of a road through the world, and supply heuristic terrain penalties for mountains,
@@ -585,7 +585,7 @@ graph.<span class="s">draw</span><span class="s">(</span>highlight=path, weighte
     <p> </p>
     <p><span class="grey_box">Centrality</span></p>
     <p>How a node is connected to other nodes influences its importance in the network. The Graph
-    library uses two measurements to determine a node's importance: <a href="http://en.wikipedia.org/wiki/Centrality">betweenness centrality</a> and <a href="http://en.wikipedia.org/wiki/Centrality">eigenvector centrality</a>.</p>
+    library uses two measurements to determine a node’s importance: <a href="http://en.wikipedia.org/wiki/Centrality">betweenness centrality</a> and <a href="http://en.wikipedia.org/wiki/Centrality">eigenvector centrality</a>.</p>
     <ul>
       <li><b>Betweenness centrality</b>: nodes that occur on many shortest paths have a higher
       betweenness. You can think of such nodes as being hubs, landmarks, city centers and so on.
@@ -620,7 +620,7 @@ graph.<span class="s">draw</span><span class="s">(</span>highlight=path, weighte
             <p>The king of a country has only his advisors as direct connections, but his influence
             is obviously much higher than a post office secretary in the same country who may have
             hundreds of direct connections with his clients.</p>
-            <p>Eigenvalue centrality is what Google's PageRank algorithm uses to rank web pages.</p>
+            <p>Eigenvalue centrality is what Google’s PageRank algorithm uses to rank web pages.</p>
             <p>Read some more interesting details on the <a href="http://20bits.com/2007/11/02/graph-theory-part-iii-facebook/">20bits blog</a>.</p>
           </td></tr></tbody></table></p>
     <p><br/>
@@ -638,10 +638,10 @@ graph.<span class="s">draw</span><span class="s">(</span>highlight=path, weighte
                              start=<span class="kw">None</span>, iterations=<span class="s">100</span>, tolerance=<span class="s">0.0001</span><span class="s">)</span></pre>
 
 
-    <p>Both methods recalculate a node's traffic/weight property and return a dictionary of node
-    id's linked to a value between 0.0 and 1.0. You may also notice the optional <i>rating</i>
-    parameter which is a dictionary of node id's linked to a score to influence it's weight (e.g.
-    Google not only examines a web page's connections but also its contents - the score of a page's
+    <p>Both methods recalculate a node’s traffic/weight property and return a dictionary of node
+    id’s linked to a value between 0.0 and 1.0. You may also notice the optional <i>rating</i>
+    parameter which is a dictionary of node id’s linked to a score to influence it’s weight (e.g.
+    Google not only examines a web page’s connections but also its contents - the score of a page’s
     content could be reflected in the <i>ranking</i> dictionary).</p>
     <p> </p>
     <hr size="2" width="100%"/>
@@ -672,7 +672,7 @@ graph.<span class="s">draw</span><span class="s">(</span>highlight=path, weighte
     given graph. If <i>distance</i> is 0, it will contain only the node with the given <i>id</i>.
     If distance is 1, it will contain the node and all nodes directly connected to that node. If
     <i>distance</i> is 2, it will also contain all nodes that are connected to nodes directly
-    connected to the given node, and so on. You can also supply a list of id's instead of a single
+    connected to the given node, and so on. You can also supply a list of id’s instead of a single
     id.<br/></p>
     <p>Yet another way to create a subgraph is to pass a <b>filtering function</b> instead of an
     id. For example:</p>
@@ -719,7 +719,7 @@ g.<span class="s">draw</span><span class="s">(</span>directed=<span class="kw">T
 
     <p><span class="grey_box">Cliques</span><br/></p>
     <p>In graph theory, a <a href="http://en.wikipedia.org/wiki/Clique_%28graph_theory%29">clique</a> is a graph in which each
-    node is connected to all the other nodes. There's a <i>graph.is_clique</i> property that
+    node is connected to all the other nodes. There’s a <i>graph.is_clique</i> property that
     returns <i>True</i> when the graph is complete. Since each node is connected to every other
     node in a complete graph, its <i>density</i> will be 1.0.</p>
     <pre>graph.<span class="s">clique</span><span class="s">(</span><span class="s">id</span>, distance=<span class="s">0</span><span class="s">)</span></pre>
@@ -735,9 +735,9 @@ g.<span class="s">draw</span><span class="s">(</span>directed=<span class="kw">T
     <i>threshold</i> nodes.</p>
     <p> </p>
     <p><span class="grey_box">Partitioning</span></p>
-    <p>Finally, there's a powerful technique to split a graph into its <b>unconnected
+    <p>Finally, there’s a powerful technique to split a graph into its <b>unconnected
     subgraphs.</b> Sometimes your graph may contain two or more clusters of nodes without
-    connections between them (especially if you don't know where the data came from). The
+    connections between them (especially if you don’t know where the data came from). The
     <i>graph.split()</i> method will return a list of unconnected subgraphs, sorted biggest-first:</p>
     <pre>subgraphs = graph.<span class="s">split</span><span class="s">(</span><span class="s">)</span>
 subgraphs<span class="s">[</span><span class="s">0</span><span class="s">]</span>.<span class="s">solve</span><span class="s">(</span><span class="s">)</span>

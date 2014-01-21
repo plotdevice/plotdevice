@@ -23,29 +23,29 @@
     <a href="http://developer.apple.com/cocoa/">Cocoa</a> applications for Mac OS X in pure python.
     Cocoa is the programming environment on Mac OS X that allows developers to create graphical
     applications with a typical Apple-look-and-feel.</p>
-    <p>Cocoa's two main libraries (<em>Foundation Kit</em> and <em>Application Kit</em>) are
-    bundled with NodeBox. If you know a little PyObjC it's easy to start playing around with all
+    <p>Cocoa’s two main libraries (<em>Foundation Kit</em> and <em>Application Kit</em>) are
+    bundled with NodeBox. If you know a little PyObjC it’s easy to start playing around with all
     the magic in Mac OS X, right from your NodeBox script.</p>
     <p class="pink_text"><em>This tutorial contains advanced material.</em></p>
     <hr/>
 
     <h2>AppKit manual</h2>
 
-    <p>The first thing you'll notice about AppKit is that it has a <em>lot</em> of <em>long</em>
+    <p>The first thing you’ll notice about AppKit is that it has a <em>lot</em> of <em>long</em>
     and <em>odd</em> objects all beginning with <em>NS</em>: NSBezierPath, NSRect, NSImage, and so
     on (the <em>NS</em> stems from the fact that AppKit is a direct descendant of NeXTSTEP, Steve
-    Jobs' technology that revived Apple).</p>
+    Jobs’ technology that revived Apple).</p>
     <p>Commands like <em>layoutManager.drawGlyphsForGlyphRange_atPoint_(glyphRange,
     (x-dx,y-dy-self.font.defaultLineHeightForFont()))</em> are common. So the first thing to do is
-    get a manual. If you've installed Xcode, it provides a totally reasonable documentation viewer
-    accessible through the Help menu. On the web you can find Apple's <a href="https://developer.apple.com/library/mac/documentation/cocoa/reference/applicationkit/objc_classic/_index.html">
+    get a manual. If you’ve installed Xcode, it provides a totally reasonable documentation viewer
+    accessible through the Help menu. On the web you can find Apple’s <a href="https://developer.apple.com/library/mac/documentation/cocoa/reference/applicationkit/objc_classic/_index.html">
     AppKit</a> &amp; <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/ObjC_classic/_index.html">
     Foundation</a> references.</p>
     <hr/>
 
     <h2>AppKit rules of thumb</h2>
 
-    <p>Apple's documentation lists all of the objects in their Objective-C form. To use them in
+    <p>Apple’s documentation lists all of the objects in their Objective-C form. To use them in
     Python, a good rule of thumb is to <strong>replace the colon with an underscore</strong> (e.g.
     <em>setShadowBlurRadius:(float)val</em> becomes <em>setShadowBlurRadius_(floatval)</em> ).</p>
     <p>Another good thing to know is that you create AppKit objects with <em>object.alloc()</em>
@@ -57,7 +57,7 @@
     <pre><span class="kw">from</span> Appkit <span class="kw">import</span> *</pre>
 
 
-    <p>I'll show you some examples of what you can do with AppKit.</p>
+    <p>I’ll show you some examples of what you can do with AppKit.</p>
     <hr/>
 
     <h2>Playing sounds in NodeBox</h2>
@@ -220,7 +220,7 @@ linedash<span class="s">(</span>p, segment=<span class="s">5</span><span class="
     <em>shadow()</em> will have a dropshadow until you call <em>noshadow()</em>.</p>
     <p>Note that the shadow class inherits from something called <em>Grob</em>. This is short for
     <em>Graphic Object</em>. A Grob executes its <em>_draw()</em> method the moment it is drawn.
-    You need to initialise it with the current context (canvas) to draw in, that's why we pass the
+    You need to initialise it with the current context (canvas) to draw in, that’s why we pass the
     global <em>_ctx</em> to Grob.__init__(). The <em>_ctx</em> contains the current context.</p>
     <p>This is a typical example of what NodeBox drawing commands look like (also see the <a href="http://dev.nodebox.net/browser/nodebox/trunk/src/DrawingPrimitives.py">source</a>).</p>
     <pre><span class="kw">from</span> AppKit <span class="kw">import</span> NSShadow, NSColor

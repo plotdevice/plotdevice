@@ -13,7 +13,7 @@
 
   <div class="article">
     <p>The NodeBox Grid library offers a number of tools to work with rows and columns in a page
-    layout. It's like having a combination of InDesign and Excel available in NodeBox. You can use
+    layout. It’s like having a combination of InDesign and Excel available in NodeBox. You can use
     the library to generate flowing columns of text and image grids, automatically apply aesthetic
     proportions between cells in the grid, create spreadsheet tables with (simple) statistics,
     define reusable visual styles in a CSS-like way. Numerous of text commands help you for example
@@ -77,7 +77,7 @@
 
     <p>The <i>create()</i> command returns a new grid object, by default encompassing the entire
     drawing canvas. You can define the number of rows and columns in the grid and a different width
-    and/or height. A grid also has lots of properties and methods to make life easier. We'll
+    and/or height. A grid also has lots of properties and methods to make life easier. We’ll
     briefly summarize them here and discuss them in detail later on.</p>
     <p>The returned <i>grid</i> object has the following properties:</p>
     <p><span class="grey_box">Navigation</span></p>
@@ -99,11 +99,11 @@
     <ul>
       <li><i>grid.x</i>: the horizontal offset of a cell.<br/>
       </li><li><i>grid.y</i>: the vertical offset of a cell.<br/>
-      </li><li><i>grid.width</i>: a cell's width in pixels.<br/>
-      </li><li><i>grid.height</i>: a cell's height in pixels.<br/>
-      </li><li><i>grid.relative_width</i>: a cell's width as a number between 0.0 and 1.0, relative to
+      </li><li><i>grid.width</i>: a cell’s width in pixels.<br/>
+      </li><li><i>grid.height</i>: a cell’s height in pixels.<br/>
+      </li><li><i>grid.relative_width</i>: a cell’s width as a number between 0.0 and 1.0, relative to
       other cells.
-      </li><li><i>grid.relative_height</i>: a cell's height as a number between 0.0 and 1.0, in relative
+      </li><li><i>grid.relative_height</i>: a cell’s height as a number between 0.0 and 1.0, in relative
       to other cells.
       </li><li><i>grid.fixed</i>: <i>True</i> when this cell does not harmoniously rescale to make room
       for other cells.<br/>
@@ -148,7 +148,7 @@
 
     <p>The grid object has a <i>grid.split()</i> method that divides the grid into rows and columns
     of cells. It can be supplied an optional <a href="#proportion">proportion</a> and <a href="#style">style</a> name. The <i>grid.clear()</i> method removes all cells (but it retains the
-    grid's style, proportion and content).</p>
+    grid’s style, proportion and content).</p>
     <pre><span class="kw">grid</span>.<span class="s">split</span><span class="s">(</span>rows, columns, proportion=<span class="kw">None</span>, style=<span class="kw">None</span><span class="s">)</span></pre>
 
     <pre><span class="kw">grid</span>.<span class="s">clear</span><span class="s">(</span><span class="s">)</span></pre>
@@ -236,7 +236,7 @@ g.<span class="s">rows</span>.<span class="s">second</span></pre>
     <i>second</i>, <i>third</i>, ... <i>sixth</i> properties. They will work on a grid, a row, a
     column and even on a list of rows or columns.</p>
     <p>Another good idea is to <b>label distinct sections in the grid</b>. For example, you may
-    want to call the top part "header" and work with that label from there on. Each named section
+    want to call the top part ‘header’ and work with that label from there on. Each named section
     in the grid (cell, row, column) automatically becomes available as a property. You can also
     retrieve named sections with the <i>grid.find()</i> method.<br/></p>
     <pre>g.<span class="s">top</span>.<span class="s">name</span> = <span class="str">"header"</span>
@@ -265,8 +265,8 @@ s.<span class="kw">fontsize</span> = <span class="s">20</span></pre>
     <h2><a id="add_content" name="add_content" title="add_content"></a>Adding content</h2>
 
     <p>You can fill a grid with text, images or your own drawing command. Simply assign it to the
-    <i>grid.content</i> property. The content automatically gets distributed among the grid's rows
-    and columns, following a "depletion"-approach: cells are filled until there is no content left.
+    <i>grid.content</i> property. The content automatically gets distributed among the grid’s rows
+    and columns, following a ‘depletion’-approach: cells are filled until there is no content left.
     The <i>grid.flow</i> list determines which cells get content first (column-first by default).</p>
     <pre>g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">1</span>, <span class="s">3</span>, width=<span class="s">550</span>, height=<span class="s">200</span><span class="s">)</span>
 g.<span class="s">content</span> = <span class="kw">open</span><span class="s">(</span><span class="str">"alice.txt"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span> <span class="grey"># text from a file</span>
@@ -291,7 +291,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
       (1 by default)<br/>
       </li><li><i>grid.content.repeat</i>: when <i>True</i>, cycle through the list of images until all
       cells are filled.
-      </li><li><i>grid.content.remainder</i>: the excess content that wasn't drawn.<br/>
+      </li><li><i>grid.content.remainder</i>: the excess content that wasn’t drawn.<br/>
     </li></ul><br/>
 
     <p>Some methods you can use to retrieve content:</p>
@@ -337,7 +337,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     first.</p>
     <p> </p>
     <p><span class="grey_box">Fitting content</span><br/></p>
-    <p>In some situations you don't want content to flow from cell to cell, you want it to <b>match
+    <p>In some situations you don’t want content to flow from cell to cell, you want it to <b>match
     the size of this cell</b> as best as possible. This is especially true for grids containing
     images and titles. We may want the image in a cell to stretch so it fits the cell comfortably,
     avoiding gaps. We may want the title to take up all the available space so we can then resize
@@ -387,7 +387,7 @@ g.<span class="s">styles</span>.<span class="kw">align</span> = <span class="str
     <pre>custom_content<span class="s">(</span>x, y, width, height, style=<span class="kw">None</span><span class="s">)</span></pre>
 
 
-    <p>It receives the grid's position, size and style as input parameters.
+    <p>It receives the grid’s position, size and style as input parameters.
     <table>
       <tbody>
         <tr>
@@ -437,8 +437,8 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     cut off, <i>orphans</i> for stray lines at the start. If <i>forward</i> is <i>True</i>, orphans
     will never be moved back to the previous block. Instead, more text is cut off from the end of
     the previous block and moved forward.</p>
-    <p>Note that widow/orphan control won't work with lists (i.e. single lines of text separated by
-    a carriage return), so then you'll need to turn it off.</p>
+    <p>Note that widow/orphan control won’t work with lists (i.e. single lines of text separated by
+    a carriage return), so then you’ll need to turn it off.</p>
     <pre><span class="kw">text</span>.<span class="s">legible_width</span><span class="s">(</span>txt, chars=<span class="s">70</span><span class="s">)</span></pre>
 
     <pre><span class="kw">text</span>.<span class="s">fit_fontsize</span><span class="s">(</span><span class="s">str</span>, width, height<span class="s">)</span></pre>
@@ -448,8 +448,8 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
 
     <p>The <i>text.legible_width()</i> command returns a <b>good column width</b> for the given
     <i>txt</i> set in the current font. Here we follow the rule of thumb in graphic design that 70
-    characters per line at fontsize 10pt is optimal. When the fontsize becomes smaller, you'll
-    likely need smaller columns to keep the reader's attention. Smaller lineheight furthermore
+    characters per line at fontsize 10pt is optimal. When the fontsize becomes smaller, you’ll
+    likely need smaller columns to keep the reader’s attention. Smaller lineheight furthermore
     decreases the column width.</p>
     <p>The <i>text.fit_fontsize()</i> command returns a good fontsize so that the given <i>str</i>
     fits a box of the given <i>width</i> and <i>height</i>. In the same way,
@@ -457,7 +457,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     vertically.</p>
     <p> </p>
     <p><span class="grey_box">Placeholder text</span></p>
-    <p>If you don't have any text lying around, you can generate paragraphs of <a href="http://en.wikipedia.org/wiki/Lorem_ipsum">lorem ipsum</a> placeholder text right from the text
+    <p>If you don’t have any text lying around, you can generate paragraphs of <a href="http://en.wikipedia.org/wiki/Lorem_ipsum">lorem ipsum</a> placeholder text right from the text
     module. Each command below returns a string of text containing words of different length,
     yielding a good visual representation of a real text will look like:</p>
     <pre><span class="kw">text</span>.<span class="s">placeholder</span><span class="s">(</span>n=<span class="s">10</span><span class="s">)</span>                        <span class="grey"># a text with n paragraphs</span></pre>
@@ -519,7 +519,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     <pre><span class="kw">grid</span>.<span class="s">styles</span>.<span class="s">margin</span> = <span class="s">5</span></pre>
 
 
-    <p>Here's an example of how to add your own custom style. Note the optional <i>template</i>
+    <p>Here’s an example of how to add your own custom style. Note the optional <i>template</i>
     parameter: we are creating a new style based on a copy of the default style:</p>
     <pre>s = <span class="kw">grid</span>.<span class="s">styles</span>.<span class="s">create</span><span class="s">(</span><span class="str">"header"</span>, template=<span class="str">"default"</span><span class="s">)</span>
 s.<span class="kw">background</span> = <span class="kw">color</span><span class="s">(</span><span class="s">0</span><span class="s">)</span></pre>
@@ -551,7 +551,7 @@ s.<span class="kw">background</span> = <span class="kw">color</span><span class=
     <p><span class="grey_box">Background</span><br/></p>
     <p>The background of a cell can be a <b>fill color</b>, an <b>image</b>, or a <b>gradient</b>.
     You can assign it a single color, a tuple of two colors for a gradient or an image filename. If
-    you want to draw a gradient you'll need to have the <a href="Colors.html">Colors</a> library
+    you want to draw a gradient you’ll need to have the <a href="Colors.html">Colors</a> library
     installed.</p>
     <p>For more complex gradients, use the following method:</p>
     <pre>style.<span class="kw">background</span>.<span class="s">gradientfill</span><span class="s">(</span><span class="s">self</span>, clr1, clr2, <span class="s">type</span>=<span class="str">"radial"</span>, 
@@ -575,7 +575,7 @@ s.<span class="kw">background</span> = <span class="kw">color</span><span class=
     <ul>
       <li>For text, applicable values are LEFT, CENTER, RIGHT and JUSTIFY.<br/>
       </li><li>For images, you can supply either a single value or a (horizontal, vertical) tuple.<br/>
-      Additional values here are "top" and "bottom".
+      Additional values here are ‘top’ and ‘bottom’.
     </li></ul>
 
     <p> </p>
@@ -599,8 +599,8 @@ s.<span class="kw">background</span> = <span class="kw">color</span><span class=
             <p><img alt="grid13" height="250" src="media/grid13.jpg" width="250"/></p>
           </td><td>
             <p><b>Cell box model</b></p>
-            <p>This illustration shows how a cell's whitespace is organized. Assume that the blue
-            box is a cell. It's total size is defined by <i>cell.width</i> and <i>cell.height</i>.</p>
+            <p>This illustration shows how a cell’s whitespace is organized. Assume that the blue
+            box is a cell. It’s total size is defined by <i>cell.width</i> and <i>cell.height</i>.</p>
             <p>Margin space goes around the cell border.<br/>
             The border goes around the cell padding.</p>
             <p>The inner rectangle defines the space available to draw text and images
@@ -611,8 +611,8 @@ s.<span class="kw">background</span> = <span class="kw">color</span><span class=
     <p>When you set the style for a grid, all of the cells in the grid will inherit the same style.
     We say that this grid is an invisible <b>container</b>, and instead of appyling styling to
     itself, it <b>delegates</b> the styling to all of its children.</p>
-    <p>This works intuitively in most cases. Take a look at the example below. I've created a
-    default style, and a style for the header. All the cells in the header assume the same "header"
+    <p>This works intuitively in most cases. Take a look at the example below. I’ve created a
+    default style, and a style for the header. All the cells in the header assume the same ‘header’
     style.</p>
     <p><img alt="grid12" height="170" src="media/grid12.jpg" width="550"/></p>
     <pre>g = <span class="kw">grid</span>.<span class="s">create</span><span class="s">(</span><span class="s">3</span>, <span class="s">1</span>, <span class="kw">WIDTH</span>, <span class="kw">HEIGHT</span><span class="s">)</span>
@@ -638,11 +638,11 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
 
 
     <p>In some case however, style delegation works counter-intuitively. Suppose you wanted to
-    define one background image for the entire header. You would set the header style's
+    define one background image for the entire header. You would set the header style’s
     <i>background</i> property to an image, which would then be delegated to all the cells in the
     header. Result: each cell gets its own copy of the image.</p>
     <p>To counter this, set <i>style.delegate</i> to <i>False</i>. The image (or color or border)
-    is then applied only to the container. You'll now have to create a second style for all the
+    is then applied only to the container. You’ll now have to create a second style for all the
     individual cells in the container though.</p>
     <pre><span class="kw">grid</span>.<span class="s">has_style</span><span class="s">(</span><span class="s">)</span></pre>
 
@@ -697,7 +697,7 @@ g.<span class="s">proportion</span> = <span class="str">"even, "</span>fib<span 
           </td></tr></tbody></table></p>
     <p> </p>
     <p><span class="grey_box">Custom proportions</span></p>
-    <p>When you need something more elaborate (but not that elaborate that you're going to define
+    <p>When you need something more elaborate (but not that elaborate that you’re going to define
     the width and height for each row and column yourself) you can work with the custom
     <i>proportion()</i> command:</p>
     <pre>proportion<span class="s">(</span>distribution=<span class="str">"even"</span>, 
@@ -731,18 +731,18 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
 
     <p>You can resize cells, rows and columns either by an <b>absolute</b> value or by a
     <b>relative</b> value between 0.0 and 1.0. For example: the total relative width of all the
-    columns in a grid is 1.0 (or 100%). If there are four even columns in the grid each column's
+    columns in a grid is 1.0 (or 100%). If there are four even columns in the grid each column’s
     relative width is 0.25 (25%).<br/></p>
     <pre><span class="kw">grid</span>.<span class="kw">size</span><span class="s">(</span>width, height, fixed=<span class="kw">False</span>, relative=<span class="kw">False</span><span class="s">)</span></pre>
 
 
     <p>The following properties can also be used to resize a cell, column or row:</p>
     <ul>
-      <li><i>grid.width</i>: a cell's width in pixels.<br/>
-      </li><li><i>grid.height</i>: a cell's height in pixels.<br/>
-      </li><li><i>grid.relative_width</i>: a cell's width as a number between 0.0 and 1.0, relative to
+      <li><i>grid.width</i>: a cell’s width in pixels.<br/>
+      </li><li><i>grid.height</i>: a cell’s height in pixels.<br/>
+      </li><li><i>grid.relative_width</i>: a cell’s width as a number between 0.0 and 1.0, relative to
       other cells.
-      </li><li><i>grid.relative_height</i>: a cell's height as a number between 0.0 and 1.0, in relative
+      </li><li><i>grid.relative_height</i>: a cell’s height as a number between 0.0 and 1.0, in relative
       to other cells.
       </li><li><i>grid.fixed</i>: <i>True</i> when this cell does not automatically rescale to make room
       for other cells.
@@ -754,7 +754,7 @@ g.<span class="s">top</span>.<span class="s">relative_height</span> += <span cla
 
 
     <p>When you resize a cell in a grid, the other cells in the same row or column will contract or
-    expand evenly to make room. The grid's proportion will be respected as best as possible in the
+    expand evenly to make room. The grid’s proportion will be respected as best as possible in the
     course.<a href="http://nodebox.net/code/data/media/grid17.mov"><br/>
     View demo</a><br/></p>
     <p>However, if a cell has its <i>fixed</i> property set to <i>True</i>, it will always retain
@@ -846,7 +846,7 @@ g.<span class="s">column</span><span class="s">(</span><span class="s">1</span><
 
 
     <p>This is especially useful because the <i>grid.content.remainder</i> property will contain
-    any content that hasn't been drawn - and therefore should be drawn on the next page.</p>
+    any content that hasn’t been drawn - and therefore should be drawn on the next page.</p>
     <p>In the simple example below we create a grid with some content for the first page. The next
     pages we export (File &gt; Export as Image &gt; Number of Pages) will start from the remainder
     of text for which no room was left on the previous page.</p>

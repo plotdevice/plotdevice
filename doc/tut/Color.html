@@ -30,7 +30,7 @@
 
 
     <p>However, since each line now has a random stroke, some lines will tend to look dull and
-    light. To crank up the colors, we can easily adjust the lines' saturation without switching to
+    light. To crank up the colors, we can easily adjust the lines’ saturation without switching to
     a different color space. For the same reason, a stroke width of two is used instead of one,
     overlapping the lines makes them appear brighter as well.</p>
     <pre><span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>:
@@ -65,7 +65,7 @@
     <h2>CMYK output?</h2>
 
     <p>But then what colorspace is used for output? In whatever way you use a <a href="../ref/Color.html#colormode()">colormode()</a> in your script, the output adhers to <a href="../ref/Color.html#outputmode()">outputmode()</a>. This makes it easy when working with print
-    documents as you don't need to worry about the technical details, but can instead focus on the
+    documents as you don’t need to worry about the technical details, but can instead focus on the
     colors you like. Keep in mind that not all RGB colors are printable though.</p>
     <h2>Colors are stored in the graphics state</h2>
 
@@ -93,7 +93,7 @@
     together. Saturation is limited between 0.0 and 0.5, for a faded look. The brightness is
     furthermore limited between 0.5 and 1.0 (fifty to a hundred percent) so we get bright colors.
     Take a look at the <a href="../lib/Colors.html">Colors</a> library which has excellent support
-    for these kind of "color ranges".<br/></p>
+    for these kind of ‘color ranges’.<br/></p>
     <p> </p>
     <p><span class="media"><img height="132" src="media/color-hue1.jpg" width="132"/></span>
     <span class="media"><img height="132" src="media/color-hue2.jpg" width="132"/></span>
@@ -102,7 +102,7 @@
     <h2>Gradients</h2>
 
     <p>You can create gradients in NodeBox by drawing lines in a for-loop and increasing the
-    transparency of each line. In the example below color <i>c</i>'s alpha transparency ranges from
+    transparency of each line. In the example below color <i>c</i>’s alpha transparency ranges from
     0.0 to 1.0 (notice how we multiply by 1.0 to get a floating point number).</p>
     <pre><span class="kw">colormode</span><span class="s">(</span><span class="kw">HSB</span><span class="s">)</span>
 c = <span class="kw">color</span><span class="s">(</span><span class="s">0.5</span>, <span class="s">1</span>, <span class="s">1</span><span class="s">)</span>

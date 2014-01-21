@@ -104,7 +104,7 @@
     sensory go-betweens. When we start tagging other concepts with these properties (e.g <i>bright
     is-property-of sun</i>) we are basically teaching machines something about aesthetics and the
     visual world.</p>
-    <p>If you open up the "from property" window in the web app you'll notice that some properties
+    <p>If you open up the ‘from property’ window in the web app you’ll notice that some properties
     are highlighted. These are properties we think are good candidates to connect to pieces of
     NodeBox code to generate associated visual output.<br/>
     <br/></p>
@@ -128,11 +128,11 @@
     <p><span class="grey_box">Editing</span><br/></p>
     <p>At this point you can only <i>add</i> rules in the online application. If you are planning
     on getting your hands dirty you may need to be able to edit existing rules to reorganize or
-    restructure clusters in the network. If this is the case, contact us and we'll set you up with
+    restructure clusters in the network. If this is the case, contact us and we’ll set you up with
     some editing rights.<br/>
     <br/></p>
     <p><span class="grey_box">Where to start?</span></p>
-    <p>If you don't know where to start, here are some good clusters of knowledge in the
+    <p>If you don’t know where to start, here are some good clusters of knowledge in the
     network:<br/>
     <table>
       <tbody>
@@ -166,7 +166,7 @@
     <p><span class="grey_box">How to start?</span><br/></p>
     <p>Think of a central concept that interests you. Start adding rules to it (and remember to add
     some <i>is-property-of</i> rules). Then start thinking about the new concepts that were
-    introduced in your rules. You'll quickly have a good cluster of knowledge.</p>
+    introduced in your rules. You’ll quickly have a good cluster of knowledge.</p>
     <p>For example:</p>
     <ul>
       <li>Yoda <i>is-a</i> muppet<br/>
@@ -193,9 +193,9 @@
             them and activate those you think make sense.</p>
             <p>You can browse the rules starting from a property (e.g. voracious
             <i>is-property-of</i> predator) or by searching for concepts (e.g. predator
-            <i>has-property</i> voracious). You can switch modes by clicking "property" or
-            "concept" at the top of the widget.</p>
-            <p>Then simply select the rules that make senses and they'll be activated in the
+            <i>has-property</i> voracious). You can switch modes by clicking ‘property’ or
+            ‘concept’ at the top of the widget.</p>
+            <p>Then simply select the rules that make senses and they’ll be activated in the
             Perception network.<br/></p>
           </td></tr></tbody></table></p>
     <p> </p>
@@ -205,7 +205,7 @@
     running</h2>
 
     <p>Put the <i>perception</i> library folder in the same folder as your script so NodeBox can
-    find the library. You can also put it in <i>~/Library/Application Support/NodeBox/.</i> You'll
+    find the library. You can also put it in <i>~/Library/Application Support/NodeBox/.</i> You’ll
     also need the <a href="Graph.html">Graph</a> library installed. Put it in <i>Application
     Support</i> as well, or inside the <i>perception</i> library folder.</p>
     <pre>perception = <span class="kw">ximport</span><span class="s">(</span><span class="str">"perception"</span><span class="s">)</span></pre>
@@ -229,7 +229,7 @@
     <p>This is useful because if there is a <i>wet is-property-of fog</i> rule and a <i>fog
     is-related-to autumn</i> rule, the command will also retrieve the <i>wet is-property-of
     autumn</i> rule even though we were only querying for <i>fog</i> rules. This results in much
-    more meaningful data to put in a small "fog-graph".</p>
+    more meaningful data to put in a small ‘fog-graph’.</p>
     <p>Note that you can also set the author once in the AUTHOR variable. It will then be used in
     all queries throughout the library.</p>
     <pre>perception.<span class="s">AUTHOR</span> = <span class="str">"alice@wonderland.com"</span></pre>
@@ -237,12 +237,12 @@
 
     <p>Each <i>Rule</i> object in the returned list has the following properties:</p>
     <ul>
-      <li><i>rule.concept1</i>: the "from" concept in the rule, for example <i>wet</i>.<br/>
+      <li><i>rule.concept1</i>: the ‘from’ concept in the rule, for example <i>wet</i>.<br/>
       </li><li><i>rule.relation</i>: the semantic relation defining the rule, for example
       <i>is-property-of</i>.
-      </li><li><i>rule.concept2</i>: the "to" concept in the rule, for example <i>fog</i>.
-      </li><li><i>rule.context</i>: the rule's context, for example <i>nature</i>.<br/>
-      </li><li><i>rule.author</i>: the author's ID.<br/>
+      </li><li><i>rule.concept2</i>: the ‘to’ concept in the rule, for example <i>fog</i>.
+      </li><li><i>rule.context</i>: the rule’s context, for example <i>nature</i>.<br/>
+      </li><li><i>rule.author</i>: the author’s ID.<br/>
       </li><li><i>rule.date</i>: rule creation date.<br/>
       <br/>
     </li></ul>
@@ -260,12 +260,12 @@
     <p>Obviously, the next fun thing to do is to cluster related concepts in a small graph (like in
     the web application). The library builds on the <a href="Graph.html">Graph</a> library to
     accomplish this. The <i>cluster()</i> command returns a graph object that has all of the
-    functionality described in the documentation of the Graph library - that's the best place to
+    functionality described in the documentation of the Graph library - that’s the best place to
     start if you are new to graph networks.</p>
     <pre>cluster<span class="s">(</span>concept, relation=<span class="kw">None</span>, context=<span class="kw">None</span>, author=<span class="kw">None</span>, depth=<span class="s">2</span><span class="s">)</span></pre>
 
 
-    <p>So, it's easy enough to visualize a cluster of rules:
+    <p>So, it’s easy enough to visualize a cluster of rules:
     <table>
       <tbody>
         <tr>
@@ -353,8 +353,8 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
 
 
     <p>The <i>graph.hyponyms()</i> method analyzes the cluster and returns a list of node objects
-    that are concrete examples of the graph's root. If proper is <i>True</i>, only proper names are
-    returned (e.g. "God" but not "god"). The <i>fringe</i> determines how close to the perimeter of
+    that are concrete examples of the graph’s root. If proper is <i>True</i>, only proper names are
+    returned (e.g. ‘God’ but not ‘god’). The <i>fringe</i> determines how close to the perimeter of
     the graph the nodes are located. With a higher <i>fringe</i> value (or simply <i>None</i>)
     nodes can be located deeper in the cluster, nearer to the root.</p>
     <pre>g = perception.<span class="s">cluster</span><span class="s">(</span><span class="str">"river"</span>, depth=<span class="s">3</span><span class="s">)</span>
@@ -364,7 +364,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
 
     <p>The <i>graph.properties()</i> method analyzes the cluster and returns a list of property
     nodes relevant to the graph root. The <i>graph.objects()</i> method does the reverse: it
-    returns concrete, tangible nodes if the graph's root is a property. The <i>distance</i>
+    returns concrete, tangible nodes if the graph’s root is a property. The <i>distance</i>
     determines how far away from the root these nodes can be.</p>
     <p>At this point you may wonder about the difference between using the <i>properties()</i>
     method on a single node or using it on a cluster graph. The difference is that the latter is
@@ -389,7 +389,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     <p>A cluster graph object has two additional properties:</p>
     <ul>
       <li><i>graph.proper_nouns</i>: a list of nodes in the graph that are proper nouns (e.g.
-      "NodeBox").<br/>
+      ‘NodeBox’).<br/>
       </li><li><i>graph.proper_leaves</i>: a list of nodes in the graph that are both leaves and proper
       nouns.
     </li></ul>
@@ -432,7 +432,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     <i>concept</i> with <i>is-a</i> relations, in the given <i>context</i>. All of these concepts
     are located in the given <i>fringe</i> of the taxonomy. If <i>proper</i> is <i>True</i>, they
     furthermore need to be proper nouns.</p>
-    <p>Wow, what was all of that! Let's try to clarify things with an example:</p>
+    <p>Wow, what was all of that! Let’s try to clarify things with an example:</p>
     <pre>perception.<span class="s">range</span>.<span class="s">append</span><span class="s">(</span><span class="str">"font"</span>, <span class="str">"typeface"</span>, <span class="str">"graphics"</span>, fringe=<span class="s">2</span>, proper=<span class="kw">True</span><span class="s">)</span>
 <span class="kw">print</span> perception.<span class="s">range</span><span class="s">(</span><span class="str">"font"</span><span class="s">)</span>
 &gt;&gt;&gt; <span class="s">[</span><span class="str">'Arial'</span>, <span class="str">'Beowolf'</span>, <span class="str">'Comic Sans MS'</span>, <span class="str">'Courier'</span>, ... <span class="s">]</span></pre>
@@ -440,7 +440,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
 
     <p>What the above rule means is that a font is a concept with a proper name that has typeface
     as an ancestor. We only look in the graphics context - this avoids ambuigity - and define a
-    rather narrow fringe to avoid that font category names (e.g. "Serif") also end up in the range.</p>
+    rather narrow fringe to avoid that font category names (e.g. ‘Serif’) also end up in the range.</p>
     <p>All of the tweaked range rules are stored in the <i>range.rules</i> dictionary. So you can
     find out what ranges have already been defined by printing out <i>range.rules.keys()</i>.</p>
     <p> </p>
@@ -450,7 +450,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
 
     <p>So far we have looked at how to retrieve a lists of rules from the Perception database,
     construct and analyze a cluster of related rules and retrieve a range of concept siblings.
-    Let's take it a step further and look at how we can find paths between different, unrelated
+    Let’s take it a step further and look at how we can find paths between different, unrelated
     clusters.</p>
     <pre>index.<span class="s">shortest_path</span><span class="s">(</span>concept1, concept2<span class="s">)</span></pre>
 
@@ -474,7 +474,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     <p>Now how does this index work on the inside? Obviously, finding a good path between two
     random concepts takes quite a bit of time and effort. For this reason, the index is cached
     locally on your machine instead of requesting shortest paths from the online application. Check
-    out the <i>index/</i> folder inside the library. You'll notice a "properties" file. This is the
+    out the <i>index/</i> folder inside the library. You’ll notice a ‘properties’ file. This is the
     cached set we are currently using: it contains all the shortest paths between all of the
     properties in Perception.</p>
     <p>You can also create your own custom sets:</p>
@@ -484,7 +484,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     <p>This will create a new file with the given name, containing the shortest paths between all
     the concepts in the given list. Below is an example script of how to build a new properties
     set. Be aware that even for 100-200 concepts it might very well take an hour to build the new
-    set. You'll also need an active internet connection.<br/></p>
+    set. You’ll also need an active internet connection.<br/></p>
     <pre>perception.<span class="s">index</span>.<span class="s">build</span><span class="s">(</span>
     <span class="str">"properties"</span>,
     perception.<span class="s">range</span>.<span class="s">properties</span>,
@@ -492,7 +492,7 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
 <span class="s">)</span></pre>
 
 
-    <p>You may wonder about the heuristic parameter - we'll get to that in the <a href="#heuristics">heuristics</a> chapter below.<br/></p>
+    <p>You may wonder about the heuristic parameter - we’ll get to that in the <a href="#heuristics">heuristics</a> chapter below.<br/></p>
     <p>To switch between different cached sets, simply change the index name:</p>
     <pre>perception.<span class="s">index</span>.<span class="s">name</span> = <span class="str">"properties"</span></pre>
             
@@ -526,14 +526,14 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
 
     <p>Note that there is no randomness involved except when the solver needs to make a choice
     between two exactly equal concepts. The process is entirely dependent on the rules people have
-    added to the Perception database (so obviously, at times you will disagree with the solver's
+    added to the Perception database (so obviously, at times you will disagree with the solver’s
     suggestions). In short, this is what happens behind the scenes:</p>
     <ul>
       <li>For each concept in the list, create a cluster.
       </li><li>Analyze the cluster for strong properties that best describe this concept.
       </li><li>Find the shortest path between the best of these properties and the given <i>root</i>
       property.<br/>
-      </li><li>If it's shorter than the best candidate so far, add it to the list of candidates.
+      </li><li>If it’s shorter than the best candidate so far, add it to the list of candidates.
     </li></ul>
 
     <p>If you want to use the solver with something else besides properties, you will need to
@@ -550,7 +550,7 @@ perception.<span class="s">solver</span>.<span class="s">index</span> = <span cl
 perception.<span class="s">solver</span>.<span class="s">method</span> = <span class="str">"my_analysis"</span></pre>
 
 
-    <p>That said, let's have a look at pathfinding heuristics used in the library.</p>
+    <p>That said, let’s have a look at pathfinding heuristics used in the library.</p>
     <p> </p>
     <hr size="2" width="100%"/>
 
@@ -558,12 +558,12 @@ perception.<span class="s">solver</span>.<span class="s">method</span> = <span c
 
     <p>When building a cached index, we may want to discourage certain type of relations. For
     example, a shortest path that has an <i>is-opposite-of</i> in it somewhere is probably not a
-    path that makes much sense. Consider that a tree is "organic", and that "artificial" is the
+    path that makes much sense. Consider that a tree is ‘organic’, and that ‘artificial’ is the
     opposite of organic, and that a computer is artificial. This makes the distance between trees
-    and computers very short, but that's not really a good thing when we want to compare trees to
+    and computers very short, but that’s not really a good thing when we want to compare trees to
     other organic things (which - obviously - computers are not).</p>
     <p>We can pass an optional <i>heuristic</i> parameter to the <i>index.build()</i> command. This
-    heuristic (i.e. loosely defined search rule) is a command that takes two node id's and returns
+    heuristic (i.e. loosely defined search rule) is a command that takes two node id’s and returns
     a cost, usually a number between -1.0 and 1.0. Links that cost less are preferred over more
     expensive ones, even if this means a longer path between two nodes. The Perception library
     offers a handy <i>heuristic()</i> builder to construct search rules:</p>
@@ -586,13 +586,13 @@ perception.<span class="s">index</span>.<span class="s">build</span><span class=
     optional heuristic parameter to tweak the returned results.</p>
     <p>With the combination of the online input module, clusters, ranges, customizable indexes and
     the solver you can start doing anything you want. If you feel like getting your hands dirty,
-    pop open the library's source code and see what else is possible.</p>
+    pop open the library’s source code and see what else is possible.</p>
     <p> </p>
     <hr size="2" width="100%"/>
 
     <h2><a id="api" name="api" title="api"></a>REST API</h2>
 
-    <p>If you require data from the Perception network outside of NodeBox, that's possible with the
+    <p>If you require data from the Perception network outside of NodeBox, that’s possible with the
     simple query API. You can direct your software to the Perception URL, add some query arguments
     and retrieve clusters of rules in plain text, JSON or XML format.</p>
     <pre>http://nodebox.<span class="s">net</span>/perception?<span class="s">[</span>concept<span class="s">]</span></pre>
@@ -607,8 +607,8 @@ perception.<span class="s">index</span>.<span class="s">build</span><span class=
       </li><li><span class="inline_code">context</span>: only return rules in the given context.
       </li><li><span class="inline_code">author</span>: only return rules from the given author.
       </li><li><span class="inline_code">user</span>: the e-mail address you use as your author
-      identification. When data is returned you won't be able to see the ID's other authors use,
-      but you can supply your own one as user to ensure it isn't obfuscated.
+      identification. When data is returned you won’t be able to see the ID’s other authors use,
+      but you can supply your own one as user to ensure it isn’t obfuscated.
       </li><li><span class="inline_code">depth</span>: without this argument you simply get a list of
       all the rules in the network that match the above criteria. With a depth argument (between 2
       and 4), you get a <i>cluster</i> of relevant concepts surrounding your given query concept.

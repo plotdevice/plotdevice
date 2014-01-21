@@ -19,7 +19,7 @@
     complementary or analogous), create lists of gradient colors, work with drop shadows and
     gradient fills for paths, define powerful <i>indefinite</i> color ranges (like <i>bright
     red</i> or <i>purplishgreenish</i>), aggregate color information from Yahoo!, and more!<br/></p>
-    <p>There's a lot of stuff to explain but luckily most principles in the Colors library are
+    <p>There’s a lot of stuff to explain but luckily most principles in the Colors library are
     easy.<br/>
     Some central themes are:</p>
     <ul>
@@ -50,8 +50,7 @@
     <h2>Documentation</h2>
 
     <ul>
-      <li><a href="#library">How to get the library up and running</a>
-      </li><li><a href="#color">Colors</a>
+      <li><a href="#color">Colors</a>
       </li><li><a href="#colorlist">Color lists</a>
       </li><li><a href="#rules">Color lists from harmony rules</a> (complementary, analogous, ...)
       </li><li><a href="#gradient">Color lists from gradients</a>
@@ -86,12 +85,12 @@
     between 0.0 and 1.0, set <i>range</i> to 255.</p>
     <p>The optional <i>name</i> parameter lets you define a name for the color. Otherwise, a name
     will be guessed using the <i>clr.nearest_hue()</i> method (see below).</p>
-    <p>The <i>hex()</i> command creates a color from a hexadecimal string (e.g. "#30343D").<br/></p>
+    <p>The <i>hex()</i> command creates a color from a hexadecimal string (e.g. ‘#30343D’).<br/></p>
     <pre>named_color<span class="s">(</span><span class="s">str</span><span class="s">)</span></pre>
 
 
-    <p>The <i>named_color()</i> command creates a color from a name like "olive" or "maroon" or
-    "antiquewhite". A list of all the named colors the command will recognize is <a href="Colors/named_colors.html">here</a>. The really great thing is that <b>each of these named
+    <p>The <i>named_color()</i> command creates a color from a name like ‘olive’ or ‘maroon’ or
+    ‘antiquewhite’. A list of all the named colors the command will recognize is <a href="Colors/named_colors.html">here</a>. The really great thing is that <b>each of these named
     colors is also a command</b> in the Colors library. So the two colors in the example below are
     exactly the same:</p>
     <pre>clr1 = colors.<span class="s">named_color</span><span class="s">(</span><span class="str">"olive"</span><span class="s">)</span>
@@ -104,7 +103,7 @@ clr2 = colors.<span class="s">olive</span><span class="s">(</span><span class="s
     <p><span class="grey_box">Color properties</span></p>
     <p>Each of the above commands returns a <i>Color</i> object. It has all the standard properties
     a color created with the NodeBox <a href="../ref/Color.html#color()">color()</a> command also
-    has. You can use these to find out the color's R, B and B values, or its C, M, Y and K values,
+    has. You can use these to find out the color’s R, B and B values, or its C, M, Y and K values,
     or its H, S and B values:</p>
     <ul>
       <li><i>clr.r</i>: the red value in RGB.
@@ -123,9 +122,9 @@ clr2 = colors.<span class="s">olive</span><span class="s">(</span><span class="s
     <p>The <i>Color</i> object in the Colors Library has some additional properties:</p>
     <ul>
       <li><i>clr</i><i>.name</i>: the name of this color.<br/>
-      </li><li><i>clr</i><i>.is_black</i>: will be <i>True</i> when the color's R, G and B values are 0.
-      </li><li><i>clr</i><i>.is_white</i>: will be <i>True</i> when the color's R, G and B values are 1.
-      </li><li><i>clr</i><i>.is_gray</i>: will be <i>True</i> when the color's R, G and B values are the
+      </li><li><i>clr</i><i>.is_black</i>: will be <i>True</i> when the color’s R, G and B values are 0.
+      </li><li><i>clr</i><i>.is_white</i>: will be <i>True</i> when the color’s R, G and B values are 1.
+      </li><li><i>clr</i><i>.is_gray</i>: will be <i>True</i> when the color’s R, G and B values are the
       same.
       </li><li><i>clr</i><i>.is_transparent</i>: will be <i>True</i> when the color is completely
       transparent.<br/>
@@ -168,7 +167,7 @@ clr2 = colors.<span class="s">olive</span><span class="s">(</span><span class="s
 
 
     <p>The <i>clr.analog()</i> command returns hues that are next to this one on the color wheel,
-    separated by <i>angle</i>. The additional <i>d</i> parameter will slightly vary the color's
+    separated by <i>angle</i>. The additional <i>d</i> parameter will slightly vary the color’s
     brightness and saturation for more variation.<br/></p>
     <pre>clr.<span class="s">analog</span><span class="s">(</span>angle=<span class="s">20</span>, d=<span class="s">0.5</span><span class="s">)</span></pre>
 
@@ -181,7 +180,7 @@ clr2 = colors.<span class="s">olive</span><span class="s">(</span><span class="s
     <pre>clr.<span class="s">nearest_hue</span><span class="s">(</span>primary=<span class="kw">False</span><span class="s">)</span></pre>
 
 
-    <p>To get the distance between two colors as a number there's the <i>clr.distance()</i> method.
+    <p>To get the distance between two colors as a number there’s the <i>clr.distance()</i> method.
     It returns a number between 0.0 and 1.0 representing the distance as if colors were arranged on
     a sphere (e.g. a disc of hues with the less saturated colors in the centre, darker discs in the
     sphere are at the bottom).</p>
@@ -342,7 +341,7 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
     <hr/>
 
     <p><span class="grey_box">Color context</span><br/></p>
-    <p>There's one additional <i>list.context</i> property which is a list of words associated with
+    <p>There’s one additional <i>list.context</i> property which is a list of words associated with
     the colors in the list. For example, red is commonly associated with things like anger and
     passion, while black is associated with death, grief, modernism.</p>
     <p>If you put them together in a color list, its context will contain words like anger, drama
@@ -360,7 +359,7 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
 
           </td></tr></tbody></table></p>
     <p>The data is drawn from the files in the <i>/context</i> subfolder in the library. You can
-    adjust them to your own needs. There's also a dictionary with all the information:</p>
+    adjust them to your own needs. There’s also a dictionary with all the information:</p>
     <pre><span class="kw">print</span> colors.<span class="s">context</span><span class="s">[</span><span class="str">"red"</span><span class="s">]</span></pre>
     
     <hr/>
@@ -411,7 +410,7 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
     (except <i>complement()</i>, which just returns the original color and its complement). Notice
     that some commands have an <i>angle</i> parameter. This controls how far colors are apart on
     the color wheel. Making it bigger for the <i>analogous()</i> scheme introduces more variation.</p>
-    <p>There's also a <i>rule()</i> command where you can supply the rule name as a string. All of
+    <p>There’s also a <i>rule()</i> command where you can supply the rule name as a string. All of
     the rule names are stored in the <i>rules</i> list.<br/></p>
     <pre>rule<span class="s">(</span>name, clr, angle=<span class="kw">None</span>, contrast=<span class="s">0.3</span>, flip=<span class="kw">False</span><span class="s">)</span></pre>
 
@@ -492,7 +491,7 @@ scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</s
     <p><span class="grey_box">Analog color scheme</span><br/></p>
     <p>When you want a <b>realistic, organic feel</b> to your composition you can work with
     <b>analogous</b> schemes. Remember how a <a href="#color">color</a> object in the Colors
-    library has an <i>analog()</i> method? It's very easy to use in a loop so that each element is
+    library has an <i>analog()</i> method? It’s very easy to use in a loop so that each element is
     subtly different:</p>
     <pre><span class="kw">size</span><span class="s">(</span><span class="s">600</span>, <span class="s">600</span><span class="s">)</span>
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
@@ -563,9 +562,9 @@ g = colors.<span class="s">gradient</span><span class="s">(</span>clr1, clr2, st
 
 
     <p><span class="image_border"><img alt="colors-gradientlist1" height="330" src="media/colors-gradientlist1.jpg" width="550"/></span></p>
-    <p>Let's add a nice spiral to the composition. As you can see in the example below, I can reset
+    <p>Let’s add a nice spiral to the composition. As you can see in the example below, I can reset
     the number of <i>steps</i> in the gradient list (the number of colors is updated accordingly) -
-    I don't need to create a new gradient. The same goes for the gradient <i>spread</i>.
+    I don’t need to create a new gradient. The same goes for the gradient <i>spread</i>.
     Additionaly, remember that <i>g</i> is a color list so I can use the <i>reverse()</i> method:</p>
     <pre><span class="grey"># append this to the previous code:</span>
  
@@ -698,7 +697,7 @@ high_contrast_reds.<span class="s">b</span> = <span class="s">[</span><span clas
 
     <h2><a id="shade" name="shade" title="shade"></a>Predefined color ranges: shades</h2>
 
-    <p>We've already included some predefined color range variables in the library for you. We call
+    <p>We’ve already included some predefined color range variables in the library for you. We call
     them <b>shades</b>. These includes useful concepts such as <i>light</i> and <i>dark</i>,
     defined by a combination of saturation and brightness.</p>
     <p>All of the shades are in the <i>shades</i> list:</p>
@@ -721,7 +720,7 @@ high_contrast_reds.<span class="s">b</span> = <span class="s">[</span><span clas
       </li><li><b>intense:</b> powerful deep/bright contrasts.<br/>
     </li></ul>
 
-    <p>Here's a visual overview of all the shades. The <i>shades</i> list is traversed. Each
+    <p>Here’s a visual overview of all the shades. The <i>shades</i> list is traversed. Each
     individual shade is then called as a command (remember we can call color ranges like commands)
     and limited to a yellow hue. Since we also call the range with the <i>n</i> parameter, a
     <b>list</b> of range-constrained yellow colors is returned.</p>
@@ -748,7 +747,7 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
 
           </td></tr></tbody></table></p>
     <p> </p>
-    <p>You can also use shade variables directly. Here's a dark indigo color:<br/>
+    <p>You can also use shade variables directly. Here’s a dark indigo color:<br/>
     <table border="0">
       <tbody>
         <tr>
@@ -815,8 +814,8 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
 
 
     <p>You can supply <a href="#shade">shades</a>, your own color ranges, or a <i>shade + named
-    color</i> string to the <i>range</i> parameter. The following two themes are the same (by "the
-    same" we mean that they contain the same ranges - however, their output may vary as ranges do
+    color</i> string to the <i>range</i> parameter. The following two themes are the same (by ‘the
+    same’ we mean that they contain the same ranges - however, their output may vary as ranges do
     not contain fixed colors).
     <table border="0">
       <tbody>
@@ -884,7 +883,7 @@ colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s
     <p>The Colors library comes bundled with more than four thousand color themes, grouped into
     four categories: emotion, nature, adjectives, and basic english words. These themes have been
     harvested from the web using the technique explained in the <a href="http://nodebox.net/code/index.php/Prism">Prism</a> example. Some of them look great, others
-    decent, others bad. But it's a good source to get inspiration nonetheless.</p>
+    decent, others bad. But it’s a good source to get inspiration nonetheless.</p>
     <p>To load an aggregated theme, <b>create a theme with a name</b>:
     <table border="0">
       <tbody>
@@ -949,7 +948,7 @@ t.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,
     determines the direction in which light is shining (<i>None</i> if it shines equally in all
     directions) and <i>spread</i> determines the extent of the beam (wide or narrow).</p>
     <p>In this example a light source is positioned in the lower right corner. The value returned
-    from the <i>shader()</i> command is used to modify each oval's brightness.<br/></p>
+    from the <i>shader()</i> command is used to modify each oval’s brightness.<br/></p>
     <p><img alt="colors-shader1" height="300" src="media/colors-shader1.jpg" width="550"/></p>
     <pre><span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span><span class="s">0.1</span>,<span class="s">0</span>,<span class="s">0.05</span><span class="s">)</span>
@@ -999,8 +998,8 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
     colors.<span class="s">gradientpath</span><span class="s">(</span>p, clr1, clr2, alpha=<span class="s">0.5</span>+d, dx=r, dy=r<span class="s">)</span></pre>
 
 
-    <p>Let's just add a few more bells to the script! For each oval at the edge of the nucleus,
-    we'll draw some curves bending inward.</p>
+    <p>Let’s just add a few more bells to the script! For each oval at the edge of the nucleus,
+    we’ll draw some curves bending inward.</p>
     <pre><span class="grey">#   add to the script above:</span>
     <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
     <span class="kw">stroke</span><span class="s">(</span>clr1<span class="s">)</span>
@@ -1015,7 +1014,7 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
 
 
     <p>With the <a href="Supershape.html">Supershape</a> library we can draw all sorts of organic
-    forms. Let's use it to add a pattern to each oval.</p>
+    forms. Let’s use it to add a pattern to each oval.</p>
     <pre><span class="grey">#   add to the script above:</span>
     supershape = <span class="kw">ximport</span><span class="s">(</span><span class="str">"supershape"</span><span class="s">)</span>
     <span class="kw">strokewidth</span><span class="s">(</span>d*<span class="s">0.75</span><span class="s">)</span>
@@ -1043,20 +1042,20 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
 
     <p>The <i>shadow()</i> and <i>noshadow()</i> commands work like <a href="../ref/Color.html#fill()">fill()</a> and <a href="../ref/Color.html#nofill()">nofill()</a>.
     Once you set a shadow all the subsequent elements you draw to the canvas will have a dropshadow
-    (or until <i>nofill()</i> is called). The <i>dx</i> and <i>dy</i> define the shadow's offset,
-    <i>alpha</i> the shadow's opacity and <i>blur</i> its sharpness.</p>
+    (or until <i>nofill()</i> is called). The <i>dx</i> and <i>dy</i> define the shadow’s offset,
+    <i>alpha</i> the shadow’s opacity and <i>blur</i> its sharpness.</p>
     <p>The <i>gradientfill()</i> command takes a given <i>path</i> just like <a href="../ref/Path.html#drawpath()">drawpath()</a> and draws it to the screen filled with a gradient
     ranging between <a href="../ref/Color.html#color()">colors</a> <i>clr1</i> and <i>clr2</i>. The
-    <i>type</i> of gradient can be "radial" or "linear".</p>
+    <i>type</i> of gradient can be ‘radial’ or ‘linear’.</p>
     <p>The <i>spread</i> parameter is the distance between the two colors. It can be a relative
     float number between 0.0 and 1.0 or an absolute int. In the case of a float, 1.0 represents the
     highest of either width and height for radial gradients, and the lowest of width and height for
     linear gradients.</p>
-    <p>It's also useful to note the <i>alpha</i> parameter. When a gradient fill is drawn, the path
+    <p>It’s also useful to note the <i>alpha</i> parameter. When a gradient fill is drawn, the path
     is first filled with an opaque color, and the gradient mask is then drawn on top of that. While
     <i>clr1</i> and <i>clr2</i> can have their individual alpha value, <i>alpha</i> controls the
     opacity of the opaque underground. When you hide the opaque underground, no shadows will be
-    rendered for this layer - so it's bit of tweaking to combine shadows and gradients.<br/></p>
+    rendered for this layer - so it’s bit of tweaking to combine shadows and gradients.<br/></p>
     <p>An example with shadows and gradient supershapes:<br/></p>
     <pre><span class="grey"># Enable dropshadows</span>
 colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s">0.75</span><span class="s">)</span>

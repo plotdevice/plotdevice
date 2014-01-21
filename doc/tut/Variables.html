@@ -22,8 +22,8 @@
     variable as a cardboard box. You can put something inside the box, put it away for storage, and
     later on retrieve the item from the box. Usually, people put labels or some kind of code on
     boxes to remember what is inside.</p>
-    <p>It's the same with variables. Each variable has a <i>name</i>, and a <i>value</i>. The name
-    is like the label on a box: it's a quick reminder of what item, or value, is inside the
+    <p>It’s the same with variables. Each variable has a <i>name</i>, and a <i>value</i>. The name
+    is like the label on a box: it’s a quick reminder of what item, or value, is inside the
     variable. Just like boxes, variables can hold all sorts of stuff useful in a NodeBox script:
     pieces of text, an important number, the name of a font, a <a href="Lists.html">list</a> of
     colors, and so on.</p>
@@ -31,13 +31,13 @@
     <h2>Why use variables</h2>
 
     <p>You store things in variables when you plan to <b>reuse</b> them. If each of ten rectangles
-    you're going to draw is a hundred pixels wide, it's a good idea to declare a <i>width</i>
-    variable that stores the number <i>100</i>, and tell each rectangle to go look what's inside
+    you’re going to draw is a hundred pixels wide, it’s a good idea to declare a <i>width</i>
+    variable that stores the number <i>100</i>, and tell each rectangle to go look what’s inside
     this <i>width</i> variable.</p>
-    <p>This way, when you change your mind about the rectangle's width, you only need to change the
-    contents of the <i>width</i> variable, since each rectangle is looking over there for it's
+    <p>This way, when you change your mind about the rectangle’s width, you only need to change the
+    contents of the <i>width</i> variable, since each rectangle is looking over there for it’s
     width.</p>
-    <p>Don't worry, things will clear up once we try some examples!</p>
+    <p>Don’t worry, things will clear up once we try some examples!</p>
     <h2>Declaring variables</h2>
 
     <p>You can declare a variable at any point in your script, and give it <b>any name you
@@ -53,7 +53,7 @@
           </td><td>
             <br/>
             <br/>
-            It's as easy as this: we think of a good name for a variable, and assign any value to
+            It’s as easy as this: we think of a good name for a variable, and assign any value to
             it we like. NodeBox keeps a small sticky note reminder for itself to know what value is
             inside the variable.
             <pre>
@@ -74,7 +74,7 @@ example, a rectangle is drawn at (10,10), with width of 100 and height of 30.
           </td><td>
             <br/>
             <br/>
-            The first rectangle's width is 100, then the value of the variable changes to 20, so
+            The first rectangle’s width is 100, then the value of the variable changes to 20, so
             the two following rectangles use that new value and have width 20.
             <pre>
 width = <span class="s">100</span>
@@ -92,11 +92,11 @@ width = <span class="s">20</span>
     <h2>Calculations with variables</h2>
 
     <p>When you store numbers in variables, you can perform math operations on them, multiply them,
-    increase them, and so on. This is essential when positioning text for example: you don't want
+    increase them, and so on. This is essential when positioning text for example: you don’t want
     to calculate the position of each piece of text by yourself. Rather, paragraph text should go
     neatly below the title - and when the title font size changes, the paragraph text should move
     along by itself.</p>
-    <p>Thus, the paragraph's vertical position should be <b>dependant</b> on the title's vertical
+    <p>Thus, the paragraph’s vertical position should be <b>dependant</b> on the title’s vertical
     position.</p>
     <table border="0">
       <tbody>
@@ -128,7 +128,7 @@ quote = <span class="str">"Nicely below each other"</span>
 
     <h2>Where do variables live?</h2>
 
-    <p>Each script has its own memory storage, it's own warehouse of boxes and sticky notes. The
+    <p>Each script has its own memory storage, it’s own warehouse of boxes and sticky notes. The
     specific value of a variable is therefore only known inside the script where it is used, not in
     other scripts.</p>
     <h2>Predefined variables</h2>
@@ -159,14 +159,14 @@ quote = <span class="str">"Nicely below each other"</span>
     <p>The variable panel displays script variables visually as sliders, fields, or check boxes.
     When you drag variable sliders, its values change on the fly, changing the output in the
     drawing area. Any <a href="../ref/Utility.html#random()">random()</a> values in your script are
-    retained as long as you don't re-run your script. In other words, random values change when you
+    retained as long as you don’t re-run your script. In other words, random values change when you
     run a script, but not when you change values or drag sliders in the variable panel.</p>
     <p><br/>
     <span class="media"><img height="523" src="media/variables.jpg" width="622"/></span></p>
     <p>The command to add variables to the variable panel is the <b>var()</b> command.</p>
     <ul>
       <li>var(<i>name</i>, NUMBER, <i>default</i>, <i>min</i>, <i>max</i>)
-      </li><li>var(<i>name</i>, TEXT, <i>default="hello"</i>)
+      </li><li>var(<i>name</i>, TEXT, <i>default=’hello’</i>)
       </li><li>var(<i>name</i>, BOOLEAN)
       </li><li>var(<i>command</i>, BUTTON)
     </li></ul>
@@ -175,7 +175,7 @@ quote = <span class="str">"Nicely below each other"</span>
     produce a slider, text an input field and booleans (<i>True</i> or <i>False</i>) a checkbox.
     The <i>command</i> parameter for buttons is the name of a command in your script to call when
     the button is pressed.</p>
-    <p>The variable panel is inspired on <a href="http://just.letterror.com/ltrwiki/BobIppolito">Bob Ippolito's widget drawer</a> in the
+    <p>The variable panel is inspired on <a href="http://just.letterror.com/ltrwiki/BobIppolito">Bob Ippolito’s widget drawer</a> in the
     original DrawBot.</p>
   </div>
 

@@ -84,8 +84,8 @@
     <p>Text data often contain quotes themselves, especially if the text contains dialogue. When
     NodeBox examines the string and encounters such a quote, it would logically assume that the
     string is terminated here.</p>
-    <p>The following example won't work, NodeBox thinks <em>(On his death bed):</em> needs to be
-    assigned to <em>str</em>, followed by garbage statements it doesn't understand:</p>
+    <p>The following example won’t work, NodeBox thinks <em>(On his death bed):</em> needs to be
+    assigned to <em>str</em>, followed by garbage statements it doesn’t understand:</p>
     <pre><span class="s">str</span> = <span class="str">"(On his death bed): "</span>Those curtains are hideous.<span class="str">" - Oscar Wilde"</span></pre>
 
 
@@ -97,7 +97,7 @@
 
     <h2>File input</h2>
 
-    <p>When you're going to use long paragraphs of text, it's better to store the text in a
+    <p>When you’re going to use long paragraphs of text, it’s better to store the text in a
     separate text file and assign that to a variable, this keeps your script clean, and you can
     edit the text separately from the script.</p>
     <p> </p>
@@ -109,14 +109,14 @@
     <h2>Unicode characters</h2>
 
     <p><a href="http://en.wikipedia.org/wiki/Unicode">Unicode</a> is a character system that allows
-    computers to use symbols from all of the writing systems in the world. If you're going to use
-    for example <em>suomi</em> or <em>Hebrew</em> in the output of your script, you'll have to know
+    computers to use symbols from all of the writing systems in the world. If you’re going to use
+    for example <em>suomi</em> or <em>Hebrew</em> in the output of your script, you’ll have to know
     about Unicode.</p>
     <p>The first thing to make sure is that the <strong>typeface</strong> you are going to use
     includes Unicode characters, so the text can be drawn in the font. Usually, large font families
     like Helvetica include Unicode for almost any Unicode character.</p>
-    <p>Next, you'll have to tell NodeBox that a piece of text includes special characters. This is
-    as simple as adding a "<strong>u"</strong> to the front of the string quotes.</p>
+    <p>Next, you’ll have to tell NodeBox that a piece of text includes special characters. This is
+    as simple as adding a ‘<strong>u’</strong> to the front of the string quotes.</p>
     <pre><span class="s">str</span> = u<span class="str">"?אתה מדבר אנגלית"</span>
 <span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">50</span>, <span class="s">200</span><span class="s">)</span></pre>
 
@@ -126,11 +126,11 @@
     <p> </p>
     <p>When you are going to import text from a text file there are two things to look out for.
     First, the text file needs to <strong>saved as Unicode</strong>. In TextEdit, apply the plain
-    text format and when you save it, select "Unicode (UTF-8)" from the Plain Text Encoding list.</p>
+    text format and when you save it, select ‘Unicode (UTF-8)’ from the Plain Text Encoding list.</p>
     <p> </p>
     <p><img alt="strings-unicode2" src="media/strings-unicode2.jpg"/></p>
     <p> </p>
-    <p>Then when you import the contents of the file into NodeBox, you'll have to
+    <p>Then when you import the contents of the file into NodeBox, you’ll have to
     <strong>decode</strong> the text:</p>
     <pre><span class="s">str</span> = <span class="kw">open</span><span class="s">(</span><span class="str">"hebrew.txt"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
 <span class="s">str</span> = <span class="s">str</span>.<span class="s">decode</span><span class="s">(</span><span class="str">"utf-8"</span><span class="s">)</span>

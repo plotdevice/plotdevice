@@ -31,45 +31,45 @@
         <h2>Named parameter values</h2>
 
         <p>Scale factors used to set non-pixel dimensions with <a href="Utility.html#size()"><code>size()</code></a></p>
-        <pre><span class="red">inch, cm, mm</span></pre>
+        <pre><span class="kw">inch<span class="s">, </span>cm<span class="s">, </span>mm</span></pre>
 
 
         <p>Color modes used by <a href="Color.html#colormode()"><code>colormode()</code></a>,
         <a href="Color.html#outputmode()"><code>outputmode()</code></a>, and others</p>
-        <pre><span class="red">RGB, HSB, CMYK</span></pre>
+        <pre><span class="kw">RGB<span class="s">, </span>HSB<span class="s">, </span>CMYK</span></pre>
 
 
         <p>alignment modes used by <a href="Typography.html#align()"><code>align()</code></a> and
         <a href="Transform.html#transform()"><code>transform()</code></a></p>
-        <pre><span class="red">CENTER<span class="s">, </span>CORNER
+        <pre><span class="kw">CENTER<span class="s">, </span>CORNER
 LEFT<span class="s">, </span>RIGHT<span class="s">, </span>CENTER<span class="s">, </span>JUSTIFY</span></pre>
 
 
-        <p>Types of <a href="Classes.html#PathElement">PathElement</a></p>
-        <pre><span class="red">MOVETO<span class="s">, </span>LINETO<span class="s">, </span>CURVETO<span class="s">, </span>CLOSE</span></pre>
+        <p>Types of <a href="Classes.html#PathElement"><code>PathElement</code></a></p>
+        <pre><span class="kw">MOVETO<span class="s">, </span>LINETO<span class="s">, </span>CURVETO<span class="s">, </span>CLOSE</span></pre>
 
 
         <p><code>joinstyle</code>s</p>
-        <pre><span class="red">MITER<span class="s">, </span>ROUND<span class="s">, </span>BEVEL<span class="s">, </span>BUTT<span class="s">, </span>SQUARE</span></pre>
+        <pre><span class="kw">MITER<span class="s">, </span>ROUND<span class="s">, </span>BEVEL<span class="s">, </span>BUTT<span class="s">, </span>SQUARE</span></pre>
 
 
         <p>Styles for the <a href="Primitives.html#arrow()"><code>arrow()</code></a> primitive</p>
-        <pre><span class="red">NORMAL<span class="s">, </span>FORTYFIVE</span></pre>
+        <pre><span class="kw">NORMAL<span class="s">, </span>FORTYFIVE</span></pre>
 
 
         <p>Datatypes for specifying a dynamic <a href="Utility.html#var()"><code>var()</code></a></p>
-        <pre><span class="red">NUMBER<span class="s">, </span>TEXT<span class="s">, </span>BOOLEAN<span class="s">, </span>BUTTON</span></pre>
+        <pre><span class="kw">NUMBER<span class="s">, </span>TEXT<span class="s">, </span>BOOLEAN<span class="s">, </span>BUTTON</span></pre>
 
 
         <h2>Global state</h2>
 
         <p>The current size of the canvas in the wake of the most recent <a href="Utility.html#size()"><code>size()</code></a> call</p>
-        <pre><span class="red">WIDTH<span class="s">, </span>HEIGHT</span></pre>
+        <pre><span class="kw">WIDTH<span class="s">, </span>HEIGHT</span></pre>
 
 
         <p>The current iteration count in an <a href="../tut/Animation.html">animation</a> (note
         that these are synonyms for the same value, counting up from 1)</p>
-        <pre><span class="red">FRAME<span class="s">, </span>PAGE</span></pre>
+        <pre><span class="kw">FRAME<span class="s">, </span>PAGE</span></pre>
 
       </div>
     </div><a id="canvas" name="canvas"></a>
@@ -108,10 +108,10 @@ canvas.<span class="kw">save</span>(filename) <span class="grey"># name must end
       <h3>colors</h3>
 
       <div class="definition">
-        <h2>Module Description</h2>
-
         <p class="pink_text">Prior to version 1.10 this object was accessed through the external
         Colors library, but it is now available to your scripts without any additional imports.</p>
+        <h2>Module Description</h2>
+
         <div class="row">
           The <code>colors</code> object offers a set of convenience methods for advanced color
           manipulation, the creation of color palettes and more.
@@ -140,8 +140,8 @@ canvas.<span class="kw">save</span>(filename) <span class="grey"># name must end
         manager</a> that takes care of canvas-setup and file-generation for both single images and
         animations. By enclosing your drawing code in a <code>with</code> block, you can ensure
         that the correct sequence of <code>clear</code> and <code>save</code> calls are made to the
-        <code>canvas</code> automatically. For instance these two methods of generating a png are
-        equivalent:</p>
+        <code><a href="#canvas">canvas</a></code> automatically. For instance these two methods of
+        generating a png are equivalent:</p>
         <pre><span class="kw">from</span> <span class="nn">nodebox.script</span> <span class="kw">import</span> <span class="o">*</span>
 
 <span class="grey"># export an image</span>
@@ -161,7 +161,7 @@ canvas.<span class="kw">save</span>(filename) <span class="grey"># name must end
         pass a <code>loop</code> or <code>fps</code> argument), the <code>export</code> context
         manager will return a <code>Movie</code> object. Each time you call its <code>add</code>
         method, a new frame with the contents of the canvas will be added to the end of the
-        animation. Once you've added the final frame, you must call <code>finish</code> to wait for
+        animation. Once you’ve added the final frame, you must call <code>finish</code> to wait for
         the video encoder thread to complete its work.</p>
         <p>As with the single-image version of the <code>export</code> call, you can use the
         <code>with</code> statement in your code to tidy up some of the frame-drawing boilerplate.
@@ -213,11 +213,11 @@ canvas.<span class="kw">save</span>(filename) <span class="grey"># name must end
 
         <h2><a class="anchor" href="#image-sequences" id="image-sequences" name="image-sequences"></a>Image sequences</h2>
 
-        <p>If you're generating a series of images, <code>export</code> will automatically give
+        <p>If you’re generating a series of images, <code>export</code> will automatically give
         them consecutive names derived from the filename you pass as an argument. If the filename
-        is a simple <code class="str">"name.ext"</code> string, the sequence number will be
-        appended with 4 characters of padding (<code class="str">"name-0001.ext"</code>,
-        <code class="str">"name-0002.ext"</code>, etc.). If the filename contains a block of
+        is a simple <code class="str">’name.ext’</code> string, the sequence number will be
+        appended with 4 characters of padding (<code class="str">’name-0001.ext’</code>,
+        <code class="str">’name-0002.ext’</code>, etc.). If the filename contains a block of
         <code>###</code> characters, they will be replaced with the sequence number and zero padded
         to the same width:</p>
         <pre><span class="grey"># export a sequence of images to output-0001.png, output-0002.png, ...</span>

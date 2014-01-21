@@ -44,14 +44,14 @@
 
 
     <p>The library has a single command, <i>top()</i> which returns a list of 2-tuples, for example
-    [(5,"typography"), (2,"workshop")], representing the most important words in the text
+    [(5,’typography’), (2,’workshop’)], representing the most important words in the text
     <i>str</i>, and their count. The command returns the top <i>n</i> words.<br/></p>
     <pre>top<span class="s">(</span><span class="s">str</span>, n=<span class="s">10</span>, nouns=<span class="kw">True</span>, singularize=<span class="kw">True</span>, filters=<span class="s">[</span><span class="s">]</span><span class="s">)</span></pre>
 
 
     <p>When WordNet is present, the command will return only nouns by default and try to
     singularize them. Optionally, you also can supply a filters list of words to ignore. For
-    example, here we filter keywords from Lucas Nijs' text on <a href="Keywords/Ideas_from_the_Heart.html">Ideas from the Heart</a>.</p>
+    example, here we filter keywords from Lucas Nijs’ text on <a href="Keywords/Ideas_from_the_Heart.html">Ideas from the Heart</a>.</p>
     <pre><span class="kw">import</span> keywords
 <span class="s">str</span> = <span class="kw">open</span><span class="s">(</span><span class="str">"ideasfromtheheart.txt"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
 top = keywords.<span class="s">top</span><span class="s">(</span><span class="s">str</span>, nouns=<span class="kw">True</span><span class="s">)</span>

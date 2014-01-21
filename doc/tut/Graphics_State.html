@@ -23,7 +23,7 @@
     All the lines you then paint on the canvas have the same color. And the same texture according
     to the thickness and softness of the brush. Naturally, you could paint with both hands and feet
     holding multiple brushes with multiple colors. But then things become chaotic.</p>
-    <p>So in NodeBox you "paint" with one color. All of the elements you draw have the same color,
+    <p>So in NodeBox you ‘paint’ with one color. All of the elements you draw have the same color,
     until you switch to a different color. Then all subsequent elements you draw have that color.</p>
     <h2>State commands</h2>
 
@@ -42,7 +42,7 @@
     transparent and draw two ovals with a black outline and a transparent fill:</p>
     <p><img alt="graphics_state1" src="media/graphics_state1.gif"/><br/></p>
     <p>By default, the current fill color is black. The default strokewidth is 1. However, stroke
-    colors won't show until you define a current stroke color, which is transparent by default.</p>
+    colors won’t show until you define a current stroke color, which is transparent by default.</p>
     <h2>Transformation state</h2>
 
     <p>You can think of the transformation state along the same lines as when painting. The NodeBox
@@ -76,7 +76,7 @@
     becomes 0.64 (0.8 x 0.8), the third time it becomes 0.512 (0.64 x 0.8) and so on.</p>
     <h2>Corner mode transformations</h2>
 
-    <p>We haven't discussed the <a href="../ref/Transform.html#transform()">transform()</a> command
+    <p>We haven’t discussed the <a href="../ref/Transform.html#transform()">transform()</a> command
     yet. As you may have already read in the reference you can switch it between CENTER and CORNER.
     Centered transformation means that all shapes, paths, text and images rotate scale and skew
     around their own center. As we would probably expect them to. Corner mode transformations means
@@ -103,8 +103,8 @@
     script. Then the transformation state reverts to how things where before push(). This way you
     can <b>transform groups of elements that need to stay together</b>.</p>
     <p>Color and text commands are not affected by push() and pop().<br/></p>
-    <p>Here's a short example. Note that the last rectangle isn't rotated. That's because the
-    rotation happens between the push and pop "brackets".</p>
+    <p>Here’s a short example. Note that the last rectangle isn’t rotated. That’s because the
+    rotation happens between the push and pop ‘brackets’.</p>
     <pre><span class="kw">rect</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
 <span class="kw">push</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">rotate</span><span class="s">(</span><span class="s">45</span><span class="s">)</span>

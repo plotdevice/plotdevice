@@ -19,14 +19,14 @@
     images, news and spelling suggestions, to read RSS and Atom newsfeeds, to retrieve articles
     from <a href="http://en.wikipedia.org">Wikipedia</a>, to collect quality images from <a href="http://www.morguefile.com">morgueFile</a> or <a href="http://www.flickr.com">Flickr</a>, to
     get color themes from <a href="http://kuler.adobe.com">kuler</a> or <a href="http://www.colr.org">Colr</a>, to browse through HTML documents, to clean up HTML, to validate
-    URL's, to create GIF images from math equations using <a href="http://www.forkosh.com/mimetex.html">mimeTeX</a>, to get ironic word definitions from <a href="http://www.urbandictionary.com">Urban Dictionary</a>.<br/></p>
+    URL’s, to create GIF images from math equations using <a href="http://www.forkosh.com/mimetex.html">mimeTeX</a>, to get ironic word definitions from <a href="http://www.urbandictionary.com">Urban Dictionary</a>.<br/></p>
     <p>The NodeBox Web library works with a caching mechanism that stores things you download from
     the web, so they can be retrieved faster the next time. Many of the services also work
     asynchronously. This means you can use the library in an animation that keeps on running while
     new content is downloaded in the background.</p>
-    <p>The library bundles Leonard Richardson's <a href="http://www.crummy.com/software/BeautifulSoup/">Beautiful Soup</a> to parse HTM, Mark Pilgrim's
+    <p>The library bundles Leonard Richardson’s <a href="http://www.crummy.com/software/BeautifulSoup/">Beautiful Soup</a> to parse HTM, Mark Pilgrim’s
     <a href="http://www.feedparser.org/">Universal Feed Parser</a> for newsfeeds, a connection to
-    John Forkosh's mathTeX server (thanks Cedric Foellmi), Leif K-Brooks entity replace algorithm,
+    John Forkosh’s mathTeX server (thanks Cedric Foellmi), Leif K-Brooks entity replace algorithm,
     <a href="http://code.google.com/p/simplejson/">simplejson</a>, and patches for Debian from the
     people at <a href="http://indywiki.sourceforge.net/">Indywiki</a>.<br/></p>
     <h2>Download</h2>
@@ -45,7 +45,7 @@
     <ul>
       <li><a href="#library">How to get the library up and running</a>
       </li><li><a href="#validation">Validating web content</a><br/>
-      </li><li><a href="#url">Working with URL's</a>
+      </li><li><a href="#url">Working with URL’s</a>
       </li><li><a href="#html">Working with HTML</a>
       </li><li><a href="#yahoo">Querying Yahoo! for links, images and news</a>
       </li><li><a href="#yahoocontextual">Improving Yahoo! results with a contextual search</a>
@@ -126,7 +126,7 @@
                                                         
     <hr/>
 
-    <h2><a id="url" name="url" title="url"></a>Working with URL's</h2>
+    <h2><a id="url" name="url" title="url"></a>Working with URL’s</h2>
 
     <p>A <a href="http://en.wikipedia.org/wiki/Url">URL</a> is  the address you use to connect
     to a page on the internet, for example: <i>http://nodebox.net</i>. The NodeBox Web library can
@@ -148,10 +148,10 @@
     command has an optional parameter <i>wait</i> that determines <b>how long to wait for a
     download</b>. If the time is exceeded, the download is aborted.</p>
     <p>The last two parameters can be used to <b>cache downloaded content locally</b>, so it
-    doesn't have to downloaded again in the future. The <i>cache</i> parameter is a string with the
+    doesn’t have to downloaded again in the future. The <i>cache</i> parameter is a string with the
     name of a subfolder in /cache where to store content. The <i>type</i> parameter is the file
     extension of the downloaded content.</p>
-    <p>The <i>save()</i> command stores the URL's content at the given local path. If no path is
+    <p>The <i>save()</i> command stores the URL’s content at the given local path. If no path is
     given it will attempt to extract a filename from the URL and store that in the current working
     directory. The path to the saved file is returned.</p>
     <p>The Web library also has easier ways to deal with specific web content like HTML
@@ -159,9 +159,9 @@
     example.</p>
     <p>The <i>download()</i> command is actually an alias of the <i>url.retrieve()</i> command.
     This command has an additional <i>asynchronous</i> parameter useful to <b>download stuff in the
-    background</b> while an animation keeps on running. We'll see about asynchronous downloads
+    background</b> while an animation keeps on running. We’ll see about asynchronous downloads
     later on. The <i>url.retrieve()</i> command returns an object with a <i>data</i> property
-    containing a string with the downloaded content. If you don't need anything that complicated
+    containing a string with the downloaded content. If you don’t need anything that complicated
     just use the easy <i>download()</i> command:<br/></p>
     <pre><span class="grey"># Download an image from the NodeBox Gallery.</span>
 url = <span class="str">"http://nodebox.net/code/data/media/twisted-final.jpg"</span>
@@ -189,13 +189,13 @@ img = web.<span class="s">download</span><span class="s">(</span>url<span class=
       </li><li><i>url.path</i>: the subdirectory at the server, for example <i>/code/index.php/</i>
       </li><li><i>url.page</i>: the name of the document, for example <i>search</i><br/>
       </li><li><i>url.anchor</i>: named anchor on the page<br/>
-      </li><li><i>url.query</i>: a dictionary of query string values, for example <i>{ "q": "pixels"
+      </li><li><i>url.query</i>: a dictionary of query string values, for example <i>{ ‘q’: ‘pixels’
       }</i><br/>
-      </li><li><i>url.method</i>: the query string method either "get" or "post"<br/>
+      </li><li><i>url.method</i>: the query string method either ‘get’ or ‘post’<br/>
     </li></ul>
 
     <p>In the same way the <i>url.create()</i> command returns an object with these properties.
-    This command is useful to, for example, construct URL's with a POST query and pass that to
+    This command is useful to, for example, construct URL’s with a POST query and pass that to
     <i>url.retrieve()</i> or <i>page.parse()</i>.</p>
     <p>For example. this script retrieves the first 10 forum pages from NodeBox:</p>
     <pre>url = web.<span class="s">url</span>.<span class="s">create</span><span class="s">(</span><span class="str">"http://nodebox.net/code/index.php/Share"</span><span class="s">)</span>
@@ -208,7 +208,7 @@ url.<span class="s">query</span><span class="s">[</span><span class="str">"p"</s
 
     <h2><a id="html" name="html" title="html"></a>Working with HTML</h2>
 
-    <p>The NodeBox Web library uses Leonard Richardson's <a href="http://www.crummy.com/software/BeautifulSoup/">Beautiful Soup</a> to parse HTML content. This
+    <p>The NodeBox Web library uses Leonard Richardson’s <a href="http://www.crummy.com/software/BeautifulSoup/">Beautiful Soup</a> to parse HTML content. This
     means you can search and loop through all the tags in the HTML. For example, you might want to
     download a HTML page from the internet, find all the links in it and then download all those
     links. Or find all the image tags in the source and then retrieve all those images with
@@ -219,7 +219,7 @@ url.<span class="s">query</span><span class="s">[</span><span class="str">"p"</s
     <pre>web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span>url, wait=<span class="s">10</span>, cached=<span class="kw">True</span><span class="s">)</span></pre>
 
 
-    <p>You can get the meta information in the HTML header with the returned object's <i>title</i>,
+    <p>You can get the meta information in the HTML header with the returned object’s <i>title</i>,
     <i>description</i> and <i>keywords</i> properties:</p>
     <pre>html = web.<span class="s">page</span>.<span class="s">parse</span><span class="s">(</span><span class="str">"http://nodebox.net"</span><span class="s">)</span>
  
@@ -341,7 +341,7 @@ web.<span class="s">html</span>.<span class="s">plain</span><span class="s">(</s
 
     <p>Before you can use the Web library to query the Yahoo! search engine, you need to obtain
     <b>a license key</b>: <a href="http://developer.yahoo.com/search/">http://developer.yahoo.com/search/</a></p>
-    <p>Click  "get an application ID". Fill out the form and you'll end up with a long string
+    <p>Click  ‘get an application ID’. Fill out the form and you’ll end up with a long string
     of numbers and characters which is your Yahoo! license key. It entitles you to 5000 queries a
     day. Now register your license key in your NodeBox script:<br/></p>
     <pre>web.<span class="s">yahoo</span>.<span class="s">license_key</span><span class="s">(</span><span class="str">"myID"</span><span class="s">)</span>
@@ -489,7 +489,7 @@ results = web.<span class="s">yahoo</span>.<span class="s">search</span><span cl
     ever return the first 32 results, so the maximum value for <i>start</i> is 24.</p>
     <p>When searching for images, the results can be filtered for image <i>size</i> with the
     optional size parameter.<br/>
-    Acceptable values are "small", "medium", "large" and "wallpaper".<br/></p>
+    Acceptable values are ‘small’, ‘medium’, ‘large’ and ‘wallpaper’.<br/></p>
     <p> </p>
     <hr/>
 
@@ -557,7 +557,7 @@ results = web.<span class="s">yahoo</span>.<span class="s">search</span><span cl
     <p>The command takes a <i>q</i> query parameter and, optionally, the <i>language</i> the
     article should be written in. When <i>light</i> is True, only a <i>title</i>, <i>links</i> to
     other articles, <i>categories</i> and <i>disambiguation</i> will be parsed from the article
-    (it's faster than a full parse).</p>
+    (it’s faster than a full parse).</p>
     <p>Note that the <i>q</i> parameter is case-insenstive - this gives the best chance of
     retrieving an article.<br/>
     If you do want case-sensitivity use <i>search(q, case_sensitive=True)</i>.</p>
@@ -663,7 +663,7 @@ x, y, w = <span class="s">20</span>, <span class="s">20</span>, <span class="s">
 
     <p>An image object has the following properties:</p>
     <ul>
-      <li><i>image.path</i>: the image's filename
+      <li><i>image.path</i>: the image’s filename
       </li><li><i>image.description</i>: a description parsed from the source content
       </li><li><i>image.links</i>: a list of related article titles
       </li><li><i>image properties</i>: a list of properties parsed from the source (e.g. <i>left</i>,
@@ -741,10 +741,10 @@ table = article.<span class="s">tables</span><span class="s">[</span><span class
       <li><i>reference.title</i>: a title of a publication<br/>
       </li><li><i>reference.url</i>: a link to a web page<br/>
       </li><li><i>reference.author</i>: the author of a publication<br/>
-      </li><li><i>reference.first</i>: the author's first name<br/>
-      </li><li><i>reference.last</i>: the author's last name
+      </li><li><i>reference.first</i>: the author’s first name<br/>
+      </li><li><i>reference.last</i>: the author’s last name
       </li><li><i>reference.journal</i>: the journal in which the article is published
-      </li><li><i>reference.publisher</i>: the journal's publisher
+      </li><li><i>reference.publisher</i>: the journal’s publisher
       </li><li><i>reference.date</i>: publication date<br/>
       </li><li><i>reference.year</i>: publication year<br/>
       </li><li><i>reference.id</i>: an ISBN book number
@@ -755,7 +755,7 @@ table = article.<span class="s">tables</span><span class="s">[</span><span class
     <hr/>
 
     <p><span class="grey_box">Article translations</span></p>
-    <p>Here's an example script how to get the translated version of an article:</p>
+    <p>Here’s an example script how to get the translated version of an article:</p>
     <pre>article = web.<span class="s">wikipedia</span>.<span class="s">search</span><span class="s">(</span><span class="str">"computer"</span><span class="s">)</span>
 language = <span class="str">"fr"</span>
 <span class="kw">if</span> article.<span class="s">translations</span>.<span class="s">has_key</span><span class="s">(</span>language<span class="s">)</span>:
@@ -817,7 +817,7 @@ web.<span class="s">wikipedia</span>.<span class="s">draw_table</span><span clas
       <li><i>img.id</i>: the unique morgueFile ID for the image
       </li><li><i>img.category</i>: the category the image belongs to
       </li><li><i>img.author</i>: the name of the author
-      </li><li><i>img.name</i>: the image's name
+      </li><li><i>img.name</i>: the image’s name
       </li><li><i>img.url</i>: the URL of the image thumbnail<br/>
       <i>img.width</i>: the image width in pixels
       </li><li><i>img.height</i>: the image height in pixels
@@ -839,8 +839,8 @@ web.<span class="s">wikipedia</span>.<span class="s">draw_table</span><span clas
 
 
     <p>Each image object in the list has a <i>download()</i> method that stores the image file
-    locally in cache. It has an optional parameter <i>size</i>, which can be set to "small" (image
-    thumbnail) or "large" (default):</p>
+    locally in cache. It has an optional parameter <i>size</i>, which can be set to ‘small’ (image
+    thumbnail) or ‘large’ (default):</p>
     <pre>img = images<span class="s">[</span><span class="s">0</span><span class="s">]</span>
 img.<span class="s">download</span><span class="s">(</span><span class="kw">size</span>=<span class="str">"large"</span>, wait=<span class="s">60</span><span class="s">)</span>
 <span class="kw">image</span><span class="s">(</span>img.<span class="s">path</span>, <span class="s">0</span>, <span class="s">0</span>, width=img.<span class="s">width</span>, height=img.<span class="s">height</span><span class="s">)</span>
@@ -863,12 +863,12 @@ img.<span class="s">download</span><span class="s">(</span><span class="kw">size
 
 
     <p>The <i>flickr.search()</i> command has two optional parameters: <i>sort</i> and
-    <i>match</i>. The sort order can be set either to "interest", "relevance" (default) or "date".
-    The <i>match</i> parameter can be either "all" (image tags must include all of the search
-    words) or "any" (default).</p>
+    <i>match</i>. The sort order can be set either to ‘interest’, ‘relevance’ (default) or ‘date’.
+    The <i>match</i> parameter can be either ‘all’ (image tags must include all of the search
+    words) or ‘any’ (default).</p>
     <p>Each image object in the returned list has a <i>download()</i> method like the morgueFile
     interface. The <i>download()</i> method has an optional <i>size</i> parameter which can be
-    "square", "small", "medium", "large" and "wallpaper". This way you can specify the size of the
+    ‘square’, ‘small’, ‘medium’, ‘large’ and ‘wallpaper’. This way you can specify the size of the
     image to download.<br/></p>
     <p> </p>
     <hr/>
@@ -988,7 +988,7 @@ img = web.<span class="s">mathtex</span>.<span class="s">gif</span><span class="
     downloads</h2>
 
     <p>Downloading content from the internet may take a moment to complete. When running an
-    animation in NodeBox, you don't want it to halt while NodeBox waits for the download to
+    animation in NodeBox, you don’t want it to halt while NodeBox waits for the download to
     complete. The Web library offers you the capability to download <i>asynchronously</i>.
     N<b>odeBox will then continue running with the download taking place in the background
     memory</b>. Once it is done you can start manipulating the retrieved data.</p>
@@ -998,7 +998,7 @@ img = web.<span class="s">mathtex</span>.<span class="s">gif</span><span class="
 
     <p>With <i>asynchronous</i> set to True, the download will occur in the background. The
     returned object has a <i>done</i> property which is True when downloading has terminated. The
-    object's <i>data</i> property then contains the source data.</p>
+    object’s <i>data</i> property then contains the source data.</p>
     <p>You can also set a <i>wait</i> amount of seconds that is the maximum amount of time NodeBox
     will connect to the internet. When the limit is exceeded and no data was fully recovered, the
     returned object will have an <i>error</i> property set. When something else went wrong
@@ -1022,7 +1022,7 @@ img = web.<span class="s">mathtex</span>.<span class="s">gif</span><span class="
     <i>newsfeed.parse()</i>, <i>wikipedia.search()</i>, <i>morguefile.search()</i>,
     <i>morguefile_image.download()</i> and <i>kuler.search()</i>.</p>
     <p>An exception is the Urban Dictionary which uses SOAP instead of <i>url.retrieve()</i>.</p>
-    <p>Here's a quick mash-up of an interactive link browser. It starts out with some links from
+    <p>Here’s a quick mash-up of an interactive link browser. It starts out with some links from
     Yahoo! and when you click on a link, it displays the links in that web page, and so on.</p>
     <pre><span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sin
 <span class="kw">import</span> web
@@ -1120,7 +1120,7 @@ web.<span class="s">morguefile</span>.<span class="s">clear_cache</span><span cl
                     </p>
     <hr/>
 
-    <p>The NodeBox Web library addresses the following API's:</p>
+    <p>The NodeBox Web library addresses the following API’s:</p>
     <ul>
       <li>Yahoo!: <a href="http://developer.yahoo.com/search/">http://developer.yahoo.com/search/</a>
       </li><li>Wikipedia: <a href="http://www.mediawiki.org/wiki/API">http://www.mediawiki.org/wiki/API</a><br/>

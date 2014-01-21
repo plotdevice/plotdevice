@@ -20,7 +20,7 @@
     database. This means the database is just another file in your project folder that you can copy
     and redistribute along with your NodeBox-scripts.</p>
     <p>If you need a viewer application for the SQLite database you can download the free <a href="http://sqlitebrowser.sourceforge.net/">SQLite Database Browser</a> and bundle it with your
-    project. There's also a <a href="https://addons.mozilla.org/en-US/firefox/addon/5817">Firefox
+    project. There’s also a <a href="https://addons.mozilla.org/en-US/firefox/addon/5817">Firefox
     extension</a>.<br/></p>
     <h2>Download</h2>
 
@@ -90,7 +90,7 @@
     the name of an id-field. An id stores a unique number for each record of data.</p>
     <p>Aside from the id-field you can create your own indexes on a table with the
     <i>create_index()</i> method. Indexes in a database makes things go faster: if we are going to
-    perform a lot of search queries on the <i>age</i> field in the <i>persons</i> table it's a good
+    perform a lot of search queries on the <i>age</i> field in the <i>persons</i> table it’s a good
     idea to index that field. When you define the <i>unique</i> parameter as <i>True</i>, the
     indexed field must be a <b>unique value for each record</b> in the table.</p>
     <pre>book = database.<span class="s">create</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
@@ -139,7 +139,7 @@ pages = book.<span class="s">pages</span> <span class="grey"># this is even easi
 
     <p>The <i>append()</i> method adds a new record with the given <i>fields</i> of data to the
     table. The <i>fields</i> can be a dictionary or a number of parameters specifying the names of
-    the fields and the data in each field. You don't need to supply a value for the id-field - this
+    the fields and the data in each field. You don’t need to supply a value for the id-field - this
     is a number that is automatically incremented.</p>
     <pre>book = database.<span class="s">create</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
 book.<span class="s">create_table</span><span class="s">(</span><span class="str">"pages"</span>, <span class="s">[</span><span class="str">"title"</span>, <span class="str">"text"</span>, <span class="str">"image"</span>, <span class="str">"pagenumber"</span><span class="s">]</span><span class="s">)</span>
@@ -213,18 +213,18 @@ r = book.<span class="s">pages</span>.<span class="s">find</span><span class="s"
 
     <h2><a id="batch" name="batch" title="batch"></a>Batch transactions</h2>
 
-    <p>It's faster to write records to disk in batches of, say, 10 000, than writing each record to
+    <p>It’s faster to write records to disk in batches of, say, 10 000, than writing each record to
     the database file individually. Automated scripts that process a lot of records can make use of
     the <i>commit()</i> method for a significant speed increase:</p>
     <pre>db.<span class="s">commit</span><span class="s">(</span>each=<span class="s">0</span><span class="s">)</span></pre>
 
 
     <p>When called without parameters, commits any pending transactions. A transaction is a call to
-    a table's <i>append()</i>, <i>edit()</i> or <i>remove()</i> method, or the database's
+    a table’s <i>append()</i>, <i>edit()</i> or <i>remove()</i> method, or the database’s
     <i>sql()</i> method.</p>
     <p>When commit() is called with the <i>each</i> parameter, sets the batch size. By default,
     transactions are committed instantly, but <b>if you plan to add a lot of records at the same
-    time it's better to commit them in batch</b>.</p>
+    time it’s better to commit them in batch</b>.</p>
     <p>Do not forget to <b>close the database</b> when you are done with it. This commits any
     pending transaction that have not yet been written to disk.</p>
     <pre>db.<span class="s">close</span><span class="s">(</span><span class="s">)</span></pre>
@@ -235,8 +235,8 @@ r = book.<span class="s">pages</span>.<span class="s">find</span><span class="s"
     <pre>db.<span class="s">dump</span><span class="s">(</span><span class="s">)</span></pre>
 
 
-    <p>The <i>dump()</i> method generates an <a href="http://en.wikipedia.org/wiki/Xml">XML</a>-file with all the database's contents. XML is a
-    standardized format to hold data. It's pretty human readable and supported by many
+    <p>The <i>dump()</i> method generates an <a href="http://en.wikipedia.org/wiki/Xml">XML</a>-file with all the database’s contents. XML is a
+    standardized format to hold data. It’s pretty human readable and supported by many
     applications.</p>
     <pre>book = database.<span class="s">connect</span><span class="s">(</span><span class="str">"book"</span><span class="s">)</span>
 book.<span class="s">dump</span><span class="s">(</span><span class="s">)</span>

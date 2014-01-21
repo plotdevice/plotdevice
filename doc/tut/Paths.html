@@ -29,7 +29,7 @@
     <p>Paths in NodeBox are made up of <a href="http://en.wikipedia.org/wiki/B%e9zier_curve">Bezier
     curves</a>. Bezier curves are commonly applied in computer graphics to draw curves. A Bezier
     curve is defined by a starting point, an ending point, and two <i>control handles</i> that
-    describe those points' vector. The first handle describes the forward curvature of the starting
+    describe those points’ vector. The first handle describes the forward curvature of the starting
     point, the second handle the backward curvature of the second point.</p>
     <p>For example:</p>
     <pre><span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
@@ -151,7 +151,7 @@ p = <span class="kw">endpath</span><span class="s">(</span><span class="s">)</sp
       <h2>Example</h2>
 
       <p>The following example manipulates a text path, letting each curving point <i>droop</i> a
-      bit (let's hope the guys at Underware don't freak when they see what happened their beautiful
+      bit (let’s hope the guys at Underware don’t freak when they see what happened their beautiful
       typeface)! Some more advanced math could create a handwritten variation of the text, or a
       text in which character looks different each time.</p>
       <p><br/>
@@ -206,7 +206,7 @@ points = <span class="s">[</span><span class="s">]</span>
       <a href="LetterKnitter.html">LetterKnitter</a>, when <a href="Superfolia">growing grass</a>
       on shapes, and so on and so on.</p>
       <p>A special thanks goes to professor F. De Smedt at the Free University of Brussels for his
-      integration and interpolation algorithms (also check the <a href="http://en.wikipedia.org/wiki/De_Casteljau%27s_algorithm">de Casteljau's algorithm</a>).<br/></p>
+      integration and interpolation algorithms (also check the <a href="http://en.wikipedia.org/wiki/De_Casteljau%27s_algorithm">de Casteljau’s algorithm</a>).<br/></p>
       <p><br/>
       <span class="media"><img height="552" src="media/paths-t.jpg" width="552"/></span><br/></p>
       <h2>Finding points on a path</h2>
@@ -228,12 +228,12 @@ path = <span class="kw">endpath</span><span class="s">(</span><span class="s">)<
     <span class="kw">oval</span><span class="s">(</span>pt.<span class="s">x</span><span class="s">-2</span>, pt.<span class="s">y</span><span class="s">-2</span>, <span class="s">4</span>, <span class="s">4</span><span class="s">)</span></pre>
 
 
-      <p>And it's even easier like this:</p>
+      <p>And it’s even easier like this:</p>
       <pre><span class="kw">for</span> pt <span class="kw">in</span> path.<span class="s">points</span><span class="s">(</span><span class="s">11</span><span class="s">)</span>:
     <span class="kw">oval</span><span class="s">(</span>pt.<span class="s">x</span><span class="s">-2</span>, pt.<span class="s">y</span><span class="s">-2</span>, <span class="s">4</span>, <span class="s">4</span><span class="s">)</span></pre>
 
 
-      <p>It's easy to create <b>path filters</b> this way (in analogy to image filters). Here are
+      <p>It’s easy to create <b>path filters</b> this way (in analogy to image filters). Here are
       some good <a href="Path_Filters.html">examples</a>.<br/></p>
       <h2>Inserting points on a path</h2>
 
@@ -259,7 +259,7 @@ path.<span class="s">addpoint</span><span class="s">(</span><span class="s">0.25
       <p>A path is basically made up of <b>segments</b>: two points and the curve in between. A
       group of segments that has a beginning and an ending, or is closed, is a <b>contour</b>.
       Character glyphs are a composite of contours (for example: the inner and outer oval of the
-      character "o" are two contours). In typography it's often useful to get the separate
+      character ‘o’ are two contours). In typography it’s often useful to get the separate
       contours.</p>
       <pre><span class="kw">fontsize</span><span class="s">(</span><span class="s">50</span><span class="s">)</span>
 path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"contours"</span>, <span class="s">10</span>, <span class="s">100</span><span class="s">)</span>
@@ -375,7 +375,7 @@ compound = path1.<span class="s">xor</span><span class="s">(</span>path2<span cl
       <p> </p>
       <h2>Using a Transform object</h2>
 
-      <p>It's easy enough to draw transformed and colored copies of the compound path, but what if
+      <p>It’s easy enough to draw transformed and colored copies of the compound path, but what if
       we want to <b>rotate and scale the individual shapes</b> before flattening them? We can use
       the <a href="../ref/Classes.html#Transform">Transform</a> object in NodeBox for this purpose.</p>
       <pre><span class="grey"># We construct our indivual shape in the top-left corner.</span>
@@ -412,7 +412,7 @@ compound = path
 
       <p>Paths in NodeBox can be <b>forced to fit</b> a bounding box. Then as the size of the box
       is adjusted the path will stretch accordingly. This reverse logic is useful in some
-      situations where a path needs to exactly fit an area and we don't want to be bothered with
+      situations where a path needs to exactly fit an area and we don’t want to be bothered with
       creating the shape in exactly the right proportions or at the right position.</p>
       <pre>path.<span class="s">fit</span><span class="s">(</span>x=<span class="kw">None</span>, y=<span class="kw">None</span>, width=<span class="kw">None</span>, height=<span class="kw">None</span>, stretch=<span class="kw">False</span><span class="s">)</span></pre>
 

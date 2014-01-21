@@ -16,7 +16,7 @@
 
     <p>One of the oldest libraries for NodeBox. Pixie is a handwriting that looks different each
     time, contains mistakes, has wobbly baselines and variable color pressure. The handwriting is
-    based on Tom De Smedt's handwriting.</p>
+    based on Tom De Smedt’s handwriting.</p>
     <p>The library contains the <a href="http://www.answers.com/opentype">OpenType</a> Pixie font
     family that must be installed on your system in order for the code to work.</p>
     <h2>Download</h2>
@@ -69,7 +69,7 @@
 
 
     <p>Draws the string <i>str</i> at position <i>x</i>, <i>y</i> with the given line <i>width</i>
-    and font size <i>pt</i>. The command returns an (x, y) tuple with the position of the heading's
+    and font size <i>pt</i>. The command returns an (x, y) tuple with the position of the heading’s
     bottom right corner. For example:</p>
     <pre>txt  = <span class="str">"Fat trendy Pixie headers!"</span>
 pixie.<span class="s">heading</span><span class="s">(</span>txt, <span class="s">100</span>, <span class="s">100</span>, <span class="s">200</span>, pt=<span class="s">15</span><span class="s">)</span></pre>
@@ -89,7 +89,7 @@ pixie.<span class="s">heading</span><span class="s">(</span>txt, <span class="s"
     and font size <i>pt</i>. With the optional <i>line</i> parameter set to <i>True</i> the
     paragraph will be underlined. When you set <i>serif</i> to <i>True</i> some characters in the
     text will look kinda serif-ish. The command returns an (x,y) tuple with the position of the
-    text's bottom right corner. For example:<br/></p>
+    text’s bottom right corner. For example:<br/></p>
     <pre><span class="s">str</span> += <span class="str">"Pixie was originally a part of the Aunt Hillary code package,"</span>
 <span class="s">str</span> += <span class="str">"a handwriting that looks different each time, contains mistakes,"</span>
 <span class="s">str</span> += <span class="str">"has wobbly baselines and variable color pressure."</span>
@@ -169,7 +169,7 @@ pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</s
 
     <h2><a id="sprite" name="sprite" title="sprite"></a>Doodles</h2>
 
-    <p>Here's a fun command to add some doodles to your text!<br/>
+    <p>Here’s a fun command to add some doodles to your text!<br/>
     The <i>sprite()</i> command draws a little critter with random legs, face and body:</p>
     <pre>sprite<span class="s">(</span>x, y, pt=<span class="s">20</span><span class="s">)</span></pre>
 
@@ -183,7 +183,7 @@ pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</s
 
     <h2><a id="tree" name="tree" title="tree"></a>Diagrams</h2>
 
-    <p>The Pixie library has powerful graphing algorithms. Wow! Now you're ready to get
+    <p>The Pixie library has powerful graphing algorithms. Wow! Now you’re ready to get
     professional.<br/>
     With the <i>tree()</i> command you can draw a network of related nodes:</p>
     <pre>tree<span class="s">(</span>root, nodes, x, y, width, height, 
@@ -192,7 +192,7 @@ pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</s
 
     <p>The command draws a tree scheme exploding from a central root. The <i>nodes</i> list is
     expected to contain tuples of relations, for example:<br/>
-    <span class="inline_code">[ ("node1", ["leaf1a", "leaf1b"]), ("node2", ["leaf2a"]) ]</span></p>
+    <span class="inline_code">[ (’node1’, [’leaf1a’, ‘leaf1b’]), (’node2’, [’leaf2a’]) ]</span></p>
     <p>Nodes in the drawn network become smaller and smaller if the <i>grow</i> parameter is
     <i>True</i>. Two other commands in the library, <i>line()</i> and <i>node()</i>, are called to
     draw the individual nodes.</p>

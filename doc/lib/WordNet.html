@@ -51,7 +51,7 @@
 &gt;&gt;&gt; bound together<span class="s">)</span>; <span class="str">"I am reading a good book on economics"</span></pre>
 
 
-    <p>A word can have multiple senses, for example "tree" can mean a tree in a forest but also a
+    <p>A word can have multiple senses, for example ‘tree’ can mean a tree in a forest but also a
     tree diagram, or a person named Sir Herbert Beerbohm Tree. Sense indices start from 0.<br/></p>
     <pre><span class="kw">print</span> wordnet.<span class="s">noun_senses</span><span class="s">(</span><span class="str">"tree"</span><span class="s">)</span>
 &gt;&gt;&gt; <span class="s">[</span><span class="s">[</span><span class="str">'tree'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'tree'</span>, <span class="str">'tree diagram'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'Tree'</span>, <span class="str">'Sir Beerbohm Tree'</span><span class="s">]</span><span class="s">]</span></pre>
@@ -126,14 +126,14 @@
 &gt;&gt;&gt; <span class="s">[</span><span class="str">'tree'</span>, <span class="str">'tree'</span>, <span class="str">'tree diagram'</span>, <span class="str">'Tree'</span>, <span class="str">'Sir Herbert Beerbohm Tree'</span><span class="s">]</span></pre>
 
 
-    <p>If you want a list of all nouns/verbs/adjectives/adverbs there's the
+    <p>If you want a list of all nouns/verbs/adjectives/adverbs there’s the
     <i>wordnet.all_nouns()</i>, <i>wordnet.all_verbs()</i> ... commands:</p>
     <pre><span class="kw">print</span> <span class="s">len</span><span class="s">(</span>wordnet.<span class="s">all_nouns</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
 &gt;&gt;&gt; <span class="s">117096</span></pre>
 
 
     <p>All of the commands shown here for nouns are <b>also available for verbs, adjectives and
-    adverbs</b>, <i>verb_hypernyms("run")</i>, <i>djective_gloss("beautiful")</i> etc. are valid
+    adverbs</b>, <i>verb_hypernyms(’run’)</i>, <i>djective_gloss(’beautiful’)</i> etc. are valid
     commands.</p>
     <p> </p>
     <hr/>
@@ -141,7 +141,7 @@
     <h2>Example</h2>
 
     <p>The NodeBox WordNet library has a small gizmo bundled in called <b><i>explode</i></b> (you
-    won't find it in the Linguistics library however)<i>.</i> You can use it to quickly visualise
+    won’t find it in the Linguistics library however)<i>.</i> You can use it to quickly visualise
     WordNet:</p>
     <pre>wordnet = <span class="kw">ximport</span><span class="s">(</span><span class="str">"wordnet"</span><span class="s">)</span>
 <span class="kw">from</span> wordnet <span class="kw">import</span> explode

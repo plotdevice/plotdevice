@@ -24,7 +24,7 @@
     to launch scripts with the NodeBox interpreter, you may prefer to use the graphics context and
     export functions from within your own module (and running whichever <code>python</code> binary
     your system or virtualenv provides).</p>
-    <p>Detailed installation instructions can be found in the project's <code><a href="https://github.com/samizdatco/nodebox-pyobjc/blob/master/README.md">README</a></code> file. To
+    <p>Detailed installation instructions can be found in the project’s <code><a href="https://github.com/samizdatco/nodebox-pyobjc/blob/master/README.md">README</a></code> file. To
     simplify the use of NodeBox with other external libraries, we recommend installing the module
     into a <a href="http://virtualenv.org">virtualenv</a> along with your other dependencies:</p>
     <pre><span class="kw">$ </span>virtualenv env
@@ -36,7 +36,7 @@
     <h2><a href="#nodebox.script" id="nodebox.script" name="nodebox.script"></a>Initializing a
     graphics context with <code>nodebox.script</code></h2>
 
-    <p>The <code>nodebox.script</code> module initializes your script's namespace with one
+    <p>The <code>nodebox.script</code> module initializes your script’s namespace with one
     identical to a script running with the app or command line tool. For instance, the following
     will draw a few boxes:</p>
     <pre><span class="grey">#!/usr/bin/env python</span>
@@ -52,11 +52,11 @@
     <pre><span class="kw">canvas</span><span class="o">.</span><span class="kw">save</span><span class="s">(</span><span class="str">'~/Pictures/output.pdf'</span><span class="s">)</span></pre>
 
 
-    <p>If you're generating multiple images, be sure to reset the graphics state in between frames:</p>
+    <p>If you’re generating multiple images, be sure to reset the graphics state in between frames:</p>
     <pre><span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span></pre>
 
 
-    <p>But if you plan to do more than generate a one-off, you'll likely find the <a href="../ref/Globals.html#export"><code>export()</code></a> function more convenient. It provides
+    <p>But if you plan to do more than generate a one-off, you’ll likely find the <a href="../ref/Globals.html#export()"><code>export()</code></a> function more convenient. It provides
     convenience methods for writing images, vector documents, and even animations.</p>
   </div>
 

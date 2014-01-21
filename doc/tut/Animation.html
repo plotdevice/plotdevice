@@ -38,12 +38,12 @@
     <p> </p>
     <p>You may already know a little bit about defining your own commands from the <a href="Commands.html">Templating</a> tutorial.</p>
     <p>The setup() command is run once, at the beginning of the animation, and draw() is run on
-    each <i>frame</i>, or step, in the animation. Take a look at the example above. What I'm doing
+    each <i>frame</i>, or step, in the animation. Take a look at the example above. What I’m doing
     there in the setup() definition, is declaring a <i>global variable</i> named <i>frame</i>,
-    which I'm going to use later on in the draw() to keep track of the animation frame being
+    which I’m going to use later on in the draw() to keep track of the animation frame being
     rendered on the canvas. The variable needs to be a global, because otherwise setup() and draw()
-    can't communicate, or <i>share</i> the variable.</p>
-    <p>Now examine the draw() definition. It's a typical example of an animation script. The draw()
+    can’t communicate, or <i>share</i> the variable.</p>
+    <p>Now examine the draw() definition. It’s a typical example of an animation script. The draw()
     command is called repetively by NodeBox, rendering frame after frame of animation. In the
     example above, the draw() definition basically does four things:</p>
     <ul>
@@ -86,7 +86,7 @@ ease = sin<span class="s">(</span>radians<span class="s">(</span>x<span class="s
 
     <h2>Exporting as a Quicktime movie</h2>
 
-    <p>You can export an animation as a Quicktime movie. Select "Export as Quicktime Movie..." from
+    <p>You can export an animation as a Quicktime movie. Select ‘Export as Quicktime Movie...’ from
     the NodeBox File menu, or press shift-apple-e. You can select a number of frames to export, and
     a movie frame rate.</p>
     <p>The Quicktime functionality in NodeBox is based on <a href="http://undefined.org/python/">PyQTSequence</a> written by Bob Ippolito.</p>

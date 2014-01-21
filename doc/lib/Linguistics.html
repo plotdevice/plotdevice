@@ -19,12 +19,12 @@
     write out numbers, find dictionary descriptions and synonyms for words, summarise texts and
     parse grammatical structure from sentences.</p>
     <p>The library bundles <a href="http://www.cogsci.princeton.edu/~wn/">WordNet</a> (using Oliver
-    Steele's <a href="http://osteele.com/projects/pywordnet/">PyWordNet</a>), <a href="http://nltk.sourceforge.net/">NLTK</a>, Damian Conway's <a href="http://www.csse.monash.edu.au/~damian/papers/HTML/Plurals.html">pluralisation rules</a>, Bermi
-    Ferrer's <a href="http://www.bermi.org/inflector/">singularization rules</a>, Jason Wiener's
+    Steele’s <a href="http://osteele.com/projects/pywordnet/">PyWordNet</a>), <a href="http://nltk.sourceforge.net/">NLTK</a>, Damian Conway’s <a href="http://www.csse.monash.edu.au/~damian/papers/HTML/Plurals.html">pluralisation rules</a>, Bermi
+    Ferrer’s <a href="http://www.bermi.org/inflector/">singularization rules</a>, Jason Wiener’s
     <a href="http://jasonwiener.wordpress.com/2006/01/20/simple-nlp-part-of-speech-tagger-in-python/">Brill
-    tagger</a>, several algorithms adopted from Michael Granger's <a href="http://www.deveiate.org/projects/Linguistics/wiki/English">Ruby Linguistics</a> module, John
-    Wiseman's implementation of the <a href="http://lemonodor.com/archives/001511.html">Regressive
-    Imagery Dictionary</a>, Charles K. Ogden's list of <a href="http://ogden.basic-english.org">basic English</a> words, and Peter Norvig's <a href="http://norvig.com/spell-correct.html">spelling corrector</a>.<br/></p>
+    tagger</a>, several algorithms adopted from Michael Granger’s <a href="http://www.deveiate.org/projects/Linguistics/wiki/English">Ruby Linguistics</a> module, John
+    Wiseman’s implementation of the <a href="http://lemonodor.com/archives/001511.html">Regressive
+    Imagery Dictionary</a>, Charles K. Ogden’s list of <a href="http://ogden.basic-english.org">basic English</a> words, and Peter Norvig’s <a href="http://norvig.com/spell-correct.html">spelling corrector</a>.<br/></p>
     <h2>Download</h2>
 
     <table border="0">
@@ -55,7 +55,7 @@
       </li><li><a href="#shallow_parsing">Shallow parsing, the grammatical structure of a sentence</a>
       </li><li><a href="#summarisation">Summarisation of text to keywords</a>
       </li><li><a href="#rid">Regressive Imagery Dictionary, content analysis</a>
-      </li><li><a href="#ogden">Ogden's basic English words</a><br/>
+      </li><li><a href="#ogden">Ogden’s basic English words</a><br/>
     </li></ul>
 
     <p> </p>
@@ -104,7 +104,7 @@
 &gt;&gt;&gt; <span class="kw">True</span></pre>
 
 
-    <p>The <i>is_persuasive()</i> command returns <i>True</i> if the given word is a "magic" word
+    <p>The <i>is_persuasive()</i> command returns <i>True</i> if the given word is a ‘magic’ word
     (you, money, save, new, results, health, easy, ...):</p>
     <pre><span class="kw">print</span> en.<span class="s">is_persuasive</span><span class="s">(</span><span class="str">"money"</span><span class="s">)</span>
 &gt;&gt;&gt; <span class="kw">True</span></pre>
@@ -227,7 +227,7 @@
 
 
     <p>An additional optional parameter <i>shallow</i>=<i>True</i> speeds up the lookup process but
-    doesn't check as many synonyms. You can also use <i>verb.is_emotion()</i>,
+    doesn’t check as many synonyms. You can also use <i>verb.is_emotion()</i>,
     <i>adjective.is_emotion()</i> and <i>adverb.is_emotion()</i>.</p>
     <p> </p>
     <hr/>
@@ -242,7 +242,7 @@
 &gt;&gt;&gt; bound together<span class="s">)</span>; <span class="str">"I am reading a good book on economics"</span></pre>
 
 
-    <p>A word can have multiple senses, for example "tree" can mean a tree in a forest but also a
+    <p>A word can have multiple senses, for example ‘tree’ can mean a tree in a forest but also a
     tree diagram, or a person named Sir Herbert Beerbohm Tree:</p>
     <pre><span class="kw">print</span> en.<span class="s">noun</span>.<span class="s">senses</span><span class="s">(</span><span class="str">"tree"</span><span class="s">)</span>
 &gt;&gt;&gt; <span class="s">[</span><span class="s">[</span><span class="str">'tree'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'tree'</span>, <span class="str">'tree diagram'</span><span class="s">]</span>, <span class="s">[</span><span class="str">'Tree'</span>, <span class="str">'Sir Beerbohm Tree'</span><span class="s">]</span><span class="s">]</span></pre>
@@ -317,14 +317,14 @@
 &gt;&gt;&gt; <span class="s">[</span><span class="str">'tree'</span>, <span class="str">'tree'</span>, <span class="str">'tree diagram'</span>, <span class="str">'Tree'</span>, <span class="str">'Sir Herbert Beerbohm Tree'</span><span class="s">]</span></pre>
 
 
-    <p>If you want a list of all nouns/verbs/adjectives/adverbs there's the
+    <p>If you want a list of all nouns/verbs/adjectives/adverbs there’s the
     <i>wordnet.all_nouns()</i>, <i>wordnet.all_verbs()</i> ... commands:</p>
     <pre><span class="kw">print</span> <span class="s">len</span><span class="s">(</span>en.<span class="s">wordnet</span>.<span class="s">all_nouns</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
 &gt;&gt;&gt; <span class="s">117096</span></pre>
 
 
     <p>All of the commands shown here for nouns are also available for verbs, adjectives and
-    adverbs, <i>en.verb.hypernyms("run")</i>, <i>en.adjective.gloss("beautiful")</i> etc. are valid
+    adverbs, <i>en.verb.hypernyms(’run’)</i>, <i>en.adjective.gloss(’beautiful’)</i> etc. are valid
     commands.</p>
     <p> </p>
     <hr/>
@@ -339,7 +339,7 @@
 
 
     <p>The <i>verb.present()</i> command returns the present tense for the given person. Known
-    values for <i>person</i> are 1, 2, 3, "1st", "2nd", "3rd", "plural", "*". Just use the one you
+    values for <i>person</i> are 1, 2, 3, ‘1st’, ‘2nd’, ‘3rd’, ‘plural’, ‘*’. Just use the one you
     like most.</p>
     <pre><span class="kw">print</span> en.<span class="s">verb</span>.<span class="s">present</span><span class="s">(</span><span class="str">"gave"</span><span class="s">)</span>
 <span class="kw">print</span> en.<span class="s">verb</span>.<span class="s">present</span><span class="s">(</span><span class="str">"gave"</span>, person=<span class="s">3</span>, negate=<span class="kw">False</span><span class="s">)</span>
@@ -395,7 +395,7 @@
 
     <h2><a id="spelling" name="spelling" title="spelling"></a>Spelling corrections</h2>
 
-    <p>NodeBox English Linguistics is able to perform spelling corrections based on Peter Norvig's
+    <p>NodeBox English Linguistics is able to perform spelling corrections based on Peter Norvig’s
     algorithm. The spelling corrector has an accuracy of about 70%.</p>
     <p>The <i>spelling.suggest()</i> returns a list of possible corrections for a given word. The
     <i>spelling.correct()</i> command returns the corrected version (best guess) of the word.</p>
@@ -408,8 +408,8 @@
     <h2>Shallow parsing, the grammatical structure of a sentence</h2>
 
     <p>NodeBox English Linguistics is able to do sentence structure analysis using a combination of
-    Jason Wiener's tagger and NLTK's chunker. The tagger assigns a part-of-speech tag to each word
-    in the sentence using a (Brill's) lexicon. A <i>postag</i> is something like NN or VBP marking
+    Jason Wiener’s tagger and NLTK’s chunker. The tagger assigns a part-of-speech tag to each word
+    in the sentence using a (Brill’s) lexicon. A <i>postag</i> is something like NN or VBP marking
     words as nouns, verbs, determiners, pronouns, etc. The chunker is then able to group syntactic
     units in the sentence. A syntactic unit is, for example, a determiner followed by adjectives
     followed by a noun: <i>the tasty little chicken</i> is a syntactic unit.</p>
@@ -477,7 +477,7 @@ en.<span class="s">sentence</span>.<span class="s">traverse</span><span class="s
 
     <p>The returned list contains all chunks of text that matched the pattern. In the example above
     it retrieved all chunks of the form <i>an adjective + and + an adjective + a noun</i>. Notice
-    that when you use something like "NN" in your pattern (noun), NNS (plural nouns) are returned
+    that when you use something like ‘NN’ in your pattern (noun), NNS (plural nouns) are returned
     as well.</p>
     <pre>s = <span class="str">"The hairy hamsters visited the cruel dentist."</span>
 matches = en.<span class="s">sentence</span>.<span class="s">find</span><span class="s">(</span>s, <span class="str">"JJ NN"</span><span class="s">)</span>
@@ -495,7 +495,7 @@ matches = en.<span class="s">sentence</span>.<span class="s">find</span><span cl
 
 
     <p>Finally, if you feel up to it you could feed the following command with a list of your own
-    regular expression units to chunk, mine are pretty basic as I'm not a linguist.</p>
+    regular expression units to chunk, mine are pretty basic as I’m not a linguist.</p>
     <pre><span class="kw">print</span> en.<span class="s">sentence</span>.<span class="s">chunk_rules</span><span class="s">(</span><span class="s">)</span></pre>
 
 
@@ -532,7 +532,7 @@ meta = <span class="s">[</span><span class="str">"news"</span>, <span class="str
     analysis</h2>
 
     <p>NodeBox English Linguistics is able to do psychological content analysis using John
-    Wiseman's Python implementation of the Regressive Imagery Dictionary. The RID asigns scores to
+    Wiseman’s Python implementation of the Regressive Imagery Dictionary. The RID asigns scores to
     <i>primary</i>, <i>secondary</i> and <i>emotional</i> process thoughts in a text.</p>
     <ul>
       <li>Primary: free-form associative thinking involved in dreams and fantasy
@@ -548,10 +548,10 @@ meta = <span class="s">[</span><span class="str">"news"</span>, <span class="str
       <li><i>item.name</i>: the name of the category
       </li><li><i>item.count</i>: the number of words in the text that fall into this category
       </li><li><i>item.words</i>: a list of words from the text that fall into this category
-      </li><li><i>item.type</i>: the type of category, either "primary", "secondary" or "emotions".
+      </li><li><i>item.type</i>: the type of category, either ‘primary’, ‘secondary’ or ‘emotions’.
     </li></ul>
 
-    <p>Let's run a little test with Lucas' <a href="Keywords/Ideas_from_the_Heart.html">Ideas from
+    <p>Let’s run a little test with Lucas’ <a href="Keywords/Ideas_from_the_Heart.html">Ideas from
     the Heart</a> text:<br/></p>
     <pre>txt = <span class="kw">open</span><span class="s">(</span><span class="str">"heart.txt"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
 summary = en.<span class="s">content</span>.<span class="s">categorise</span><span class="s">(</span>txt<span class="s">)</span>
@@ -589,7 +589,7 @@ summary = en.<span class="s">content</span>.<span class="s">categorise</span><sp
     <hr size="2" width="100%"/>
 
     <p> </p>
-    <h2><a id="ogden" name="ogden" title="ogden"></a>Ogden's basic English words</h2>
+    <h2><a id="ogden" name="ogden" title="ogden"></a>Ogden’s basic English words</h2>
 
     <p>NodeBox English Linguistics comes bundled with Charles K. Ogden list of basic English words:
     a set of 2000 words that can express 90% of the concepts in English. The list is stored as

@@ -14,7 +14,7 @@
   <div class="article">
     <h2>Description</h2>
 
-    <p>The Core Image library for NodeBox adds image manipulation to NodeBox. It's like having
+    <p>The Core Image library for NodeBox adds image manipulation to NodeBox. It’s like having
     control over Photoshop through simple Python programming commands. <a href="http://www.apple.com/macosx/features/coreimage/">Core Image</a> is a Mac OS X specific
     framework available from Mac OS X 1.4 (Tiger) and up (Leopard, ...). Core Image uses hardware
     acceleration whenever possible. You can apply filters and transformations to images with a
@@ -74,7 +74,7 @@
 
     <p>The <i>canvas()</i> command returns a new, empty canvas. It takes two parameters: the
     <i>width</i> and <i>height</i> of the canvas. You can set an optional <i>quality</i> parameter
-    to "high" to use 128-bit pixel depth but this is unnecessary in most cases.</p>
+    to ‘high’ to use 128-bit pixel depth but this is unnecessary in most cases.</p>
     <pre>canvas = coreimage.<span class="s">canvas</span><span class="s">(</span><span class="s">150</span>, <span class="s">150</span><span class="s">)</span></pre>
 
 
@@ -160,8 +160,8 @@ l = canvas.<span class="s">append</span><span class="s">(</span><span class="kw"
             and <i>strokewidth</i>.
             <pre>
 l = canvas.<span class="s">append</span><span class="s">(</span><span class="kw">color</span><span class="s">(</span><span class="s">1.0</span>, <span class="s">0.0</span>, <span class="s">0.5</span><span class="s">)</span><span class="s">)</span></pre>
-font("Georgia-Italic", 40)<br/>
-            p = textpath("text", 0, 0)<br/>
+font(’Georgia-Italic’, 40)<br/>
+            p = textpath(’text’, 0, 0)<br/>
             l = canvas.append(p, fill=color(1))<br/>
         </td></tr><tr>
           <td><img height="150" src="media/coreimage-layers4.jpg" width="150"/>
@@ -174,7 +174,7 @@ l = canvas.<span class="s">append</span><span class="s">(</span><span class="kw"
           <td><img height="150" src="media/coreimage-layers5.jpg" width="150"/>
           </td><td>
             Both linear and radial gradients are defined by two colors. If you also define the
-            optional <i>type</i> parameter as "radial" you get a radial gradient. You control the
+            optional <i>type</i> parameter as ‘radial’ you get a radial gradient. You control the
             range of the gradient center with the optional <i>spread</i> parameter (between 0.0 and
             1.0).
             <pre>
@@ -232,7 +232,7 @@ l = canvas.<span class="s">append</span><span class="s">(</span>pixels, w, h<spa
           </td></tr></tbody></table></p>
     <p> </p>
     <p>If you think <i>canvas.append()</i> is too generic, there are various aliases that make it
-    more understandable what kind of layer you're creating (all return a new layer):
+    more understandable what kind of layer you’re creating (all return a new layer):
     <i>canvas.fill()</i>, <i>canvas.path()</i>, <i>canvas.gradient()</i>, <i>canvas.group()</i>,
     <i>canvas.bytes()</i>, <i>canvas.pixels()</i>.</p>
     <p> </p>
@@ -252,7 +252,7 @@ canvas.<span class="s">append</span><span class="s">(</span>l<span class="s">)</
     <p>You can pre-render layers with <i>layer.render()</i> (or a canvas with
     <i>canvas.flatten()</i>) once and then use them as new layers or in another canvas. The
     advantage is that all the transformations and filters are calculated only once instead of
-    individually for each copy. You can think of this as "flattening" a layer. See also the chapter
+    individually for each copy. You can think of this as ‘flattening’ a layer. See also the chapter
     on <a href="#dynamics">dynamics and caching</a>.</p>
     <p> </p>
     <p><span class="grey_box">Layer type</span></p>
@@ -331,7 +331,7 @@ front = canvas.<span class="s">append</span><span class="s">(</span><span class=
 back.<span class="s">to_front</span><span class="s">(</span><span class="s">)</span></pre>
 
           </td></tr></tbody></table></p>
-    <p>The <i>layer.index</i> property contains the layer's position in the canvas. Like any list
+    <p>The <i>layer.index</i> property contains the layer’s position in the canvas. Like any list
     in NodeBox the indices start from zero:</p>
     <pre>canvas.<span class="s">append</span><span class="s">(</span><span class="str">"leaf.jpg"</span><span class="s">)</span>
 l = canvas.<span class="s">append</span><span class="s">(</span><span class="str">"lily.tif"</span><span class="s">)</span>
@@ -357,8 +357,8 @@ l.<span class="s">hide</span><span class="s">(</span><span class="s">)</span></p
         <tr>
           <td><img height="150" src="media/coreimage-layers9.jpg" width="150"/>
           </td><td>
-            You can use a layer's <i>x</i> and <i>y</i> properties to move it around. These
-            properties store the layer's position measured in pixels from the top-left of the
+            You can use a layer’s <i>x</i> and <i>y</i> properties to move it around. These
+            properties store the layer’s position measured in pixels from the top-left of the
             canvas.
             <pre>
 canvas.<span class="s">append</span><span class="s">(</span><span class="str">"leaf.jpg"</span><span class="s">)</span>
@@ -402,7 +402,7 @@ canvas.<span class="s">append</span><span class="s">(</span><span class="str">"l
         </td></tr><tr>
           <td><img height="150" src="media/coreimage-layers13.jpg" width="150"/>
           </td><td>
-            There's also the <i>layer.flip_vertical()</i> and <i>layer.flip_horizontal()</i>
+            There’s also the <i>layer.flip_vertical()</i> and <i>layer.flip_horizontal()</i>
             methods of course.
             <pre>
 canvas.<span class="s">append</span><span class="s">(</span><span class="str">"leaf.jpg"</span><span class="s">)</span>
@@ -435,19 +435,19 @@ l.<span class="s">crop</span><span class="s">(</span><span class="s">0</span>, <
           </td></tr></tbody></table></p>
     <p> </p>
     <p><span class="grey_box">Origin point</span></p>
-    <p>By default, all layer transformations originate from the layer's center. However, you can
-    change the layer's origin point, have the layer rotate from the bottom right corner for
-    example. Let's turn on some of the visual aids in the Core Image library for a minute:</p>
+    <p>By default, all layer transformations originate from the layer’s center. However, you can
+    change the layer’s origin point, have the layer rotate from the bottom right corner for
+    example. Let’s turn on some of the visual aids in the Core Image library for a minute:</p>
     <pre>canvas.<span class="s">draw</span><span class="s">(</span>helper=<span class="kw">True</span><span class="s">)</span></pre>
 
 
     <p> </p>
     <p><span class="media"><img height="520" src="media/coreimage-layers16.jpg" width="751"/></span></p>
-    <p>We can clearly see the layer's bounding box and how it is positioned around the central
+    <p>We can clearly see the layer’s bounding box and how it is positioned around the central
     origin point. The layer rotates from the center. When we call <i>layer.origin_bottom_left()</i>
-    to change the layer's origin point to the bottom left, rotations will originate from over
-    there. Also, now the layer's bottom left is at the center of the canvas instead of the layer's
-    center. Think of the origin point as the layer's anchor/pivot/orbit.</p>
+    to change the layer’s origin point to the bottom left, rotations will originate from over
+    there. Also, now the layer’s bottom left is at the center of the canvas instead of the layer’s
+    center. Think of the origin point as the layer’s anchor/pivot/orbit.</p>
     <p><span class="media"><img height="520" src="media/coreimage-layers17.jpg" width="751"/></span></p>
     <p>The following commands set the origin point:</p>
     <ul>
@@ -503,7 +503,7 @@ l.<span class="s">crop</span><span class="s">(</span><span class="s">0</span>, <
         <tr>
           <td><img height="150" src="media/coreimage-layers18.jpg" width="150"/>
           </td><td>
-            The layer's <i>brightness</i> property ranges between -1.0 and 1.0:
+            The layer’s <i>brightness</i> property ranges between -1.0 and 1.0:
             <pre>
 canvas.<span class="s">append</span><span class="s">(</span><span class="str">"leaf.jpg"</span><span class="s">)</span>
 l = canvas.<span class="s">append</span><span class="s">(</span><span class="str">"lily.tif"</span><span class="s">)</span>
@@ -512,7 +512,7 @@ l.<span class="s">brightness</span> = <span class="s">0.25</span></pre>
         </td></tr><tr>
           <td><img height="150" src="media/coreimage-layers19.jpg" width="150"/>
           </td><td>
-            The layer's <i>contrast</i> property ranges between 0.25 and 4.0:
+            The layer’s <i>contrast</i> property ranges between 0.25 and 4.0:
             <pre>
 canvas.<span class="s">append</span><span class="s">(</span><span class="str">"leaf.jpg"</span><span class="s">)</span>
 l = canvas.<span class="s">append</span><span class="s">(</span><span class="str">"lily.tif"</span><span class="s">)</span>
@@ -521,7 +521,7 @@ l.<span class="s">contrast</span> = <span class="s">1.5</span></pre>
         </td></tr><tr>
           <td><img height="150" src="media/coreimage-layers20.jpg" width="150"/>
           </td><td>
-            The layer's <i>saturation</i> property ranges between 0.0 and 2.0:
+            The layer’s <i>saturation</i> property ranges between 0.0 and 2.0:
             <pre>
 canvas.<span class="s">append</span><span class="s">(</span><span class="str">"leaf.jpg"</span><span class="s">)</span>
 l = canvas.<span class="s">append</span><span class="s">(</span><span class="str">"lily.tif"</span><span class="s">)</span>
@@ -681,8 +681,8 @@ l.<span class="s">blend_color</span><span class="s">(</span><span class="s">50</
 
     <h2><a id="alpha_masks" name="alpha_masks" title="alpha_masks"></a>Applying alpha masks</h2>
 
-    <p>The layer's alpha mask stores information where the layer shines through and where it is
-    opaque. Since the <i>layer.mask</i> property is a canvas object, it's just as easy to work with
+    <p>The layer’s alpha mask stores information where the layer shines through and where it is
+    opaque. Since the <i>layer.mask</i> property is a canvas object, it’s just as easy to work with
     alpha layers than it is with normal layers. You can position, transform, adjust, blend and
     filter them just as any other layer.</p>
     <p> 
@@ -810,13 +810,13 @@ l.<span class="s">filter</span><span class="s">(</span><span class="str">"zoombl
 
 
     <p><b>Hole distortion</b><br/>
-    Pushes the layer's pixels outwards. Parameters are <i>dx</i>, <i>dy</i>, and a <i>radius</i>
+    Pushes the layer’s pixels outwards. Parameters are <i>dx</i>, <i>dy</i>, and a <i>radius</i>
     between 0.0 and 1000.0.</p>
     <pre>layer.<span class="s">filter</span><span class="s">(</span><span class="str">"holedistortion"</span>, dx=<span class="s">0</span>, dy=<span class="s">0</span>, radius=<span class="s">300</span><span class="s">)</span></pre>
 
 
     <p><b>Circle splash distortion</b><br/>
-    Pushes the layer's pixels outwards on a circle. Parameters are <i>dx</i>, <i>dy</i>,
+    Pushes the layer’s pixels outwards on a circle. Parameters are <i>dx</i>, <i>dy</i>,
     <i>radius</i> between 0.0 and 1000.0 .<br/></p>
     <pre>layer.<span class="s">filter</span><span class="s">(</span><span class="str">"circlesplash"</span>, dx=<span class="s">0</span>, dy=<span class="s">0</span>, radius=<span class="s">150</span><span class="s">)</span></pre>
 
@@ -928,7 +928,7 @@ l.<span class="s">filter</span><span class="s">(</span><span class="str">"zoombl
     <p><b>Page curl</b><br/>
     Curls a corner of the layer. You can pass the <i>back</i> parameter a canvas object to use as
     backside. By default the backside is a mirrored version of the layer. It can also be a color or
-    "pattern", in which case the backside is a triangle-tiled pattern. Parameters are <i>time</i>
+    ‘pattern’, in which case the backside is a triangle-tiled pattern. Parameters are <i>time</i>
     between 0.0 and 1.0, <i>radius</i> between 0 and 200 and <i>angle</i> between 0 and 360.</p>
     <pre>layer.<span class="s">filter</span><span class="s">(</span><span class="str">"pagecurl"</span>, <span class="s">time</span>=<span class="s">0.4</span>, radius=<span class="s">75</span>, angle=<span class="s">45</span>, back=<span class="kw">None</span><span class="s">)</span></pre>
 
@@ -1272,10 +1272,10 @@ p = l.<span class="s">pixels</span><span class="s">(</span><span class="s">)</sp
 &gt;&gt;&gt; <span class="s">150</span>, <span class="s">150</span></pre>
 
 
-    <p>There's also a <i>pixels.</i><i>set_pixel()</i>. It takes an <i>x</i> and <i>y</i> position
+    <p>There’s also a <i>pixels.</i><i>set_pixel()</i>. It takes an <i>x</i> and <i>y</i> position
     and a <i>color</i> as parameters. When you modify pixels in this way, changes will not
     automatically be committed to the layer. You need to <b>explicitly call</b>
-    <i>pixels.</i><i>update()</i> on the pixels object when you're done modifying. Also, remember
+    <i>pixels.</i><i>update()</i> on the pixels object when you’re done modifying. Also, remember
     that pixel operations can be time and memory intensive.<br/></p>
     <pre>p = l.<span class="s">pixels</span><span class="s">(</span><span class="s">)</span>
 p.<span class="s">set_pixel</span><span class="s">(</span><span class="s">100</span>, <span class="s">100</span>, <span class="kw">color</span><span class="s">(</span><span class="s">0</span>,<span class="s">1</span>,<span class="s">0</span><span class="s">)</span><span class="s">)</span>
@@ -1291,13 +1291,13 @@ p.<span class="s">update</span><span class="s">(</span><span class="s">)</span><
     <p><span class="media"><img height="520" src="media/coreimage-layers50.jpg" width="751"/></span></p>
     <p> </p>
     <p><span class="grey_box">Pixel histogram</span></p>
-    <p>The <i>pixels.histogram()</i> extracts a histogram from the layer's pixel data. The return
+    <p>The <i>pixels.histogram()</i> extracts a histogram from the layer’s pixel data. The return
     value is a list with either three (R, G and B) or four (R, G, B, A) elements. Each element is a
     list of 254 elements ranging between 0.0 and 1.0. For example: if
     <i>pixels.histogram()[0][100]</i> would be 0.0, this means that the layer has no pixels where
-    the red is 100. If <i>pixels.histogram()[1][10]</i> would be 1.0, this means that the layer's
+    the red is 100. If <i>pixels.histogram()[1][10]</i> would be 1.0, this means that the layer’s
     pixels usually have a green value of 10.</p>
-    <p>Let's have a look at the pixel values of the leaf image using another one of the visual aids
+    <p>Let’s have a look at the pixel values of the leaf image using another one of the visual aids
     in the Core Image library:</p>
     <p> </p>
     <p><span class="media"><img height="520" src="media/coreimage-layers51.jpg" width="751"/></span></p>
@@ -1307,7 +1307,7 @@ p.<span class="s">update</span><span class="s">(</span><span class="s">)</span><
     <h2><a id="export_the_canvas" name="export_the_canvas" title="export_the_canvas"></a>Exporting
     the canvas to JPEG, GIF, PNG or TIFF</h2>
 
-    <p>It's easy to export the canvas as an compressed image for the web or a TIFF with CMYK
+    <p>It’s easy to export the canvas as an compressed image for the web or a TIFF with CMYK
     colors. If your image has few different colors (e.g. opaque color planes with text) you can use
     export a lossless GIF for the web. If your image contains photos, use a JPEG with compression.
     When you are going to paper print your image, use a CMYK TIFF.</p>
@@ -1366,7 +1366,7 @@ canvas.<span class="s">export</span><span class="s">(</span><span class="str">"f
         intensity colors may contain pixel errors. This is especially true for layers created from
         paths. It is your responsibility to create paths in CMYK-safe colors. Usually everything is
         OK so long as you use paths created with NodeBox <a href="../ref/Color.html#color()">color()</a> colors.</p>
-      </li><li>When you export Core Image compositions from the NodeBox file menu, PDF export won't work
+      </li><li>When you export Core Image compositions from the NodeBox file menu, PDF export won’t work
       under Mac OS X 10.5. You can export JPEG, GIF and PNG however.<br/>
     </li></ul>
 
@@ -1392,18 +1392,18 @@ canvas.<span class="s">draw</span><span class="s">(</span><span class="s">0</spa
     <h2><a id="helpers" name="helpers" title="helpers"></a>Working with helpers and interfaces</h2>
 
     <p>Some things in the Core Image library are a little hard to do or grasp without visual
-    feedback. That's why the library has a few helpers and interfaces. There's a helper for the
+    feedback. That’s why the library has a few helpers and interfaces. There’s a helper for the
     <i>canvas.draw()</i> command that displays rulers and a bounding box for each of the layers.
-    It's already shown in the documentation on <a href="#transforming_layers">transforming
-    layers</a>. There's also a helper for the pixels histogram shown in the documentation on
+    It’s already shown in the documentation on <a href="#transforming_layers">transforming
+    layers</a>. There’s also a helper for the pixels histogram shown in the documentation on
     <a href="#pixels">working with pixels</a>.</p>
-    <p>Furthermore, there's a helper for the lighting filter. The helper makes it a bit easier to
+    <p>Furthermore, there’s a helper for the lighting filter. The helper makes it a bit easier to
     determine where the light source is positioned and what parameters like <i>dz0</i> and
     <i>concentration</i> do.</p>
     <p> </p>
     <p><span class="media"><img height="520" src="media/coreimage-layers52.jpg" width="751"/></span></p>
     <p>With each filter you can use the <i>interface</i> parameter to get NodeBox sliders that
-    control the options for the filter. It's a convenient way to get to know how each filter works.</p>
+    control the options for the filter. It’s a convenient way to get to know how each filter works.</p>
     <p><span class="media"><img height="551" src="media/coreimage-layers53.jpg" width="739"/></span></p>
     <p> </p>
     <p>Notice how each parameter you normally define in code is now replaced by a handy slider.</p>
@@ -1431,7 +1431,7 @@ images = morguefile.<span class="s">search</span><span class="s">(</span><span c
       <li><i>img</i>.id: the unique MorgueFile ID for the image
       </li><li><i>img</i>.category: the category the image belongs to
       </li><li><i>img</i>.author: the name of the author
-      </li><li><i>img</i>.name: the image's name
+      </li><li><i>img</i>.name: the image’s name
       </li><li><i>img</i>.url: the URL of the image thumbnail
       </li><li><i>img</i>.date: the date the image was added to MorgueFile
       </li><li><i>img</i>.views: the number of times the image has been viewed
@@ -1453,7 +1453,7 @@ images = morguefile.<span class="s">search</span><span class="s">(</span><span c
 
     <p>You can use the <i>img.download()</i> method with any of these image objects. This command
     takes two optional parameters: <i>path</i> specifying in what folder to put the image (if the
-    folder doesn't exist it will be created) and <i>thumbnail</i>, which when True downloads a
+    folder doesn’t exist it will be created) and <i>thumbnail</i>, which when True downloads a
     small thumbnail instead of the image itself.</p>
     <p>The command returns the pathname of the image, which is the specified <i>path</i> + the name
     of the author + the name of the image.</p>
@@ -1464,7 +1464,7 @@ images = morguefile.<span class="s">search</span><span class="s">(</span><span c
     <p> </p>
     <p><span class="media"><img height="411" src="media/coreimage-morguefile2.jpg" width="548"/></span></p>
     <p>You can then start using the image as a canvas layer.</p>
-    <p>There's also the <i>morguefile.search_by_author()</i> command which looks for images by
+    <p>There’s also the <i>morguefile.search_by_author()</i> command which looks for images by
     author name.</p>
     <p> </p>
     <hr/>
@@ -1544,10 +1544,10 @@ images = morguefile.<span class="s">search</span><span class="s">(</span><span c
       </li><li>
         <p>If you rotate a canvas drawn in NodeBox using <i>transform(CORNER)</i> it rotates from
         the bottom left corner instead of the top left corner.</p>
-      </li><li>Core Image might run very slow or even halt NodeBox when exporting multiple PDF's or
+      </li><li>Core Image might run very slow or even halt NodeBox when exporting multiple PDF’s or
       animations from a complex canvas. Exporting image files leaks memory as well (which can
-      result in kernel panic). I haven't found a solution yet - there's a problem when calling
-      <i>CIContext().drawImage</i>. For now, don't export movies/PDF's/images in batch (e.g. a
+      result in kernel panic). I haven’t found a solution yet - there’s a problem when calling
+      <i>CIContext().drawImage</i>. For now, don’t export movies/PDF’s/images in batch (e.g. a
       thousand in one roll), or use an external screen capture tool like IShowU.<br/>
     </li></ul>
 

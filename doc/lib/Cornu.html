@@ -14,11 +14,11 @@
   <div class="article">
     <h2>Description</h2>
 
-    <p>The Cornu library adds Raph Levien's elegant cornu curves to NodeBox. Cornu curves (wich are
+    <p>The Cornu library adds Raph Levien’s elegant cornu curves to NodeBox. Cornu curves (wich are
     based on the <a href="http://en.wikipedia.org/wiki/Fresnel_integral">Cornu spiral</a>) are a
     different approach to curves than Bezier paths, generally requiring less points, no control
-    handles, providing more elegant forms, and looking kinda "spiraling". The library uses Mark
-    Meyer's algorithm to transform Cornu spirals to Bézier curves.</p>
+    handles, providing more elegant forms, and looking kinda ‘spiraling’. The library uses Mark
+    Meyer’s algorithm to transform Cornu spirals to Bézier curves.</p>
     <h2>Download</h2>
 
     <table border="0">
@@ -53,11 +53,11 @@
 
 
     <p>The <i>drawpath()</i> command draws a cornu path from a list of (x,y)-tuples. The x and y
-    coordinates range between 0.0 and 1.0, describing a point's position <b>relative</b> to the
-    drawing area's <a href="../ref/Utility.html#size()">size()</a>.</p>
+    coordinates range between 0.0 and 1.0, describing a point’s position <b>relative</b> to the
+    drawing area’s <a href="../ref/Utility.html#size()">size()</a>.</p>
     <p>When the <i>close</i> parameter is set to True, draws a closed path. The number of
     <i>tweaks</i> makes the path more elegant, but slows down the command as well. When
-    <i>points</i> is true, draws the path's control points to the screen. When <i>flat</i> is true,
+    <i>points</i> is true, draws the path’s control points to the screen. When <i>flat</i> is true,
     the resulting path will be made up of very small straight line segments (by default the
     resulting path is made up of Bézier curves).</p>
     <pre><span class="kw">size</span><span class="s">(</span><span class="s">700</span>,<span class="s">700</span><span class="s">)</span>
@@ -79,8 +79,8 @@ cornu.<span class="kw">drawpath</span><span class="s">(</span>path, tweaks=<span
     <pre>path<span class="s">(</span>coordinates, close=<span class="kw">False</span>, tweaks=<span class="s">20</span>, flat=<span class="kw">False</span><span class="s">)</span></pre>
 
 
-    <p>Again, the x and y coordinates in this list range between 0.0 and 1.0, describing a point's
-    position relative to the drawing area's <a href="../ref/Utility.html#size()">size()</a>. The
+    <p>Again, the x and y coordinates in this list range between 0.0 and 1.0, describing a point’s
+    position relative to the drawing area’s <a href="../ref/Utility.html#size()">size()</a>. The
     points in the returned path object are absolute positions.<br/></p>
     <p>See the documentation on <a href="../tut/Paths.html">paths</a> to see what you can do with
     path objects.</p>

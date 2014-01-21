@@ -16,7 +16,7 @@
 
     <p>The Boids library provides features to implement coordinated animal motion such as bird
     flocks and fish schools. The code is based on <a href="http://www.red3d.com/cwr/boids/">Craig
-    W. Reynolds flocking model</a> and <a href="http://www.vergenet.net/~conrad/boids/pseudocode.html">Conrad Parker's pseudocode</a>.</p>
+    W. Reynolds flocking model</a> and <a href="http://www.vergenet.net/~conrad/boids/pseudocode.html">Conrad Parker’s pseudocode</a>.</p>
     <p>Essentially, a boid, a single element in the flock, has three simple steering behaviours:</p>
     <ul>
       <li><b>Separation:</b> steer to avoid crowding local flockmates
@@ -24,7 +24,7 @@
       </li><li><b>Cohesion:</b> steer to move towards the average position of local flockmates
     </li></ul>
 
-    <p>The beauty of it is that the flock doesn't have a predefined flight path, or any math
+    <p>The beauty of it is that the flock doesn’t have a predefined flight path, or any math
     describing its motion; a flock is totally and naturally self-organising.</p>
     <h2>Download</h2>
 
@@ -100,12 +100,12 @@
     <pre>flock.<span class="s">copy</span><span class="s">(</span><span class="s">)</span></pre>
 
 
-    <p>The <i>flock.scatter()</i> method undoes the boids's cohesion and alignment. The flock has a
+    <p>The <i>flock.scatter()</i> method undoes the boids’s cohesion and alignment. The flock has a
     <i>chance</i> between 0.0 and 1.0 each of scattering during each update. Once scattered, the
     confusion lasts the given number of <i>frames</i>.</p>
-    <p>The <i>flock.perch()</i> method controls the boids's resting behavior. Boids whose
+    <p>The <i>flock.perch()</i> method controls the boids’s resting behavior. Boids whose
     y-position becomes larger than <i>ground</i> have a <i>chance</i> between 0.0 and 1.0 of
-    resting. Usually, <i>chance</i> is 1.0: when you hit the ground you can't continue flying, a
+    resting. Usually, <i>chance</i> is 1.0: when you hit the ground you can’t continue flying, a
     chance less than 1.0 would indicate water. A boid will rest for the given number of
     <i>frames</i>.</p>
     <p>The <i>flock.goal()</i> method defines a point the flock finds interesting and has a
@@ -128,7 +128,7 @@
       <li><i>boid.x</i>: the horizontal position of the boid.<br/>
       </li><li><i>boid.y</i>: the vertical position of the boid.<br/>
       </li><li><i>boid.z</i>: the depth of the boid.<br/>
-      </li><li><i>boid.angle</i>: the boid's current heading.<br/>
+      </li><li><i>boid.angle</i>: the boid’s current heading.<br/>
       </li><li><i>boid.is_perching</i>: will be <i>True</i> when the boid is resting on the ground.
     </li></ul>
   </div>
