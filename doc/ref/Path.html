@@ -5,7 +5,8 @@
   <title>NodeBox Reference: Path</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
 
     <h3>Path</h3>
@@ -22,62 +23,138 @@
   </div>
 
   <div class="article">
-    <a name="autoclosepath()"></a>
+    <a name="bezier()"></a>
 
     <div class="section">
-      <h3>autoclosepath()</h3>
+      <h3>bezier()</h3>
 
       <div class="definition">
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">autoclosepath</span><span class="s">(</span>close=<span class="kw">True</span><span class="s">)</span></pre>
-
+<pre>path = <span class="kw">bezier</span>(points=[], curvature=1.0, <span class="red">**</span>opts)
+</pre>
+<pre>
+<span class="kw">with bezier</span>(x=0, y=0, <span class="red">**</span>opts) as path:
+    <span class="grey"># call moveto(), lineto(), or curveto() to add points to the path</span>
+</pre>
         </div>
 
         <h2>Description</h2>
 
         <div class="row">
-          The autoclosepath() command defines whether custom shapes created between <a href="#beginpath()">beginpath()</a> and <a href="#endpath()">endpath()</a> are automatically
-          closed by connecting the last point and the first point in the path with a line. It takes
-          one parameter which is a boolean (True or False). All shapes created with beginpath()
-          following this command will adhere to the setting.
+          <p>The bezier() command allows the creation of custom shapes. The <code>x</code> &amp;
+          <code>y</code> parameters set the location of the first point (origin) in the path. These
+          parameters are optional. When not supplied, a starting location for the path should be
+          given inside the <code>with</code> block using the <a href="Path.html#moveto()">moveto()</a> command.</p>
+          <p>Inside the <code>with</code> block, a series of other path commands usually follow,
+          for example <a href="#moveto()">moveto()</a>, <a href="Path.html#lineto()">lineto()</a>,
+          or <a href="Path.html#curveto()">curveto()</a>. At the end of the block the path is drawn
+          if the <code>draw</code> parameter has not been set to <code>False</code>. Otherwise you
+          can use the variable captured in the <code>as</code> clause of the <code>with</code>
+          statement once the block is complete.</p>
         </div>
+
+        <h2>Optional Parameters</h2>
+
+        <p><code class="box"><span class="red">draw</span></code><br/>
+        By default, paths are drawn as soon as the <code>with</code> block completes (or when
+        bezier() returns if a <code>points</code> parameter was passed). By setting
+        <code>draw=False</code>, the path will be returned but not drawn. You can then draw it
+        manually by calling <code>path.draw()</code> on the returned <a href="Classes.html#BezierPath">BezierPath</a> object.</p>
+        <p><code class="box"><span class="red">close</span></code><br/>
+        If <code>True</code>, connect the final point in the path back to the starting position
+        after the final drawing command. If omitted, it defaults to <code>True</code> (or inherits
+        the value from the last call to <a href="#autoclosepath()">autoclosepath()</a>).</p>
+        <p><code class="box"><span class="red">fill</span></code> <span class="grey">/</span>
+        <code class="box"><span class="red">stroke</span></code> <span class="grey">/</span>
+        <code class="box"><span class="red">strokewidth</span></code><br/>
+        Values passed to these parameters will override the state set in previous calls to the
+        corrseponding <a href="Color.html#fill()">fill()</a>, <a href="Color.html#stroke()">stroke()</a>, and <a href="Color.html#strokewidth()">strokewidth()</a> commands. If omitted, the path will inherit
+        values from the global state when drawn.</p>
+        <p><code class="box"><span class="red">capstyle</span></code><br/>
+        Set the shape of the path’s endpoints to <code class="kw">BUTT</code>, <code class="kw">ROUND</code> or <code class="kw">SQUARE</code>. If omitted, the style defaults to
+        <code class="kw">BUTT</code> (or inherits the value from last call to <a href="#capstyle()">capstyle()</a>).</p>
+        <p><code class="box"><span class="red">joinstyle</span></code><br/>
+        Set the shape of the path’s vertices to <code class="kw">MITER</code>, <code class="kw">ROUND</code> or <code class="kw">BEVEL</code>. If omitted, the style defaults to
+        <code class="kw">MITER</code> (or inherits the value from the last call to <a href="#joinstyle()">joinstyle()</a>).</p>
+        <p><code class="box"><span class="red">curvature</span></code><br/>
+        When bezier() is called with a list of more than three <code>(x,y)</code> tuples as
+        <code>points</code>, the <code>curvature</code> parameter offers some control on how
+        smoothly separate segments are stitched together: from straight lines (<code>0.0</code>) to
+        smooth curves (<code>1.0</code>). If omitted, curvature defaults to <code>1.0</code>.</p>
+        <div class="row"></div>
 
         <h2>Tutorial</h2>
 
         <div class="row">
           <a href="../tut/Paths.html">Paths</a>
         </div>
+
+        <h2>Examples</h2>
+
+        <div class="row">
+          <table border="0">
+            <tbody>
+              <tr>
+                <td><span class="image_border"><img src="media/beginpath.jpg"/></span>
+                </td><td>
+<pre>
+<span class="grey"># define a path inside of a 'with' block</span>
+<span class="kw">with bezier</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">, stroke=0.2) as path:</span>
+    <span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
+</pre>
+                </td></tr></tbody></table>
+        </div>
+
+        <div class="row">
+          <table border="0">
+            <tbody>
+              <tr>
+                <td><span class="image_border"><img src="media/findpath.jpg"/></span>
+                </td><td>
+<pre>
+<span class="grey"># define a path with a list of x,y points</span>
+points = <span class="s">[</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>, <span class="s">(</span><span class="s">90</span>, <span class="s">90</span><span class="s">)</span>, <span class="s">(</span><span class="s">350</span>, <span class="s">200</span><span class="s">)</span><span class="s">]</span>
+path = <span class="kw">bezier</span>(points, close=<span class="kw">False</span>, stroke=0.2, fill=<span class="kw">None</span>)
+
+<span class="grey"># draw dots at the point coordinates</span>
+<span class="kw">for</span> x, y <span class="kw">in</span> points:
+    <span class="kw">oval</span><span class="s">(</span>x<span class="s">-2</span>, y<span class="s">-2</span>, <span class="s">4</span>, <span class="s">4</span><span class="s">)</span>
+</pre>
+                </td></tr></tbody></table>
+        </div>
       </div>
-    </div><a name="beginclip()"></a>
+    </div><a name="clip()"></a>
 
     <div class="section">
-      <h3>beginclip()</h3>
+      <h3>clip()</h3>
 
       <div class="definition">
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">beginclip</span><span class="s">(</span>path<span class="s">)</span></pre>
-
+<pre>
+<span class="kw">with clip</span>(path):
+</pre>
         </div>
 
         <h2>Description</h2>
 
         <div class="row">
-          Using the beginclip() and <a href="#endclip()">endclip()</a> commands define a clipping
-          mask. The supplied parameter defines the path to be used as a clipping mask. Each of the
-          shape commands returns a path that can be used with beginclip() - setting the draw
-          parameter of a shape command simply returns the path without actually drawing the shape.
-          Any shapes, paths, texts and images between beginclip() and endclip() are clipped, this
-          means that any part that falls outside the clipping mask path is not drawn.
+          Using the clip() command defines a clipping mask. The supplied parameter defines the path
+          to be used as a clipping mask. Each of the shape commands returns a path that can be used
+          with clip() – setting the <code>draw</code> parameter of a shape command to <code class="kw">False</code> simply returns the path without actually drawing the shape. Any shapes,
+          paths, texts and images drawn inside the clip() block are clipped, this means that any
+          part that falls outside the clipping mask path is not drawn. After completing the block,
+          subsequent shapes, paths, texts and images are no longer clipped to the path supplied to
+          clip().
         </div>
 
-        <h2>Returns</h2>
+        <h2>Tutorial</h2>
 
         <div class="row">
-          <a href="Classes.html#ClippingPath">ClippingPath</a> containing the mask
+          <a href="../tut/Paths.html">Paths</a>
         </div>
 
         <h2>Example</h2>
@@ -88,59 +165,11 @@
               <tr>
                 <td><span class="image_border"><img alt="superfolia" src="media/beginclip.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
-<span class="kw">beginclip</span><span class="s">(</span>p<span class="s">)</span>
-<span class="kw">image</span><span class="s">(</span><span class="str">"header.jpg"</span>, <span class="s">-130</span>, <span class="s">0</span><span class="s">)</span>
-<span class="kw">endclip</span><span class="s">(</span><span class="s">)</span></pre>
-
-                </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="beginpath()"></a>
-
-    <div class="section">
-      <h3>beginpath()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-          <pre><span class="kw">beginpath</span><span class="s">(</span>x=<span class="kw">None</span>, y=<span class="kw">None</span><span class="s">)</span></pre>
-
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          Using the beginpath() and <a href="#endpath()">endpath()</a> commands allows creating
-          custom shapes. The two parameters of beginpath() set the location of the first point
-          (origin) in the path. These parameters are optional. When not supplied, a starting
-          location for the path should be given with the <a href="#moveto()">moveto()</a> command.
-          After calling the beginpath() command, a series of other path commands usually follow,
-          for example moveto(), <a href="#lineto()">lineto()</a>, or <a href="#curveto()">curveto()</a>. Finally, the endpath() command draws the path to the screen.
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Paths.html">Paths</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img src="media/beginpath.jpg"/></span>
-                </td><td>
-                  <pre>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">beginpath</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
-<span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
-<span class="kw">endpath</span><span class="s">(</span><span class="s">)</span></pre>
-
+<span class="kw">with clip</span><span class="s">(</span>p<span class="s">):</span>
+    <span class="kw">image</span><span class="s">(</span><span class="str">"header.jpg"</span>, <span class="s">-130</span>, <span class="s">0</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -153,19 +182,20 @@ p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">curveto</span><span class="s">(</span>h1x, h1y, h2x, h2y, x, y<span class="s">)</span></pre>
-
+<pre>
+<span class="kw">curveto</span><span class="s">(</span>h1x, h1y, h2x, h2y, x, y<span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
 
         <div class="row">
-          The curveto() command must be called between <a href="#beginpath()">beginpath()</a> and
-          <a href="#endpath()">endpath()</a>. Draws a curve between the current point in the path
-          and a new destination point. The last two parameters, x and y, set the location of the
-          new destination point. The first and second, and the third and fourth parameters set the
-          location of the two control points of the curve. These control points, or handles, define
-          the edge and slant of the curve.
+          The curveto() command must be called within a <a href="#bezier()">bezier()</a> block (or
+          between <a href="ClassicPath.html#beginpath()">beginpath()</a> and <a href="ClassicPath.html#endpath()">endpath()</a>). Draws a curve between the current point in
+          the path and a new destination point. The last two parameters, x and y, set the location
+          of the new destination point. The first and second, and the third and fourth parameters
+          set the location of the two control points of the curve. These control points, or
+          handles, define the edge and slant of the curve.
         </div>
 
         <h2>Tutorial</h2>
@@ -182,201 +212,18 @@ p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span
               <tr>
                 <td><span class="image_border"><img src="media/curveto.jpg"/></span>
                 </td><td>
-                  <pre>
+                </td><td>
+<pre>
+<span class="kw">with bezier</span><span class="s">(stroke=0.2, fill=<span class="kw">None</span>) as path:</span>
+    <span class="kw">curveto</span><span class="s">(</span><span class="s">100</span>, <span class="s">100</span>, <span class="s">50</span>, <span class="s">0</span>, <span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
+</pre><em>or</em>
+<pre>
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">beginpath</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span><span class="s">)</span>
 <span class="kw">curveto</span><span class="s">(</span><span class="s">100</span>, <span class="s">100</span>, <span class="s">50</span>, <span class="s">0</span>, <span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
-<span class="kw">endpath</span><span class="s">(</span><span class="s">)</span></pre>
-
-                </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="drawpath()"></a>
-
-    <div class="section">
-      <h3>drawpath()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-          <pre><span class="kw">drawpath</span><span class="s">(</span>path<span class="s">)</span></pre>
-
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          Draws a path to the screen. A path is a series of lines and curves defined between
-          <a href="#beginpath()">beginpath()</a> and <a href="#endpath()">endpath()</a>. Normally,
-          endpath() draws the path to the screen, unless when calling endpath(draw=False). The path
-          can then be assigned to a variable, and this variable used as a parameter for drawpath().
-
-          <p><u>Note</u>: if you have one path that you want to draw multiple times with
-          drawpath(), for example each with its own rotation and position, you need to supply a
-          copy:<br/>
-          <span style="font-family: Courier">drawpath(path.copy())</span></p>
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Paths.html">Paths</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img src="media/drawpath.jpg"/></span>
-                </td><td>
-                  <pre>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">beginpath</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
-<span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
-p = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw">False</span><span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span></pre>
-
-                </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="endclip()"></a>
-
-    <div class="section">
-      <h3>endclip()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-          <pre><span class="kw">endclip</span><span class="s">(</span><span class="s">)</span></pre>
-
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          The endclip() command is the companion to <a href="#beginclip()">beginclip()</a> and may
-          only be called after the latter. When endclip() is called, subsequent shapes, paths,
-          texts and images are no longer clipped to the path supplied to beginclip()
-        </div>
-      </div>
-    </div><a name="endpath()"></a>
-
-    <div class="section">
-      <h3>endpath()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-          <pre><span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw">True</span><span class="s">)</span></pre>
-
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          The endpath() command is the companion to <a href="#beginpath()">beginpath()</a> and may
-          only be called after the later. When endpath() is called, the path defined between
-          beginpath() and endpath() is drawn to the screen. Optionally, when endpath(draw=False) is
-          called, the path is not drawn to the screen, but can be assigned to a variable and drawn
-          to the screen at a later time with the <a href="#drawpath()">drawpath()</a> command.
-          Check the <a href="../tut/Paths.html">tutorial on paths</a> for other possibilities with
-          paths.
-        </div>
-
-        <h2>Returns</h2>
-
-        <div class="row">
-          <a href="Classes.html#BezierPath">BezierPath</a> containing the constructed path
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Paths.html">Paths</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img src="media/endpath.jpg"/></span>
-                </td><td>
-                  <pre>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">beginpath</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
-<span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
-<span class="kw">endpath</span><span class="s">(</span><span class="s">)</span></pre>
-
-                  <pre>
-<span class="kw">beginpath</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
-<span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
-p = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw">False</span><span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span></pre>
-
-                </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="findpath()"></a>
-
-    <div class="section">
-      <h3>findpath()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-          <pre><span class="kw">findpath</span><span class="s">(</span><span class="s">list</span>, curvature =<span class="s">1.0</span><span class="s">)</span></pre>
-
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          Constructs a fluid path from a list of coordinates. Each element in the list is a 2-tuple
-          defining the x-coordinate and the y-coordinate. If the curve has more than three points,
-          the <i>curvature</i> parameter offers some control on how separate segments are stitched
-          together: from straight lines (0.0) to smooth curves (1.0).
-        </div>
-
-        <h2>Returns</h2>
-
-        <div class="row">
-          <a href="Classes.html#BezierPath">BezierPath</a> containing the constructed path
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Paths.html">Paths</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img src="media/findpath.jpg"/></span>
-                </td><td>
-                  <pre>
-points = <span class="s">[</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>, <span class="s">(</span><span class="s">90</span>, <span class="s">90</span><span class="s">)</span>, <span class="s">(</span><span class="s">350</span>, <span class="s">200</span><span class="s">)</span><span class="s">]</span>
-<span class="kw">for</span> x, y <span class="kw">in</span> points:
-    <span class="kw">oval</span><span class="s">(</span>x<span class="s">-2</span>, y<span class="s">-2</span>, <span class="s">4</span>, <span class="s">4</span><span class="s">)</span>
- 
-<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>    
-path = <span class="kw">findpath</span><span class="s">(</span>points<span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>path<span class="s">)</span></pre>
-
+<span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -389,17 +236,18 @@ path = <span class="kw">findpath</span><span class="s">(</span>points<span class
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">lineto</span><span class="s">(</span>x, y<span class="s">)</span></pre>
-
+<pre>
+<span class="kw">lineto</span><span class="s">(</span>x, y<span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
 
         <div class="row">
-          The lineto() command must be called between <a href="#beginpath()">beginpath()</a> and
-          <a href="#endpath()">endpath()</a>. Draws a line between the current point in the path
-          and a new destination point. The two parameters set the location of the new destination
-          point.
+          The lineto() command must be called within a <a href="#bezier()">bezier()</a> block (or
+          between <a href="ClassicPath.html#beginpath()">beginpath()</a> and <a href="ClassicPath.html#endpath()">endpath()</a>). Draws a line between the current point in
+          the path and a new destination point. The two parameters set the location of the new
+          destination point.
         </div>
 
         <h2>Tutorial</h2>
@@ -416,14 +264,19 @@ path = <span class="kw">findpath</span><span class="s">(</span>points<span class
               <tr>
                 <td><span class="image_border"><img src="media/lineto.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
+<span class="kw">with bezier</span><span class="s">(10, 10, stroke=0.2, fill=<span class="kw">None</span>) as path:</span>
+    <span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+    <span class="kw">lineto</span><span class="s">(</span><span class="s">80</span>, <span class="s">40</span><span class="s">)</span>
+</pre><em>or</em>
+<pre>
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">beginpath</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
 <span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
 <span class="kw">lineto</span><span class="s">(</span><span class="s">80</span>, <span class="s">40</span><span class="s">)</span>
-<span class="kw">endpath</span><span class="s">(</span><span class="s">)</span></pre>
-
+<span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -436,17 +289,18 @@ path = <span class="kw">findpath</span><span class="s">(</span>points<span class
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">moveto</span><span class="s">(</span>x, y<span class="s">)</span></pre>
-
+<pre>
+<span class="kw">moveto</span><span class="s">(</span>x, y<span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
 
         <div class="row">
-          The moveto() command must be called between <a href="#beginpath()">beginpath()</a> and
-          <a href="#endpath()">endpath()</a>. The two parameters set the location of a new origin
-          point for the path. This would be the same as lifting the pen from a paper and putting it
-          down somewhere else to continue drawing.
+          The moveto() command must be called within a <a href="#bezier()">bezier()</a> block (or
+          between <a href="ClassicPath.html#beginpath()">beginpath()</a> and <a href="ClassicPath.html#endpath()">endpath()</a>). The two parameters set the location of a new
+          origin point for the path. This would be the same as lifting the pen from a paper and
+          putting it down somewhere else to continue drawing.
         </div>
 
         <h2>Tutorial</h2>
@@ -463,15 +317,352 @@ path = <span class="kw">findpath</span><span class="s">(</span>points<span class
               <tr>
                 <td><span class="image_border"><img src="media/moveto.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
+<span class="kw">with bezier</span><span class="s">(10, 10, stroke=0.2) as path:</span>
+    <span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
+    <span class="kw">moveto</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span><span class="s">)</span>
+    <span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">80</span><span class="s">)</span>
+</pre><em>or</em>
+<pre>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">beginpath</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
 <span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
 <span class="kw">moveto</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span><span class="s">)</span>
 <span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">80</span><span class="s">)</span>
-<span class="kw">endpath</span><span class="s">(</span><span class="s">)</span></pre>
-
+<span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="classic">
+      <p class="pink_text">Classic Bezier API</p>
+      <p><em>Prior to version 1.10, NodeBox used a more state machine-oriented set of
+      <code>begin*</code>/<code>end*</code> commands to establish path contexts, control drawing,
+      etc. Though these low-level commands have been supplanted by the <a href="#bezier()"><code>bezier()</code></a> and <a href="#clip()"><code>clip()</code></a> methods,
+      they are still supported (and are used by the new methods behind the scenes).</em></p>
+    </div>
+
+    <div>
+      <a name="autoclosepath()"></a>
+
+      <div class="section">
+        <h3>autoclosepath()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="kw">autoclosepath</span><span class="s">(</span>close=<span class="kw">True</span><span class="s">)</span>
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            The autoclosepath() command defines whether custom shapes created between <a href="#beginpath()">beginpath()</a> and <a href="#endpath()">endpath()</a> are automatically
+            closed by connecting the last point and the first point in the path with a line. It
+            takes one parameter which is a boolean (True or False). All shapes created with
+            beginpath() following this command will adhere to the setting.
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Paths.html">Paths</a>
+          </div>
+        </div>
+      </div><a name="beginclip()"></a>
+
+      <div class="section">
+        <h3>beginclip()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="kw">beginclip</span><span class="s">(</span>path<span class="s">)</span>
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Using the beginclip() and <a href="#endclip()">endclip()</a> commands define a clipping
+            mask. The supplied parameter defines the path to be used as a clipping mask. Each of
+            the shape commands returns a path that can be used with beginclip() - setting the draw
+            parameter of a shape command simply returns the path without actually drawing the
+            shape. Any shapes, paths, texts and images between beginclip() and endclip() are
+            clipped, this means that any part that falls outside the clipping mask path is not
+            drawn.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            <a href="Classes.html#ClippingPath">ClippingPath</a> containing the mask
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img alt="superfolia" src="media/beginclip.jpg"/></span>
+                  </td><td>
+<pre>
+p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
+<span class="kw">beginclip</span><span class="s">(</span>p<span class="s">)</span>
+<span class="kw">image</span><span class="s">(</span><span class="str">"header.jpg"</span>, <span class="s">-130</span>, <span class="s">0</span><span class="s">)</span>
+<span class="kw">endclip</span><span class="s">(</span><span class="s">)</span>
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="beginpath()"></a>
+
+      <div class="section">
+        <h3>beginpath()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="kw">beginpath</span><span class="s">(</span>x=<span class="kw">None</span>, y=<span class="kw">None</span><span class="s">)</span>
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Using the beginpath() and <a href="#endpath()">endpath()</a> commands allows creating
+            custom shapes. The two parameters of beginpath() set the location of the first point
+            (origin) in the path. These parameters are optional. When not supplied, a starting
+            location for the path should be given with the <a href="Path.html#moveto()">moveto()</a> command. After calling the beginpath() command, a
+            series of other path commands usually follow, for example moveto(), <a href="Path.html#lineto()">lineto()</a>, or <a href="Path.html#curveto()">curveto()</a>.
+            Finally, the endpath() command draws the path to the screen.
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Paths.html">Paths</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img src="media/beginpath.jpg"/></span>
+                  </td><td>
+<pre>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
+<span class="kw">beginpath</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
+<span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
+<span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="drawpath()"></a>
+
+      <div class="section">
+        <h3>drawpath()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="kw">drawpath</span><span class="s">(</span>path<span class="s">)</span>
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Draws a path to the screen. A path is a series of lines and curves defined between
+            <a href="#beginpath()">beginpath()</a> and <a href="#endpath()">endpath()</a>.
+            Normally, endpath() draws the path to the screen, unless when calling
+            endpath(draw=False). The path can then be assigned to a variable, and this variable
+            used as a parameter for drawpath().
+
+            <p><u>Note</u>: if you have one path that you want to draw multiple times with
+            drawpath(), for example each with its own rotation and position, you need to supply a
+            copy:<br/>
+            <span style="font-family: Courier">drawpath(path.copy())</span></p>
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Paths.html">Paths</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img src="media/drawpath.jpg"/></span>
+                  </td><td>
+<pre>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
+<span class="kw">beginpath</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
+<span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
+p = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw">False</span><span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span>
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="endclip()"></a>
+
+      <div class="section">
+        <h3>endclip()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="kw">endclip</span><span class="s">(</span><span class="s">)</span>
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            The endclip() command is the companion to <a href="#beginclip()">beginclip()</a> and
+            may only be called after the latter. When endclip() is called, subsequent shapes,
+            paths, texts and images are no longer clipped to the path supplied to beginclip()
+          </div>
+        </div>
+      </div><a name="endpath()"></a>
+
+      <div class="section">
+        <h3>endpath()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw">True</span><span class="s">)</span>
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            The endpath() command is the companion to <a href="#beginpath()">beginpath()</a> and
+            may only be called after the later. When endpath() is called, the path defined between
+            beginpath() and endpath() is drawn to the screen. Optionally, when endpath(draw=False)
+            is called, the path is not drawn to the screen, but can be assigned to a variable and
+            drawn to the screen at a later time with the <a href="#drawpath()">drawpath()</a>
+            command. Check the <a href="../tut/Paths.html">tutorial on paths</a> for other
+            possibilities with paths.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            <a href="Classes.html#BezierPath">BezierPath</a> containing the constructed path
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Paths.html">Paths</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img src="media/endpath.jpg"/></span>
+                  </td><td>
+<pre>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
+<span class="kw">beginpath</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
+<span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
+<span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="kw">beginpath</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
+<span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
+p = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw">False</span><span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span>
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="findpath()"></a>
+
+      <div class="section">
+        <h3>findpath()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="kw">findpath</span><span class="s">(</span><span class="s">list</span>, curvature =<span class="s">1.0</span><span class="s">)</span>
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Constructs a fluid path from a list of coordinates. Each element in the list is a
+            2-tuple defining the x-coordinate and the y-coordinate. If the curve has more than
+            three points, the <i>curvature</i> parameter offers some control on how separate
+            segments are stitched together: from straight lines (0.0) to smooth curves (1.0).
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            <a href="Classes.html#BezierPath">BezierPath</a> containing the constructed path
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Paths.html">Paths</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img src="media/findpath.jpg"/></span>
+                  </td><td>
+<pre>
+points = <span class="s">[</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>, <span class="s">(</span><span class="s">90</span>, <span class="s">90</span><span class="s">)</span>, <span class="s">(</span><span class="s">350</span>, <span class="s">200</span><span class="s">)</span><span class="s">]</span>
+<span class="kw">for</span> x, y <span class="kw">in</span> points:
+    <span class="kw">oval</span><span class="s">(</span>x<span class="s">-2</span>, y<span class="s">-2</span>, <span class="s">4</span>, <span class="s">4</span><span class="s">)</span>
+ 
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
+<span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>    
+path = <span class="kw">findpath</span><span class="s">(</span>points<span class="s">)</span>
+<span class="kw">drawpath</span><span class="s">(</span>path<span class="s">)</span>
+</pre>
+                  </td></tr></tbody></table>
+          </div>
         </div>
       </div>
     </div>
