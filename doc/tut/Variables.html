@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: Variables</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3>Variables</h3>
@@ -56,10 +57,10 @@
             It’s as easy as this: we think of a good name for a variable, and assign any value to
             it we like. NodeBox keeps a small sticky note reminder for itself to know what value is
             inside the variable.
-            <pre>
+<pre>
 width = <span class="s">100</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, width, <span class="s">30</span><span class="s">)</span></pre>
-Variables can be used as parameters. <b>NodeBox looks up what value it contains</b>. In this
+<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, width, <span class="s">30</span><span class="s">)</span>
+</pre>Variables can be used as parameters. <b>NodeBox looks up what value it contains</b>. In this
 example, a rectangle is drawn at (10,10), with width of 100 and height of 30.
           </td></tr></tbody></table>
 
@@ -76,14 +77,14 @@ example, a rectangle is drawn at (10,10), with width of 100 and height of 30.
             <br/>
             The first rectangle’s width is 100, then the value of the variable changes to 20, so
             the two following rectangles use that new value and have width 20.
-            <pre>
+<pre>
 width = <span class="s">100</span>
 <span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, width, <span class="s">30</span> <span class="s">)</span>
  
 width = <span class="s">20</span>
 <span class="kw">rect</span><span class="s">(</span><span class="s">120</span>, <span class="s">10</span>, width, <span class="s">30</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">330</span>, <span class="s">10</span>, width, <span class="s">30</span><span class="s">)</span></pre>
-
+<span class="kw">rect</span><span class="s">(</span><span class="s">330</span>, <span class="s">10</span>, width, <span class="s">30</span><span class="s">)</span>
+</pre>
         </td></tr><tr>
           <td style="text-align: center"><img src="media/variables-width3.jpg"/>
           </td><td>The resulting output in NodeBox.
@@ -103,27 +104,27 @@ width = <span class="s">20</span>
         <tr>
           <td><img src="media/variables-math1.jpg"/>
           </td><td>
-            <pre>
+<pre>
 count = <span class="s">10</span>
 <span class="kw">print</span> count
 &gt;&gt;&gt; <span class="s">1</span>
  
 count += <span class="s">5</span>
 <span class="kw">print</span> count
-&gt;&gt;&gt; <span class="s">15</span></pre>
-
+&gt;&gt;&gt; <span class="s">15</span>
+</pre>
         </td></tr><tr>
           <td><img src="media/variables-math2.jpg"/>
           </td><td>
-            <pre>
+<pre>
 x = <span class="s">30</span>
 y = <span class="s">30</span>
 quote = <span class="str">"Nicely on the left"</span>
 <span class="kw">text</span><span class="s">(</span>quote, x, y<span class="s">)</span>
 y += <span class="kw">textheight</span><span class="s">(</span>quote<span class="s">)</span> 
 quote = <span class="str">"Nicely below each other"</span> 
-<span class="kw">text</span><span class="s">(</span>quote, x, y<span class="s">)</span></pre>
-
+<span class="kw">text</span><span class="s">(</span>quote, x, y<span class="s">)</span>
+</pre>
           </td></tr></tbody></table>
 
     <h2>Where do variables live?</h2>

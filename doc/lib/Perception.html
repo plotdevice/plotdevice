@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: Perception</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>Perception</h3>
@@ -208,8 +209,8 @@
     find the library. You can also put it in <i>~/Library/Application Support/NodeBox/.</i> You’ll
     also need the <a href="Graph.html">Graph</a> library installed. Put it in <i>Application
     Support</i> as well, or inside the <i>perception</i> library folder.</p>
-    <pre>perception = <span class="kw">ximport</span><span class="s">(</span><span class="str">"perception"</span><span class="s">)</span></pre>
-
+<pre>perception = <span class="kw">ximport</span><span class="s">(</span><span class="str">"perception"</span><span class="s">)</span>
+</pre>
 
     <p class="small_text">Outside of NodeBox you can also just do <i>import perception.</i></p>
     <p> </p>
@@ -221,8 +222,8 @@
     <i>query()</i> command. A list of rules will be returned - all of them involving the given
     <i>concept</i>, with the given <i>relation</i>, in the given <i>context</i> and/or from the
     given <i>author</i>.</p>
-    <pre>query<span class="s">(</span>concept, relation=<span class="kw">None</span>, context=<span class="kw">None</span>, author=<span class="kw">None</span>, depth=<span class="s">1</span><span class="s">)</span></pre>
-
+<pre>query<span class="s">(</span>concept, relation=<span class="kw">None</span>, context=<span class="kw">None</span>, author=<span class="kw">None</span>, depth=<span class="s">1</span><span class="s">)</span>
+</pre>
 
     <p>If the optional <i>depth</i> is 1 the command simply returns all the rules that match. If
     <i>depth</i> is between 1 and 4, it returns a cluster of interconnected concepts.</p>
@@ -232,8 +233,8 @@
     more meaningful data to put in a small ‘fog-graph’.</p>
     <p>Note that you can also set the author once in the AUTHOR variable. It will then be used in
     all queries throughout the library.</p>
-    <pre>perception.<span class="s">AUTHOR</span> = <span class="str">"alice@wonderland.com"</span></pre>
-
+<pre>perception.<span class="s">AUTHOR</span> = <span class="str">"alice@wonderland.com"</span>
+</pre>
 
     <p>Each <i>Rule</i> object in the returned list has the following properties:</p>
     <ul>
@@ -251,8 +252,8 @@
     <p>When you execute a query, the library attempts to connect to the online Perception database.
     The result is then cached locally so the next time you run the same query it will respond
     quicker. At some point you may want to empty the local cache:</p>
-    <pre>cache_clear<span class="s">(</span><span class="s">)</span></pre>
-            
+<pre>cache_clear<span class="s">(</span><span class="s">)</span>
+</pre>            
     <hr size="2" width="100%"/>
 
     <h2><a id="cluster" name="cluster" title="cluster"></a>Perception clusters inside NodeBox</h2>
@@ -262,8 +263,8 @@
     accomplish this. The <i>cluster()</i> command returns a graph object that has all of the
     functionality described in the documentation of the Graph library - that’s the best place to
     start if you are new to graph networks.</p>
-    <pre>cluster<span class="s">(</span>concept, relation=<span class="kw">None</span>, context=<span class="kw">None</span>, author=<span class="kw">None</span>, depth=<span class="s">2</span><span class="s">)</span></pre>
-
+<pre>cluster<span class="s">(</span>concept, relation=<span class="kw">None</span>, context=<span class="kw">None</span>, author=<span class="kw">None</span>, depth=<span class="s">2</span><span class="s">)</span>
+</pre>
 
     <p>So, it’s easy enough to visualize a cluster of rules:
     <table>
@@ -272,43 +273,43 @@
           <td>
             <p><img alt="perception-cluster" height="150" src="media/perception-cluster.jpg" width="150"/></p>
           </td><td>
-            <pre>
+<pre>
 g = perception.<span class="s">cluster</span><span class="s">(</span><span class="str">"fog"</span><span class="s">)</span>
 g.<span class="s">distance</span> = <span class="s">1.2</span>
 g.<span class="s">styles</span>.<span class="s">apply</span><span class="s">(</span><span class="s">)</span>
 g.<span class="s">solve</span><span class="s">(</span><span class="s">)</span>
-g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></pre>
-
+g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
+</pre>
           </td></tr></tbody></table><br/></p>
     <p><span class="grey_box">Concept node methods and properties</span></p>
     <p>Nodes (e.g. individual concepts) in the cluster graph have all the standard node properties
     and methods, and some additional functionality that pertains to the Perception network:</p>
-    <pre>node.<span class="s">is_a</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span></pre>
-
-    <pre>node.<span class="s">is_part_of</span><span class="s">(</span>node. <span class="s">direct</span>=<span class="kw">True</span><span class="s">)</span></pre>
-
-    <pre>node.<span class="s">is_opposite_of</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span></pre>
-
-    <pre>node.<span class="s">is_property_of</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span></pre>
-
-    <pre>node.<span class="s">is_related_to</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span></pre>
-
-    <pre>node.<span class="s">is_same_as</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span></pre>
-
-    <pre>node.<span class="s">has_specific</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span></pre>
-
-    <pre>node.<span class="s">has_part</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span></pre>
-
-    <pre>node.<span class="s">has_property</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span></pre>
-
+<pre>node.<span class="s">is_a</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span>
+</pre>
+<pre>node.<span class="s">is_part_of</span><span class="s">(</span>node. <span class="s">direct</span>=<span class="kw">True</span><span class="s">)</span>
+</pre>
+<pre>node.<span class="s">is_opposite_of</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span>
+</pre>
+<pre>node.<span class="s">is_property_of</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span>
+</pre>
+<pre>node.<span class="s">is_related_to</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span>
+</pre>
+<pre>node.<span class="s">is_same_as</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span>
+</pre>
+<pre>node.<span class="s">has_specific</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span>
+</pre>
+<pre>node.<span class="s">has_part</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span>
+</pre>
+<pre>node.<span class="s">has_property</span><span class="s">(</span>node, direct=<span class="kw">True</span><span class="s">)</span>
+</pre>
 
     <p>Each of these methods returns <i>True</i> or <i>False</i>, depending on whether the two
     nodes are directly with the given relation. If <i>direct</i> is <i>False</i>, intermediary
     nodes are allowed as long as the relation stays the same. For example:</p>
-    <pre>g = perception.<span class="s">cluster</span><span class="s">(</span><span class="str">"albatross"</span>, depth=<span class="s">3</span><span class="s">)</span>
+<pre>g = perception.<span class="s">cluster</span><span class="s">(</span><span class="str">"albatross"</span>, depth=<span class="s">3</span><span class="s">)</span>
 <span class="kw">print</span> g.<span class="s">albatross</span>.<span class="s">is_a</span><span class="s">(</span><span class="str">"animal"</span>, direct=<span class="kw">False</span><span class="s">)</span>
-&gt;&gt;&gt; <span class="kw">True</span></pre>
-
+&gt;&gt;&gt; <span class="kw">True</span>
+</pre>
 
     <p>In this case, <i>True</i> is returned because an albatross is a bird and a bird is an
     animal. So albatross is an animal. Note that if the cluster query would have been executed with
@@ -316,22 +317,22 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     would have been returned. Deeper clusters yield more intelligence, yet slower and more
     cluttered visualizations.</p>
     <p>The following methods return a list of connected nodes by relation type:</p>
-    <pre>node.<span class="s">hyponyms</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>     <span class="grey"># specific: tree =&gt; evergeen, deciduous</span></pre>
-
-    <pre>node.<span class="s">hypernyms</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>    <span class="grey"># abstract: tree =&gt; organism</span></pre>
-
-    <pre>node.<span class="s">meronyms</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>     <span class="grey"># parts: tree =&gt; bark, leaf, branch</span></pre>
-
-    <pre>node.<span class="s">holonyms</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>     <span class="grey"># group: tree =&gt; forest</span></pre>
-
-    <pre>node.<span class="s">antonyms</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>     <span class="grey"># opposites: warm &lt;=&gt; cool</span></pre>
-
-    <pre>node.<span class="s">properties</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>   <span class="grey"># tree =&gt; big, strong, old</span></pre>
-
-    <pre>node.<span class="s">associations</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span> <span class="grey"># tree =&gt; squirrel, primate</span></pre>
-
-    <pre>node.<span class="s">objects</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>      <span class="grey"># illustrate property: strong =&gt; horse, tree, ...</span></pre>
-
+<pre>node.<span class="s">hyponyms</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>     <span class="grey"># specific: tree =&gt; evergeen, deciduous</span>
+</pre>
+<pre>node.<span class="s">hypernyms</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>    <span class="grey"># abstract: tree =&gt; organism</span>
+</pre>
+<pre>node.<span class="s">meronyms</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>     <span class="grey"># parts: tree =&gt; bark, leaf, branch</span>
+</pre>
+<pre>node.<span class="s">holonyms</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>     <span class="grey"># group: tree =&gt; forest</span>
+</pre>
+<pre>node.<span class="s">antonyms</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>     <span class="grey"># opposites: warm &lt;=&gt; cool</span>
+</pre>
+<pre>node.<span class="s">properties</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>   <span class="grey"># tree =&gt; big, strong, old</span>
+</pre>
+<pre>node.<span class="s">associations</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span> <span class="grey"># tree =&gt; squirrel, primate</span>
+</pre>
+<pre>node.<span class="s">objects</span><span class="s">(</span>depth=<span class="s">1</span><span class="s">)</span>      <span class="grey"># illustrate property: strong =&gt; horse, tree, ...</span>
+</pre>
 
     <p>With a <i>depth</i> of 1, only directly connected nodes are returned. With a <i>depth</i> of
     2 nodes connected to directly connected nodes are also returned, and so on.</p>
@@ -345,22 +346,22 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     <p><span class="grey_box">Concept cluster methods and properties</span></p>
     <p>A concept cluster graph has all the methods and properties any other graph object has, and
     some additional semantic functionality:</p>
-    <pre>graph.<span class="s">hyponyms</span><span class="s">(</span>proper=<span class="kw">False</span>, fringe=<span class="s">1</span><span class="s">)</span> <span class="grey"># specify: tree =&gt; oak, linden</span></pre>
-
-    <pre>graph.<span class="s">properties</span><span class="s">(</span>distance=<span class="s">2</span><span class="s">)</span> <span class="grey"># describe: sun =&gt; yellow, red, hot, bright</span></pre>
-
-    <pre>graph.<span class="s">objects</span><span class="s">(</span>distance=<span class="s">2</span><span class="s">)</span>    <span class="grey"># illustrate: wild =&gt; anger, sea, rodeo</span></pre>
-
+<pre>graph.<span class="s">hyponyms</span><span class="s">(</span>proper=<span class="kw">False</span>, fringe=<span class="s">1</span><span class="s">)</span> <span class="grey"># specify: tree =&gt; oak, linden</span>
+</pre>
+<pre>graph.<span class="s">properties</span><span class="s">(</span>distance=<span class="s">2</span><span class="s">)</span> <span class="grey"># describe: sun =&gt; yellow, red, hot, bright</span>
+</pre>
+<pre>graph.<span class="s">objects</span><span class="s">(</span>distance=<span class="s">2</span><span class="s">)</span>    <span class="grey"># illustrate: wild =&gt; anger, sea, rodeo</span>
+</pre>
 
     <p>The <i>graph.hyponyms()</i> method analyzes the cluster and returns a list of node objects
     that are concrete examples of the graph’s root. If proper is <i>True</i>, only proper names are
     returned (e.g. ‘God’ but not ‘god’). The <i>fringe</i> determines how close to the perimeter of
     the graph the nodes are located. With a higher <i>fringe</i> value (or simply <i>None</i>)
     nodes can be located deeper in the cluster, nearer to the root.</p>
-    <pre>g = perception.<span class="s">cluster</span><span class="s">(</span><span class="str">"river"</span>, depth=<span class="s">3</span><span class="s">)</span>
+<pre>g = perception.<span class="s">cluster</span><span class="s">(</span><span class="str">"river"</span>, depth=<span class="s">3</span><span class="s">)</span>
 <span class="kw">print</span> g.<span class="s">hyponyms</span><span class="s">(</span><span class="s">)</span>
-&gt;&gt;&gt; <span class="s">[</span>rivulet, brook<span class="s">]</span></pre>
-
+&gt;&gt;&gt; <span class="s">[</span>rivulet, brook<span class="s">]</span>
+</pre>
 
     <p>The <i>graph.properties()</i> method analyzes the cluster and returns a list of property
     nodes relevant to the graph root. The <i>graph.objects()</i> method does the reverse: it
@@ -371,20 +372,20 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     <b>more elaborate</b>: it derives (or <b>infers</b>) additional knowledge from strong nodes
     surrounding the root. In other words: it finds more relevant nodes. And, nodes in the returned
     list are <b>sorted by weight</b>. For example:</p>
-    <pre>g = perception.<span class="s">cluster</span><span class="s">(</span><span class="str">"sun"</span>, depth=<span class="s">3</span><span class="s">)</span>
+<pre>g = perception.<span class="s">cluster</span><span class="s">(</span><span class="str">"sun"</span>, depth=<span class="s">3</span><span class="s">)</span>
 <span class="kw">print</span> g.<span class="s">sun</span>.<span class="s">properties</span><span class="s">(</span><span class="s">)</span>
 &gt;&gt;&gt; <span class="s">[</span>yellow, red, hot, <span class="s">round</span>, bright<span class="s">]</span>
 <span class="kw">print</span> g.<span class="s">properties</span><span class="s">(</span><span class="s">)</span>
 &gt;&gt;&gt; <span class="s">[</span>yellow, red, hot, bright, <span class="s">round</span>, cyan, white, healthy, slow, blue, 
      orange, intense, passionate, exotic, mysterious, dangerous, organic, 
-     dry, fast, chaotic, blond, important, warm<span class="s">]</span></pre>
-
+     dry, fast, chaotic, blond, important, warm<span class="s">]</span>
+</pre>
 
     <p>The returned list contains node objects. A simple way to get to a list of strings:</p>
-    <pre>g = perception.<span class="s">cluster</span><span class="s">(</span><span class="str">"sun"</span>, depth=<span class="s">3</span><span class="s">)</span>
+<pre>g = perception.<span class="s">cluster</span><span class="s">(</span><span class="str">"sun"</span>, depth=<span class="s">3</span><span class="s">)</span>
 <span class="kw">print</span> <span class="s">[</span>node.<span class="s">id</span> <span class="kw">for</span> node <span class="kw">in</span> g.<span class="s">sun</span>.<span class="s">properties</span><span class="s">(</span><span class="s">)</span><span class="s">]</span>
-&gt;&gt;&gt; <span class="s">[</span><span class="str">"yellow"</span>, <span class="str">"red"</span>, <span class="str">"hot"</span>, <span class="str">"round"</span>, <span class="str">"bright"</span><span class="s">]</span></pre>
-
+&gt;&gt;&gt; <span class="s">[</span><span class="str">"yellow"</span>, <span class="str">"red"</span>, <span class="str">"hot"</span>, <span class="str">"round"</span>, <span class="str">"bright"</span><span class="s">]</span>
+</pre>
 
     <p>A cluster graph object has two additional properties:</p>
     <ul>
@@ -404,28 +405,32 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     Perception</i>, or <i>all the movies in Perception</i>. Such ranges are derived from
     <b>taxonomies</b>, graphs that show only the <i>is-a</i> relation and in which all nodes come
     from the same ancestor.</p>
-    <pre>taxonomy<span class="s">(</span>concept, context, author=<span class="kw">None</span>, depth=<span class="s">4</span><span class="s">)</span></pre>
-
-    <pre><span class="s">range</span><span class="s">(</span><span class="s">type</span><span class="s">)</span></pre>
-
+<pre>taxonomy<span class="s">(</span>concept, context, author=<span class="kw">None</span>, depth=<span class="s">4</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">range</span><span class="s">(</span><span class="s">type</span><span class="s">)</span>
+</pre>
 
     <p>The <i>range()</i> command returns a list of concepts that are of the given <i>type</i>. The
     <i>type</i> is expected to be a singular word, so you query for a <i>movie range</i> instead of
     a <i>movies range</i>. For example:</p>
-    <pre><span class="kw">print</span> perception.<span class="s">range</span><span class="s">(</span><span class="str">"movie"</span><span class="s">)</span> 
-&gt;&gt;&gt; <span class="s">[</span><span class="str">'Conan The Barbarian'</span>, <span class="str">'Dawn of the Dead'</span>, <span class="str">'Star Wars'</span>, <span class="str">'The Matrix'</span><span class="s">]</span></pre>
-
+<pre>
+<span class="kw">print</span> perception.<span class="s">range</span><span class="s">(</span><span class="str">"movie"</span><span class="s">)</span> 
+&gt;&gt;&gt; <span class="s">[</span><span class="str">'Conan The Barbarian'</span>, <span class="str">'Dawn of the Dead'</span>, <span class="str">'Star Wars'</span>, <span class="str">'The Matrix'</span><span class="s">]</span>
+</pre>
 
     <p>One special range is the <i>properties range</i>. It contains all the concepts from
     Perception that fall within the properties context:</p>
-    <pre><span class="kw">print</span> perception.<span class="s">range</span><span class="s">(</span><span class="str">"properties"</span><span class="s">)</span><span class="s">[</span>:<span class="s">5</span><span class="s">]</span>
-&gt;&gt;&gt; <span class="s">[</span><span class="str">'abstract'</span>, <span class="str">'agile'</span>, <span class="str">'angry'</span>, <span class="str">'angular'</span>, <span class="str">'annoying'</span><span class="s">]</span></pre>
-
+<pre>
+<span class="kw">print</span> perception.<span class="s">range</span><span class="s">(</span><span class="str">"properties"</span><span class="s">)</span><span class="s">[</span>:<span class="s">5</span><span class="s">]</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="str">'abstract'</span>, <span class="str">'agile'</span>, <span class="str">'angry'</span>, <span class="str">'angular'</span>, <span class="str">'annoying'</span><span class="s">]</span>
+</pre>
 
     <p>Often, the rules that define what goes into the same range need to be tweaked a little bit
     to get the best results. You can do this with the <i>range.append()</i> command:</p>
-    <pre><span class="s">range</span>.<span class="s">append</span><span class="s">(</span>name, concept, context, fringe=<span class="s">2</span>, proper=<span class="kw">False</span><span class="s">)</span></pre>
-
+<pre>
+<span class="s">range</span>.<span class="s">append</span><span class="s">(</span>name, concept, context, fringe=<span class="s">2</span>, proper=<span class="kw">False</span><span class="s">)</span>
+</pre>
 
     <p>Now what does this do? It tells the <i>range()</i> command that there exists a range with
     the given <i>name</i>. This range is made up of concepts that are connected to the ancestor
@@ -433,10 +438,10 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     are located in the given <i>fringe</i> of the taxonomy. If <i>proper</i> is <i>True</i>, they
     furthermore need to be proper nouns.</p>
     <p>Wow, what was all of that! Let’s try to clarify things with an example:</p>
-    <pre>perception.<span class="s">range</span>.<span class="s">append</span><span class="s">(</span><span class="str">"font"</span>, <span class="str">"typeface"</span>, <span class="str">"graphics"</span>, fringe=<span class="s">2</span>, proper=<span class="kw">True</span><span class="s">)</span>
+<pre>perception.<span class="s">range</span>.<span class="s">append</span><span class="s">(</span><span class="str">"font"</span>, <span class="str">"typeface"</span>, <span class="str">"graphics"</span>, fringe=<span class="s">2</span>, proper=<span class="kw">True</span><span class="s">)</span>
 <span class="kw">print</span> perception.<span class="s">range</span><span class="s">(</span><span class="str">"font"</span><span class="s">)</span>
-&gt;&gt;&gt; <span class="s">[</span><span class="str">'Arial'</span>, <span class="str">'Beowolf'</span>, <span class="str">'Comic Sans MS'</span>, <span class="str">'Courier'</span>, ... <span class="s">]</span></pre>
-
+&gt;&gt;&gt; <span class="s">[</span><span class="str">'Arial'</span>, <span class="str">'Beowolf'</span>, <span class="str">'Comic Sans MS'</span>, <span class="str">'Courier'</span>, ... <span class="s">]</span>
+</pre>
 
     <p>What the above rule means is that a font is a concept with a proper name that has typeface
     as an ancestor. We only look in the graphics context - this avoids ambuigity - and define a
@@ -452,12 +457,12 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     construct and analyze a cluster of related rules and retrieve a range of concept siblings.
     Let’s take it a step further and look at how we can find paths between different, unrelated
     clusters.</p>
-    <pre>index.<span class="s">shortest_path</span><span class="s">(</span>concept1, concept2<span class="s">)</span></pre>
-
-    <pre>index.<span class="s">nearest</span><span class="s">(</span>root, concepts<span class="s">)</span></pre>
-
-    <pre>index.<span class="s">sort_by_distance</span><span class="s">(</span>root, concepts<span class="s">)</span></pre>
-
+<pre>index.<span class="s">shortest_path</span><span class="s">(</span>concept1, concept2<span class="s">)</span>
+</pre>
+<pre>index.<span class="s">nearest</span><span class="s">(</span>root, concepts<span class="s">)</span>
+</pre>
+<pre>index.<span class="s">sort_by_distance</span><span class="s">(</span>root, concepts<span class="s">)</span>
+</pre>
 
     <p>The <i>index.shortest_path()</i> command returns a list of concepts describing how to get
     from <i>concept1</i> to <i>concept2</i> in the quickest way. The <i>index.nearest()</i> command
@@ -465,9 +470,10 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     concept. The <i>index.sort_by_distance()</i> command returns the list of <i>concepts</i> sorted
     by distance from the <i>root</i> concept.</p>
     <p>For example, which is darker: being happy or being sad?</p>
-    <pre><span class="kw">print</span> perception.<span class="s">index</span>.<span class="s">nearest</span><span class="s">(</span><span class="str">"dark"</span>, <span class="s">[</span><span class="str">"happy"</span>, <span class="str">"sad"</span><span class="s">]</span><span class="s">)</span> 
-&gt;&gt;&gt; sad</pre>
-
+<pre>
+<span class="kw">print</span> perception.<span class="s">index</span>.<span class="s">nearest</span><span class="s">(</span><span class="str">"dark"</span>, <span class="s">[</span><span class="str">"happy"</span>, <span class="str">"sad"</span><span class="s">]</span><span class="s">)</span> 
+&gt;&gt;&gt; sad
+</pre>
 
     <p>Note that since <i>index</i> itself is a dictionary you can also do <i>index.has_key()</i>,
     <i>index.keys()</i>, etc.</p>
@@ -478,24 +484,24 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     cached set we are currently using: it contains all the shortest paths between all of the
     properties in Perception.</p>
     <p>You can also create your own custom sets:</p>
-    <pre>index.<span class="s">build</span><span class="s">(</span>name, concepts=<span class="s">[</span><span class="s">]</span>, heuristic=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>index.<span class="s">build</span><span class="s">(</span>name, concepts=<span class="s">[</span><span class="s">]</span>, heuristic=<span class="kw">None</span><span class="s">)</span>
+</pre>
 
     <p>This will create a new file with the given name, containing the shortest paths between all
     the concepts in the given list. Below is an example script of how to build a new properties
     set. Be aware that even for 100-200 concepts it might very well take an hour to build the new
     set. You’ll also need an active internet connection.<br/></p>
-    <pre>perception.<span class="s">index</span>.<span class="s">build</span><span class="s">(</span>
+<pre>perception.<span class="s">index</span>.<span class="s">build</span><span class="s">(</span>
     <span class="str">"properties"</span>,
     perception.<span class="s">range</span>.<span class="s">properties</span>,
     perception.<span class="s">cost</span><span class="s">(</span><span class="kw">None</span>, <span class="s">{</span><span class="str">"is-property-of"</span>:<span class="s">-0.25</span>,<span class="str">"is-opposite-of"</span>:<span class="s">10</span><span class="s">}</span><span class="s">)</span>
-<span class="s">)</span></pre>
-
+<span class="s">)</span>
+</pre>
 
     <p>You may wonder about the heuristic parameter - we’ll get to that in the <a href="#heuristics">heuristics</a> chapter below.<br/></p>
     <p>To switch between different cached sets, simply change the index name:</p>
-    <pre>perception.<span class="s">index</span>.<span class="s">name</span> = <span class="str">"properties"</span></pre>
-            
+<pre>perception.<span class="s">index</span>.<span class="s">name</span> = <span class="str">"properties"</span>
+</pre>            
     <hr size="2" width="100%"/>
 
     <h2><a id="solver" name="solver" title="solver"></a>Working with the solver</h2>
@@ -503,26 +509,26 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     <p>The solver combines clusters, ranges and the index to make decisions about the real world.
     The <i>solver.find()</i> command will filter and sort the list of given concepts according to
     how relevant they are to the <i>given</i> root concept.<br/></p>
-    <pre>solver.<span class="s">find</span><span class="s">(</span>root, concepts<span class="s">)</span></pre>
-
+<pre>solver.<span class="s">find</span><span class="s">(</span>root, concepts<span class="s">)</span>
+</pre>
 
     <p>For example, we could use it to find a typeface that matches a certain feel:</p>
-    <pre>concepts = perception.<span class="s">range</span><span class="s">(</span><span class="str">"font"</span><span class="s">)</span>
+<pre>concepts = perception.<span class="s">range</span><span class="s">(</span><span class="str">"font"</span><span class="s">)</span>
 <span class="kw">print</span> perception.<span class="s">solver</span>.<span class="s">find</span><span class="s">(</span><span class="str">"funny"</span>, concepts<span class="s">)</span>
-&gt;&gt;&gt; <span class="s">[</span><span class="str">'Sauna'</span>, <span class="str">'Helvetica'</span>, <span class="str">'Arial'</span>, <span class="str">'Dolly'</span><span class="s">]</span> <span class="grey"># funny fonts?</span></pre>
-
-    <pre>concepts = perception.<span class="s">range</span><span class="s">(</span><span class="str">"font"</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="str">'Sauna'</span>, <span class="str">'Helvetica'</span>, <span class="str">'Arial'</span>, <span class="str">'Dolly'</span><span class="s">]</span> <span class="grey"># funny fonts?</span>
+</pre>
+<pre>concepts = perception.<span class="s">range</span><span class="s">(</span><span class="str">"font"</span><span class="s">)</span>
 <span class="kw">print</span> perception.<span class="s">solver</span>.<span class="s">find</span><span class="s">(</span><span class="str">"structured"</span>, concepts<span class="s">)</span>
-&gt;&gt;&gt; <span class="s">[</span><span class="str">'Verdana'</span>, <span class="str">'Georgia'</span>, <span class="str">'Dolly'</span>, <span class="str">'Arial'</span><span class="s">]</span> <span class="grey"># structured fonts?</span></pre>
-
-    <pre>concepts = perception.<span class="s">range</span><span class="s">(</span><span class="str">"color"</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="str">'Verdana'</span>, <span class="str">'Georgia'</span>, <span class="str">'Dolly'</span>, <span class="str">'Arial'</span><span class="s">]</span> <span class="grey"># structured fonts?</span>
+</pre>
+<pre>concepts = perception.<span class="s">range</span><span class="s">(</span><span class="str">"color"</span><span class="s">)</span>
 <span class="kw">print</span> perception.<span class="s">solver</span>.<span class="s">find</span><span class="s">(</span><span class="str">"creepy"</span>, concepts<span class="s">)</span>
-&gt;&gt;&gt; <span class="s">[</span><span class="str">'black'</span>, <span class="str">'blue'</span>, <span class="str">'azure'</span><span class="s">]</span> <span class="grey"># creepy colors?</span></pre>
-
-    <pre>concepts = perception.<span class="s">range</span><span class="s">(</span><span class="str">"emotion"</span><span class="s">)</span>
+&gt;&gt;&gt; <span class="s">[</span><span class="str">'black'</span>, <span class="str">'blue'</span>, <span class="str">'azure'</span><span class="s">]</span> <span class="grey"># creepy colors?</span>
+</pre>
+<pre>concepts = perception.<span class="s">range</span><span class="s">(</span><span class="str">"emotion"</span><span class="s">)</span>
 <span class="kw">print</span> perception.<span class="s">solver</span>.<span class="s">find</span><span class="s">(</span><span class="str">"dark"</span>, concepts<span class="s">)</span>
-&gt;&gt;&gt; <span class="s">[</span><span class="str">'disgust'</span>, <span class="str">'sadness'</span>, <span class="str">'pride'</span>, <span class="str">'fear'</span>, <span class="str">'anger'</span><span class="s">]</span> <span class="grey"># dark emotions?</span></pre>
-
+&gt;&gt;&gt; <span class="s">[</span><span class="str">'disgust'</span>, <span class="str">'sadness'</span>, <span class="str">'pride'</span>, <span class="str">'fear'</span>, <span class="str">'anger'</span><span class="s">]</span> <span class="grey"># dark emotions?</span>
+</pre>
 
     <p>Note that there is no randomness involved except when the solver needs to make a choice
     between two exactly equal concepts. The process is entirely dependent on the rules people have
@@ -539,7 +545,8 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
     <p>If you want to use the solver with something else besides properties, you will need to
     create your own index. Also, the cluster graph needs a method that returns the concepts you
     want. In a hypothetical example, you could redefine the workings of the solver as follows:<br/></p>
-    <pre><span class="kw">def</span> <span class="rose">my_analysis</span><span class="s">(</span>graph<span class="s">)</span>:
+<pre>
+<span class="kw">def</span> <span class="rose">my_analysis</span><span class="s">(</span>graph<span class="s">)</span>:
     <span class="grey"># Our own custom analysis!</span>
     <span class="grey"># It is expected to yield a list of the nodes </span>
     <span class="grey"># we find interesting in the graph.</span>
@@ -547,8 +554,8 @@ g.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></p
  
 perception.<span class="s">graph</span>.<span class="s">add_method</span><span class="s">(</span><span class="str">"my_analysis"</span>, my_analysis<span class="s">)</span>
 perception.<span class="s">solver</span>.<span class="s">index</span> = <span class="str">"properties"</span>
-perception.<span class="s">solver</span>.<span class="s">method</span> = <span class="str">"my_analysis"</span></pre>
-
+perception.<span class="s">solver</span>.<span class="s">method</span> = <span class="str">"my_analysis"</span>
+</pre>
 
     <p>That said, let’s have a look at pathfinding heuristics used in the library.</p>
     <p> </p>
@@ -567,20 +574,20 @@ perception.<span class="s">solver</span>.<span class="s">method</span> = <span c
     a cost, usually a number between -1.0 and 1.0. Links that cost less are preferred over more
     expensive ones, even if this means a longer path between two nodes. The Perception library
     offers a handy <i>heuristic()</i> builder to construct search rules:</p>
-    <pre>heuristic<span class="s">(</span>costs=<span class="s">{</span><span class="s">}</span>, graph=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>heuristic<span class="s">(</span>costs=<span class="s">{</span><span class="s">}</span>, graph=<span class="kw">None</span><span class="s">)</span>
+</pre>
 
     <p>The <i>heuristic()</i> command returns something you can pass to <i>index.build()</i>. The
     <i>costs</i> parameter is a dictionary of relations linking to costs. This way you can tax
     individual relations. For example, to build a decent index that ignores <i>is-opposite-of</i>
     relations and encourages <i>is-property-of</i> relations:</p>
-    <pre>h = perception.<span class="s">heuristic</span><span class="s">(</span><span class="s">{</span><span class="str">"is-property-of"</span>: <span class="s">-0.25</span>, <span class="str">"is-opposite-of"</span>: <span class="s">10</span><span class="s">}</span><span class="s">)</span>
+<pre>h = perception.<span class="s">heuristic</span><span class="s">(</span><span class="s">{</span><span class="str">"is-property-of"</span>: <span class="s">-0.25</span>, <span class="str">"is-opposite-of"</span>: <span class="s">10</span><span class="s">}</span><span class="s">)</span>
 perception.<span class="s">index</span>.<span class="s">build</span><span class="s">(</span>
     <span class="str">"properties"</span>,
     perception.<span class="s">range</span><span class="s">(</span><span class="str">"properties"</span><span class="s">)</span>,
     heuristic=h
-<span class="s">)</span></pre>
-
+<span class="s">)</span>
+</pre>
 
     <p>Note that the <i>graph.properties()</i> and <i>graph.objects()</i> methods also have an
     optional heuristic parameter to tweak the returned results.</p>
@@ -595,8 +602,8 @@ perception.<span class="s">index</span>.<span class="s">build</span><span class=
     <p>If you require data from the Perception network outside of NodeBox, that’s possible with the
     simple query API. You can direct your software to the Perception URL, add some query arguments
     and retrieve clusters of rules in plain text, JSON or XML format.</p>
-    <pre>http://nodebox.<span class="s">net</span>/perception?<span class="s">[</span>concept<span class="s">]</span></pre>
-
+<pre>http://nodebox.<span class="s">net</span>/perception?<span class="s">[</span>concept<span class="s">]</span>
+</pre>
 
     <p>Arguments:</p>
     <ul>
@@ -616,22 +623,23 @@ perception.<span class="s">index</span>.<span class="s">build</span><span class=
     </li></ul>
 
     <p>For example, to get some properties regarding flowers:</p>
-    <pre>http://nodebox.<span class="s">net</span>/perception/?flower&amp;format=txt&amp;relation=is-property-of</pre>
-
+<pre>http://nodebox.<span class="s">net</span>/perception/?flower&amp;format=txt&amp;relation=is-property-of
+</pre>
 
     <p>This will yield something like the result below:</p>
-    <pre><span class="str">'feminine'</span>, <span class="str">'is-property-of'</span>, <span class="str">'flower'</span>, <span class="str">'nature'</span>, <span class="str">'author1'</span>, <span class="str">'2008-04-17'</span>
+<pre>
+<span class="str">'feminine'</span>, <span class="str">'is-property-of'</span>, <span class="str">'flower'</span>, <span class="str">'nature'</span>, <span class="str">'author1'</span>, <span class="str">'2008-04-17'</span>
 <span class="str">'naive'</span>, <span class="str">'is-property-of'</span>, <span class="str">'flower'</span>, <span class="str">'nature'</span>, <span class="str">'author1'</span>, <span class="str">'2008-04-17'</span>
-<span class="str">'elegant'</span>, <span class="str">'is-property-of'</span>, <span class="str">'flower'</span>, <span class="str">'nature'</span>, <span class="str">'author1'</span>, <span class="str">'2008-04-17'</span></pre>
-       <br/>
+<span class="str">'elegant'</span>, <span class="str">'is-property-of'</span>, <span class="str">'flower'</span>, <span class="str">'nature'</span>, <span class="str">'author1'</span>, <span class="str">'2008-04-17'</span>
+</pre>       <br/>
     <hr size="2" width="100%"/>
 
     <h2><a id="widget" name="widget" title="widget"></a>Widget</h2>
 
     <p><a href="http://nodebox.net/code/data/media/NodeBoxPerception.wdgt.zip">Download</a> the
     Dashboard widget to keep track of updates to the Perception module:<br/></p>
-    <p><iframe scrolling="no" src="/perception/widget.php">&amp;amp;amp;amp;amp;amp;lt;br
-    /&amp;amp;amp;amp;amp;amp;gt;&amp;amp;amp;amp;amp;amp;lt;/p&amp;amp;amp;amp;amp;amp;gt;</iframe></p>
+    <p><iframe scrolling="no" src="/perception/widget.php">&amp;amp;amp;amp;amp;lt;br
+    /&amp;amp;amp;amp;amp;gt;&amp;amp;amp;amp;amp;lt;/p&amp;amp;amp;amp;amp;gt;</iframe></p>
   </div>
 
 </body></html>

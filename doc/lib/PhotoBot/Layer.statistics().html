@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: photobot.Layer.statistics()</title>
   <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>photobot.Layer.statistics()</h3>
@@ -13,8 +14,8 @@
 
   <div class="article">
     <h2>Syntax</h2>
-    <pre>canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="s">statistics</span><span class="s">(</span><span class="s">)</span></pre>
-
+<pre>canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="s">statistics</span><span class="s">(</span><span class="s">)</span>
+</pre>
 
     <h2>Description</h2>
 
@@ -33,13 +34,14 @@
     </li></ul>
 
     <h2>Example</h2>
-    <pre><span class="kw">import</span> photobot
+<pre>
+<span class="kw">import</span> photobot
 canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
 canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"robot.jpg"</span><span class="s">)</span>
 stats = canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">statistics</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">print</span> stats.<span class="s">mean</span>
-&gt;&gt;&gt;<span class="s">[</span><span class="s">68.778499999999994</span>, <span class="s">57.926200000000001</span>, <span class="s">46.7866</span>, <span class="s">255.0</span><span class="s">]</span></pre>
-
+&gt;&gt;&gt;<span class="s">[</span><span class="s">68.778499999999994</span>, <span class="s">57.926200000000001</span>, <span class="s">46.7866</span>, <span class="s">255.0</span><span class="s">]</span>
+</pre>
   </div>
 
 </body></html>

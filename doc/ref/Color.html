@@ -5,7 +5,8 @@
   <title>NodeBox Reference: Color</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
 
     <h3>Color</h3>
@@ -31,13 +32,14 @@
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">background</span><span class="s">(</span>r, g, b, a=<span class="s">1.0</span><span class="s">)</span>
+<pre>
+<span class="kw">background</span><span class="s">(</span>r, g, b, a=<span class="s">1.0</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span>h, s, b, a=<span class="s">1.0</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span>c, m, y, k, a=<span class="s">1.0</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span>k, a=<span class="s">1.0</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span><span class="kw">color</span><span class="s">)</span>
-<span class="kw">background</span><span class="s">(</span><span class="kw">None</span><span class="s">)</span></pre>
-
+<span class="kw">background</span><span class="s">(</span><span class="kw">None</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -68,10 +70,10 @@
               <tr>
                 <td><span class="image_border"><img src="media/background.gif"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">background</span><span class="s">(</span><span class="kw">None</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">50</span>, <span class="s">50</span><span class="s">)</span></pre>
-
+<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -84,11 +86,12 @@
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">color</span><span class="s">(</span>r, g, b, a<span class="s">)</span>
+<pre>
+<span class="kw">color</span><span class="s">(</span>r, g, b, a<span class="s">)</span>
 <span class="kw">color</span><span class="s">(</span>h, s, b, a<span class="s">)</span>
 <span class="kw">color</span><span class="s">(</span>c, m, y, k, a<span class="s">)</span>
-<span class="kw">color</span><span class="s">(</span>k, a<span class="s">)</span></pre>
-
+<span class="kw">color</span><span class="s">(</span>k, a<span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -122,15 +125,15 @@
               <tr>
                 <td><span class="image_border"><img src="media/color.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 clr1 = <span class="kw">color</span><span class="s">(</span><span class="s">1.0</span>, <span class="s">0.0</span>, <span class="s">0.5</span><span class="s">)</span>
 <span class="kw">fill</span><span class="s">(</span>clr1<span class="s">)</span>
 <span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">25</span>, <span class="s">25</span><span class="s">)</span>
  
 clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3</span>, <span class="s">0.0</span>, <span class="s">0.4</span><span class="s">)</span>
 <span class="kw">fill</span><span class="s">(</span>clr2<span class="s">)</span>
-<span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span></pre>
-
+<span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -143,8 +146,9 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">colormode</span><span class="s">(</span>mode, <span class="s">range</span>=<span class="s">1.0</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">colormode</span><span class="s">(</span>mode, <span class="s">range</span>=<span class="s">1.0</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -180,15 +184,15 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
               <tr>
                 <td><span class="image_border"><img src="media/colormode.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">colormode</span><span class="s">(</span><span class="kw">RGB</span><span class="s">)</span>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.25</span>, <span class="s">0.25</span>, <span class="s">0.25</span><span class="s">)</span>
 <span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
  
 <span class="kw">colormode</span><span class="s">(</span><span class="kw">HSB</span><span class="s">)</span>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">0.25</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">60</span>, <span class="s">10</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span></pre>
-
+<span class="kw">rect</span><span class="s">(</span><span class="s">60</span>, <span class="s">10</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -201,12 +205,13 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">fill</span><span class="s">(</span>r, g, b, a<span class="s">)</span>
+<pre>
+<span class="kw">fill</span><span class="s">(</span>r, g, b, a<span class="s">)</span>
 <span class="kw">fill</span><span class="s">(</span>h, s, b, a<span class="s">)</span>
 <span class="kw">fill</span><span class="s">(</span>c, m, y, k, a<span class="s">)</span>
 <span class="kw">fill</span><span class="s">(</span>k, a<span class="s">)</span>
-<span class="kw">fill</span><span class="s">(</span><span class="kw">color</span><span class="s">)</span></pre>
-
+<span class="kw">fill</span><span class="s">(</span><span class="kw">color</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -235,12 +240,12 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
               <tr>
                 <td><span class="image_border"><img src="media/fill.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">1.0</span>, <span class="s">0.0</span>, <span class="s">0.5</span><span class="s">)</span>
 <span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">25</span>, <span class="s">25</span><span class="s">)</span>
 <span class="kw">fill</span><span class="s">(</span>.<span class="s">3</span>, <span class="s">0.0</span>, <span class="s">0.4</span><span class="s">)</span>
-<span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span></pre>
-
+<span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -253,8 +258,9 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">nofill</span><span class="s">(</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -278,14 +284,14 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
               <tr>
                 <td><span class="image_border"><img src="media/nofill.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">strokewidth</span><span class="s">(</span><span class="s">1.5</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span></pre>
-
+<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -298,8 +304,9 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">nostroke</span><span class="s">(</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">nostroke</span><span class="s">(</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -323,14 +330,14 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
               <tr>
                 <td><span class="image_border"><img src="media/nostroke.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">strokewidth</span><span class="s">(</span><span class="s">6</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">1.0</span>, <span class="s">0.0</span>, <span class="s">0.5</span><span class="s">)</span>
 <span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
 <span class="kw">nostroke</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span></pre>
-
+<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -343,8 +350,8 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre>outputmode<span class="s">(</span>mode<span class="s">)</span></pre>
-
+<pre>outputmode<span class="s">(</span>mode<span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -372,8 +379,8 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
         <h2>Example</h2>
 
         <div class="row">
-          <pre>outputmode<span class="s">(</span><span class="kw">CMYK</span><span class="s">)</span></pre>
-
+<pre>outputmode<span class="s">(</span><span class="kw">CMYK</span><span class="s">)</span>
+</pre>
         </div>
       </div>
     </div><a name="stroke()"></a>
@@ -385,12 +392,13 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">stroke</span><span class="s">(</span>r, g, b, a<span class="s">)</span>
+<pre>
+<span class="kw">stroke</span><span class="s">(</span>r, g, b, a<span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span>h, s, b, a<span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span>c, m, y, k, a<span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span>k, a<span class="s">)</span>
-<span class="kw">stroke</span><span class="s">(</span><span class="kw">color</span><span class="s">)</span></pre>
-
+<span class="kw">stroke</span><span class="s">(</span><span class="kw">color</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -425,14 +433,14 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
               <tr>
                 <td><span class="image_border"><img src="media/stroke.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">strokewidth</span><span class="s">(</span><span class="s">3</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.3</span>, <span class="s">0.0</span>, <span class="s">0.4</span><span class="s">)</span>
 <span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">1.0</span>, <span class="s">0.0</span>, <span class="s">0.5</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span></pre>
-
+<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -445,8 +453,9 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">strokewidth</span><span class="s">(</span>width<span class="s">)</span></pre>
-
+<pre>
+<span class="kw">strokewidth</span><span class="s">(</span>width<span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -469,14 +478,14 @@ clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0.3<
               <tr>
                 <td><span class="image_border"><img src="media/strokewidth.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">strokewidth</span><span class="s">(</span><span class="s">1.5</span><span class="s">)</span>
 <span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
 <span class="kw">strokewidth</span><span class="s">(</span><span class="s">3</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span></pre>
-
+<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>

@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: Introduction</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3>Introduction</h3>
@@ -209,15 +210,17 @@
     <p>Then you will want to have a look at the <a href="Reference">reference</a> to see what
     scripting commands are available. When you use a command you plug in <b>parameters</b> that
     define its behavior. For example, the reference may mention something like:</p>
-    <pre><span class="kw">rect</span><span class="s">(</span>x, y, width, height<span class="s">)</span></pre>
-
+<pre>
+<span class="kw">rect</span><span class="s">(</span>x, y, width, height<span class="s">)</span>
+</pre>
 
     <p>This means that <span class="inline_code">rect</span> is a command with <i>x</i>, <i>y</i>,
     <i>width</i> and <i>height</i> parameters. The name of the command tells something about what
     it is going to do (<i>rect</i> will probably draw a rectangle on the screen). The parameters
     you replace with values of your own. For example:</p>
-    <pre><span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">80</span>, <span class="s">100</span>, <span class="s">50</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">rect</span><span class="s">(</span><span class="s">40</span>, <span class="s">80</span>, <span class="s">100</span>, <span class="s">50</span><span class="s">)</span>
+</pre>
 
     <p>This will draw a rectangle located 40 from the left edge of the canvas, 80 from the top of
     the canvas, with a width of 100 and a height of 50. Go through the reference and try out each
@@ -232,9 +235,10 @@
     variation to your script.</p>
     <p>Commands ‘inside’ the loop are indented with the TAB-key. In this case we draw five
     rectangles at a random position:</p>
-    <pre><span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">5</span><span class="s">)</span>:
-    <span class="kw">rect</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">50</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">200</span><span class="s">)</span>, <span class="s">20</span>, <span class="s">20</span><span class="s">)</span></pre>
- 
+<pre>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">5</span><span class="s">)</span>:
+    <span class="kw">rect</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">50</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">200</span><span class="s">)</span>, <span class="s">20</span>, <span class="s">20</span><span class="s">)</span>
+</pre> 
 
     <p><span class="orange_box">Tutorial</span></p>
     <p>The tutorial contains essential tips on how commands work and how to write scripts.<br/>
@@ -254,8 +258,9 @@
       nonetheless.<br/>
     </li></ul>
 
-    <p>At one point you’ll also discover how to work with <a href="../ref/Path.html#beginpath()">Bézier paths</a>. This is where NodeBox truly shines. All of the
-    things you can do with paths are unlocked in the <a href="Paths.html">tutorial on paths</a>.</p>
+    <p>At one point you’ll also discover how to work with <a href="../ref/ClassicPath.html#beginpath()">Bézier paths</a>. This is where NodeBox truly shines. All
+    of the things you can do with paths are unlocked in the <a href="Paths.html">tutorial on
+    paths</a>.</p>
     <p> </p>
     <hr size="2" width="100%"/>
 

@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: Classes</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3>Classes</h3>
@@ -48,27 +49,28 @@
     class is created</b>. The <i>__init__()</i> method sets all the starting values for an object’s
     properties.</p>
     <p>For example, here’s what a simple definition of a Creature class would look like:</p>
-    <pre><span class="kw">class</span> Creature:
+<pre>
+<span class="kw">class</span> Creature:
     
     <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, x, y, <span class="kw">speed</span>=<span class="s">1.0</span>, <span class="kw">size</span>=<span class="s">4</span><span class="s">)</span>:
         
         <span class="s">self</span>.<span class="s">x</span> = x
         <span class="s">self</span>.<span class="s">y</span> = y
         <span class="s">self</span>.<span class="kw">speed</span> = <span class="kw">speed</span>
-        <span class="s">self</span>.<span class="kw">size</span> = <span class="kw">size</span></pre>
-
+        <span class="s">self</span>.<span class="kw">size</span> = <span class="kw">size</span>
+</pre>
 
     <p>As you can see a creature has <i>x</i> and <i>y</i> properties (the location of the
     creature) and <i>speed</i> and <i>size</i> properties (which we’ll use to move the creature
     around). All of them can be set when a new creature is ‘instantiated’. The <i>speed</i> and
     <i>size</i> properties have default values so they are optional.</p>
-    <pre>ant = Creature<span class="s">(</span><span class="s">100</span>, <span class="s">100</span>, <span class="kw">speed</span>=<span class="s">2.0</span><span class="s">)</span>
-dinosaur = Creature<span class="s">(</span><span class="s">200</span>, <span class="s">250</span>, <span class="kw">speed</span>=<span class="s">0.25</span>, <span class="kw">size</span>=<span class="s">45</span><span class="s">)</span></pre>
-
+<pre>ant = Creature<span class="s">(</span><span class="s">100</span>, <span class="s">100</span>, <span class="kw">speed</span>=<span class="s">2.0</span><span class="s">)</span>
+dinosaur = Creature<span class="s">(</span><span class="s">200</span>, <span class="s">250</span>, <span class="kw">speed</span>=<span class="s">0.25</span>, <span class="kw">size</span>=<span class="s">45</span><span class="s">)</span>
+</pre>
 
     <p>To change a property value for a creature later on we can simply do:</p>
-    <pre>ant.<span class="kw">speed</span> = <span class="s">2.5</span></pre>
-
+<pre>ant.<span class="kw">speed</span> = <span class="s">2.5</span>
+</pre>
 
     <p><u>Naming conventions:</u></p>
     <ul>
@@ -85,7 +87,8 @@ dinosaur = Creature<span class="s">(</span><span class="s">200</span>, <span cla
     class method looks exactly like a command definition but it always takes <i>self</i> as the
     first parameter. The <i>self</i> parameter is the current instance of the class. It allows you
     to access all of an object’s current property values and methods from inside the method.</p>
-    <pre><span class="kw">class</span> Creature: 
+<pre>
+<span class="kw">class</span> Creature: 
     
     <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, x, y, <span class="kw">speed</span>=<span class="s">1.0</span>, <span class="kw">size</span>=<span class="s">4</span><span class="s">)</span>:
         
@@ -109,8 +112,8 @@ dinosaur = Creature<span class="s">(</span><span class="s">200</span>, <span cla
         <span class="s">self</span>._vy = <span class="s">max</span><span class="s">(</span>-v, <span class="s">min</span><span class="s">(</span><span class="s">self</span>._vy, v<span class="s">)</span><span class="s">)</span> 
         
         <span class="s">self</span>.<span class="s">x</span> += <span class="s">self</span>._vx
-        <span class="s">self</span>.<span class="s">y</span> += <span class="s">self</span>._vy</pre>
-
+        <span class="s">self</span>.<span class="s">y</span> += <span class="s">self</span>._vy
+</pre>
 
     <p>So now we have added two new properties to the class, <i>_vx</i> and <i>_vy,</i> which store
     a creature’s current heading. Both property names start with an underscore because they are for
@@ -123,7 +126,7 @@ dinosaur = Creature<span class="s">(</span><span class="s">200</span>, <span cla
     by moving it to the new heading.</p>
     <p>Now we can create two ants (a small fast one and a big slow one). Because their size and
     speed differ they will roam in different ways.</p>
-    <pre>ant1 = Creature<span class="s">(</span><span class="s">300</span>, <span class="s">300</span>, <span class="kw">speed</span>=<span class="s">2.0</span><span class="s">)</span>
+<pre>ant1 = Creature<span class="s">(</span><span class="s">300</span>, <span class="s">300</span>, <span class="kw">speed</span>=<span class="s">2.0</span><span class="s">)</span>
 ant2 = Creature<span class="s">(</span><span class="s">300</span>, <span class="s">300</span>, <span class="kw">speed</span>=<span class="s">0.5</span>, <span class="kw">size</span>=<span class="s">8</span><span class="s">)</span>
  
 <span class="kw">speed</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>
@@ -131,8 +134,8 @@ ant2 = Creature<span class="s">(</span><span class="s">300</span>, <span class="
     ant1.<span class="s">roam</span><span class="s">(</span><span class="s">)</span>
     ant2.<span class="s">roam</span><span class="s">(</span><span class="s">)</span>
     <span class="kw">oval</span><span class="s">(</span>ant1.<span class="s">x</span>, ant1.<span class="s">y</span>, ant1.<span class="kw">size</span>, ant1.<span class="kw">size</span><span class="s">)</span>
-    <span class="kw">oval</span><span class="s">(</span>ant2.<span class="s">x</span>, ant2.<span class="s">y</span>, ant2.<span class="kw">size</span>, ant2.<span class="kw">size</span><span class="s">)</span></pre>
-
+    <span class="kw">oval</span><span class="s">(</span>ant2.<span class="s">x</span>, ant2.<span class="s">y</span>, ant2.<span class="kw">size</span>, ant2.<span class="kw">size</span><span class="s">)</span>
+</pre>
 
     <p><img alt="classes-creature1" src="media/classes-creature1.jpg"/></p>
     <p><a href="http://nodebox.net/code/data/media/classes-creature1.mov">Play movie</a></p>
@@ -159,20 +162,22 @@ ant2 = Creature<span class="s">(</span><span class="s">300</span>, <span class="
     <p>We’ll start out by creating a World class which we can use to store a list of obstacles.
     Later on we can add all sorts of other stuff to the world (e.g. weather methods, colony
     location properties, etc...).</p>
-    <pre><span class="kw">class</span> World:    
+<pre>
+<span class="kw">class</span> World:    
     <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:        
-        <span class="s">self</span>.<span class="s">obstacles</span> = <span class="s">[</span><span class="s">]</span></pre>
- 
+        <span class="s">self</span>.<span class="s">obstacles</span> = <span class="s">[</span><span class="s">]</span>
+</pre> 
 
     <p><span class="orange_box">Obstacle class</span></p>
     <p>Next we’ll make an Obstacle class.<br/>
     An obstacle in the world is a basic object that has a position and a radius.</p>
-    <pre><span class="kw">class</span> Obstacle:    
+<pre>
+<span class="kw">class</span> Obstacle:    
     <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, x, y, radius<span class="s">)</span>:        
         <span class="s">self</span>.<span class="s">x</span> = x
         <span class="s">self</span>.<span class="s">y</span> = y
-        <span class="s">self</span>.<span class="s">radius</span> = radius</pre>
- 
+        <span class="s">self</span>.<span class="s">radius</span> = radius
+</pre> 
 
     <p><span class="orange_box">Geometry</span></p>
     <p>To know if a creature is going to run into an obstacle we need to know <b>if the tip of its
@@ -180,7 +185,8 @@ ant2 = Creature<span class="s">(</span><span class="s">300</span>, <span class="
     the coordinates of the tip of the feeler. Luckily everything we need is already described in
     the tutorial on <a href="Math.html">math geometry</a>. We can copy-paste the commands and add
     them to our script:</p>
-    <pre><span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> degrees, atan2
+<pre>
+<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> degrees, atan2
 <span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sqrt, <span class="s">pow</span>
 <span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> radians, sin, cos
  
@@ -198,8 +204,8 @@ ant2 = Creature<span class="s">(</span><span class="s">300</span>, <span class="
     <span class="str">""</span><span class="str">" Returns the coordinates of given distance and angle from a point.
     "</span><span class="str">""</span>
     <span class="kw">return</span> <span class="s">(</span>x0 + cos<span class="s">(</span>radians<span class="s">(</span>angle<span class="s">)</span><span class="s">)</span> * distance, 
-            y0 + sin<span class="s">(</span>radians<span class="s">(</span>angle<span class="s">)</span><span class="s">)</span> * distance<span class="s">)</span></pre>
- 
+            y0 + sin<span class="s">(</span>radians<span class="s">(</span>angle<span class="s">)</span><span class="s">)</span> * distance<span class="s">)</span>
+</pre> 
 
     <p>With the above <i>coordinates()</i> command we can:<br/></p>
     <ul>
@@ -223,7 +229,8 @@ ant2 = Creature<span class="s">(</span><span class="s">300</span>, <span class="
       </li><li>if it is, check if the coordinates of the tip of the feeler are inside the obstacle,
       </li><li>and if so, steer away in the most logical direction.
     </li></ul>
-    <pre><span class="kw">class</span> Creature:
+<pre>
+<span class="kw">class</span> Creature:
     
     <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, world, x, y, <span class="kw">speed</span>=<span class="s">1.0</span>, <span class="kw">size</span>=<span class="s">4</span><span class="s">)</span>:
         
@@ -290,8 +297,8 @@ ant2 = Creature<span class="s">(</span><span class="s">300</span>, <span class="
         <span class="s">self</span>._vy = <span class="s">max</span><span class="s">(</span>-v, <span class="s">min</span><span class="s">(</span><span class="s">self</span>._vy, v<span class="s">)</span><span class="s">)</span> 
         
         <span class="s">self</span>.<span class="s">x</span> += <span class="s">self</span>._vx
-        <span class="s">self</span>.<span class="s">y</span> += <span class="s">self</span>._vy</pre>
-
+        <span class="s">self</span>.<span class="s">y</span> += <span class="s">self</span>._vy
+</pre>
 
     <p><img alt="classes-creature3" src="media/classes-creature3.jpg"/><br/>
     <a href="http://nodebox.net/code/data/media/classes-creature3.mov">Play movie</a> | <a href="Obstacle_avoidance.html">view source code</a></p>

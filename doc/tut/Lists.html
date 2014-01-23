@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: Lists</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3>Lists</h3>
@@ -36,10 +37,10 @@
     string), therefore they are embedded in quotes. The list is assigned to a variable named
     <em>groceries</em>, but we know that variables can have any name we like, so it could be named
     <em>g</em> or <em>stufftodo</em> as well for that matter.</p>
-    <pre>groceries = <span class="s">[</span><span class="str">"apples"</span>, <span class="str">"pears"</span>, <span class="str">"carrots"</span>, <span class="str">"cucumber"</span>, <span class="str">"yoghurt"</span>, <span class="str">"milk"</span><span class="s">]</span>
+<pre>groceries = <span class="s">[</span><span class="str">"apples"</span>, <span class="str">"pears"</span>, <span class="str">"carrots"</span>, <span class="str">"cucumber"</span>, <span class="str">"yoghurt"</span>, <span class="str">"milk"</span><span class="s">]</span>
 <span class="kw">print</span> <span class="s">len</span><span class="s">(</span>groceries<span class="s">)</span>
-&gt;&gt;&gt; <span class="s">6</span></pre>
-
+&gt;&gt;&gt; <span class="s">6</span>
+</pre>
 
     <p>A list can contain any kind of data: strings, numbers, and even lists.<br/>
     The len(<em>list</em>) command returns the number of items in a list.</p>
@@ -47,13 +48,14 @@
 
     <p>You can reference items in a list directly, by adding the index of the item you want to the
     variable name, between square brackets:</p>
-    <pre><span class="kw">print</span> groceries<span class="s">[</span><span class="s">0</span><span class="s">]</span>
-&gt;&gt;&gt; apples</pre>
-
-    <pre>groceries<span class="s">[</span><span class="s">3</span><span class="s">]</span> = <span class="str">"banana"</span>
+<pre>
+<span class="kw">print</span> groceries<span class="s">[</span><span class="s">0</span><span class="s">]</span>
+&gt;&gt;&gt; apples
+</pre>
+<pre>groceries<span class="s">[</span><span class="s">3</span><span class="s">]</span> = <span class="str">"banana"</span>
 <span class="kw">print</span> groceries
-&gt;&gt;&gt; <span class="s">[</span><span class="str">"apples"</span>, <span class="str">"pears"</span>, <span class="str">"carrots"</span>, <span class="str">"banana"</span>, <span class="str">"yoghurt"</span>, <span class="str">"milk"</span><span class="s">]</span></pre>
-
+&gt;&gt;&gt; <span class="s">[</span><span class="str">"apples"</span>, <span class="str">"pears"</span>, <span class="str">"carrots"</span>, <span class="str">"banana"</span>, <span class="str">"yoghurt"</span>, <span class="str">"milk"</span><span class="s">]</span>
+</pre>
 
     <p>Don’t forget: items in a list start with index zero. That’s why in the above example the
     fourth element is replaced. The fourth element has index 3.</p>
@@ -70,17 +72,17 @@
             <br/>
             <br/>
             To append an item to the end of the list:
-            <pre>
+<pre>
 groceries.<span class="s">append</span><span class="s">(</span><span class="str">"eggs"</span><span class="s">)</span>
 <span class="kw">print</span> groceries
 &gt;&gt;&gt; <span class="s">[</span><span class="str">"apples"</span>, <span class="str">"pears"</span>, 
 &gt;&gt;&gt;  <span class="str">"carrots"</span>, <span class="str">"banana"</span>, 
 &gt;&gt;&gt;  <span class="str">"yoghurt"</span>, <span class="str">"milk"</span>,
-&gt;&gt;&gt;  <span class="str">"eggs"</span><span class="s">]</span></pre>
-To remove the eggs from the list:
-            <pre>
-<span class="kw">del</span> groceries<span class="s">[</span><span class="s">6</span><span class="s">]</span></pre>
-
+&gt;&gt;&gt;  <span class="str">"eggs"</span><span class="s">]</span>
+</pre>To remove the eggs from the list:
+<pre>
+<span class="kw">del</span> groceries<span class="s">[</span><span class="s">6</span><span class="s">]</span>
+</pre>
           </td></tr></tbody></table>
 
     <p>Items can be inserted halfway the list with the <em>list</em>.insert(<em>i</em>,
@@ -103,7 +105,7 @@ To remove the eggs from the list:
             <br/>
             <br/>
             Using the for-loop:
-            <pre>
+<pre>
 <span class="kw">for</span> item <span class="kw">in</span> groceries:
     <span class="kw">print</span> <span class="str">"buy some "</span> + item 
 &gt;&gt;&gt; buy some apples 
@@ -112,8 +114,8 @@ To remove the eggs from the list:
 &gt;&gt;&gt; buy some banana 
 &gt;&gt;&gt; buy some yoghurt 
 &gt;&gt;&gt; buy some milk 
-&gt;&gt;&gt; buy some eggs</pre>
-
+&gt;&gt;&gt; buy some eggs
+</pre>
           </td></tr></tbody></table>
 
     <p>In the above example, the indented command(s) below the <em>for</em> command are executed
@@ -148,7 +150,7 @@ To remove the eggs from the list:
     <span class="media"><img alt="" height="132" src="media/lists-loop15.jpg" width="132"/></span>
     <span class="media"><img alt="" height="132" src="media/lists-loop16.jpg" width="132"/></span></p>
     <p>The code:</p>
-    <pre>words = <span class="s">[</span><span class="str">"Lists"</span>, <span class="str">"are"</span>, <span class="str">"fun"</span><span class="s">]</span>
+<pre>words = <span class="s">[</span><span class="str">"Lists"</span>, <span class="str">"are"</span>, <span class="str">"fun"</span><span class="s">]</span>
 colors = <span class="s">[</span><span class="kw">color</span><span class="s">(</span><span class="s">1</span>,<span class="s">0</span>,<span class="s">0</span><span class="s">)</span>, <span class="kw">color</span><span class="s">(</span><span class="s">1</span>,<span class="s">1</span>,<span class="s">1</span><span class="s">)</span>, <span class="kw">color</span><span class="s">(</span><span class="s">0</span>,<span class="s">0</span>,<span class="s">0</span><span class="s">)</span><span class="s">]</span>
  
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">40</span><span class="s">)</span>:
@@ -159,15 +161,15 @@ colors = <span class="s">[</span><span class="kw">color</span><span class="s">(<
     <span class="kw">fontsize</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">10</span>,<span class="s">100</span><span class="s">)</span><span class="s">)</span>
  
     <span class="kw">fill</span><span class="s">(</span><span class="kw">choice</span><span class="s">(</span>colors<span class="s">)</span><span class="s">)</span>
-    <span class="kw">text</span><span class="s">(</span><span class="kw">choice</span><span class="s">(</span>words<span class="s">)</span>, x, y<span class="s">)</span></pre>
-
+    <span class="kw">text</span><span class="s">(</span><span class="kw">choice</span><span class="s">(</span>words<span class="s">)</span>, x, y<span class="s">)</span>
+</pre>
 
     <h2>Dictionaries</h2>
 
     <p>Dictionaries are extremely useful kinds of lists that have string indices, <em>keys</em>,
     that you define yourself. Each key is unique and references an item in the list. Dictionaries
     are created with <strong>curly braces</strong> instead of square brackets.</p>
-    <pre>heading = <span class="s">{</span><span class="s">}</span>
+<pre>heading = <span class="s">{</span><span class="s">}</span>
 heading<span class="s">[</span><span class="str">"font"</span><span class="s">]</span> = <span class="str">"ConduitITC-Medium"</span>
 heading<span class="s">[</span><span class="str">"size"</span><span class="s">]</span> = <span class="s">18</span>
 heading<span class="s">[</span><span class="str">"fill"</span><span class="s">]</span> = <span class="kw">color</span><span class="s">(</span><span class="s">1</span>,<span class="s">0</span>,<span class="s">0</span><span class="s">)</span>
@@ -179,8 +181,8 @@ heading<span class="s">[</span><span class="str">"fill"</span><span class="s">]<
 &gt;&gt;&gt; <span class="s">18</span>
  
 <span class="kw">if</span> heading.<span class="s">has_key</span><span class="s">(</span><span class="str">"fill"</span><span class="s">)</span>: <span class="kw">print</span> <span class="str">"found!"</span>
-&gt;&gt;&gt; found!</pre>
-
+&gt;&gt;&gt; found!
+</pre>
 
     <h2>More on lists</h2>
 

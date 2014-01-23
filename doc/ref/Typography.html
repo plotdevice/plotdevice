@@ -5,7 +5,8 @@
   <title>NodeBox Reference: Typography</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
 
     <h3>Typography</h3>
@@ -31,8 +32,9 @@
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">align</span><span class="s">(</span><span class="kw">align</span>=<span class="kw">LEFT</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">align</span><span class="s">(</span><span class="kw">align</span>=<span class="kw">LEFT</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -57,13 +59,13 @@
               <tr>
                 <td><span class="image_border"><img src="media/align.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">fontsize</span><span class="s">(</span><span class="s">16</span><span class="s">)</span>
 <span class="kw">align</span><span class="s">(</span><span class="kw">RIGHT</span><span class="s">)</span>
 quip = <span class="str">"If it ain't fun make it fun"</span>
-<span class="kw">text</span><span class="s">(</span>quip, <span class="s">10</span>, <span class="s">55</span>, width=<span class="s">90</span><span class="s">)</span></pre>
-
+<span class="kw">text</span><span class="s">(</span>quip, <span class="s">10</span>, <span class="s">55</span>, width=<span class="s">90</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -76,8 +78,9 @@ quip = <span class="str">"If it ain't fun make it fun"</span>
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">font</span><span class="s">(</span>fontname, <span class="kw">fontsize</span>=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">font</span><span class="s">(</span>fontname, <span class="kw">fontsize</span>=<span class="kw">None</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -103,52 +106,12 @@ quip = <span class="str">"If it ain't fun make it fun"</span>
               <tr>
                 <td><span class="image_border"><img src="media/font.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">font</span><span class="s">(</span><span class="str">"Helvetica"</span>, <span class="s">35</span><span class="s">)</span>
-<span class="kw">text</span><span class="s">(</span><span class="str">"hello"</span>, <span class="s">10</span>, <span class="s">50</span><span class="s">)</span></pre>
-
+<span class="kw">text</span><span class="s">(</span><span class="str">"hello"</span>, <span class="s">10</span>, <span class="s">50</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="fonts()"></a>
-
-    <div class="section">
-      <h3>fonts()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-          <pre><span class="kw">fonts</span><span class="s">(</span>like=<span class="kw">None</span>, western=<span class="kw">True</span><span class="s">)</span></pre>
-
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          The fonts() command searches the fonts installed on the system and can filter the list in
-          a few ways. When called with no arguments, the list contains all fonts on the system with
-          a latin character set. To retrieve the set of non-latin fonts, pass False as the western
-          parameter. To filter the list through a (case-insensitive) font name match, pass a
-          substring as the like parameter.
-        </div>
-
-        <h2>Returns</h2>
-
-        <div class="row">
-          a list of “Postscript Names” which can be used as arguments for the <a href="#font()">font()</a> command
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <pre>romans = <span class="kw">fonts</span><span class="s">()</span> <span class="grey"># Get a list of all the text-friendly fonts on the system</span>
-jenson = <span class="kw">fonts</span><span class="s">(like=<span class="str">"jenson"</span>)</span> <span class="grey"># all installed weights of Adobe Jenson.</span>
-
-eastern = <span class="kw">fonts</span><span class="s">(western=<span class="kw">False</span>)</span> <span class="grey"># all asian-character fonts, math fonts, etc.</span>
-kozuka = <span class="kw">fonts</span><span class="s">(western=<span class="kw">False</span>, like=<span class="str">"koz"</span>)</span> <span class="grey"># the weights in the Kozuka families</span></pre>
-
         </div>
       </div>
     </div><a name="fontsize()"></a>
@@ -160,8 +123,9 @@ kozuka = <span class="kw">fonts</span><span class="s">(western=<span class="kw">
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">fontsize</span><span class="s">(</span><span class="kw">fontsize</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">fontsize</span><span class="s">(</span><span class="kw">fontsize</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -186,12 +150,12 @@ kozuka = <span class="kw">fonts</span><span class="s">(western=<span class="kw">
               <tr>
                 <td><span class="image_border"><img src="media/fontsize.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">font</span><span class="s">(</span><span class="str">"Helvetica"</span><span class="s">)</span>
 <span class="kw">fontsize</span><span class="s">(</span><span class="s">35</span><span class="s">)</span>
-<span class="kw">text</span><span class="s">(</span><span class="str">"hello"</span>, <span class="s">10</span>, <span class="s">50</span><span class="s">)</span></pre>
-
+<span class="kw">text</span><span class="s">(</span><span class="str">"hello"</span>, <span class="s">10</span>, <span class="s">50</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -204,8 +168,9 @@ kozuka = <span class="kw">fonts</span><span class="s">(western=<span class="kw">
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">lineheight</span><span class="s">(</span>height=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">lineheight</span><span class="s">(</span>height=<span class="kw">None</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -234,13 +199,13 @@ kozuka = <span class="kw">fonts</span><span class="s">(western=<span class="kw">
               <tr>
                 <td><span class="image_border"><img alt="GCD" src="media/lineheight.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">fontsize</span><span class="s">(</span><span class="s">16</span><span class="s">)</span>
 <span class="kw">lineheight</span><span class="s">(</span><span class="s">0.4</span><span class="s">)</span>
 quip = <span class="str">"If it ain't fun make it fun"</span>
-<span class="kw">text</span><span class="s">(</span>quip, <span class="s">10</span>, <span class="s">55</span>, width=<span class="s">80</span><span class="s">)</span></pre>
-
+<span class="kw">text</span><span class="s">(</span>quip, <span class="s">10</span>, <span class="s">55</span>, width=<span class="s">80</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -253,8 +218,9 @@ quip = <span class="str">"If it ain't fun make it fun"</span>
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">text</span><span class="s">(</span>txt, x, y, width=<span class="kw">None</span>, height=<span class="s">1000000</span>, outline=<span class="kw">False</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">text</span><span class="s">(</span>txt, x, y, width=<span class="kw">None</span>, height=<span class="s">1000000</span>, outline=<span class="kw">False</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -288,12 +254,12 @@ quip = <span class="str">"If it ain't fun make it fun"</span>
               <tr>
                 <td><span class="image_border"><img src="media/text.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">font</span><span class="s">(</span><span class="str">"Helvetica"</span>, <span class="s">20</span><span class="s">)</span>
 <span class="kw">text</span><span class="s">(</span><span class="str">"hello"</span>, <span class="s">10</span>, <span class="s">50</span><span class="s">)</span>
-<span class="kw">text</span><span class="s">(</span><span class="str">"goodbye"</span>, <span class="s">10</span>, <span class="s">70</span><span class="s">)</span></pre>
-
+<span class="kw">text</span><span class="s">(</span><span class="str">"goodbye"</span>, <span class="s">10</span>, <span class="s">70</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -306,8 +272,9 @@ quip = <span class="str">"If it ain't fun make it fun"</span>
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">textheight</span><span class="s">(</span>txt, width=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">textheight</span><span class="s">(</span>txt, width=<span class="kw">None</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -331,11 +298,11 @@ quip = <span class="str">"If it ain't fun make it fun"</span>
             <tbody>
               <tr>
                 <td>
-                  <pre>
+<pre>
 <span class="kw">font</span><span class="s">(</span><span class="str">"Courier New"</span><span class="s">)</span>
 h = <span class="kw">textheight</span><span class="s">(</span><span class="str">"hello"</span>, <span class="s">30</span><span class="s">)</span>
-<span class="kw">print</span> h</pre>
-
+<span class="kw">print</span> h
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -348,8 +315,9 @@ h = <span class="kw">textheight</span><span class="s">(</span><span class="str">
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">textmetrics</span><span class="s">(</span>txt, width=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">textmetrics</span><span class="s">(</span>txt, width=<span class="kw">None</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -373,12 +341,12 @@ h = <span class="kw">textheight</span><span class="s">(</span><span class="str">
             <tbody>
               <tr>
                 <td>
-                  <pre>
+<pre>
 <span class="kw">font</span><span class="s">(</span><span class="str">"Courier New"</span><span class="s">)</span>
 w, h = <span class="kw">textmetrics</span><span class="s">(</span><span class="str">"hello"</span>, <span class="s">30</span><span class="s">)</span>
 <span class="kw">print</span> w
-<span class="kw">print</span> h</pre>
-
+<span class="kw">print</span> h
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -391,16 +359,16 @@ w, h = <span class="kw">textmetrics</span><span class="s">(</span><span class="s
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">textpath</span><span class="s">(</span>txt, x, y, width=<span class="kw">None</span>, height=<span class="s">1000000</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">textpath</span><span class="s">(</span>txt, x, y, width=<span class="kw">None</span>, height=<span class="s">1000000</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
 
         <div class="row">
           Works exactly like the <a href="#text()">text()</a> command, except it returns a path
-          that can be used with <a href="Path.html#drawpath()">drawpath()</a>, <a href="Path.html#beginclip()">beginclip()</a> and <a href="Path.html#endclip()">endclip()</a>
-          instead of drawing text to the screen.
+          that can be used with <a href="ClassicPath.html#drawpath()">drawpath()</a>, <a href="ClassicPath.html#beginclip()">beginclip()</a> and <a href="ClassicPath.html#endclip()">endclip()</a> instead of drawing text to the screen.
         </div>
 
         <h2>Returns</h2>
@@ -423,13 +391,13 @@ w, h = <span class="kw">textmetrics</span><span class="s">(</span><span class="s
               <tr>
                 <td><span class="image_border"><img src="media/textpath.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">fontsize</span><span class="s">(</span><span class="s">65</span><span class="s">)</span>
 path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"clip"</span>, <span class="s">10</span>, <span class="s">70</span><span class="s">)</span>
 <span class="kw">beginclip</span><span class="s">(</span>path<span class="s">)</span>
 <span class="kw">image</span><span class="s">(</span><span class="str">"header.jpg"</span>, <span class="s">-300</span>, <span class="s">-150</span><span class="s">)</span>
-<span class="kw">endclip</span><span class="s">(</span><span class="s">)</span></pre>
-
+<span class="kw">endclip</span><span class="s">(</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -442,8 +410,9 @@ path = <span class="kw">textpath</span><span class="s">(</span><span class="str"
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">textwidth</span><span class="s">(</span>txt, width=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">textwidth</span><span class="s">(</span>txt, width=<span class="kw">None</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -466,11 +435,11 @@ path = <span class="kw">textpath</span><span class="s">(</span><span class="str"
             <tbody>
               <tr>
                 <td>
-                  <pre>
+<pre>
 <span class="kw">font</span><span class="s">(</span><span class="str">"Courier New"</span><span class="s">)</span>
 w = <span class="kw">textwidth</span><span class="s">(</span><span class="str">"hello"</span><span class="s">)</span>
-<span class="kw">print</span> w</pre>
-
+<span class="kw">print</span> w
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>

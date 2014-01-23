@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: WiiNode</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>WiiNode</h3>
@@ -56,8 +57,8 @@
 
     <p>Put the web library folder in the same folder as your script so NodeBox can find the
     library. You can also put it in ~/Library/Application Support/NodeBox/.</p>
-    <pre>wiinode = ximport("wiinode")<br/></pre>
-
+<pre>wiinode = ximport("wiinode")<br/>
+</pre>
 
     <p><small>Outside of NodeBox you can also just do import wiinode.</small></p>
     <hr/>
@@ -67,8 +68,8 @@
 
     <p>In your animation, initialize the WiiMote object. Then, in each frame, call the update
     method:</p>
-    <pre>def setup():<br/>    global wm<br/>    wm = wiinode.WiiMote()<br/><br/>def draw():<br/>    global wm<br/>    wm.update()<br/>    print wm.yaw<br/></pre>
-
+<pre>def setup():<br/>    global wm<br/>    wm = wiinode.WiiMote()<br/><br/>def draw():<br/>    global wm<br/>    wm.update()<br/>    print wm.yaw<br/>
+</pre>
     <hr/>
     <a name="wiimote" title="wiimote"></a>
 
@@ -80,19 +81,19 @@
     <p>The WiiMote returns roll, pitch and yaw. See the <a href="http://en.wikipedia.org/wiki/Flight_dynamics">Wikipedia article on flight dynamics</a> for
     more information.</p>
     <p>See the <code>wiinode_example1.py</code> for a game that uses the roll value.</p>
-    <pre>wm.pitch # The absolute pitch value<br/>wm.roll # The absolute roll value<br/>wm.yaw # The absolute yaw value<br/></pre>
-
+<pre>wm.pitch # The absolute pitch value<br/>wm.roll # The absolute roll value<br/>wm.yaw # The absolute yaw value<br/>
+</pre>
 
     <p><span class="grey_box">Acceleration</span></p>
     <p>The WiiMote returns acceleration in both x, y and z positions. This is <b>not</b> the
     remote’s absolute position in space. You need an infrared sender for that.</p>
-    <pre>wm.x # The horizontal (left-right) acceleration<br/>wm.y # The forward acceleration<br/>wm.z # The vertical (up-down) acceleration<br/></pre>
-
+<pre>wm.x # The horizontal (left-right) acceleration<br/>wm.y # The forward acceleration<br/>wm.z # The vertical (up-down) acceleration<br/>
+</pre>
 
     <p><span class="grey_box">Buttons</span></p>
     <p>The WiiMote’s A and B buttons can be monitored as well.</p>
-    <pre>wm.a # True if the A button is pressed<br/>wm.b # True if the B button is pressed<br/></pre>
-
+<pre>wm.a # True if the A button is pressed<br/>wm.b # True if the B button is pressed<br/>
+</pre>
     <hr/>
     <a name="fooling" title="fooling"></a>
 

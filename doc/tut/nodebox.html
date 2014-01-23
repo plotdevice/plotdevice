@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: nodebox</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3 class="tt">nodebox</h3>
@@ -49,10 +50,11 @@
     <p>Once you have installed NodeBox and added the <code>nodebox</code> command to your shell’s
     <code>PATH</code>, it can be used to run scripts in a window or export graphics to file using
     one of the supported image/video formats.</p>
-    <pre><span class="kw">nodebox</span> [<span class="red">-f</span>] [<span class="red">-b</span>] [<span class="red">--live</span>] [<span class="red">--virtualenv</span> PATH] [<span class="red">--args</span> [a [b ...]]]
+<pre>
+<span class="kw">nodebox</span> [<span class="red">-f</span>] [<span class="red">-b</span>] [<span class="red">--live</span>] [<span class="red">--virtualenv</span> PATH] [<span class="red">--args</span> [a [b ...]]]
         [<span class="red">--export</span> FILE] [<span class="red">--frames</span> N or M-N] [<span class="red">--fps</span> N] [<span class="red">--rate</span> N] [<span class="red">--loop</span> [N]] 
-        file</pre>
-
+        file
+</pre>
 
     <h2><a class="anchor" href="#runtime-arguments" id="runtime-arguments" name="runtime-arguments"></a>Runtime arguments</h2>
 
@@ -84,7 +86,8 @@
     <code class="box"><span class="red">--loop</span> [N]</code> number of times to loop an
     exported animated gif (omit <code>N</code> to loop forever)</p>
     <h2><a class="anchor" href="#usage-examples" id="usage-examples" name="usage-examples"></a>Usage examples</h2>
-    <pre><span class="grey"># Run a script</span>
+<pre>
+<span class="grey"># Run a script</span>
 nodebox script.py
 
 <span class="grey"># Run fullscreen</span>
@@ -100,8 +103,8 @@ nodebox script.py --export output.gif --frames 60 --fps 30 --loop
 nodebox script.py --export output.png --frames 10
 
 <span class="grey"># Create a 5 second long H.264 video at 2 megabits/sec</span>
-nodebox script.py --export output.mov --frames 150 --rate 2.0</pre>
-
+nodebox script.py --export output.mov --frames 150 --rate 2.0
+</pre>
   </div>
 
 </body></html>

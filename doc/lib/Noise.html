@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: Noise</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>Noise</h3>
@@ -59,8 +60,8 @@
 
     <p>Put the <i>noise</i> library folder in the same folder as your script so NodeBox can find
     the library. You can also put it in ~/Library/Application Support/NodeBox/.</p>
-    <pre>noise = <span class="kw">ximport</span><span class="s">(</span><span class="str">"noise"</span><span class="s">)</span></pre>
- 
+<pre>noise = <span class="kw">ximport</span><span class="s">(</span><span class="str">"noise"</span><span class="s">)</span>
+</pre> 
     <hr size="2" width="100%"/>
 
     <h2><a id="generate" name="generate" title="generate"></a>Generating noise</h2>
@@ -68,8 +69,8 @@
     <p>The <i>generate()</i> command returns smooth values between 0.0 and 1.0 based on the
     parameters you supply. You can render noise in one (<i>x</i>), two (<i>x, y</i>) or three
     dimensions (<i>x, y, z</i>).</p>
-    <pre>generate<span class="s">(</span>x, y=<span class="s">0.0</span>, z=<span class="s">0.0</span><span class="s">)</span></pre>
-
+<pre>generate<span class="s">(</span>x, y=<span class="s">0.0</span>, z=<span class="s">0.0</span><span class="s">)</span>
+</pre>
 
     <p>The <i>x, y</i> and <i>z</i> parameters determine the coordinates in the noise landscape.
     Since the landscape is infinite, the actual value of a coordinate doesn’t matter, only the
@@ -80,13 +81,13 @@
         <tr>
           <td><span class="image_border"><img alt="noise3" height="100" src="media/noise3.jpg" width="100"/></span>
           </td><td>
-            <pre>
+<pre>
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">100</span><span class="s">)</span>:
     <span class="kw">for</span> j <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">100</span><span class="s">)</span>:
         d = noise.<span class="s">generate</span><span class="s">(</span>i*<span class="s">0.05</span>, j*<span class="s">0.05</span><span class="s">)</span>  
         <span class="kw">fill</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">0</span>, d*<span class="s">1.2</span><span class="s">)</span>
-        <span class="kw">rect</span><span class="s">(</span>i, j, <span class="s">1</span>, <span class="s">1</span><span class="s">)</span></pre>
-
+        <span class="kw">rect</span><span class="s">(</span>i, j, <span class="s">1</span>, <span class="s">1</span><span class="s">)</span>
+</pre>
           </td></tr></tbody></table></p>
     <p>The <i>generate()</i> command has additional <i>width</i>, <i>height</i>, <i>depth</i> and
     <i>scale</i> parameters that might make things more comprehensible for you. Instead of
@@ -97,7 +98,7 @@
         <tr>
           <td><span class="image_border"><img alt="noise4" height="100" src="media/noise4.jpg" width="100"/></span>
           </td><td>
-            <pre>
+<pre>
 w, h = <span class="s">100</span>, <span class="s">100</span>
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span>w<span class="s">)</span>:
     <span class="kw">for</span> j <span class="kw">in</span> <span class="s">range</span><span class="s">(</span>h<span class="s">)</span>:
@@ -107,16 +108,16 @@ w, h = <span class="s">100</span>, <span class="s">100</span>
             height=h, 
             <span class="kw">scale</span>=<span class="s">0.5</span>
         <span class="s">)</span>
-        <span class="kw">rect</span><span class="s">(</span>i, j, <span class="s">1</span>, <span class="s">1</span>, <span class="kw">fill</span>=<span class="s">(</span><span class="s">0</span>,<span class="s">0</span>,<span class="s">0</span>,d*<span class="s">1.2</span><span class="s">)</span><span class="s">)</span></pre>
-
+        <span class="kw">rect</span><span class="s">(</span>i, j, <span class="s">1</span>, <span class="s">1</span>, <span class="kw">fill</span>=<span class="s">(</span><span class="s">0</span>,<span class="s">0</span>,<span class="s">0</span>,d*<span class="s">1.2</span><span class="s">)</span><span class="s">)</span>
+</pre>
           </td></tr></tbody></table></p>
     <p> </p>
     <p>By default, the Noise library will load a ‘shape’ from which to generate the noise. It will
     use the same pattern each time you run your script. If you want the library to create a new
     pattern each time you run the script you can call the <i>seed()</i> command before generating
     noise:</p>
-    <pre>seed<span class="s">(</span>i=<span class="kw">None</span><span class="s">)</span></pre>
- 
+<pre>seed<span class="s">(</span>i=<span class="kw">None</span><span class="s">)</span>
+</pre> 
     <hr size="2" width="100%"/>
 
     <h2>Shaping the noise pattern:</h2>
@@ -129,24 +130,24 @@ w, h = <span class="s">100</span>, <span class="s">100</span>
         <tr>
           <td><span class="image_border"><img alt="noise5" height="100" src="media/noise5.jpg" width="100"/></span>
           </td><td>
-            <pre>
+<pre>
 <span class="grey"># honey comb</span>
-noise.<span class="s">shape</span><span class="s">(</span> <span class="s">[</span><span class="s">0</span>,<span class="s">1</span><span class="s">]</span>*<span class="s">256</span> <span class="s">)</span></pre>
-
+noise.<span class="s">shape</span><span class="s">(</span> <span class="s">[</span><span class="s">0</span>,<span class="s">1</span><span class="s">]</span>*<span class="s">256</span> <span class="s">)</span>
+</pre>
         </td></tr><tr>
           <td><span class="image_border"><img alt="noise6" height="100" src="media/noise6.jpg" width="100"/></span>
           </td><td>
-            <pre>
+<pre>
 <span class="grey"># chainmail</span>
-noise.<span class="s">shape</span><span class="s">(</span> <span class="s">[</span><span class="s">0</span>,<span class="s">1</span>,<span class="s">2</span>,<span class="s">3</span><span class="s">]</span>*<span class="s">128</span> <span class="s">)</span></pre>
-
+noise.<span class="s">shape</span><span class="s">(</span> <span class="s">[</span><span class="s">0</span>,<span class="s">1</span>,<span class="s">2</span>,<span class="s">3</span><span class="s">]</span>*<span class="s">128</span> <span class="s">)</span>
+</pre>
         </td></tr><tr>
           <td><span class="image_border"><img alt="noise7" height="100" src="media/noise7.jpg" width="100"/></span>
           </td><td>
-            <pre>
+<pre>
 <span class="grey"># some kind of metal or fabric?</span>
-noise.<span class="s">shape</span><span class="s">(</span> <span class="s">[</span><span class="s">0</span>,<span class="s">1</span>,<span class="s">2</span>,<span class="s">3</span>,<span class="kw">random</span><span class="s">(</span><span class="s">6</span><span class="s">)</span>,<span class="s">3</span>,<span class="s">2</span>,<span class="s">1</span><span class="s">]</span>*<span class="s">64</span> <span class="s">)</span></pre>
-
+noise.<span class="s">shape</span><span class="s">(</span> <span class="s">[</span><span class="s">0</span>,<span class="s">1</span>,<span class="s">2</span>,<span class="s">3</span>,<span class="kw">random</span><span class="s">(</span><span class="s">6</span><span class="s">)</span>,<span class="s">3</span>,<span class="s">2</span>,<span class="s">1</span><span class="s">]</span>*<span class="s">64</span> <span class="s">)</span>
+</pre>
           </td></tr></tbody></table></p>
     <p> </p>
   </div>

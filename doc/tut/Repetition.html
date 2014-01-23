@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: Repetition</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3>Repetition</h3>
@@ -33,9 +34,10 @@
     <p><span class="media"><img alt="" height="511" src="media/repetition1.jpg" width="584"/></span></p>
     <p> </p>
     <p>The statement looks like this:</p>
-    <pre><span class="kw">for</span> variable <span class="kw">in</span> <span class="s">list</span>:
-  do stuff</pre>
-
+<pre>
+<span class="kw">for</span> variable <span class="kw">in</span> <span class="s">list</span>:
+  do stuff
+</pre>
 
     <p>Don’t forget the little <strong>colon at the end</strong> of the <em>for variable in
     list:</em> statement!</p>
@@ -54,21 +56,23 @@
     <p>So if <em>list</em> where [’apple’, ‘pear’, ‘banana’], the commands in the for-loop would be
     executed three times, with <em>variable</em> consecutively being <em>apple</em> the first time,
     <em>pear</em> the second time, and <em>banana</em> the third time. Now we’re counting fruit.</p>
-    <pre><span class="kw">for</span> i <span class="kw">in</span> <span class="s">[</span><span class="str">"apple"</span>, <span class="str">"pear"</span>, <span class="str">"banana"</span><span class="s">]</span>:
+<pre>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">[</span><span class="str">"apple"</span>, <span class="str">"pear"</span>, <span class="str">"banana"</span><span class="s">]</span>:
   <span class="kw">print</span> i
 &gt;&gt;&gt; apple
 &gt;&gt;&gt; pear
-&gt;&gt;&gt; banana</pre>
-
+&gt;&gt;&gt; banana
+</pre>
 
     <p>A common thing to put here as <em>list</em> is the <strong>range(<em>n</em>)</strong>
     command, which returns a list with numbers from 0 to <em>n</em>.</p>
-    <pre><span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">3</span><span class="s">)</span>:
+<pre>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">3</span><span class="s">)</span>:
     <span class="kw">print</span> i
 &gt;&gt;&gt; <span class="s">0</span>
 &gt;&gt;&gt; <span class="s">1</span>
-&gt;&gt;&gt; <span class="s">2</span></pre>
-
+&gt;&gt;&gt; <span class="s">2</span>
+</pre>
 
     <h2>The <em>do stuff</em> part</h2>
 
@@ -88,12 +92,13 @@
     example, and have NodeBox place each of them at random locations. This way, each time you run
     the script, you get a different composition of circles.</p>
     <p>It’s easy to program a ‘style’ with variations this way.</p>
-    <pre><span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">100</span><span class="s">)</span>:
+<pre>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">100</span><span class="s">)</span>:
     x = <span class="kw">random</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>
     y = <span class="kw">random</span><span class="s">(</span><span class="kw">WIDTH</span><span class="s">)</span>
     r = <span class="kw">random</span><span class="s">(</span><span class="s">50</span>, <span class="s">100</span><span class="s">)</span>
-    <span class="kw">oval</span><span class="s">(</span>x, y, r, r<span class="s">)</span></pre>
-
+    <span class="kw">oval</span><span class="s">(</span>x, y, r, r<span class="s">)</span>
+</pre>
   </div>
 
 </body></html>

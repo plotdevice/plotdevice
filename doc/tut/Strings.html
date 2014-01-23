@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: Strings</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3>Strings</h3>
@@ -24,15 +25,15 @@
     quotes</strong>; it needs to start and end with a quote. Otherwise NodeBox might think the
     piece of text is the name of a variable, or something else.</p>
     <p>Consider the following example:</p>
-    <pre>hello = <span class="s">20</span>
+<pre>hello = <span class="s">20</span>
 <span class="s">str</span> = hello
 <span class="kw">print</span> <span class="s">str</span>
 &gt;&gt;&gt; <span class="s">20</span>
  
 <span class="s">str</span> = <span class="str">"hello"</span>
 <span class="kw">print</span> <span class="s">str</span>
-&gt;&gt;&gt; hello</pre>
-
+&gt;&gt;&gt; hello
+</pre>
 
     <h2>Strings are lists of characters</h2>
 
@@ -63,21 +64,23 @@
     <em>lower()</em> methods, or have the first character capitalized with <em>capitalize</em>.
     Remember, these are methods, so instead of saying <em>str = upper(str)</em> you need to say
     <em>str = str.upper()</em>.</p>
-    <pre><span class="s">str</span> = <span class="str">"Kumquats, Kumquats! I must have my Kumquats! - Oscar Wilde"</span>
+<pre>
+<span class="s">str</span> = <span class="str">"Kumquats, Kumquats! I must have my Kumquats! - Oscar Wilde"</span>
 <span class="s">str</span> = <span class="s">str</span>.<span class="s">upper</span><span class="s">(</span><span class="s">)</span> 
 <span class="kw">print</span> <span class="s">str</span> 
-&gt;&gt;&gt; KUMQUATS, KUMQUATS! I MUST HAVE MY KUMQUATS! - OSCAR WILDE</pre>
-
+&gt;&gt;&gt; KUMQUATS, KUMQUATS! I MUST HAVE MY KUMQUATS! - OSCAR WILDE
+</pre>
 
     <p>The <em>replace()</em> method is especially useful when you want to filter mistakes from the
     string, or when you want to alter portions of the content:</p>
-    <pre><span class="s">str</span> = <span class="str">"Something's rotten in the state of Denmark."</span>
+<pre>
+<span class="s">str</span> = <span class="str">"Something's rotten in the state of Denmark."</span>
 <span class="s">str</span> = <span class="s">str</span>.<span class="s">replace</span><span class="s">(</span><span class="str">"in"</span>, <span class="str">"in, like, "</span><span class="s">)</span>
 <span class="s">str</span> = <span class="s">str</span>.<span class="s">replace</span><span class="s">(</span><span class="str">"."</span>, <span class="str">" dude."</span><span class="s">)</span>
 <span class="s">str</span> = <span class="s">str</span>.<span class="s">replace</span><span class="s">(</span><span class="str">"rotten"</span>, <span class="str">"way uncool"</span><span class="s">)</span>
 <span class="kw">print</span> <span class="s">str</span>
-&gt;&gt;&gt; Something<span class="str">'s way uncool in, like, the state of Denmark dude.</span></pre>
-
+&gt;&gt;&gt; Something<span class="str">'s way uncool in, like, the state of Denmark dude.</span>
+</pre>
 
     <h2>Quotes in quotes</h2>
 
@@ -86,14 +89,16 @@
     string is terminated here.</p>
     <p>The following example won’t work, NodeBox thinks <em>(On his death bed):</em> needs to be
     assigned to <em>str</em>, followed by garbage statements it doesn’t understand:</p>
-    <pre><span class="s">str</span> = <span class="str">"(On his death bed): "</span>Those curtains are hideous.<span class="str">" - Oscar Wilde"</span></pre>
-
+<pre>
+<span class="s">str</span> = <span class="str">"(On his death bed): "</span>Those curtains are hideous.<span class="str">" - Oscar Wilde"</span>
+</pre>
 
     <p>Instead, the string needs to be wrapped in triple quotes:</p>
-    <pre><span class="s">str</span> = <span class="str">""</span><span class="str">"(On his death bed): "</span>Those curtains are hideous.<span class="str">" - Oscar Wilde"</span><span class="str">""</span> 
+<pre>
+<span class="s">str</span> = <span class="str">""</span><span class="str">"(On his death bed): "</span>Those curtains are hideous.<span class="str">" - Oscar Wilde"</span><span class="str">""</span> 
 <span class="kw">print</span> <span class="s">str</span> 
-&gt;&gt;&gt; <span class="s">(</span>On his death bed<span class="s">)</span>: <span class="str">"Those curtains are hideous."</span> - Oscar Wilde</pre>
-
+&gt;&gt;&gt; <span class="s">(</span>On his death bed<span class="s">)</span>: <span class="str">"Those curtains are hideous."</span> - Oscar Wilde
+</pre>
 
     <h2>File input</h2>
 
@@ -117,9 +122,10 @@
     like Helvetica include Unicode for almost any Unicode character.</p>
     <p>Next, you’ll have to tell NodeBox that a piece of text includes special characters. This is
     as simple as adding a ‘<strong>u’</strong> to the front of the string quotes.</p>
-    <pre><span class="s">str</span> = u<span class="str">"?אתה מדבר אנגלית"</span>
-<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">50</span>, <span class="s">200</span><span class="s">)</span></pre>
-
+<pre>
+<span class="s">str</span> = u<span class="str">"?אתה מדבר אנגלית"</span>
+<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">50</span>, <span class="s">200</span><span class="s">)</span>
+</pre>
 
     <p> </p>
     <p><img alt="strings-unicode1" src="media/strings-unicode1.jpg"/></p>
@@ -132,11 +138,12 @@
     <p> </p>
     <p>Then when you import the contents of the file into NodeBox, you’ll have to
     <strong>decode</strong> the text:</p>
-    <pre><span class="s">str</span> = <span class="kw">open</span><span class="s">(</span><span class="str">"hebrew.txt"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
+<pre>
+<span class="s">str</span> = <span class="kw">open</span><span class="s">(</span><span class="str">"hebrew.txt"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
 <span class="s">str</span> = <span class="s">str</span>.<span class="s">decode</span><span class="s">(</span><span class="str">"utf-8"</span><span class="s">)</span>
 <span class="kw">align</span><span class="s">(</span><span class="kw">RIGHT</span><span class="s">)</span>
-<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">100</span>, <span class="s">200</span><span class="s">)</span></pre>
-
+<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">100</span>, <span class="s">200</span><span class="s">)</span>
+</pre>
 
     <p> </p>
   </div>

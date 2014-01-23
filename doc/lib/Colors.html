@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: Colors</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>Colors</h3>
@@ -35,8 +36,8 @@
     <p>My personal favorites are <a href="#shade">shades</a> and <a href="#shadow">shadows and
     gradient fills</a>.</p>
     <p class="pink_text">If you have NodeBox 1.10 or up, the library is integrated by default as
-    the <a href="../ref/Color.html#colors">colors</a> object.</p>
-    <h2>Download</h2>
+    the <a href="../ref/Globals.html#colors">colors</a> object.</p>
+    <h2>Previous Version Download</h2>
 
     <table border="0">
       <tbody>
@@ -69,16 +70,17 @@
 
     <p>The Colors library has a number of commands that create a new color you can use with
     <a href="../ref/Color.html#fill()">fill()</a> or <a href="../ref/Color.html#fill()">stroke()</a>.</p>
-    <pre>rgb<span class="s">(</span>r, g, b, a=<span class="kw">None</span>, <span class="s">range</span>=<span class="s">1.0</span>, name=<span class="str">""</span><span class="s">)</span></pre>
-
-    <pre>hsb<span class="s">(</span>h, s, b, a=<span class="kw">None</span>, <span class="s">range</span>=<span class="s">1.0</span>, name=<span class="str">""</span><span class="s">)</span></pre>
-
-    <pre>cmyk<span class="s">(</span>c, m, y, k, <span class="s">range</span>=<span class="s">1.0</span>, name=<span class="str">""</span><span class="s">)</span></pre>
-
-    <pre>lab<span class="s">(</span>l, a, b, <span class="s">range</span>=<span class="s">1.0</span>, name=<span class="str">""</span><span class="s">)</span></pre>
-
-    <pre><span class="s">hex</span><span class="s">(</span><span class="s">str</span>, name=<span class="str">""</span><span class="s">)</span></pre>
-
+<pre>rgb<span class="s">(</span>r, g, b, a=<span class="kw">None</span>, <span class="s">range</span>=<span class="s">1.0</span>, name=<span class="str">""</span><span class="s">)</span>
+</pre>
+<pre>hsb<span class="s">(</span>h, s, b, a=<span class="kw">None</span>, <span class="s">range</span>=<span class="s">1.0</span>, name=<span class="str">""</span><span class="s">)</span>
+</pre>
+<pre>cmyk<span class="s">(</span>c, m, y, k, <span class="s">range</span>=<span class="s">1.0</span>, name=<span class="str">""</span><span class="s">)</span>
+</pre>
+<pre>lab<span class="s">(</span>l, a, b, <span class="s">range</span>=<span class="s">1.0</span>, name=<span class="str">""</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">hex</span><span class="s">(</span><span class="s">str</span>, name=<span class="str">""</span><span class="s">)</span>
+</pre>
 
     <p>With the <i>range</i> parameter you can define how you want to supply the channel values.
     For example, if you want to define <i>r</i>, <i>g</i> and <i>b</i> between 0 and 255 instead of
@@ -86,16 +88,16 @@
     <p>The optional <i>name</i> parameter lets you define a name for the color. Otherwise, a name
     will be guessed using the <i>clr.nearest_hue()</i> method (see below).</p>
     <p>The <i>hex()</i> command creates a color from a hexadecimal string (e.g. ‘#30343D’).<br/></p>
-    <pre>named_color<span class="s">(</span><span class="s">str</span><span class="s">)</span></pre>
-
+<pre>named_color<span class="s">(</span><span class="s">str</span><span class="s">)</span>
+</pre>
 
     <p>The <i>named_color()</i> command creates a color from a name like ‘olive’ or ‘maroon’ or
     ‘antiquewhite’. A list of all the named colors the command will recognize is <a href="Colors/named_colors.html">here</a>. The really great thing is that <b>each of these named
     colors is also a command</b> in the Colors library. So the two colors in the example below are
     exactly the same:</p>
-    <pre>clr1 = colors.<span class="s">named_color</span><span class="s">(</span><span class="str">"olive"</span><span class="s">)</span>
-clr2 = colors.<span class="s">olive</span><span class="s">(</span><span class="s">)</span></pre>
-
+<pre>clr1 = colors.<span class="s">named_color</span><span class="s">(</span><span class="str">"olive"</span><span class="s">)</span>
+clr2 = colors.<span class="s">olive</span><span class="s">(</span><span class="s">)</span>
+</pre>
 
     <p> </p>
     <hr/>
@@ -138,59 +140,59 @@ clr2 = colors.<span class="s">olive</span><span class="s">(</span><span class="s
     <p><span class="grey_box">Color methods</span></p>
     <p>Each color has a range of methods to manipulate it. Each of these returns a <b>copy</b> of
     the color.</p>
-    <pre>clr.<span class="s">copy</span><span class="s">(</span><span class="s">)</span></pre>
-
-    <pre>clr.<span class="s">darken</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span></pre>
-
-    <pre>clr.<span class="s">lighten</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span></pre>
-
-    <pre>clr.<span class="s">desaturate</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span></pre>
-
-    <pre>clr.<span class="s">saturate</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span></pre>
-
-    <pre>clr.<span class="s">adjust_contrast</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span></pre>
-
-    <pre>clr.<span class="s">adjust_rgb</span><span class="s">(</span>r=<span class="s">0.0</span>, g=<span class="s">0.0</span>, b=<span class="s">0.0</span>, a=<span class="s">0.0</span><span class="s">)</span></pre>
-
-    <pre>clr.<span class="s">adjust_hsb</span><span class="s">(</span>h=<span class="s">0.0</span>, s=<span class="s">0.0</span>, b=<span class="s">0.0</span>, a=<span class="s">0.0</span><span class="s">)</span></pre>
-
+<pre>clr.<span class="s">copy</span><span class="s">(</span><span class="s">)</span>
+</pre>
+<pre>clr.<span class="s">darken</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span>
+</pre>
+<pre>clr.<span class="s">lighten</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span>
+</pre>
+<pre>clr.<span class="s">desaturate</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span>
+</pre>
+<pre>clr.<span class="s">saturate</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span>
+</pre>
+<pre>clr.<span class="s">adjust_contrast</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span>
+</pre>
+<pre>clr.<span class="s">adjust_rgb</span><span class="s">(</span>r=<span class="s">0.0</span>, g=<span class="s">0.0</span>, b=<span class="s">0.0</span>, a=<span class="s">0.0</span><span class="s">)</span>
+</pre>
+<pre>clr.<span class="s">adjust_hsb</span><span class="s">(</span>h=<span class="s">0.0</span>, s=<span class="s">0.0</span>, b=<span class="s">0.0</span>, a=<span class="s">0.0</span><span class="s">)</span>
+</pre>
 
     <p>What is interesting about these methods is that you can also apply them to <a href="#colorlist">color lists</a>. This way you can quickly manipulate sets of colors without having
     to change each color individually.</p>
     <p>The <i>clr.blend()</i> command returns a mixture from this color and another color:</p>
-    <pre>clr.<span class="s">blend</span><span class="s">(</span>clr, factor=<span class="s">0.5</span><span class="s">)</span></pre>
-
+<pre>clr.<span class="s">blend</span><span class="s">(</span>clr, factor=<span class="s">0.5</span><span class="s">)</span>
+</pre>
 
     <p>The <i>clr.rotate()</i> command returns a color that is <i>angle</i> degrees across the
     color wheel. So when <i>angle</i> is 180, this returns the complementary color.</p>
-    <pre>clr.<span class="kw">rotate</span><span class="s">(</span>angle=<span class="s">180</span><span class="s">)</span></pre>
-
+<pre>clr.<span class="kw">rotate</span><span class="s">(</span>angle=<span class="s">180</span><span class="s">)</span>
+</pre>
 
     <p>The <i>clr.analog()</i> command returns hues that are next to this one on the color wheel,
     separated by <i>angle</i>. The additional <i>d</i> parameter will slightly vary the color’s
     brightness and saturation for more variation.<br/></p>
-    <pre>clr.<span class="s">analog</span><span class="s">(</span>angle=<span class="s">20</span>, d=<span class="s">0.5</span><span class="s">)</span></pre>
-
+<pre>clr.<span class="s">analog</span><span class="s">(</span>angle=<span class="s">20</span>, d=<span class="s">0.5</span><span class="s">)</span>
+</pre>
 
     <p>Another interesting method is <i>clr.nearest_hue()</i>. This returns the name of the name of
     a well-known hue this color resembles most (<i>red, orange, yellow, lime, green, teal, cyan,
     azure, blue, violet, purple or pink</i>). When the <i>primary</i> parameter is <i>True</i>, the
     name returned is limited to primary hues: <i>red, orange, yellow, green, blue, purple,
     pink</i>.</p>
-    <pre>clr.<span class="s">nearest_hue</span><span class="s">(</span>primary=<span class="kw">False</span><span class="s">)</span></pre>
-
+<pre>clr.<span class="s">nearest_hue</span><span class="s">(</span>primary=<span class="kw">False</span><span class="s">)</span>
+</pre>
 
     <p>To get the distance between two colors as a number there’s the <i>clr.distance()</i> method.
     It returns a number between 0.0 and 1.0 representing the distance as if colors were arranged on
     a sphere (e.g. a disc of hues with the less saturated colors in the centre, darker discs in the
     sphere are at the bottom).</p>
-    <pre>clr.<span class="s">distance</span><span class="s">(</span>clr<span class="s">)</span></pre>
-
+<pre>clr.<span class="s">distance</span><span class="s">(</span>clr<span class="s">)</span>
+</pre>
 
     <p>The <i>clr.swatch()</i> command draws a rectangle to the canvas filled with the color. The
     rectangle is located at <i>x</i> and <i>y</i> and has width <i>w</i> and height <i>h</i>.</p>
-    <pre>clr.<span class="s">swatch</span><span class="s">(</span>x, y, w=<span class="s">35</span>, h=<span class="s">35</span>, roundness=<span class="s">0</span><span class="s">)</span></pre>
-    
+<pre>clr.<span class="s">swatch</span><span class="s">(</span>x, y, w=<span class="s">35</span>, h=<span class="s">35</span>, roundness=<span class="s">0</span><span class="s">)</span>
+</pre>    
 
     <p> </p>
     <hr/>
@@ -201,27 +203,32 @@ clr2 = colors.<span class="s">olive</span><span class="s">(</span><span class="s
     with lists of colors. You can store different colors in a list and then manipulate the entire
     collection. For example, make all of the colors darker, retrieve the lightest color, or even
     create a list from pixels in an image for example.</p>
-    <pre><span class="s">list</span><span class="s">(</span>clr1, clr2, clr3, ..., name=<span class="str">""</span>, tags=<span class="s">[</span><span class="s">]</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span><span class="s">(</span><span class="s">[</span>clr1, clr2, clr3, ...<span class="s">]</span>, name=<span class="str">""</span>, tags=<span class="s">[</span><span class="s">]</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span><span class="s">(</span>imagepath, n=<span class="s">10</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span><span class="s">(</span>word<span class="s">)</span></pre>
-
-    <pre><span class="s">list</span><span class="s">(</span>Web.<span class="s">KulerTheme</span><span class="s">)</span></pre>
-
+<pre>
+<span class="s">list</span><span class="s">(</span>clr1, clr2, clr3, ..., name=<span class="str">""</span>, tags=<span class="s">[</span><span class="s">]</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span><span class="s">(</span><span class="s">[</span>clr1, clr2, clr3, ...<span class="s">]</span>, name=<span class="str">""</span>, tags=<span class="s">[</span><span class="s">]</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span><span class="s">(</span>imagepath, n=<span class="s">10</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span><span class="s">(</span>word<span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span><span class="s">(</span>Web.<span class="s">KulerTheme</span><span class="s">)</span>
+</pre>
 
     <p>Lists can be created from a number of indivdual colors, another list of colors, the pathname
     of an image from which to grab pixel values (you need to have the <a href="Core_Image.html">Core Image</a> library installed), a word, or a kuler theme from the <a href="Web.html#kuler">web.kuler.search()</a> command in the NodeBox Web library.</p>
     <p>Optionally you can supply a <i>name</i> and a list of <i>tags</i> for the list.</p>
     <p>Accessing each individual color in the list works the same as with any other list:</p>
-    <pre>sea = colors.<span class="s">list</span><span class="s">(</span><span class="str">"sea.jpg"</span>, n=<span class="s">20</span><span class="s">)</span>
+<pre>sea = colors.<span class="s">list</span><span class="s">(</span><span class="str">"sea.jpg"</span>, n=<span class="s">20</span><span class="s">)</span>
 x = <span class="s">0</span>
 <span class="kw">for</span> clr <span class="kw">in</span> sea:
     <span class="kw">rect</span><span class="s">(</span>x, <span class="s">0</span>, <span class="s">20</span>, <span class="s">20</span>, <span class="kw">fill</span>=clr<span class="s">)</span>
-    x += <span class="s">20</span></pre>
-
+    x += <span class="s">20</span>
+</pre>
 
     <p><img alt="colors_colorlist1" height="27" src="media/colors_colorlist1.jpg" width="550"/></p>
     <p>You can also use the <a href="../ref/Utility.html#choice()">choice()</a> command to get a
@@ -246,12 +253,15 @@ x = <span class="s">0</span>
 
     <p><span class="grey_box">Color list methods</span><br/></p>
     <p>Some methods to manipulate the list. All of these will return a <b>copy</b> of the list.<br/></p>
-    <pre><span class="s">list</span>.<span class="s">reverse</span><span class="s">(</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">sort</span><span class="s">(</span><span class="s">reversed</span>=<span class="kw">True</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">repeat</span><span class="s">(</span><span class="s">self</span>, n=<span class="s">2</span>, oscillate=<span class="kw">False</span>, callback=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>
+<span class="s">list</span>.<span class="s">reverse</span><span class="s">(</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">sort</span><span class="s">(</span><span class="s">reversed</span>=<span class="kw">True</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">repeat</span><span class="s">(</span><span class="s">self</span>, n=<span class="s">2</span>, oscillate=<span class="kw">False</span>, callback=<span class="kw">None</span><span class="s">)</span>
+</pre>
 
     <p>The <i>list.reverse()</i> method returns a copy with all the colors in reversed order.</p>
     <p>The <i>list</i><i>.sort()</i> method returns a copy with the colors sorted from dark to
@@ -261,8 +271,9 @@ x = <span class="s">0</span>
     contain <i>red, green, yellow, red, green, yellow</i>. When <i>oscillate</i> is <i>True</i> it
     will contain <i>red, green, yellow, yellow, green, red</i>. This is useful for lists of
     gradient colors.</p>
-    <pre><span class="s">list</span>.<span class="s">swarm</span><span class="s">(</span>x, y, r=<span class="s">100</span><span class="s">)</span></pre>
-
+<pre>
+<span class="s">list</span>.<span class="s">swarm</span><span class="s">(</span>x, y, r=<span class="s">100</span><span class="s">)</span>
+</pre>
 
     <p>The <i>list.swarm()</i> method draws a small visualization of all the colors in the list.
     <table border="0">
@@ -270,48 +281,62 @@ x = <span class="s">0</span>
         <tr>
           <td><span class="image_border"><img alt="colors_colorlist2" height="101" src="media/colors_colorlist2.jpg" width="100"/></span>
           </td><td>
-            <pre>
+<pre>
 sea = colors.<span class="s">list</span><span class="s">(</span><span class="str">"sea.jpg"</span>, n=<span class="s">20</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span>sea.<span class="s">darkest</span><span class="s">)</span>
-sea.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span></pre>
-
+sea.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
+</pre>
           </td></tr></tbody></table></p>
     <p>All of the methods that work on a single color also work on a list of colors. They will
     transform all the individual colors in the list:</p>
-    <pre><span class="s">list</span>.<span class="s">copy</span><span class="s">(</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">darken</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">lighten</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">desaturate</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">saturate</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">adjust_contrast</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">adjust_rgb</span><span class="s">(</span>r=<span class="s">0.0</span>, g=<span class="s">0.0</span>, b=<span class="s">0.0</span>, a=<span class="s">0.0</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">adjust_hsb</span><span class="s">(</span>h=<span class="s">0.0</span>, s=<span class="s">0.0</span>, b=<span class="s">0.0</span>, a=<span class="s">0.0</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">analog</span><span class="s">(</span><span class="s">self</span>, angle=<span class="s">20</span>, d=<span class="s">0.5</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="kw">rotate</span><span class="s">(</span><span class="s">self</span>, angle=<span class="s">180</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">swatch</span><span class="s">(</span>x, y, w=<span class="s">35</span>, h=<span class="s">35</span>, padding=<span class="s">0</span>, roundness=<span class="s">0</span><span class="s">)</span></pre>
-
+<pre>
+<span class="s">list</span>.<span class="s">copy</span><span class="s">(</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">darken</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">lighten</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">desaturate</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">saturate</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">adjust_contrast</span><span class="s">(</span>step=<span class="s">0.1</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">adjust_rgb</span><span class="s">(</span>r=<span class="s">0.0</span>, g=<span class="s">0.0</span>, b=<span class="s">0.0</span>, a=<span class="s">0.0</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">adjust_hsb</span><span class="s">(</span>h=<span class="s">0.0</span>, s=<span class="s">0.0</span>, b=<span class="s">0.0</span>, a=<span class="s">0.0</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">analog</span><span class="s">(</span><span class="s">self</span>, angle=<span class="s">20</span>, d=<span class="s">0.5</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="kw">rotate</span><span class="s">(</span><span class="s">self</span>, angle=<span class="s">180</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">swatch</span><span class="s">(</span>x, y, w=<span class="s">35</span>, h=<span class="s">35</span>, padding=<span class="s">0</span>, roundness=<span class="s">0</span><span class="s">)</span>
+</pre>
 
     <p> </p>
     <hr size="2" width="100%"/>
 
     <p><span class="grey_box">Color list sorting</span></p>
     <p>The colors in a list can be sorted in various ways:</p>
-    <pre><span class="s">list</span>.<span class="s">sort</span><span class="s">(</span>comparison=<span class="str">"hue"</span>, <span class="s">reversed</span>=<span class="kw">False</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">sort_by_distance</span><span class="s">(</span><span class="s">reversed</span>=<span class="kw">False</span><span class="s">)</span></pre>
-
-    <pre><span class="s">list</span>.<span class="s">cluster</span><span class="s">(</span>cmp1=<span class="str">"hue"</span>, cmp2=<span class="str">"brightness"</span>, <span class="s">reversed</span>=<span class="kw">False</span>, n=<span class="s">12</span><span class="s">)</span></pre>
-
+<pre>
+<span class="s">list</span>.<span class="s">sort</span><span class="s">(</span>comparison=<span class="str">"hue"</span>, <span class="s">reversed</span>=<span class="kw">False</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">sort_by_distance</span><span class="s">(</span><span class="s">reversed</span>=<span class="kw">False</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">list</span>.<span class="s">cluster</span><span class="s">(</span>cmp1=<span class="str">"hue"</span>, cmp2=<span class="str">"brightness"</span>, <span class="s">reversed</span>=<span class="kw">False</span>, n=<span class="s">12</span><span class="s">)</span>
+</pre>
 
     <p>The basic <i>list.sort()</i> method allows you to sort by any color property (hue,
     brightness, red, magenta, ...)</p>
@@ -327,14 +352,14 @@ sea.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span
         <tr>
           <td><span class="image_border"><img alt="colors_colorlist3" height="100" src="media/colors_colorlist3.jpg" width="100"/></span>
           </td><td>
-            <pre>
+<pre>
 clrs = colors.<span class="s">list</span><span class="s">(</span>
     colors.<span class="s">purple</span><span class="s">(</span><span class="s">)</span>.<span class="s">darken</span><span class="s">(</span><span class="s">)</span>, 
     colors.<span class="s">deeppink</span><span class="s">(</span><span class="s">)</span> 
 <span class="s">)</span>
 clrs += colors.<span class="s">violet</span><span class="s">(</span><span class="s">)</span>
-clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span></pre>
-
+clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
+</pre>
           </td></tr></tbody></table></p>
     <p>Also, the * operator is equivalent to the <i>list.repeat()</i> method.<br/></p>
     <p> </p>
@@ -351,17 +376,18 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
         <tr>
           <td><span class="image_border"><img alt="colors_colorlist4" height="100" src="media/colors_colorlist4.jpg" width="100"/></span>
           </td><td>
-            <pre>
+<pre>
 clrs = colors.<span class="s">list</span><span class="s">(</span> colors.<span class="s">red</span><span class="s">(</span><span class="s">)</span>, colors.<span class="s">black</span><span class="s">(</span><span class="s">)</span> <span class="s">)</span>
 clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
 <span class="kw">print</span> clrs.<span class="s">context</span>
-&gt;&gt;&gt; <span class="s">[</span><span class="str">'anger'</span>, <span class="str">'devil'</span>, <span class="str">'drama'</span>, <span class="str">'power'</span>, <span class="str">'sex'</span>, <span class="str">'strength'</span><span class="s">]</span></pre>
-
+&gt;&gt;&gt; <span class="s">[</span><span class="str">'anger'</span>, <span class="str">'devil'</span>, <span class="str">'drama'</span>, <span class="str">'power'</span>, <span class="str">'sex'</span>, <span class="str">'strength'</span><span class="s">]</span>
+</pre>
           </td></tr></tbody></table></p>
     <p>The data is drawn from the files in the <i>/context</i> subfolder in the library. You can
     adjust them to your own needs. There’s also a dictionary with all the information:</p>
-    <pre><span class="kw">print</span> colors.<span class="s">context</span><span class="s">[</span><span class="str">"red"</span><span class="s">]</span></pre>
-    
+<pre>
+<span class="kw">print</span> colors.<span class="s">context</span><span class="s">[</span><span class="str">"red"</span><span class="s">]</span>
+</pre>    
     <hr/>
 
     <h2><a id="rules" name="rules" title="rules"></a>Color lists from harmony rules</h2>
@@ -385,26 +411,26 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
     </li></ul>
 
     <p> </p>
-    <pre>complement<span class="s">(</span>clr<span class="s">)</span></pre>
-
-    <pre>complementary<span class="s">(</span>clr<span class="s">)</span></pre>
-
-    <pre>split_complementary<span class="s">(</span>clr<span class="s">)</span></pre>
-
-    <pre>left_complement<span class="s">(</span>clr<span class="s">)</span></pre>
-
-    <pre>right_complement<span class="s">(</span>clr<span class="s">)</span></pre>
-
-    <pre>analogous<span class="s">(</span>clr, angle=<span class="s">10</span>, contrast=<span class="s">0.25</span><span class="s">)</span></pre>
-
-    <pre>monochrome<span class="s">(</span>clr<span class="s">)</span></pre>
-
-    <pre>triad<span class="s">(</span>clr, angle=<span class="s">120</span><span class="s">)</span></pre>
-
-    <pre>tetrad<span class="s">(</span>clr, angle=<span class="s">90</span><span class="s">)</span></pre>
-
-    <pre>compound<span class="s">(</span>clr, flip=<span class="kw">False</span><span class="s">)</span></pre>
-
+<pre>complement<span class="s">(</span>clr<span class="s">)</span>
+</pre>
+<pre>complementary<span class="s">(</span>clr<span class="s">)</span>
+</pre>
+<pre>split_complementary<span class="s">(</span>clr<span class="s">)</span>
+</pre>
+<pre>left_complement<span class="s">(</span>clr<span class="s">)</span>
+</pre>
+<pre>right_complement<span class="s">(</span>clr<span class="s">)</span>
+</pre>
+<pre>analogous<span class="s">(</span>clr, angle=<span class="s">10</span>, contrast=<span class="s">0.25</span><span class="s">)</span>
+</pre>
+<pre>monochrome<span class="s">(</span>clr<span class="s">)</span>
+</pre>
+<pre>triad<span class="s">(</span>clr, angle=<span class="s">120</span><span class="s">)</span>
+</pre>
+<pre>tetrad<span class="s">(</span>clr, angle=<span class="s">90</span><span class="s">)</span>
+</pre>
+<pre>compound<span class="s">(</span>clr, flip=<span class="kw">False</span><span class="s">)</span>
+</pre>
 
     <p>All of the commands take a base <i>clr</i> from which a scheme is then derived. A <a href="#colorlist">color list</a> is returned, usually containing three to six matching colors
     (except <i>complement()</i>, which just returns the original color and its complement). Notice
@@ -412,22 +438,23 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
     the color wheel. Making it bigger for the <i>analogous()</i> scheme introduces more variation.</p>
     <p>There’s also a <i>rule()</i> command where you can supply the rule name as a string. All of
     the rule names are stored in the <i>rules</i> list.<br/></p>
-    <pre>rule<span class="s">(</span>name, clr, angle=<span class="kw">None</span>, contrast=<span class="s">0.3</span>, flip=<span class="kw">False</span><span class="s">)</span></pre>
-
-    <pre><span class="kw">print</span> colors.<span class="s">rules</span>
+<pre>rule<span class="s">(</span>name, clr, angle=<span class="kw">None</span>, contrast=<span class="s">0.3</span>, flip=<span class="kw">False</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="kw">print</span> colors.<span class="s">rules</span>
 &gt;&gt;&gt; <span class="s">[</span><span class="str">'complement'</span>, <span class="str">'complementary'</span>, <span class="str">'split complementary'</span>, <span class="str">'left complement'</span>, 
 &gt;&gt;&gt;  <span class="str">'right complement'</span>, <span class="str">'analogous'</span>, <span class="str">'monochrome'</span>, <span class="str">'triad'</span>, <span class="str">'tetrad'</span>, 
-&gt;&gt;&gt;  <span class="str">'compound'</span>, <span class="str">'flipped compound'</span><span class="s">]</span></pre>
-
+&gt;&gt;&gt;  <span class="str">'compound'</span>, <span class="str">'flipped compound'</span><span class="s">]</span>
+</pre>
 
     <p>With the <i>rule()</i> command we can quickly display all the possibilities for a color:</p>
-    <pre>clr = colors.<span class="s">rgb</span><span class="s">(</span><span class="s">0.0</span>, <span class="s">0.4</span>, <span class="s">0.6</span><span class="s">)</span>
+<pre>clr = colors.<span class="s">rgb</span><span class="s">(</span><span class="s">0.0</span>, <span class="s">0.4</span>, <span class="s">0.6</span><span class="s">)</span>
 x = <span class="s">10</span>
 <span class="kw">for</span> name <span class="kw">in</span> colors.<span class="s">rules</span>:
     scheme = colors.<span class="s">rule</span><span class="s">(</span>name, clr<span class="s">)</span>
     scheme.<span class="s">swatch</span><span class="s">(</span>x, <span class="s">10</span><span class="s">)</span>
-    x += <span class="s">40</span></pre>
-
+    x += <span class="s">40</span>
+</pre>
 
     <p><img alt="colors-rules0" height="230" src="media/colors-rules0.jpg" width="460"/></p>
     <p> </p>
@@ -441,44 +468,44 @@ x = <span class="s">10</span>
           <br/>
           </td><td>
             <p>Complementary scheme:</p>
-            <pre>
+<pre>
 clr = colors.<span class="s">rgb</span><span class="s">(</span><span class="s">0</span>, <span class="s">0.4</span>, <span class="s">0.6</span><span class="s">)</span>
 scheme = colors.<span class="s">complementary</span><span class="s">(</span>clr<span class="s">)</span>
 scheme.<span class="s">swarm</span><span class="s">(</span><span class="s">75</span>, <span class="s">75</span><span class="s">)</span>
-scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, w=<span class="s">25</span>, h=<span class="s">25</span><span class="s">)</span></pre>
-
+scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, w=<span class="s">25</span>, h=<span class="s">25</span><span class="s">)</span>
+</pre>
         </td></tr><tr>
           <td class="image_border"><img alt="colors-rules3" height="150" src="media/colors-rules3.jpg" width="150"/><br/>
           <br/>
           </td><td>
             <p>Left complementary:</p>
-            <pre>
+<pre>
 clr = colors.<span class="s">rgb</span><span class="s">(</span><span class="s">0</span>, <span class="s">0.4</span>, <span class="s">0.6</span><span class="s">)</span>
 scheme = colors.<span class="s">left_complement</span><span class="s">(</span>clr<span class="s">)</span>
 scheme.<span class="s">swarm</span><span class="s">(</span><span class="s">75</span>, <span class="s">75</span><span class="s">)</span>
-scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, w=<span class="s">25</span>, h=<span class="s">25</span><span class="s">)</span></pre>
-
+scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, w=<span class="s">25</span>, h=<span class="s">25</span><span class="s">)</span>
+</pre>
         </td></tr><tr>
           <td class="image_border"><img alt="colors-rules5" height="150" src="media/colors-rules5.jpg" width="150"/><br/>
           <br/>
           </td><td>
             <p>Analogous:</p>
-            <pre>
+<pre>
 clr = colors.<span class="s">rgb</span><span class="s">(</span><span class="s">0</span>, <span class="s">0.4</span>, <span class="s">0.6</span><span class="s">)</span>
 scheme = colors.<span class="s">analogous</span><span class="s">(</span>clr<span class="s">)</span>
 scheme.<span class="s">swarm</span><span class="s">(</span><span class="s">75</span>, <span class="s">75</span><span class="s">)</span>
-scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, w=<span class="s">25</span>, h=<span class="s">25</span><span class="s">)</span></pre>
-
+scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, w=<span class="s">25</span>, h=<span class="s">25</span><span class="s">)</span>
+</pre>
         </td></tr><tr>
           <td><span class="image_border"><img alt="colors-rules10" height="150" src="media/colors-rules10.jpg" width="150"/></span><br/>
           </td><td>
             <p>Flipped compound:</p>
-            <pre>
+<pre>
 clr = colors.<span class="s">rgb</span><span class="s">(</span><span class="s">0</span>, <span class="s">0.4</span>, <span class="s">0.6</span><span class="s">)</span>
 scheme = colors.<span class="s">compound</span><span class="s">(</span>clr, flip=<span class="kw">True</span><span class="s">)</span>
 scheme.<span class="s">swarm</span><span class="s">(</span><span class="s">75</span>, <span class="s">75</span><span class="s">)</span>
-scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, w=<span class="s">25</span>, h=<span class="s">25</span><span class="s">)</span></pre>
-
+scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, w=<span class="s">25</span>, h=<span class="s">25</span><span class="s">)</span>
+</pre>
           </td></tr></tbody></table></p>
     <p> </p>
     <p>Techies may want to note that calculations for the rules are performed on an <i>artistic
@@ -493,7 +520,8 @@ scheme.<span class="s">swatch</span><span class="s">(</span><span class="s">0</s
     <b>analogous</b> schemes. Remember how a <a href="#color">color</a> object in the Colors
     library has an <i>analog()</i> method? It’s very easy to use in a loop so that each element is
     subtly different:</p>
-    <pre><span class="kw">size</span><span class="s">(</span><span class="s">600</span>, <span class="s">600</span><span class="s">)</span>
+<pre>
+<span class="kw">size</span><span class="s">(</span><span class="s">600</span>, <span class="s">600</span><span class="s">)</span>
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.4</span>, <span class="s">0.5</span>, <span class="s">0</span><span class="s">)</span>
 <span class="kw">strokewidth</span><span class="s">(</span><span class="s">0.1</span><span class="s">)</span>
@@ -526,8 +554,8 @@ colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s
             x1+vx1, y1+vy1, 
             x1, y1
         <span class="s">)</span>
-        <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span></pre>
-
+        <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+</pre>
 
     <p><img alt="colors-rules11" height="550" src="media/colors-rules11.jpg" width="550"/><br/></p>
     <p>You can find this script fully documented in the library download.</p>
@@ -538,10 +566,10 @@ colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s
 
     <p>The Colors library has a handy <i>gradient()</i> command that takes a couple of colors and
     calculates all the intermediary steps between them.</p>
-    <pre>gradient<span class="s">(</span><span class="s">[</span>clr1, clr2, clr3, ...<span class="s">]</span>, steps=<span class="s">100</span>, spread=<span class="s">0.5</span><span class="s">)</span></pre>
-
-    <pre>gradient<span class="s">(</span>clr1, clr2, clr3, ..., steps=<span class="s">100</span>, spread=<span class="s">0.5</span><span class="s">)</span></pre>
-
+<pre>gradient<span class="s">(</span><span class="s">[</span>clr1, clr2, clr3, ...<span class="s">]</span>, steps=<span class="s">100</span>, spread=<span class="s">0.5</span><span class="s">)</span>
+</pre>
+<pre>gradient<span class="s">(</span>clr1, clr2, clr3, ..., steps=<span class="s">100</span>, spread=<span class="s">0.5</span><span class="s">)</span>
+</pre>
 
     <p>You can supply base colors either as a list or simply as an enumeration of parameters. A
     <a href="#colorlist">color list</a> is returned with additional colors that form a smooth
@@ -551,22 +579,23 @@ colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s
     <p>For example, here we create a gradient list from light blue to dark blue. For each color in
     the list an oval is drawn that zooms inward. So we draw 60 ovals that go from light blue to
     dark blue:<br/></p>
-    <pre>clr1 = colors.<span class="s">rgb</span><span class="s">(</span><span class="s">0.6</span>, <span class="s">0.8</span>, <span class="s">1.0</span><span class="s">)</span>
+<pre>clr1 = colors.<span class="s">rgb</span><span class="s">(</span><span class="s">0.6</span>, <span class="s">0.8</span>, <span class="s">1.0</span><span class="s">)</span>
 clr2 = colors.<span class="s">rgb</span><span class="s">(</span><span class="s">0.0</span>, <span class="s">0.2</span>, <span class="s">0.4</span><span class="s">)</span>
 g = colors.<span class="s">gradient</span><span class="s">(</span>clr1, clr2, steps=<span class="s">60</span><span class="s">)</span>
  
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">len</span><span class="s">(</span>g<span class="s">)</span><span class="s">)</span>:
     <span class="kw">fill</span><span class="s">(</span>g<span class="s">[</span>i<span class="s">]</span><span class="s">)</span>
     r = <span class="s">700</span>-i*<span class="s">10</span>
-    <span class="kw">oval</span><span class="s">(</span><span class="s">-75</span>+i*<span class="s">5</span>, <span class="s">-180</span>+i*<span class="s">5</span>, r, r<span class="s">)</span></pre>
-
+    <span class="kw">oval</span><span class="s">(</span><span class="s">-75</span>+i*<span class="s">5</span>, <span class="s">-180</span>+i*<span class="s">5</span>, r, r<span class="s">)</span>
+</pre>
 
     <p><span class="image_border"><img alt="colors-gradientlist1" height="330" src="media/colors-gradientlist1.jpg" width="550"/></span></p>
     <p>Let’s add a nice spiral to the composition. As you can see in the example below, I can reset
     the number of <i>steps</i> in the gradient list (the number of colors is updated accordingly) -
     I don’t need to create a new gradient. The same goes for the gradient <i>spread</i>.
     Additionaly, remember that <i>g</i> is a color list so I can use the <i>reverse()</i> method:</p>
-    <pre><span class="grey"># append this to the previous code:</span>
+<pre>
+<span class="grey"># append this to the previous code:</span>
  
 g.<span class="s">steps</span> = <span class="s">200</span>
 g = g.<span class="s">reverse</span><span class="s">(</span><span class="s">)</span>
@@ -577,14 +606,15 @@ colors.<span class="s">shadow</span><span class="s">(</span>blur=<span class="s"
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">len</span><span class="s">(</span>g<span class="s">)</span><span class="s">)</span>:
     <span class="kw">fill</span><span class="s">(</span>g<span class="s">[</span>i<span class="s">]</span><span class="s">)</span>
     <span class="kw">rotate</span><span class="s">(</span><span class="s">3</span><span class="s">)</span>
-    <span class="kw">oval</span><span class="s">(</span>i*<span class="s">0.5</span>, i*<span class="s">0.5</span>, <span class="s">200</span>-i, <span class="s">200</span>-i<span class="s">)</span></pre>
-
+    <span class="kw">oval</span><span class="s">(</span>i*<span class="s">0.5</span>, i*<span class="s">0.5</span>, <span class="s">200</span>-i, <span class="s">200</span>-i<span class="s">)</span>
+</pre>
 
     <p><span class="image_border"><img alt="colors-gradientlist2" height="330" src="media/colors-gradientlist2.jpg" width="550"/></span></p>
     <p>My personal favorite is the one with all the different hues of blue mixed up. It reminds me
     of Alice in Wonderland. Replace the above <i>fill()</i> command with:</p>
-    <pre><span class="kw">fill</span><span class="s">(</span><span class="kw">choice</span><span class="s">(</span>g<span class="s">)</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">fill</span><span class="s">(</span><span class="kw">choice</span><span class="s">(</span>g<span class="s">)</span><span class="s">)</span>
+</pre>
 
     <p><img alt="colors-gradientlist3" height="330" src="media/colors-gradientlist3.jpg" width="550"/><br/></p>
     <p> </p>
@@ -593,19 +623,20 @@ colors.<span class="s">shadow</span><span class="s">(</span>blur=<span class="s"
     <p><span class="grey_box">Gradient outlines</span></p>
     <p>Finally, the Colors library has an <i>outline()</i> command which works extremely well with
     <i>gradient()</i>. The command colorizes the stroke of a path with the colors in a given list:</p>
-    <pre>outline<span class="s">(</span>path, colors, precision=<span class="s">0.4</span>, continuous=<span class="kw">True</span><span class="s">)</span></pre>
-
+<pre>outline<span class="s">(</span>path, colors, precision=<span class="s">0.4</span>, continuous=<span class="kw">True</span><span class="s">)</span>
+</pre>
 
     <p>Outlines a <i>path</i> with the colors in the list. When <i>continuous</i> is False, each
     contour in the path starts with the first color in the list, and ends with the last color in
     the list. Because each line segment is drawn separately, the command works only with a
     corner-mode <a href="../ref/Transform.html#transform()">transform()</a>.</p>
-    <pre><span class="kw">font</span><span class="s">(</span><span class="str">"Georgia"</span>, <span class="s">58</span><span class="s">)</span>
+<pre>
+<span class="kw">font</span><span class="s">(</span><span class="str">"Georgia"</span>, <span class="s">58</span><span class="s">)</span>
 p = <span class="kw">textpath</span><span class="s">(</span><span class="str">"gradient text is back!"</span>, <span class="s">10</span>, <span class="s">50</span><span class="s">)</span>
 g = colors.<span class="s">gradient</span><span class="s">(</span><span class="kw">color</span><span class="s">(</span><span class="s">1</span>,<span class="s">0</span>,<span class="s">0.5</span><span class="s">)</span>, <span class="kw">color</span><span class="s">(</span><span class="s">0</span>,<span class="s">0.5</span>,<span class="s">1</span><span class="s">)</span><span class="s">)</span>
  
-colors.<span class="s">outline</span><span class="s">(</span>p, g<span class="s">)</span></pre>
-
+colors.<span class="s">outline</span><span class="s">(</span>p, g<span class="s">)</span>
+</pre>
 
     <p><img alt="colors-gradientlist4" height="80" src="media/colors-gradientlist4.jpg" width="550"/></p>
     <p> </p>
@@ -616,9 +647,10 @@ colors.<span class="s">outline</span><span class="s">(</span>p, g<span class="s"
     <p>A color range is a set of indefinite <b>colors that have their hue, saturation and
     brightness constrained</b> between a minimum and maximum value. You can use color ranges to
     quickly describe fuzzy concepts like <i>dark</i> and <i>bright</i>.</p>
-    <pre><span class="s">range</span><span class="s">(</span>h=<span class="s">(</span><span class="s">0.0</span>,<span class="s">1.0</span><span class="s">)</span>, s=<span class="s">(</span><span class="s">0.0</span>,<span class="s">1.0</span><span class="s">)</span>, b=<span class="s">(</span><span class="s">0.0</span>,<span class="s">1.0</span><span class="s">)</span>, a=<span class="s">(</span><span class="s">1.0</span>,<span class="s">1.0</span><span class="s">)</span>, 
-      grayscale=<span class="kw">False</span>, name=<span class="str">""</span>, length=<span class="s">100</span><span class="s">)</span></pre>
-
+<pre>
+<span class="s">range</span><span class="s">(</span>h=<span class="s">(</span><span class="s">0.0</span>,<span class="s">1.0</span><span class="s">)</span>, s=<span class="s">(</span><span class="s">0.0</span>,<span class="s">1.0</span><span class="s">)</span>, b=<span class="s">(</span><span class="s">0.0</span>,<span class="s">1.0</span><span class="s">)</span>, a=<span class="s">(</span><span class="s">1.0</span>,<span class="s">1.0</span><span class="s">)</span>, 
+      grayscale=<span class="kw">False</span>, name=<span class="str">""</span>, length=<span class="s">100</span><span class="s">)</span>
+</pre>
 
     <p>The <i>h</i>, <i>s</i>, <i>b</i> and <i>a</i> parameters are (min, max) tuples with
     <i>min</i> and <i>max</i> ranging between 0.0 and 1.0. A color range behaves like a list of
@@ -631,22 +663,22 @@ colors.<span class="s">outline</span><span class="s">(</span>p, g<span class="s"
         <tr>
           <td><span class="image_border"><img alt="colors-colorrange1" height="100" src="media/colors-colorrange1.jpg" width="100"/></span>
           </td><td>
-            <pre>
+<pre>
 r = colors.<span class="s">range</span><span class="s">(</span>h=<span class="s">(</span><span class="s">0</span>,<span class="s">0.2</span><span class="s">)</span><span class="s">)</span>
 r.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
 <span class="kw">print</span> r<span class="s">[</span><span class="s">0</span>:<span class="s">2</span><span class="s">]</span>
 &gt;&gt;&gt; <span class="s">[</span>Color<span class="s">(</span><span class="s">0.287</span>, <span class="s">0.276</span>, <span class="s">0.252</span>, <span class="s">1.000</span><span class="s">)</span>, 
-     Color<span class="s">(</span><span class="s">0.089</span>, <span class="s">0.064</span>, <span class="s">0.026</span>, <span class="s">1.000</span><span class="s">)</span><span class="s">]</span></pre>
-
+     Color<span class="s">(</span><span class="s">0.089</span>, <span class="s">0.064</span>, <span class="s">0.026</span>, <span class="s">1.000</span><span class="s">)</span><span class="s">]</span>
+</pre>
           </td></tr></tbody></table></p>
     <p>Color ranges often yield surprising results with a minimum amount of code:</p>
-    <pre>r = colors.<span class="s">range</span><span class="s">(</span>h=<span class="s">(</span><span class="s">0</span>,<span class="s">0.2</span><span class="s">)</span><span class="s">)</span>
+<pre>r = colors.<span class="s">range</span><span class="s">(</span>h=<span class="s">(</span><span class="s">0</span>,<span class="s">0.2</span><span class="s">)</span><span class="s">)</span>
 <span class="kw">transform</span><span class="s">(</span>CORNER<span class="s">)</span>
 <span class="kw">rotate</span><span class="s">(</span><span class="s">45</span><span class="s">)</span>
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span>/<span class="s">10</span><span class="s">)</span>:
     <span class="kw">fill</span><span class="s">(</span><span class="kw">choice</span><span class="s">(</span>r<span class="s">)</span><span class="s">)</span>
-    <span class="kw">rect</span><span class="s">(</span>-<span class="kw">WIDTH</span>, i*<span class="s">15</span>, <span class="kw">WIDTH</span>*<span class="s">2</span>, <span class="s">20</span><span class="s">)</span></pre>
-
+    <span class="kw">rect</span><span class="s">(</span>-<span class="kw">WIDTH</span>, i*<span class="s">15</span>, <span class="kw">WIDTH</span>*<span class="s">2</span>, <span class="s">20</span><span class="s">)</span>
+</pre>
 
     <p><span class="image_border"><img alt="colors-colorrange2" height="550" src="media/colors-colorrange2.jpg" width="550"/></span></p>
     <p> </p>
@@ -654,35 +686,41 @@ r.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,
 
     <p><span class="grey_box">Color range methods, properties and calls</span></p>
     <p>A color range has the following methods:</p>
-    <pre><span class="s">range</span>.<span class="s">constrain_hue</span><span class="s">(</span><span class="s">min</span>, <span class="s">max</span>=<span class="kw">None</span><span class="s">)</span></pre>
-
-    <pre><span class="s">range</span>.<span class="s">constrain_saturation</span><span class="s">(</span><span class="s">min</span>, <span class="s">max</span>=<span class="kw">None</span><span class="s">)</span></pre>
-
-    <pre><span class="s">range</span>.<span class="s">constrain_brightness</span><span class="s">(</span><span class="s">min</span>, <span class="s">max</span>=<span class="kw">None</span><span class="s">)</span></pre>
-
-    <pre><span class="s">range</span>.<span class="s">constrain_alpha</span><span class="s">(</span><span class="s">min</span>, <span class="s">max</span>=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>
+<span class="s">range</span>.<span class="s">constrain_hue</span><span class="s">(</span><span class="s">min</span>, <span class="s">max</span>=<span class="kw">None</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">range</span>.<span class="s">constrain_saturation</span><span class="s">(</span><span class="s">min</span>, <span class="s">max</span>=<span class="kw">None</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">range</span>.<span class="s">constrain_brightness</span><span class="s">(</span><span class="s">min</span>, <span class="s">max</span>=<span class="kw">None</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">range</span>.<span class="s">constrain_alpha</span><span class="s">(</span><span class="s">min</span>, <span class="s">max</span>=<span class="kw">None</span><span class="s">)</span>
+</pre>
 
     <p>More complex ranges including gaps can be created by assigning a list of (<i>min</i>,
     <i>max</i>) tuples to a property directly:</p>
-    <pre>high_contrast_reds = colors.<span class="s">range</span><span class="s">(</span><span class="s">)</span>
+<pre>high_contrast_reds = colors.<span class="s">range</span><span class="s">(</span><span class="s">)</span>
 high_contrast_reds.<span class="s">h</span> = <span class="s">0</span>
 high_contrast_reds.<span class="s">s</span> = <span class="s">(</span><span class="s">0.5</span>, <span class="s">1.0</span><span class="s">)</span>
-high_contrast_reds.<span class="s">b</span> = <span class="s">[</span><span class="s">(</span><span class="s">0.1</span>,<span class="s">0.2</span><span class="s">)</span>, <span class="s">(</span><span class="s">0.9</span>,<span class="s">1.0</span><span class="s">)</span><span class="s">]</span></pre>
-
+high_contrast_reds.<span class="s">b</span> = <span class="s">[</span><span class="s">(</span><span class="s">0.1</span>,<span class="s">0.2</span><span class="s">)</span>, <span class="s">(</span><span class="s">0.9</span>,<span class="s">1.0</span><span class="s">)</span><span class="s">]</span>
+</pre>
 
     <p>Since a color range behaves like a <a href="#colorlist">color list</a> it also has
     <i>copy()</i>, <i>adjust_rgb()</i>, <i>repeat()</i>, <i>swatch()</i> ... methods.</p>
     <p>If you need a single color from the range you can use the <i>range.color()</i> method:</p>
-    <pre><span class="s">range</span>.<span class="kw">color</span><span class="s">(</span>clr=<span class="kw">None</span>, d=<span class="s">0.035</span><span class="s">)</span></pre>
-
-    <pre><span class="s">range</span>.<span class="s">colors</span><span class="s">(</span>clr=<span class="kw">None</span>, n=<span class="s">10</span>, d=<span class="s">0.035</span><span class="s">)</span></pre>
-
+<pre>
+<span class="s">range</span>.<span class="kw">color</span><span class="s">(</span>clr=<span class="kw">None</span>, d=<span class="s">0.035</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="s">range</span>.<span class="s">colors</span><span class="s">(</span>clr=<span class="kw">None</span>, n=<span class="s">10</span>, d=<span class="s">0.035</span><span class="s">)</span>
+</pre>
 
     <p>However, you can also directly <b>call</b> a range like a command:</p>
-    <pre>yellowgreenish = colors.<span class="s">range</span><span class="s">(</span>h=<span class="s">(</span><span class="s">0.1</span>,<span class="s">0.2</span><span class="s">)</span><span class="s">)</span>
-<span class="kw">background</span><span class="s">(</span> yellowgreenish<span class="s">(</span><span class="s">)</span> <span class="s">)</span></pre>
-
+<pre>yellowgreenish = colors.<span class="s">range</span><span class="s">(</span>h=<span class="s">(</span><span class="s">0.1</span>,<span class="s">0.2</span><span class="s">)</span><span class="s">)</span>
+<span class="kw">background</span><span class="s">(</span> yellowgreenish<span class="s">(</span><span class="s">)</span> <span class="s">)</span>
+</pre>
 
     <p>When you call a color range like this you can supply three optional parameters:</p>
     <ul>
@@ -701,10 +739,11 @@ high_contrast_reds.<span class="s">b</span> = <span class="s">[</span><span clas
     them <b>shades</b>. These includes useful concepts such as <i>light</i> and <i>dark</i>,
     defined by a combination of saturation and brightness.</p>
     <p>All of the shades are in the <i>shades</i> list:</p>
-    <pre><span class="kw">print</span> colors.<span class="s">shades</span>
+<pre>
+<span class="kw">print</span> colors.<span class="s">shades</span>
 &gt;&gt;&gt; <span class="s">[</span>light, dark, bright, weak, neutral, fresh, soft, hard, warm, 
-&gt;&gt;&gt;  cool, intense<span class="s">]</span></pre>
-    
+&gt;&gt;&gt;  cool, intense<span class="s">]</span>
+</pre>    
 
     <ul>
       <li><b>light:</b> bright and light colors.
@@ -724,14 +763,14 @@ high_contrast_reds.<span class="s">b</span> = <span class="s">[</span><span clas
     individual shade is then called as a command (remember we can call color ranges like commands)
     and limited to a yellow hue. Since we also call the range with the <i>n</i> parameter, a
     <b>list</b> of range-constrained yellow colors is returned.</p>
-    <pre>x = <span class="s">20</span>
+<pre>x = <span class="s">20</span>
 y = <span class="s">20</span>
 <span class="kw">for</span> shade <span class="kw">in</span> colors.<span class="s">shades</span>:
     <span class="kw">text</span><span class="s">(</span>shade.<span class="s">name</span>, x, y<span class="s">-5</span>, <span class="kw">fill</span>=<span class="s">0.2</span>, <span class="kw">fontsize</span>=<span class="s">12</span><span class="s">)</span>
     clr = shade<span class="s">(</span>colors.<span class="s">yellow</span><span class="s">(</span><span class="s">)</span>, n=<span class="s">10</span><span class="s">)</span>
     clr.<span class="s">swatch</span><span class="s">(</span>x, y<span class="s">)</span>
-    x += <span class="s">45</span></pre>
-    
+    x += <span class="s">45</span>
+</pre>    
 
     <p><img alt="colors-shades0" height="400" src="media/colors-shades0.jpg" width="550"/><br/></p>
     <p>The <i>shade()</i> command returns a shade by name:
@@ -740,11 +779,11 @@ y = <span class="s">20</span>
         <tr>
           <td><span class="image_border"><img alt="colors-shades1" height="100" src="media/colors-shades1.jpg" width="100"/></span>
           </td><td>
-            <pre>
+<pre>
 clrs = colors.<span class="s">shade</span><span class="s">(</span><span class="str">"intense"</span><span class="s">)</span>
 clrs = clrs<span class="s">(</span>colors.<span class="s">yellow</span><span class="s">(</span><span class="s">)</span>, n=<span class="s">20</span><span class="s">)</span>
-clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,<span class="s">50</span><span class="s">)</span></pre>
-
+clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,<span class="s">50</span><span class="s">)</span>
+</pre>
           </td></tr></tbody></table></p>
     <p> </p>
     <p>You can also use shade variables directly. Here’s a dark indigo color:<br/>
@@ -753,9 +792,9 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
         <tr>
           <td><span class="image_border"><img alt="colors-shades2" height="100" src="media/colors-shades2.jpg" width="100"/></span>
           </td><td>
-            <pre>
-<span class="kw">background</span><span class="s">(</span>colors.<span class="s">dark</span><span class="s">(</span>colors.<span class="s">indigo</span><span class="s">(</span><span class="s">)</span><span class="s">)</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">background</span><span class="s">(</span>colors.<span class="s">dark</span><span class="s">(</span>colors.<span class="s">indigo</span><span class="s">(</span><span class="s">)</span><span class="s">)</span><span class="s">)</span>
+</pre>
           </td></tr></tbody></table></p>
     <p> </p>
     <p>Intense colors of any hue by simply calling the intense range without any parameter:<br/>
@@ -764,13 +803,13 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
         <tr>
           <td><img alt="colors-shades3" height="100" src="media/colors-shades3.jpg" width="100"/>
           </td><td>
-            <pre>
+<pre>
 <span class="kw">transform</span><span class="s">(</span>CORNER<span class="s">)</span>
 <span class="kw">rotate</span><span class="s">(</span><span class="s">45</span><span class="s">)</span>
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span>/<span class="s">10</span><span class="s">)</span>:
     <span class="kw">fill</span><span class="s">(</span>colors.<span class="s">intense</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
-    <span class="kw">rect</span><span class="s">(</span>-<span class="kw">WIDTH</span>, i*<span class="s">10</span>, <span class="kw">WIDTH</span>*<span class="s">2</span>, <span class="s">20</span><span class="s">)</span></pre>
-
+    <span class="kw">rect</span><span class="s">(</span>-<span class="kw">WIDTH</span>, i*<span class="s">10</span>, <span class="kw">WIDTH</span>*<span class="s">2</span>, <span class="s">20</span><span class="s">)</span>
+</pre>
           </td></tr></tbody></table></p>
     <p> </p>
     <hr/>
@@ -779,16 +818,17 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
     <p>Now that we have learned about shades it is easy to deduce some information from individual
     colors. First of all, we can check if a colors falls within a certain shade range (check if a
     color is dark or bright for example):</p>
-    <pre>clr = colors.<span class="s">red</span><span class="s">(</span><span class="s">)</span>
+<pre>clr = colors.<span class="s">red</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">print</span> clr <span class="kw">in</span> colors.<span class="s">bright</span>
-&gt;&gt;&gt; <span class="kw">True</span> <span class="grey"># red is a bright color.</span></pre>
-
+&gt;&gt;&gt; <span class="kw">True</span> <span class="grey"># red is a bright color.</span>
+</pre>
 
     <p>And since we can find out if a color is dark, bright, neutral, cool, etc. we can guess a
     name for it:</p>
-    <pre><span class="kw">print</span> colors.<span class="s">guess_name</span><span class="s">(</span> <span class="kw">color</span><span class="s">(</span><span class="s">1</span>, <span class="s">0</span>, <span class="s">0.5</span><span class="s">)</span> <span class="s">)</span>
-&gt;&gt;&gt; bright pink</pre>
-    
+<pre>
+<span class="kw">print</span> colors.<span class="s">guess_name</span><span class="s">(</span> <span class="kw">color</span><span class="s">(</span><span class="s">1</span>, <span class="s">0</span>, <span class="s">0.5</span><span class="s">)</span> <span class="s">)</span>
+&gt;&gt;&gt; bright pink
+</pre>    
     <hr/>
 
     <h2><a id="theme" name="theme" title="theme"></a>Grouping ranges into color themes</h2>
@@ -797,8 +837,8 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
     color ranges in a theme has a hue associated with it and a weight which determines its
     frequency in the theme. Simply put, a <i>sand</i> theme would be made up of combinations like
     <i>50% soft ivory</i>, 25% <i>dark goldenrod</i> and <i>25% warm brown</i>.</p>
-    <pre>theme<span class="s">(</span>name=<span class="str">""</span>, guess=<span class="kw">False</span>, length=<span class="s">100</span><span class="s">)</span></pre>
-
+<pre>theme<span class="s">(</span>name=<span class="str">""</span>, guess=<span class="kw">False</span>, length=<span class="s">100</span><span class="s">)</span>
+</pre>
 
     <p>The theme command returns a <i>ColorTheme</i> object with the following properties:</p>
     <ul>
@@ -810,8 +850,8 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
 
     <p><br/>
     To add a color range to the theme you use the <i>theme.add_range()</i> method:</p>
-    <pre>theme.<span class="s">add_range</span><span class="s">(</span><span class="s">range</span>, clr=<span class="kw">None</span>, weight=<span class="s">1.0</span><span class="s">)</span></pre>
-
+<pre>theme.<span class="s">add_range</span><span class="s">(</span><span class="s">range</span>, clr=<span class="kw">None</span>, weight=<span class="s">1.0</span><span class="s">)</span>
+</pre>
 
     <p>You can supply <a href="#shade">shades</a>, your own color ranges, or a <i>shade + named
     color</i> string to the <i>range</i> parameter. The following two themes are the same (by ‘the
@@ -822,37 +862,38 @@ clrs.<span class="s">swarm</span><span class="s">(</span><span class="s">50</spa
         <tr>
           <td><img alt="colors-range1" height="100" src="media/colors-range1.jpg" width="100"/>
           </td><td>
-            <pre>
+<pre>
 sand = colors.<span class="s">theme</span><span class="s">(</span><span class="s">)</span>
 sand.<span class="s">add_range</span><span class="s">(</span>colors.<span class="s">soft</span>, colors.<span class="s">ivory</span><span class="s">(</span><span class="s">)</span>, weight=<span class="s">0.5</span><span class="s">)</span>
 sand.<span class="s">add_range</span><span class="s">(</span>colors.<span class="s">dark</span>, colors.<span class="s">goldenrod</span><span class="s">(</span><span class="s">)</span>, weight=<span class="s">0.25</span><span class="s">)</span>
 sand.<span class="s">add_range</span><span class="s">(</span>colors.<span class="s">warm</span>, colors.<span class="s">brown</span><span class="s">(</span><span class="s">)</span>, weight=<span class="s">0.25</span><span class="s">)</span>
-sand.<span class="s">swatch</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span>, w=<span class="s">7</span>, h=<span class="s">7</span>, padding=<span class="s">1</span><span class="s">)</span></pre>
-
+sand.<span class="s">swatch</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span>, w=<span class="s">7</span>, h=<span class="s">7</span>, padding=<span class="s">1</span><span class="s">)</span>
+</pre>
         </td></tr><tr>
           <td><img alt="colors-range2" height="100" src="media/colors-range2.jpg" width="100"/>
           </td><td>
-            <pre>
+<pre>
 sand = colors.<span class="s">theme</span><span class="s">(</span><span class="s">)</span>
 sand.<span class="s">add_range</span><span class="s">(</span><span class="str">"soft ivory"</span>, weight=<span class="s">0.5</span><span class="s">)</span>
 sand.<span class="s">add_range</span><span class="s">(</span><span class="str">"dark goldenrod"</span>, weight=<span class="s">0.25</span><span class="s">)</span>
 sand.<span class="s">add_range</span><span class="s">(</span><span class="str">"warm brown"</span>, weight=<span class="s">0.25</span><span class="s">)</span> 
-sand.<span class="s">swatch</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span>, w=<span class="s">7</span>, h=<span class="s">7</span>, padding=<span class="s">1</span><span class="s">)</span></pre>
-
+sand.<span class="s">swatch</span><span class="s">(</span><span class="s">2</span>, <span class="s">2</span>, w=<span class="s">7</span>, h=<span class="s">7</span>, padding=<span class="s">1</span><span class="s">)</span>
+</pre>
           </td></tr></tbody></table></p>
     <p>You can retrieve an individual (random) color from the theme with the <i>theme.color()</i>
     method, or a color list with the <i>theme.colors()</i> method. The weight of each range is
     taken into account - heavier ranges will output more colors.</p>
-    <pre>theme.<span class="kw">color</span><span class="s">(</span>d=<span class="s">0.035</span><span class="s">)</span></pre>
-
-    <pre>theme.<span class="s">colors</span><span class="s">(</span>n=<span class="s">10</span>, d=<span class="s">0.035</span><span class="s">)</span></pre>
-
+<pre>theme.<span class="kw">color</span><span class="s">(</span>d=<span class="s">0.035</span><span class="s">)</span>
+</pre>
+<pre>theme.<span class="s">colors</span><span class="s">(</span>n=<span class="s">10</span>, d=<span class="s">0.035</span><span class="s">)</span>
+</pre>
 
     <p>The optional <i>d</i> parameter provides a slight variation in brightness and saturation.</p>
     <p>To retrieve a single color you can also simply call the theme as a command. Or to retrieve
     multiple colors you can treat it as a list containing <i>length</i> colors (the <i>length</i>
     parameter in the <i>theme()</i> command).<br/></p>
-    <pre><span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">275</span><span class="s">)</span>
+<pre>
+<span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">275</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span> sand<span class="s">(</span><span class="s">)</span> <span class="s">)</span>
 colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s">0.4</span>, dx=<span class="s">-40</span>, blur=<span class="s">10</span><span class="s">)</span>
  
@@ -861,8 +902,8 @@ colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s
     <span class="kw">translate</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>
     <span class="kw">scale</span><span class="s">(</span><span class="s">0.96</span><span class="s">)</span>
     <span class="kw">skew</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>
-    <span class="kw">rect</span><span class="s">(</span><span class="s">0</span>, <span class="s">-40</span>, <span class="s">400</span>, <span class="s">400</span><span class="s">)</span></pre>
-
+    <span class="kw">rect</span><span class="s">(</span><span class="s">0</span>, <span class="s">-40</span>, <span class="s">400</span>, <span class="s">400</span><span class="s">)</span>
+</pre>
 
     <p><span class="image_border"><img alt="colors-range3" height="275" src="media/colors-range3.jpg" width="550"/></span></p>
     <p>A color theme also has the standard <i>copy()</i>, <i>swatch()</i> and <i>swarm()</i>
@@ -873,8 +914,8 @@ colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s
     <p>Another interesting method is theme.recombine(). You can use it to create a new generation
     from two parent themes using a cut-and-splice techniques. Check the examples included in the
     library.</p>
-    <pre>theme1.<span class="s">recombine</span><span class="s">(</span>theme2, d=<span class="s">0.7</span><span class="s">)</span></pre>
-
+<pre>theme1.<span class="s">recombine</span><span class="s">(</span>theme2, d=<span class="s">0.7</span><span class="s">)</span>
+</pre>
 
     <p> </p>
     <hr/>
@@ -890,19 +931,19 @@ colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s
         <tr>
           <td><span class="image_border"><img alt="colors-range4" height="100" src="media/colors-range4.jpg" width="100"/></span>
           </td><td>
-            <pre>
+<pre>
 t = colors.<span class="s">theme</span><span class="s">(</span><span class="str">"sky"</span>, guess=<span class="kw">True</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span> colors.<span class="s">list</span><span class="s">(</span>t<span class="s">)</span>.<span class="s">darkest</span><span class="s">)</span>
-t.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span></pre>
-
+t.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
+</pre>
         </td></tr><tr>
           <td><span class="image_border"><img alt="colors-range5" height="100" src="media/colors-range5.jpg" width="100"/></span>
           </td><td>
-            <pre>
+<pre>
 t = colors.<span class="s">theme</span><span class="s">(</span><span class="str">"love"</span>, guess=<span class="kw">True</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span> colors.<span class="s">list</span><span class="s">(</span>t<span class="s">)</span>.<span class="s">darkest</span><span class="s">)</span>
-t.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span></pre>
-
+t.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
+</pre>
           </td></tr></tbody></table></p>
     <p>Adjectives and emotions work best. If a word is not found an exception will be raised. When
     the optional <i>guess</i> parameter is <i>True</i>, a theme will be returned for a word that
@@ -915,10 +956,10 @@ t.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,
     database of aggregated themes with your own queries. The <i>google()</i> and <i>yahoo()</i>
     commands will query the web and return a color theme based on the top colors and shades that
     appear in the content of web pages (see <a href="http://nodebox.net/code/index.php/Prism">Prism</a>).</p>
-    <pre>google<span class="s">(</span>query<span class="s">)</span></pre>
-
-    <pre>yahoo<span class="s">(</span>query, license=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>google<span class="s">(</span>query<span class="s">)</span>
+</pre>
+<pre>yahoo<span class="s">(</span>query, license=<span class="kw">None</span><span class="s">)</span>
+</pre>
 
     <p>The command returns a <a href="#theme">color theme</a>. With the <i>yahoo()</i> command, you
     can specify your own <a href="Web.html#yahoo">Yahoo! license key</a> with the optional
@@ -926,8 +967,8 @@ t.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,
     the first time. After that, the search query is stored locally and can be retrieved instantly.</p>
     <p>Another way to get color information (with good results) is by measuring pixels in online
     images. The morguefile() command will scan thumbnails in the <a href="http://morguefile.com">morgueFile</a> archive for colors:</p>
-    <pre>morguefile<span class="s">(</span>query, n<span class="s">)</span></pre>
-
+<pre>morguefile<span class="s">(</span>query, n<span class="s">)</span>
+</pre>
 
     <p>The command will return a <a href="#colorlist">color list</a> with <i>n</i> colors.</p>
     <p> </p>
@@ -938,8 +979,8 @@ t.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,
     <p>The Colors library has a useful <i>shader()</i> command that <b>simulates a source of
     light</b>. You can control the source of the light, its direction and strength across the
     canvas to determine the colors of onscreen elements.</p>
-    <pre>shader<span class="s">(</span>x, y, dx, dy, radius=<span class="s">300</span>, angle=<span class="s">0</span>, spread=<span class="s">90</span><span class="s">)</span></pre>
-
+<pre>shader<span class="s">(</span>x, y, dx, dy, radius=<span class="s">300</span>, angle=<span class="s">0</span>, spread=<span class="s">90</span><span class="s">)</span>
+</pre>
 
     <p>The x and y is the position of an element on the canvas. The <i>dx</i> and <i>dy</i> is the
     position of the lightsource. Based on the distance between the two a number from 0.0 (no light)
@@ -950,7 +991,8 @@ t.<span class="s">swarm</span><span class="s">(</span><span class="s">50</span>,
     <p>In this example a light source is positioned in the lower right corner. The value returned
     from the <i>shader()</i> command is used to modify each oval’s brightness.<br/></p>
     <p><img alt="colors-shader1" height="300" src="media/colors-shader1.jpg" width="550"/></p>
-    <pre><span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
+<pre>
+<span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span><span class="s">0.1</span>,<span class="s">0</span>,<span class="s">0.05</span><span class="s">)</span>
 <span class="kw">colormode</span><span class="s">(</span><span class="kw">HSB</span><span class="s">)</span>
 colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</span>
@@ -961,19 +1003,20 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
     d = colors.<span class="s">shader</span><span class="s">(</span>x, y, <span class="s">550</span>, <span class="s">300</span>, angle=<span class="s">150</span><span class="s">)</span>
     <span class="grey"># HSB is brighter and opaque in the centre of the light.</span>
     <span class="kw">fill</span><span class="s">(</span><span class="s">0.84</span>+d*<span class="s">0.1</span>, <span class="s">1</span>, <span class="s">0.2</span><span class="s">+0.8</span>*d, d<span class="s">)</span>
-    <span class="kw">oval</span><span class="s">(</span>x, y, r, r<span class="s">)</span></pre>
-
+    <span class="kw">oval</span><span class="s">(</span>x, y, r, r<span class="s">)</span>
+</pre>
 
     <p>We can get different effects by modifying the position, radius and spread of the light:</p>
-    <pre>d = colors.<span class="s">shader</span><span class="s">(</span>x, y, <span class="s">275</span>, <span class="s">300</span>, radius=<span class="s">200</span>, angle=<span class="s">90</span>, spread=<span class="s">180</span><span class="s">)</span></pre>
-
+<pre>d = colors.<span class="s">shader</span><span class="s">(</span>x, y, <span class="s">275</span>, <span class="s">300</span>, radius=<span class="s">200</span>, angle=<span class="s">90</span>, spread=<span class="s">180</span><span class="s">)</span>
+</pre>
 
     <p><img alt="colors-shader2" height="300" src="media/colors-shader2.jpg" width="550"/></p>
     <p> </p>
     <p>When used together with <i>shadow()</i> and <i>gradientpath()</i>, we can now create
     compositions with a realistic sense of <b>depth</b>:</p>
     <p><img alt="colors-shader3" height="370" src="media/colors-shader3.jpg" width="550"/></p>
-    <pre><span class="grey"># Deep green gradient background.</span>
+<pre>
+<span class="grey"># Deep green gradient background.</span>
 <span class="kw">size</span><span class="s">(</span><span class="s">400</span>, <span class="s">400</span><span class="s">)</span>
 bg = <span class="kw">rect</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="kw">WIDTH</span>, <span class="kw">HEIGHT</span>, draw=<span class="kw">False</span><span class="s">)</span>
 colors.<span class="s">gradientpath</span><span class="s">(</span>bg, <span class="kw">color</span><span class="s">(</span><span class="s">0.15</span>,<span class="s">0.2</span>,<span class="s">0</span><span class="s">)</span>, <span class="kw">color</span><span class="s">(</span><span class="s">0</span>,<span class="s">0</span>,<span class="s">0</span><span class="s">)</span><span class="s">)</span>
@@ -995,12 +1038,13 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
     <span class="kw">nostroke</span><span class="s">(</span><span class="s">)</span>
     clr1 = <span class="kw">color</span><span class="s">(</span><span class="s">0.4</span>+d*<span class="s">0.5</span>, <span class="s">0.6</span>+d*<span class="s">0.3</span>, <span class="s">0</span>, <span class="s">0.75</span><span class="s">)</span>
     clr2 = <span class="kw">color</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">0</span>, d<span class="s">)</span>
-    colors.<span class="s">gradientpath</span><span class="s">(</span>p, clr1, clr2, alpha=<span class="s">0.5</span>+d, dx=r, dy=r<span class="s">)</span></pre>
-
+    colors.<span class="s">gradientpath</span><span class="s">(</span>p, clr1, clr2, alpha=<span class="s">0.5</span>+d, dx=r, dy=r<span class="s">)</span>
+</pre>
 
     <p>Let’s just add a few more bells to the script! For each oval at the edge of the nucleus,
     we’ll draw some curves bending inward.</p>
-    <pre><span class="grey">#   add to the script above:</span>
+<pre>
+<span class="grey">#   add to the script above:</span>
     <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
     <span class="kw">stroke</span><span class="s">(</span>clr1<span class="s">)</span>
     <span class="kw">strokewidth</span><span class="s">(</span><span class="s">0.25</span><span class="s">)</span>
@@ -1010,18 +1054,19 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
             v = <span class="s">(</span><span class="s">1</span>-d<span class="s">)</span> * <span class="s">150</span>
             <span class="kw">beginpath</span><span class="s">(</span>x, y<span class="s">)</span>
             <span class="kw">curveto</span><span class="s">(</span>x, y, x+<span class="kw">random</span><span class="s">(</span>-v,v<span class="s">)</span>, y+<span class="kw">random</span><span class="s">(</span>-v,v<span class="s">)</span>, <span class="s">200</span>, <span class="s">200</span><span class="s">)</span>
-            <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span></pre>
-
+            <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+</pre>
 
     <p>With the <a href="Supershape.html">Supershape</a> library we can draw all sorts of organic
     forms. Let’s use it to add a pattern to each oval.</p>
-    <pre><span class="grey">#   add to the script above:</span>
+<pre>
+<span class="grey">#   add to the script above:</span>
     supershape = <span class="kw">ximport</span><span class="s">(</span><span class="str">"supershape"</span><span class="s">)</span>
     <span class="kw">strokewidth</span><span class="s">(</span>d*<span class="s">0.75</span><span class="s">)</span>
     <span class="kw">if</span> d &gt; <span class="s">0.25</span>:
         p = supershape.<span class="s">path</span><span class="s">(</span>x+r, y+r, r, r, <span class="s">10</span>, <span class="s">1.5</span>, <span class="s">-0.5</span>, <span class="s">1.5</span><span class="s">)</span>
-        <span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span></pre>
-
+        <span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span>
+</pre>
 
     <p><img alt="colors-shader5" height="550" src="media/colors-shader5.jpg" width="550"/><br/></p>
     <p> </p>
@@ -1032,21 +1077,21 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
     <p>The Colors library has a <i>shadow()</i> command and a <i>gradientfill()</i> to add depth to
     your compositions. Shadows influence all the elements on the canvas while gradients are applied
     to a given <a href="../ref/Classes.html#BezierPath">path</a>.</p>
-    <pre>shadow<span class="s">(</span>dx=<span class="s">10</span>, dy=<span class="s">10</span>, alpha=<span class="s">0.25</span>, blur=<span class="s">4.0</span><span class="s">)</span></pre>
-
-    <pre>noshadow<span class="s">(</span><span class="s">)</span></pre>
-
-    <pre>gradientfill<span class="s">(</span>path, clr1, clr2, <span class="s">type</span>=<span class="str">"radial"</span>, 
-             dx=<span class="s">0</span>, dy=<span class="s">0</span>, spread=<span class="s">1.0</span>, angle=<span class="s">0</span>, alpha=<span class="s">1.0</span><span class="s">)</span></pre>
-
+<pre>shadow<span class="s">(</span>dx=<span class="s">10</span>, dy=<span class="s">10</span>, alpha=<span class="s">0.25</span>, blur=<span class="s">4.0</span><span class="s">)</span>
+</pre>
+<pre>noshadow<span class="s">(</span><span class="s">)</span>
+</pre>
+<pre>gradientfill<span class="s">(</span>path, clr1, clr2, <span class="s">type</span>=<span class="str">"radial"</span>, 
+             dx=<span class="s">0</span>, dy=<span class="s">0</span>, spread=<span class="s">1.0</span>, angle=<span class="s">0</span>, alpha=<span class="s">1.0</span><span class="s">)</span>
+</pre>
 
     <p>The <i>shadow()</i> and <i>noshadow()</i> commands work like <a href="../ref/Color.html#fill()">fill()</a> and <a href="../ref/Color.html#nofill()">nofill()</a>.
     Once you set a shadow all the subsequent elements you draw to the canvas will have a dropshadow
     (or until <i>nofill()</i> is called). The <i>dx</i> and <i>dy</i> define the shadow’s offset,
     <i>alpha</i> the shadow’s opacity and <i>blur</i> its sharpness.</p>
-    <p>The <i>gradientfill()</i> command takes a given <i>path</i> just like <a href="../ref/Path.html#drawpath()">drawpath()</a> and draws it to the screen filled with a gradient
-    ranging between <a href="../ref/Color.html#color()">colors</a> <i>clr1</i> and <i>clr2</i>. The
-    <i>type</i> of gradient can be ‘radial’ or ‘linear’.</p>
+    <p>The <i>gradientfill()</i> command takes a given <i>path</i> just like <a href="../ref/ClassicPath.html#drawpath()">drawpath()</a> and draws it to the screen filled with a
+    gradient ranging between <a href="../ref/Color.html#color()">colors</a> <i>clr1</i> and
+    <i>clr2</i>. The <i>type</i> of gradient can be ‘radial’ or ‘linear’.</p>
     <p>The <i>spread</i> parameter is the distance between the two colors. It can be a relative
     float number between 0.0 and 1.0 or an absolute int. In the case of a float, 1.0 represents the
     highest of either width and height for radial gradients, and the lowest of width and height for
@@ -1057,7 +1102,8 @@ colors.<span class="s">shadow</span><span class="s">(</span><span class="s">)</s
     opacity of the opaque underground. When you hide the opaque underground, no shadows will be
     rendered for this layer - so it’s bit of tweaking to combine shadows and gradients.<br/></p>
     <p>An example with shadows and gradient supershapes:<br/></p>
-    <pre><span class="grey"># Enable dropshadows</span>
+<pre>
+<span class="grey"># Enable dropshadows</span>
 colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s">0.75</span><span class="s">)</span>
 <span class="kw">rotate</span><span class="s">(</span><span class="s">90</span><span class="s">)</span>
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">100</span><span class="s">)</span>:
@@ -1077,8 +1123,8 @@ colors.<span class="s">shadow</span><span class="s">(</span>alpha=<span class="s
         dx=<span class="s">88</span>-i*<span class="s">10</span>, dy=<span class="s">-25</span>+i, 
         spread=<span class="s">0.83</span>, 
         alpha=<span class="s">0.25</span>
-    <span class="s">)</span></pre>
-
+    <span class="s">)</span>
+</pre>
 
     <p><img alt="colors-gradient1" height="519" src="media/colors-gradient1.jpg" width="550"/><br/></p>
   </div>

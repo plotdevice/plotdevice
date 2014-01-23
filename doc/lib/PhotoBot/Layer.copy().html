@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: photobot.Layer.copy()</title>
   <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>photobot.Layer.copy()</h3>
@@ -26,7 +27,7 @@
     layer copy. The <em>brighten()</em> function brightens any image you pass to it, and returns a
     layer copy. More complex functions could manipulate an image in this way without having to
     retype the same manipulations over and over.</p>
-    <pre>photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
+<pre>photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
  
 <span class="kw">def</span> <span class="rose">brighten</span><span class="s">(</span><span class="kw">image</span><span class="s">)</span>:
   canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
@@ -36,8 +37,8 @@
  
 canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
 canvas.<span class="s">layer</span><span class="s">(</span>brighten<span class="s">(</span><span class="str">"robot.jpg"</span><span class="s">)</span><span class="s">)</span>
-canvas.<span class="s">layer</span><span class="s">(</span>brighten<span class="s">(</span><span class="str">"penguin.jpg"</span><span class="s">)</span><span class="s">)</span></pre>
-
+canvas.<span class="s">layer</span><span class="s">(</span>brighten<span class="s">(</span><span class="str">"penguin.jpg"</span><span class="s">)</span><span class="s">)</span>
+</pre>
   </div>
 
 </body></html>

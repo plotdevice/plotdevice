@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: iSight</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>iSight</h3>
@@ -35,26 +36,27 @@
     <p>Put the <em>isight</em> folder in the same folder as your script so NodeBox can find the
     library. You can also put it in <em>~/Library/Application Support/NodeBox/.</em></p>
     <p>Then you can grab an image from the camera with the following code:</p>
-    <pre>isight = <span class="kw">ximport</span><span class="s">(</span><span class="str">"isight"</span><span class="s">)</span>
-img = isight.<span class="s">grab</span><span class="s">(</span><span class="s">640</span>, <span class="s">480</span><span class="s">)</span> <span class="grey"># width and height are 320 x 240 by default</span></pre>
-
+<pre>isight = <span class="kw">ximport</span><span class="s">(</span><span class="str">"isight"</span><span class="s">)</span>
+img = isight.<span class="s">grab</span><span class="s">(</span><span class="s">640</span>, <span class="s">480</span><span class="s">)</span> <span class="grey"># width and height are 320 x 240 by default</span>
+</pre>
 
     <p>The return value is a path where the grabbed image is stored:</p>
-    <pre><span class="kw">image</span><span class="s">(</span>img, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">image</span><span class="s">(</span>img, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span>
+</pre>
 
     <p><img alt="isight1" height="240" src="media/isight1.jpg" width="320"/></p>
     <p> </p>
     <hr/>
 
     <p>So it’s easy enough to start playing with image frames from the camera in Core Image:</p>
-    <pre>coreimage = <span class="kw">ximport</span><span class="s">(</span><span class="str">"coreimage"</span><span class="s">)</span>
+<pre>coreimage = <span class="kw">ximport</span><span class="s">(</span><span class="str">"coreimage"</span><span class="s">)</span>
 canvas = coreimage.<span class="s">canvas</span><span class="s">(</span><span class="s">320</span>, <span class="s">240</span><span class="s">)</span>
 l = canvas.<span class="s">layer</span><span class="s">(</span>img<span class="s">)</span>
 l.<span class="s">filter_bumpdistortion</span><span class="s">(</span>radius=<span class="s">115</span>, <span class="kw">scale</span>=<span class="s">0.85</span>, dx=<span class="s">8</span>, dy=<span class="s">5</span><span class="s">)</span>
 l.<span class="s">filter_triangletile</span><span class="s">(</span>angle=<span class="s">17.43</span>, width=<span class="s">84</span><span class="s">)</span>
-canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></pre>
-
+canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
+</pre>
 
     <p><img alt="isight2" height="240" src="media/isight2.jpg" width="320"/></p>
     <p><img alt="isight3" height="240" src="media/isight3.jpg" width="320"/><br/></p>

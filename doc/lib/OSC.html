@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: OSC</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>OSC</h3>
@@ -44,8 +45,8 @@
 
     <p>Put the ‘osc’ library folder in the download in the same folder as your script so NodeBox
     can find the library. You can also put it in ~/Library/Application Support/NodeBox/.</p>
-    <pre>osc = <span class="kw">ximport</span><span class="s">(</span><span class="str">"osc"</span><span class="s">)</span></pre>
-
+<pre>osc = <span class="kw">ximport</span><span class="s">(</span><span class="str">"osc"</span><span class="s">)</span>
+</pre>
 
     <p><span class="small_text">Have a look at test.py to see a simple <i>’pure-data talks to
     nodebox and back’</i> example.</span><br/></p>
@@ -53,44 +54,44 @@
 
     <p>Before sending or receiving data OSC should be initialized. The process initializes the
     callback manager and the out-socket.</p>
-    <pre>osc.<span class="s">init</span><span class="s">(</span><span class="s">)</span></pre>
-
+<pre>osc.<span class="s">init</span><span class="s">(</span><span class="s">)</span>
+</pre>
 
     <p>Sending data over osc has different possibilities. You can send a single message or a bundle
     that stores several messages.<br/></p>
     <p>A single message:</p>
-    <pre>message = osc.<span class="s">createBinaryMsg</span><span class="s">(</span>osc_address, data_list<span class="s">)</span></pre>
-
-    <pre>osc.<span class="s">sendOSC</span><span class="s">(</span>message, ip_address, port<span class="s">)</span></pre>
-
+<pre>message = osc.<span class="s">createBinaryMsg</span><span class="s">(</span>osc_address, data_list<span class="s">)</span>
+</pre>
+<pre>osc.<span class="s">sendOSC</span><span class="s">(</span>message, ip_address, port<span class="s">)</span>
+</pre>
 
     <p>or in one line:</p>
-    <pre>osc.<span class="s">sendMsg</span><span class="s">(</span>osc_address, data_list, ip_address, port<span class="s">)</span></pre>
-
+<pre>osc.<span class="s">sendMsg</span><span class="s">(</span>osc_address, data_list, ip_address, port<span class="s">)</span>
+</pre>
 
     <p>As for bundles, the above can be used because the data sent is a <a href="../tut/Lists.html">list</a> that can contain more than one message. There are options to
     create and send a bundle in a different way.</p>
     <p>Methods for making a bundle, adding items to it and sending it:</p>
-    <pre>bundle = osc.<span class="s">createBundle</span><span class="s">(</span><span class="s">)</span></pre>
-
-    <pre>osc.<span class="s">appendToBundle</span><span class="s">(</span>bundle, osc_address, data_list<span class="s">)</span></pre>
-
-    <pre>osc.<span class="s">sendBundle</span><span class="s">(</span>bundle, ip_address, port<span class="s">)</span></pre>
-
+<pre>bundle = osc.<span class="s">createBundle</span><span class="s">(</span><span class="s">)</span>
+</pre>
+<pre>osc.<span class="s">appendToBundle</span><span class="s">(</span>bundle, osc_address, data_list<span class="s">)</span>
+</pre>
+<pre>osc.<span class="s">sendBundle</span><span class="s">(</span>bundle, ip_address, port<span class="s">)</span>
+</pre>
 
     <h2><a name="recieve" title="recieve"></a>Receiving data</h2>
 
     <p>To receive data over OSC an in-socket should be set up.<br/></p>
-    <pre>in_socket = osc.<span class="s">createListener</span><span class="s">(</span>ip_address, port<span class="s">)</span></pre>
-
+<pre>in_socket = osc.<span class="s">createListener</span><span class="s">(</span>ip_address, port<span class="s">)</span>
+</pre>
 
     <p>The in-socket can be used to get incoming OSC to send it to the callback manager.</p>
-    <pre>osc.<span class="s">getOSC</span><span class="s">(</span>in_socket<span class="s">)</span></pre>
-
+<pre>osc.<span class="s">getOSC</span><span class="s">(</span>in_socket<span class="s">)</span>
+</pre>
 
     <p>A final command can bind OSC addresses with commands in the sketch.<br/></p>
-    <pre>osc.<span class="s">bind</span><span class="s">(</span>nodebox_command, osc_address<span class="s">)</span></pre>
-
+<pre>osc.<span class="s">bind</span><span class="s">(</span>nodebox_command, osc_address<span class="s">)</span>
+</pre>
 
     <h2><a name="alot" title="alot"></a>A lot of possibilities</h2>
 

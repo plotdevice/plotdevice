@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: Interaction</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3>Interaction</h3>
@@ -33,11 +34,12 @@
     </li></ul>
 
     <p>You would typically use the mousedown variable in an if-statement:</p>
-    <pre><span class="kw">if</span> mousedown:
+<pre>
+<span class="kw">if</span> mousedown:
      <span class="grey"># do stuff when the mouse is pressed</span>
 <span class="kw">else</span>:
-     <span class="grey"># do stuff when the mouse isn't pressed</span></pre>
-
+     <span class="grey"># do stuff when the mouse isn't pressed</span>
+</pre>
 
     <h2>Interacting with the keyboard</h2>
 
@@ -56,7 +58,8 @@
     <p>A fun example is this little sketch application. Simply run the code and draw some stuff on
     the canvas! <img alt="interaction-sketch" src="media/interaction-sketch.gif"/></p>
     <p><a href="http://nodebox.net/code/data/media/interaction-sketch.mov">Play movie</a></p>
-    <pre><span class="kw">size</span><span class="s">(</span><span class="s">400</span> ,<span class="s">400</span><span class="s">)</span>
+<pre>
+<span class="kw">size</span><span class="s">(</span><span class="s">400</span> ,<span class="s">400</span><span class="s">)</span>
 <span class="kw">speed</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>
  
 <span class="kw">def</span> <span class="red">setup</span><span class="s">(</span><span class="s">)</span>:
@@ -84,8 +87,8 @@
                 first = <span class="kw">False</span>
             <span class="kw">else</span>:
                 <span class="kw">lineto</span><span class="s">(</span>pt.<span class="s">x</span>, pt.<span class="s">y</span><span class="s">)</span>
-        <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span></pre>
-
+        <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+</pre>
   </div>
 
 </body></html>

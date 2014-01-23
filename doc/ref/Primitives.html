@@ -5,7 +5,8 @@
   <title>NodeBox Reference: Primitives</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
 
     <h3>Primitives</h3>
@@ -31,8 +32,9 @@
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">arrow</span><span class="s">(</span>x, y, width, <span class="s">type</span>=<span class="kw">NORMAL</span>, draw=<span class="kw">True</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">arrow</span><span class="s">(</span>x, y, width, <span class="s">type</span>=<span class="kw">NORMAL</span>, draw=<span class="kw">True</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -64,10 +66,10 @@
               <tr>
                 <td><span class="image_border"><img src="media/arrow.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">arrow</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span>, <span class="s">50</span><span class="s">)</span></pre>
-
+<span class="kw">arrow</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -80,8 +82,9 @@
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">image</span><span class="s">(</span>path, x, y, width=<span class="kw">None</span>, height=<span class="kw">None</span>, alpha=<span class="s">1.0</span>, data=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">image</span><span class="s">(</span>path, x, y, width=<span class="kw">None</span>, height=<span class="kw">None</span>, alpha=<span class="s">1.0</span>, data=<span class="kw">None</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -106,9 +109,9 @@
               <tr>
                 <td><span class="image_border"><img alt="superfolia" height="125" src="media/superfolia.jpg" width="125"/></span>
                 </td><td>
-                  <pre>
-<span class="kw">image</span><span class="s">(</span><span class="str">"superfolia.jpg"</span>, <span class="s">50</span>, <span class="s">0</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">image</span><span class="s">(</span><span class="str">"superfolia.jpg"</span>, <span class="s">50</span>, <span class="s">0</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -121,8 +124,9 @@
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">imagesize</span><span class="s">(</span>path<span class="s">)</span></pre>
-
+<pre>
+<span class="kw">imagesize</span><span class="s">(</span>path<span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -146,11 +150,11 @@
             <tbody>
               <tr>
                 <td>
-                  <pre>
+<pre>
 w, h = <span class="kw">imagesize</span><span class="s">(</span><span class="str">"superfolia.jpg"</span><span class="s">)</span>
 <span class="kw">print</span> w
-<span class="kw">print</span> h</pre>
-
+<span class="kw">print</span> h
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -163,8 +167,9 @@ w, h = <span class="kw">imagesize</span><span class="s">(</span><span class="str
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">line</span><span class="s">(</span>x1, y1, x2, y2, draw=<span class="kw">True</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">line</span><span class="s">(</span>x1, y1, x2, y2, draw=<span class="kw">True</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -197,11 +202,11 @@ w, h = <span class="kw">imagesize</span><span class="s">(</span><span class="str
               <tr>
                 <td><span class="image_border"><img src="media/line.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">strokewidth</span><span class="s">(</span><span class="s">2</span><span class="s">)</span>
-<span class="kw">line</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">80</span>, <span class="s">80</span><span class="s">)</span></pre>
-
+<span class="kw">line</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">80</span>, <span class="s">80</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -214,8 +219,9 @@ w, h = <span class="kw">imagesize</span><span class="s">(</span><span class="str
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">oval</span><span class="s">(</span>x, y, width, height, draw=<span class="kw">True</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">oval</span><span class="s">(</span>x, y, width, height, draw=<span class="kw">True</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -246,10 +252,10 @@ w, h = <span class="kw">imagesize</span><span class="s">(</span><span class="str
               <tr>
                 <td><span class="image_border"><img src="media/oval.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">oval</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span></pre>
-
+<span class="kw">oval</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -262,8 +268,9 @@ w, h = <span class="kw">imagesize</span><span class="s">(</span><span class="str
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">rect</span><span class="s">(</span>x, y, width, height, roundness=<span class="s">0.0</span>, draw=<span class="kw">True</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">rect</span><span class="s">(</span>x, y, width, height, roundness=<span class="s">0.0</span>, draw=<span class="kw">True</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -294,10 +301,60 @@ w, h = <span class="kw">imagesize</span><span class="s">(</span><span class="str
               <tr>
                 <td><span class="image_border"><img src="media/rect.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">60</span>, <span class="s">40</span><span class="s">)</span></pre>
+<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">60</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
+                </td></tr></tbody></table>
+        </div>
+      </div>
+    </div><a name="size()"></a>
 
+    <div class="section">
+      <h3>size()</h3>
+
+      <div class="definition">
+        <h2>Syntax</h2>
+
+        <div class="row">
+<pre>
+<span class="kw">size</span><span class="s">(</span>w, h<span class="s">)</span>
+</pre>
+        </div>
+
+        <h2>Description</h2>
+
+        <div class="row">
+          Sets the size of the canvas in points. The first parameter sets the width, the second
+          parameter the height. If this command is used, it should be the first line in a script -
+          it’s illogical to set the size of the canvas halfway a script! The supplied values can be
+          multiplied by ‘inch’, ‘cm’ or ‘mm’. The predefined WIDTH and HEIGHT variables can be used
+          to obtain the canvas size.
+        </div>
+
+        <h2>Tutorial</h2>
+
+        <div class="row">
+          <a href="../tut/Variables.html">Variables</a>
+        </div>
+
+        <h2>Example</h2>
+
+        <div class="row">
+          <table border="0">
+            <tbody>
+              <tr>
+                <td>
+<pre>
+<span class="kw">size</span><span class="s">(</span><span class="s">400</span>, <span class="s">600</span><span class="s">)</span>
+<span class="grey"># the canvas is 400 X 600 points</span>
+<span class="kw">print</span> <span class="kw">WIDTH</span> <span class="grey"># prints 400</span>
+<span class="kw">print</span> <span class="kw">HEIGHT</span> <span class="grey"># prints 600</span>
+</pre>
+<pre>
+<span class="kw">size</span><span class="s">(</span><span class="s">20</span>*<span class="kw">cm</span>, <span class="s">20</span>*<span class="kw">cm</span><span class="s">)</span>
+<span class="grey"># the canvas is 20 x 20 cm</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>
@@ -310,8 +367,9 @@ w, h = <span class="kw">imagesize</span><span class="s">(</span><span class="str
         <h2>Syntax</h2>
 
         <div class="row">
-          <pre><span class="kw">star</span><span class="s">(</span>x, y, points=<span class="s">20</span>, outer=<span class="s">100</span>, inner=<span class="s">50</span>, draw=<span class="kw">True</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">star</span><span class="s">(</span>x, y, points=<span class="s">20</span>, outer=<span class="s">100</span>, inner=<span class="s">50</span>, draw=<span class="kw">True</span><span class="s">)</span>
+</pre>
         </div>
 
         <h2>Description</h2>
@@ -342,10 +400,10 @@ w, h = <span class="kw">imagesize</span><span class="s">(</span><span class="str
               <tr>
                 <td><span class="image_border"><img src="media/star.jpg"/></span>
                 </td><td>
-                  <pre>
+<pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">star</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span>, <span class="s">9</span>, <span class="s">40</span>, <span class="s">10</span><span class="s">)</span></pre>
-
+<span class="kw">star</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span>, <span class="s">9</span>, <span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
+</pre>
                 </td></tr></tbody></table>
         </div>
       </div>

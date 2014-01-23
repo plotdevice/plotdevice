@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: photobot.Canvas.gradient()</title>
   <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>photobot.Canvas.gradient()</h3>
@@ -13,8 +14,8 @@
 
   <div class="article">
     <h2>Syntax</h2>
-    <pre>canvas.<span class="s">gradient</span><span class="s">(</span>style, w=<span class="s">1.0</span>, h=<span class="s">1.0</span>, name=<span class="str">""</span><span class="s">)</span></pre>
-
+<pre>canvas.<span class="s">gradient</span><span class="s">(</span>style, w=<span class="s">1.0</span>, h=<span class="s">1.0</span>, name=<span class="str">""</span><span class="s">)</span>
+</pre>
 
     <h2>Description</h2>
 
@@ -27,12 +28,12 @@
 
     <p>Assigns a linear gradient to the alpha channel of <em>robot.jpg</em>, making the image go
     from transparent (left) to opaque (right).</p>
-    <pre>photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
+<pre>photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
 canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
 canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"images/robot.jpg"</span><span class="s">)</span>
 canvas.<span class="s">gradient</span><span class="s">(</span>photobot.<span class="s">LINEAR</span><span class="s">)</span>
-canvas.<span class="s">layers</span><span class="s">[</span><span class="s">2</span><span class="s">]</span>.<span class="s">mask</span><span class="s">(</span><span class="s">)</span></pre>
-
+canvas.<span class="s">layers</span><span class="s">[</span><span class="s">2</span><span class="s">]</span>.<span class="s">mask</span><span class="s">(</span><span class="s">)</span>
+</pre>
 
     <div class="example">
       <img alt="" height="100" src="../media/photobot-gradient.jpg" width="100"/>

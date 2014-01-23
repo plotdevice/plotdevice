@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: Libraries</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3>Libraries</h3>
@@ -45,18 +46,19 @@
     Python’s libraries in your NodeBox projects.</p>
     <p>Take a look at the list of Python libraries <a href="http://docs.python.org/modindex.html">here</a>.</p>
     <p>You can import a library command into your script with the following statement:<br/></p>
-    <pre>variable = <span class="kw">ximport</span><span class="s">(</span><span class="str">"library"</span><span class="s">)</span></pre>
-
+<pre>variable = <span class="kw">ximport</span><span class="s">(</span><span class="str">"library"</span><span class="s">)</span>
+</pre>
 
     <p>For example, if you look at the <em>random</em> library on the above list of Python
     libraries, you see the <em>random</em> library has a <em>shuffle()</em> command to randomly
     reorder a <a href="Lists.html">list</a>. To use this command in a NodeBox project:</p>
-    <pre><span class="s">list</span> = <span class="s">[</span><span class="s">1</span>, <span class="s">2</span>, <span class="s">3</span>, <span class="s">4</span>, <span class="s">5</span><span class="s">]</span>
+<pre>
+<span class="s">list</span> = <span class="s">[</span><span class="s">1</span>, <span class="s">2</span>, <span class="s">3</span>, <span class="s">4</span>, <span class="s">5</span><span class="s">]</span>
 rnd = <span class="kw">ximport</span><span class="s">(</span><span class="str">"random"</span><span class="s">)</span>
 rnd.<span class="s">shuffle</span><span class="s">(</span><span class="s">list</span><span class="s">)</span> 
 <span class="kw">print</span> <span class="s">list</span>  
-&gt;&gt;&gt; <span class="s">[</span><span class="s">3</span>, <span class="s">4</span>, <span class="s">1</span>, <span class="s">5</span>, <span class="s">2</span><span class="s">]</span></pre>
-
+&gt;&gt;&gt; <span class="s">[</span><span class="s">3</span>, <span class="s">4</span>, <span class="s">1</span>, <span class="s">5</span>, <span class="s">2</span><span class="s">]</span>
+</pre>
 
     <p>You don’t need to install any files or anything, NodeBox knows where the Python libraries
     are.</p>

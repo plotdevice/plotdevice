@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: TUIO</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>TUIO</h3>
@@ -65,17 +66,19 @@
     initializes a callback manager from the <tt>OSC</tt> module.</p>
     <p>A simple example can be found in the <tt>examples</tt> directory in <tt>example1.py</tt>:</p>
     <p>1. Import it:</p>
-    <pre>tuio = <span class="kw">ximport</span><span class="s">(</span><span class="str">"tuio"</span><span class="s">)</span></pre>
-
+<pre>tuio = <span class="kw">ximport</span><span class="s">(</span><span class="str">"tuio"</span><span class="s">)</span>
+</pre>
 
     <p>2. Setup the tracking program:</p>
-    <pre><span class="kw">def</span> <span class="rose">setup</span><span class="s">(</span><span class="s">)</span>:
+<pre>
+<span class="kw">def</span> <span class="rose">setup</span><span class="s">(</span><span class="s">)</span>:
     <span class="kw">global</span> tracking
-    tracking = tuio.<span class="s">Tracking</span><span class="s">(</span><span class="s">)</span></pre>
-
+    tracking = tuio.<span class="s">Tracking</span><span class="s">(</span><span class="s">)</span>
+</pre>
 
     <p>3. Setup the main loop and draw all recognized object and rotate them accordingly:</p>
-    <pre><span class="kw">def</span> <span class="rose">draw</span><span class="s">(</span><span class="s">)</span>:
+<pre>
+<span class="kw">def</span> <span class="rose">draw</span><span class="s">(</span><span class="s">)</span>:
     <span class="kw">global</span> tracking
     tracking.<span class="s">update</span><span class="s">(</span><span class="s">)</span>
     <span class="kw">fontsize</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>
@@ -85,18 +88,19 @@
         <span class="kw">rotate</span><span class="s">(</span>obj.<span class="s">angle</span><span class="s">)</span>
         <span class="kw">rect</span><span class="s">(</span>x, y, <span class="s">20</span>, <span class="s">20</span><span class="s">)</span>
         <span class="kw">reset</span><span class="s">(</span><span class="s">)</span>
-        <span class="kw">text</span><span class="s">(</span>obj, x, y<span class="s">)</span></pre>
-
+        <span class="kw">text</span><span class="s">(</span>obj, x, y<span class="s">)</span>
+</pre>
 
     <p>a) You need to update the tracking information on each loop manually.</p>
     <p>b) Access the tracked objects by using one of the helper function that return a list of
     these objects.</p>
     <p>c) Stop the tracking manually on every exception to prevent socket errors</p>
     <p>4. Stop the tracking when Nodebox stops the program.</p>
-    <pre><span class="kw">def</span> <span class="rose">stop</span><span class="s">(</span><span class="s">)</span>:
+<pre>
+<span class="kw">def</span> <span class="rose">stop</span><span class="s">(</span><span class="s">)</span>:
     <span class="kw">global</span> tracking
-    tracking.<span class="s">stop</span><span class="s">(</span><span class="s">)</span></pre>
-
+    tracking.<span class="s">stop</span><span class="s">(</span><span class="s">)</span>
+</pre>
 
     <p>While holding two fiducials in front of the camera the visual output of this script was, for
     example:</p>

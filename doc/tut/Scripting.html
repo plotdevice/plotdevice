@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: Scripting</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3>Scripting</h3>
@@ -27,11 +28,12 @@
     <p>Detailed installation instructions can be found in the project’s <code><a href="https://github.com/samizdatco/nodebox-pyobjc/blob/master/README.md">README</a></code> file. To
     simplify the use of NodeBox with other external libraries, we recommend installing the module
     into a <a href="http://virtualenv.org">virtualenv</a> along with your other dependencies:</p>
-    <pre><span class="kw">$ </span>virtualenv env
+<pre>
+<span class="kw">$ </span>virtualenv env
 <span class="kw">$ </span>source ./env/bin/activate
 <span class="o">(</span>env<span class="o">)</span><span class="kw">$ </span>pip install https://github.com/samizdatco/nodebox-pyobjc/archive/master.zip
-<span class="o">(</span>env<span class="o">)</span><span class="kw">$ </span>pip install requests envoy bs4 <span class="grey"># some other useful packages</span></pre>
-
+<span class="o">(</span>env<span class="o">)</span><span class="kw">$ </span>pip install requests envoy bs4 <span class="grey"># some other useful packages</span>
+</pre>
 
     <h2><a href="#nodebox.script" id="nodebox.script" name="nodebox.script"></a>Initializing a
     graphics context with <code>nodebox.script</code></h2>
@@ -39,22 +41,25 @@
     <p>The <code>nodebox.script</code> module initializes your script’s namespace with one
     identical to a script running with the app or command line tool. For instance, the following
     will draw a few boxes:</p>
-    <pre><span class="grey">#!/usr/bin/env python</span>
+<pre>
+<span class="grey">#!/usr/bin/env python</span>
 <span class="kw">from</span> <span class="nn">nodebox.script</span> <span class="kw">import</span> <span class="o">*</span>
 <span class="kw">for</span> <span class="kw">x</span><span class="s">,</span> <span class="kw">y</span> <span class="ow">in</span> <span class="kw">grid</span><span class="s">(</span><span class="mi">10</span><span class="s">,</span><span class="mi">10</span><span class="s">,</span><span class="mi">12</span><span class="s">,</span><span class="mi">12</span><span class="s">):</span>
-    <span class="kw">rect</span><span class="s">(</span><span class="kw">x</span><span class="s">,</span><span class="kw">y</span><span class="s">,</span> <span class="mi">10</span><span class="s">,</span><span class="mi">10</span><span class="s">)</span></pre>
-
+    <span class="kw">rect</span><span class="s">(</span><span class="kw">x</span><span class="s">,</span><span class="kw">y</span><span class="s">,</span> <span class="mi">10</span><span class="s">,</span><span class="mi">10</span><span class="s">)</span>
+</pre>
 
     <p>You can then generate output files using the global <code>canvas</code> object. Its
     <code>save</code> method takes a file path as an argument and the format will be determined by
     the file extension (<code>pdf</code>, <code>eps</code>, <code>png</code>, <code>jpg</code>,
     <code>gif</code>, or <code>tiff</code>):</p>
-    <pre><span class="kw">canvas</span><span class="o">.</span><span class="kw">save</span><span class="s">(</span><span class="str">'~/Pictures/output.pdf'</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">canvas</span><span class="o">.</span><span class="kw">save</span><span class="s">(</span><span class="str">'~/Pictures/output.pdf'</span><span class="s">)</span>
+</pre>
 
     <p>If you’re generating multiple images, be sure to reset the graphics state in between frames:</p>
-    <pre><span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span></pre>
-
+<pre>
+<span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span>
+</pre>
 
     <p>But if you plan to do more than generate a one-off, you’ll likely find the <a href="../ref/Globals.html#export()"><code>export()</code></a> function more convenient. It provides
     convenience methods for writing images, vector documents, and even animations.</p>

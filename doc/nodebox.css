@@ -277,6 +277,16 @@ a.noexternal { background-image:none !important; padding-right: 0; }
   border-top:1px solid #666;
 }
 
+.article .classic{
+  margin-top:48px;
+  border-top:1px solid #666;
+}
+
+
+.article .classic + div>.section{
+  border-color:#ccc;
+}
+
 .article a:target + .section:before{
   content:"→";
   left:-42px;
@@ -305,6 +315,8 @@ a.noexternal { background-image:none !important; padding-right: 0; }
   margin-top:0;
 }
 
+
+
 /*.article .contents h2,*/
 /*
 .article .contents{
@@ -317,3 +329,7 @@ a.noexternal { background-image:none !important; padding-right: 0; }
   float:left;
 }
 */
+
+
+
+

@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: Tendrils</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3>Tendrils</h3>
@@ -22,7 +23,8 @@
     all the tendrils together.</p>
     <p> </p>
     <p><img alt="tendrils1" src="media/tendrils1.jpg"/></p>
-    <pre><span class="kw">size</span><span class="s">(</span><span class="s">600</span>, <span class="s">600</span><span class="s">)</span>
+<pre>
+<span class="kw">size</span><span class="s">(</span><span class="s">600</span>, <span class="s">600</span><span class="s">)</span>
  
 <span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> pi, sin, cos, radians
  
@@ -108,8 +110,8 @@ plant = Plant<span class="s">(</span><span class="kw">WIDTH</span>/<span class="
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">200</span><span class="s">)</span>: 
     plant.<span class="s">grow</span><span class="s">(</span>curl=<span class="s">1.0</span>, step=<span class="s">0.02</span><span class="s">)</span>
  
-plant.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></pre>
- 
+plant.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
+</pre> 
     <hr size="2" width="100%"/>
 
     <h2>Using the plant as a layer in Core Image</h2>
@@ -119,7 +121,7 @@ plant.<span class="s">draw</span><span class="s">(</span><span class="s">)</span
     play around with the <i>curl</i> parameter a bit.</p>
     <p> </p>
     <p><img alt="tendrils2" src="media/tendrils2.jpg"/></p>
-    <pre>coreimage = <span class="kw">ximport</span><span class="s">(</span><span class="str">"coreimage"</span><span class="s">)</span>
+<pre>coreimage = <span class="kw">ximport</span><span class="s">(</span><span class="str">"coreimage"</span><span class="s">)</span>
 canvas = coreimage.<span class="s">canvas</span><span class="s">(</span><span class="kw">WIDTH</span>, <span class="kw">HEIGHT</span><span class="s">)</span>
 layer = canvas.<span class="s">append</span><span class="s">(</span>
     plant.<span class="s">path</span><span class="s">(</span><span class="s">)</span>, 
@@ -128,8 +130,8 @@ layer = canvas.<span class="s">append</span><span class="s">(</span>
     <span class="kw">strokewidth</span>=<span class="s">0.2</span>
 <span class="s">)</span>
 layer.<span class="s">filter</span><span class="s">(</span><span class="str">"zoomblur"</span>, amount=<span class="s">10</span><span class="s">)</span>
-canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></pre>
- 
+canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
+</pre> 
 
     <p>Created by Tom De Smedt<br/>
     Based on the ‘Tendrils’ algorithm by ART+COM<br/></p>

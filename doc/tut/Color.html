@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: Color</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3>Color</h3>
@@ -22,24 +23,26 @@
     have a few useful attributes that allow you to think in different color spaces at the same
     time. For example, if we wanted to draw a grid of lines in random colors, we would use the
     following code:</p>
-    <pre><span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>:
+<pre>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>:
   c = <span class="kw">color</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
   <span class="kw">stroke</span><span class="s">(</span>c<span class="s">)</span>
   <span class="kw">strokewidth</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
-  <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, i, <span class="kw">WIDTH</span>, i<span class="s">)</span></pre>
-
+  <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, i, <span class="kw">WIDTH</span>, i<span class="s">)</span>
+</pre>
 
     <p>However, since each line now has a random stroke, some lines will tend to look dull and
     light. To crank up the colors, we can easily adjust the lines’ saturation without switching to
     a different color space. For the same reason, a stroke width of two is used instead of one,
     overlapping the lines makes them appear brighter as well.</p>
-    <pre><span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>:
+<pre>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>:
   c = <span class="kw">color</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
   c.<span class="s">saturation</span> = <span class="s">1.0</span>
   <span class="kw">stroke</span><span class="s">(</span>c<span class="s">)</span>   
   <span class="kw">strokewidth</span><span class="s">(</span><span class="s">2</span><span class="s">)</span>
-  <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, i, <span class="kw">WIDTH</span>, i<span class="s">)</span></pre>
-
+  <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, i, <span class="kw">WIDTH</span>, i<span class="s">)</span>
+</pre>
 
     <p> </p>
     <p><span class="media"><img height="522" src="media/color-lines.jpg" width="579"/></span></p>
@@ -78,15 +81,16 @@
     <i>we can</i>. But often this does not generate consistent design.</p>
     <p>The HSB color mode is excellent to create color harmony.</p>
     <p>Consider the following example:</p>
-    <pre><span class="kw">colormode</span><span class="s">(</span><span class="kw">HSB</span><span class="s">)</span>
+<pre>
+<span class="kw">colormode</span><span class="s">(</span><span class="kw">HSB</span><span class="s">)</span>
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>:
   c = <span class="kw">color</span><span class="s">(</span><span class="s">0.5</span>, <span class="kw">random</span><span class="s">(</span><span class="s">0.5</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">0.5</span>,<span class="s">1.0</span><span class="s">)</span><span class="s">)</span>
   <span class="kw">stroke</span><span class="s">(</span>c<span class="s">)</span>
   <span class="kw">strokewidth</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">50</span><span class="s">)</span><span class="s">)</span>
   radius = <span class="kw">random</span><span class="s">(</span><span class="s">200</span><span class="s">)</span>
-  <span class="kw">oval</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>, radius, radius<span class="s">)</span></pre>
-
+  <span class="kw">oval</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>, radius, radius<span class="s">)</span>
+</pre>
 
     <p>The hue is always the same, 0.5 or a hue of 180, which is cyan. Only the saturation and
     brightness are varied a bit. This ensures we always have shades of blue, so they all fit
@@ -104,13 +108,14 @@
     <p>You can create gradients in NodeBox by drawing lines in a for-loop and increasing the
     transparency of each line. In the example below color <i>c</i>’s alpha transparency ranges from
     0.0 to 1.0 (notice how we multiply by 1.0 to get a floating point number).</p>
-    <pre><span class="kw">colormode</span><span class="s">(</span><span class="kw">HSB</span><span class="s">)</span>
+<pre>
+<span class="kw">colormode</span><span class="s">(</span><span class="kw">HSB</span><span class="s">)</span>
 c = <span class="kw">color</span><span class="s">(</span><span class="s">0.5</span>, <span class="s">1</span>, <span class="s">1</span><span class="s">)</span>
 <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>:
   c.<span class="s">a</span> = <span class="s">1.0</span> * i / <span class="kw">HEIGHT</span>
   <span class="kw">stroke</span><span class="s">(</span>c<span class="s">)</span> 
-  <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, i, <span class="kw">WIDTH</span>, i<span class="s">)</span></pre>
-
+  <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, i, <span class="kw">WIDTH</span>, i<span class="s">)</span>
+</pre>
 
     <p> </p>
     <p><span class="media"><img height="520" src="media/color-gradient.jpg" width="581"/></span></p>

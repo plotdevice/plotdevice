@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: Quicktime</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>Quicktime</h3>
@@ -46,16 +47,16 @@
     <p>Put the downloaded <em>quicktime</em> folder in <em>~/Library/Application
     Support/NodeBox/</em> or in the same folder as your script so NodeBox can find the library.
     Then import the library in your script:<br/></p>
-    <pre>quicktime = <span class="kw">ximport</span><span class="s">(</span><span class="str">"quicktime"</span><span class="s">)</span></pre>
- 
+<pre>quicktime = <span class="kw">ximport</span><span class="s">(</span><span class="str">"quicktime"</span><span class="s">)</span>
+</pre> 
     <hr/>
 
     <h2><a id="movie" name="movie" title="movie"></a>Movie frames</h2>
 
     <p>The library has a <em>movie()</em> command that opens a movie from a given location. You can
     open any type of movie you could normally open with the Quicktime application:</p>
-    <pre>movie<span class="s">(</span>path<span class="s">)</span></pre>
-
+<pre>movie<span class="s">(</span>path<span class="s">)</span>
+</pre>
 
     <p>The command returns a <em>Movie</em> object with a number of useful properties:</p>
     <ul>
@@ -68,10 +69,10 @@
     </li></ul>
 
     <p>The returned movie object has two methods to grab image frames:</p>
-    <pre>movie.<span class="s">frame</span><span class="s">(</span><span class="s">time</span><span class="s">)</span></pre>
-
-    <pre>movie.<span class="s">frames</span><span class="s">(</span>n=<span class="s">10</span>, start=<span class="s">0</span>, stop=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>movie.<span class="s">frame</span><span class="s">(</span><span class="s">time</span><span class="s">)</span>
+</pre>
+<pre>movie.<span class="s">frames</span><span class="s">(</span>n=<span class="s">10</span>, start=<span class="s">0</span>, stop=<span class="kw">None</span><span class="s">)</span>
+</pre>
 
     <p>The <em>frame()</em> method returns a <em>MovieFrame</em> object with image data at the
     given <em>time</em> (in seconds) in the movie. The <em>frames()</em> command returns a list of
@@ -88,13 +89,13 @@
 
     <p>Displaying frames in NodeBox is really very easy. The following script loops through all the
     frames in an animation:</p>
-    <pre>movie = quicktime.<span class="s">movie</span><span class="s">(</span><span class="str">"twisted_world.mp4"</span><span class="s">)</span>
+<pre>movie = quicktime.<span class="s">movie</span><span class="s">(</span><span class="str">"twisted_world.mp4"</span><span class="s">)</span>
 <span class="kw">size</span><span class="s">(</span>movie.<span class="s">width</span>, movie.<span class="s">height</span><span class="s">)</span>
 <span class="kw">speed</span><span class="s">(</span><span class="s">50</span><span class="s">)</span>
 <span class="kw">def</span> <span class="rose">draw</span><span class="s">(</span><span class="s">)</span>:
     frame = movie.<span class="s">frame</span><span class="s">(</span>FRAME*<span class="s">0.1</span><span class="s">)</span>
-    <span class="kw">image</span><span class="s">(</span><span class="kw">None</span>, <span class="s">0</span>, <span class="s">0</span>, data=frame.<span class="s">data</span>, width=frame.<span class="s">width</span><span class="s">)</span></pre>
- 
+    <span class="kw">image</span><span class="s">(</span><span class="kw">None</span>, <span class="s">0</span>, <span class="s">0</span>, data=frame.<span class="s">data</span>, width=frame.<span class="s">width</span><span class="s">)</span>
+</pre> 
     <hr/>
 
     <h2><a id="coreimage" name="coreimage" title="coreimage"></a>Movie frames in Core Image</h2>
@@ -103,7 +104,7 @@
     object returned from <em>movie.frame()</em> or the <em>movie.frames()</em> list can be passed
     to the <em>canvas.layer()</em> method in Core Image. Then you can apply all sorts of filters
     and effects to it:</p>
-    <pre>coreimage = <span class="kw">ximport</span><span class="s">(</span><span class="str">"coreimage"</span><span class="s">)</span>
+<pre>coreimage = <span class="kw">ximport</span><span class="s">(</span><span class="str">"coreimage"</span><span class="s">)</span>
 quicktime = <span class="kw">ximport</span><span class="s">(</span><span class="str">"quicktime"</span><span class="s">)</span>
  
 movie = quicktime.<span class="s">movie</span><span class="s">(</span><span class="str">"twisted_world.mp4"</span><span class="s">)</span>
@@ -112,8 +113,8 @@ frame = movie.<span class="s">frame</span><span class="s">(</span><span class="s
 canvas = coreimage.<span class="s">canvas</span><span class="s">(</span>movie.<span class="s">width</span>, movie.<span class="s">height</span><span class="s">)</span>
 l = canvas.<span class="s">layer</span><span class="s">(</span>frame<span class="s">)</span>
 l.<span class="s">filter_zoomblur</span><span class="s">(</span><span class="s">)</span>
-canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</span></pre>
- 
+canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
+</pre> 
 
     <p> </p>
     <hr/>
@@ -122,8 +123,8 @@ canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</spa
 
     <p>The library has an <em>audio()</em> command that opens a sound from a given location. You
     can open any type of sound you could normally open with the Quicktime application:</p>
-    <pre>audio<span class="s">(</span>path<span class="s">)</span></pre>
-
+<pre>audio<span class="s">(</span>path<span class="s">)</span>
+</pre>
 
     <p>The command returns an <em>Audio</em> object with a number of useful properties:</p>
     <ul>
@@ -139,16 +140,16 @@ canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</spa
     </li></ul>
 
     <p>The returned audio object also has a number of methods that control the playback:</p>
-    <pre>audio.<span class="s">play</span><span class="s">(</span><span class="s">)</span></pre>
-
-    <pre>audio.<span class="s">stop</span><span class="s">(</span><span class="s">)</span></pre>
-
-    <pre>audio.<span class="s">pause</span><span class="s">(</span><span class="s">)</span></pre>
-
-    <pre>audio.<span class="s">is_playing</span><span class="s">(</span><span class="s">)</span></pre>
-
-    <pre>audio.<span class="kw">reset</span><span class="s">(</span><span class="s">)</span></pre>
-
+<pre>audio.<span class="s">play</span><span class="s">(</span><span class="s">)</span>
+</pre>
+<pre>audio.<span class="s">stop</span><span class="s">(</span><span class="s">)</span>
+</pre>
+<pre>audio.<span class="s">pause</span><span class="s">(</span><span class="s">)</span>
+</pre>
+<pre>audio.<span class="s">is_playing</span><span class="s">(</span><span class="s">)</span>
+</pre>
+<pre>audio.<span class="kw">reset</span><span class="s">(</span><span class="s">)</span>
+</pre>
 
     <p>The <em>audio.is_playing()</em> method returns <em>True</em> as long as the sound is playing
     in NodeBox. While the sound is playing you can adjust its <em>volume</em> and <em>rate</em>. It
@@ -164,18 +165,18 @@ canvas.<span class="s">draw</span><span class="s">(</span><span class="s">)</spa
     <p>Sometimes you may want to work with a selection of a movie instead of the whole movie, or a
     one-second sample of the audio that you are going to loop. For these purposes, both the
     <em>Movie</em> and the <em>Audio</em> object have a selection() method:</p>
-    <pre>media.<span class="s">selection</span><span class="s">(</span>start=<span class="s">0</span>, stop=<span class="kw">None</span><span class="s">)</span></pre>
-
+<pre>media.<span class="s">selection</span><span class="s">(</span>start=<span class="s">0</span>, stop=<span class="kw">None</span><span class="s">)</span>
+</pre>
 
     <p>It returns a new movie or a new audio object ranged between the given <em>start</em> and
     <em>stop</em> time. For example, here’s how to create a short loop from an audio fragment:<br/></p>
-    <pre>audio = quicktime.<span class="s">audio</span><span class="s">(</span><span class="str">"modron_cube.mp3"</span><span class="s">)</span>
+<pre>audio = quicktime.<span class="s">audio</span><span class="s">(</span><span class="str">"modron_cube.mp3"</span><span class="s">)</span>
 audio = audio.<span class="s">selection</span><span class="s">(</span>start=<span class="s">0</span>, stop=<span class="s">7.2</span><span class="s">)</span>
 <span class="kw">speed</span><span class="s">(</span><span class="s">100</span><span class="s">)</span>
 <span class="kw">def</span> <span class="rose">draw</span><span class="s">(</span><span class="s">)</span>:
     <span class="kw">if</span> <span class="kw">not</span> audio.<span class="s">is_playing</span>:
-        audio.<span class="s">play</span><span class="s">(</span><span class="s">)</span></pre>
-
+        audio.<span class="s">play</span><span class="s">(</span><span class="s">)</span>
+</pre>
   </div>
 
 </body></html>

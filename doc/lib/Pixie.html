@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: Pixie</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>Pixie</h3>
@@ -58,22 +59,22 @@
 
     <p>Put the <i>pixie</i> library folder in the same folder as your script so NodeBox can find
     the library. You can also put it in <i>~/Library/Application Support/NodeBox/.</i></p>
-    <pre>pixie = <span class="kw">ximport</span><span class="s">(</span><span class="str">"pixie"</span><span class="s">)</span></pre>
- 
+<pre>pixie = <span class="kw">ximport</span><span class="s">(</span><span class="str">"pixie"</span><span class="s">)</span>
+</pre> 
     <hr size="2" width="100%"/>
 
     <h2><a id="headings" name="headings" title="headings"></a>Headings</h2>
 
     <p>The <i>heading()</i> command lets you draw text in a fat font:</p>
-    <pre>heading<span class="s">(</span><span class="s">str</span>, x, y, width, pt=<span class="s">30</span>, slant=<span class="s">0.0</span><span class="s">)</span></pre>
-
+<pre>heading<span class="s">(</span><span class="s">str</span>, x, y, width, pt=<span class="s">30</span>, slant=<span class="s">0.0</span><span class="s">)</span>
+</pre>
 
     <p>Draws the string <i>str</i> at position <i>x</i>, <i>y</i> with the given line <i>width</i>
     and font size <i>pt</i>. The command returns an (x, y) tuple with the position of the heading’s
     bottom right corner. For example:</p>
-    <pre>txt  = <span class="str">"Fat trendy Pixie headers!"</span>
-pixie.<span class="s">heading</span><span class="s">(</span>txt, <span class="s">100</span>, <span class="s">100</span>, <span class="s">200</span>, pt=<span class="s">15</span><span class="s">)</span></pre>
-
+<pre>txt  = <span class="str">"Fat trendy Pixie headers!"</span>
+pixie.<span class="s">heading</span><span class="s">(</span>txt, <span class="s">100</span>, <span class="s">100</span>, <span class="s">200</span>, pt=<span class="s">15</span><span class="s">)</span>
+</pre>
 
     <p><img alt="pixie-heading" height="97" src="media/pixie-heading.gif" width="337"/></p>
     <p> </p>
@@ -82,26 +83,29 @@ pixie.<span class="s">heading</span><span class="s">(</span>txt, <span class="s"
     <h2><a id="text" name="text" title="text"></a>Paragraph text</h2>
 
     <p>The <i>text()</i> command lets you draw blocks of sketchy handwriting:</p>
-    <pre><span class="kw">text</span><span class="s">(</span><span class="s">str</span>, x, y, width, pt=<span class="s">15</span>, slant=<span class="s">0.5</span>, <span class="kw">line</span>=<span class="kw">False</span>, serif=<span class="kw">False</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, x, y, width, pt=<span class="s">15</span>, slant=<span class="s">0.5</span>, <span class="kw">line</span>=<span class="kw">False</span>, serif=<span class="kw">False</span><span class="s">)</span>
+</pre>
 
     <p>Draws the string <i>str</i> at position <i>x</i>, <i>y</i> with the given line <i>width</i>
     and font size <i>pt</i>. With the optional <i>line</i> parameter set to <i>True</i> the
     paragraph will be underlined. When you set <i>serif</i> to <i>True</i> some characters in the
     text will look kinda serif-ish. The command returns an (x,y) tuple with the position of the
     text’s bottom right corner. For example:<br/></p>
-    <pre><span class="s">str</span> += <span class="str">"Pixie was originally a part of the Aunt Hillary code package,"</span>
+<pre>
+<span class="s">str</span> += <span class="str">"Pixie was originally a part of the Aunt Hillary code package,"</span>
 <span class="s">str</span> += <span class="str">"a handwriting that looks different each time, contains mistakes,"</span>
 <span class="s">str</span> += <span class="str">"has wobbly baselines and variable color pressure."</span>
-pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">20</span>, <span class="s">20</span>, <span class="s">200</span>, pt=<span class="s">15</span><span class="s">)</span></pre>
-
+pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">20</span>, <span class="s">20</span>, <span class="s">200</span>, pt=<span class="s">15</span><span class="s">)</span>
+</pre>
 
     <p><span class="media"><img height="115" src="media/pixie-paragraph.gif" width="307"/></span></p>
     <p> </p>
     <p><span class="grey_box">Text height</span><br/></p>
     <p>With the <i>textheight()</i> command you can guess the height of a text paragraph:</p>
-    <pre><span class="kw">textheight</span><span class="s">(</span><span class="s">str</span>, width, pt=<span class="s">20</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">textheight</span><span class="s">(</span><span class="s">str</span>, width, pt=<span class="s">20</span><span class="s">)</span>
+</pre>
 
     <p>Returns the height of a <i>text()</i> paragraph with given <i>str</i>, <i>width</i> and
     point size <i>pt</i>. Because baselines in a Pixie paragraph wobble randomly, this command
@@ -110,14 +114,16 @@ pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</s
     <p><span class="grey_box">Messing it up</span></p>
     <p>The library has a few commands to make text look more organic. You can change the text color
     and lineheight, highlight keywords and add random errors and scribbles:<br/></p>
-    <pre><span class="kw">color</span><span class="s">(</span>c=<span class="s">0.8</span>, m=<span class="s">0.4</span>, y=<span class="s">0.0</span>, k=<span class="s">0.4</span><span class="s">)</span></pre>
-
-    <pre><span class="kw">lineheight</span><span class="s">(</span>x=<span class="s">1.2</span><span class="s">)</span></pre>
-
-    <pre>keywords<span class="s">(</span><span class="s">list</span>=<span class="s">(</span><span class="s">)</span>, all=<span class="kw">False</span><span class="s">)</span></pre>
-
-    <pre>distraction<span class="s">(</span>d=<span class="s">0.05</span><span class="s">)</span></pre>
-
+<pre>
+<span class="kw">color</span><span class="s">(</span>c=<span class="s">0.8</span>, m=<span class="s">0.4</span>, y=<span class="s">0.0</span>, k=<span class="s">0.4</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="kw">lineheight</span><span class="s">(</span>x=<span class="s">1.2</span><span class="s">)</span>
+</pre>
+<pre>keywords<span class="s">(</span><span class="s">list</span>=<span class="s">(</span><span class="s">)</span>, all=<span class="kw">False</span><span class="s">)</span>
+</pre>
+<pre>distraction<span class="s">(</span>d=<span class="s">0.05</span><span class="s">)</span>
+</pre>
 
     <p>The <i>color()</i> command sets the color (in CMYK) of all handwritten text.</p>
     <p>The <i>lineheight()</i> command sets the spacing between lines of text in <i>heading()</i>
@@ -138,31 +144,31 @@ pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</s
             <p><span class="media"><img height="127" src="media/pixie-spacing.gif" width="283"/></span></p>
           </td><td>
             <p>Increased line spacing:<br/></p>
-            <pre>
+<pre>
 pixie.<span class="kw">lineheight</span><span class="s">(</span><span class="s">1.4</span><span class="s">)</span>
-pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">100</span>, <span class="s">100</span>, <span class="s">200</span><span class="s">)</span></pre>
-
+pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">100</span>, <span class="s">100</span>, <span class="s">200</span><span class="s">)</span>
+</pre>
         </td></tr><tr>
           <td>
             <p><span class="media"><img height="108" src="media/pixie-keywords.gif" width="288"/></span></p>
           </td><td>
             <p>Keyword highlighting:<br/></p>
-            <pre>
+<pre>
 k = <span class="s">[</span><span class="str">"pixie"</span>, <span class="str">"aunt hillary"</span><span class="s">]</span>
 pixie.<span class="s">keywords</span><span class="s">(</span>k<span class="s">)</span>
-pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">100</span>, <span class="s">100</span>, <span class="s">200</span><span class="s">)</span></pre>
-
+pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">100</span>, <span class="s">100</span>, <span class="s">200</span><span class="s">)</span>
+</pre>
         </td></tr><tr>
           <td>
             <p><span class="media"><img height="140" src="media/pixie-distraction.gif" width="332"/></span></p>
           </td><td>
             <p>Adding mistakes:<br/></p>
-            <pre>
+<pre>
 k = <span class="s">[</span><span class="str">"pixie"</span>, <span class="str">"aunt hillary"</span><span class="s">]</span>
 pixie.<span class="s">keywords</span><span class="s">(</span>k<span class="s">)</span>
 pixie.<span class="s">distraction</span><span class="s">(</span><span class="s">0.8</span><span class="s">)</span>
-pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">100</span>, <span class="s">100</span>, <span class="s">200</span><span class="s">)</span></pre>
-
+pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">100</span>, <span class="s">100</span>, <span class="s">200</span><span class="s">)</span>
+</pre>
           </td></tr></tbody></table></p>
     <p> </p>
     <hr size="2" width="100%"/>
@@ -171,11 +177,12 @@ pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</s
 
     <p>Here’s a fun command to add some doodles to your text!<br/>
     The <i>sprite()</i> command draws a little critter with random legs, face and body:</p>
-    <pre>sprite<span class="s">(</span>x, y, pt=<span class="s">20</span><span class="s">)</span></pre>
-
-    <pre><span class="kw">for</span> x, y <span class="kw">in</span> <span class="kw">grid</span><span class="s">(</span><span class="s">3</span>, <span class="s">3</span>, <span class="s">60</span>, <span class="s">60</span><span class="s">)</span>:
-    pixie.<span class="s">sprite</span><span class="s">(</span><span class="s">100</span>+x, <span class="s">100</span>+y<span class="s">)</span></pre>
-
+<pre>sprite<span class="s">(</span>x, y, pt=<span class="s">20</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="kw">for</span> x, y <span class="kw">in</span> <span class="kw">grid</span><span class="s">(</span><span class="s">3</span>, <span class="s">3</span>, <span class="s">60</span>, <span class="s">60</span><span class="s">)</span>:
+    pixie.<span class="s">sprite</span><span class="s">(</span><span class="s">100</span>+x, <span class="s">100</span>+y<span class="s">)</span>
+</pre>
 
     <p><span class="media"><img height="223" src="media/pixie-sprite.gif" width="266"/></span> </p>
     <p> </p>
@@ -186,9 +193,9 @@ pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</s
     <p>The Pixie library has powerful graphing algorithms. Wow! Now you’re ready to get
     professional.<br/>
     With the <i>tree()</i> command you can draw a network of related nodes:</p>
-    <pre>tree<span class="s">(</span>root, nodes, x, y, width, height, 
-     pt=<span class="s">15</span>, <span class="s">max</span>=<span class="s">10</span>, grow=<span class="kw">False</span>, border=<span class="kw">False</span><span class="s">)</span></pre>
-
+<pre>tree<span class="s">(</span>root, nodes, x, y, width, height, 
+     pt=<span class="s">15</span>, <span class="s">max</span>=<span class="s">10</span>, grow=<span class="kw">False</span>, border=<span class="kw">False</span><span class="s">)</span>
+</pre>
 
     <p>The command draws a tree scheme exploding from a central root. The <i>nodes</i> list is
     expected to contain tuples of relations, for example:<br/>
@@ -196,13 +203,13 @@ pixie.<span class="kw">text</span><span class="s">(</span><span class="s">str</s
     <p>Nodes in the drawn network become smaller and smaller if the <i>grow</i> parameter is
     <i>True</i>. Two other commands in the library, <i>line()</i> and <i>node()</i>, are called to
     draw the individual nodes.</p>
-    <pre>root = <span class="str">"PixieBundle"</span>
+<pre>root = <span class="str">"PixieBundle"</span>
 n1 = <span class="s">(</span><span class="str">"WordNet"</span>, <span class="s">(</span><span class="s">)</span><span class="s">)</span>
 n2 = <span class="s">(</span><span class="str">"Wikipedia"</span>, <span class="s">(</span><span class="s">)</span><span class="s">)</span>
 n3 = <span class="s">(</span><span class="str">"Pixie"</span>, <span class="s">(</span><span class="str">"paragraph"</span>,<span class="str">"color"</span>,<span class="str">"spacing"</span>,<span class="str">"keywords"</span><span class="s">)</span><span class="s">)</span>
 nodes = <span class="s">(</span>n1,n2,n3<span class="s">)</span>
-pixie.<span class="s">tree</span><span class="s">(</span>root, nodes, <span class="s">200</span>, <span class="s">200</span>, <span class="s">400</span>, <span class="s">400</span>, pt=<span class="s">15</span><span class="s">)</span></pre>
-
+pixie.<span class="s">tree</span><span class="s">(</span>root, nodes, <span class="s">200</span>, <span class="s">200</span>, <span class="s">400</span>, <span class="s">400</span>, pt=<span class="s">15</span><span class="s">)</span>
+</pre>
 
     <p><span class="media"><img height="203" src="media/pixie-tree.gif" width="322"/></span></p>
   </div>

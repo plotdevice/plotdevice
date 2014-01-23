@@ -5,7 +5,8 @@
   <title>NodeBox Tutorials: Animation</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
 
     <h3>Animation</h3>
@@ -65,9 +66,10 @@
     for each curve, which gives me a fluid distortion vector that eases in and eases out each
     curve.</p>
     <p>A sine function typically looks like this:</p>
-    <pre><span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sin, radians
-ease = sin<span class="s">(</span>radians<span class="s">(</span>x<span class="s">)</span><span class="s">)</span> * y</pre>
-
+<pre>
+<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sin, radians
+ease = sin<span class="s">(</span>radians<span class="s">(</span>x<span class="s">)</span><span class="s">)</span> * y
+</pre>
 
     <h2>Tips for speed optimization</h2>
 
@@ -80,7 +82,7 @@ ease = sin<span class="s">(</span>radians<span class="s">(</span>x<span class="s
       repeatedly calling <a href="../ref/Typography.html#text()">text()</a> in the draw() command.
       </li><li>Tune the speed() command to exactly the speed you need. Setting it as high as possible
       often works as a drawback because then NodeBox would attempt to update too much.
-      </li><li>Tune the <a href="../ref/Utility.html#size()">size()</a> of the canvas to exactly what
+      </li><li>Tune the <a href="../ref/Primitives.html#size()">size()</a> of the canvas to exactly what
       you need - a smaller canvas means less screen to refresh.<br/>
     </li></ul>
 

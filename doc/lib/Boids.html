@@ -5,7 +5,8 @@
   <title>NodeBox Libraries: Boids</title>
   <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
 
-</head><body><div class="link" id="nav">
+</head><body>
+  <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
 
     <h3>Boids</h3>
@@ -56,8 +57,8 @@
 
     <p>Put the <i>boids</i> library folder in the same folder as your script so NodeBox can find
     the library. You can also put it in ~/Library/Application Support/NodeBox/.</p>
-    <pre>boids = <span class="kw">ximport</span><span class="s">(</span><span class="str">"boids"</span><span class="s">)</span></pre>
- 
+<pre>boids = <span class="kw">ximport</span><span class="s">(</span><span class="str">"boids"</span><span class="s">)</span>
+</pre> 
     <hr/>
 
     <h2><a id="flock" name="flock" title="flock"></a>Creating a flock</h2>
@@ -65,8 +66,8 @@
     <p>The <i>flock()</i> command returns a new flock consisting of <i>n</i> boids, that are caged
     in area starting at coordinates <i>x</i> and <i>y</i> and having a width <i>w</i> and height
     <i>h</i>.</p>
-    <pre>flock<span class="s">(</span>n, x, y, w, h<span class="s">)</span></pre>
-
+<pre>flock<span class="s">(</span>n, x, y, w, h<span class="s">)</span>
+</pre>
 
     <p>The returned flock object has a number of properties:</p>
     <ul>
@@ -80,25 +81,25 @@
     <p><br/>
     The returned flock object also has a number of methods. The primary method is
     <i>flock.update()</i>, which you usually call at each frame in an animation:</p>
-    <pre>flock.<span class="s">update</span><span class="s">(</span>shuffled=<span class="kw">True</span>, 
+<pre>flock.<span class="s">update</span><span class="s">(</span>shuffled=<span class="kw">True</span>, 
              separation=<span class="s">10</span>, alignment=<span class="s">5</span>, cohension=<span class="s">100</span>, 
-             goal=<span class="s">20</span>, limit=<span class="s">30</span><span class="s">)</span></pre>
-
+             goal=<span class="s">20</span>, limit=<span class="s">30</span><span class="s">)</span>
+</pre>
 
     <p>Each time <i>flock.update()</i> is called, the boids move another step in their flight
     pattern. There are six optional parameters. By default the flock is <i>shuffled</i> to ensure
     fluid movement of all individual boids. You can play around with the other parameters to get
     different flocking behavior.</p>
-    <pre>flock.<span class="s">scatter</span><span class="s">(</span>chance=<span class="s">0.005</span>, frames=<span class="s">50</span><span class="s">)</span></pre>
-
-    <pre>flock.<span class="s">perch</span><span class="s">(</span>ground=<span class="kw">None</span>, chance=<span class="s">1.0</span>, frames=<span class="kw">lambda</span>:<span class="s">25</span>+<span class="kw">random</span><span class="s">(</span><span class="s">50</span><span class="s">)</span><span class="s">)</span></pre>
-
-    <pre>flock.<span class="s">goal</span><span class="s">(</span>x, y, z, flee=<span class="kw">False</span><span class="s">)</span></pre>
-
-    <pre>flock.<span class="s">nogoal</span><span class="s">(</span><span class="s">)</span></pre>
-
-    <pre>flock.<span class="s">copy</span><span class="s">(</span><span class="s">)</span></pre>
-
+<pre>flock.<span class="s">scatter</span><span class="s">(</span>chance=<span class="s">0.005</span>, frames=<span class="s">50</span><span class="s">)</span>
+</pre>
+<pre>flock.<span class="s">perch</span><span class="s">(</span>ground=<span class="kw">None</span>, chance=<span class="s">1.0</span>, frames=<span class="kw">lambda</span>:<span class="s">25</span>+<span class="kw">random</span><span class="s">(</span><span class="s">50</span><span class="s">)</span><span class="s">)</span>
+</pre>
+<pre>flock.<span class="s">goal</span><span class="s">(</span>x, y, z, flee=<span class="kw">False</span><span class="s">)</span>
+</pre>
+<pre>flock.<span class="s">nogoal</span><span class="s">(</span><span class="s">)</span>
+</pre>
+<pre>flock.<span class="s">copy</span><span class="s">(</span><span class="s">)</span>
+</pre>
 
     <p>The <i>flock.scatter()</i> method undoes the boids’s cohesion and alignment. The flock has a
     <i>chance</i> between 0.0 and 1.0 each of scattering during each update. Once scattered, the
@@ -118,10 +119,10 @@
 
     <p>A flock object returned from the <i>flock()</i> command is a list of individual boids. You
     can easily loop through it:</p>
-    <pre>flock = boids.<span class="s">flock</span><span class="s">(</span><span class="s">10</span>, <span class="s">0</span>, <span class="s">0</span>, <span class="kw">WIDTH</span>, <span class="kw">HEIGHT</span><span class="s">)</span> 
+<pre>flock = boids.<span class="s">flock</span><span class="s">(</span><span class="s">10</span>, <span class="s">0</span>, <span class="s">0</span>, <span class="kw">WIDTH</span>, <span class="kw">HEIGHT</span><span class="s">)</span> 
 <span class="kw">for</span> boid <span class="kw">in</span> flock:
-    <span class="kw">print</span> boid.<span class="s">x</span>, boid.<span class="s">y</span></pre>
-
+    <span class="kw">print</span> boid.<span class="s">x</span>, boid.<span class="s">y</span>
+</pre>
 
     <p>Each boid object has a number of useful properties:</p>
     <ul>
