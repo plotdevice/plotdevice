@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from AppKit import *
 from nodebox.graphics.grobs import *
 from nodebox.graphics import grobs
@@ -275,6 +276,38 @@ class Context(object):
 
     ### Path Commands ###
 
+    def bezier(self, x=None, y=None, **opts):
+        if isinstance(x, (list, tuple)):
+            path = self.findpath(x or ops.get('points'), opts.get('curvature', 1.0))
+            for arg_key, arg_val in opts.items():
+                if arg_key in BezierPath.kwargs:
+                    setattr(path, arg_key, _copy_attr(arg_val))
+            path.inheritFromContext(opts.keys())
+            if opts.get('draw')!=False:
+                path.draw()
+            return path
+        return self._bezier(x,y,**opts)
+
+    @contextmanager
+    def _bezier(self, x=None, y=None, **opts):
+        autoclose = opts['close'] if 'close' in opts else self._autoclosepath
+        self._path = self.BezierPath()
+        self._pathclosed = False
+        self._path.moveto(x or 0, y or 0)
+
+        yield self._path
+
+        if autoclose:
+            self.closepath()        
+        for arg_key, arg_val in opts.items():
+            if arg_key in BezierPath.kwargs:
+                setattr(self._path, arg_key, _copy_attr(arg_val))
+        self._path.inheritFromContext(opts.keys())
+        if opts.get('draw')!=False:
+            self._path.draw()
+        self._path = None
+        self._pathclosed = False
+
     def beginpath(self, x=None, y=None):
         self._path = self.BezierPath()
         self._pathclosed = False
@@ -283,28 +316,28 @@ class Context(object):
 
     def moveto(self, x, y):
         if self._path is None:
-            raise NodeBoxError, "No current path. Use beginpath() first."
+            raise NodeBoxError, "No current path. Use bezier() or beginpath() first."
         self._path.moveto(x,y)
 
     def lineto(self, x, y):
         if self._path is None:
-            raise NodeBoxError, "No current path. Use beginpath() first."
+            raise NodeBoxError, "No current path. Use bezier() or beginpath() first."
         self._path.lineto(x, y)
 
     def curveto(self, x1, y1, x2, y2, x3, y3):
         if self._path is None:
-            raise NodeBoxError, "No current path. Use beginpath() first."
+            raise NodeBoxError, "No current path. Use bezier() or beginpath() first."
         self._path.curveto(x1, y1, x2, y2, x3, y3)
 
     def closepath(self):
         if self._path is None:
-            raise NodeBoxError, "No current path. Use beginpath() first."
+            raise NodeBoxError, "No current path. Use bezier() or beginpath() first."
         if not self._pathclosed:
             self._path.closepath()
 
     def endpath(self, draw=True):
         if self._path is None:
-            raise NodeBoxError, "No current path. Use beginpath() first."
+            raise NodeBoxError, "No current path. Use bezier() or beginpath() first."
         if self._autoclosepath:
             self.closepath()
         p = self._path
@@ -336,7 +369,13 @@ class Context(object):
         return path
     
     ### Clipping Commands ###
-    
+
+    @contextmanager
+    def clip(self, path):
+        cp = self.beginclip(path)
+        yield cp
+        self.endclip()
+
     def beginclip(self, path):
         cp = self.ClippingPath(path)
         self.canvas.push(cp)
