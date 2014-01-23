@@ -234,11 +234,11 @@
 		2ABBB2F91854018B001C4E0A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		2ABBB2FB18540246001C4E0A /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
-		2ABDB7671867D8160069EFC3 /* nodebox-app.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "nodebox-app.py"; path = "boot/nodebox-app.py"; sourceTree = "<group>"; };
-		2ABDB7681867D8160069EFC3 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = boot/main.m; sourceTree = "<group>"; };
-		2ABDB7691867D8160069EFC3 /* NodeBox_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NodeBox_Prefix.pch; path = boot/NodeBox_Prefix.pch; sourceTree = "<group>"; };
-		2ABDB76C1867D8210069EFC3 /* NodeBox-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "NodeBox-Info.plist"; path = "boot/NodeBox-Info.plist"; sourceTree = "<group>"; };
-		2ABDB7721867D9920069EFC3 /* nodebox */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = nodebox; path = boot/nodebox; sourceTree = "<group>"; };
+		2ABDB7671867D8160069EFC3 /* nodebox-app.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "nodebox-app.py"; path = "etc/nodebox-app.py"; sourceTree = "<group>"; };
+		2ABDB7681867D8160069EFC3 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = etc/main.m; sourceTree = "<group>"; };
+		2ABDB7691867D8160069EFC3 /* NodeBox_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NodeBox_Prefix.pch; path = etc/NodeBox_Prefix.pch; sourceTree = "<group>"; };
+		2ABDB76C1867D8210069EFC3 /* NodeBox-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "NodeBox-Info.plist"; path = "etc/NodeBox-Info.plist"; sourceTree = "<group>"; };
+		2ABDB7721867D9920069EFC3 /* nodebox */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = nodebox; path = etc/nodebox; sourceTree = "<group>"; };
 		2ABDB7751867EB520069EFC3 /* app.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = app.py; sourceTree = "<group>"; };
 		2ABDB7761867EB520069EFC3 /* views.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = views.py; sourceTree = "<group>"; };
 		2AC5187F18636C9F007FB066 /* sandbox.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sandbox.py; sourceTree = "<group>"; };
@@ -585,7 +585,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "ditto examples $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\nchmod 644 $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples/*/*.py";
+			shellScript = "ditto doc/examples $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\nchmod 644 $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples/*/*.py";
 		};
 		6156AAC410BC110E00C3CE99 /* Copy External Libraries */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -768,13 +768,13 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = boot/NodeBox_Prefix.pch;
+				GCC_PREFIX_HEADER = etc/NodeBox_Prefix.pch;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7,
 				);
-				INFOPLIST_FILE = "boot/NodeBox-Info.plist";
+				INFOPLIST_FILE = "etc/NodeBox-Info.plist";
 				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
@@ -793,13 +793,13 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = boot/NodeBox_Prefix.pch;
+				GCC_PREFIX_HEADER = etc/NodeBox_Prefix.pch;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7,
 				);
-				INFOPLIST_FILE = "boot/NodeBox-Info.plist";
+				INFOPLIST_FILE = "etc/NodeBox-Info.plist";
 				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;

@@ -179,7 +179,6 @@ class ColorTheme(list):
           shds = {str(rng):wgt/total_weight for _,rng,wgt in ranges}
           clrs[clr.name] = {"weight":normalized_weight, "shades":shds}
           # clrs[clr.name].update({"rgb":[clr.r, clr.g, clr.b]})
-      # return {"query":self.name, "theme":clrs}
       return clrs
 
     @property
@@ -442,6 +441,7 @@ class ColorThemeDB(object):
       self.restore(themes_dir)
     else:
       self.synchronize(themes_dir)
+      
   #
   # some properties for easy access to catalog information
   # 

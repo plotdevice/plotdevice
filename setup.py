@@ -84,7 +84,7 @@ plist={
         'CFBundleTypeName': "Python File",
         'CFBundleTypeRole': 'Editor',
         'LSItemContentTypes':['public.python-script'],
-        'LSHandlerRank':'Alternate',
+        'LSHandlerRank':'Owner',
         'NSDocumentClass': 'NodeBoxDocument',
     }],
     "CFBundleIdentifier": BUNDLE_ID,
@@ -103,7 +103,6 @@ rsrc = [
     "Resources/English.lproj/AskString.xib",
     "Resources/English.lproj/Credits.rtf",
     "Resources/English.lproj/MainMenu.xib",
-    "Resources/English.lproj/NodeBox Help",
     "Resources/English.lproj/NodeBoxDocument.xib",
     "Resources/English.lproj/NodeBoxPreferences.xib",
     "Resources/NodeBox.icns",
@@ -181,7 +180,7 @@ if BUILD_APP:
             remove_tree("%s/../Frameworks"%RSRC, dry_run=self.dry_run)
 
             # place the command line tool in SharedSupport
-            self.copy_file("%s/boot/nodebox"%TOP, BIN)
+            self.copy_file("%s/etc/nodebox"%TOP, BIN)
 
             # put the module and .so files in a known location (primarily so the
             # tool can find task.py)
@@ -190,7 +189,7 @@ if BUILD_APP:
             # find $TOP/nodebox -name \*pyc -exec rm {} \;
 
             # install the documentation
-            self.copy_tree('%s/examples'%TOP, '%s/examples'%RSRC)
+            self.copy_tree('%s/doc/examples'%TOP, '%s/examples'%RSRC)
 
             print "done building NodeBox.app in ./dist"
 
@@ -255,7 +254,7 @@ if __name__=='__main__':
         classifiers = CLASSIFIERS,
         ext_modules = ext_modules,
         packages = find_packages(),
-        scripts = ["boot/nodebox"],
+        scripts = ["etc/nodebox"],
         zip_safe=False,
         cmdclass={
             'clean': CleanCommand,
@@ -269,7 +268,7 @@ if __name__=='__main__':
     if BUILD_APP:
         config.update(dict(
             app = [{
-                'script': "boot/nodebox-app.py",
+                'script': "etc/nodebox-app.py",
                 "plist":plist,
             }],
             data_files = rsrc,
