@@ -393,7 +393,7 @@ class NodeBoxDocument(NSDocument):
 
         if kind=='image' and opts['last'] == opts['first']:
             self.runScript()
-            self.vm.canvas.save(fname, format)
+            self.vm.canvas.save(fname, opts.get('format'))
         else:
             msg = u"Generating %s %s…"%(opts['last']-opts['first']+1, 'pages' if kind=='image' else 'frames')
             self.footer.setMode_('export')
