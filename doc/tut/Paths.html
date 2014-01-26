@@ -34,12 +34,8 @@
     point, the second handle the backward curvature of the second point.</p>
     <p>For example:</p>
 <pre>
-<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
-<span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
-<span class="kw">beginpath</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
-<span class="kw">curveto</span><span class="s">(</span><span class="s">150</span>, <span class="s">100</span>, <span class="s">200</span>, <span class="s">200</span>, <span class="s">50</span>, <span class="s">400</span><span class="s">)</span>
-p = <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">with bezier</span>(100, 100, fill=<span class="kw">None</span>, stroke=0, close=<span class="kw">False</span>) as path:
+    <span class="kw">curveto</span>(150, 100, 200, 200, 50, 400)
 </pre>
 
     <p>Draws the following curve:</p>
@@ -82,7 +78,7 @@ p = <span class="kw">endpath</span><span class="s">(</span><span class="s">)</sp
 <pre>
 <span class="kw">font</span><span class="s">(</span><span class="str">"Dolly-Bold"</span>, <span class="s">300</span><span class="s">)</span>
 path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"e"</span>, <span class="s">200</span>, <span class="s">200</span><span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>path<span class="s">)</span>
+<span class="kw">bezier</span>(path)
 </pre>
             </td><td>
 <pre>
@@ -92,7 +88,7 @@ points = <span class="s">[</span><span class="s">]</span>
 <span class="kw">for</span> point <span class="kw">in</span> path:
   point.<span class="s">y</span> += <span class="s">20</span> 
   points.<span class="s">append</span><span class="s">(</span>point<span class="s">)</span> 
-  <span class="kw">drawpath</span><span class="s">(</span>points<span class="s">)</span>
+<span class="kw">bezier</span>(points)
 </pre>
             </td></tr></tbody></table>
 
@@ -106,17 +102,17 @@ points = <span class="s">[</span><span class="s">]</span>
 <span class="kw">for</span> point <span class="kw">in</span> path:
   <span class="grey"># --&gt; Manipulate points here</span>
   points.<span class="s">append</span><span class="s">(</span>point<span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>points<span class="s">)</span>
+<span class="kw">bezier</span>(points)
 </pre>
 <pre>
-<span class="kw">beginpath</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
-<span class="kw">curveto</span><span class="s">(</span><span class="s">150</span>, <span class="s">100</span>, <span class="s">200</span>, <span class="s">200</span>, <span class="s">50</span>, <span class="s">400</span><span class="s">)</span>
-path = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw">False</span><span class="s">)</span>
+<span class="kw">with bezier</span>(100, 100, draw=<span class="kw">False</span>) as path:
+  <span class="kw">curveto</span><span class="s">(</span><span class="s">150</span>, <span class="s">100</span>, <span class="s">200</span>, <span class="s">200</span>, <span class="s">50</span>, <span class="s">400</span><span class="s">)</span>
+
 points = <span class="s">[</span><span class="s">]</span>
 <span class="kw">for</span> point <span class="kw">in</span> path:
   <span class="grey"># --&gt; Manipulate points here</span>
   points.<span class="s">append</span><span class="s">(</span>point<span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>points<span class="s">)</span>
+<span class="kw">bezier</span>(points)
 </pre>
 
       <h2>Manipulating points</h2>
@@ -126,11 +122,12 @@ points = <span class="s">[</span><span class="s">]</span>
       <ul>
         <li><i>point.x</i>: the x-coordinate or horizontal location.
         </li><li><i>point.y</i>: the y-coordinate or vertical location.<br/>
-        </li><li><i>point.cmd</i>: the type of line segment, either LINETO, CURVETO, MOVETO or CLOSE,
-        </li><li><i>point.ctrl1.x</i>: if CURVETO, the x-coordinate of the first control handle of the
-        curve.<br/>
-        </li><li><i>point.ctrl1.y</i>: if CURVETO, the y-coordinate of the first control handle of the
-        curve.<br/>
+        </li><li><i>point.cmd</i>: the type of line segment, either <code class="kw">LINETO</code>,
+        <code class="kw">CURVETO</code>, <code class="kw">MOVETO</code> or <code class="kw">CLOSE</code>,
+        </li><li><i>point.ctrl1.x</i>: if <code class="kw">CURVETO</code>, the x-coordinate of the first
+        control handle of the curve.<br/>
+        </li><li><i>point.ctrl1.y</i>: if <code class="kw">CURVETO</code>, the y-coordinate of the first
+        control handle of the curve.<br/>
         </li><li><i>point.ctrl2.x</i>: the x-coordinate of the second control handle.
         </li><li><i>point.ctrl2.y</i>: the y-coordinate of the second control handle.
       </li></ul>
@@ -139,15 +136,10 @@ points = <span class="s">[</span><span class="s">]</span>
       handle of a point controls how the curve connects to the previous point, the <i>ctrl2</i>
       handle how the curve connects to the next point.</p>
       <p>For example:</p>
-<pre>
-<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
-<span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
-<span class="kw">beginpath</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
-<span class="kw">curveto</span><span class="s">(</span><span class="s">150</span>, <span class="s">100</span>, <span class="s">200</span>, <span class="s">200</span>, <span class="s">150</span>, <span class="s">200</span><span class="s">)</span>
-<span class="kw">curveto</span><span class="s">(</span><span class="s">100</span>, <span class="s">200</span>, <span class="s">200</span>, <span class="s">350</span>, <span class="s">300</span>, <span class="s">300</span><span class="s">)</span>
-p = <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">print</span> p<span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">ctrl1</span>.<span class="s">x</span>
+<pre>with <span class="kw">bezier</span>(100,100, fill=<span class="kw">None</span>, stroke=1, close=<span class="kw">False</span>) as path:
+    <span class="kw">curveto</span><span class="s">(</span><span class="s">150</span>, <span class="s">100</span>, <span class="s">200</span>, <span class="s">200</span>, <span class="s">150</span>, <span class="s">200</span><span class="s">)</span>
+    <span class="kw">curveto</span><span class="s">(</span><span class="s">100</span>, <span class="s">200</span>, <span class="s">200</span>, <span class="s">350</span>, <span class="s">300</span>, <span class="s">300</span><span class="s">)</span>
+<span class="kw">print</span> path<span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">ctrl1</span>.<span class="s">x</span>
 </pre>
 
       <p> </p>
@@ -174,9 +166,7 @@ points = <span class="s">[</span><span class="s">]</span>
         point.<span class="s">y</span> += <span class="s">5</span>
     points.<span class="s">append</span><span class="s">(</span>point<span class="s">)</span>
  
-<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>points<span class="s">)</span>
+<span class="kw">bezier</span>(points)
 </pre>
     </div><a id="Path_Mathematics" name="Path_Mathematics"></a>
 
@@ -221,13 +211,9 @@ points = <span class="s">[</span><span class="s">]</span>
       means halfway the path. 0.0 is the origin of the path, 1.0 the end.</p>
       <p>The code:</p>
 <pre>
-<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
-<span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
-<span class="kw">beginpath</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
-<span class="kw">curveto</span><span class="s">(</span><span class="s">150</span>, <span class="s">100</span>, <span class="s">200</span>, <span class="s">150</span>, <span class="s">150</span>, <span class="s">200</span><span class="s">)</span>
-<span class="kw">curveto</span><span class="s">(</span><span class="s">50</span>, <span class="s">250</span>, <span class="s">200</span>, <span class="s">350</span>, <span class="s">400</span>, <span class="s">400</span><span class="s">)</span>
-path = <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">with</span> <span class="kw">bezier</span>(100, 100, fill=<span class="kw">None</span>, stroke=0, close=<span class="kw">False</span>) as path:
+    <span class="kw">curveto</span>(150, 100, 200, 150, 150, 200)
+    <span class="kw">curveto</span>(50, 250, 200, 350, 400, 400)
  
 <span class="kw">for</span> t <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">11</span><span class="s">)</span>:
     pt = path.<span class="s">point</span><span class="s">(</span><span class="s">0.1</span>*t<span class="s">)</span> 
@@ -246,15 +232,10 @@ path = <span class="kw">endpath</span><span class="s">(</span><span class="s">)<
 
       <p>Injecting new points in the path is equally easy:</p>
 <pre>
-<span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
-<span class="kw">beginpath</span><span class="s">(</span><span class="s">100</span>, <span class="s">500</span><span class="s">)</span>
-<span class="kw">curveto</span><span class="s">(</span><span class="s">200</span>,<span class="s">250</span>, <span class="s">600</span>,<span class="s">600</span>, <span class="s">400</span>,<span class="s">300</span><span class="s">)</span>
-path = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw">False</span><span class="s">)</span>
- 
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">0.5</span><span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>path<span class="s">)</span>
- 
+<span class="kw">with</span> <span class="kw">bezier</span>(100, 500, stroke=0.5, close=<span class="kw">False</span>) as path:
+    <span class="kw">curveto</span><span class="s">(</span><span class="s">200</span>,<span class="s">250</span>, <span class="s">600</span>,<span class="s">600</span>, <span class="s">400</span>,<span class="s">300</span><span class="s">)</span>
+  
 path.<span class="s">addpoint</span><span class="s">(</span><span class="s">0.25</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">for</span> point <span class="kw">in</span> path:
@@ -273,9 +254,7 @@ path.<span class="s">addpoint</span><span class="s">(</span><span class="s">0.25
 <span class="kw">fontsize</span><span class="s">(</span><span class="s">50</span><span class="s">)</span>
 path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"contours"</span>, <span class="s">10</span>, <span class="s">100</span><span class="s">)</span>
 <span class="kw">for</span> contour <span class="kw">in</span> path.<span class="s">contours</span>:
-  <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-  <span class="kw">stroke</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">0.5</span><span class="s">)</span><span class="s">)</span>
-  <span class="kw">drawpath</span><span class="s">(</span>contour<span class="s">)</span>
+    <span class="kw">bezier</span>(contour, stroke=<span class="kw">random</span>(0.5), fill=<span class="kw">None</span>)
 </pre>
 
       <p><img alt="pathmatics-contours" src="media/pathmatics-contours.gif"/></p>
@@ -312,7 +291,7 @@ path = <span class="kw">textpath</span><span class="s">(</span><span class="str"
 path1 = <span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
 path2 = <span class="kw">oval</span><span class="s">(</span><span class="s">90</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
 compound = path1.<span class="s">union</span><span class="s">(</span>path2<span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>compound<span class="s">)</span>
+<span class="kw">bezier</span>(compound)
 </pre>
           </td></tr><tr>
             <td><img alt="paths-compound2" src="media/paths-compound2.jpg"/>
@@ -324,7 +303,7 @@ compound = path1.<span class="s">union</span><span class="s">(</span>path2<span 
 path1 = <span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
 path2 = <span class="kw">oval</span><span class="s">(</span><span class="s">90</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
 compound = path1.<span class="s">intersect</span><span class="s">(</span>path2<span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>compound<span class="s">)</span>
+<span class="kw">bezier</span>(compound)
 </pre>
               <p> </p>
           </td></tr><tr>
@@ -337,7 +316,7 @@ compound = path1.<span class="s">intersect</span><span class="s">(</span>path2<s
 path1 = <span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
 path2 = <span class="kw">oval</span><span class="s">(</span><span class="s">90</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
 compound = path1.<span class="s">difference</span><span class="s">(</span>path2<span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>compound<span class="s">)</span>
+<span class="kw">bezier</span>(compound)
 </pre>
               <p> </p>
           </td></tr><tr>
@@ -350,7 +329,7 @@ compound = path1.<span class="s">difference</span><span class="s">(</span>path2<
 path1 = <span class="kw">oval</span><span class="s">(</span><span class="s">40</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
 path2 = <span class="kw">oval</span><span class="s">(</span><span class="s">90</span>, <span class="s">40</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
 compound = path1.<span class="s">xor</span><span class="s">(</span>path2<span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>compound<span class="s">)</span>
+<span class="kw">bezier</span>(compound)
 </pre> 
             </td></tr></tbody></table>
 
@@ -367,17 +346,15 @@ compound = path1.<span class="s">xor</span><span class="s">(</span>path2<span cl
       <p>With a for-loop we can keep adding new paths to the compound path. In the example below,
       we create a number of circles varying in size, and append them to one flattened compound
       path:</p>
-<pre>compound = <span class="kw">None</span>
-<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">50</span><span class="s">)</span>:
-    r = <span class="kw">random</span><span class="s">(</span><span class="s">75</span><span class="s">)</span>
-    path = <span class="kw">oval</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">300</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">200</span><span class="s">)</span>, r, r, draw=<span class="kw">False</span><span class="s">)</span>
-    <span class="kw">if</span> <span class="kw">not</span> compound:
+<pre>
+compound = <span class="kw">None</span>
+<span class="kw">for</span> i <span class="kw">in</span> range(50):
+    r = <span class="kw">random</span>(75)
+    path = <span class="kw">oval</span>(<span class="kw">random</span>(300), <span class="kw">random</span>(200), r, r, draw=<span class="kw">False</span>)
+    <span class="kw">if not</span> compound:
         compound = path
-    compound = compound.<span class="s">union</span><span class="s">(</span>path<span class="s">)</span>
- 
-<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>compound<span class="s">)</span>
+    compound = compound.union(path)
+<span class="kw">bezier</span>(compound, fill=<span class="kw">None</span>, stroke=0)
 </pre> 
 
       <p><img alt="paths-compound4" src="media/paths-compound4.jpg"/></p>

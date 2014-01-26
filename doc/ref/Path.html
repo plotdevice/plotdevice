@@ -9,10 +9,10 @@
   <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
 
-    <h3>Path</h3>
-
     <ul class="siblings">
       <li><a href="Primitives.html">Primitives</a>
+      </li><li>
+        <h3 style="margin:0;">Path</h3>
       </li><li><a href="Transform.html">Transform</a>
       </li><li><a href="Color.html">Color</a>
       </li><li><a href="Typography.html">Typography</a>
@@ -412,7 +412,7 @@ p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span
             <table border="0">
               <tbody>
                 <tr>
-                  <td><span class="image_border"><img alt="superfolia" src="media/beginclip.jpg"/></span>
+                  <td><span class="image_border"><img alt="superfolia" height="125" src="media/beginclip.jpg" width="125"/></span>
                   </td><td>
 <pre>
 p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span>, <span class="s">80</span>, <span class="s">80</span>, draw=<span class="kw">False</span><span class="s">)</span>
@@ -460,13 +460,64 @@ p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span
             <table border="0">
               <tbody>
                 <tr>
-                  <td><span class="image_border"><img src="media/beginpath.jpg"/></span>
+                  <td><span class="image_border"><img height="125" src="media/beginpath.jpg" width="125"/></span>
                   </td><td>
 <pre>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">beginpath</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
 <span class="kw">lineto</span><span class="s">(</span><span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
 <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="capstyle()"></a>
+
+      <div class="section">
+        <h3>capstyle()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="kw">capstyle</span>(style)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Defines how endpoints of a path should be rendered. The style argument must be one of:
+            <code class="kw">BUTT</code> (the default), <code class="kw">ROUND</code>, or
+            <code class="kw">SQUARE</code>. Note that the latter two styles extend the length of
+            the path to add the endcaps.
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Paths.html">Paths</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img src="media/capstyle.png"/></span>
+                  </td><td>
+<pre>
+<span class="kw">fill</span>(None)
+<span class="kw">stroke</span>(0)
+<span class="kw">strokewidth</span>(10)
+<span class="kw">capstyle</span>(<span class="kw">BUTT</span>)
+<span class="kw">line</span>(20,20, 50,20)
+<span class="kw">capstyle</span>(<span class="kw">ROUND</span>)
+<span class="kw">line</span>(20,40, 50,40)
+<span class="kw">capstyle</span>(<span class="kw">SQUARE</span>)
+<span class="kw">line</span>(20,60, 50,60)
 </pre>
                   </td></tr></tbody></table>
           </div>
@@ -512,7 +563,7 @@ p = <span class="kw">oval</span><span class="s">(</span><span class="s">20</span
             <table border="0">
               <tbody>
                 <tr>
-                  <td><span class="image_border"><img src="media/drawpath.jpg"/></span>
+                  <td><span class="image_border"><img height="125" src="media/drawpath.jpg" width="125"/></span>
                   </td><td>
 <pre>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -590,7 +641,7 @@ p = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw"
             <table border="0">
               <tbody>
                 <tr>
-                  <td><span class="image_border"><img src="media/endpath.jpg"/></span>
+                  <td><span class="image_border"><img height="125" src="media/endpath.jpg" width="125"/></span>
                   </td><td>
 <pre>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
@@ -648,7 +699,7 @@ p = <span class="kw">endpath</span><span class="s">(</span>draw=<span class="kw"
             <table border="0">
               <tbody>
                 <tr>
-                  <td><span class="image_border"><img src="media/findpath.jpg"/></span>
+                  <td><span class="image_border"><img height="125" src="media/findpath.jpg" width="125"/></span>
                   </td><td>
 <pre>
 points = <span class="s">[</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span><span class="s">)</span>, <span class="s">(</span><span class="s">90</span>, <span class="s">90</span><span class="s">)</span>, <span class="s">(</span><span class="s">350</span>, <span class="s">200</span><span class="s">)</span><span class="s">]</span>
@@ -660,6 +711,59 @@ points = <span class="s">[</span><span class="s">(</span><span class="s">10</spa
 <span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>    
 path = <span class="kw">findpath</span><span class="s">(</span>points<span class="s">)</span>
 <span class="kw">drawpath</span><span class="s">(</span>path<span class="s">)</span>
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="joinstyle()"></a>
+
+      <div class="section">
+        <h3>joinstyle()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="kw">joinstyle</span>(style)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Defines how vertices in a path should be rendered. The style argument must be one of:
+            <code class="kw">MITER</code> (the default), <code class="kw">ROUND</code>, or
+            <code class="kw">BEVEL</code>.
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Paths.html">Paths</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img src="media/joinstyle.png"/></span>
+                  </td><td>
+<pre>
+<span class="kw">fill</span>(None)
+<span class="kw">stroke</span>(0)
+<span class="kw">strokewidth</span>(10)
+
+<span class="kw">joinstyle</span>(<span class="kw">MITER</span>)
+<span class="kw">bezier</span>([(20,20), (40,40), (60,20)], curvature=0)
+
+<span class="kw">joinstyle</span>(<span class="kw">ROUND</span>)
+<span class="kw">bezier</span>([(20,50), (40,70), (60,50)], curvature=0)
+
+<span class="kw">joinstyle</span>(<span class="kw">BEVEL</span>)
+<span class="kw">bezier</span>([(20,80), (40,100), (60,80)], curvature=0)
 </pre>
                   </td></tr></tbody></table>
           </div>
