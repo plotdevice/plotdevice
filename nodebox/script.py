@@ -30,26 +30,6 @@ else:
     from nodebox import graphics
     from nodebox import util
 
-    # Trivial subclass of graphics.Canvas that also resets the context when `clear` is called
-    class Canvas(graphics.Canvas):
-        """Holds the accumulated set of graphic objects drawn by the script (and can write them).
-
-        When drawing commands are called by your script, the result is the addition of new graphics
-        to the canvas. Once your drawing code has run, you can write the resulting graphic to a file
-        by calling:
-
-            canvas.save('output.pdf')
-
-        to erase the canvas and start drawing something else, call:
-
-            canvas.clear()
-        """
-        def clear(self):
-            """Erase all graphics objects and reset the graphics context state"""
-            super(Canvas, self).clear()
-            if 'context' in globals():
-                context._resetContext()
-
     # Context manager returned by `export` when an animation file extension is provided
     class Movie(object):
         """Represents a movie in the process of being assembled one frame at a time.
@@ -59,7 +39,7 @@ else:
 
             movie = export('anim.mov')
             for i in xrange(100):
-                canvas.clear() # erase the previous frame from the canvas
+                canvas.clear() # erase the previous frame
                 ...            # (do some drawing)
                 movie.add()    # add the canvas to the movie
             movie.finish()     # wait for i/o to complete
@@ -99,9 +79,11 @@ else:
                     with movie.frame:
                         ... # draw the frame
             """
+            context._saveContext()
             canvas.clear()
             yield
             self.add()
+            context._restoreContext()
 
         def add(self):
             """Add a new frame to the movie with the current contents of the canvas."""
@@ -160,11 +142,13 @@ else:
             else:
                 self.tmpl = re.sub(r'^(.*)(\.[a-z]{3,4})$', r'\1-%04i\2', fname)
         def __enter__(self):
+            context._saveContext()
             canvas.clear()
             return self
         def __exit__(self, type, value, tb):
             if self.idx is None:
                 canvas.save(self.fname, self.format)
+            context._restoreContext()
         @property
         @contextmanager
         def sequence(self):
@@ -176,12 +160,14 @@ else:
                         with image.sequence:
                             ... # draw the next image in the sequence
             """
+            context._saveContext()
             canvas.clear()
             yield
             if self.idx is None:
                 self.idx = 1
             canvas.save(self.tmpl%self.idx, self.format)
             self.idx += 1
+            context._restoreContext()
 
     # Context manager returned by `export` for PDF files (allowing single or multi-page docs)
     class PDF(object):
@@ -210,10 +196,12 @@ else:
             self.fname = fname
             self.doc = None
         def __enter__(self):
+            context._saveContext()
             canvas.clear()
             return self
         def __exit__(self, type, value, tb):
-            self.finish() or canvas.save(self.fname, 'pdf')                
+            self.finish() or canvas.save(self.fname, 'pdf')
+            context._restoreContext()
 
         @property
         @contextmanager
@@ -238,9 +226,11 @@ else:
                     with pdf.page:
                         ... # draw the next page
             """
+            context._saveContext()
             canvas.clear()
             yield
             self.add()            
+            context._restoreContext()
 
         def add(self):
             """Add a new page to the PDF with the current contents of the canvas."""
@@ -309,7 +299,7 @@ else:
 
     # create a canvas and graphics context for the draw functions to operate on
     ns = {"export":export}
-    canvas = Canvas()
+    canvas = graphics.Canvas()
     context = graphics.Context(canvas, ns)
     colors._ctx = context
 
