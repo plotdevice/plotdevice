@@ -41,7 +41,7 @@
     <p>For example, observe the following script. We start by setting the current fill to red and
     draw three red ovals. Then we set the current stroke to black and change the fill color to
     transparent and draw two ovals with a black outline and a transparent fill:</p>
-    <p><img alt="graphics_state1" src="media/graphics_state1.gif"/><br/></p>
+    <p><img alt="graphics_state1" height="525" src="media/graphics_state1.gif" width="588"/><br/></p>
     <p>By default, the current fill color is black. The default strokewidth is 1. However, stroke
     colors won’t show until you define a current stroke color, which is transparent by default.</p>
     <h2>Transformation state</h2>
@@ -67,13 +67,13 @@
     y=100. So the rectangle will be drawn 20 to the right and 40 down of the <i>new</i> origin
     point. The rectangle ends up at x=120 and y=140. The translate() command <i>displaces the
     current origin point relative to the previous origin point.</i></p>
-    <p><img alt="graphics_state2" src="media/graphics_state2.gif"/><br/></p>
+    <p><img alt="graphics_state2" height="524" src="media/graphics_state2.gif" width="581"/><br/></p>
     <p> </p>
     <p>Rotation, scaling and skewing work <b>incremental</b> as well. If you first rotate by 40
     degrees, all the elements you subsequently draw will be rotated by 40 degrees. If you then
     rotate by 30 degrees, the current rotation becomes 70 (40 + 30). All subsequent elements will
     be rotated by 70 degrees.</p>
-    <p><img alt="graphics_state3" src="media/graphics_state3.gif"/></p>
+    <p><img alt="graphics_state3" height="525" src="media/graphics_state3.gif" width="588"/></p>
     <p>Likewise, if you keep putting <span class="inline_code">scale(0.8)</span> in your script the
     elements on the canvas become smaller and smaller. The second time you scale, the current scale
     becomes 0.64 (0.8 x 0.8), the third time it becomes 0.512 (0.64 x 0.8) and so on.</p>
@@ -92,7 +92,7 @@
     <p>In the example below, we move the origin point to x=100 and y=100 and have three pieces of
     text rotate around it. Without the corner mode transform, they would rotate around their own
     center and it would be a lot more difficult to position them.<br/></p>
-    <p><img alt="graphics_state4" src="media/graphics_state4.gif"/></p>
+    <p><img alt="graphics_state4" height="520" src="media/graphics_state4.gif" width="581"/></p>
     <p> </p>
     <p>The <a href="../ref/Transform.html#reset()">reset()</a> command will reset all
     transformations from that point onward in your script.</p>
@@ -122,7 +122,7 @@
     regardless of where this is, the moon is always orbiting around the planet. A planet is a local
     origin point for the moon.</p>
     <p> </p>
-    <p><span class="image_border"><img alt="graphics_state5" src="media/graphics_state5.gif"/></span><br/>
+    <p><span class="image_border"><img alt="graphics_state5" height="445" src="media/graphics_state5.gif" width="445"/></span><br/>
     <a href="http://nodebox.net/code/data/media/graphics_state5.mov">Play movie</a></p>
 <pre>
 <span class="kw">size</span><span class="s">(</span><span class="s">450</span>, <span class="s">450</span><span class="s">)</span>

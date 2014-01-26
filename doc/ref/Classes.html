@@ -9,8 +9,6 @@
   <div class="link" id="nav">
     <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
 
-    <h3>Classes</h3>
-
     <ul class="siblings">
       <li><a href="Primitives.html">Primitives</a>
       </li><li><a href="Path.html">Path</a>
@@ -18,6 +16,8 @@
       </li><li><a href="Color.html">Color</a>
       </li><li><a href="Typography.html">Typography</a>
       </li><li><a href="Utility.html">Utility</a>
+      </li><li>
+        <h3 style="margin:0;">Classes</h3>
       </li><li><a href="Globals.html">Globals</a>
     </li></ul>
   </div>
@@ -170,6 +170,42 @@ clr.
           <p>See the <a href="../tut/Color.html">tutorial on colors</a> to learn about all the
           properties.</p>
           <p>With the <i>blend()</i> method you can create an in-between of two colors.<br/></p>
+        </div>
+      </div>
+    </div><a id="Image" name="Image"></a>
+
+    <div class="section">
+      <h3>Image</h3>
+
+      <div class="definition">
+        <h2>Description</h2>
+
+        <div class="row">
+          The <a href="Primitives.html#image()">image()</a> command in NodeBox returns an Image
+          object representing a bitmap or vector image file. If you call image() with a
+          <code>draw=<span class="kw">False</span></code> argument, you can make copies of the
+          image and position or draw the object manually:
+        </div>
+
+        <h2>Methods</h2>
+
+        <div class="row">
+<pre>img.<span class="kw">draw</span>()
+</pre>
+<pre>img.<span class="kw">copy</span>()
+</pre>
+        </div>
+
+        <h2>Properties</h2>
+
+        <div class="row">
+<pre>img.<span class="kw">x</span>
+img.<span class="kw">y</span>
+img.<span class="kw">width</span>
+img.<span class="kw">height</span>
+img.<span class="kw">size</span>
+img.<span class="kw">alpha</span>
+</pre>The <code>size</code> property returns the dimensions in a <code>(w,h)</code> tuple.
         </div>
       </div>
     </div><a id="PathElement" name="PathElement"></a>

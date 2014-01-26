@@ -25,7 +25,7 @@
     contour and then calculate a number of points on it, based on the length (so longer segments
     will get more hairs and shorter segments will get less). On each point we draw some wiggly
     curves.</p>
-    <p><img alt="pathfilter1" src="media/pathfilter1.jpg"/></p>
+    <p><img alt="pathfilter1" height="300" src="media/pathfilter1.jpg" width="550"/></p>
 <pre>
 <span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span><span class="s">0.23</span>, <span class="s">0.21</span>, <span class="s">0.15</span><span class="s">)</span>
@@ -75,7 +75,7 @@ path = <span class="kw">textpath</span><span class="s">(</span><span class="str"
     of a contour, a number of points are calculated along the contour. Then points are connected
     randomly with straight lines (as long as the distance between them is smaller than some given
     number, fontsize() / 5 in this case).</p>
-    <p><img alt="pathfilter2" src="media/pathfilter2.jpg"/></p>
+    <p><img alt="pathfilter2" height="300" src="media/pathfilter2.jpg" width="550"/></p>
 <pre>
 <span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sqrt
  
@@ -119,7 +119,7 @@ m = <span class="s">2.0</span>
     optimizing) paths on top of each other. For each contour a number of points are calculated. Two
     points are roughly connected by a straight line. The connection gets more accurate as more
     layers are drawn.</p>
-    <p><img alt="pathfilter3" src="media/pathfilter3.jpg"/></p>
+    <p><img alt="pathfilter3" height="300" src="media/pathfilter3.jpg" width="550"/></p>
 <pre>
 <span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span><span class="s">0.23</span>, <span class="s">0.21</span>, <span class="s">0.15</span><span class="s">)</span>
@@ -168,7 +168,7 @@ m = <span class="s">15</span>
     perpendicular angle jutting outwards from the curve. We then find the point halfway between the
     starting and ending point and push it upwards. If we connect a curve from the starting point to
     this point, and a curve from this point to the ending point, we get a spike connecting the two.</p>
-    <p><img alt="pathfilter4" src="media/pathfilter4.jpg"/><br/></p>
+    <p><img alt="pathfilter4" height="300" src="media/pathfilter4.jpg" width="550"/><br/></p>
 <pre>
 <span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> degrees, atan2
 <span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sqrt, <span class="s">pow</span>
@@ -239,7 +239,7 @@ c = <span class="s">0.8</span> <span class="grey"># spike curvature</span>
     <h2>Trashed</h2>
 
     <p>A path filter that trashes the path by inserting random line segments between two points.</p>
-    <p><img alt="pathfilter5" src="media/pathfilter5.jpg"/><br/></p>
+    <p><img alt="pathfilter5" height="300" src="media/pathfilter5.jpg" width="550"/><br/></p>
 <pre>
 <span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
 <span class="kw">background</span><span class="s">(</span><span class="s">0.23</span>, <span class="s">0.21</span>, <span class="s">0.15</span><span class="s">)</span> 
