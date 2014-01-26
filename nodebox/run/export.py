@@ -6,16 +6,16 @@ from math import floor
 import nodebox
 
 try:
+    # map in the objc classes from the cIO module
     import cIO
+    for c in "AnimatedGif", "ImageSequence", "Installer", "Video":
+        globals()[c] = objc.lookUpClass(c)
 except ImportError:
     notfound = "Couldn't locate C extensions (try running `python setup.py build` before running from the source dist)."
     raise RuntimeError(notfound)
 
 IMG_BATCH_SIZE = 8
 MOV_BATCH_SIZE = 16
-
-# map in the objc classes from the cIO module
-AnimatedGif, ImageSequence, Installer, Video = [objc.lookUpClass(c) for c in "AnimatedGif", "ImageSequence", "Installer", "Video"]
 
 class ExportSession(object):
     running = True
