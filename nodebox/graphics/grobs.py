@@ -226,26 +226,63 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
     stateAttributes = ('_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_transform', '_transformmode')
     kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle')
 
-    def __init__(self, ctx, path=None, **kwargs):
+    def __init__(self, ctx, path=None, origin=None, **kwargs):
         super(BezierPath, self).__init__(ctx)
         TransformMixin.__init__(self)
         ColorMixin.__init__(self, **kwargs)
+
+        # use any drawstyle settings in kwargs (the rest will be inherited)
+        for attr in (a for a in BezierPath.kwargs if a in kwargs):
+            setattr(self, attr, _copy_attr(kwargs[attr]))
         self.capstyle = kwargs.get('capstyle', BUTT)
         self.joinstyle = kwargs.get('joinstyle', MITER)
+
+        # internal state
         self._segment_cache = None
+        self._autoclose = kwargs.get('close', self._ctx._autoclosepath)
+        self._autodraw = kwargs.get('draw', True)
+        self._overrides = [k for k in kwargs if k in BezierPath.kwargs]
+        self._closed = True
+
+        # initialize an NSBezierPath based on `path` arg (if any)
         if path is None:
-            self._nsBezierPath = NSBezierPath.bezierPath()
-        elif isinstance(path, (list,tuple)):
-            self._nsBezierPath = NSBezierPath.bezierPath()
+            self._nsBezierPath = NSBezierPath.bezierPath() 
+        elif isinstance(path, (list,tuple)): # points=[(x,y),...]
+            self._nsBezierPath = NSBezierPath.bezierPath() 
             self.extend(path)
-        elif isinstance(path, BezierPath):
-            self._nsBezierPath = path._nsBezierPath.copy()
+        elif isinstance(path, BezierPath):   # BezierPath (by copy)
+            self._nsBezierPath = path._nsBezierPath.copy() 
             _copy_attrs(path, self, self.stateAttributes)
-        elif isinstance(path, NSBezierPath):
-            self._nsBezierPath = path
+        elif isinstance(path, NSBezierPath): # NSBezierPath (by reference)
+            self._nsBezierPath = path                      
         else:
             raise NodeBoxError, "Don't know what to do with %s." % path
-            
+
+        if path:
+            # if the path is fully specified (i.e., not a `with` block), 
+            # finish dealing with it now.
+            if self._autoclose:
+                self.closepath()
+            if self._autodraw:
+                self.inheritFromContext(self._overrides)
+                self.draw()
+        elif isinstance(origin, (list, tuple)):
+            # if an x,y pair was passed as the `origin`, moveto it
+            self._path.moveto(*origin)
+
+    def __enter__(self):
+        self._ctx._saveContext()
+        return self
+
+    def __exit__(self, type, value, tb):
+        if self._autoclose:
+            self.closepath()
+        self.inheritFromContext(self._overrides)
+        if self._autodraw:
+            self.draw()
+        self._ctx._path = None
+        self._ctx._restoreContext()
+
     def _get_path(self):
         warnings.warn("The 'path' attribute is deprecated. Please use _nsBezierPath instead.", DeprecationWarning, stacklevel=2)
         return self._nsBezierPath
@@ -279,16 +316,21 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
         self._nsBezierPath.moveToPoint_( (x, y) )
 
     def lineto(self, x, y):
+        if self._closed:
+            self.moveto(0,0)
         self._segment_cache = None
         self._nsBezierPath.lineToPoint_( (x, y) )
+        self._closed = False
 
     def curveto(self, x1, y1, x2, y2, x3, y3):
         self._segment_cache = None
         self._nsBezierPath.curveToPoint_controlPoint1_controlPoint2_( (x3, y3), (x1, y1), (x2, y2) )
 
     def closepath(self):
+        if self._closed: return
         self._segment_cache = None
         self._nsBezierPath.closePath()
+        self._closed = True
         
     def setlinewidth(self, width):
         self.linewidth = width
@@ -812,7 +854,8 @@ color = Color
 
 class Transform(object):
 
-    def __init__(self, transform=None):
+    def __init__(self, transform=None, ctx=None):
+        self._ctx = ctx
         if transform is None:
             transform = NSAffineTransform.transform()
         elif isinstance(transform, Transform):
@@ -828,6 +871,15 @@ class Transform(object):
         else:
             raise NodeBoxError, "Don't know how to handle transform %s." % transform
         self._nsAffineTransform = transform
+
+    def __enter__(self):
+        if not self._ctx: return
+        self._ctx.push()
+        return self
+
+    def __exit__(self, type, value, tb):
+        if not self._ctx: return
+        self._ctx.pop()
         
     def _get_transform(self):
         warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", DeprecationWarning, stacklevel=2)

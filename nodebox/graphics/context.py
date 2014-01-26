@@ -14,6 +14,7 @@ class Context(object):
     KEY_BACKSPACE = grobs.KEY_BACKSPACE
     KEY_TAB = grobs.KEY_TAB
     KEY_ESC = grobs.KEY_ESC
+    state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_path', '_autoclosepath', '_transform', '_transformmode', '_transformstack', '_fontname', '_fontsize', '_lineheight', '_align', '_noImagesHint', '_oldvars', '_vars'
     
     def __init__(self, canvas=None, ns=None):
 
@@ -32,15 +33,31 @@ class Context(object):
         self._imagecache = {}
         self._vars = []
         self._resetContext()
+        self._statestack = []
 
         # default to a white background, but otherwise don't change it between iterations
         # (scripts should be able to set the bg once in setup() and have that persist across frames)
         self.canvas.background = self.Color(1.0)
+        self.canvas._ctx = self
 
         # cache a list of all of the exportable attr names (for use when making namespaces)
         self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_') or a.endswith('_')))
 
+    def _saveContext(self):
+        cached = [_copy_attr(getattr(self, v)) for v in Context.state_vars]
+        self._statestack.insert(0, cached)
+
+    def _restoreContext(self):
+        try:
+            cached = self._statestack.pop(0)
+        except IndexError:
+            raise NodeBoxError, "Too many Context._restoreState calls."
+
+        for attr, val in zip(Context.state_vars, cached):
+            setattr(self, attr, val)
+
     def _resetContext(self):
+        """Do a thorough reset of all the state variables (aside from canvas.background)"""
         self._outputmode = RGB
         self._colormode = RGB
         self._colorrange = 1.0
@@ -51,7 +68,7 @@ class Context(object):
         self._joinstyle = MITER
         self._path = None
         self._autoclosepath = True
-        self._transform = Transform()
+        self._transform = Transform(ctx=self)
         self._transformmode = CENTER
         self._transformstack = []
         self._fontname = "Helvetica"
@@ -61,7 +78,7 @@ class Context(object):
         self._noImagesHint = False
         self._oldvars = self._vars
         self._vars = []
-
+        
     def ximport(self, libName):
         if libName=='colors':
             return self._ns[libName]
@@ -183,6 +200,10 @@ class Context(object):
 
     ellipse = oval
 
+    @contextmanager
+    def lines(self):
+        pass
+
     def line(self, x1, y1, x2, y2, draw=True, **kwargs):
         BezierPath.checkKwargs(kwargs)
         p = self.BezierPath(**kwargs)
@@ -192,7 +213,7 @@ class Context(object):
           p.draw()
         return p
 
-    def star(self, startx, starty, points=20, outer= 100, inner = 50, draw=True, **kwargs):
+    def star(self, startx, starty, points=20, outer=100, inner=50, draw=True, **kwargs):
         BezierPath.checkKwargs(kwargs)
         from math import sin, cos, pi
 
@@ -276,37 +297,20 @@ class Context(object):
 
     ### Path Commands ###
 
-    def bezier(self, x=None, y=None, **opts):
-        if isinstance(x, (list, tuple)):
-            path = self.findpath(x or ops.get('points'), opts.get('curvature', 1.0))
-            for arg_key, arg_val in opts.items():
-                if arg_key in BezierPath.kwargs:
-                    setattr(path, arg_key, _copy_attr(arg_val))
-            path.inheritFromContext(opts.keys())
-            if opts.get('draw')!=False:
-                path.draw()
-            return path
-        return self._bezier(x,y,**opts)
-
-    @contextmanager
-    def _bezier(self, x=None, y=None, **opts):
-        autoclose = opts['close'] if 'close' in opts else self._autoclosepath
-        self._path = self.BezierPath()
-        self._pathclosed = False
-        self._path.moveto(x or 0, y or 0)
-
-        yield self._path
-
-        if autoclose:
-            self.closepath()        
-        for arg_key, arg_val in opts.items():
-            if arg_key in BezierPath.kwargs:
-                setattr(self._path, arg_key, _copy_attr(arg_val))
-        self._path.inheritFromContext(opts.keys())
-        if opts.get('draw')!=False:
-            self._path.draw()
-        self._path = None
-        self._pathclosed = False
+    def bezier(self, x=None, y=None, **kwargs):
+        if isinstance(x, (BezierPath, list, tuple)):
+            # if a list of point tuples or a BezierPath is the first arg, there's
+            # no need to open a context (since the path is already defined). Instead
+            # handle the path immediately (passing along styles and `draw` kwarg)
+            return self.BezierPath(path=x, **kwargs)
+        else:
+            # Otherwise, just set the drawing style and (optionally) the initial 
+            # moveto location. Then let the `with` block add the path elements.
+            if self._path is not None:
+                raise NodeBoxError, "Already defining a bezier path. Don't nest `with bezier()` blocks"
+            origin = None if any(c is None for c in (x,y)) else (x,y)
+            self._path = self.BezierPath(origin=origin, **kwargs)
+            return self._path
 
     def beginpath(self, x=None, y=None):
         self._path = self.BezierPath()
@@ -334,6 +338,7 @@ class Context(object):
             raise NodeBoxError, "No current path. Use bezier() or beginpath() first."
         if not self._pathclosed:
             self._path.closepath()
+            self._pathclosed = True
 
     def endpath(self, draw=True):
         if self._path is None:
@@ -391,22 +396,21 @@ class Context(object):
 
     def pop(self):
         try:
-            self._transform = Transform(self._transformstack[0])
+            self._transform = Transform(self._transformstack[0], ctx=self)
             del self._transformstack[0]
         except IndexError, e:
             raise NodeBoxError, "pop: too many pops!"
             
-            
     def transform(self, mode=None):
         if mode is not None:
             self._transformmode = mode
-        return self._transformmode
+        return self._transform
         
     def translate(self, x, y):
         self._transform.translate(x, y)
         
     def reset(self):
-        self._transform = Transform()
+        self._transform = Transform(ctx=self)
 
     def rotate(self, degrees=0, radians=0):
         self._transform.rotate(-degrees,-radians)
