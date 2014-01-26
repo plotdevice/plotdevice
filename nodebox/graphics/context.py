@@ -68,7 +68,7 @@ class Context(object):
         self._joinstyle = MITER
         self._path = None
         self._autoclosepath = True
-        self._transform = Transform(ctx=self)
+        self._transform = Transform()
         self._transformmode = CENTER
         self._transformstack = []
         self._fontname = "Helvetica"
@@ -141,27 +141,25 @@ class Context(object):
                 return v
         return None
 
-    ### Objects ####
-    
-    def _makeInstance(self, clazz, args, kwargs):
-        """Creates an instance of a class defined in this document.        
-           This method sets the context of the object to the current context."""
-        inst = clazz(self, *args, **kwargs)
-        return inst
+    ### Objects (whose contexts are set to this Context instance) ###
+
     def BezierPath(self, *args, **kwargs):
-        return self._makeInstance(BezierPath, args, kwargs)
+        return BezierPath(self, *args, **kwargs)
     def ClippingPath(self, *args, **kwargs):
-        return self._makeInstance(ClippingPath, args, kwargs)
+        return ClippingPath(self, *args, **kwargs)
     def Rect(self, *args, **kwargs):
-        return self._makeInstance(Rect, args, kwargs)
+        return Rect(self, *args, **kwargs)
     def Oval(self, *args, **kwargs):
-        return self._makeInstance(Oval, args, kwargs)
+        return Oval(self, *args, **kwargs)
     def Color(self, *args, **kwargs):
-        return self._makeInstance(Color, args, kwargs)
+        return Color(self, *args, **kwargs)
     def Image(self, *args, **kwargs):
-        return self._makeInstance(Image, args, kwargs)
+        return Image(self, *args, **kwargs)
     def Text(self, *args, **kwargs):
-        return self._makeInstance(Text, args, kwargs)
+        return Text(self, *args, **kwargs)
+    def TransformContext(self, *args, **kwargs):
+        from nodebox.graphics.grobs import TransformContext
+        return TransformContext(self, *args, **kwargs)
 
     ### Primitives ###
 
@@ -396,21 +394,23 @@ class Context(object):
 
     def pop(self):
         try:
-            self._transform = Transform(self._transformstack[0], ctx=self)
+            self._transform = Transform(self._transformstack[0])
             del self._transformstack[0]
         except IndexError, e:
             raise NodeBoxError, "pop: too many pops!"
             
     def transform(self, mode=None):
-        if mode is not None:
-            self._transformmode = mode
-        return self._transform
+        if mode is not None and mode not in (CORNER, CENTER):
+            raise NodeBoxError, "transform: mode must be CORNER or CENTER"
+        trans_ctx = self.TransformContext()
+        self._transformmode = mode
+        return trans_ctx
         
     def translate(self, x, y):
         self._transform.translate(x, y)
         
     def reset(self):
-        self._transform = Transform(ctx=self)
+        self._transform = Transform()
 
     def rotate(self, degrees=0, radians=0):
         self._transform.rotate(-degrees,-radians)

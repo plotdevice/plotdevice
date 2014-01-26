@@ -852,10 +852,27 @@ class Color(object):
 
 color = Color
 
+class TransformContext(object):
+    """Performs the setup/cleanup for a `with transform()` block"""
+    def __init__(self, ctx):
+        self._ctx = ctx
+        self._oldmode = self._ctx._transformmode
+
+    def __enter__(self):
+        self._ctx.push()
+        return self._ctx._transform
+
+    def __exit__(self, type, value, tb):
+        self._ctx.pop()
+        self._ctx._transformmode = self._oldmode
+
+    @property
+    def mode(self):
+        return self._ctx._transformmode
+
 class Transform(object):
 
-    def __init__(self, transform=None, ctx=None):
-        self._ctx = ctx
+    def __init__(self, transform=None):
         if transform is None:
             transform = NSAffineTransform.transform()
         elif isinstance(transform, Transform):
@@ -871,15 +888,6 @@ class Transform(object):
         else:
             raise NodeBoxError, "Don't know how to handle transform %s." % transform
         self._nsAffineTransform = transform
-
-    def __enter__(self):
-        if not self._ctx: return
-        self._ctx.push()
-        return self
-
-    def __exit__(self, type, value, tb):
-        if not self._ctx: return
-        self._ctx.pop()
         
     def _get_transform(self):
         warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", DeprecationWarning, stacklevel=2)
