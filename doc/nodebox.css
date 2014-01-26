@@ -100,7 +100,7 @@ a.noexternal { background-image:none !important; padding-right: 0; }
 /* TABLE OF CONTENTS */
 .toc{
   overflow:auto;
-  margin-bottom:40px;
+  padding-bottom:40px;
   border-top:1px solid #666;
   font-size:13px;
 }
@@ -219,7 +219,7 @@ a.noexternal { background-image:none !important; padding-right: 0; }
 #nav ul.siblings{
   float:left;
   list-style:none;
-  padding-left:12px;
+  padding-left:0;
 }
 
 #nav.link ul.siblings li{ 
@@ -251,7 +251,8 @@ a.noexternal { background-image:none !important; padding-right: 0; }
   font: 18px Arial;
   margin-bottom:1px;
 }
-#nav.link li a{ color:#aaa; }
+#nav.link li a{ color:#bbb; font-weight:bold;}
+#nav.link .chapter li a{ color:#bbb; font-weight:normal;}
 #nav.link li a:hover{
   text-decoration:none;
   color:#bb4200;
