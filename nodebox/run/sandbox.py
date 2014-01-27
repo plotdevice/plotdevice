@@ -181,8 +181,10 @@ class Sandbox(object):
         # Clear the canvas
         self.canvas.clear()
 
-        # Reset the context
-        self.context._resetContext()
+        # Reset the context, but only if this is the beginning of a run. Otherwise
+        # settings should persist to allow unchanging settings to be placed in setup()
+        if method is None:
+            self.context._resetContext()
 
         # Initalize the magicvar
         self.namespace[MAGICVAR] = self.magicvar
