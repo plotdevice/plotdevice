@@ -402,9 +402,7 @@ class Context(object):
     def transform(self, mode=None):
         if mode is not None and mode not in (CORNER, CENTER):
             raise NodeBoxError, "transform: mode must be CORNER or CENTER"
-        trans_ctx = self.TransformContext()
-        self._transformmode = mode
-        return trans_ctx
+        return self.TransformContext(mode)
         
     def translate(self, x, y):
         self._transform.translate(x, y)

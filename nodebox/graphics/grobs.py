@@ -853,10 +853,12 @@ class Color(object):
 color = Color
 
 class TransformContext(object):
-    """Performs the setup/cleanup for a `with transform()` block"""
-    def __init__(self, ctx):
+    """Performs the setup/cleanup for a `with transform()` block (and changes the mode)"""
+    def __init__(self, ctx, mode=None):
         self._ctx = ctx
         self._oldmode = self._ctx._transformmode
+        self._mode = mode or self._oldmode
+        self._ctx._transformmode = self._mode
 
     def __enter__(self):
         self._ctx.push()
@@ -865,6 +867,12 @@ class TransformContext(object):
     def __exit__(self, type, value, tb):
         self._ctx.pop()
         self._ctx._transformmode = self._oldmode
+
+    def __eq__(self, other):
+        return self._mode == other
+
+    def __repr__(self):
+        return {CENTER:'CENTER', CORNER:'CORNER'}.get(self._mode)
 
     @property
     def mode(self):
