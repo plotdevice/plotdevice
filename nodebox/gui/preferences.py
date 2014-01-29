@@ -311,16 +311,17 @@ def defaultDefaults():
                    NSLigatureAttributeName: 0}
     _SYNTAXCOLORS = {
         # text colors
-        "keyword": {FG_COLOR: NSColor.blueColor()},
-        "identifier": {FG_COLOR: NSColor.redColor().shadowWithLevel_(0.2)},
-        "string": {FG_COLOR: NSColor.magentaColor()},
-        "comment": {FG_COLOR: NSColor.grayColor()},
+        "keyword": {FG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.7287307382, 0.2822835445, 0.01825759932, 1.0)},
+        "identifier": {FG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.0636304393411, 0.506952047348, 0.661560952663, 1.0)},
+        "string": {FG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.0979111269116, 0.482684463263, 0.00660359347239, 1.0)},
+        "comment": {FG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.391519248486, 0.391507565975, 0.391514211893, 1.0)},
         "plain": {FG_COLOR: NSColor.blackColor()},
         "err": {FG_COLOR: ERR_COL},
         # background colors
         "page": {BG_COLOR: NSColor.whiteColor()},
-        "selection": {BG_COLOR: NSColor.colorWithRed_green_blue_alpha_(175/255.0, 247/255.0, 1.0, 1.0)},
+        "selection": {BG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.743757605553, 0.976963877678, 0.998794317245, 1.0)},
     }
+
     for key, value in _SYNTAXCOLORS.items():
         newVal = _BASICATTRS.copy()
         newVal.update(value)
@@ -328,7 +329,7 @@ def defaultDefaults():
     _BASICATTRS = NSDictionary.dictionaryWithDictionary_(_BASICATTRS)
 
     return {
-        "NSQuitAlwaysKeepsWindows": True,
+        # "NSQuitAlwaysKeepsWindows": True,
         "nodebox:remote-port": 9001,
         "nodebox:text-attributes": packAttrs(_BASICATTRS),
         "nodebox:text-colors": packAttrs(_SYNTAXCOLORS),
