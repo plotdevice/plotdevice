@@ -4,6 +4,8 @@ import random
 from os.path import dirname, basename, abspath, relpath, isdir
 from hashlib import md5
 from codecs import open
+from functools import partial
+from inspect import getargspec
 from collections import namedtuple
 from PyObjCTools import AppHelper
 from Foundation import *
@@ -40,6 +42,33 @@ class Delegate(object):
     def exportProgress(self, written, total, cancelled):
         pass
 
+class StateVar(dict):
+    """A dictionary object whose items may also be accessed with dot notation."""
+    def __init__(self, *args, **kw):
+        super(StateVar, self).__init__(*args, **kw)
+        self.__initialised = True
+
+    def __getattr__(self, key): 
+        try:
+            return self[key]
+        except KeyError, k:
+            raise AttributeError, k
+    
+    def __setattr__(self, key, value): 
+        # this test allows attributes to be set in the __init__ method
+        if not self.__dict__.has_key('_StateVar__initialised'):
+            return dict.__setattr__(self, key, value)
+        self[key] = value
+    
+    def __delattr__(self, key):
+        try:
+            del self[key]
+        except KeyError, k:
+            raise AttributeError, k
+    
+    def __repr__(self):     
+        return dict.__repr__(self)
+
 class Sandbox(object):
 
     def __init__(self, delegate=None):
@@ -48,6 +77,8 @@ class Sandbox(object):
         self._path = None       # file path to the active script
         self._source = None     # unicode contents of script
         self._code = None       # byte-compiled source
+        self._stateful = []     # list of script functions that expect a state variable
+        self._statevar = None   # persistent dict passed to animation functions in script
         self.canvas = None      # can be handed off to views or exporters to access the image
         self.context = None     # quartz playground
         self.namespace = {}     # a mutable copy of _env with the user script's functions mixed in
@@ -152,7 +183,7 @@ class Sandbox(object):
             result = self.call(compileScript)
             if not result.ok:
                 return result
-        
+
         # Reset the frame / animation status
         self._meta.running = False
         self._meta.next = self._meta.first
@@ -203,6 +234,16 @@ class Sandbox(object):
                 # If no method was specified, we're in the initial pass through the script
                 # so flag the run as having begun
                 self._meta.running = True
+
+                # determine which of the script's routines expect a state varaiable
+                self._stateful = []
+                for routine in 'setup','draw','stop':
+                    func = self.namespace.get(routine)
+                    if func and getargspec(func).args:
+                        self._stateful.append(routine)
+                # allocate a fresh state var if any routines are using it
+                self._statevar = StateVar() if self._stateful else None
+
             elif method=='draw':
                 # tick the frame ahead after each draw call
                 self._meta.next+=1
@@ -230,7 +271,10 @@ class Sandbox(object):
                 exec self._code in self.namespace
             method = execScript
         elif method in self.namespace:
-            method = self.namespace[method]
+            if method in self._stateful:
+                method = partial(self.namespace[method], self._statevar)
+            else:
+                method = self.namespace[method]
         elif not callable(method):
             # silently skip over undefined methods (convenient if a script lacks 'setup' or 'draw')
             return Outcome(True, [])
