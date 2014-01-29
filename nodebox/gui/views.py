@@ -10,7 +10,7 @@ from PyObjCTools import AppHelper
 from nodebox import graphics
 from nodebox.run import stacktrace
 
-DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.8, NSColor.whiteColor())
+DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
 
 class NodeBoxBackdrop(NSView):
     """A container that sits between the NSClipView and NodeBoxGraphicsView
