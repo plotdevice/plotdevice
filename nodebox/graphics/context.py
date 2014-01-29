@@ -34,10 +34,6 @@ class Context(object):
         self._vars = []
         self._resetContext()
         self._statestack = []
-
-        # default to a white background, but otherwise don't change it between iterations
-        # (scripts should be able to set the bg once in setup() and have that persist across frames)
-        self.canvas.background = self.Color(1.0)
         self.canvas._ctx = self
 
         # cache a list of all of the exportable attr names (for use when making namespaces)
@@ -57,7 +53,7 @@ class Context(object):
             setattr(self, attr, val)
 
     def _resetContext(self):
-        """Do a thorough reset of all the state variables (aside from canvas.background)"""
+        """Do a thorough reset of all the state variables"""
         self._outputmode = RGB
         self._colormode = RGB
         self._colorrange = 1.0
@@ -78,6 +74,7 @@ class Context(object):
         self._noImagesHint = False
         self._oldvars = self._vars
         self._vars = []
+        self.canvas.background = self.Color(1.0)
         
     def ximport(self, libName):
         if libName=='colors':
