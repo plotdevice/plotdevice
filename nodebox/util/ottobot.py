@@ -224,13 +224,13 @@ colormode(HSB)
 
 def genTemplate(kind='sketch'):
     if kind=='sketch':
-        return """# Welcome to NodeBox
+        return u"""# Welcome to NodeBox
 size(500, 500)
 background(1)
 text("Welcome to NodeBox", 40, 40)
 """
     elif kind=='anim':
-        return"""# to create an animation, call speed() with a 
+        return u"""# to create an animation, call speed() with a 
 # frame-rate value. This has the side-effect of
 # running setup, draw, and stop in the pattern
 # described below:
