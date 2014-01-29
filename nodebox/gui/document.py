@@ -7,8 +7,6 @@ import random
 import time
 import objc
 
-from hashlib import md5
-from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
 from nodebox.run import Sandbox
