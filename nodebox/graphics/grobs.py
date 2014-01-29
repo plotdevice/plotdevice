@@ -1,4 +1,6 @@
 import os
+import re
+import json
 import warnings
 from random import choice, shuffle
 from AppKit import *
@@ -86,6 +88,8 @@ _STATE_NAMES = {
     '_align':         'align',
     '_lineheight':    'lineheight',
 }
+
+_CSS_COLORS = json.load(file('%s/colors/names.json'%os.path.dirname(__file__)))
 
 def _save():
     NSGraphicsContext.currentContext().saveGraphicsState()
@@ -644,38 +648,49 @@ class Color(object):
                 clr = args[0]._cmyk
         elif params == 1 and isinstance(args[0], NSColor):
             clr = args[0]
-        elif params == 1: # Gray, no alpha
-            args = self._normalizeList(args)
-            g, = args
-            clr = NSColor.colorWithDeviceWhite_alpha_(g, 1)
-        elif params == 2: # Gray and alpha
-            args = self._normalizeList(args)
-            g, a = args
-            clr = NSColor.colorWithDeviceWhite_alpha_(g, a)
-        elif params == 3 and self._ctx._colormode == RGB: # RGB, no alpha
-            args = self._normalizeList(args)
-            r,g,b = args
-            clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, 1)
-        elif params == 3 and self._ctx._colormode == HSB: # HSB, no alpha
-            args = self._normalizeList(args)
-            h, s, b = args
-            clr = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, s, b, 1)
-        elif params == 4 and self._ctx._colormode == RGB: # RGB and alpha
-            args = self._normalizeList(args)
-            r,g,b, a = args
+        elif params>=1 and isinstance(args[0], (str, unicode)):
+            if re.search(r'#?[0-9a-f]{3,8}', args[0]): # rgb & rgba hex strings
+                hexclr = args[0].lstrip('#')
+                if len(hexclr) in (3,4):
+                    hexclr = "".join(map("".join, zip(hexclr,hexclr)))
+                if len(hexclr) not in (6,8):
+                    raise NodeBoxError, "Don't know how to interpret hex color '#%s'." % hexclr
+                r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
+                a = args[1] if params==2 else 1.0
+                if len(hexclr)==8:
+                    a = int(hexclr[6:], 16)/255.0                
+            elif args[0] in _CSS_COLORS: # handle css color names
+                try:
+                    r, g, b, a = _CSS_COLORS[args[0]]
+                except ValueError:
+                    r, g, b = _CSS_COLORS[args[0]]
+                    a = args[1] if params==2 else 1.0
             clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, a)
-        elif params == 4 and self._ctx._colormode == HSB: # HSB and alpha
-            args = self._normalizeList(args)
-            h, s, b, a = args
-            clr = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, s, b, a)
-        elif params == 4 and self._ctx._colormode == CMYK: # CMYK, no alpha
-            args = self._normalizeList(args)
-            c, m, y, k  = args
-            clr = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, m, y, k, 1)
-        elif params == 5 and self._ctx._colormode == CMYK: # CMYK and alpha
-            args = self._normalizeList(args)
-            c, m, y, k, a  = args
-            clr = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, m, y, k, a)
+        elif 1 <= params <= 5:
+            if params == 1: # Gray, no alpha
+                g, = self._normalizeList(args)
+                clr = NSColor.colorWithDeviceWhite_alpha_(g, 1)
+            elif params == 2: # Gray and alpha
+                g, a = self._normalizeList(args)
+                clr = NSColor.colorWithDeviceWhite_alpha_(g, a)
+            elif params == 3 and self._ctx._colormode == RGB: # RGB, no alpha
+                r,g,b = self._normalizeList(args)
+                clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, 1)
+            elif params == 3 and self._ctx._colormode == HSB: # HSB, no alpha
+                h, s, b = self._normalizeList(args)
+                clr = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, s, b, 1)
+            elif params == 4 and self._ctx._colormode == RGB: # RGB and alpha
+                r,g,b, a = self._normalizeList(args)
+                clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, a)
+            elif params == 4 and self._ctx._colormode == HSB: # HSB and alpha
+                h, s, b, a = self._normalizeList(args)
+                clr = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, s, b, a)
+            elif params == 4 and self._ctx._colormode == CMYK: # CMYK, no alpha
+                c, m, y, k  = self._normalizeList(args)
+                clr = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, m, y, k, 1)
+            elif params == 5 and self._ctx._colormode == CMYK: # CMYK and alpha
+                c, m, y, k, a  = self._normalizeList(args)
+                clr = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, m, y, k, a)
         else:
             clr = NSColor.colorWithDeviceWhite_alpha_(0, 1)
 
