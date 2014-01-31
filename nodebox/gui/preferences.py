@@ -309,7 +309,7 @@ def defaultDefaults():
     _basicFont = NSFont.userFixedPitchFontOfSize_(11)
     _BASICATTRS = {NSFontAttributeName: _basicFont,
                    NSLigatureAttributeName: 0}
-    _SYNTAXCOLORS = {
+    _LIGHT_SYNTAXCOLORS = {
         # text colors
         "keyword": {FG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.7287307382, 0.2822835445, 0.01825759932, 1.0)},
         "identifier": {FG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.0636304393411, 0.506952047348, 0.661560952663, 1.0)},
@@ -321,6 +321,24 @@ def defaultDefaults():
         "page": {BG_COLOR: NSColor.whiteColor()},
         "selection": {BG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.743757605553, 0.976963877678, 0.998794317245, 1.0)},
     }
+
+    _DARK_SYNTAXCOLORS = {
+        # text colors
+        "identifier":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.72914814949, 0.171053349972, 0.106676459312, 1.0)},
+        "constant":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.0636304393411, 0.506952047348, 0.661560952663, 1.0)},
+        "keyword":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(243/255.0, 192/255.0, 36/255.0, 1.0)},
+        "string":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.132785454392, 0.560580074787, 0.0322014801204, 1.0)},
+        "comment":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.43789768219, 0.497855067253, 0.612316548824, 1.0)},
+        "plain":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.789115667343, 0.843085050583, 0.837674379349, 1.0)},
+        "err":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.664596498013, 0.0, 0.0132505837828, 1.0)},
+        # background colors
+        "page":{BG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.0436993055046, 0.0851569622755, 0.146313145757, 1.0)},
+        "selection":{BG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.19904075563, 0.230226844549, 0.373898953199, 1.0)},
+
+    }
+    
+
+    _SYNTAXCOLORS = _DARK_SYNTAXCOLORS
 
     for key, value in _SYNTAXCOLORS.items():
         newVal = _BASICATTRS.copy()

@@ -48,7 +48,7 @@ class PyDETextView(NSTextView):
         self.setFrame_(((0, 0), scrollView.contentSize()))
         self.setAutoresizingMask_(NSViewWidthSizable)
         self.textContainer().setWidthTracksTextView_(True)
-        self.setTextContainerInset_( (0,4) ) # add a pinch of top-margin
+        self.setTextContainerInset_( (4,10) ) # add a pinch of top-margin
         self.setAllowsUndo_(True)
         self.setRichText_(False)
         self.setTypingAttributes_(getBasicTextAttributes())

@@ -40,12 +40,21 @@ keywordsList += graphics.__all__
 keywordsList += util.__all__
 keywordsList += dir(graphics.Context)
 
+
 # Build up a regular expression which will match anything
 # interesting, including multi-line triple-quoted strings.
 commentPat = r"#[^\n]*"
 
 pat = r"[uU]?[rR]?q[^\\q\n]*(\\[\000-\377][^\\q\n]*)*q?"
 quotePat = pat.replace("q", "'") + "|" + pat.replace('q', '"')
+
+# some keywords in graphics.__all__ are constants that we want to color differently
+constantsList = ["inch", "cm", "mm", "RGB", "HSB", "CMYK", "CORNER", "LEFT", "RIGHT", "CENTER", "JUSTIFY", "MOVETO", "LINETO", "CURVETO", "CLOSE", "MITER", "ROUND", "BEVEL", "BUTT", "SQUARE", "NORMAL", "FORTYFIVE", "NUMBER", "TEXT", "BOOLEAN", "BUTTON", "WIDTH", "HEIGHT", "FRAME", "PAGE", "MOUSEX", "MOUSEY", "mousedown", "KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT", "KEY_BACKSPACE", "KEY_TAB", "KEY_ESC"]
+for const in constantsList:
+	while const in keywordsList:
+		keywordsList.remove(const)
+
+constPat = r'\b([0-9][0-9\.]*|(?:' + "|".join(constantsList) + r'))\b'
 
 # Way to go, Tim!
 pat = r"""
@@ -75,7 +84,7 @@ tripleQuotePat = pat.replace("q", "'") + "|" + pat.replace('q', '"')
 # identifier references.
 keyPat = r"\b(" + "|".join(keywordsList) + r")\b"
 
-matchPat = commentPat + "|" + keyPat + "|(" + tripleQuotePat + "|" + quotePat + ")"
+matchPat = commentPat + "|" + keyPat + "|(" + tripleQuotePat + "|" + quotePat + ")" + "|" + constPat
 matchRE = re.compile(matchPat)
 
 idKeyPat = "[ \t]*([A-Za-z_][A-Za-z_0-9.]*)"	# Ident w. leading whitespace.
@@ -91,6 +100,7 @@ def fontify(pytext, searchfrom=0, searchto=None):
 	asMatch = asRE.match
 	
 	commentTag = 'comment'
+	constTag = 'constant'
 	stringTag = 'string'
 	keywordTag = 'keyword'
 	identifierTag = 'identifier'
@@ -127,6 +137,9 @@ def fontify(pytext, searchfrom=0, searchto=None):
 		elif m.group(0)[0] == "#":
 			start, end = m.span()
 			yield commentTag, start, end, None
+		elif m.groups()[-1]:
+			start, end = m.span()
+			yield constTag, start, end, None
 		else:
 			start, end = m.span()
 			yield stringTag, start, end, None
