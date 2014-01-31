@@ -85,6 +85,35 @@ class NodeBoxDocument(NSDocument):
         self.animationSpinner.setFrame_(((x,3),(16,16)))
         self.toggleStatusBar_(self)
 
+    def windowWillUseStandardFrame_defaultFrame_(self, win, rect):
+        container = self.graphicsView.superview().superview().superview().superview() # nssplitview or nsview
+        frame = win.frame()
+        current = frame.size
+        gworld = self.graphicsView.frame().size
+        scrollview = self.graphicsView.superview().superview().superview().frame().size
+        thumb_w = 9 if type(container) is NSSplitView else 0 # no thumb when running from command line
+
+        gfx_share = scrollview.width / (current.width-thumb_w)
+        best_w = round(gworld.width/gfx_share) + thumb_w
+        best_h = gworld.height + 22
+        merged = NSIntersectionRect(rect, (rect.origin, (best_w, best_h)))
+
+        if merged.size.width<300 or merged.size.height<222:
+            # whatever appkit code makes the decision to zoom does crazy stuff if you pass it a
+            # standard-frame of a fixed min size. no clue why it bobbles the height. the real ‘solution’
+            # is to shim into the nswindow zoom: method. might also be the only place to disable animated
+            # frame resize (which doesn't really fit with the graphicsview resize behavior)
+            return frame
+
+        center = dict(x=NSMidX(frame), y=NSMidY(frame))
+        merged.origin.x = round(center['x'] - merged.size.width/2.0)
+        merged.origin.y = round(center['y'] - merged.size.height/2.0)
+        return merged
+
+    def windowShouldZoom_toFrame_(self, win, rect):
+        # catch the occasions where we don't modify the size and cancel the zoom
+        return win.frame().size != rect.size
+
     def autosavesInPlace(self):
         return True
 
