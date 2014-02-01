@@ -82,6 +82,7 @@ class Sandbox(object):
         self.canvas = None      # can be handed off to views or exporters to access the image
         self.context = None     # quartz playground
         self.namespace = {}     # a mutable copy of _env with the user script's functions mixed in
+        self.crashed = False    # flag whether the script exited abnormally
         self.live = False       # whether to keep the output pipe open between runs
         self.session = None     # the image/movie export session (if any)
         self.stationery = False # whether the script is from the examples folder
@@ -167,6 +168,8 @@ class Sandbox(object):
         if src:
             self.source = src
 
+        self.crashed = False
+
         # Initialize the namespace
         self.namespace.clear()
         self.namespace.update(dict(self._env))
@@ -182,6 +185,7 @@ class Sandbox(object):
                 self._code = compile("%s\n\n"%self._source, scriptname.encode('ascii', 'ignore'), "exec")
             result = self.call(compileScript)
             if not result.ok:
+                self.crashed = True
                 return result
 
         # Reset the frame / animation status
@@ -196,6 +200,8 @@ class Sandbox(object):
         result = Outcome(True, [])
         if self._meta.running:
             result = self.call("stop")
+            if not result.ok:
+                self.crashed = True
             self._meta.running = False
         self._meta.first, self._meta.last = (1,None)
         if self._meta.console and not self.live:
@@ -207,15 +213,15 @@ class Sandbox(object):
         """Run either the entire script or call a specific method"""
         # Check if there is code to run
         if self._code is None:
-            self.compile()
+            self.compile() # hmmm... shouldn't this be checking for failures?
 
         # Clear the canvas
         self.canvas.clear()
 
         # Reset the context, but only if this is the beginning of a run. Otherwise
         # settings should persist to allow unchanging settings to be placed in setup()
-        if method is None:
-            self.context._resetContext()
+        # if method is None:
+        self.context._resetContext()
 
         # Initalize the magicvar
         self.namespace[MAGICVAR] = self.magicvar
@@ -228,6 +234,7 @@ class Sandbox(object):
         
         # Run the script
         result = self.call(method)
+        self.crashed = not result.ok
 
         if self.animated:
             if method is None:
@@ -312,6 +319,7 @@ class Sandbox(object):
             method()
         except:
             # print the stacktrace and quit
+            self.crashed = True
             errtxt = stacktrace(self._path)
             sys.stderr.write(errtxt)
             return Outcome(False, output.data)
@@ -335,19 +343,23 @@ class Sandbox(object):
                      bitrate, fps, loop
         """
         compilation = self.compile() # compile the script
+        self.crashed = not compilation.ok
         self.delegate.exportStatus(compilation)
         if not compilation.ok:
+            self.crashed = True
             return
 
         firstpass = self.call() # evaluate the script once
         self.delegate.exportStatus(firstpass)
         if not firstpass.ok:
+            self.crashed = True
             return
 
         if self.animated:
             setup = self.call("setup")
             self.delegate.exportStatus(setup)
             if not setup.ok:
+                self.crashed = True
                 return
 
         opts.setdefault('console', self.tty)
@@ -384,6 +396,7 @@ class Sandbox(object):
                 self.delegate.exportStatus(result, self.canvas)
                 self.delegate.exportProgress(self.session.written, self.session.total, self.session.cancelled)
                 if not result.ok:
+                    self.crashed = True
                     self.session._shutdown()
                     return self._finishExport()
                 self.session.add(self.canvas, i)
