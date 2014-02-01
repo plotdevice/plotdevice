@@ -1,6 +1,8 @@
-from bisect import bisect
+# encoding: utf-8
 import re
 import objc
+from time import time
+from bisect import bisect
 from Foundation import *
 from AppKit import *
 from nodebox.gui.preferences import getBasicTextAttributes, getSyntaxTextAttributes
@@ -787,10 +789,33 @@ class OutputTextView(NSTextView):
     def clear(self, timestamp=False):
         self.endl = False
         self.ts.replaceCharactersInRange_withString_((0,self.ts.length()), "")
+        self._begin = time()
         if timestamp:
             locale = NSUserDefaults.standardUserDefaults().dictionaryRepresentation()
             timestamp = NSDate.date().descriptionWithCalendarFormat_timeZone_locale_("%Y-%m-%d %H:%M:%S", None, locale)
             self.append(timestamp+"\n", 'info')
+
+    def report(self, crashed, frames):
+        if not hasattr(self, '_begin'):
+            return
+        val = time() - self._begin
+
+        # print "ran for", (time() - self._begin), "then", ("crashed" if crashed else "exited cleanly")
+        if crashed or (frames==None and val < 0.333):
+            return
+        hrs = val // 3600 
+        val = val - (hrs * 3600)
+        mins = val // 60
+        secs = val - (mins * 60) 
+        dur = ''           
+        if hrs:
+            dur = '%ih%i\'%1.1f"' % (hrs, mins, secs)
+        else:
+            dur = '%i\'%1.1f"' % (mins, secs)
+
+        msg = "%i frame%s"%(frames, '' if frames==1 else 's') if frames else "rendered"
+        outcome = "%s in %s\n"%(msg, dur)
+        self.append(outcome, 'info')
 
     def performFindPanelAction_(self, sender):
         # same timer-based hack as PyDETextView.performFindPanelAction_
