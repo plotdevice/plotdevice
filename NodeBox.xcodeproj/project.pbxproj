@@ -36,6 +36,7 @@
 		2A294478185E578300E9F650 /* preferences.py in Copy nodebox.gui */ = {isa = PBXBuildFile; fileRef = 2A294468185E575F00E9F650 /* preferences.py */; };
 		2A294480185E596200E9F650 /* context.py in Copy nodebox.graphics */ = {isa = PBXBuildFile; fileRef = 2A29447C185E595000E9F650 /* context.py */; };
 		2A294481185E596800E9F650 /* grobs.py in Copy nodebox.graphics */ = {isa = PBXBuildFile; fileRef = 2A29447D185E595000E9F650 /* grobs.py */; };
+		2A3BD55E189C653600748EA3 /* NodeBoxFile-nb.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2A3BD55D189C653600748EA3 /* NodeBoxFile-nb.icns */; };
 		2A3DB1F7187E85190062635B /* script.py in Copy nodebox root */ = {isa = PBXBuildFile; fileRef = 2A3DB1F5187E85130062635B /* script.py */; };
 		2A4812E71884AF3B00B47700 /* fsevents.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 2A4812E51884AF3100B47700 /* fsevents.py */; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
@@ -224,6 +225,7 @@
 		2A29447D185E595000E9F650 /* grobs.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = grobs.py; sourceTree = "<group>"; };
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		2A3BD55D189C653600748EA3 /* NodeBoxFile-nb.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "NodeBoxFile-nb.icns"; path = "Resources/NodeBoxFile-nb.icns"; sourceTree = "<group>"; };
 		2A3DB1F5187E85130062635B /* script.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = script.py; sourceTree = "<group>"; };
 		2A4812E51884AF3100B47700 /* fsevents.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = fsevents.py; sourceTree = "<group>"; };
 		2A4812EA188CF45800B47700 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
@@ -368,6 +370,7 @@
 				611CC48910BA8B9E00B55455 /* InfoPlist.strings */,
 				611CC49310BA8B9E00B55455 /* NodeBox.icns */,
 				611CC49410BA8B9E00B55455 /* NodeBoxFile.icns */,
+				2A3BD55D189C653600748EA3 /* NodeBoxFile-nb.icns */,
 				2ABDB76C1867D8210069EFC3 /* NodeBox-Info.plist */,
 			);
 			name = Resources;
@@ -567,6 +570,7 @@
 				611CC5A010BA908C00B55455 /* NodeBoxDocument.xib in Resources */,
 				611CC5A810BA919A00B55455 /* NodeBoxPreferences.xib in Resources */,
 				611CC68010BAA08300B55455 /* MainMenu.xib in Resources */,
+				2A3BD55E189C653600748EA3 /* NodeBoxFile-nb.icns in Resources */,
 				611CC68710BAA0A600B55455 /* AskString.xib in Resources */,
 				2A26314B188E1A3A000B792A /* doc in Resources */,
 				6155D9F413E2B79E00675A92 /* CHANGES.md in Resources */,

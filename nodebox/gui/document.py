@@ -266,7 +266,32 @@ class NodeBoxDocument(NSDocument):
         ok = super(NodeBoxDocument, self).saveToURL_ofType_forSaveOperation_error_(url, type, op, err)
         if self.path and os.path.exists(self.path):
             self.mtime = os.path.getmtime(self.path)
+            print self.path, self.mtime
+
+        # if the save operation left a backup file around (why!), rm it here...
+        bak = self.backupFileURL().fileSystemRepresentation() if self.backupFileURL() else None
+        if ok and bak and os.path.exists(bak) and os.path.basename(bak).startswith('.'):
+            os.unlink(bak)
+
         return ok
+
+    def prepareSavePanel_(self, panel):
+        # saving modifications to .py files is fine, but if a Save As operation happens, restrict it to .nb files
+        panel.setRequiredFileType_("nb")
+        panel.setAccessoryView_(None)
+        return True
+
+    def backupFileURL(self):
+        # by default a backup file is left in the original file's directory with a tilde appended to
+        # the filename (before the extension). since for some reason the NSDocument infrastructure isn't
+        # clearing it away after a save, we'll prepend a dot to the name so the user doesn't see the 
+        # backup file appearing on save. then in saveToURL, we clean out the backup file
+        pth = super(NodeBoxDocument, self).backupFileURL()
+        if not pth:
+            return None
+        pth = pth.fileSystemRepresentation()
+        tmp = os.path.join(os.path.dirname(pth), '.'+os.path.basename(pth))
+        return NSURL.fileURLWithPath_(tmp)
 
     # 
     # Running the script in the main window
@@ -391,6 +416,8 @@ class NodeBoxDocument(NSDocument):
         # Display the output of the script
         if result.ok and redraw:
             self.currentView.setCanvas(self.vm.canvas)
+        if not result.ok and method is None:
+            self.stopScript()
 
         return result.ok
 
@@ -498,6 +525,8 @@ class NodeBoxDocument(NSDocument):
         # end any ongoing export cleanly
         if self.vm.session:
             self.vm.session.cancel()
+
+        self.outputView.report(self.vm.crashed, self.vm.namespace['FRAME'] if self.vm.animated else None)
 
     #
     # Pasteboards

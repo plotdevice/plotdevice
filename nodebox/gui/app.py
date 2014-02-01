@@ -59,7 +59,8 @@ class NodeBoxAppDelegate(NSObject):
 
     def openExample_(self, sender):
         pth = sender.representedObject()
-        doc, err = self._docsController.makeUntitledDocumentOfType_error_("public.python-script", None)
+        # doc, err = self._docsController.makeUntitledDocumentOfType_error_("public.python-script", None)
+        doc, err = self._docsController.makeUntitledDocumentOfType_error_("net.nodebox.NodeBox.document", None)
         doc.stationery = pth
         self._docsController.addDocument_(doc)
         doc.makeWindowControllers()
@@ -172,6 +173,8 @@ class NodeBoxDocumentController(NSDocumentController):
             
             pth = url.fileSystemRepresentation()
             if pth in self.checklist:
+
+                # note that the file might have disappeared and pth is dangling...
                 time = os.path.getmtime(pth)
                 if time != doc.mtime:
                     doc.refresh()
