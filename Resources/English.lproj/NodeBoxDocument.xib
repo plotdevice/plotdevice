@@ -63,23 +63,23 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="Gog-0j-9A9">
-                                    <rect key="frame" x="318" y="0.0" width="15" height="463"/>
+                                    <rect key="frame" x="317" y="0.0" width="16" height="463"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
-                            <splitView autosaveName="" id="41">
+                            <splitView autosaveName="" dividerStyle="paneSplitter" id="41">
                                 <rect key="frame" x="342" y="0.0" width="380" height="463"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
-                                    <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" hasVerticalScroller="NO" usesPredominantAxisScrolling="NO" id="40">
-                                        <rect key="frame" x="0.0" y="0.0" width="380" height="347"/>
+                                    <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" hasVerticalScroller="NO" usesPredominantAxisScrolling="NO" id="40">
+                                        <rect key="frame" x="0.0" y="0.0" width="380" height="346"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <clipView key="contentView" id="yt1-Yq-neg">
-                                            <rect key="frame" x="1" y="1" width="378" height="345"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="380" height="346"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <customView id="39" customClass="PyDETextView">
-                                                    <rect key="frame" x="0.0" y="0.0" width="396" height="314"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="398" height="315"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <connections>
                                                         <outlet property="document" destination="-2" id="165"/>
@@ -96,21 +96,21 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
                                     </scrollView>
-                                    <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="30">
+                                    <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="30">
                                         <rect key="frame" x="0.0" y="356" width="380" height="107"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <clipView key="contentView" id="15t-by-Wh6">
-                                            <rect key="frame" x="1" y="1" width="378" height="105"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="380" height="107"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <textView editable="NO" importsGraphics="NO" richText="NO" findStyle="bar" incrementalSearchingEnabled="YES" allowsDocumentBackgroundColorChange="YES" usesRuler="YES" verticallyResizable="YES" id="31" customClass="OutputTextView">
-                                                    <rect key="frame" x="0.0" y="0.0" width="378" height="105"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="380" height="107"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                    <size key="minSize" width="378" height="105"/>
+                                                    <size key="minSize" width="380" height="107"/>
                                                     <size key="maxSize" width="723" height="10000000"/>
                                                     <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                    <size key="minSize" width="378" height="105"/>
+                                                    <size key="minSize" width="380" height="107"/>
                                                     <size key="maxSize" width="723" height="10000000"/>
                                                 </textView>
                                             </subviews>
@@ -121,7 +121,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
                                         <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" controlSize="small" horizontal="NO" id="293">
-                                            <rect key="frame" x="365" y="1" width="14" height="105"/>
+                                            <rect key="frame" x="366" y="0.0" width="14" height="107"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
                                     </scrollView>
@@ -497,6 +497,6 @@ bered page-00003.pdf</string>
         </customView>
     </objects>
     <resources>
-        <image name="NSStopProgressFreestandingTemplate" width="12" height="12"/>
+        <image name="NSStopProgressFreestandingTemplate" width="83" height="83"/>
     </resources>
 </document>
