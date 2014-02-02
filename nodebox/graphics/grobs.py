@@ -46,19 +46,33 @@ LINETO = NSLineToBezierPathElement
 CURVETO = NSCurveToBezierPathElement
 CLOSE = NSClosePathBezierPathElement
 
-MITER = NSMiterLineJoinStyle
-ROUND = NSRoundLineJoinStyle # Also used for NSRoundLineCapStyle, same value.
-BEVEL = NSBevelLineJoinStyle
-BUTT = NSButtLineCapStyle
-SQUARE = NSSquareLineCapStyle
+# linejoin styles and nstypes
+MITER = "miter"
+ROUND = "round"
+BEVEL = "bevel"
+_JOINSTYLE=dict(
+    miter = NSMiterLineJoinStyle,
+    round = NSRoundLineJoinStyle,
+    bevel = NSBevelLineJoinStyle,
+)
+
+# endcap styles and nstypes
+BUTT = "butt"
+ROUND = "round"
+SQUARE = "square"
+_CAPSTYLE=dict(
+    butt = NSButtLineCapStyle,
+    round = NSRoundLineCapStyle,
+    square = NSSquareLineCapStyle,
+)
 
 LEFT = NSLeftTextAlignment
 RIGHT = NSRightTextAlignment
 CENTER = NSCenterTextAlignment
 JUSTIFY = NSJustifiedTextAlignment
 
-NORMAL=1
-FORTYFIVE=2
+NORMAL = "normal"
+FORTYFIVE = "fortyfive"
 
 NUMBER = 1
 TEXT = 2
@@ -230,62 +244,66 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
     stateAttributes = ('_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_transform', '_transformmode')
     kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle')
 
-    def __init__(self, ctx, path=None, origin=None, **kwargs):
+
+    def __init__(self, ctx, path=None, immediate=False, **kwargs):
         super(BezierPath, self).__init__(ctx)
         TransformMixin.__init__(self)
         ColorMixin.__init__(self, **kwargs)
-
-        # use any drawstyle settings in kwargs (the rest will be inherited)
-        for attr in (a for a in BezierPath.kwargs if a in kwargs):
-            setattr(self, attr, _copy_attr(kwargs[attr]))
-        self.capstyle = kwargs.get('capstyle', BUTT)
-        self.joinstyle = kwargs.get('joinstyle', MITER)
-
-        # internal state
         self._segment_cache = None
-        self._autoclose = kwargs.get('close', self._ctx._autoclosepath)
-        self._autodraw = kwargs.get('draw', True)
-        self._overrides = [k for k in kwargs if k in BezierPath.kwargs]
-        self._closed = True
+        self._finished = False
 
-        # initialize an NSBezierPath based on `path` arg (if any)
+        # path arg might contain a list of point tuples, a bezier to copy, or a raw
+        # nsbezier reference to use as the backing store. otherwise start with a
+        # fresh path with no points
         if path is None:
-            self._nsBezierPath = NSBezierPath.bezierPath() 
-        elif isinstance(path, (list,tuple)): # points=[(x,y),...]
-            self._nsBezierPath = NSBezierPath.bezierPath() 
+            self._nsBezierPath = NSBezierPath.bezierPath()
+        elif isinstance(path, (list,tuple)):
+            self._nsBezierPath = NSBezierPath.bezierPath()
             self.extend(path)
-        elif isinstance(path, BezierPath):   # BezierPath (by copy)
-            self._nsBezierPath = path._nsBezierPath.copy() 
+        elif isinstance(path, BezierPath):
+            self._nsBezierPath = path._nsBezierPath.copy()
             _copy_attrs(path, self, self.stateAttributes)
-        elif isinstance(path, NSBezierPath): # NSBezierPath (by reference)
-            self._nsBezierPath = path                      
+        elif isinstance(path, NSBezierPath):
+            self._nsBezierPath = path
         else:
             raise NodeBoxError, "Don't know what to do with %s." % path
 
-        if path:
-            # if the path is fully specified (i.e., not a `with` block), 
-            # finish dealing with it now.
-            if self._autoclose:
-                self.closepath()
-            if self._autodraw:
-                self.inheritFromContext(self._overrides)
-                self.draw()
-        elif isinstance(origin, (list, tuple)):
-            # if an x,y pair was passed as the `origin`, moveto it
-            self._path.moveto(*origin)
+        # use any drawstyle settings in kwargs (the rest will be inherited)
+        self.capstyle = kwargs.get('capstyle', self._ctx._capstyle)
+        self.joinstyle = kwargs.get('joinstyle', self._ctx._joinstyle)
+        self._overrides = {k:_copy_attr(v) for k,v in kwargs.items() if k in BezierPath.kwargs}
+        self._autoclose = kwargs.get('close', self._ctx._autoclosepath)
+        self._autodraw = kwargs.get('draw', False)
+        
+        # finish the path (and potentially draw it) immediately if flagged to do so.
+        # in practice, `immediate` is only passed when invoked by the `bezier()` command
+        # with a preexisting point-set or bezier `path` argument.
+        if immediate:
+            self._autofinish()
 
     def __enter__(self):
+        if self._finished:
+            raise NodeBoxError, "Bezier already complete. Only use `with bezier()` when defining a path using moveto, lineto, etc."
+        elif self._ctx._path is not None:
+            raise NodeBoxError, "Already defining a bezier path. Don't nest `with bezier()` blocks"
         self._ctx._saveContext()
+        self._ctx._path = self
         return self
 
     def __exit__(self, type, value, tb):
-        if self._autoclose:
-            self.closepath()
-        self.inheritFromContext(self._overrides)
-        if self._autodraw:
-            self.draw()
+        self._autofinish()
         self._ctx._path = None
         self._ctx._restoreContext()
+
+    def _autofinish(self):
+        if self._autoclose:
+            self.closepath()
+        if self._autodraw:
+            self.inheritFromContext(self._overrides.keys())
+            for attr, val in self._overrides.items():
+                setattr(self, attr, val)
+            self.draw()
+        self._finished = True
 
     def _get_path(self):
         warnings.warn("The 'path' attribute is deprecated. Please use _nsBezierPath instead.", DeprecationWarning, stacklevel=2)
@@ -320,21 +338,19 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
         self._nsBezierPath.moveToPoint_( (x, y) )
 
     def lineto(self, x, y):
-        if self._closed:
-            self.moveto(0,0)
         self._segment_cache = None
+        if self._nsBezierPath.elementCount()==0:
+            # use an implicit 0,0 origin if path doesn't have a prior moveto
+            self._nsBezierPath.moveToPoint_( (0, 0) )    
         self._nsBezierPath.lineToPoint_( (x, y) )
-        self._closed = False
 
     def curveto(self, x1, y1, x2, y2, x3, y3):
         self._segment_cache = None
         self._nsBezierPath.curveToPoint_controlPoint1_controlPoint2_( (x3, y3), (x1, y1), (x2, y2) )
 
     def closepath(self):
-        if self._closed: return
         self._segment_cache = None
         self._nsBezierPath.closePath()
-        self._closed = True
         
     def setlinewidth(self, width):
         self.linewidth = width
@@ -438,8 +454,8 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
         if (self._strokecolor):
             self._strokecolor.set()
             self._nsBezierPath.setLineWidth_(self._strokewidth)
-            self._nsBezierPath.setLineCapStyle_(self._capstyle)
-            self._nsBezierPath.setLineJoinStyle_(self._joinstyle)
+            self._nsBezierPath.setLineCapStyle_(_CAPSTYLE[self._capstyle])
+            self._nsBezierPath.setLineJoinStyle_(_JOINSTYLE[self._joinstyle])
             self._nsBezierPath.stroke()
         _restore()
 
@@ -666,31 +682,30 @@ class Color(object):
                     r, g, b = _CSS_COLORS[args[0]]
                     a = args[1] if params==2 else 1.0
             clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, a)
-        elif 1 <= params <= 5:
-            if params == 1: # Gray, no alpha
-                g, = self._normalizeList(args)
-                clr = NSColor.colorWithDeviceWhite_alpha_(g, 1)
-            elif params == 2: # Gray and alpha
-                g, a = self._normalizeList(args)
-                clr = NSColor.colorWithDeviceWhite_alpha_(g, a)
-            elif params == 3 and self._ctx._colormode == RGB: # RGB, no alpha
-                r,g,b = self._normalizeList(args)
-                clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, 1)
-            elif params == 3 and self._ctx._colormode == HSB: # HSB, no alpha
-                h, s, b = self._normalizeList(args)
-                clr = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, s, b, 1)
-            elif params == 4 and self._ctx._colormode == RGB: # RGB and alpha
-                r,g,b, a = self._normalizeList(args)
-                clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, a)
-            elif params == 4 and self._ctx._colormode == HSB: # HSB and alpha
-                h, s, b, a = self._normalizeList(args)
-                clr = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, s, b, a)
-            elif params == 4 and self._ctx._colormode == CMYK: # CMYK, no alpha
-                c, m, y, k  = self._normalizeList(args)
-                clr = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, m, y, k, 1)
-            elif params == 5 and self._ctx._colormode == CMYK: # CMYK and alpha
-                c, m, y, k, a  = self._normalizeList(args)
-                clr = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, m, y, k, a)
+        elif params == 1: # Gray, no alpha
+            g, = self._normalizeList(args)
+            clr = NSColor.colorWithDeviceWhite_alpha_(g, 1)
+        elif params == 2: # Gray and alpha
+            g, a = self._normalizeList(args)
+            clr = NSColor.colorWithDeviceWhite_alpha_(g, a)
+        elif params == 3 and self._ctx._colormode == RGB: # RGB, no alpha
+            r,g,b = self._normalizeList(args)
+            clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, 1)
+        elif params == 3 and self._ctx._colormode == HSB: # HSB, no alpha
+            h, s, b = self._normalizeList(args)
+            clr = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, s, b, 1)
+        elif params == 4 and self._ctx._colormode == RGB: # RGB and alpha
+            r,g,b, a = self._normalizeList(args)
+            clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, a)
+        elif params == 4 and self._ctx._colormode == HSB: # HSB and alpha
+            h, s, b, a = self._normalizeList(args)
+            clr = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, s, b, a)
+        elif params == 4 and self._ctx._colormode == CMYK: # CMYK, no alpha
+            c, m, y, k  = self._normalizeList(args)
+            clr = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, m, y, k, 1)
+        elif params == 5 and self._ctx._colormode == CMYK: # CMYK and alpha
+            c, m, y, k, a  = self._normalizeList(args)
+            clr = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, m, y, k, a)
         else:
             clr = NSColor.colorWithDeviceWhite_alpha_(0, 1)
 

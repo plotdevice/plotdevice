@@ -293,19 +293,22 @@ class Context(object):
     ### Path Commands ###
 
     def bezier(self, x=None, y=None, **kwargs):
+        origin = (x,y) if all(isinstance(c, (int,float)) for c in (x,y)) else None
+        kwargs.setdefault('draw', True)
         if isinstance(x, (BezierPath, list, tuple)):
             # if a list of point tuples or a BezierPath is the first arg, there's
             # no need to open a context (since the path is already defined). Instead
             # handle the path immediately (passing along styles and `draw` kwarg)
-            return self.BezierPath(path=x, **kwargs)
+            kwargs.setdefault('close', False)
+            return self.BezierPath(path=x, immediate=True, **kwargs)
         else:
-            # Otherwise, just set the drawing style and (optionally) the initial 
-            # moveto location. Then let the `with` block add the path elements.
-            if self._path is not None:
-                raise NodeBoxError, "Already defining a bezier path. Don't nest `with bezier()` blocks"
-            origin = None if any(c is None for c in (x,y)) else (x,y)
-            self._path = self.BezierPath(origin=origin, **kwargs)
-            return self._path
+            # otherwise start a new path with the presumption that it will be populated
+            # in a `with` block or by adding points manually. begins with a moveto
+            # element if an x,y coord was provided
+            p = self.BezierPath(**kwargs)
+            if origin:
+                p.moveto(*origin)
+            return p
 
     def beginpath(self, x=None, y=None):
         self._path = self.BezierPath()
@@ -464,6 +467,7 @@ class Context(object):
         return self._capstyle
 
     def joinstyle(self, style=None):
+        # print "JOIN", style, 'vs',(MITER, ROUND, BEVEL)
         if style is not None:
             if style not in (MITER, ROUND, BEVEL):
                 raise NodeBoxError, 'Line join style should be MITER, ROUND or BEVEL.'

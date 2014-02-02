@@ -293,15 +293,15 @@ scale(2.0)
 pop()
 marker(140)
 
-
-# Paths
+# classic Paths api
 translate(0, 140)
-nostroke()
+stroke(.75)
 text("Paths", 20, 165)
 beginpath(165, 140)
 lineto(140, 200)
 curveto(160, 250, 160, 200, 190, 200)
-p = endpath()
+p = endpath().copy()
+
 stroke(0)
 nofill()
 sw = strokewidth()
@@ -315,5 +315,20 @@ for pt in p:
 drawpath(p)
 pop()
 
+# new Paths api
+with transform():
+    translate(120,0)
+    with bezier(165, 140, strokewidth=4, stroke=.8) as p:
+        lineto(140, 200)
+        curveto(160, 250, 160, 200, 190, 200)
+    
+    p = p.copy()
+    translate(60,0)
+    for pt in p:
+        pt.x += 60
+        pt.ctrl1.x += 60
+        pt.ctrl2.x += 60
+    bezier(p, strokewidth=2, stroke='red')
+    
 strokewidth(sw)
 marker(140)
