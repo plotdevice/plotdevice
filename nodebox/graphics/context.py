@@ -195,17 +195,19 @@ class Context(object):
 
     ellipse = oval
 
-    @contextmanager
-    def lines(self):
-        pass
-
     def line(self, x1, y1, x2, y2, draw=True, **kwargs):
-        BezierPath.checkKwargs(kwargs)
-        p = self.BezierPath(**kwargs)
-        p.line(x1, y1, x2, y2)
-        p.inheritFromContext(kwargs.keys())
-        if draw:
-          p.draw()
+        if self._path is None:
+            BezierPath.checkKwargs(kwargs)
+            p = self.BezierPath(**kwargs)
+            p.line(x1, y1, x2, y2)
+            p.inheritFromContext(kwargs.keys())
+            if draw:
+              p.draw()
+        else:
+            # if a bezier is being built in a `with` block, add line segments to it, but
+            # ignore kwargs since the bezier object's styles apply to all lines drawn
+            p = self._path
+            p.line(x1, y1, x2, y2)
         return p
 
     def star(self, startx, starty, points=20, outer=100, inner=50, draw=True, **kwargs):
