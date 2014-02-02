@@ -74,6 +74,7 @@ class PyDETextView(NSTextView):
 
         editorAttrs = getSyntaxTextAttributes()
         self.setBackgroundColor_(editorAttrs['page'][BG_COLOR])
+        self.setTextColor_(editorAttrs['plain'][FG_COLOR])
         self.setInsertionPointColor_(editorAttrs['plain'][FG_COLOR])
         self.setSelectedTextAttributes_(editorAttrs['selection'])
 
@@ -224,6 +225,7 @@ class PyDETextView(NSTextView):
         editorAttrs = getSyntaxTextAttributes()
         basicAttrs = getBasicTextAttributes()
         basicAttrs.update(editorAttrs['plain'])
+        self.setTextColor_(editorAttrs['plain'][FG_COLOR])
         self.setBackgroundColor_(editorAttrs['page'][BG_COLOR])
         self.setInsertionPointColor_(editorAttrs['plain'][FG_COLOR])
         self.setSelectedTextAttributes_(editorAttrs['selection'])
