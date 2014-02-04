@@ -288,6 +288,7 @@ a.noexternal { background-image:none !important; padding-right: 0; }
   border-color:#ccc;
 }
 
+.article a:target + a + .section:before,
 .article a:target + .section:before{
   content:"→";
   left:-42px;
