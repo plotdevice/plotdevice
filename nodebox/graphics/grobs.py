@@ -1001,8 +1001,16 @@ class Transform(object):
             other = other._nsAffineTransform
         self._nsAffineTransform.prependTransform_(other)
 
+    def apply(self, point_or_path):
+        if isinstance(point_or_path, BezierPath):
+            return self.transformBezierPath(point_or_path)
+        elif isinstance(point_or_path, Point):
+            return self.transformPoint(point_or_path)
+        else:
+            raise NodeBoxError, "Can only transform BezierPaths or Points"
+
     def transformPoint(self, point):
-        return self._nsAffineTransform.transformPoint_(point)
+        return Point(self._nsAffineTransform.transformPoint_((point.x,point.y)))
 
     def transformBezierPath(self, path):
         if isinstance(path, BezierPath):
