@@ -337,22 +337,32 @@
 
         <div class="row">
 <pre>
-<span class="kw">transform</span><span class="s">(</span>mode=<span class="kw">CENTER</span><span class="s">)</span>
+<span class="kw">transform</span><span class="s">(</span>mode=<span class="kw">CENTER</span><span class="s">, reset=<span class="kw">False</span>)</span>
+</pre>
+<pre>
+<span class="kw">with transform</span>(mode=<span class="kw">CENTER</span>, reset=<span class="kw">False</span>) <span class="kw">as</span> t:
 </pre>
         </div>
 
         <h2>Description</h2>
 
         <div class="row">
-          Sets the registration point - the offset for <a href="#rotate()">rotate()</a>, <a href="#scale()">scale()</a> and <a href="#skew()">skew()</a> commands. By default, shapes,
-          paths, text and images rotate around their own centerpoint. Optionally, transform() can
-          be called with mode=CORNER to rotate and skew around the canvas’ upper left corner.
+          <p>Sets the registration point - the offset for <a href="#rotate()">rotate()</a>,
+          <a href="#scale()">scale()</a> and <a href="#skew()">skew()</a> commands. By default,
+          shapes, paths, text and images rotate around their own centerpoint. Optionally,
+          transform() can be called with <code>mode=<span class="kw">CORNER</span></code> to rotate
+          and skew around the canvas’ upper left corner.</p>
+          <p>When called as part of a <code>with</code> block, any subsequent transformation calls
+          will apply only within the block. At the end of the block, the transformation state will
+          be reset to what it was before the transform() call. This is equivalent to calling
+          <a href="#push()">push()</a> and <a href="#pop()">pop()</a> at the beginning and end of
+          the block respectively, though transform() will also reset the <code>mode</code> on exit.</p>
         </div>
 
         <h2>Returns</h2>
 
         <div class="row">
-          the current transform mode (CORNER or CENTER)
+          the current transform mode (<code class="kw">CORNER</code> or <code class="kw">CENTER</code>)
         </div>
 
         <h2>Tutorial</h2>
