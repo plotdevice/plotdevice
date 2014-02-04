@@ -328,7 +328,8 @@ with transform():
         pt.x += 60
         pt.ctrl1.x += 60
         pt.ctrl2.x += 60
-    bezier(p, strokewidth=2, stroke='red')
+    bezier(p, stroke=None, fill='red')
+    bezier(p, strokewidth=2, stroke='#a00')
     
 strokewidth(sw)
 marker(140)
