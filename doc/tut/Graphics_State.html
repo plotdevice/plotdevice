@@ -98,30 +98,26 @@
     transformations from that point onward in your script.</p>
     <h2>State in a state?</h2>
 
-    <p>Two other transformation commands are <a href="../ref/Transform.html#push()">push()</a> and
-    <a href="../ref/Transform.html#push()">pop()</a>. You can use these to create a state in a
-    state. They sort of do what brackets do in language: in the middle of the sentence, they can
-    sidetrack, then go back to the main sentence. Once you call the push() command, all subsequent
-    translate(), rotate(), scale() and skew() commands are valid until you call pop() in your
-    script. Then the transformation state reverts to how things where before push(). This way you
-    can <b>transform groups of elements that need to stay together</b>.</p>
-    <p>Color and text commands are not affected by push() and pop().<br/></p>
+    <p>The transform() command can also be used as part of a <code class="kw">with</code> block,
+    allowing you to create a state in a state. Inside of the block, all subsequent translate(),
+    rotate(), scale() and skew() commands are valid only until the end of the block. Then the
+    transformation state reverts to how things where before the <code>transform()</code>. This way
+    you can <b>transform groups of elements that need to stay together</b>.</p>
+    <p>Color and text commands are not included in this resetting behavior.<br/></p>
     <p>Here’s a short example. Note that the last rectangle isn’t rotated. That’s because the
-    rotation happens between the push and pop ‘brackets’.</p>
+    rotation happens within the transform() block.</p>
 <pre>
-<span class="kw">rect</span><span class="s">(</span><span class="s">20</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
-<span class="kw">push</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">rotate</span><span class="s">(</span><span class="s">45</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">120</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
-<span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">220</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+<span class="kw">rect</span>(20, 20, 40, 40)
+<span class="kw">with transform</span>():
+    <span class="kw">rotate</span>(45)
+    <span class="kw">rect</span>(120, 20, 40, 40)
+<span class="kw">rect</span>(220, 20, 40, 40)
 </pre>
 
-    <p>Again using our analogy and planets, the push() and pop() command are a bit like a moon
-    orbiting around a planet. Each plant is orbiting around a certain origin point (the sun), but
-    regardless of where this is, the moon is always orbiting around the planet. A planet is a local
-    origin point for the moon.</p>
-    <p> </p>
+    <p>Using a solar-system anaolgy, each transform() block is a bit like a moon orbiting around a
+    planet. Each planet is orbiting around a certain origin point (the sun), but regardless of
+    where this is, the moon is always orbiting around the planet. A planet is a local origin point
+    for the moon.</p>
     <p><span class="image_border"><img alt="graphics_state5" height="445" src="media/graphics_state5.gif" width="445"/></span><br/>
     <a href="http://nodebox.net/code/data/media/graphics_state5.mov">Play movie</a></p>
 <pre>
@@ -142,26 +138,25 @@
     <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">3</span><span class="s">)</span>:
         
         <span class="grey"># Each planet acts as a local origin for the orbitting moon.</span>
-        <span class="grey"># Comment out the push() and pop() and see what happens.</span>
-        <span class="kw">push</span><span class="s">(</span><span class="s">)</span>
+        <span class="grey"># Comment out the transform() statement and see what happens.</span>
+        <span class="kw">with transform</span>():
         
-        <span class="grey"># This is a line with a length of 120,</span>
-        <span class="grey"># that starts at the sun and has an angle of i * 120.</span>
-        <span class="kw">rotate</span><span class="s">(</span>FRAME+i*<span class="s">120</span><span class="s">)</span>
-        <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">120</span>, <span class="s">0</span><span class="s">)</span>
+            <span class="grey"># This is a line with a length of 120,</span>
+            <span class="grey"># that starts at the sun and has an angle of i * 120.</span>
+            <span class="kw">rotate</span><span class="s">(</span>FRAME+i*<span class="s">120</span><span class="s">)</span>
+            <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">120</span>, <span class="s">0</span><span class="s">)</span>
+            
+            <span class="grey"># Move the origin to the end of the line.</span>
+            <span class="kw">translate</span><span class="s">(</span><span class="s">120</span>, <span class="s">0</span><span class="s">)</span>
+            <span class="kw">oval</span><span class="s">(</span><span class="s">-5</span>, <span class="s">-5</span>, <span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
+            <span class="kw">text</span><span class="s">(</span><span class="str">"planet"</span>, <span class="s">10</span>, <span class="s">0</span><span class="s">)</span>
+            
+            <span class="grey"># Keep rotating around the local planet.</span>
+            <span class="kw">rotate</span><span class="s">(</span>FRAME*<span class="s">6</span><span class="s">)</span>
+            <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">30</span>, <span class="s">0</span><span class="s">)</span>
+            <span class="kw">text</span><span class="s">(</span><span class="str">"moon"</span>, <span class="s">32</span>, <span class="s">0</span><span class="s">)</span>
         
-        <span class="grey"># Move the origin to the end of the line.</span>
-        <span class="kw">translate</span><span class="s">(</span><span class="s">120</span>, <span class="s">0</span><span class="s">)</span>
-        <span class="kw">oval</span><span class="s">(</span><span class="s">-5</span>, <span class="s">-5</span>, <span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
-        <span class="kw">text</span><span class="s">(</span><span class="str">"planet"</span>, <span class="s">10</span>, <span class="s">0</span><span class="s">)</span>
-        
-        <span class="grey"># Keep rotating around the local planet.</span>
-        <span class="kw">rotate</span><span class="s">(</span>FRAME*<span class="s">6</span><span class="s">)</span>
-        <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">30</span>, <span class="s">0</span><span class="s">)</span>
-        <span class="kw">text</span><span class="s">(</span><span class="str">"moon"</span>, <span class="s">32</span>, <span class="s">0</span><span class="s">)</span>
-        
-        <span class="grey"># Move the origin back to the sun.</span>
-        <span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
+        <span class="grey"># The origin moves back to the sun outside of the block.</span>
 </pre>  
 
     <h2>Breaking the state</h2>

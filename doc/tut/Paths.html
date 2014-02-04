@@ -336,7 +336,7 @@ compound = path1.<span class="s">xor</span><span class="s">(</span>path2<span cl
       <p> </p>
       <p>The returned path can be manipulated like any other path in NodeBox, you can <a href="../ref/Color.html#fill()">fill()</a> and <a href="../ref/Color.html#stroke()">stroke()</a>
       it, <a href="../ref/Transform.html#rotate()">rotate()</a> it and put it (or multiple copies
-      of it) onscreen with <a href="../ref/ClassicPath.html#drawpath()">drawpath()</a>.</p>
+      of it) onscreen with <a href="../ref/Path.html#bezier()">bezier()</a>.</p>
       <p>One thing to note is that the compound path will not contain any curves, rather, it is
       made up of numerous straight line segments (we say that the path is <b>flattened</b>)<i>.</i>
       Each of the compound methods has an optional <i>flatness</i> parameter. The lower it gets,
@@ -374,21 +374,21 @@ path = <span class="kw">rect</span><span class="s">(</span><span class="s">-10</
 <span class="grey"># Let's chip away small piece of the rectangle:</span>
 path = path.<span class="s">difference</span><span class="s">(</span><span class="kw">rect</span><span class="s">(</span><span class="s">-15</span>, <span class="s">80</span>, <span class="s">20</span>, <span class="s">15</span>, draw=<span class="kw">False</span><span class="s">)</span><span class="s">)</span>
  
+<span class="grey"># Create a rotation transform we'll repeatedly apply to a path</span>
+t = Transform<span class="s">(</span><span class="s">)</span>
+t.<span class="kw">rotate</span><span class="s">(</span><span class="s">20</span><span class="s">)</span>
+
 compound = path
-<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">17</span><span class="s">)</span>:
-    
+<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">17</span><span class="s">)</span>:    
     <span class="grey"># Before adding the rectangle shape to</span>
     <span class="grey"># the flattened compound, we rotate it a bit.</span>
-    t = Transform<span class="s">(</span><span class="s">)</span>
-    t.<span class="kw">rotate</span><span class="s">(</span><span class="s">20</span><span class="s">)</span>
-    path = t.<span class="s">transformBezierPath</span><span class="s">(</span>path<span class="s">)</span>
-    
+    path = t.<span class="s">apply</span><span class="s">(</span>path<span class="s">)</span>    
     compound = compound.<span class="s">union</span><span class="s">(</span>path<span class="s">)</span>
  
 <span class="kw">translate</span><span class="s">(</span><span class="s">275</span>, <span class="s">275</span><span class="s">)</span>
 <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>compound<span class="s">)</span>
+<span class="kw">bezier</span><span class="s">(</span>compound<span class="s">)</span>
 </pre>
 
       <p><img alt="paths-compound5" src="media/paths-compound5.jpg"/></p>

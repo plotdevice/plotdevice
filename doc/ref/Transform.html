@@ -23,39 +23,117 @@
   </div>
 
   <div class="article">
-    <a name="pop()"></a>
+    <a name="transform()"></a>
 
     <div class="section">
-      <h3>pop()</h3>
+      <h3>transform()</h3>
 
       <div class="definition">
         <h2>Syntax</h2>
 
         <div class="row">
 <pre>
-<span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">transform</span><span class="s">(</span>mode=<span class="kw">CENTER</span><span class="s">, *transforms)</span>
+</pre>
+<pre>
+<span class="kw">with transform</span>(mode=<span class="kw">CENTER</span>, *transforms) <span class="kw">as</span> t:
 </pre>
         </div>
 
         <h2>Description</h2>
 
         <div class="row">
-          NodeBox is a so-called state-machine. For example, once rotate(45) is called, all
-          subsequent shapes, paths, text and images are rotated 45 degrees. The rotation state is
-          45 degrees. The <a href="#push()">push()</a> and pop() commands allow for a state within
-          a state. All transformations, such as <a href="#rotate()">rotate()</a> and <a href="#skew()">skew()</a>, defined between a push() and pop() call last only until pop() is
-          called. Thereafter the previous state is used. For example, a rotate(-30) within a
-          rotate(45) means a rotation state of 15 degrees until pop() is called and the rotation
-          state becomes 45 degrees again.
+          <p>The <code>mode</code> parameter sets the registration point – the offset for <a href="#rotate()">rotate()</a>, <a href="#scale()">scale()</a> and <a href="#skew()">skew()</a>
+          commands. By default, shapes, paths, text and images rotate around their own centerpoint.
+          transform() can be called with an optional first-parameter of <code><span class="kw">CORNER</span></code> to rotate and skew around the canvas’s upper left corner.</p>
+          <p>When called as part of a <code class="kw">with</code> block, any subsequent
+          transformation calls will apply only within the block. At the end of the block, the
+          transformation state will be reset to what it was before the transform() call. This is
+          equivalent to calling <a href="#push()">push()</a> and <a href="#pop()">pop()</a> at the
+          beginning and end of the block respectively, though transform() will also reset the
+          <code>mode</code> on exit.</p>
+          <table border="0">
+            <tbody>
+              <tr>
+                <td>
+<pre>
+oldmode = <span class="kw">transform</span>()
+<span class="kw">transform</span>(<span class="kw">CORNER</span>)
+<span class="kw">push</span>()
+<span class="kw">translate</span>(100,20)
+<span class="kw">line</span>(0,0, 40,0)
+<span class="kw">pop</span>()
+<span class="kw">transform</span>(oldmode)
+            
+</pre>
+                </td><td><em>simplifies to</em>
+                </td><td>
+<pre>
+with <span class="kw">transform</span>(<span class="kw">CORNER</span>):
+    <span class="kw">translate</span>(100,20)
+    <span class="kw">line</span>(0,0, 40,0)
+</pre>
+                </td></tr></tbody></table>
+        </div>
+
+        <h2>Inline Transformations</h2>
+
+        <div class="row">
+          <p>In addition to the optional <code>mode</code> parameter, the transform() function will
+          also search its arguments for transformation commands. Each command can be listed by name
+          and followed by its argument (if any).</p>
+          <p>When used in a <code>with</code>-statement, the commands will be applied at the
+          beginning of the block and then reset at the end. For example, the following usages are
+          equivalent:</p>
+          <table border="0">
+            <tbody>
+              <tr>
+                <td>
+<pre>
+<span class="kw">with transform</span>():
+    <span class="kw">reset</span>()
+    <span class="kw">translate</span>(40,40)
+    <span class="kw">rotate</span>(45)
+    <span class="kw">rect</span>(0,0,20,20)
+</pre>
+                </td><td>
+<pre>
+<span class="kw">with transform</span>(<span class="kw">reset</span>, <span class="kw">translate</span>, (40,40), <span class="kw">rotate</span>, 45):
+    <span class="kw">rect</span>(0,0,20,20)
+</pre>
+                </td></tr></tbody></table>
+        </div>
+
+        <h2>Returns</h2>
+
+        <div class="row">
+          <p>When called as a simple function, returns the current transform mode (<code class="kw">CORNER</code> or <code class="kw">CENTER</code>).</p>
+<pre>
+<span class="kw">print</span> <span class="str">"initial mode:"</span>, <span class="kw">transform</span>()
+<span class="kw">print</span> <span class="str">"new mode:"</span>, <span class="kw">transform</span>(<span class="kw">CORNER</span>)
+<span class="grey">&gt;&gt;&gt; initial mode: CENTER</span>
+<span class="grey">&gt;&gt;&gt; new mode: CORNER</span>
+</pre>
+
+          <p>Alternately, the <a href="Classes.html#Transform"><code>Transform</code></a> assembled
+          in a <code>with</code> block can be captured using the <code class="kw">as</code>
+          construct and can be applied to <a href="Classes.html#BezierPath"><code>BezierPath</code></a> and <a href="Classes.html#Point"><code>Point</code></a> objects even after the block has completed:</p>
+<pre>
+<span class="kw">with transform</span>(<span class="kw">CORNER</span>) <span class="kw">as</span> t: <span class="grey"># define a Transform object in the `t` variable</span>
+    <span class="kw">skew</span>(20.0)
+square = <span class="kw">rect</span>(20,20,40,40, fill=0.7) <span class="grey"># a non-transfomed square</span>
+parallelogram = t.<span class="kw">apply</span>(square) <span class="grey"># create a skewed copy of the square</span>
+<span class="kw">bezier</span>(parallelogram, fill=<span class="kw">None</span>, stroke=0)
+</pre>
         </div>
 
         <h2>Tutorial</h2>
 
         <div class="row">
-          <a href="../tut/Graphics_State.html">Graphics State</a> 
+          <a href="../tut/Graphics_State.html">Graphics State</a>
         </div>
 
-        <h2>Example</h2>
+        <h2>Examples</h2>
 
         <div class="row">
           <table border="0">
@@ -64,72 +142,29 @@
                 <td><span class="image_border"><img height="125" src="media/pop.jpg" width="125"/></span>
                 </td><td>
 <pre>
-<span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">fontsize</span><span class="s">(</span><span class="s">14</span><span class="s">)</span>
-<span class="kw">rotate</span><span class="s">(</span><span class="s">90</span><span class="s">)</span>
-<span class="kw">text</span><span class="s">(</span><span class="str">"one"</span>, <span class="s">40</span>, <span class="s">80</span><span class="s">)</span>
+<span class="kw">fill</span>(0.2)
+<span class="kw">fontsize</span>(14)
+<span class="kw">rotate</span>(90)
+<span class="kw">text</span>(<span class="str">"one"</span>, 40, 80)
  
-<span class="kw">push</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">rotate</span><span class="s">(</span><span class="s">-90</span><span class="s">)</span>
-<span class="kw">text</span><span class="s">(</span><span class="str">"two"</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
-<span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">with</span> <span class="kw">transform</span>(<span class="kw">rotate</span>, -90):
+    <span class="kw">text</span>(<span class="str">"two"</span>, 40, 40)
  
-<span class="kw">text</span><span class="s">(</span><span class="str">"three"</span>, <span class="s">50</span>, <span class="s">80</span><span class="s">)</span>
+<span class="kw">text</span>(<span class="str">"three"</span>, 50, 80)
 </pre>
-                </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="push()"></a>
-
-    <div class="section">
-      <h3>push()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">push</span><span class="s">(</span><span class="s">)</span>
-</pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          NodeBox is a so-called state-machine. For example, once rotate(45) is called, all
-          subsequent shapes, paths, text and images are rotated 45 degrees. The rotation state is
-          45 degrees. The push() and <a href="#pop()">pop()</a> commands allow for a state within a
-          state. All transformations, such as <a href="#rotate()">rotate()</a> and <a href="#skew()">skew()</a>, defined between a push() and pop() call last only until pop() is
-          called. Thereafter the previous state is used. For example, a rotate(-30) within a
-          rotate(45) means a rotation state of 15 degrees until pop() is called and the rotation
-          state becomes 45 degrees again.
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Graphics_State.html">Graphics State</a> 
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img height="125" src="media/push.jpg" width="125"/></span>
+                </td><td><em>or</em>
                 </td><td>
 <pre>
 <span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
 <span class="kw">fontsize</span><span class="s">(</span><span class="s">14</span><span class="s">)</span>
 <span class="kw">rotate</span><span class="s">(</span><span class="s">90</span><span class="s">)</span>
 <span class="kw">text</span><span class="s">(</span><span class="str">"one"</span>, <span class="s">40</span>, <span class="s">80</span><span class="s">)</span>
- 
+
 <span class="kw">push</span><span class="s">(</span><span class="s">)</span>
 <span class="kw">rotate</span><span class="s">(</span><span class="s">-90</span><span class="s">)</span>
 <span class="kw">text</span><span class="s">(</span><span class="str">"two"</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
 <span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
- 
+
 <span class="kw">text</span><span class="s">(</span><span class="str">"three"</span>, <span class="s">50</span>, <span class="s">80</span><span class="s">)</span>
 </pre>
                 </td></tr></tbody></table>
@@ -327,50 +362,6 @@
                 </td></tr></tbody></table>
         </div>
       </div>
-    </div><a name="transform()"></a>
-
-    <div class="section">
-      <h3>transform()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">transform</span><span class="s">(</span>mode=<span class="kw">CENTER</span><span class="s">, reset=<span class="kw">False</span>)</span>
-</pre>
-<pre>
-<span class="kw">with transform</span>(mode=<span class="kw">CENTER</span>, reset=<span class="kw">False</span>) <span class="kw">as</span> t:
-</pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          <p>Sets the registration point - the offset for <a href="#rotate()">rotate()</a>,
-          <a href="#scale()">scale()</a> and <a href="#skew()">skew()</a> commands. By default,
-          shapes, paths, text and images rotate around their own centerpoint. Optionally,
-          transform() can be called with <code>mode=<span class="kw">CORNER</span></code> to rotate
-          and skew around the canvas’ upper left corner.</p>
-          <p>When called as part of a <code>with</code> block, any subsequent transformation calls
-          will apply only within the block. At the end of the block, the transformation state will
-          be reset to what it was before the transform() call. This is equivalent to calling
-          <a href="#push()">push()</a> and <a href="#pop()">pop()</a> at the beginning and end of
-          the block respectively, though transform() will also reset the <code>mode</code> on exit.</p>
-        </div>
-
-        <h2>Returns</h2>
-
-        <div class="row">
-          the current transform mode (<code class="kw">CORNER</code> or <code class="kw">CENTER</code>)
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Graphics_State.html">Graphics State</a>
-        </div>
-      </div>
     </div><a name="translate()"></a>
 
     <div class="section">
@@ -415,6 +406,65 @@
 <span class="kw">oval</span><span class="s">(</span><span class="s">-10</span>, <span class="s">-10</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
 <span class="kw">translate</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
 <span class="kw">oval</span><span class="s">(</span><span class="s">-10</span>, <span class="s">-10</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+</pre>
+                </td></tr></tbody></table>
+        </div>
+      </div>
+    </div><a name="push()"></a><a name="pop()"></a>
+
+    <div class="section">
+      <h3>push() &amp; pop()</h3>
+
+      <div class="definition">
+        <h2>Syntax</h2>
+
+        <div class="row">
+<pre>
+<span class="kw">push</span><span class="s">(</span><span class="s">)</span>
+</pre>
+<pre>
+<span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
+</pre>
+        </div>
+
+        <h2>Description</h2>
+
+        <div class="row">
+          NodeBox is a so-called state-machine. For example, once rotate(45) is called, all
+          subsequent shapes, paths, text and images are rotated 45 degrees. The rotation state is
+          45 degrees. The push() and pop() commands allow for a state within a state. All
+          transformations, such as <a href="#rotate()">rotate()</a> and <a href="#skew()">skew()</a>, defined between a push() and pop() call last only until pop() is
+          called. Thereafter the previous state is used. For example, a rotate(-30) within a
+          rotate(45) means a rotation state of 15 degrees until pop() is called and the rotation
+          state becomes 45 degrees again.
+        </div>
+
+        <h2>Tutorial</h2>
+
+        <div class="row">
+          <a href="../tut/Graphics_State.html">Graphics State</a> 
+        </div>
+
+        <h2>Example</h2>
+
+        <div class="row">
+          <table border="0">
+            <tbody>
+              <tr>
+                <td><span class="image_border"><img height="125" src="media/push.jpg" width="125"/></span>
+                </td><td>
+<pre>
+<span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
+<span class="kw">fontsize</span><span class="s">(</span><span class="s">14</span><span class="s">)</span>
+<span class="kw">rotate</span><span class="s">(</span><span class="s">90</span><span class="s">)</span>
+<span class="kw">text</span><span class="s">(</span><span class="str">"one"</span>, <span class="s">40</span>, <span class="s">80</span><span class="s">)</span>
+ 
+<span class="kw">push</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">rotate</span><span class="s">(</span><span class="s">-90</span><span class="s">)</span>
+<span class="kw">text</span><span class="s">(</span><span class="str">"two"</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
+<span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
+ 
+<span class="kw">text</span><span class="s">(</span><span class="str">"three"</span>, <span class="s">50</span>, <span class="s">80</span><span class="s">)</span>
 </pre>
                 </td></tr></tbody></table>
         </div>
