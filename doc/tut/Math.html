@@ -63,7 +63,15 @@
     <span class="kw">return</span> x, y
 </pre>
 
-      <p>To use these commands in your script, simply import them:</p>
+      <p>To use fast, C-based versions of these commands in your script, they can be accessed
+      through the <code class="kw">geo</code> global:</p>
+<pre>geo.<span class="kw">angle</span>(x0, y0, x1, y1)
+geo.<span class="kw">distance</span>(x0, y0, x1, y1)
+geo.<span class="kw">coordinates</span>(x0, y0, distance, angle)
+geo.<span class="kw">reflect</span>(x0, y0, x1, y1, d=1.0, a=180)
+</pre>
+
+      <p>Or you can simply import them:</p>
 <pre>
 <span class="kw">from</span> nodebox.<span class="s">geo</span> <span class="kw">import</span> angle, distance, coordinates, reflect
 </pre> 
