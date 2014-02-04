@@ -14,7 +14,7 @@ from nodebox.graphics import NodeBoxError
 from nodebox import util
 from nodebox import graphics
 from nodebox.run.export import MovieExportSession, ImageExportSession
-from nodebox.run import stacktrace
+from nodebox.run import stacktrace, stackframes
 from nodebox import __MAGIC as MAGICVAR
 
 __all__ = ['Sandbox']
@@ -185,7 +185,7 @@ class Sandbox(object):
                 self._code = compile("%s\n\n"%self._source, scriptname.encode('ascii', 'ignore'), "exec")
             result = self.call(compileScript)
             if not result.ok:
-                self.crashed = True
+                self.crashed = stackframes()
                 return result
 
         # Reset the frame / animation status
@@ -200,8 +200,6 @@ class Sandbox(object):
         result = Outcome(True, [])
         if self._meta.running:
             result = self.call("stop")
-            if not result.ok:
-                self.crashed = True
             self._meta.running = False
         self._meta.first, self._meta.last = (1,None)
         if self._meta.console and not self.live:
@@ -233,8 +231,8 @@ class Sandbox(object):
         self.namespace['PAGENUM'] = self.namespace['FRAME'] = self._meta.next
         
         # Run the script
+        self.crashed = False
         result = self.call(method)
-        self.crashed = not result.ok
 
         if self.animated:
             if method is None:
@@ -319,7 +317,7 @@ class Sandbox(object):
             method()
         except:
             # print the stacktrace and quit
-            self.crashed = True
+            self.crashed = stackframes()
             errtxt = stacktrace(self._path)
             sys.stderr.write(errtxt)
             return Outcome(False, output.data)
@@ -343,23 +341,19 @@ class Sandbox(object):
                      bitrate, fps, loop
         """
         compilation = self.compile() # compile the script
-        self.crashed = not compilation.ok
         self.delegate.exportStatus(compilation)
         if not compilation.ok:
-            self.crashed = True
             return
 
         firstpass = self.call() # evaluate the script once
         self.delegate.exportStatus(firstpass)
         if not firstpass.ok:
-            self.crashed = True
             return
 
         if self.animated:
             setup = self.call("setup")
             self.delegate.exportStatus(setup)
             if not setup.ok:
-                self.crashed = True
                 return
 
         opts.setdefault('console', self.tty)
@@ -396,7 +390,6 @@ class Sandbox(object):
                 self.delegate.exportStatus(result, self.canvas)
                 self.delegate.exportProgress(self.session.written, self.session.total, self.session.cancelled)
                 if not result.ok:
-                    self.crashed = True
                     self.session._shutdown()
                     return self._finishExport()
                 self.session.add(self.canvas, i)
