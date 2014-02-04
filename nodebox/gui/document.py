@@ -266,7 +266,6 @@ class NodeBoxDocument(NSDocument):
         ok = super(NodeBoxDocument, self).saveToURL_ofType_forSaveOperation_error_(url, type, op, err)
         if self.path and os.path.exists(self.path):
             self.mtime = os.path.getmtime(self.path)
-            print self.path, self.mtime
 
         # if the save operation left a backup file around (why!), rm it here...
         bak = self.backupFileURL().fileSystemRepresentation() if self.backupFileURL() else None
