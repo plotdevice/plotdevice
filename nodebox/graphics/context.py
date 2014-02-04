@@ -401,10 +401,12 @@ class Context(object):
         except IndexError, e:
             raise NodeBoxError, "pop: too many pops!"
             
-    def transform(self, mode=None):
+    def transform(self, *args):
+        xforms = list(args)
+        mode = xforms.pop(0) if len(xforms) and not callable(xforms[0]) else None
         if mode is not None and mode not in (CORNER, CENTER):
             raise NodeBoxError, "transform: mode must be CORNER or CENTER"
-        return self.TransformContext(mode)
+        return self.TransformContext(mode, *xforms)
         
     def translate(self, x, y):
         self._transform.translate(x, y)

@@ -884,18 +884,29 @@ color = Color
 
 class TransformContext(object):
     """Performs the setup/cleanup for a `with transform()` block (and changes the mode)"""
-    def __init__(self, ctx, mode=None):
-        self._ctx = ctx
-        self._oldmode = self._ctx._transformmode
+    _xforms = ['reset','rotate','translate','scale','skew']
+
+    def __init__(self, ctx, mode=None, *xforms):
+        self._oldmode = ctx._transformmode
+        self._oldtransform = ctx._transform.matrix
         self._mode = mode or self._oldmode
-        self._ctx._transformmode = self._mode
+        self._ctx = ctx
+
+        # walk through the transformations in the args and apply them
+        ctx._transformmode = self._mode
+        for xf in [xforms[i:i+2] for i,t in enumerate(xforms) if callable(t)]:
+            cmd, arg = xf[0], [a for a in xf[1:] if not callable(a)]
+            if arg and isinstance(arg[0], tuple):
+                arg = arg[0]
+            if cmd.__name__ not in self._xforms:
+                raise NodeBoxError, "Unknown transformation method: %s." % cmd.__name__
+            cmd(*arg)
 
     def __enter__(self):
-        self._ctx.push()
         return self._ctx._transform
 
     def __exit__(self, type, value, tb):
-        self._ctx.pop()
+        self._ctx._transform = Transform(self._oldtransform)
         self._ctx._transformmode = self._oldmode
 
     def __eq__(self, other):
