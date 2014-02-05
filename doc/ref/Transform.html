@@ -117,7 +117,8 @@ with <span class="kw">transform</span>(<span class="kw">CORNER</span>):
 
           <p>Alternately, the <a href="Classes.html#Transform"><code>Transform</code></a> assembled
           in a <code>with</code> block can be captured using the <code class="kw">as</code>
-          construct and can be applied to <a href="Classes.html#BezierPath"><code>BezierPath</code></a> and <a href="Classes.html#Point"><code>Point</code></a> objects even after the block has completed:</p>
+          construct and can be applied to <a href="Classes.html#BezierPath"><code>BezierPath</code></a> and <code>Point</code> objects even
+          after the block has completed:</p>
 <pre>
 <span class="kw">with transform</span>(<span class="kw">CORNER</span>) <span class="kw">as</span> t: <span class="grey"># define a Transform object in the `t` variable</span>
     <span class="kw">skew</span>(20.0)
@@ -242,7 +243,7 @@ parallelogram = t.<span class="kw">apply</span>(square) <span class="grey"># cre
           Rotates all subsequent shape, path, text, image commands. The rotate() command is called
           with one parameter, by default specifying the angle in degrees. Optionally, the angle can
           be specified in radians, by calling rotate(radians=0.5) for example. The rotate() command
-          works incremental: if you call rotate(30), and later on call rotate(60), all commands
+          works incrementally: if you call rotate(30), and later on call rotate(60), all commands
           following that second rotate() will be rotated 90 degrees (30+60).
         </div>
 
@@ -289,7 +290,7 @@ parallelogram = t.<span class="kw">apply</span>(square) <span class="grey"># cre
           commands. The first parameter sets the horizontal scale, the second parameter the
           vertical scale. Additionally, the scale() command can be called with a single parameter
           that sets both the horizontal and vertical scale. Scale values are specified as
-          floating-point (decimal) numbers. The scale() command works incremental: if you call
+          floating-point (decimal) numbers. The scale() command works incrementally: if you call
           scale(0.5), and later on call scale(0.2), all commands following that second scale() will
           be sized to 10 percent (0.2 of 0.5).
         </div>
@@ -336,7 +337,7 @@ parallelogram = t.<span class="kw">apply</span>(square) <span class="grey"># cre
         <div class="row">
           Slants the direction of all subsequent shape, path, text, image commands. The first
           parameter sets the horizontal skew. The second parameter is optional and sets the
-          vertical skew. The skew() command works incremental: if you call skew(10), and later on
+          vertical skew. The skew() command works incrementally: if you call skew(10), and later on
           call skew(20), all commands following that second skew() will be skewed by 30 (10+20).
         </div>
 

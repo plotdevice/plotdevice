@@ -368,7 +368,7 @@ w, h = <span class="kw">textmetrics</span><span class="s">(</span><span class="s
 
         <div class="row">
           Works exactly like the <a href="#text()">text()</a> command, except it returns a path
-          that can be used with <a href="ClassicPath.html#drawpath()">drawpath()</a>, <a href="ClassicPath.html#beginclip()">beginclip()</a> and <a href="ClassicPath.html#endclip()">endclip()</a> instead of drawing text to the screen.
+          that can be used with <a href="Path.html#bezier()">bezier()</a> or <a href="Path.html#clip()">clip()</a> instead of drawing text to the screen.
         </div>
 
         <h2>Returns</h2>
@@ -392,11 +392,10 @@ w, h = <span class="kw">textmetrics</span><span class="s">(</span><span class="s
                 <td><span class="image_border"><img height="125" src="media/textpath.jpg" width="125"/></span>
                 </td><td>
 <pre>
-<span class="kw">fontsize</span><span class="s">(</span><span class="s">65</span><span class="s">)</span>
-path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"clip"</span>, <span class="s">10</span>, <span class="s">70</span><span class="s">)</span>
-<span class="kw">beginclip</span><span class="s">(</span>path<span class="s">)</span>
-<span class="kw">image</span><span class="s">(</span><span class="str">"header.jpg"</span>, <span class="s">-300</span>, <span class="s">-150</span><span class="s">)</span>
-<span class="kw">endclip</span><span class="s">(</span><span class="s">)</span>
+<span class="kw">fontsize</span>(65)
+path = <span class="kw">textpath</span>(<span class="str">"clip"</span>, 10, 70)
+<span class="kw">with clip</span>(path):
+    <span class="kw">image</span>(<span class="str">"header.jpg"</span>, -300, -150)
 </pre>
                 </td></tr></tbody></table>
         </div>

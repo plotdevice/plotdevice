@@ -41,9 +41,10 @@
 
         <div class="row">
           Each path in NodeBox (see for example, <a href="Primitives.html#rect()">rect()</a>,
-          <a href="Primitives.html#oval()">oval()</a>, <a href="ClassicPath.html#endpath()">endpath()</a>, <a href="Typography.html#textpath()">textpath()</a>) is a BezierPath object. This object has a
-          number of properties to manipulate indivdual points in the path and can be passed to the
-          <a href="ClassicPath.html#drawpath()">drawpath()</a> command to draw it on the canvas.
+          <a href="Primitives.html#oval()">oval()</a>, <a href="Path.html#bezier()">bezier()</a>,
+          <a href="Typography.html#textpath()">textpath()</a>) is a BezierPath object. This object
+          has a number of properties to manipulate indivdual points in the path and can be passed
+          to the bezier() command to draw it on the canvas.
         </div>
 
         <h2>Properties</h2>
@@ -59,12 +60,12 @@ path.<span class="s">contours</span>
 
         <div class="row">
 <pre>path<span class="s">[</span>i<span class="s">]</span>
-path.<span class="kw">moveto</span><span class="s">(</span>x, y<span class="s">)</span>
-path.<span class="kw">lineto</span><span class="s">(</span>x, y<span class="s">)</span>
-path.<span class="kw">curveto</span><span class="s">(</span>h1x, h1y, h2x, h2y, x, y<span class="s">)</span>
-path.<span class="kw">closepath</span><span class="s">(</span><span class="s">)</span>
-path.<span class="kw">rect</span><span class="s">(</span>x, y, width, height<span class="s">)</span>
-path.<span class="kw">oval</span><span class="s">(</span>x, y, width, height<span class="s">)</span>
+path.<span>moveto</span><span class="s">(</span>x, y<span class="s">)</span>
+path.<span>lineto</span><span class="s">(</span>x, y<span class="s">)</span>
+path.<span>curveto</span><span class="s">(</span>h1x, h1y, h2x, h2y, x, y<span class="s">)</span>
+path.<span>closepath</span><span class="s">(</span><span class="s">)</span>
+path.<span>rect</span><span class="s">(</span>x, y, width, height<span class="s">)</span>
+path.<span>oval</span><span class="s">(</span>x, y, width, height<span class="s">)</span>
 </pre>
 <pre>path.<span class="s">contains</span><span class="s">(</span>x, y<span class="s">)</span>
 </pre>
@@ -164,7 +165,7 @@ clr.<span class="s">brightness</span>
 clr.<span class="s">c</span>
 clr.<span class="s">m</span>
 clr.<span class="s">y</span>
-clr.
+clr.<span class="s">k</span>
 </pre>
 
           <p>See the <a href="../tut/Color.html">tutorial on colors</a> to learn about all the
