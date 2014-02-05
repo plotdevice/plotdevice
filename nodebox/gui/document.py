@@ -10,7 +10,7 @@ import objc
 from Foundation import *
 from AppKit import *
 from nodebox.run import Sandbox
-from nodebox.gui.editor import PyDETextView, OutputTextView
+from nodebox.gui.editor import OutputTextView, EditorView
 from nodebox.gui.preferences import get_default, getBasicTextAttributes
 from nodebox.gui.widgets import DashboardController, ExportSheet
 from nodebox.gui.views import FullscreenWindow, FullscreenView
@@ -22,7 +22,8 @@ NSEventGestureAxisVertical = 2
 class NodeBoxDocument(NSDocument):
     graphicsView = objc.IBOutlet()
     outputView = objc.IBOutlet()
-    textView = objc.IBOutlet()
+    editorView = objc.IBOutlet()
+    textView = objc.IBOutlet() # ye olde PyDETextView
     window = objc.IBOutlet()
     dashboardController = objc.IBOutlet()
     animationSpinner = objc.IBOutlet()
@@ -55,7 +56,7 @@ class NodeBoxDocument(NSDocument):
             self.setDisplayName_(os.path.basename(self.stationery))
             self.vm.stationery = self.stationery
         font = getBasicTextAttributes()[NSFontAttributeName]
-        win = self.textView.window()
+        win = self.editorView.window()
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
         win.setRestorable_(True)
         win.setIdentifier_("nodebox-doc")
@@ -70,11 +71,7 @@ class NodeBoxDocument(NSDocument):
         # which we'd need to implement for restoration to work. try
         # again in 10.9.x, or is there a way to monkeypatch the metadata?
 
-        # disable system's auto-smartquotes in the editor pane
-        self.textView.setAutomaticQuoteSubstitutionEnabled_(False)
-        self.textView.setEnabledTextCheckingTypes_(0)
-
-        win.makeFirstResponder_(self.textView)
+        win.makeFirstResponder_(self.editorView)
         self.currentView = self.graphicsView
 
         win.setAutorecalculatesContentBorderThickness_forEdge_(True,NSMinYEdge)
@@ -123,21 +120,21 @@ class NodeBoxDocument(NSDocument):
         super(NodeBoxDocument, self).close()
 
     def source(self):
-        return self.textView.string()
+        return self.editorView.source
 
     def setSource_(self, source):
-        self.textView.setString_(source)
+        self.editorView.source = source
 
     def cancelOperation_(self, sender):
         self.stopScript()        
 
     def _updateWindowAutosave(self):
-        if self.path and self.textView: # don't try to access views until fully loaded
+        if self.path and self.editorView: # don't try to access views until fully loaded
             name = 'nodebox:%s'%self.path
 
             # walk through superviews to set the autosave id for the splitters
             splits = {"lower":None, "upper":None}
-            it = self.textView
+            it = self.editorView
             while it.superview():
                 if type(it) is NSSplitView:
                     side = 'lower' if not splits['lower'] else 'upper'
@@ -160,19 +157,9 @@ class NodeBoxDocument(NSDocument):
         content.size.height -= thickness
         content.origin.y += thickness
         
-        # work around a weird piece of NSBehavior (http://goo.gl/pGFQqn):
-        style = None
-        scrollview = None
-        if self.textView:
-            scrollview = self.textView.superview().superview()
-            style = scrollview.scrollerStyle()
-
         self.mainView.setFrame_(content)
         win.setContentBorderThickness_forEdge_(thickness, NSMinYEdge)
         self.footer.setHidden_(not self._showFooter)
-
-        if scrollview and style is not None:
-            scrollview.setScrollerStyle_(style)
 
     def _ui_state(self):
         # Set the mouse position
@@ -216,7 +203,6 @@ class NodeBoxDocument(NSDocument):
 
     def __del__(self):
         # remove the circular references in our helper objects
-        self.textView._cleanup()
         self.vm._cleanup()
 
     # 
@@ -238,7 +224,7 @@ class NodeBoxDocument(NSDocument):
             self.vm.path = self.path
 
     def readFromFile_ofType_(self, path, tp):
-        if self.textView is None:
+        if self.editorView is None:
             # we're not yet fully loaded
             self.path = path
         else:
@@ -258,7 +244,6 @@ class NodeBoxDocument(NSDocument):
             self.mtime = os.path.getmtime(path)
             self._updateWindowAutosave()
             self.setSource_(text.decode("utf-8"))
-            self.textView.usesTabs = "\t" in text
             self.vm.path = path
             self.vm.source = text.decode("utf-8")
 
@@ -508,16 +493,16 @@ class NodeBoxDocument(NSDocument):
         NSCursor.unhide()
 
         # try to send the cursor to the editor
-        focus = self.textView or self.graphicsView
-        if focus:
-            focus.window().makeFirstResponder_(focus)
-        if self.textView:
-            self.textView.hideValueLadder()
+        if self.editorView:
+            self.editorView.focus()
+        elif self.graphicsView:
+            self.graphicsView.window().makeFirstResponder_(self.graphicsView)
 
         # bring the window forward (to recover from fullscreen mode) and re-cache the graphics
         if self.graphicsView:
             # note that graphicsView is nulled out in self.close_ before we're called.
             # otherwise the makeKey will cause a double-flicker before the window disappears
+            focus = self.editorView or self.graphicsView
             focus.window().makeKeyAndOrderFront_(self)
             self.graphicsView.volatile = False
 

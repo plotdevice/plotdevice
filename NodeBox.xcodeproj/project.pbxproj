@@ -22,6 +22,11 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		2A15C42D18A1FA14006BDFF0 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A15C42C18A1FA14006BDFF0 /* WebKit.framework */; };
+		2A15C43C18A2095B006BDFF0 /* ace.js in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2A15C43818A2095B006BDFF0 /* ace.js */; };
+		2A15C43D18A2095B006BDFF0 /* jquery-2.1.0.js in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2A15C43918A2095B006BDFF0 /* jquery-2.1.0.js */; };
+		2A15C43E18A2095B006BDFF0 /* themes.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2A15C43A18A2095B006BDFF0 /* themes.json */; };
+		2A15C43F18A2095B006BDFF0 /* ui.html in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2A15C43B18A2095B006BDFF0 /* ui.html */; };
 		2A263141188CF4B2000B792A /* __init__.py in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812EA188CF45800B47700 /* __init__.py */; };
 		2A263143188CF4B7000B792A /* context.json in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812ED188CF45800B47700 /* context.json */; };
 		2A263144188CF4B9000B792A /* LICENSE.txt in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812EE188CF45800B47700 /* LICENSE.txt */; };
@@ -95,6 +100,19 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		2A15C43718A20929006BDFF0 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = editor;
+			dstSubfolderSpec = 7;
+			files = (
+				2A15C43C18A2095B006BDFF0 /* ace.js in CopyFiles */,
+				2A15C43D18A2095B006BDFF0 /* jquery-2.1.0.js in CopyFiles */,
+				2A15C43E18A2095B006BDFF0 /* themes.json in CopyFiles */,
+				2A15C43F18A2095B006BDFF0 /* ui.html in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2A29445E185E54C200E9F650 /* Copy nodebox.run */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -213,6 +231,11 @@
 /* Begin PBXFileReference section */
 		1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FBA07B3F13500E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
+		2A15C42C18A1FA14006BDFF0 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		2A15C43818A2095B006BDFF0 /* ace.js */ = {isa = PBXFileReference; lastKnownFileType = file; name = ace.js; path = Resources/editor/ace.js; sourceTree = "<group>"; };
+		2A15C43918A2095B006BDFF0 /* jquery-2.1.0.js */ = {isa = PBXFileReference; lastKnownFileType = file; name = "jquery-2.1.0.js"; path = "Resources/editor/jquery-2.1.0.js"; sourceTree = "<group>"; };
+		2A15C43A18A2095B006BDFF0 /* themes.json */ = {isa = PBXFileReference; lastKnownFileType = file; name = themes.json; path = Resources/editor/themes.json; sourceTree = "<group>"; };
+		2A15C43B18A2095B006BDFF0 /* ui.html */ = {isa = PBXFileReference; lastKnownFileType = file; name = ui.html; path = Resources/editor/ui.html; sourceTree = "<group>"; };
 		2A263148188E0D87000B792A /* default.themes */ = {isa = PBXFileReference; lastKnownFileType = file; path = default.themes; sourceTree = "<group>"; };
 		2A26314A188E1A3A000B792A /* doc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = doc; sourceTree = "<group>"; };
 		2A294458185E539400E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
@@ -281,6 +304,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */,
+				2A15C42D18A1FA14006BDFF0 /* WebKit.framework in Frameworks */,
 				2A591FF0185C17D200D1833D /* Security.framework in Frameworks */,
 				2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */,
 				2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */,
@@ -317,6 +341,17 @@
 				8D15AC370486D014006FF6A4 /* NodeBox.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		2A15C44018A20971006BDFF0 /* editor */ = {
+			isa = PBXGroup;
+			children = (
+				2A15C43818A2095B006BDFF0 /* ace.js */,
+				2A15C43918A2095B006BDFF0 /* jquery-2.1.0.js */,
+				2A15C43A18A2095B006BDFF0 /* themes.json */,
+				2A15C43B18A2095B006BDFF0 /* ui.html */,
+			);
+			name = editor;
 			sourceTree = "<group>";
 		};
 		2A294457185E539400E9F650 /* run */ = {
@@ -361,6 +396,7 @@
 		2A37F4B8FDCFA73011CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				2A15C44018A20971006BDFF0 /* editor */,
 				611CC68510BAA0A600B55455 /* AskString.xib */,
 				611CC67E10BAA08300B55455 /* MainMenu.xib */,
 				611CC5A610BA919A00B55455 /* NodeBoxPreferences.xib */,
@@ -379,6 +415,7 @@
 		2A37F4C3FDCFA73011CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2A15C42C18A1FA14006BDFF0 /* WebKit.framework */,
 				2A591FEF185C17D200D1833D /* Security.framework */,
 				2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */,
 				2ABBB2FB18540246001C4E0A /* CoreVideo.framework */,
@@ -506,6 +543,7 @@
 				8D15AC2B0486D014006FF6A4 /* Resources */,
 				611CC53110BA8E0000B55455 /* Copy nodebox root */,
 				611CC55010BA8E4900B55455 /* Copy nodebox.gui */,
+				2A15C43718A20929006BDFF0 /* CopyFiles */,
 				611CC59610BA901100B55455 /* Copy nodebox.util */,
 				2A29445E185E54C200E9F650 /* Copy nodebox.run */,
 				611CC59710BA901100B55455 /* Copy nodebox.graphics */,

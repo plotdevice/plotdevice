@@ -1,0 +1,233 @@
+{
+  "Tomorrow Night Blue": {
+    "dark": true, 
+    "color": "#FFFFFF", 
+    "background": "#002451", 
+    "module": "ace/theme/tomorrow_night_blue", 
+    "css": "ace-tomorrow-night-blue"
+  }, 
+  "Chrome": {
+    "dark": false, 
+    "color": "black", 
+    "background": "#FFFFFF", 
+    "module": "ace/theme/chrome", 
+    "css": "ace-chrome"
+  }, 
+  "Tomorrow Night Eighties": {
+    "dark": true, 
+    "color": "#CCCCCC", 
+    "background": "#2D2D2D", 
+    "module": "ace/theme/tomorrow_night_eighties", 
+    "css": "ace-tomorrow-night-eighties"
+  }, 
+  "Chaos": {
+    "dark": true, 
+    "color": "#E6E1DC", 
+    "background": "#161616", 
+    "module": "ace/theme/chaos", 
+    "css": "ace-chaos"
+  }, 
+  "Terminal": {
+    "dark": true, 
+    "color": "#DEDEDE", 
+    "background": "black", 
+    "module": "ace/theme/terminal", 
+    "css": "ace-terminal-theme"
+  }, 
+  "Dreamweaver": {
+    "dark": false, 
+    "color": "black", 
+    "background": "#FFFFFF", 
+    "module": "ace/theme/dreamweaver", 
+    "css": "ace-dreamweaver"
+  }, 
+  "Merbivore Soft": {
+    "dark": true, 
+    "color": "#E6E1DC", 
+    "background": "#1C1C1C", 
+    "module": "ace/theme/merbivore_soft", 
+    "css": "ace-merbivore-soft"
+  }, 
+  "Monokai": {
+    "dark": true, 
+    "color": "#F8F8F2", 
+    "background": "#272822", 
+    "module": "ace/theme/monokai", 
+    "css": "ace-monokai"
+  }, 
+  "Solarized Light": {
+    "dark": false, 
+    "color": "#586E75", 
+    "background": "#FDF6E3", 
+    "module": "ace/theme/solarized_light", 
+    "css": "ace-solarized-light"
+  }, 
+  "Blackboard": {
+    "dark": true, 
+    "color": "#F8F8F8", 
+    "background": "#0C1021", 
+    "module": "ace/theme/blackboard", 
+    "css": "ace-blackboard"
+  }, 
+  "Merbivore": {
+    "dark": true, 
+    "color": "#E6E1DC", 
+    "background": "#161616", 
+    "module": "ace/theme/merbivore", 
+    "css": "ace-merbivore"
+  }, 
+  "Mono Industrial": {
+    "dark": true, 
+    "color": "#FFFFFF", 
+    "background": "#222C28", 
+    "module": "ace/theme/mono_industrial", 
+    "css": "ace-mono-industrial"
+  }, 
+  "Twilight": {
+    "dark": true, 
+    "color": "#F8F8F8", 
+    "background": "#141414", 
+    "module": "ace/theme/twilight", 
+    "css": "ace-twilight"
+  }, 
+  "Idle Fingers": {
+    "dark": true, 
+    "color": "#FFFFFF", 
+    "background": "#323232", 
+    "module": "ace/theme/idle_fingers", 
+    "css": "ace-idle-fingers"
+  }, 
+  "Github": {
+    "dark": false, 
+    "color": "#000", 
+    "background": "#fff", 
+    "module": "ace/theme/github", 
+    "css": "ace-github"
+  }, 
+  "Clouds": {
+    "dark": false, 
+    "color": "#000000", 
+    "background": "#FFFFFF", 
+    "module": "ace/theme/clouds", 
+    "css": "ace-clouds"
+  }, 
+  "Katzenmilch": {
+    "dark": false, 
+    "color": "rgba(15, 0, 9, 1.0)", 
+    "background": "#f3f2f3", 
+    "module": "ace/theme/katzenmilch", 
+    "css": "ace-katzenmilch"
+  }, 
+  "Kuroir": {
+    "dark": false, 
+    "color": "#363636", 
+    "background": "#E8E9E8", 
+    "module": "ace/theme/kuroir", 
+    "css": "ace-kuroir"
+  }, 
+  "Vibrant Ink": {
+    "dark": true, 
+    "color": "#FFFFFF", 
+    "background": "#0F0F0F", 
+    "module": "ace/theme/vibrant_ink", 
+    "css": "ace-vibrant-ink"
+  }, 
+  "Eclipse": {
+    "dark": false, 
+    "color": "black", 
+    "background": "#FFFFFF", 
+    "module": "ace/theme/eclipse", 
+    "css": "ace-eclipse"
+  }, 
+  "Tomorrow Night Bright": {
+    "dark": true, 
+    "color": "#DEDEDE", 
+    "background": "#000000", 
+    "module": "ace/theme/tomorrow_night_bright", 
+    "css": "ace-tomorrow-night-bright"
+  }, 
+  "Textmate": {
+    "dark": false, 
+    "color": "black", 
+    "background": "#FFFFFF", 
+    "module": "ace/theme/textmate", 
+    "css": "ace-tm"
+  }, 
+  "Tomorrow Night": {
+    "dark": true, 
+    "color": "#C5C8C6", 
+    "background": "#1D1F21", 
+    "module": "ace/theme/tomorrow_night", 
+    "css": "ace-tomorrow-night"
+  }, 
+  "Crimson Editor": {
+    "dark": false, 
+    "color": "rgb(64, 64, 64)", 
+    "background": "#FFFFFF", 
+    "module": "ace/theme/crimson_editor", 
+    "css": "ace-crimson-editor"
+  }, 
+  "Solarized Dark": {
+    "dark": true, 
+    "color": "#93A1A1", 
+    "background": "#002B36", 
+    "module": "ace/theme/solarized_dark", 
+    "css": "ace-solarized-dark"
+  }, 
+  "Kr Theme": {
+    "dark": true, 
+    "color": "#FCFFE0", 
+    "background": "#0B0A09", 
+    "module": "ace/theme/kr_theme", 
+    "css": "ace-kr-theme"
+  }, 
+  "Clouds Midnight": {
+    "dark": true, 
+    "color": "#929292", 
+    "background": "#191919", 
+    "module": "ace/theme/clouds_midnight", 
+    "css": "ace-clouds-midnight"
+  }, 
+  "Pastel On Dark": {
+    "dark": true, 
+    "color": "#8F938F", 
+    "background": "#2C2828", 
+    "module": "ace/theme/pastel_on_dark", 
+    "css": "ace-pastel-on-dark"
+  }, 
+  "Xcode": {
+    "dark": false, 
+    "color": "#000000", 
+    "background": "#FFFFFF", 
+    "module": "ace/theme/xcode", 
+    "css": "ace-xcode"
+  }, 
+  "Ambiance": {
+    "dark": true, 
+    "color": "#E6E1DC", 
+    "background": "#202020", 
+    "module": "ace/theme/ambiance", 
+    "css": "ace-ambiance"
+  }, 
+  "Cobalt": {
+    "dark": true, 
+    "color": "#FFFFFF", 
+    "background": "#002240", 
+    "module": "ace/theme/cobalt", 
+    "css": "ace-cobalt"
+  }, 
+  "Dawn": {
+    "dark": false, 
+    "color": "#080808", 
+    "background": "#F9F9F9", 
+    "module": "ace/theme/dawn", 
+    "css": "ace-dawn"
+  }, 
+  "Tomorrow": {
+    "dark": false, 
+    "color": "#4D4D4C", 
+    "background": "#FFFFFF", 
+    "module": "ace/theme/tomorrow", 
+    "css": "ace-tomorrow"
+  }
+}

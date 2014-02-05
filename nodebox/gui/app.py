@@ -11,6 +11,8 @@ from nodebox.gui.preferences import get_default
 from nodebox.run import CommandListener
 from nodebox import util, bundle_path
 
+def set_timeout(target, sel, delay, info=None, repeat=False):
+    return NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(delay, target, sel, info, repeat)
 
 class NodeBoxAppDelegate(NSObject):
     examplesMenu = None
@@ -102,9 +104,6 @@ class NodeBoxAppDelegate(NSObject):
         import atexit
         atexit._run_exitfuncs()
 
-
-def set_timeout(target, sel, delay, info=None, repeat=False):
-    return NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(delay, target, sel, info, repeat)
 
 class NodeBoxDocumentController(NSDocumentController):
     _observer = None # fsevents thread

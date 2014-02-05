@@ -9,12 +9,12 @@
             <connections>
                 <outlet property="animationSpinner" destination="276" id="277"/>
                 <outlet property="dashboardController" destination="170" id="171"/>
+                <outlet property="editorView" destination="M8a-Fy-5V5" id="S5m-9Q-p7s"/>
                 <outlet property="exportSheet" destination="2ZA-Wl-gCw" id="Z4Z-5p-VeV"/>
                 <outlet property="footer" destination="268" id="KhU-wS-UDi"/>
                 <outlet property="graphicsView" destination="15o-mm-Ppr" id="oax-n6-MB2"/>
                 <outlet property="mainView" destination="271" id="Gev-tK-Il7"/>
                 <outlet property="outputView" destination="31" id="37"/>
-                <outlet property="textView" destination="39" id="43"/>
                 <outlet property="window" destination="5" id="299"/>
             </connections>
         </customObject>
@@ -63,7 +63,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="Gog-0j-9A9">
-                                    <rect key="frame" x="317" y="0.0" width="16" height="463"/>
+                                    <rect key="frame" x="318" y="0.0" width="15" height="463"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
@@ -71,46 +71,28 @@
                                 <rect key="frame" x="342" y="0.0" width="380" height="463"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
-                                    <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" hasVerticalScroller="NO" usesPredominantAxisScrolling="NO" id="40">
-                                        <rect key="frame" x="0.0" y="0.0" width="380" height="346"/>
-                                        <autoresizingMask key="autoresizingMask"/>
-                                        <clipView key="contentView" id="yt1-Yq-neg">
-                                            <rect key="frame" x="0.0" y="0.0" width="380" height="346"/>
-                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                            <subviews>
-                                                <customView id="39" customClass="PyDETextView">
-                                                    <rect key="frame" x="0.0" y="0.0" width="398" height="315"/>
-                                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                                    <connections>
-                                                        <outlet property="document" destination="-2" id="165"/>
-                                                    </connections>
-                                                </customView>
-                                            </subviews>
-                                        </clipView>
-                                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" arrowsPosition="none" controlSize="small" horizontal="YES" id="296">
-                                            <rect key="frame" x="-100" y="-100" width="378" height="14"/>
-                                            <autoresizingMask key="autoresizingMask"/>
-                                        </scroller>
-                                        <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" arrowsPosition="none" doubleValue="1" controlSize="small" horizontal="NO" id="295">
-                                            <rect key="frame" x="-100" y="-100" width="14" height="345"/>
-                                            <autoresizingMask key="autoresizingMask"/>
-                                        </scroller>
-                                    </scrollView>
+                                    <customView id="M8a-Fy-5V5" customClass="EditorView">
+                                        <rect key="frame" x="0.0" y="0.0" width="380" height="334"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                        <connections>
+                                            <outlet property="document" destination="-2" id="mci-ng-ded"/>
+                                        </connections>
+                                    </customView>
                                     <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="30">
-                                        <rect key="frame" x="0.0" y="356" width="380" height="107"/>
+                                        <rect key="frame" x="0.0" y="344" width="380" height="119"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <clipView key="contentView" id="15t-by-Wh6">
-                                            <rect key="frame" x="0.0" y="0.0" width="380" height="107"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="380" height="119"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <textView editable="NO" importsGraphics="NO" richText="NO" findStyle="bar" incrementalSearchingEnabled="YES" allowsDocumentBackgroundColorChange="YES" usesRuler="YES" verticallyResizable="YES" id="31" customClass="OutputTextView">
-                                                    <rect key="frame" x="0.0" y="0.0" width="380" height="107"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="380" height="119"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                    <size key="minSize" width="380" height="107"/>
+                                                    <size key="minSize" width="380" height="119"/>
                                                     <size key="maxSize" width="723" height="10000000"/>
                                                     <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                    <size key="minSize" width="380" height="107"/>
+                                                    <size key="minSize" width="380" height="119"/>
                                                     <size key="maxSize" width="723" height="10000000"/>
                                                 </textView>
                                             </subviews>
@@ -121,7 +103,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
                                         <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" controlSize="small" horizontal="NO" id="293">
-                                            <rect key="frame" x="366" y="0.0" width="14" height="107"/>
+                                            <rect key="frame" x="366" y="0.0" width="14" height="119"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
                                     </scrollView>
@@ -227,7 +209,6 @@
             <contentBorderThickness minY="22"/>
             <connections>
                 <outlet property="delegate" destination="-2" id="9"/>
-                <outlet property="initialFirstResponder" destination="39" id="256"/>
             </connections>
         </window>
         <window title="Variables" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" releasedWhenClosed="NO" wantsToBeColor="NO" visibleAtLaunch="NO" animationBehavior="default" id="169" userLabel="Panel" customClass="NSPanel">
@@ -497,6 +478,6 @@ bered page-00003.pdf</string>
         </customView>
     </objects>
     <resources>
-        <image name="NSStopProgressFreestandingTemplate" width="83" height="83"/>
+        <image name="NSStopProgressFreestandingTemplate" width="12" height="12"/>
     </resources>
 </document>

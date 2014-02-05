@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>ACE in Action</title>
+    <style type="text/css" media="screen">
+        #editor { 
+            font-family:"Source Code Pro";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+
+    <!-- load the heavy js up front -->
+    <script src="jquery-2.1.0.js" charset="utf-8"></script>
+    <script src="ace.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="editor"></div>
+
+
+<script>
+    var Editor = function(elt){
+        var dom = $(elt)
+        var ed = ace.edit(dom.attr('id'))
+        var that = {
+            init:function(){
+                ed.setTheme('ace/theme/blackboard');
+                ed.setShowPrintMargin(false);
+                ed.setFadeFoldWidgets(true);
+                var sess = ed.getSession()
+                sess.setMode("ace/mode/nodebox");
+                sess.setTabSize(4);
+                sess.setUseSoftTabs(true);
+                that.focus()
+                return that
+            },
+            focus:function(){
+                console.log('focus')
+                ed.focus()
+            },
+            source:function(src){
+                if (src===undefined){
+                    return ed.getValue()
+                }else{
+                    ed.setValue(src);
+                    ed.clearSelection();
+                    ed.moveCursorTo(0, 0);
+                    // ACEView.aceTextDidChange()
+                }
+            },
+            mark:function(){
+                ed.getSession().setAnnotations([{
+                  row: 1, column: 10,
+                  text: "error description",
+                  type: "warning" // error warning information
+                }]);            
+                // ed.focus()
+                ed.gotoLine(2, 10, true)
+            }
+        }
+      
+        return (dom.length==0) ? {} : that.init()
+    }
+    var editor = Editor("#editor")
+
+
+
+    // var editor = ace.edit("editor");
+    // editor.setKeyboardHandler("ace/keyboard/emacs");
+</script>
+
+    
+<script>
+    $(document).ready(function(){
+        console.log('ed', editor)
+    //     $("#themebar").on('change', function(){
+    //         var active = $("#themebar").val()
+    //         editor.setTheme('ace/theme/'+active);
+    //     })
+    //     $("#themebar").val('solarized-dark')
+    //     editor.setTheme('ace/theme/'+$("#themebar").val());
+    })
+</script>
+</body>
+</html>
