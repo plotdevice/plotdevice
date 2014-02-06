@@ -3,50 +3,49 @@ import os
 import re
 import objc
 import json
+import cgi
+from pprint import pprint
 from time import time
 from bisect import bisect
 from Foundation import *
 from AppKit import *
-from WebKit import *
-from nodebox.gui.preferences import getBasicTextAttributes, getSyntaxTextAttributes
-from nodebox.gui.preferences import setTextFont, FG_COLOR, BG_COLOR
+from WebKit import * # (defaults write net.nodebox.NodeBox WebKitDeveloperExtras -bool true)
+from nodebox.gui.preferences import get_default, editor_info
 from nodebox.util.PyFontify import fontify
 from nodebox.gui.widgets import ValueLadder
 from nodebox.gui.app import set_timeout
 from nodebox import bundle_path
 
+
 class EditorView(NSView):
     document = objc.IBOutlet()
 
+    # WebKit mgmt
+
     def awakeFromNib(self):
-        print "EditorView", self.document
         self.webview = WebView.alloc().init()
         self.webview.setFrameLoadDelegate_(self)
         self._queue = []
         self._wakeup = None
-
         self.addSubview_(self.webview)
-        html = bundle_path('Contents/Resources/editor/ui.html')
+        html = bundle_path('Contents/Resources/ui/editor.html')
         ui = file(html).read().decode('utf-8')
         baseurl = NSURL.fileURLWithPath_(os.path.dirname(html))
         self.webview.mainFrame().loadHTMLString_baseURL_(ui, baseurl)
+        nc = NSNotificationCenter.defaultCenter()
+        nc.addObserver_selector_name_object_(self, "themeChanged", "ThemeChanged", None)
+        nc.addObserver_selector_name_object_(self, "fontChanged", "FontChanged", None)
+        self.themeChanged()
+        self.fontChanged()
 
-    def _get_source(self):
-        return self.webview.stringByEvaluatingJavaScriptFromString_('editor.source();')
-    def _set_source(self, src):
-        # print u'editor.source("%s")'%src
-        self.js(u'editor.source(%s)'%json.dumps(src, ensure_ascii=False))
-
-    source = property(_get_source, _set_source)
+    def webView_didFinishLoadForFrame_(self, sender, frame):
+        self.webview.windowScriptObject().setValue_forKey_(self,'app')
 
     def resizeSubviewsWithOldSize_(self, oldSize):
         self.resizeWebview()
 
     def resizeWebview(self):
         self.webview.setFrame_(self.bounds())
-
-    def focus(self):
-        self.js('editor.focus();')
 
     def js(self, cmds):
         if not isinstance(cmds, (list,tuple)):
@@ -62,15 +61,41 @@ class EditorView(NSView):
             for op in self._queue:
                 self.webview.stringByEvaluatingJavaScriptFromString_(op)
             self._queue = []
+            self._wakeup = None
 
+    def isSelectorExcludedFromWebScript_(self, sel):
+        return False
 
+    # App-initiated actions
+
+    def fontChanged(self, note=None):
+        self.js('editor.font("%(family)s", %(px)i);'%editor_info())
+
+    def themeChanged(self, note=None):
+        self.js('editor.theme("%(module)s");'%editor_info())
+
+    def focus(self):
+        self.js('editor.focus();')
+
+    def _get_source(self):
+        return self.webview.stringByEvaluatingJavaScriptFromString_('editor.source();')
+    def _set_source(self, src):
+        self.js(u'editor.source(%s)'%json.dumps(src, ensure_ascii=False))
+    source = property(_get_source, _set_source)
+
+    # JS-initiated actions
+
+    def loadPrefs(self):
+       NSApp().delegate().showPreferencesPanel_(self)
 
 class OutputTextView(NSTextView):
+    editor = objc.IBOutlet()
     endl = False
     scroll_lock = True
 
     def awakeFromNib(self):
         self.ts = self.textStorage()
+        self.info = editor_info()
         self.colorize()
         self.setTextContainerInset_( (0,4) ) # a pinch of top-margin
         self.setUsesFindBar_(True)
@@ -83,33 +108,50 @@ class OutputTextView(NSTextView):
         self.setUsesFindBar_(True)
 
         nc = NSNotificationCenter.defaultCenter()
-        nc.addObserver_selector_name_object_(self, "textFontChanged:", "PyDETextFontChanged", None)
+        nc.addObserver_selector_name_object_(self, "themeChanged", "ThemeChanged", None)
+        nc.addObserver_selector_name_object_(self, "fontChanged", "FontChanged", None)
 
-    def textFontChanged_(self, font):
-        self.setFont_(getBasicTextAttributes()[NSFontAttributeName])
+    def fontChanged(self, note=None):
+        self.info = editor_info()
+        self.setFont_(self.info['font'])
+        self.colorize()
+
+    def themeChanged(self, note=None):
+        self.info = editor_info()
         self.colorize()
 
     def canBecomeKeyView(self):
         return False
 
     def colorize(self):
-        attrs = getSyntaxTextAttributes()
-        pageColor = attrs['page'][BG_COLOR]
-        plainColor = attrs['plain'][FG_COLOR]
-        self.setBackgroundColor_(pageColor)
-        # self.setDrawsBackground_(True)
+        clr, font = self.info['colors'], self.info['font']
+        self.setBackgroundColor_(clr['background'])
+        self.setTypingAttributes_({"NSColor":clr['color'], "NSFont":font, "NSLigature":0})
+        self.setSelectedTextAttributes_({"NSBackgroundColor":clr['selection']})
+        
+        # recolor previous contents
+        attrs = self._attrs()
+        self.ts.beginEditing()
+        last = self.ts.length()
+        cursor = 0
+        while cursor < last:
+            a, r = self.ts.attributesAtIndex_effectiveRange_(cursor, None)
+            self.ts.setAttributes_range_(attrs[a['stream']],r)
+            cursor = r.location+r.length
+        self.ts.endEditing()
 
-        self.setTypingAttributes_(attrs['plain'])
-        self.setSelectedTextAttributes_(attrs['selection'])
 
     def _attrs(self, stream=None):
-        attrs = getSyntaxTextAttributes()
-        attrs.update({
-            'message':attrs['plain'],
-            'info':dict(attrs['plain'])
-        })
-        attrs['info'][FG_COLOR] = attrs['plain'][FG_COLOR].colorWithAlphaComponent_(0.5)
+        clr, font = self.info['colors'], self.info['font']
+        basic_attrs = {"NSFont":font, "NSLigature":0}
+
+        attrs = {
+            'message':{"NSColor":clr['color']},
+            'info':{"NSColor":clr['comment']},
+            'err':{"NSColor":clr['error']}
+        }
         for s,a in attrs.items():
+            a.update(basic_attrs)
             a.update({"stream":s})
         if stream:
             return attrs.get(stream)

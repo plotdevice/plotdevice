@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style type="text/css" media="screen">
+        #editor { 
+            line-height: 1.4em;
+            font-family:"Source Code Pro";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+
+    <!-- load the heavy js up front -->
+    <script src="jquery-2.1.0.js" charset="utf-8"></script>
+    <script src="ace.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="editor"></div>
+
+
+<script>
+    $(document).ready(function(){
+        var Editor = function(elt){
+            var dom = $(elt)
+            var ed = ace.edit(dom.attr('id'))
+            var sess = ed.getSession()
+            var that = {
+                init:function(){
+                    ed.setShowPrintMargin(false);
+                    ed.setFadeFoldWidgets(true);
+                    sess.setMode("ace/mode/nodebox");
+                    sess.setTabSize(4);
+                    sess.setUseSoftTabs(true);
+                    // ed.setKeyboardHandler("ace/keyboard/emacs");
+
+                    ed.commands.addCommand({
+                        name: "openPreferences",
+                        bindKey: {mac: "Command-,"},
+                        exec: function(editor) {
+                            app.loadPrefs()
+                        }
+                    })
+                    ed.commands.addCommand({
+                        name: "showKeyboardShortcuts",
+                        bindKey: {win: "Ctrl-Alt-h", mac: "Command-Alt-h"},
+                        exec: function(editor) {
+                            ace.config.loadModule("ace/ext/keybinding_menu", function(module) {
+                                module.init(editor);
+                                editor.showKeyboardShortcuts()
+                            })
+                        }
+                    })
+                    // that.focus()
+                    return that
+                },
+                focus:function(){
+                    console.log('focus')
+                    ed.focus()
+                },
+                source:function(src){
+                    if (src===undefined){
+                        return ed.getValue()
+                    }else{
+                        ed.setValue(src);
+                        ed.clearSelection();
+                        ed.moveCursorTo(0, 0);
+                        // ACEView.aceTextDidChange()
+                    }
+                },
+                font:function(family, px){
+                    dom.css({fontFamily:family, fontSize:px})
+                    // ed.setFontSize(px)
+                },
+                theme:function(thm){
+                    if (thm===undefined){
+                        return ed.getTheme()
+                    }else{
+                        ed.setTheme(thm)
+                        // console.log('load theme',thm, Themes[thm])
+                        // var module = 'ace/theme/' + Themes[thm]['theme']
+                        // ed.setTheme(module)
+                    }
+                },
+                mark:function(){
+                    sess.setAnnotations([{
+                      row: 1, column: 10,
+                      text: "error description",
+                      type: "warning" // error warning information
+                    }]);            
+                    // ed.focus()
+                    ed.gotoLine(2, 10, true)
+                }
+            }
+          
+            return (dom.length==0) ? {} : that.init()
+        }
+        
+        $.getJSON('themes.json', function(data){
+            window.Themes = data
+            window.editor = Editor("#editor")
+        })
+    })
+
+</script>
+
+    
+</body>
+</html>

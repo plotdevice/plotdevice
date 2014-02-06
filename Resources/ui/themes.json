@@ -1,0 +1,398 @@
+{
+  "Tomorrow Night Blue": {
+    "dark": true, 
+    "colors": {
+      "color": "#ffffff", 
+      "comment": "#7285b7", 
+      "selection": "#003f8e", 
+      "background": "#002451", 
+      "error": "#ff9da4"
+    }, 
+    "theme": "Tomorrow Night Blue", 
+    "module": "ace/theme/tomorrow_night_blue"
+  }, 
+  "Chrome": {
+    "dark": false, 
+    "colors": {
+      "color": "#000000", 
+      "comment": "#236e24", 
+      "selection": "#b5d5ff", 
+      "background": "#ffffff", 
+      "error": "#ff0000"
+    }, 
+    "theme": "Chrome", 
+    "module": "ace/theme/chrome"
+  }, 
+  "Tomorrow Night Eighties": {
+    "dark": true, 
+    "colors": {
+      "color": "#cccccc", 
+      "comment": "#999999", 
+      "selection": "#515151", 
+      "background": "#2d2d2d", 
+      "error": "#f99157"
+    }, 
+    "theme": "Tomorrow Night Eighties", 
+    "module": "ace/theme/tomorrow_night_eighties"
+  }, 
+  "Chaos": {
+    "dark": true, 
+    "colors": {
+      "color": "#e6e1dc", 
+      "comment": "#555555", 
+      "selection": "#494836", 
+      "background": "#161616", 
+      "error": "#ff308f"
+    }, 
+    "theme": "Chaos", 
+    "module": "ace/theme/chaos"
+  }, 
+  "Terminal": {
+    "dark": true, 
+    "colors": {
+      "color": "#dedede", 
+      "comment": "#ff4500", 
+      "selection": "#424242", 
+      "background": "#000000", 
+      "error": "#ff1493"
+    }, 
+    "theme": "Terminal", 
+    "module": "ace/theme/terminal"
+  }, 
+  "Dreamweaver": {
+    "dark": false, 
+    "colors": {
+      "color": "#000000", 
+      "comment": "#4c886b", 
+      "selection": "#b5d5ff", 
+      "background": "#ffffff", 
+      "error": "#ff0000"
+    }, 
+    "theme": "Dreamweaver", 
+    "module": "ace/theme/dreamweaver"
+  }, 
+  "Merbivore Soft": {
+    "dark": true, 
+    "colors": {
+      "color": "#e6e1dc", 
+      "comment": "#ac4bb8", 
+      "selection": "#494949", 
+      "background": "#1c1c1c", 
+      "error": "#fc803a"
+    }, 
+    "theme": "Merbivore Soft", 
+    "module": "ace/theme/merbivore_soft"
+  }, 
+  "Monokai": {
+    "dark": true, 
+    "colors": {
+      "color": "#f8f8f2", 
+      "comment": "#75715e", 
+      "selection": "#49483e", 
+      "background": "#272822", 
+      "error": "#f92672"
+    }, 
+    "theme": "Monokai", 
+    "module": "ace/theme/monokai"
+  }, 
+  "Solarized Light": {
+    "dark": false, 
+    "colors": {
+      "color": "#586e75", 
+      "comment": "#93a1a1", 
+      "selection": "#073643", 
+      "background": "#fdf6e3", 
+      "error": "#d30102"
+    }, 
+    "theme": "Solarized Light", 
+    "module": "ace/theme/solarized_light"
+  }, 
+  "Blackboard": {
+    "dark": true, 
+    "colors": {
+      "color": "#f8f8f8", 
+      "comment": "#aeaeae", 
+      "selection": "#325087", 
+      "background": "#0c1021", 
+      "error": "#ff6400"
+    }, 
+    "theme": "Blackboard", 
+    "module": "ace/theme/blackboard"
+  }, 
+  "Merbivore": {
+    "dark": true, 
+    "colors": {
+      "color": "#e6e1dc", 
+      "comment": "#ad2ea4", 
+      "selection": "#454545", 
+      "background": "#161616", 
+      "error": "#fc6f09"
+    }, 
+    "theme": "Merbivore", 
+    "module": "ace/theme/merbivore"
+  }, 
+  "Mono Industrial": {
+    "dark": true, 
+    "colors": {
+      "color": "#ffffff", 
+      "comment": "#666c68", 
+      "selection": "#919994", 
+      "background": "#222c28", 
+      "error": "#e98800"
+    }, 
+    "theme": "Mono Industrial", 
+    "module": "ace/theme/mono_industrial"
+  }, 
+  "Twilight": {
+    "dark": true, 
+    "colors": {
+      "color": "#f8f8f8", 
+      "comment": "#5f5a60", 
+      "selection": "#ddf0ff", 
+      "background": "#141414", 
+      "error": "#cf6a4c"
+    }, 
+    "theme": "Twilight", 
+    "module": "ace/theme/twilight"
+  }, 
+  "Idle Fingers": {
+    "dark": true, 
+    "colors": {
+      "color": "#ffffff", 
+      "comment": "#bc9458", 
+      "selection": "#5a647e", 
+      "background": "#323232", 
+      "error": "#b83426"
+    }, 
+    "theme": "Idle Fingers", 
+    "module": "ace/theme/idle_fingers"
+  }, 
+  "Github": {
+    "dark": false, 
+    "colors": {
+      "color": "#000000", 
+      "comment": "#999988", 
+      "selection": "#b5d5ff", 
+      "background": "#ffffff", 
+      "error": "#dd1144"
+    }, 
+    "theme": "Github", 
+    "module": "ace/theme/github"
+  }, 
+  "Clouds": {
+    "dark": false, 
+    "colors": {
+      "color": "#000000", 
+      "comment": "#bcc8ba", 
+      "selection": "#bdd5fc", 
+      "background": "#ffffff", 
+      "error": "#c52727"
+    }, 
+    "theme": "Clouds", 
+    "module": "ace/theme/clouds"
+  }, 
+  "Katzenmilch": {
+    "dark": false, 
+    "colors": {
+      "color": "#0f0009", 
+      "comment": "#404f50", 
+      "selection": "#6405d0", 
+      "background": "#f3f2f3", 
+      "error": "#ef6aa7"
+    }, 
+    "theme": "Katzenmilch", 
+    "module": "ace/theme/katzenmilch"
+  }, 
+  "Kuroir": {
+    "dark": false, 
+    "colors": {
+      "color": "#363636", 
+      "comment": "#949494", 
+      "selection": "#f5aa00", 
+      "background": "#e8e9e8", 
+      "error": "#fd1224"
+    }, 
+    "theme": "Kuroir", 
+    "module": "ace/theme/kuroir"
+  }, 
+  "Vibrant Ink": {
+    "dark": true, 
+    "colors": {
+      "color": "#ffffff", 
+      "comment": "#9933cc", 
+      "selection": "#6699cc", 
+      "background": "#0f0f0f", 
+      "error": "#ff6600"
+    }, 
+    "theme": "Vibrant Ink", 
+    "module": "ace/theme/vibrant_ink"
+  }, 
+  "Eclipse": {
+    "dark": false, 
+    "colors": {
+      "color": "#000000", 
+      "comment": "#719682", 
+      "selection": "#b5d5ff", 
+      "background": "#ffffff", 
+      "error": "#7f0055"
+    }, 
+    "theme": "Eclipse", 
+    "module": "ace/theme/eclipse"
+  }, 
+  "Tomorrow Night Bright": {
+    "dark": true, 
+    "colors": {
+      "color": "#dedede", 
+      "comment": "#969896", 
+      "selection": "#424242", 
+      "background": "#000000", 
+      "error": "#e78c45"
+    }, 
+    "theme": "Tomorrow Night Bright", 
+    "module": "ace/theme/tomorrow_night_bright"
+  }, 
+  "Textmate": {
+    "dark": false, 
+    "colors": {
+      "color": "#000000", 
+      "comment": "#4c886b", 
+      "selection": "#b5d5ff", 
+      "background": "#ffffff", 
+      "error": "#ff0000"
+    }, 
+    "theme": "Textmate", 
+    "module": "ace/theme/textmate"
+  }, 
+  "Tomorrow Night": {
+    "dark": true, 
+    "colors": {
+      "color": "#c5c8c6", 
+      "comment": "#969896", 
+      "selection": "#373b41", 
+      "background": "#1d1f21", 
+      "error": "#de935f"
+    }, 
+    "theme": "Tomorrow Night", 
+    "module": "ace/theme/tomorrow_night"
+  }, 
+  "Crimson Editor": {
+    "dark": false, 
+    "colors": {
+      "color": "#404040", 
+      "comment": "#4c886b", 
+      "selection": "#b5d5ff", 
+      "background": "#ffffff", 
+      "error": "#e00000"
+    }, 
+    "theme": "Crimson Editor", 
+    "module": "ace/theme/crimson_editor"
+  }, 
+  "Solarized Dark": {
+    "dark": true, 
+    "colors": {
+      "color": "#93a1a1", 
+      "comment": "#657b83", 
+      "selection": "#ffffff", 
+      "background": "#002b36", 
+      "error": "#d30102"
+    }, 
+    "theme": "Solarized Dark", 
+    "module": "ace/theme/solarized_dark"
+  }, 
+  "Kr Theme": {
+    "dark": true, 
+    "colors": {
+      "color": "#fcffe0", 
+      "comment": "#706d5b", 
+      "selection": "#aa00ff", 
+      "background": "#0b0a09", 
+      "error": "#ff9900"
+    }, 
+    "theme": "Kr Theme", 
+    "module": "ace/theme/kr_theme"
+  }, 
+  "Clouds Midnight": {
+    "dark": true, 
+    "colors": {
+      "color": "#929292", 
+      "comment": "#3c403b", 
+      "selection": "#000000", 
+      "background": "#191919", 
+      "error": "#e92e2e"
+    }, 
+    "theme": "Clouds Midnight", 
+    "module": "ace/theme/clouds_midnight"
+  }, 
+  "Pastel On Dark": {
+    "dark": true, 
+    "colors": {
+      "color": "#8f938f", 
+      "comment": "#a6c6ff", 
+      "selection": "#ddf0ff", 
+      "background": "#2c2828", 
+      "error": "#de8e30"
+    }, 
+    "theme": "Pastel On Dark", 
+    "module": "ace/theme/pastel_on_dark"
+  }, 
+  "Xcode": {
+    "dark": false, 
+    "colors": {
+      "color": "#000000", 
+      "comment": "#008e00", 
+      "selection": "#b5d5ff", 
+      "background": "#ffffff", 
+      "error": "#df0002"
+    }, 
+    "theme": "Xcode", 
+    "module": "ace/theme/xcode"
+  }, 
+  "Ambiance": {
+    "dark": true, 
+    "colors": {
+      "color": "#e6e1dc", 
+      "comment": "#555555", 
+      "selection": "#ddf0ff", 
+      "background": "#202020", 
+      "error": "#fa8d6a"
+    }, 
+    "theme": "Ambiance", 
+    "module": "ace/theme/ambiance"
+  }, 
+  "Cobalt": {
+    "dark": true, 
+    "colors": {
+      "color": "#ffffff", 
+      "comment": "#0088ff", 
+      "selection": "#b36539", 
+      "background": "#002240", 
+      "error": "#ff9d00"
+    }, 
+    "theme": "Cobalt", 
+    "module": "ace/theme/cobalt"
+  }, 
+  "Dawn": {
+    "dark": false, 
+    "colors": {
+      "color": "#080808", 
+      "comment": "#5a525f", 
+      "selection": "#275fff", 
+      "background": "#f9f9f9", 
+      "error": "#cf5628"
+    }, 
+    "theme": "Dawn", 
+    "module": "ace/theme/dawn"
+  }, 
+  "Tomorrow": {
+    "dark": false, 
+    "colors": {
+      "color": "#4d4d4c", 
+      "comment": "#8e908c", 
+      "selection": "#d6d6d6", 
+      "background": "#ffffff", 
+      "error": "#f5871f"
+    }, 
+    "theme": "Tomorrow", 
+    "module": "ace/theme/tomorrow"
+  }
+}

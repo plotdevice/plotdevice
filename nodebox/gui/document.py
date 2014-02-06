@@ -11,7 +11,6 @@ from Foundation import *
 from AppKit import *
 from nodebox.run import Sandbox
 from nodebox.gui.editor import OutputTextView, EditorView
-from nodebox.gui.preferences import get_default, getBasicTextAttributes
 from nodebox.gui.widgets import DashboardController, ExportSheet
 from nodebox.gui.views import FullscreenWindow, FullscreenView
 from nodebox import util, graphics
@@ -55,7 +54,6 @@ class NodeBoxDocument(NSDocument):
         if self.stationery:
             self.setDisplayName_(os.path.basename(self.stationery))
             self.vm.stationery = self.stationery
-        font = getBasicTextAttributes()[NSFontAttributeName]
         win = self.editorView.window()
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
         win.setRestorable_(True)
@@ -71,7 +69,7 @@ class NodeBoxDocument(NSDocument):
         # which we'd need to implement for restoration to work. try
         # again in 10.9.x, or is there a way to monkeypatch the metadata?
 
-        win.makeFirstResponder_(self.editorView)
+        # win.makeFirstResponder_(self.editorView)
         self.currentView = self.graphicsView
 
         win.setAutorecalculatesContentBorderThickness_forEdge_(True,NSMinYEdge)
@@ -81,6 +79,13 @@ class NodeBoxDocument(NSDocument):
         x = self.outputView.frame().size.width - 17
         self.animationSpinner.setFrame_(((x,3),(16,16)))
         self.toggleStatusBar_(self)
+
+    def windowDidResignKey_(self, note):
+        self.editorView.window().makeFirstResponder_(None)
+
+    def windowDidBecomeKey_(self, note):
+        self.editorView.window().makeFirstResponder_(self.editorView)
+        self.editorView.focus()
 
     def windowWillUseStandardFrame_defaultFrame_(self, win, rect):
         container = self.graphicsView.superview().superview().superview().superview() # nssplitview or nsview
