@@ -1,83 +1,57 @@
 import re
 import os
+import json
 from AppKit import *
 from Foundation import *
 from subprocess import Popen, PIPE
 from nodebox import bundle_path
 
-def get_default(label, packed=False):
+
+def get_default(label):
     if not label.startswith('NS'):
         label = 'nodebox:%s'%label
     pref = NSUserDefaults.standardUserDefaults().objectForKey_(label)
-    return pref if not packed else unpackAttrs(pref)
+    return pref
 
-def set_default(label, value, packed=False):
+def set_default(label, value):
     if not label.startswith('NS'):
         label = 'nodebox:%s'%label    
-    value = value if not packed else packAttrs(value)
     NSUserDefaults.standardUserDefaults().setObject_forKey_(value, label)
 
-FG_COLOR = NSForegroundColorAttributeName
-BG_COLOR = NSBackgroundColorAttributeName
+def defaultDefaults():
+    return {
+        "nodebox:remote-port": 9001,
+        "nodebox:theme":"Blackboard",
+        "nodebox:font-name":"Menlo",
+        "nodebox:font-size":11,
+    }
+NSUserDefaults.standardUserDefaults().registerDefaults_(defaultDefaults())
+THEMES = json.load(file(bundle_path('Contents/Resources/ui/themes.json')))
+ERR_COL = NSColor.colorWithRed_green_blue_alpha_(167/255.0, 41/255.0, 34/255.0, 1.0)
 
-def unpackAttrs(d):
-    unpacked = {}
-    for key, value in d.items():
-        if key == NSFontAttributeName:
-            value = NSFont.fontWithName_size_(value['name'], value['size'])
-        elif key in (FG_COLOR, BG_COLOR):
-            r, g, b, a = map(float, value.split())
-            value = NSColor.colorWithCalibratedRed_green_blue_alpha_(r, g, b, a)
-        elif isinstance(value, (dict, NSDictionary)):
-            value = unpackAttrs(value)
-        unpacked[key] = value
-    return unpacked
+def _hex_to_nscolor(hexclr):
+    hexclr = hexclr.lstrip('#')
+    r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
+    return NSColor.colorWithDeviceRed_green_blue_alpha_(r,g,b,1.0)
 
-def packAttrs(d):
-    packed = {}
-    for key, value in d.items():
-        if key == NSFontAttributeName:
-            value = {"name": value.fontName(), "size": value.pointSize()}
-        elif key in (FG_COLOR, BG_COLOR):
-            channels = value.colorUsingColorSpaceName_(NSCalibratedRGBColorSpace).getRed_green_blue_alpha_(None, None, None, None)
-            value = " ".join(map(str, channels))
-            packed = {key:value}
-            break
-        elif isinstance(value, (dict, NSDictionary)):
-            value = packAttrs(value)
-        packed[key] = value
-    return packed
-
-def getBasicTextAttributes():
-    return get_default("text-attributes", packed=True)
-
-def getSyntaxTextAttributes():
-    syntax = {}
-    basic = get_default("text-attributes", packed=True)
-    for fontname,attrs in get_default("text-colors", packed=True).items():
-        syntax[fontname] = dict(attrs.items()+basic.items())
-    return syntax
-
-def setBasicTextAttributes(basicAttrs):
-    if basicAttrs != getBasicTextAttributes():
-        set_default("text-attributes", basicAttrs, packed=True)
-        nc = NSNotificationCenter.defaultCenter()
-        nc.postNotificationName_object_("PyDETextFontChanged", None)
-
-def setSyntaxTextAttributes(syntaxAttrs):
-    if syntaxAttrs != getSyntaxTextAttributes():
-        set_default("text-colors", syntaxAttrs, packed=True)
-        nc = NSNotificationCenter.defaultCenter()
-        nc.postNotificationName_object_("PyDETextFontChanged", None)
-
-def setTextFont(font):
-    basicAttrs = getBasicTextAttributes()
-    syntaxAttrs = getSyntaxTextAttributes()
-    basicAttrs[NSFontAttributeName] = font
-    for v in syntaxAttrs.values():
-        v[NSFontAttributeName] = font
-    setBasicTextAttributes(basicAttrs)
-    setSyntaxTextAttributes(syntaxAttrs)
+_editor_info = {}
+def editor_info(name=None):
+    if not _editor_info:
+        info = dict(family=get_default('font-name'), px=get_default('font-size'))
+        info.update(THEMES.get(get_default('theme')))
+        info['colors'] = {k:_hex_to_nscolor(v) for k,v in info['colors'].items()}
+        fm = NSFontManager.sharedFontManager()
+        info['font'] = fm.fontWithFamily_traits_weight_size_(
+            info['family'], 
+            NSFixedPitchFontMask|NSUnboldFontMask|NSUnitalicFontMask,
+            6,
+            info['px']
+        )
+        _editor_info.clear()
+        _editor_info.update(info)
+    if name: 
+        return _editor_info.get(name)
+    return dict(_editor_info)
 
 def possibleToolLocations():
     homebin = '%s/bin/nodebox'%os.environ['HOME']
@@ -101,10 +75,13 @@ def possibleToolLocations():
             locations.append(path)
     return locations
 
+
+
 # class defined in NodeBoxPreferences.xib
 class NodeBoxPreferencesController(NSWindowController):
-    fontPreview = objc.IBOutlet()
-    keepWindows = objc.IBOutlet()
+    themeMenu = objc.IBOutlet()
+    fontMenu = objc.IBOutlet()
+    fontSizeMenu = objc.IBOutlet()
     toolInstall = objc.IBOutlet()
     toolPath = objc.IBOutlet()
     toolRepair = objc.IBOutlet()
@@ -114,16 +91,6 @@ class NodeBoxPreferencesController(NSWindowController):
     toolPortLabel = objc.IBOutlet()
     toolPortStepper = objc.IBOutlet()
     toolPortTimer = None
-    commentsColorWell = objc.IBOutlet()
-    funcClassColorWell = objc.IBOutlet()
-    keywordsColorWell = objc.IBOutlet()
-    stringsColorWell = objc.IBOutlet()
-    plainColorWell = objc.IBOutlet()
-    errColorWell = objc.IBOutlet()
-    pageColorWell = objc.IBOutlet()
-    selectionColorWell = objc.IBOutlet()
-    # toolFound = False
-    # toolValid = False
 
     def init(self):
         self = self.initWithWindowNibName_("NodeBoxPreferences")
@@ -132,46 +99,80 @@ class NodeBoxPreferencesController(NSWindowController):
         return self
 
     def awakeFromNib(self):
-        self.textFontChanged_(None)
-        syntaxAttrs = getSyntaxTextAttributes()
-        self.stringsColorWell.setColor_(syntaxAttrs["string"][FG_COLOR])
-        self.keywordsColorWell.setColor_(syntaxAttrs["keyword"][FG_COLOR])
-        self.funcClassColorWell.setColor_(syntaxAttrs["identifier"][FG_COLOR])
-        self.commentsColorWell.setColor_(syntaxAttrs["comment"][FG_COLOR])
-        self.plainColorWell.setColor_(syntaxAttrs["plain"][FG_COLOR])
-        self.errColorWell.setColor_(syntaxAttrs["err"][FG_COLOR])
-        self.pageColorWell.setColor_(syntaxAttrs["page"][BG_COLOR])
-        self.selectionColorWell.setColor_(syntaxAttrs["selection"][BG_COLOR])
-        self._wells = [self.commentsColorWell, self.funcClassColorWell, self.keywordsColorWell, self.stringsColorWell, self.plainColorWell, self.errColorWell, self.pageColorWell, self.selectionColorWell]
         self.toolPortStepper.setIntValue_(get_default('remote-port'))
         self.toolPort.setStringValue_(str(get_default('remote-port')))
         self.toolPort.setTextColor_(ERR_COL if not NSApp().delegate()._listener.active else NSColor.blackColor())
-        nc = NSNotificationCenter.defaultCenter()
-        nc.addObserver_selector_name_object_(self, "textFontChanged:", "PyDETextFontChanged", None)
-        nc.addObserver_selector_name_object_(self, "blur:", "NSWindowDidResignKeyNotification", None)
         self.checkTool()
+        self.checkThemes()
+        self.checkFonts()
 
-    def windowWillClose_(self, notification):
-        fm = NSFontManager.sharedFontManager()
-        fp = fm.fontPanel_(False)
-        if fp is not None:
-            fp.setDelegate_(None)
-            fp.close()
+    def validateMenuItem_(self, item):
+        return item.title() not in ('Light', 'Dark')
 
     def windowDidBecomeMain_(self, notification):
         self.checkTool()
+        self.checkFonts()
 
-    def controlTextDidChange_(self, note):
-        print note.userInfo
-        txt = re.sub(r'[^0-9]','', self.toolPort.stringValue())
-        print "changed",txt
-        self.toolPort.setStringValue_("huh?")
+    def checkThemes(self):
+        light = sorted([t for t,m in THEMES.items() if not m['dark']], reverse=True)
+        dark = sorted([t for t,m in THEMES.items() if m['dark']], reverse=True)
+        for theme in dark:
+            self.themeMenu.insertItemWithTitle_atIndex_(theme, 3)
+        for theme in light:
+            self.themeMenu.insertItemWithTitle_atIndex_(theme, 1)
+        for item in self.themeMenu.itemArray():
+            item.setRepresentedObject_(THEMES.get(item.title()))
+
+        selected = get_default('theme')
+        if selected not in THEMES:
+            selected = defaultDefaults()['nodebox:theme']
+
+        self.themeMenu.selectItemWithTitle_(selected)
 
     @objc.IBAction
-    def updateColors_(self, sender):
-        if not self.timer:
-            self.timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-                                    0.2, self, "timeToUpdateTheColors:", None, True)
+    def themeChanged_(self, sender):
+        set_default('theme', sender.title())
+        _editor_info.clear()
+        nc = NSNotificationCenter.defaultCenter()
+        nc.postNotificationName_object_("ThemeChanged", None)
+
+    def checkFonts(self):
+        allmono = NSFontManager.sharedFontManager().availableFontNamesWithTraits_(NSFixedPitchFontMask)
+        validmono = [fn for fn in allmono if NSFont.fontWithName_size_(fn, 12).mostCompatibleStringEncoding()==NSMacOSRomanStringEncoding]
+        validmono = [fn for fn in validmono if 'emoji' not in fn.lower()]
+        fonts = {NSFont.fontWithName_size_(fn, 12).familyName() for fn in validmono}
+        
+        fontname = get_default('font-name')
+        self.fontMenu.removeAllItems()
+        self.fontMenu.addItemsWithTitles_(sorted(fonts))
+        if fontname not in fonts:
+            fontname = fonts[0] # just in case the active font was uninstalled
+            set_default('font-name', fontname)
+        self.fontMenu.selectItemWithTitle_(fontname)
+        for item in self.fontMenu.itemArray():
+            item.setRepresentedObject_(item.title())
+
+        fontsize = get_default('font-size')
+        sizes =  [9, 10, 11, 12, 13, 14, 15, 16, 18, 21, 24, 36, 48, 60, 72]
+        self.fontSizeMenu.removeAllItems()
+        self.fontSizeMenu.addItemsWithTitles_(['%i pt'%s for s in sizes])
+        self.fontSizeMenu.selectItemWithTitle_('%i pt'%fontsize)
+        for item, size in zip(self.fontSizeMenu.itemArray(), sizes):
+            item.setRepresentedObject_(size)
+
+    @objc.IBAction
+    def fontChanged_(self, sender):
+        if sender is self.fontMenu:
+            default = 'font-name'
+        elif sender is self.fontSizeMenu:
+            default = 'font-size'
+        else:
+            return
+        item = sender.selectedItem()
+        set_default(default, item.representedObject())
+        _editor_info.clear()
+        nc = NSNotificationCenter.defaultCenter()
+        nc.postNotificationName_object_("FontChanged", None)
 
     def checkTool(self):
         broken = []
@@ -246,110 +247,5 @@ class NodeBoxPreferencesController(NSWindowController):
         NSApp().endSheet_(self.toolInstallSheet)
         self.toolInstallSheet.orderOut_(self)
 
-    def timeToUpdateTheColors_(self, sender):
-        syntaxAttrs = getSyntaxTextAttributes()
-        syntaxAttrs["string"][FG_COLOR] = self.stringsColorWell.color()
-        syntaxAttrs["keyword"][FG_COLOR] = self.keywordsColorWell.color()
-        syntaxAttrs["identifier"][FG_COLOR] = self.funcClassColorWell.color()
-        syntaxAttrs["comment"][FG_COLOR] = self.commentsColorWell.color()
-        syntaxAttrs["plain"][FG_COLOR] = self.plainColorWell.color()
-        syntaxAttrs["err"][FG_COLOR] = self.errColorWell.color()
-        syntaxAttrs["page"][BG_COLOR] = self.pageColorWell.color()
-        syntaxAttrs["selection"][BG_COLOR] = self.selectionColorWell.color()
-        setSyntaxTextAttributes(syntaxAttrs)
-        active = [w for w in self._wells if w.isActive()]
-        if not active:
-            self.stopUpdating()
-
-    def stopUpdating(self):
-        if self.timer:
-            self.timer.invalidate()
-            self.timer = None
-
-    @objc.IBAction
-    def chooseFont_(self, sender):
-        fm = NSFontManager.sharedFontManager()
-        basicAttrs = get_default("text-attributes", packed=True)
-        fm.setSelectedFont_isMultiple_(basicAttrs[NSFontAttributeName], False)
-        fm.orderFrontFontPanel_(sender)
-        fp = fm.fontPanel_(False)
-        fp.setDelegate_(self)
-
-    @objc.IBAction
-    def changeFont_(self, sender):
-        oldFont = get_default("text-attributes", packed=True)[NSFontAttributeName]
-        newFont = sender.convertFont_(oldFont)
-        if oldFont != newFont:
-            setTextFont(newFont)
-    
-    def blur_(self, note):
-        self.stopUpdating()
-        for well in [w for w in self._wells if w.isActive()]:
-            well.deactivate()
-        NSColorPanel.sharedColorPanel().orderOut_(objc.nil)
-
-    def textFontChanged_(self, notification):
-        basicAttrs = get_default("text-attributes", packed=True)
-        font = basicAttrs[NSFontAttributeName]
-        self.fontPreview.setFont_(font)
-        size = font.pointSize()
-        if size == int(size):
-            size = int(size)
-        s = u"%s %s" % (font.displayName(), size)
-        self.fontPreview.setStringValue_(s)
-
-    def __del__(self):
-        self.stopUpdating()
-        nc = NSNotificationCenter.defaultCenter()
-        nc.removeObserver_name_object_(self, "PyDETextFontChanged", None)
-        nc.removeObserver_name_object_(self, "NSWindowDidResignKeyNotification", None)
-
-ERR_COL = NSColor.colorWithRed_green_blue_alpha_(167/255.0, 41/255.0, 34/255.0, 1.0)
-def defaultDefaults():
-    _basicFont = NSFont.userFixedPitchFontOfSize_(11)
-    _BASICATTRS = {NSFontAttributeName: _basicFont,
-                   NSLigatureAttributeName: 0}
-    _LIGHT_SYNTAXCOLORS = {
-        # text colors
-        "keyword": {FG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.7287307382, 0.2822835445, 0.01825759932, 1.0)},
-        "identifier": {FG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.0636304393411, 0.506952047348, 0.661560952663, 1.0)},
-        "string": {FG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.0979111269116, 0.482684463263, 0.00660359347239, 1.0)},
-        "comment": {FG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.391519248486, 0.391507565975, 0.391514211893, 1.0)},
-        "plain": {FG_COLOR: NSColor.blackColor()},
-        "err": {FG_COLOR: ERR_COL},
-        # background colors
-        "page": {BG_COLOR: NSColor.whiteColor()},
-        "selection": {BG_COLOR: NSColor.colorWithRed_green_blue_alpha_(0.743757605553, 0.976963877678, 0.998794317245, 1.0)},
-    }
-
-    _DARK_SYNTAXCOLORS = {
-        # text colors
-        "identifier":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.72914814949, 0.171053349972, 0.106676459312, 1.0)},
-        "constant":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.0636304393411, 0.506952047348, 0.661560952663, 1.0)},
-        "keyword":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(243/255.0, 192/255.0, 36/255.0, 1.0)},
-        "string":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.132785454392, 0.560580074787, 0.0322014801204, 1.0)},
-        "comment":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.43789768219, 0.497855067253, 0.612316548824, 1.0)},
-        "plain":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.789115667343, 0.843085050583, 0.837674379349, 1.0)},
-        "err":{FG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.664596498013, 0.0, 0.0132505837828, 1.0)},
-        # background colors
-        "page":{BG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.0436993055046, 0.0851569622755, 0.146313145757, 1.0)},
-        "selection":{BG_COLOR:NSColor.colorWithRed_green_blue_alpha_(0.19904075563, 0.230226844549, 0.373898953199, 1.0)},
-
-    }
-    
-
-    _SYNTAXCOLORS = _DARK_SYNTAXCOLORS
-
-    for key, value in _SYNTAXCOLORS.items():
-        newVal = _BASICATTRS.copy()
-        newVal.update(value)
-        _SYNTAXCOLORS[key] = NSDictionary.dictionaryWithDictionary_(newVal)
-    _BASICATTRS = NSDictionary.dictionaryWithDictionary_(_BASICATTRS)
-
-    return {
-        # "NSQuitAlwaysKeepsWindows": True,
-        "nodebox:remote-port": 9001,
-        "nodebox:text-attributes": packAttrs(_BASICATTRS),
-        "nodebox:text-colors": packAttrs(_SYNTAXCOLORS),
-    }
-NSUserDefaults.standardUserDefaults().registerDefaults_(defaultDefaults())
+    # def windowWillClose_(self, notification):
+    #     pass
