@@ -7,6 +7,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NodeBoxPreferencesController">
             <connections>
+                <outlet property="bindingsMenu" destination="m8W-Aw-ued" id="X0B-7X-EFU"/>
                 <outlet property="fontMenu" destination="e2R-x9-uL7" id="dQo-AC-x7h"/>
                 <outlet property="fontSizeMenu" destination="6ih-c5-vLJ" id="UW2-OU-N5k"/>
                 <outlet property="themeMenu" destination="CaR-Wn-WAI" id="bO2-aK-jzu"/>
@@ -26,22 +27,22 @@
         <window title="NodeBox Preferences" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" wantsToBeColor="NO" animationBehavior="default" id="5" userLabel="PrefsPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="42" y="380" width="367" height="177"/>
+            <rect key="contentRect" x="42" y="380" width="367" height="188"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1280" height="832"/>
             <value key="minSize" type="size" width="300" height="150"/>
             <view key="contentView" id="6">
-                <rect key="frame" x="0.0" y="0.0" width="367" height="177"/>
+                <rect key="frame" x="0.0" y="0.0" width="367" height="188"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <box autoresizesSubviews="NO" title="Editor settings" borderType="line" id="BbW-Qn-TBC">
-                        <rect key="frame" x="17" y="72" width="333" height="97"/>
+                        <rect key="frame" x="17" y="70" width="333" height="110"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <view key="contentView">
-                            <rect key="frame" x="1" y="1" width="331" height="81"/>
+                            <rect key="frame" x="1" y="1" width="331" height="94"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="YhI-yC-bMB">
-                                    <rect key="frame" x="12" y="50" width="64" height="17"/>
+                                    <rect key="frame" x="12" y="67" width="64" height="17"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Typeface:" id="OKj-2N-ZVL">
                                         <font key="font" metaFont="system"/>
@@ -50,7 +51,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="BN2-f7-Mcx">
-                                    <rect key="frame" x="26" y="20" width="50" height="17"/>
+                                    <rect key="frame" x="26" y="42" width="50" height="17"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Syntax:" id="bOX-yZ-t90">
                                         <font key="font" metaFont="system"/>
@@ -59,9 +60,9 @@
                                     </textFieldCell>
                                 </textField>
                                 <popUpButton verticalHuggingPriority="750" id="CaR-Wn-WAI">
-                                    <rect key="frame" x="80" y="13" width="236" height="26"/>
+                                    <rect key="frame" x="79" y="37" width="237" height="22"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="Tjb-Bh-uZS">
+                                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="Tjb-Bh-uZS">
                                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="smallSystem"/>
                                         <menu key="menu" title="OtherViews" id="SCa-yH-Mrw">
@@ -77,9 +78,9 @@
                                     </connections>
                                 </popUpButton>
                                 <popUpButton verticalHuggingPriority="750" id="e2R-x9-uL7">
-                                    <rect key="frame" x="80" y="44" width="170" height="26"/>
+                                    <rect key="frame" x="79" y="63" width="171" height="22"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="CDg-nc-axr">
+                                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="CDg-nc-axr">
                                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="smallSystem"/>
                                         <menu key="menu" title="OtherViews" id="sTI-uS-Lcw"/>
@@ -89,9 +90,9 @@
                                     </connections>
                                 </popUpButton>
                                 <popUpButton verticalHuggingPriority="750" id="6ih-c5-vLJ">
-                                    <rect key="frame" x="253" y="44" width="63" height="26"/>
+                                    <rect key="frame" x="252" y="63" width="64" height="22"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <popUpButtonCell key="cell" type="push" title="13 pt" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="gUg-JJ-LMT" id="liq-9G-qEy">
+                                    <popUpButtonCell key="cell" type="push" title="13 pt" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="gUg-JJ-LMT" id="liq-9G-qEy">
                                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="smallSystem"/>
                                         <menu key="menu" title="OtherViews" id="4z1-0y-99C">
@@ -104,6 +105,33 @@
                                     </popUpButtonCell>
                                     <connections>
                                         <action selector="fontChanged:" target="-2" id="88B-7k-Rt7"/>
+                                    </connections>
+                                </popUpButton>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="RlH-9Y-Ubh">
+                                    <rect key="frame" x="14" y="15" width="62" height="17"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Behavior:" id="9u0-yR-VAd">
+                                        <font key="font" metaFont="system"/>
+                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                                <popUpButton verticalHuggingPriority="750" id="m8W-Aw-ued">
+                                    <rect key="frame" x="79" y="11" width="237" height="22"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="Ku8-By-OnQ">
+                                        <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                        <font key="font" metaFont="smallSystem"/>
+                                        <menu key="menu" title="OtherViews" id="UjV-pw-s04">
+                                            <items>
+                                                <menuItem title="Macintosh" id="bEk-U6-Qru"/>
+                                                <menuItem title="Emacs" tag="1" id="AEv-ee-hQl"/>
+                                                <menuItem title="Vim" tag="2" id="Vck-kB-oJq"/>
+                                            </items>
+                                        </menu>
+                                    </popUpButtonCell>
+                                    <connections>
+                                        <action selector="bindingsChanged:" target="-2" id="Fx6-Vj-tlE"/>
                                     </connections>
                                 </popUpButton>
                             </subviews>

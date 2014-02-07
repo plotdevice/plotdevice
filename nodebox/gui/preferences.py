@@ -8,31 +8,35 @@ from nodebox import bundle_path
 
 
 def get_default(label):
-    if not label.startswith('NS'):
+    if not re.match(r'^(NS|Web)', label):
         label = 'nodebox:%s'%label
     pref = NSUserDefaults.standardUserDefaults().objectForKey_(label)
     return pref
 
 def set_default(label, value):
-    if not label.startswith('NS'):
+    if not re.match(r'^(NS|Web)', label):
         label = 'nodebox:%s'%label    
     NSUserDefaults.standardUserDefaults().setObject_forKey_(value, label)
+    NSUserDefaults.standardUserDefaults().synchronize()
 
 def defaultDefaults():
     return {
+        "WebKitDeveloperExtras":True,
         "nodebox:remote-port": 9001,
         "nodebox:theme":"Blackboard",
+        "nodebox:bindings":"mac",
         "nodebox:font-name":"Menlo",
         "nodebox:font-size":11,
     }
 NSUserDefaults.standardUserDefaults().registerDefaults_(defaultDefaults())
 THEMES = json.load(file(bundle_path('Contents/Resources/ui/themes.json')))
 ERR_COL = NSColor.colorWithRed_green_blue_alpha_(167/255.0, 41/255.0, 34/255.0, 1.0)
+OK_COL = NSColor.colorWithRed_green_blue_alpha_(60/255.0, 60/255.0, 60/255.0, 1.0)
 
 def _hex_to_nscolor(hexclr):
     hexclr = hexclr.lstrip('#')
-    r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
-    return NSColor.colorWithDeviceRed_green_blue_alpha_(r,g,b,1.0)
+    r, g, b, a = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6], hexclr[6:8])]
+    return NSColor.colorWithDeviceRed_green_blue_alpha_(r,g,b,a)
 
 _editor_info = {}
 def editor_info(name=None):
@@ -80,6 +84,7 @@ def possibleToolLocations():
 # class defined in NodeBoxPreferences.xib
 class NodeBoxPreferencesController(NSWindowController):
     themeMenu = objc.IBOutlet()
+    bindingsMenu = objc.IBOutlet()
     fontMenu = objc.IBOutlet()
     fontSizeMenu = objc.IBOutlet()
     toolInstall = objc.IBOutlet()
@@ -101,10 +106,15 @@ class NodeBoxPreferencesController(NSWindowController):
     def awakeFromNib(self):
         self.toolPortStepper.setIntValue_(get_default('remote-port'))
         self.toolPort.setStringValue_(str(get_default('remote-port')))
-        self.toolPort.setTextColor_(ERR_COL if not NSApp().delegate()._listener.active else NSColor.blackColor())
+        self.toolPort.setTextColor_(ERR_COL if not NSApp().delegate()._listener.active else OK_COL)
         self.checkTool()
         self.checkThemes()
         self.checkFonts()
+        self.checkBindings()
+
+    def _notify(self, notification):
+        nc = NSNotificationCenter.defaultCenter()
+        nc.postNotificationName_object_(notification, None)
 
     def validateMenuItem_(self, item):
         return item.title() not in ('Light', 'Dark')
@@ -112,6 +122,17 @@ class NodeBoxPreferencesController(NSWindowController):
     def windowDidBecomeMain_(self, notification):
         self.checkTool()
         self.checkFonts()
+
+    def checkBindings(self):
+        style = get_default('bindings')
+        tag = ['mac','emacs','vim']
+        self.bindingsMenu.selectItemWithTag_(tag.index(style))
+
+    @objc.IBAction
+    def bindingsChanged_(self, sender):
+        style = ['mac','emacs','vim'][sender.selectedItem().tag()]
+        set_default('bindings', style)
+        self._notify('BindingsChanged')
 
     def checkThemes(self):
         light = sorted([t for t,m in THEMES.items() if not m['dark']], reverse=True)
@@ -133,8 +154,7 @@ class NodeBoxPreferencesController(NSWindowController):
     def themeChanged_(self, sender):
         set_default('theme', sender.title())
         _editor_info.clear()
-        nc = NSNotificationCenter.defaultCenter()
-        nc.postNotificationName_object_("ThemeChanged", None)
+        self._notify("ThemeChanged")
 
     def checkFonts(self):
         allmono = NSFontManager.sharedFontManager().availableFontNamesWithTraits_(NSFixedPitchFontMask)
@@ -171,8 +191,7 @@ class NodeBoxPreferencesController(NSWindowController):
         item = sender.selectedItem()
         set_default(default, item.representedObject())
         _editor_info.clear()
-        nc = NSNotificationCenter.defaultCenter()
-        nc.postNotificationName_object_("FontChanged", None)
+        self._notify("FontChanged")
 
     def checkTool(self):
         broken = []
@@ -196,7 +215,7 @@ class NodeBoxPreferencesController(NSWindowController):
         self.toolPath.setSelectable_(found is not None)
         # self.toolPath.setStringValue_(found.replace(os.environ['HOME'],'~') if found else '')
         self.toolPath.setStringValue_(found if found else '')
-        self.toolPath.setTextColor_(ERR_COL if not valid else NSColor.blackColor())
+        self.toolPath.setTextColor_(ERR_COL if not valid else OK_COL)
         self.toolRepair.setHidden_(not (found and not valid) )
         self.toolPort.setHidden_(not valid)
         self.toolPortLabel.setHidden_(not valid)

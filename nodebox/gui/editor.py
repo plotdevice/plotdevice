@@ -35,8 +35,10 @@ class EditorView(NSView):
         nc = NSNotificationCenter.defaultCenter()
         nc.addObserver_selector_name_object_(self, "themeChanged", "ThemeChanged", None)
         nc.addObserver_selector_name_object_(self, "fontChanged", "FontChanged", None)
+        nc.addObserver_selector_name_object_(self, "bindingsChanged", "BindingsChanged", None)
         self.themeChanged()
         self.fontChanged()
+        self.bindingsChanged()
 
     def webView_didFinishLoadForFrame_(self, sender, frame):
         self.webview.windowScriptObject().setValue_forKey_(self,'app')
@@ -74,6 +76,9 @@ class EditorView(NSView):
     def themeChanged(self, note=None):
         self.js('editor.theme("%(module)s");'%editor_info())
 
+    def bindingsChanged(self, note=None):
+        self.js('editor.bindings("%s");'%get_default('bindings'))        
+
     def focus(self):
         self.js('editor.focus();')
 
@@ -82,6 +87,11 @@ class EditorView(NSView):
     def _set_source(self, src):
         self.js(u'editor.source(%s)'%json.dumps(src, ensure_ascii=False))
     source = property(_get_source, _set_source)
+
+
+    @objc.IBAction
+    def aceAutocomplete_(self, sender):
+        print "autocomplete"
 
     # JS-initiated actions
 
@@ -95,7 +105,6 @@ class OutputTextView(NSTextView):
 
     def awakeFromNib(self):
         self.ts = self.textStorage()
-        self.info = editor_info()
         self.colorize()
         self.setTextContainerInset_( (0,4) ) # a pinch of top-margin
         self.setUsesFindBar_(True)
@@ -112,22 +121,22 @@ class OutputTextView(NSTextView):
         nc.addObserver_selector_name_object_(self, "fontChanged", "FontChanged", None)
 
     def fontChanged(self, note=None):
-        self.info = editor_info()
-        self.setFont_(self.info['font'])
+        self.setFont_(editor_info('font'))
         self.colorize()
 
     def themeChanged(self, note=None):
-        self.info = editor_info()
         self.colorize()
 
     def canBecomeKeyView(self):
         return False
 
     def colorize(self):
-        clr, font = self.info['colors'], self.info['font']
+        clr, font = editor_info('colors'), editor_info('font')
         self.setBackgroundColor_(clr['background'])
         self.setTypingAttributes_({"NSColor":clr['color'], "NSFont":font, "NSLigature":0})
         self.setSelectedTextAttributes_({"NSBackgroundColor":clr['selection']})
+        scrollview = self.superview().superview()
+        scrollview.setScrollerKnobStyle_(2 if editor_info('dark') else 1)
         
         # recolor previous contents
         attrs = self._attrs()
@@ -142,9 +151,8 @@ class OutputTextView(NSTextView):
 
 
     def _attrs(self, stream=None):
-        clr, font = self.info['colors'], self.info['font']
+        clr, font = editor_info('colors'), editor_info('font')
         basic_attrs = {"NSFont":font, "NSLigature":0}
-
         attrs = {
             'message':{"NSColor":clr['color']},
             'info':{"NSColor":clr['comment']},
