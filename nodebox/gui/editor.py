@@ -25,8 +25,6 @@ class EditorView(NSView):
     def awakeFromNib(self):
         self.webview = WebView.alloc().init()
         self.webview.setFrameLoadDelegate_(self)
-        self._queue = []
-        self._wakeup = None
         self.addSubview_(self.webview)
         html = bundle_path('Contents/Resources/ui/editor.html')
         ui = file(html).read().decode('utf-8')
@@ -36,6 +34,8 @@ class EditorView(NSView):
         nc.addObserver_selector_name_object_(self, "themeChanged", "ThemeChanged", None)
         nc.addObserver_selector_name_object_(self, "fontChanged", "FontChanged", None)
         nc.addObserver_selector_name_object_(self, "bindingsChanged", "BindingsChanged", None)
+        self._wakeup = set_timeout(self, '_jostle', 0.2, repeat=True)
+        self._queue = []
         self.themeChanged()
         self.fontChanged()
         self.bindingsChanged()
@@ -49,21 +49,22 @@ class EditorView(NSView):
     def resizeWebview(self):
         self.webview.setFrame_(self.bounds())
 
-    def js(self, cmds):
+    def js(self, cmds):            
         if not isinstance(cmds, (list,tuple)):
             cmds = [cmds]
-        self._queue.extend(cmds)
-        if not self._wakeup:
-            self._wakeup = set_timeout(self, '_execute', 0.2)
-
-    def _execute(self):
-        if self.webview.isLoading():
-            self._wakeup = set_timeout(self, '_execute', 0.2)
+        if self._wakeup:
+            self._queue.extend(cmds)
         else:
+            for op in cmds:
+                self.webview.stringByEvaluatingJavaScriptFromString_(op)
+
+    def _jostle(self):
+        if not self.webview.isLoading():
             for op in self._queue:
                 self.webview.stringByEvaluatingJavaScriptFromString_(op)
-            self._queue = []
+            self._wakeup.invalidate()
             self._wakeup = None
+            self._queue = None
 
     def isSelectorExcludedFromWebScript_(self, sel):
         return False
@@ -81,6 +82,9 @@ class EditorView(NSView):
 
     def focus(self):
         self.js('editor.focus();')
+
+    def blur(self):
+        self.js('editor.blur();')
 
     def _get_source(self):
         return self.webview.stringByEvaluatingJavaScriptFromString_('editor.source();')
