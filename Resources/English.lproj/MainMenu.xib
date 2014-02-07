@@ -136,7 +136,8 @@
                             <menuItem isSeparatorItem="YES" id="423">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Export as Image..." keyEquivalent="e" id="362">
+                            <menuItem title="Export as Image..." id="362">
+                                <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="exportAsImage:" target="-1" id="491"/>
                                 </connections>
@@ -209,7 +210,7 @@
                             <menuItem title="Find" id="444">
                                 <menu key="submenu" title="Find" id="443">
                                     <items>
-                                        <menuItem title="Find…" tag="1" keyEquivalent="f" id="448">
+                                        <menuItem title="Find…" state="on" tag="1" keyEquivalent="f" id="448">
                                             <connections>
                                                 <action selector="performFindPanelAction:" target="-1" id="454"/>
                                             </connections>
@@ -225,7 +226,6 @@
                                             </connections>
                                         </menuItem>
                                         <menuItem title="Use Selection for Find" tag="7" keyEquivalent="e" id="446">
-                                            <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                             <connections>
                                                 <action selector="performFindPanelAction:" target="-1" id="452"/>
                                             </connections>
@@ -292,7 +292,7 @@
                                 </menu>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="DSK-3c-GP2"/>
-                            <menuItem title="Toggle Status Bar" keyEquivalent="/" id="Aeg-Zo-fi3">
+                            <menuItem title="Toggle Status Bar" keyEquivalent="\" id="Aeg-Zo-fi3">
                                 <connections>
                                     <action selector="toggleStatusBar:" target="-1" id="sxb-wT-2XG"/>
                                 </connections>
@@ -318,9 +318,16 @@
                                     <action selector="stopScript:" target="-1" id="483"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Check syntax" keyEquivalent="k" id="400">
+                            <menuItem isSeparatorItem="YES" id="GZS-GI-N7W">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Autocomplete" id="400">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+CQ
+</string>
+                                <modifierMask key="keyEquivalentModifierMask" option="YES"/>
                                 <connections>
-                                    <action selector="checkSyntax:" target="-1" id="404"/>
+                                    <action selector="aceAutocomplete:" target="-1" id="stZ-Ik-Gx7"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="478">

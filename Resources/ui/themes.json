@@ -2,11 +2,11 @@
   "Tomorrow Night Blue": {
     "dark": true, 
     "colors": {
-      "color": "#ffffff", 
-      "comment": "#7285b7", 
-      "selection": "#003f8e", 
-      "background": "#002451", 
-      "error": "#ff9da4"
+      "color": "#ffffffff", 
+      "comment": "#7285b7ff", 
+      "selection": "#003f8eff", 
+      "background": "#002451ff", 
+      "error": "#ff9da4ff"
     }, 
     "theme": "Tomorrow Night Blue", 
     "module": "ace/theme/tomorrow_night_blue"
@@ -14,11 +14,11 @@
   "Chrome": {
     "dark": false, 
     "colors": {
-      "color": "#000000", 
-      "comment": "#236e24", 
-      "selection": "#b5d5ff", 
-      "background": "#ffffff", 
-      "error": "#ff0000"
+      "color": "#000000ff", 
+      "comment": "#236e24ff", 
+      "selection": "#b5d5ffff", 
+      "background": "#ffffffff", 
+      "error": "#ff0000ff"
     }, 
     "theme": "Chrome", 
     "module": "ace/theme/chrome"
@@ -26,11 +26,11 @@
   "Tomorrow Night Eighties": {
     "dark": true, 
     "colors": {
-      "color": "#cccccc", 
-      "comment": "#999999", 
-      "selection": "#515151", 
-      "background": "#2d2d2d", 
-      "error": "#f99157"
+      "color": "#ccccccff", 
+      "comment": "#999999ff", 
+      "selection": "#515151ff", 
+      "background": "#2d2d2dff", 
+      "error": "#f99157ff"
     }, 
     "theme": "Tomorrow Night Eighties", 
     "module": "ace/theme/tomorrow_night_eighties"
@@ -38,11 +38,11 @@
   "Chaos": {
     "dark": true, 
     "colors": {
-      "color": "#e6e1dc", 
-      "comment": "#555555", 
-      "selection": "#494836", 
-      "background": "#161616", 
-      "error": "#ff308f"
+      "color": "#e6e1dcff", 
+      "comment": "#555555ff", 
+      "selection": "#494836ff", 
+      "background": "#161616ff", 
+      "error": "#ff308fff"
     }, 
     "theme": "Chaos", 
     "module": "ace/theme/chaos"
@@ -50,11 +50,11 @@
   "Terminal": {
     "dark": true, 
     "colors": {
-      "color": "#dedede", 
-      "comment": "#ff4500", 
-      "selection": "#424242", 
-      "background": "#000000", 
-      "error": "#ff1493"
+      "color": "#dededeff", 
+      "comment": "#ff4500ff", 
+      "selection": "#424242ff", 
+      "background": "#000000ff", 
+      "error": "#ff1493ff"
     }, 
     "theme": "Terminal", 
     "module": "ace/theme/terminal"
@@ -62,11 +62,11 @@
   "Dreamweaver": {
     "dark": false, 
     "colors": {
-      "color": "#000000", 
-      "comment": "#4c886b", 
-      "selection": "#b5d5ff", 
-      "background": "#ffffff", 
-      "error": "#ff0000"
+      "color": "#000000ff", 
+      "comment": "#4c886bff", 
+      "selection": "#b5d5ffff", 
+      "background": "#ffffffff", 
+      "error": "#ff0000ff"
     }, 
     "theme": "Dreamweaver", 
     "module": "ace/theme/dreamweaver"
@@ -74,11 +74,11 @@
   "Merbivore Soft": {
     "dark": true, 
     "colors": {
-      "color": "#e6e1dc", 
-      "comment": "#ac4bb8", 
-      "selection": "#494949", 
-      "background": "#1c1c1c", 
-      "error": "#fc803a"
+      "color": "#e6e1dcff", 
+      "comment": "#ac4bb8ff", 
+      "selection": "#494949ff", 
+      "background": "#1c1c1cff", 
+      "error": "#fc803aff"
     }, 
     "theme": "Merbivore Soft", 
     "module": "ace/theme/merbivore_soft"
@@ -86,11 +86,11 @@
   "Monokai": {
     "dark": true, 
     "colors": {
-      "color": "#f8f8f2", 
-      "comment": "#75715e", 
-      "selection": "#49483e", 
-      "background": "#272822", 
-      "error": "#f92672"
+      "color": "#f8f8f2ff", 
+      "comment": "#75715eff", 
+      "selection": "#49483eff", 
+      "background": "#272822ff", 
+      "error": "#f92672ff"
     }, 
     "theme": "Monokai", 
     "module": "ace/theme/monokai"
@@ -98,11 +98,11 @@
   "Solarized Light": {
     "dark": false, 
     "colors": {
-      "color": "#586e75", 
-      "comment": "#93a1a1", 
-      "selection": "#073643", 
-      "background": "#fdf6e3", 
-      "error": "#d30102"
+      "color": "#586e75ff", 
+      "comment": "#93a1a1ff", 
+      "selection": "#07364316", 
+      "background": "#fdf6e3ff", 
+      "error": "#d30102ff"
     }, 
     "theme": "Solarized Light", 
     "module": "ace/theme/solarized_light"
@@ -110,11 +110,11 @@
   "Blackboard": {
     "dark": true, 
     "colors": {
-      "color": "#f8f8f8", 
-      "comment": "#aeaeae", 
-      "selection": "#325087", 
-      "background": "#0c1021", 
-      "error": "#ff6400"
+      "color": "#f8f8f8ff", 
+      "comment": "#aeaeaeff", 
+      "selection": "#325087ff", 
+      "background": "#0c1021ff", 
+      "error": "#ff6400ff"
     }, 
     "theme": "Blackboard", 
     "module": "ace/theme/blackboard"
@@ -122,11 +122,11 @@
   "Merbivore": {
     "dark": true, 
     "colors": {
-      "color": "#e6e1dc", 
-      "comment": "#ad2ea4", 
-      "selection": "#454545", 
-      "background": "#161616", 
-      "error": "#fc6f09"
+      "color": "#e6e1dcff", 
+      "comment": "#ad2ea4ff", 
+      "selection": "#454545ff", 
+      "background": "#161616ff", 
+      "error": "#fc6f09ff"
     }, 
     "theme": "Merbivore", 
     "module": "ace/theme/merbivore"
@@ -134,11 +134,11 @@
   "Mono Industrial": {
     "dark": true, 
     "colors": {
-      "color": "#ffffff", 
-      "comment": "#666c68", 
-      "selection": "#919994", 
-      "background": "#222c28", 
-      "error": "#e98800"
+      "color": "#ffffffff", 
+      "comment": "#666c68ff", 
+      "selection": "#91999466", 
+      "background": "#222c28ff", 
+      "error": "#e98800ff"
     }, 
     "theme": "Mono Industrial", 
     "module": "ace/theme/mono_industrial"
@@ -146,11 +146,11 @@
   "Twilight": {
     "dark": true, 
     "colors": {
-      "color": "#f8f8f8", 
-      "comment": "#5f5a60", 
-      "selection": "#ddf0ff", 
-      "background": "#141414", 
-      "error": "#cf6a4c"
+      "color": "#f8f8f8ff", 
+      "comment": "#5f5a60ff", 
+      "selection": "#ddf0ff33", 
+      "background": "#141414ff", 
+      "error": "#cf6a4cff"
     }, 
     "theme": "Twilight", 
     "module": "ace/theme/twilight"
@@ -158,11 +158,11 @@
   "Idle Fingers": {
     "dark": true, 
     "colors": {
-      "color": "#ffffff", 
-      "comment": "#bc9458", 
-      "selection": "#5a647e", 
-      "background": "#323232", 
-      "error": "#b83426"
+      "color": "#ffffffff", 
+      "comment": "#bc9458ff", 
+      "selection": "#5a647ee0", 
+      "background": "#323232ff", 
+      "error": "#b83426ff"
     }, 
     "theme": "Idle Fingers", 
     "module": "ace/theme/idle_fingers"
@@ -170,11 +170,11 @@
   "Github": {
     "dark": false, 
     "colors": {
-      "color": "#000000", 
-      "comment": "#999988", 
-      "selection": "#b5d5ff", 
-      "background": "#ffffff", 
-      "error": "#dd1144"
+      "color": "#000000ff", 
+      "comment": "#999988ff", 
+      "selection": "#b5d5ffff", 
+      "background": "#ffffffff", 
+      "error": "#dd1144ff"
     }, 
     "theme": "Github", 
     "module": "ace/theme/github"
@@ -182,11 +182,11 @@
   "Clouds": {
     "dark": false, 
     "colors": {
-      "color": "#000000", 
-      "comment": "#bcc8ba", 
-      "selection": "#bdd5fc", 
-      "background": "#ffffff", 
-      "error": "#c52727"
+      "color": "#000000ff", 
+      "comment": "#bcc8baff", 
+      "selection": "#bdd5fcff", 
+      "background": "#ffffffff", 
+      "error": "#c52727ff"
     }, 
     "theme": "Clouds", 
     "module": "ace/theme/clouds"
@@ -194,11 +194,11 @@
   "Katzenmilch": {
     "dark": false, 
     "colors": {
-      "color": "#0f0009", 
-      "comment": "#404f50", 
-      "selection": "#6405d0", 
-      "background": "#f3f2f3", 
-      "error": "#ef6aa7"
+      "color": "#0f0009ff", 
+      "comment": "#404f50aa", 
+      "selection": "#6405d044", 
+      "background": "#f3f2f3ff", 
+      "error": "#ef6aa7ff"
     }, 
     "theme": "Katzenmilch", 
     "module": "ace/theme/katzenmilch"
@@ -206,11 +206,11 @@
   "Kuroir": {
     "dark": false, 
     "colors": {
-      "color": "#363636", 
-      "comment": "#949494", 
-      "selection": "#f5aa00", 
-      "background": "#e8e9e8", 
-      "error": "#fd1224"
+      "color": "#363636ff", 
+      "comment": "#949494e8", 
+      "selection": "#f5aa0091", 
+      "background": "#e8e9e8ff", 
+      "error": "#fd1224ff"
     }, 
     "theme": "Kuroir", 
     "module": "ace/theme/kuroir"
@@ -218,11 +218,11 @@
   "Vibrant Ink": {
     "dark": true, 
     "colors": {
-      "color": "#ffffff", 
-      "comment": "#9933cc", 
-      "selection": "#6699cc", 
-      "background": "#0f0f0f", 
-      "error": "#ff6600"
+      "color": "#ffffffff", 
+      "comment": "#9933ccff", 
+      "selection": "#6699ccff", 
+      "background": "#0f0f0fff", 
+      "error": "#ff6600ff"
     }, 
     "theme": "Vibrant Ink", 
     "module": "ace/theme/vibrant_ink"
@@ -230,11 +230,11 @@
   "Eclipse": {
     "dark": false, 
     "colors": {
-      "color": "#000000", 
-      "comment": "#719682", 
-      "selection": "#b5d5ff", 
-      "background": "#ffffff", 
-      "error": "#7f0055"
+      "color": "#000000ff", 
+      "comment": "#719682ff", 
+      "selection": "#b5d5ffff", 
+      "background": "#ffffffff", 
+      "error": "#7f0055ff"
     }, 
     "theme": "Eclipse", 
     "module": "ace/theme/eclipse"
@@ -242,11 +242,11 @@
   "Tomorrow Night Bright": {
     "dark": true, 
     "colors": {
-      "color": "#dedede", 
-      "comment": "#969896", 
-      "selection": "#424242", 
-      "background": "#000000", 
-      "error": "#e78c45"
+      "color": "#dededeff", 
+      "comment": "#969896ff", 
+      "selection": "#424242ff", 
+      "background": "#000000ff", 
+      "error": "#e78c45ff"
     }, 
     "theme": "Tomorrow Night Bright", 
     "module": "ace/theme/tomorrow_night_bright"
@@ -254,11 +254,11 @@
   "Textmate": {
     "dark": false, 
     "colors": {
-      "color": "#000000", 
-      "comment": "#4c886b", 
-      "selection": "#b5d5ff", 
-      "background": "#ffffff", 
-      "error": "#ff0000"
+      "color": "#000000ff", 
+      "comment": "#4c886bff", 
+      "selection": "#b5d5ffff", 
+      "background": "#ffffffff", 
+      "error": "#ff0000ff"
     }, 
     "theme": "Textmate", 
     "module": "ace/theme/textmate"
@@ -266,11 +266,11 @@
   "Tomorrow Night": {
     "dark": true, 
     "colors": {
-      "color": "#c5c8c6", 
-      "comment": "#969896", 
-      "selection": "#373b41", 
-      "background": "#1d1f21", 
-      "error": "#de935f"
+      "color": "#c5c8c6ff", 
+      "comment": "#969896ff", 
+      "selection": "#373b41ff", 
+      "background": "#1d1f21ff", 
+      "error": "#de935fff"
     }, 
     "theme": "Tomorrow Night", 
     "module": "ace/theme/tomorrow_night"
@@ -278,11 +278,11 @@
   "Crimson Editor": {
     "dark": false, 
     "colors": {
-      "color": "#404040", 
-      "comment": "#4c886b", 
-      "selection": "#b5d5ff", 
-      "background": "#ffffff", 
-      "error": "#e00000"
+      "color": "#404040ff", 
+      "comment": "#4c886bff", 
+      "selection": "#b5d5ffff", 
+      "background": "#ffffffff", 
+      "error": "#e00000ff"
     }, 
     "theme": "Crimson Editor", 
     "module": "ace/theme/crimson_editor"
@@ -290,11 +290,11 @@
   "Solarized Dark": {
     "dark": true, 
     "colors": {
-      "color": "#93a1a1", 
-      "comment": "#657b83", 
-      "selection": "#ffffff", 
-      "background": "#002b36", 
-      "error": "#d30102"
+      "color": "#93a1a1ff", 
+      "comment": "#657b83ff", 
+      "selection": "#ffffff19", 
+      "background": "#002b36ff", 
+      "error": "#d30102ff"
     }, 
     "theme": "Solarized Dark", 
     "module": "ace/theme/solarized_dark"
@@ -302,11 +302,11 @@
   "Kr Theme": {
     "dark": true, 
     "colors": {
-      "color": "#fcffe0", 
-      "comment": "#706d5b", 
-      "selection": "#aa00ff", 
-      "background": "#0b0a09", 
-      "error": "#ff9900"
+      "color": "#fcffe0ff", 
+      "comment": "#706d5bff", 
+      "selection": "#aa00ff72", 
+      "background": "#0b0a09ff", 
+      "error": "#ff9900ff"
     }, 
     "theme": "Kr Theme", 
     "module": "ace/theme/kr_theme"
@@ -314,11 +314,11 @@
   "Clouds Midnight": {
     "dark": true, 
     "colors": {
-      "color": "#929292", 
-      "comment": "#3c403b", 
-      "selection": "#000000", 
-      "background": "#191919", 
-      "error": "#e92e2e"
+      "color": "#929292ff", 
+      "comment": "#3c403bff", 
+      "selection": "#000000ff", 
+      "background": "#191919ff", 
+      "error": "#e92e2eff"
     }, 
     "theme": "Clouds Midnight", 
     "module": "ace/theme/clouds_midnight"
@@ -326,11 +326,11 @@
   "Pastel On Dark": {
     "dark": true, 
     "colors": {
-      "color": "#8f938f", 
-      "comment": "#a6c6ff", 
-      "selection": "#ddf0ff", 
-      "background": "#2c2828", 
-      "error": "#de8e30"
+      "color": "#8f938fff", 
+      "comment": "#a6c6ffff", 
+      "selection": "#ddf0ff33", 
+      "background": "#2c2828ff", 
+      "error": "#de8e30ff"
     }, 
     "theme": "Pastel On Dark", 
     "module": "ace/theme/pastel_on_dark"
@@ -338,11 +338,11 @@
   "Xcode": {
     "dark": false, 
     "colors": {
-      "color": "#000000", 
-      "comment": "#008e00", 
-      "selection": "#b5d5ff", 
-      "background": "#ffffff", 
-      "error": "#df0002"
+      "color": "#000000ff", 
+      "comment": "#008e00ff", 
+      "selection": "#b5d5ffff", 
+      "background": "#ffffffff", 
+      "error": "#df0002ff"
     }, 
     "theme": "Xcode", 
     "module": "ace/theme/xcode"
@@ -350,11 +350,11 @@
   "Ambiance": {
     "dark": true, 
     "colors": {
-      "color": "#e6e1dc", 
-      "comment": "#555555", 
-      "selection": "#ddf0ff", 
-      "background": "#202020", 
-      "error": "#fa8d6a"
+      "color": "#e6e1dcff", 
+      "comment": "#555555ff", 
+      "selection": "#ddf0ff33", 
+      "background": "#202020ff", 
+      "error": "#fa8d6aff"
     }, 
     "theme": "Ambiance", 
     "module": "ace/theme/ambiance"
@@ -362,11 +362,11 @@
   "Cobalt": {
     "dark": true, 
     "colors": {
-      "color": "#ffffff", 
-      "comment": "#0088ff", 
-      "selection": "#b36539", 
-      "background": "#002240", 
-      "error": "#ff9d00"
+      "color": "#ffffffff", 
+      "comment": "#0088ffff", 
+      "selection": "#b36539bf", 
+      "background": "#002240ff", 
+      "error": "#ff9d00ff"
     }, 
     "theme": "Cobalt", 
     "module": "ace/theme/cobalt"
@@ -374,11 +374,11 @@
   "Dawn": {
     "dark": false, 
     "colors": {
-      "color": "#080808", 
-      "comment": "#5a525f", 
-      "selection": "#275fff", 
-      "background": "#f9f9f9", 
-      "error": "#cf5628"
+      "color": "#080808ff", 
+      "comment": "#5a525fff", 
+      "selection": "#275fff4c", 
+      "background": "#f9f9f9ff", 
+      "error": "#cf5628ff"
     }, 
     "theme": "Dawn", 
     "module": "ace/theme/dawn"
@@ -386,11 +386,11 @@
   "Tomorrow": {
     "dark": false, 
     "colors": {
-      "color": "#4d4d4c", 
-      "comment": "#8e908c", 
-      "selection": "#d6d6d6", 
-      "background": "#ffffff", 
-      "error": "#f5871f"
+      "color": "#4d4d4cff", 
+      "comment": "#8e908cff", 
+      "selection": "#d6d6d6ff", 
+      "background": "#ffffffff", 
+      "error": "#f5871fff"
     }, 
     "theme": "Tomorrow", 
     "module": "ace/theme/tomorrow"

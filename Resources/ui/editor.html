@@ -16,48 +16,83 @@
     <!-- load the heavy js up front -->
     <script src="jquery-2.1.0.js" charset="utf-8"></script>
     <script src="ace.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" type="text/css" href="autocomplete.css">
 </head>
 <body>
 <div id="editor"></div>
-
-
 <script>
     $(document).ready(function(){
+        ace.require("ace/ext/language_tools");
         var Editor = function(elt){
             var dom = $(elt)
             var ed = ace.edit(dom.attr('id'))
-            var sess = ed.getSession()
+            var sess = null
             var that = {
                 init:function(){
+                    
                     ed.setShowPrintMargin(false);
                     ed.setFadeFoldWidgets(true);
+                    // ed.setShowInvisibles(true)
+                    ed.commands.addCommands([
+                        {
+                            name: "Use Selection for Find",
+                            bindKey: {mac: "Command-e"},
+                            exec: function(editor) { /* no-op to stop the beeping */ }
+                        },{
+                            name: "blockoutdent",
+                            bindKey: {mac: "Command-["},
+                            exec: function(editor) { editor.blockOutdent(); },
+                            multiSelectAction: "forEachLine",
+                            scrollIntoView: "selectionPart"
+                        },{
+                            name: "blockindent",
+                            bindKey: {mac: "Command-]"},
+                            exec: function(editor) { editor.blockIndent(); },
+                            multiSelectAction: "forEachLine",
+                            scrollIntoView: "selectionPart"
+                        },{
+                            name: "openPreferences",
+                            bindKey: {mac: "Command-,"},
+                            exec: function(editor) {
+                                app.loadPrefs()
+                            }
+                        },{
+                            name: "showKeyboardShortcuts",
+                            bindKey: {mac: "Command-Alt-h"},
+                            exec: function(editor) {
+                                ace.config.loadModule("ace/ext/keybinding_menu", function(module) {
+                                    module.init(editor);
+                                    editor.showKeyboardShortcuts()
+                                })
+                            }
+                        },{
+                            name: "startAutocomplete",
+                            bindKey: "Ctrl-Space|Ctrl-Shift-Space|Alt-Space", 
+                            exec: function(editor) {
+                                if (!editor.completer)
+                                    editor.completer = new Autocomplete();
+                                editor.completer.showPopup(editor);
+                                // needed for firefox on mac
+                                editor.completer.cancelContextMenu();
+                            }
+                        }
+
+                    ])
+                    
+                    ed.setOptions({
+                        enableBasicAutocompletion: true,
+                        enableSnippets: true
+                    });
+
+                    sess = ed.getSession()
                     sess.setMode("ace/mode/nodebox");
                     sess.setTabSize(4);
                     sess.setUseSoftTabs(true);
-                    // ed.setKeyboardHandler("ace/keyboard/emacs");
 
-                    ed.commands.addCommand({
-                        name: "openPreferences",
-                        bindKey: {mac: "Command-,"},
-                        exec: function(editor) {
-                            app.loadPrefs()
-                        }
-                    })
-                    ed.commands.addCommand({
-                        name: "showKeyboardShortcuts",
-                        bindKey: {win: "Ctrl-Alt-h", mac: "Command-Alt-h"},
-                        exec: function(editor) {
-                            ace.config.loadModule("ace/ext/keybinding_menu", function(module) {
-                                module.init(editor);
-                                editor.showKeyboardShortcuts()
-                            })
-                        }
-                    })
                     // that.focus()
                     return that
                 },
                 focus:function(){
-                    console.log('focus')
                     ed.focus()
                 },
                 source:function(src){
@@ -72,17 +107,24 @@
                 },
                 font:function(family, px){
                     dom.css({fontFamily:family, fontSize:px})
-                    // ed.setFontSize(px)
                 },
                 theme:function(thm){
                     if (thm===undefined){
                         return ed.getTheme()
                     }else{
                         ed.setTheme(thm)
-                        // console.log('load theme',thm, Themes[thm])
-                        // var module = 'ace/theme/' + Themes[thm]['theme']
-                        // ed.setTheme(module)
                     }
+                },
+                bindings:function(mode){
+                    if (mode===undefined){
+                        return ed.getKeyboardHandler()
+                    }else{
+                        module = (mode=='mac') ? null : 'ace/keyboard/'+mode
+                        ed.setKeyboardHandler(module)
+                    }
+                },
+                autocomplete:function(){
+                    ed.execCommand('startAutocomplete')
                 },
                 mark:function(){
                     sess.setAnnotations([{
@@ -98,12 +140,22 @@
             return (dom.length==0) ? {} : that.init()
         }
         
-        $.getJSON('themes.json', function(data){
-            window.Themes = data
-            window.editor = Editor("#editor")
-        })
-    })
+        window.editor = Editor("#editor")
 
+
+
+        // intercept opt-tab before the webview uses it for ill
+        function option_tab(e){
+            if (e.altKey && e.which==9){
+                editor.autocomplete()
+                e.stopPropagation()
+                e.preventDefault()
+            }
+        }
+        document.getElementsByTagName('body')[0].addEventListener('keydown', option_tab, true)
+
+
+    })
 </script>
 
     
