@@ -56,11 +56,11 @@ class NodeBoxBackdrop(NSView):
         newframe = self.frame()
         gfxframe = self.gfxView.frame()
         if newframe.size.width > gfxframe.size.width:
-            gfxframe.origin.x = (newframe.size.width-gfxframe.size.width)/2.0
+            gfxframe.origin.x = (newframe.size.width-gfxframe.size.width)//2
         else:
             gfxframe.origin.x = 0
         if newframe.size.height > gfxframe.size.height:
-            gfxframe.origin.y = (newframe.size.height-gfxframe.size.height)/2.0
+            gfxframe.origin.y = (newframe.size.height-gfxframe.size.height)//2
         else:
             gfxframe.origin.y = 0
         self.gfxView.setFrame_(gfxframe)
