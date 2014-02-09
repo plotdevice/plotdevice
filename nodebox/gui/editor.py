@@ -16,7 +16,6 @@ from nodebox.gui.widgets import ValueLadder
 from nodebox.gui.app import set_timeout
 from nodebox import bundle_path
 
-
 class EditorView(NSView):
     document = objc.IBOutlet()
 
@@ -24,6 +23,7 @@ class EditorView(NSView):
 
     def awakeFromNib(self):
         self.webview = WebView.alloc().init()
+        self.webview.setAllowsUndo_(False)
         self.webview.setFrameLoadDelegate_(self)
         self.addSubview_(self.webview)
         html = bundle_path('Contents/Resources/ui/editor.html')
@@ -36,11 +36,13 @@ class EditorView(NSView):
         nc.addObserver_selector_name_object_(self, "bindingsChanged", "BindingsChanged", None)
         self._wakeup = set_timeout(self, '_jostle', 0.2, repeat=True)
         self._queue = []
+        self._edits = 0
         self.themeChanged()
         self.fontChanged()
         self.bindingsChanged()
 
-    def webView_didFinishLoadForFrame_(self, sender, frame):
+    # def webView_didFinishLoadForFrame_(self, sender, frame):
+    def webView_didClearWindowObject_forFrame_(self, sender, win, frame):
         self.webview.windowScriptObject().setValue_forKey_(self,'app')
 
     def resizeSubviewsWithOldSize_(self, oldSize):
@@ -101,6 +103,20 @@ class EditorView(NSView):
 
     def loadPrefs(self):
        NSApp().delegate().showPreferencesPanel_(self)
+
+    def edits(self, count):
+        um = self.document.undoManager()
+        c = int(count)
+        while self._edits < c:
+            um.registerUndoWithTarget_selector_object_(self, "undone:", self._edits)
+            self._edits+=1
+        while self._edits > c:
+            um.undo()
+            self._edits-=1
+
+    def undone_(self, count):
+        # print "undone to",count
+        pass
 
 class OutputTextView(NSTextView):
     editor = objc.IBOutlet()

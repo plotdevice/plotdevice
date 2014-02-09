@@ -31,6 +31,7 @@
 		2A15C45218A329BD006BDFF0 /* themes.json in Copy webkit ui */ = {isa = PBXBuildFile; fileRef = 2A15C44618A329AE006BDFF0 /* themes.json */; };
 		2A15C45518A48765006BDFF0 /* autocomplete.css in Resources */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
 		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy webkit ui */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
+		2A15C45918A76F93006BDFF0 /* underscore-1.5.2.min.js in Copy webkit ui */ = {isa = PBXBuildFile; fileRef = 2A15C45718A76F8D006BDFF0 /* underscore-1.5.2.min.js */; };
 		2A263141188CF4B2000B792A /* __init__.py in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812EA188CF45800B47700 /* __init__.py */; };
 		2A263143188CF4B7000B792A /* context.json in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812ED188CF45800B47700 /* context.json */; };
 		2A263144188CF4B9000B792A /* LICENSE.txt in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812EE188CF45800B47700 /* LICENSE.txt */; };
@@ -114,6 +115,7 @@
 				2A15C45018A329BD006BDFF0 /* editor.html in Copy webkit ui */,
 				2A15C45118A329BD006BDFF0 /* jquery-2.1.0.js in Copy webkit ui */,
 				2A15C45618A48770006BDFF0 /* autocomplete.css in Copy webkit ui */,
+				2A15C45918A76F93006BDFF0 /* underscore-1.5.2.min.js in Copy webkit ui */,
 				2A15C45218A329BD006BDFF0 /* themes.json in Copy webkit ui */,
 			);
 			name = "Copy webkit ui";
@@ -243,6 +245,7 @@
 		2A15C44518A329AE006BDFF0 /* jquery-2.1.0.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = "jquery-2.1.0.js"; path = "Resources/ui/jquery-2.1.0.js"; sourceTree = "<group>"; };
 		2A15C44618A329AE006BDFF0 /* themes.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = themes.json; path = Resources/ui/themes.json; sourceTree = "<group>"; };
 		2A15C45418A48765006BDFF0 /* autocomplete.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; name = autocomplete.css; path = Resources/ui/autocomplete.css; sourceTree = "<group>"; };
+		2A15C45718A76F8D006BDFF0 /* underscore-1.5.2.min.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = "underscore-1.5.2.min.js"; path = "Resources/ui/underscore-1.5.2.min.js"; sourceTree = "<group>"; };
 		2A263148188E0D87000B792A /* default.themes */ = {isa = PBXFileReference; lastKnownFileType = file; path = default.themes; sourceTree = "<group>"; };
 		2A26314A188E1A3A000B792A /* doc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = doc; sourceTree = "<group>"; };
 		2A294458185E539400E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
@@ -355,6 +358,7 @@
 			children = (
 				2A15C44118A329AE006BDFF0 /* ace.js */,
 				2A15C44418A329AE006BDFF0 /* editor.html */,
+				2A15C45718A76F8D006BDFF0 /* underscore-1.5.2.min.js */,
 				2A15C44518A329AE006BDFF0 /* jquery-2.1.0.js */,
 				2A15C45418A48765006BDFF0 /* autocomplete.css */,
 				2A15C44618A329AE006BDFF0 /* themes.json */,

@@ -15,6 +15,7 @@
 
     <!-- load the heavy js up front -->
     <script src="jquery-2.1.0.js" charset="utf-8"></script>
+    <script src="underscore-1.5.2.min.js" charset="utf-8"></script>
     <script src="ace.js" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" type="text/css" href="autocomplete.css">
 </head>
@@ -22,14 +23,115 @@
 <div id="editor"></div>
 <script>
     $(document).ready(function(){
+        // Resets the current undo state and creates a new `UndoManager`.
+        var UndoMgr = function() {
+            this.reset();
+        };
+
+        (function() {
+             // Provides a means for implementing your own undo manager. `options` has one property, `args`, an [[Array `Array`]], with two elements:
+             // - `args[0]` is an array of deltas
+             // - `args[1]` is the document to associate with
+             // @param {Object} options Contains additional properties
+             this.execute = function(options) {
+                var deltas = options.args[0];
+                this.$doc  = options.args[1]; // the edit session
+
+                // _.each(deltas, function(edits, i){
+                //     console.log(edits.group)
+                //     _.each(edits.deltas, function(chg){
+                //         console.log(chg.action, chg.context, chg.text!=undefined?'"'+chg.text+'"':chg.lines)
+                //     })
+                // })
+
+                // console.log(options, deltas)
+                if (options.merge && this.hasUndo()){
+                    this.dirtyCounter--;
+                    deltas = this.$undoStack.pop().concat(deltas);
+                }
+
+                this.$undoStack.push(deltas);
+                this.$redoStack = [];
+
+                if (this.dirtyCounter < 0) {
+                    // The user has made a change after undoing past the last clean state.
+                    // We can never get back to a clean state now until markClean() is called.
+                    this.dirtyCounter = NaN;
+                }
+
+                this.dirtyCounter++;
+                app.edits(this.dirtyCounter)
+            };
+
+             // [Perform an undo operation on the document, reverting the last change.]{: #UndoManager.undo}
+             // @param {Boolean} dontSelect {:dontSelect}
+             // @returns {Range} The range of the undo.
+             this.undo = function(dontSelect) {
+                var deltas = this.$undoStack.pop();
+                var undoSelectionRange = null;
+                if (deltas) {
+                    undoSelectionRange =
+                        this.$doc.undoChanges(deltas, dontSelect);
+                    this.$redoStack.push(deltas);
+                    this.dirtyCounter--;
+                    app.edits(this.dirtyCounter)
+                }
+
+                return undoSelectionRange;
+            };
+
+             // [Perform a redo operation on the document, reimplementing the last change.]{: #UndoManager.redo}
+             // @param {Boolean} dontSelect {:dontSelect}
+             this.redo = function(dontSelect) {
+                var deltas = this.$redoStack.pop();
+                var redoSelectionRange = null;
+                if (deltas) {
+                    redoSelectionRange =
+                        this.$doc.redoChanges(deltas, dontSelect);
+                    this.$undoStack.push(deltas);
+                    this.dirtyCounter++;
+                    app.edits(this.dirtyCounter)
+                }
+
+                return redoSelectionRange;
+            };
+
+             // Destroys the stack of undo and redo redo operations.
+             this.reset = function() {
+                this.$undoStack = [];
+                this.$redoStack = [];
+                this.dirtyCounter = 0;
+                app.edits(this.dirtyCounter)
+            };
+
+             // Returns `true` if there are undo operations left to perform.
+             // @returns {Boolean}
+             this.hasUndo = function() {return this.$undoStack.length > 0; };
+
+             // Returns `true` if there are redo operations left to perform.
+             // @returns {Boolean}
+             this.hasRedo = function() {return this.$redoStack.length > 0; };
+
+             // Marks the current status clean
+             this.markClean = function() {this.dirtyCounter = 0; };
+
+             // Returns if the current status is clean
+             // @returns {Boolean}
+             this.isClean = function() {return this.dirtyCounter === 0; };
+
+        }).call(UndoMgr.prototype);
+
+
         ace.require("ace/ext/language_tools");
         var Editor = function(elt){
             var dom = $(elt)
             var ed = ace.edit(dom.attr('id'))
+            var undo = new UndoMgr()
             var sess = null
             var that = {
                 init:function(){
                     
+                    // configure the editor
                     ed.setShowPrintMargin(false);
                     ed.setFadeFoldWidgets(true);
                     // ed.setShowInvisibles(true)
@@ -50,6 +152,9 @@
                             exec: function(editor) { editor.blockIndent(); },
                             multiSelectAction: "forEachLine",
                             scrollIntoView: "selectionPart"
+                        }, {
+                            name: "refreshdoc",
+                            exec: function(editor, str) { editor.session.setValue(str); },
                         },{
                             name: "openPreferences",
                             bindKey: {mac: "Command-,"},
@@ -77,32 +182,42 @@
                             }
                         }
 
-                    ])
-                    
+                    ])                    
                     ed.setOptions({
                         enableBasicAutocompletion: true,
                         enableSnippets: true
                     });
 
+                    // configure the buffer
                     sess = ed.getSession()
                     sess.setMode("ace/mode/nodebox");
                     sess.setTabSize(4);
                     sess.setUseSoftTabs(true);
+                    sess.setUndoManager(undo);
+                    sess.setUndoSelect(false);
+                    sess.on("change", that.edited)
+                    // sess.setUseWrapMode(true);
 
-                    // that.focus()
                     return that
+                },
+                blur:function(){
+                    ed.blur()
                 },
                 focus:function(){
                     ed.focus()
+                },
+                edited:function(e){
+                    console.log('chg', sess.getUndoManager().dirtyCounter)
+                    // app.edits(this.dirtyCounter)
                 },
                 source:function(src){
                     if (src===undefined){
                         return ed.getValue()
                     }else{
-                        ed.setValue(src);
+                        // sess.getDocument().initialize(src);
+                        ed.execCommand("refreshdoc",src)
                         ed.clearSelection();
                         ed.moveCursorTo(0, 0);
-                        // ACEView.aceTextDidChange()
                     }
                 },
                 font:function(family, px){

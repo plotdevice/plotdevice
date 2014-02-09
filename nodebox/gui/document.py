@@ -10,9 +10,12 @@ import objc
 from Foundation import *
 from AppKit import *
 from nodebox.run import Sandbox
+
+from nodebox.gui.preferences import editor_info
 from nodebox.gui.editor import OutputTextView, EditorView
 from nodebox.gui.widgets import DashboardController, ExportSheet
 from nodebox.gui.views import FullscreenWindow, FullscreenView
+from nodebox.gui.app import set_timeout
 from nodebox import util, graphics
 
 NSEventGestureAxisVertical = 2
@@ -78,14 +81,17 @@ class NodeBoxDocument(NSDocument):
         self.outputView.superview().superview().addFloatingSubview_forAxis_(self.animationSpinner,NSEventGestureAxisVertical)
         x = self.outputView.frame().size.width - 17
         self.animationSpinner.setFrame_(((x,3),(16,16)))
+        # self.animationSpinner.setControlTint_(NSGraphiteControlTint)
         self.toggleStatusBar_(self)
 
+
     def windowDidResignKey_(self, note):
+        self.editorView.blur()
         self.editorView.window().makeFirstResponder_(None)
 
     def windowDidBecomeKey_(self, note):
         self.editorView.window().makeFirstResponder_(self.editorView)
-        self.editorView.focus()
+        set_timeout(self.editorView, 'focus', 0.1)
 
     def windowWillUseStandardFrame_defaultFrame_(self, win, rect):
         container = self.graphicsView.superview().superview().superview().superview() # nssplitview or nsview
@@ -118,6 +124,17 @@ class NodeBoxDocument(NSDocument):
 
     def autosavesInPlace(self):
         return True
+
+    def updateChangeCount_(self, chg):
+        # print "change",chg
+        # NSChangeDone              = 0
+        # NSChangeUndone            = 1
+        # NSChangeCleared           = 2
+        # NSChangeReadOtherContents = 3
+        # NSChangeAutosaved         = 4
+        # NSChangeRedone            = 5
+        # NSChangeDiscardable       = 256
+        super(NodeBoxDocument, self).updateChangeCount_(chg)
 
     def close(self):
         self.graphicsView = None
