@@ -45,7 +45,7 @@ class NodeBoxAppDelegate(NSObject):
 
     def updateExamples(self):
         examples_folder = bundle_path("Contents/Resources/examples")
-        pyfiles = glob('%s/*/*.py'%examples_folder)
+        pyfiles = glob('%s/*/*.nb'%examples_folder)
         categories = self.examplesMenu.submenu()
         folders = {}
         for item in categories.itemArray():

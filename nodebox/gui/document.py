@@ -55,7 +55,7 @@ class NodeBoxDocument(NSDocument):
         if pth:
             self.readFromUTF8(pth)
         if self.stationery:
-            self.setDisplayName_(os.path.basename(self.stationery))
+            self.setDisplayName_(os.path.basename(self.stationery).replace('.nb',''))
             self.vm.stationery = self.stationery
         win = self.editorView.window()
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
