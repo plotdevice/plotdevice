@@ -16,6 +16,11 @@ from nodebox.gui.widgets import ValueLadder
 from nodebox.gui.app import set_timeout
 from nodebox import bundle_path
 
+__all__ = ['EditorView', 'OutputTextView']
+
+def args(*jsargs):
+    return ', '.join([json.dumps(v, ensure_ascii=False) for v in jsargs])
+
 class EditorView(NSView):
     document = objc.IBOutlet()
 
@@ -25,6 +30,7 @@ class EditorView(NSView):
         self.webview = WebView.alloc().init()
         self.webview.setAllowsUndo_(False)
         self.webview.setFrameLoadDelegate_(self)
+        self.webview.setUIDelegate_(self)
         self.addSubview_(self.webview)
         html = bundle_path('Contents/Resources/ui/editor.html')
         ui = file(html).read().decode('utf-8')
@@ -41,9 +47,33 @@ class EditorView(NSView):
         self.fontChanged()
         self.bindingsChanged()
 
+        mm=NSApp().mainMenu()
+        self._doers = mm.itemWithTitle_('Edit').submenu().itemArray()[1:3]
+
     # def webView_didFinishLoadForFrame_(self, sender, frame):
     def webView_didClearWindowObject_forFrame_(self, sender, win, frame):
         self.webview.windowScriptObject().setValue_forKey_(self,'app')
+
+    def webView_contextMenuItemsForElement_defaultMenuItems_(self, sender, elt, menu):
+        items = [
+            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u"Cut", "cut:", ""),
+            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u"Copy", "copy:", ""),
+            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u"Paste", "paste:", ""),
+            NSMenuItem.separatorItem(),
+        ]
+
+        # once a doc viewer exists, add a lookup-ref menu item pointing to it
+        # word = self.js('editor.selected')
+        # _ns = ['curveto', 'TEXT', 'BezierPath', 'random', 'WIDTH', 'colors', 'closepath', 'font', 'speed', 'JUSTIFY', 'HSB', '_copy_attr', 'KEY_UP', 'text', 'ClippingPath', 'Rect', 'FORTYFIVE', 'colormode', 'choice', 'KEY_BACKSPACE', 'inch', 'rotate', 'grid', 'background', 'geo', 'LINETO', 'textpath', 'fonts', 'findpath', 'DEFAULT_HEIGHT', 'arrow', 'NodeBoxError', 'PathElement', 'beginpath', 'NORMAL', 'textwidth', 'DEFAULT_WIDTH', 'joinstyle', 'RGB', 'export', 'ROUND', '_copy_attrs', 'canvas', 'scale', 'CENTER', 'CMYK', 'SQUARE', 'nofill', 'MITER', 'nostroke', 'TransformContext', 'capstyle', 'lineheight', 'endclip', 'Point', 'BUTTON', 'Grob', 'KEY_TAB', 'KEY_LEFT', 'findvar', 'cm', 'color', 'image', 'autoclosepath', 'Transform', 'pop', 'KEY_ESC', 'BUTT', 'oval', 'CORNER', 'ellipse', 'addvar', 'size', 'ximport', 'MOVETO', 'lineto', 'skew', 'transform', 'rect', 'Variable', 'CLOSE', 'translate', 'LEFT', 'files', 'drawpath', 'outputmode', 'imagesize', 'var', 'fontsize', 'endpath', 'line', 'KEY_DOWN', 'colorrange', 'reset', 'moveto', 'save', 'mm', 'Text', 'align', 'BOOLEAN', 'Oval', 'Image', 'clip', 'NUMBER', 'stroke', 'fill', 'strokewidth', 'bezier', 'KEY_RIGHT', 'autotext', 'BEVEL', 'star', 'state_vars', 'HEIGHT', 'Context', 'textheight', 'RIGHT', 'CURVETO', 'Color', 'beginclip', 'textmetrics', 'push']
+        # def ref_url(proc):
+        #     if proc in _ns:
+        #         return proc
+        # if ref_url(word):
+        #     doc = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u"Documentation for ‘%s()’"%word, "copy:", "")
+        #     sep = NSMenuItem.separatorItem()
+        #     items.insert(0, sep)
+        #     items.insert(0, doc)
+        return items + [it for it in menu if it.title()=='Inspect Element']
 
     def resizeSubviewsWithOldSize_(self, oldSize):
         self.resizeWebview()
@@ -51,14 +81,12 @@ class EditorView(NSView):
     def resizeWebview(self):
         self.webview.setFrame_(self.bounds())
 
-    def js(self, cmds):            
-        if not isinstance(cmds, (list,tuple)):
-            cmds = [cmds]
+    def js(self, cmd, args=''):
+        op = '%s(%s);'%(cmd,args)
         if self._wakeup:
-            self._queue.extend(cmds)
+            self._queue.append(op)
         else:
-            for op in cmds:
-                self.webview.stringByEvaluatingJavaScriptFromString_(op)
+            return self.webview.stringByEvaluatingJavaScriptFromString_(op)
 
     def _jostle(self):
         if not self.webview.isLoading():
@@ -71,53 +99,111 @@ class EditorView(NSView):
     def isSelectorExcludedFromWebScript_(self, sel):
         return False
 
+    def validateMenuItem_(self, item):
+        # we're the delegate for the Edit menu
+        if item.title=='Undo':
+            return self.document.undoManager().canUndo()
+        elif item.title=='Redo':
+            return self.document.undoManager().canRedo()
+        return True
+
     # App-initiated actions
 
     def fontChanged(self, note=None):
-        self.js('editor.font("%(family)s", %(px)i);'%editor_info())
+        info = editor_info()
+        self.js('editor.font', args(info['family'], info['px']))
 
     def themeChanged(self, note=None):
-        self.js('editor.theme("%(module)s");'%editor_info())
+        self.js('editor.theme', args(editor_info('module')))
 
     def bindingsChanged(self, note=None):
-        self.js('editor.bindings("%s");'%get_default('bindings'))        
+        self.js('editor.bindings', args(get_default('bindings')))
 
     def focus(self):
-        self.js('editor.focus();')
+        self.js('editor.focus')
 
     def blur(self):
-        self.js('editor.blur();')
+        self.js('editor.blur')
 
     def _get_source(self):
         return self.webview.stringByEvaluatingJavaScriptFromString_('editor.source();')
     def _set_source(self, src):
-        self.js(u'editor.source(%s)'%json.dumps(src, ensure_ascii=False))
+        self.js(u'editor.source', args(src))
     source = property(_get_source, _set_source)
 
+    # Menubar actions
+
+    @objc.IBAction
+    def editorAction_(self, sender):
+        cmds = ['selectline', 'splitIntoLines', 'addCursorAboveSkipCurrent', 'addCursorBelowSkipCurrent', 'centerselection', # Edit menu
+                'blockindent', 'blockoutdent', 'togglecomment', 'gotoline'] # Python menu
+        self.js('editor.exec', args(cmds[sender.tag()]))
 
     @objc.IBAction
     def aceAutocomplete_(self, sender):
-        print "autocomplete"
+        cmd = ['startAutocomplete', 'expandSnippet'][sender.tag()]
+        self.js('editor.exec', args(cmd))
+
+    @objc.IBAction
+    def aceWrapLines_(self, sender):
+        newstate = NSOnState if sender.state()==NSOffState else NSOffState
+        sender.setState_(newstate)
+        self.js('editor.wrap', args(newstate==NSOnState))
+
+    @objc.IBAction
+    def aceInvisibles_(self, sender):
+        newstate = NSOnState if sender.state()==NSOffState else NSOffState
+        sender.setState_(newstate)
+        self.js('editor.invisibles', args(newstate==NSOnState))
+
+    @objc.IBAction
+    def performFindAction_(self, sender):
+        actions = {1:'find', 2:'findnext', 3:'findprevious', 7:'setneedle'}
+        self.js('editor.exec', args(actions[sender.tag()]))
 
     # JS-initiated actions
+
+    @objc.IBAction
+    def undoAction_(self, sender):
+        undoredo = ['editor.undo', 'editor.redo']
+        self.js(undoredo[sender.tag()])
 
     def loadPrefs(self):
        NSApp().delegate().showPreferencesPanel_(self)
 
     def edits(self, count):
+        # inform the undo manager of the changes
         um = self.document.undoManager()
         c = int(count)
         while self._edits < c:
-            um.registerUndoWithTarget_selector_object_(self, "undone:", self._edits)
+            um.prepareWithInvocationTarget_(self).syncUndoState_(self._edits)
             self._edits+=1
         while self._edits > c:
-            um.undo()
             self._edits-=1
+            um.undo()
 
-    def undone_(self, count):
-        # print "undone to",count
-        pass
+        # update the undo/redo menus items
+        for item, can in zip(self._doers, (um.canUndo(), um.canRedo())):
+            item.setEnabled_(can)
 
+    def syncUndoState_(self, count):
+        pass # this would be useful if only it got called for redo as well as undo...
+
+    def setSearchPasteboard(self, query):
+        if not query: return
+
+        pb = NSPasteboard.pasteboardWithName_(NSFindPboard)
+        pb.declareTypes_owner_([NSStringPboardType],None)
+        pb.setString_forType_(query, NSStringPboardType)
+        self.flash("Edit")
+
+    def flash(self, menuname):
+        # when a menu item's key command was entered in the editor, flash the menu
+        # bar to give a hint of where the command lives
+        mm=NSApp().mainMenu()
+        menu = mm.itemWithTitle_(menuname)
+        menu.submenu().performActionForItemAtIndex_(0)
+        
 class OutputTextView(NSTextView):
     editor = objc.IBOutlet()
     endl = False
@@ -231,6 +317,12 @@ class OutputTextView(NSTextView):
         outcome = "%s in %s\n"%(msg, dur)
         self.append(outcome, 'info')
 
+    @objc.IBAction
+    def performFindAction_(self, sender):
+        # this is the renamed target of the Find... menu items (shared with EditorView)
+        # just pass the event along to the real implementation
+        self.performFindPanelAction_(sender)
+
     def performFindPanelAction_(self, sender):
         # same timer-based hack as PyDETextView.performFindPanelAction_
         # what could be the problem? something in the tab-ordering of the
@@ -251,5 +343,7 @@ class OutputTextView(NSTextView):
 
     def __del__(self):
         nc = NSNotificationCenter.defaultCenter()
-        nc.removeObserver_name_object_(self, "PyDETextFontChanged", None)
-
+        nc.removeObserver_name_object_(self, "ThemeChanged", None)
+        nc.removeObserver_name_object_(self, "FontChanged", None)
+        if self._findTimer:
+            self._findTimer.invalidate()

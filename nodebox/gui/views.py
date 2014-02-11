@@ -113,8 +113,8 @@ class NodeBoxGraphicsView(NSView):
             half_w = NSWidth(visible) / 2.0
             half_h = NSHeight(visible) / 2.0
             self.scrollPoint_( (x_pct*w-half_w, y_pct*h-half_h) )
-        self._raster = self.canvas.rasterize(zoom=self.zoom) if rasterize else None
-        self.setNeedsDisplay_(True)
+            self._raster = self.canvas.rasterize(zoom=self.zoom) if rasterize else None
+            self.setNeedsDisplay_(True)
 
     def cache(self):
         if self.canvas and not self.volatile:

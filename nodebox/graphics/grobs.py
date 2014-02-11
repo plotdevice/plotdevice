@@ -681,6 +681,8 @@ class Color(object):
                 except ValueError:
                     r, g, b = _CSS_COLORS[args[0]]
                     a = args[1] if params==2 else 1.0
+            else:
+                raise NodeBoxError, "Color strings must be 3/6/8-character hex codes or valid css-names"
             clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, a)
         elif params == 1: # Gray, no alpha
             g, = self._normalizeList(args)

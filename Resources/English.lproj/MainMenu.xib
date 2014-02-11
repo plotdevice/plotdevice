@@ -136,21 +136,18 @@
                             <menuItem isSeparatorItem="YES" id="423">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Export as Image..." id="362">
-                                <modifierMask key="keyEquivalentModifierMask"/>
+                            <menuItem title="Export as Image..." keyEquivalent="p" id="362">
                                 <connections>
                                     <action selector="exportAsImage:" target="-1" id="491"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Export as Movie..." keyEquivalent="E" id="486">
+                            <menuItem title="Export as Movie..." keyEquivalent="P" id="486">
                                 <connections>
                                     <action selector="exportAsMovie:" target="-1" id="487"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="74">
-                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
-                            </menuItem>
                             <menuItem title="Print..." keyEquivalent="p" id="78">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>
                                     <action selector="printDocument:" target="-1" id="416"/>
                                 </connections>
@@ -159,16 +156,16 @@
                     </menu>
                 </menuItem>
                 <menuItem title="Edit" id="217">
-                    <menu key="submenu" title="Edit" id="205">
+                    <menu key="submenu" title="Edit" autoenablesItems="NO" id="205">
                         <items>
-                            <menuItem title="Undo" keyEquivalent="z" id="207">
+                            <menuItem title="Undo" enabled="NO" keyEquivalent="z" id="207">
                                 <connections>
-                                    <action selector="undo:" target="-1" id="223"/>
+                                    <action selector="undoAction:" target="-1" id="UeW-gq-Bzf"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Redo" keyEquivalent="Z" id="215">
+                            <menuItem title="Redo" tag="1" enabled="NO" keyEquivalent="Z" id="215">
                                 <connections>
-                                    <action selector="redo:" target="-1" id="231"/>
+                                    <action selector="undoAction:" target="-1" id="owL-zf-g7U"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="206">
@@ -194,52 +191,81 @@
                                     <action selector="paste:" target="-1" id="226"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Delete" id="202">
-                                <connections>
-                                    <action selector="delete:" target="-1" id="235"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Select All" keyEquivalent="a" id="198">
-                                <connections>
-                                    <action selector="selectAll:" target="-1" id="232"/>
-                                </connections>
-                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="214">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
                             <menuItem title="Find" id="444">
                                 <menu key="submenu" title="Find" id="443">
                                     <items>
-                                        <menuItem title="Find…" state="on" tag="1" keyEquivalent="f" id="448">
+                                        <menuItem title="Find…" tag="1" keyEquivalent="f" id="448">
                                             <connections>
-                                                <action selector="performFindPanelAction:" target="-1" id="454"/>
+                                                <action selector="performFindAction:" target="-1" id="mfx-yu-Mqp"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="Find Next" tag="2" keyEquivalent="g" id="445">
                                             <connections>
-                                                <action selector="performFindPanelAction:" target="-1" id="453"/>
+                                                <action selector="performFindAction:" target="-1" id="XaV-KX-A4l"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="Find Previous" tag="3" keyEquivalent="G" id="449">
                                             <connections>
-                                                <action selector="performFindPanelAction:" target="-1" id="450"/>
+                                                <action selector="performFindAction:" target="-1" id="Qm8-uD-718"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="Use Selection for Find" tag="7" keyEquivalent="e" id="446">
                                             <connections>
-                                                <action selector="performFindPanelAction:" target="-1" id="452"/>
+                                                <action selector="performFindAction:" target="-1" id="RMO-nZ-Fjw"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Jump to Selection" keyEquivalent="j" id="447">
-                                            <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <menuItem title="Selection" id="7QI-zr-952">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Selection" id="kI5-nK-V04">
+                                    <items>
+                                        <menuItem title="Select All" keyEquivalent="a" id="198">
                                             <connections>
-                                                <action selector="centerSelectionInVisibleArea:" target="-1" id="451"/>
+                                                <action selector="selectAll:" target="-1" id="232"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Expand Selection to Line" keyEquivalent="l" id="kMw-0w-hjQ">
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="4QM-2R-UwB"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="ZrF-Qb-SZb"/>
+                                        <menuItem title="Split into Lines" tag="1" keyEquivalent="L" id="1eZ-vy-9bI">
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="4Jb-L4-a1k"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Add Previous Line" tag="2" keyEquivalent="" id="3c7-na-X2S">
+                                            <modifierMask key="keyEquivalentModifierMask" control="YES" option="YES"/>
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="rOW-ys-Mun"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Add Next Line" tag="3" keyEquivalent="" id="H8D-HQ-QVu">
+                                            <modifierMask key="keyEquivalentModifierMask" control="YES" option="YES"/>
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="bl1-lx-4y3"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="6nR-n0-wGT"/>
+                                        <menuItem title="Jump to Selection" tag="4" keyEquivalent="l" id="447">
+                                            <modifierMask key="keyEquivalentModifierMask" control="YES"/>
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="pWG-JF-EhA"/>
                                             </connections>
                                         </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>
                         </items>
+                        <connections>
+                            <outlet property="delegate" destination="-2" id="eby-r7-HcX"/>
+                        </connections>
                     </menu>
                 </menuItem>
                 <menuItem title="View" id="492">
@@ -292,6 +318,18 @@
                                 </menu>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="DSK-3c-GP2"/>
+                            <menuItem title="Word Wrap" keyEquivalent="w" id="ekK-uH-Icy">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="aceWrapLines:" target="-1" id="BUX-XV-JgV"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Show Invisibles" keyEquivalent="i" id="u5z-DF-wtL">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="aceInvisibles:" target="-1" id="mHz-98-MoV"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Toggle Status Bar" keyEquivalent="\" id="Aeg-Zo-fi3">
                                 <connections>
                                     <action selector="toggleStatusBar:" target="-1" id="sxb-wT-2XG"/>
@@ -321,44 +359,48 @@
                             <menuItem isSeparatorItem="YES" id="GZS-GI-N7W">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Autocomplete" id="400">
+                            <menuItem title="Autocomplete" id="nUY-Pr-sbV">
                                 <string key="keyEquivalent" base64-UTF8="YES">
 CQ
 </string>
                                 <modifierMask key="keyEquivalentModifierMask" option="YES"/>
                                 <connections>
-                                    <action selector="aceAutocomplete:" target="-1" id="stZ-Ik-Gx7"/>
+                                    <action selector="aceAutocomplete:" target="-1" id="SEI-Fv-251"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Expand Snippet" tag="1" id="400">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+CQ
+</string>
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="aceAutocomplete:" target="-1" id="TW5-YS-X9B"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="478">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Indent" keyEquivalent="]" id="394">
+                            <menuItem title="Indent" tag="5" keyEquivalent="]" id="394">
                                 <connections>
-                                    <action selector="indent:" target="-1" id="407"/>
+                                    <action selector="editorAction:" target="-1" id="nbB-aj-hoG"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Dedent" keyEquivalent="[" id="399">
+                            <menuItem title="Dedent" tag="6" keyEquivalent="[" id="399">
                                 <connections>
-                                    <action selector="dedent:" target="-1" id="412"/>
+                                    <action selector="editorAction:" target="-1" id="onZ-bq-h6D"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Comment" keyEquivalent="}" id="398">
+                            <menuItem title="Toggle Comment" tag="7" keyEquivalent="/" id="398">
                                 <connections>
-                                    <action selector="comment:" target="-1" id="405"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Uncomment" keyEquivalent="{" id="403">
-                                <connections>
-                                    <action selector="uncomment:" target="-1" id="411"/>
+                                    <action selector="editorAction:" target="-1" id="qTQ-Bb-wDW"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="393">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Jump to line..." keyEquivalent="j" id="389">
+                            <menuItem title="Jump to line..." tag="8" keyEquivalent="j" id="389">
                                 <connections>
-                                    <action selector="jumpToLine:" target="-1" id="408"/>
+                                    <action selector="editorAction:" target="-1" id="Yb7-yC-xvE"/>
                                 </connections>
                             </menuItem>
                         </items>

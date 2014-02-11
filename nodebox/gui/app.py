@@ -11,6 +11,11 @@ from nodebox.gui.preferences import get_default
 from nodebox.run import CommandListener
 from nodebox import util, bundle_path
 
+LIB_DIR_README = """"You can put NodeBox libraries In this directory to make them available to your scripts.
+If your script has used the `colors.theme()` function, the `colors` folder in this directory
+contains a set of json files with color schemes derived from various keywords.
+"""
+
 def set_timeout(target, sel, delay, info=None, repeat=False):
     return NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(delay, target, sel, info, repeat)
 
@@ -25,13 +30,30 @@ class NodeBoxAppDelegate(NSObject):
         try:
             if not os.path.exists(libDir):
                 os.mkdir(libDir)
-                f = open(os.path.join(libDir, "README"), "w")
-                f.write("In this directory, you can put Python libraries to make them available to your scripts.\n")
+                f = open(os.path.join(libDir, "README.txt"), "w")
+                f.write(LIB_DIR_README)
                 f.close()
             self._listener.start()
         except OSError: pass
         except IOError: pass
         self.examplesMenu = NSApp().mainMenu().itemWithTitle_('Examples')
+
+    def applicationDidFinishLaunching_(self, note):
+        mm=NSApp().mainMenu()
+
+        # disable the start-dictation item in the edit menu
+        edmenu = mm.itemAtIndex_(2).submenu()
+        for it in edmenu.itemArray():
+            action = it.action()
+            if action in (NSSelectorFromString("startDictation:"), ):
+                edmenu.removeItem_(it)
+
+        # add a hidden item to the menus that can be triggered internally by the editor
+        for menu in mm.itemArray()[2:5]:
+            flicker = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Flash This Menu', None, '')
+            flicker.setEnabled_(True)
+            flicker.setHidden_(True)
+            menu.submenu().insertItem_atIndex_(flicker,0)
 
     def listenOnPort_(self, port):
         if self._listener and self._listener.port == port:

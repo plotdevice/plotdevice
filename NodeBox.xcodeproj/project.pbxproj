@@ -23,15 +23,9 @@
 
 /* Begin PBXBuildFile section */
 		2A15C42D18A1FA14006BDFF0 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A15C42C18A1FA14006BDFF0 /* WebKit.framework */; };
-		2A15C44A18A329AE006BDFF0 /* editor.html in Resources */ = {isa = PBXBuildFile; fileRef = 2A15C44418A329AE006BDFF0 /* editor.html */; };
-		2A15C44C18A329AE006BDFF0 /* themes.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A15C44618A329AE006BDFF0 /* themes.json */; };
-		2A15C44D18A329BD006BDFF0 /* ace.js in Copy webkit ui */ = {isa = PBXBuildFile; fileRef = 2A15C44118A329AE006BDFF0 /* ace.js */; };
-		2A15C45018A329BD006BDFF0 /* editor.html in Copy webkit ui */ = {isa = PBXBuildFile; fileRef = 2A15C44418A329AE006BDFF0 /* editor.html */; };
-		2A15C45118A329BD006BDFF0 /* jquery-2.1.0.js in Copy webkit ui */ = {isa = PBXBuildFile; fileRef = 2A15C44518A329AE006BDFF0 /* jquery-2.1.0.js */; };
-		2A15C45218A329BD006BDFF0 /* themes.json in Copy webkit ui */ = {isa = PBXBuildFile; fileRef = 2A15C44618A329AE006BDFF0 /* themes.json */; };
-		2A15C45518A48765006BDFF0 /* autocomplete.css in Resources */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
-		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy webkit ui */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
-		2A15C45918A76F93006BDFF0 /* underscore-1.5.2.min.js in Copy webkit ui */ = {isa = PBXBuildFile; fileRef = 2A15C45718A76F8D006BDFF0 /* underscore-1.5.2.min.js */; };
+		2A15C45018A329BD006BDFF0 /* editor.html in Copy web ui assets */ = {isa = PBXBuildFile; fileRef = 2A15C44418A329AE006BDFF0 /* editor.html */; };
+		2A15C45218A329BD006BDFF0 /* themes.json in Copy web ui assets */ = {isa = PBXBuildFile; fileRef = 2A15C44618A329AE006BDFF0 /* themes.json */; };
+		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy web ui assets */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
 		2A263141188CF4B2000B792A /* __init__.py in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812EA188CF45800B47700 /* __init__.py */; };
 		2A263143188CF4B7000B792A /* context.json in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812ED188CF45800B47700 /* context.json */; };
 		2A263144188CF4B9000B792A /* LICENSE.txt in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A4812EE188CF45800B47700 /* LICENSE.txt */; };
@@ -50,6 +44,11 @@
 		2A3DB1F7187E85190062635B /* script.py in Copy nodebox root */ = {isa = PBXBuildFile; fileRef = 2A3DB1F5187E85130062635B /* script.py */; };
 		2A4812E71884AF3B00B47700 /* fsevents.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 2A4812E51884AF3100B47700 /* fsevents.py */; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
+		2A66ECEB18A99328002903DE /* ace.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDE18A992BD002903DE /* ace.js */; };
+		2A66ECEC18A99328002903DE /* editor.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDF18A992BD002903DE /* editor.js */; };
+		2A66ECED18A99328002903DE /* jquery-2.1.0.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE018A992BD002903DE /* jquery-2.1.0.js */; };
+		2A66ECEE18A99328002903DE /* keybindings.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE118A992BD002903DE /* keybindings.js */; };
+		2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */; };
 		2A9B4B2A18988839004F91DB /* names.json in Copy nodebox.graphics.colors */ = {isa = PBXBuildFile; fileRef = 2A9B4B2818988829004F91DB /* names.json */; };
 		2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */; };
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
@@ -105,20 +104,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		2A15C43718A20929006BDFF0 /* Copy webkit ui */ = {
+		2A15C43718A20929006BDFF0 /* Copy web ui assets */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = ui;
 			dstSubfolderSpec = 7;
 			files = (
-				2A15C44D18A329BD006BDFF0 /* ace.js in Copy webkit ui */,
-				2A15C45018A329BD006BDFF0 /* editor.html in Copy webkit ui */,
-				2A15C45118A329BD006BDFF0 /* jquery-2.1.0.js in Copy webkit ui */,
-				2A15C45618A48770006BDFF0 /* autocomplete.css in Copy webkit ui */,
-				2A15C45918A76F93006BDFF0 /* underscore-1.5.2.min.js in Copy webkit ui */,
-				2A15C45218A329BD006BDFF0 /* themes.json in Copy webkit ui */,
+				2A15C45018A329BD006BDFF0 /* editor.html in Copy web ui assets */,
+				2A15C45618A48770006BDFF0 /* autocomplete.css in Copy web ui assets */,
+				2A15C45218A329BD006BDFF0 /* themes.json in Copy web ui assets */,
 			);
-			name = "Copy webkit ui";
+			name = "Copy web ui assets";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		2A29445E185E54C200E9F650 /* Copy nodebox.run */ = {
@@ -150,6 +146,21 @@
 				2A263144188CF4B9000B792A /* LICENSE.txt in Copy nodebox.graphics.colors */,
 			);
 			name = "Copy nodebox.graphics.colors";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2A66ECEA18A99303002903DE /* Copy web ui scripts */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = ui/js;
+			dstSubfolderSpec = 7;
+			files = (
+				2A66ECEB18A99328002903DE /* ace.js in Copy web ui scripts */,
+				2A66ECEC18A99328002903DE /* editor.js in Copy web ui scripts */,
+				2A66ECED18A99328002903DE /* jquery-2.1.0.js in Copy web ui scripts */,
+				2A66ECEE18A99328002903DE /* keybindings.js in Copy web ui scripts */,
+				2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy web ui scripts */,
+			);
+			name = "Copy web ui scripts";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		2ABDB76F1867D9560069EFC3 /* Copy nodebox tool */ = {
@@ -240,12 +251,9 @@
 		1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FBA07B3F13500E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		2A15C42C18A1FA14006BDFF0 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
-		2A15C44118A329AE006BDFF0 /* ace.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = ace.js; path = Resources/ui/ace.js; sourceTree = "<group>"; };
 		2A15C44418A329AE006BDFF0 /* editor.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = editor.html; path = Resources/ui/editor.html; sourceTree = "<group>"; };
-		2A15C44518A329AE006BDFF0 /* jquery-2.1.0.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = "jquery-2.1.0.js"; path = "Resources/ui/jquery-2.1.0.js"; sourceTree = "<group>"; };
 		2A15C44618A329AE006BDFF0 /* themes.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = themes.json; path = Resources/ui/themes.json; sourceTree = "<group>"; };
 		2A15C45418A48765006BDFF0 /* autocomplete.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; name = autocomplete.css; path = Resources/ui/autocomplete.css; sourceTree = "<group>"; };
-		2A15C45718A76F8D006BDFF0 /* underscore-1.5.2.min.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = "underscore-1.5.2.min.js"; path = "Resources/ui/underscore-1.5.2.min.js"; sourceTree = "<group>"; };
 		2A263148188E0D87000B792A /* default.themes */ = {isa = PBXFileReference; lastKnownFileType = file; path = default.themes; sourceTree = "<group>"; };
 		2A26314A188E1A3A000B792A /* doc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = doc; sourceTree = "<group>"; };
 		2A294458185E539400E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
@@ -266,6 +274,11 @@
 		2A4812EE188CF45800B47700 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		2A4812F0188CF45800B47700 /* themes.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = themes.py; sourceTree = "<group>"; };
 		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		2A66ECDE18A992BD002903DE /* ace.js */ = {isa = PBXFileReference; lastKnownFileType = file; name = ace.js; path = Resources/ui/js/ace.js; sourceTree = "<group>"; };
+		2A66ECDF18A992BD002903DE /* editor.js */ = {isa = PBXFileReference; lastKnownFileType = file; name = editor.js; path = Resources/ui/js/editor.js; sourceTree = "<group>"; };
+		2A66ECE018A992BD002903DE /* jquery-2.1.0.js */ = {isa = PBXFileReference; lastKnownFileType = file; name = "jquery-2.1.0.js"; path = "Resources/ui/js/jquery-2.1.0.js"; sourceTree = "<group>"; };
+		2A66ECE118A992BD002903DE /* keybindings.js */ = {isa = PBXFileReference; lastKnownFileType = file; name = keybindings.js; path = Resources/ui/js/keybindings.js; sourceTree = "<group>"; };
+		2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */ = {isa = PBXFileReference; lastKnownFileType = file; name = "underscore-1.5.2.min.js"; path = "Resources/ui/js/underscore-1.5.2.min.js"; sourceTree = "<group>"; };
 		2A827CC91859E9FE00A126BA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		2A9B4B2818988829004F91DB /* names.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = names.json; sourceTree = "<group>"; };
 		2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = ../../../../../../usr/lib/libpython2.7.dylib; sourceTree = "<group>"; };
@@ -356,10 +369,8 @@
 		2A15C44018A20971006BDFF0 /* ui */ = {
 			isa = PBXGroup;
 			children = (
-				2A15C44118A329AE006BDFF0 /* ace.js */,
+				2A66ECE918A992CD002903DE /* js */,
 				2A15C44418A329AE006BDFF0 /* editor.html */,
-				2A15C45718A76F8D006BDFF0 /* underscore-1.5.2.min.js */,
-				2A15C44518A329AE006BDFF0 /* jquery-2.1.0.js */,
 				2A15C45418A48765006BDFF0 /* autocomplete.css */,
 				2A15C44618A329AE006BDFF0 /* themes.json */,
 			);
@@ -450,6 +461,18 @@
 				2A4812EE188CF45800B47700 /* LICENSE.txt */,
 			);
 			path = colors;
+			sourceTree = "<group>";
+		};
+		2A66ECE918A992CD002903DE /* js */ = {
+			isa = PBXGroup;
+			children = (
+				2A66ECDE18A992BD002903DE /* ace.js */,
+				2A66ECDF18A992BD002903DE /* editor.js */,
+				2A66ECE018A992BD002903DE /* jquery-2.1.0.js */,
+				2A66ECE118A992BD002903DE /* keybindings.js */,
+				2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */,
+			);
+			name = js;
 			sourceTree = "<group>";
 		};
 		611CC4AE10BA8C1B00B55455 /* nodebox */ = {
@@ -553,8 +576,9 @@
 			buildConfigurationList = C05733C708A9546B00998B17 /* Build configuration list for PBXNativeTarget "NodeBox" */;
 			buildPhases = (
 				8D15AC2B0486D014006FF6A4 /* Resources */,
-				2A15C45318A45A7B006BDFF0 /* update web ui */,
-				2A15C43718A20929006BDFF0 /* Copy webkit ui */,
+				2A15C45318A45A7B006BDFF0 /* update web ui (rebuild ace) */,
+				2A15C43718A20929006BDFF0 /* Copy web ui assets */,
+				2A66ECEA18A99303002903DE /* Copy web ui scripts */,
 				611CC53110BA8E0000B55455 /* Copy nodebox root */,
 				611CC55010BA8E4900B55455 /* Copy nodebox.gui */,
 				611CC59610BA901100B55455 /* Copy nodebox.util */,
@@ -618,11 +642,8 @@
 				611CC49C10BA8B9E00B55455 /* InfoPlist.strings in Resources */,
 				611CC4A110BA8B9E00B55455 /* NodeBox.icns in Resources */,
 				611CC4A210BA8B9E00B55455 /* NodeBoxFile.icns in Resources */,
-				2A15C44C18A329AE006BDFF0 /* themes.json in Resources */,
-				2A15C44A18A329AE006BDFF0 /* editor.html in Resources */,
 				611CC5A010BA908C00B55455 /* NodeBoxDocument.xib in Resources */,
 				611CC5A810BA919A00B55455 /* NodeBoxPreferences.xib in Resources */,
-				2A15C45518A48765006BDFF0 /* autocomplete.css in Resources */,
 				611CC68010BAA08300B55455 /* MainMenu.xib in Resources */,
 				2A3BD55E189C653600748EA3 /* NodeBoxFile-nb.icns in Resources */,
 				611CC68710BAA0A600B55455 /* AskString.xib in Resources */,
@@ -635,14 +656,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		2A15C45318A45A7B006BDFF0 /* update web ui */ = {
+		2A15C45318A45A7B006BDFF0 /* update web ui (rebuild ace) */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "update web ui";
+			name = "update web ui (rebuild ace)";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
