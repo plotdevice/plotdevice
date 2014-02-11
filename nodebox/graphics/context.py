@@ -514,6 +514,13 @@ class Context(object):
 
     def text(self, txt, x, y, width=None, height=None, outline=False, draw=True, **kwargs):
         Text.checkKwargs(kwargs)
+        if not isinstance(txt, basestring):
+            badargs = "text() must be called with a string as its first argument"
+            raise NodeBoxError(badargs)
+        if not all(isinstance(c, (int,float)) for c in (x,y)):
+            badargs = "text() requires x & y coordinates as its second and third arguments"
+            raise NodeBoxError(badargs)
+        
         txt = self.Text(txt, x, y, width, height, **kwargs)
         txt.inheritFromContext(kwargs.keys())
         if outline:

@@ -123,7 +123,8 @@ class Point(object):
         elif len(args) == 0:
             self.x = self.y = 0.0
         else:
-            raise NodeBoxError, "Wrong initializer for Point object"
+            badcoords = "Wrong initializer for Point object"
+            raise NodeBoxError(badcoords)
 
     def __repr__(self):
         return "Point(x=%.3f, y=%.3f)" % (self.x, self.y)
@@ -159,7 +160,8 @@ class Grob(object):
     def checkKwargs(self, kwargs):
         remaining = [arg for arg in kwargs.keys() if arg not in self.kwargs]
         if remaining:
-            raise NodeBoxError, "Unknown argument(s) '%s'" % ", ".join(remaining)
+            unknown = "Unknown argument(s) '%s'" % ", ".join(remaining)
+            raise NodeBoxError(unknown)
     checkKwargs = classmethod(checkKwargs)
 
 class TransformMixin(object):
@@ -266,7 +268,8 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
         elif isinstance(path, NSBezierPath):
             self._nsBezierPath = path
         else:
-            raise NodeBoxError, "Don't know what to do with %s." % path
+            badpath = "Don't know what to do with %s." % path
+            raise NodeBoxError(badpath)
 
         # use any drawstyle settings in kwargs (the rest will be inherited)
         self.capstyle = kwargs.get('capstyle', self._ctx._capstyle)
@@ -283,9 +286,11 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
 
     def __enter__(self):
         if self._finished:
-            raise NodeBoxError, "Bezier already complete. Only use `with bezier()` when defining a path using moveto, lineto, etc."
+            reentrant = "Bezier already complete. Only use `with bezier()` when defining a path using moveto, lineto, etc."
+            raise NodeBoxError(reentrant)
         elif self._ctx._path is not None:
-            raise NodeBoxError, "Already defining a bezier path. Don't nest `with bezier()` blocks"
+            recursive = "Already defining a bezier path. Don't nest `with bezier()` blocks"
+            raise NodeBoxError(recursive)
         self._ctx._saveContext()
         self._ctx._path = self
         return self
@@ -319,7 +324,8 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
         return self._capstyle
     def _set_capstyle(self, style):
         if style not in (BUTT, ROUND, SQUARE):
-            raise NodeBoxError, 'Line cap style should be BUTT, ROUND or SQUARE.'
+            badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
+            raise NodeBoxError(badstyle)
         self._capstyle = style
     capstyle = property(_get_capstyle, _set_capstyle)
 
@@ -327,7 +333,8 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
         return self._joinstyle
     def _set_joinstyle(self, style):
         if style not in (MITER, ROUND, BEVEL):
-            raise NodeBoxError, 'Line join style should be MITER, ROUND or BEVEL.'
+            badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
+            raise NodeBoxError(badstyle)
         self._joinstyle = style
     joinstyle = property(_get_joinstyle, _set_joinstyle)
 
@@ -410,7 +417,8 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
             elif isinstance(el, PathElement):
                 self.append(el)
             else:
-                raise NodeBoxError, "Don't know how to handle %s" % el
+                wrongtype = "Don't know how to handle %s" % el
+                raise NodeBoxError(wrongtype)
 
     def append(self, el):
         self._segment_cache = None
@@ -521,7 +529,8 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
     def points(self, amount=100):
         import bezier
         if len(self) == 0:
-            raise NodeBoxError, "The given path is empty"
+            empty = "The given path is empty"
+            raise NodeBoxError(empty)
 
         # The delta value is divided by amount - 1, because we also want the last point (t=1.0)
         # If I wouldn't use amount - 1, I fall one point short of the end.
@@ -670,7 +679,8 @@ class Color(object):
                 if len(hexclr) in (3,4):
                     hexclr = "".join(map("".join, zip(hexclr,hexclr)))
                 if len(hexclr) not in (6,8):
-                    raise NodeBoxError, "Don't know how to interpret hex color '#%s'." % hexclr
+                    invalid = "Don't know how to interpret hex color '#%s'." % hexclr
+                    raise NodeBoxError(invalid)
                 r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
                 a = args[1] if params==2 else 1.0
                 if len(hexclr)==8:
@@ -682,7 +692,8 @@ class Color(object):
                     r, g, b = _CSS_COLORS[args[0]]
                     a = args[1] if params==2 else 1.0
             else:
-                raise NodeBoxError, "Color strings must be 3/6/8-character hex codes or valid css-names"
+                invalid = "Color strings must be 3/6/8-character hex codes or valid css-names"
+                raise NodeBoxError(invalid)
             clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, a)
         elif params == 1: # Gray, no alpha
             g, = self._normalizeList(args)
@@ -901,7 +912,8 @@ class TransformContext(object):
             if arg and isinstance(arg[0], tuple):
                 arg = arg[0]
             if cmd.__name__ not in self._xforms:
-                raise NodeBoxError, "Unknown transformation method: %s." % cmd.__name__
+                unknown = "Unknown transformation method: %s." % cmd.__name__
+                raise NodeBoxError(unknown)
             cmd(*arg)
 
     def __enter__(self):
@@ -937,7 +949,8 @@ class Transform(object):
         elif isinstance(transform, NSAffineTransform):
             pass
         else:
-            raise NodeBoxError, "Don't know how to handle transform %s." % transform
+            wrongtype = "Don't know how to handle transform %s." % transform
+            raise NodeBoxError(wrongtype)
         self._nsAffineTransform = transform
         
     def _get_transform(self):
@@ -1009,7 +1022,8 @@ class Transform(object):
         elif isinstance(point_or_path, Point):
             return self.transformPoint(point_or_path)
         else:
-            raise NodeBoxError, "Can only transform BezierPaths or Points"
+            wrongtype = "Can only transform BezierPaths or Points"
+            raise NodeBoxError(wrongtype)
 
     def transformPoint(self, point):
         return Point(self._nsAffineTransform.transformPoint_((point.x,point.y)))
@@ -1018,7 +1032,8 @@ class Transform(object):
         if isinstance(path, BezierPath):
             path = BezierPath(path._ctx, path)
         else:
-            raise NodeBoxError, "Can only transform BezierPaths"
+            wrongtype = "Can only transform BezierPaths"
+            raise NodeBoxError(wrongtype)
         path._nsBezierPath = self._nsAffineTransform.transformBezierPath_(path._nsBezierPath)
         return path
 
@@ -1048,7 +1063,8 @@ class Image(Grob, TransformMixin):
                 data = NSData.dataWithBytes_length_(data, len(data))
             self._nsImage = NSImage.alloc().initWithData_(data)
             if self._nsImage is None:
-                raise NodeBoxError, "can't read image %r" % path
+                unreadable = "can't read image %r" % path
+                raise NodeBoxError(unreadable)
             self._nsImage.setFlipped_(True)
             self._nsImage.setCacheMode_(NSImageCacheNever)
         elif image is not None:
@@ -1056,10 +1072,12 @@ class Image(Grob, TransformMixin):
                 self._nsImage = image
                 self._nsImage.setFlipped_(True)
             else:
-                raise NodeBoxError, "Don't know what to do with %s." % image
+                wrongtype = "Don't know what to do with %s." % image
+                raise NodeBoxError(wrongtype)
         elif path is not None:
             if not os.path.exists(path):
-                raise NodeBoxError, 'Image "%s" not found.' % path
+                notfound = 'Image "%s" not found.' % path
+                raise NodeBoxError(notfound)
             curtime = os.path.getmtime(path)
             try:
                 image, lasttime = self._ctx._imagecache[path]
@@ -1070,7 +1088,8 @@ class Image(Grob, TransformMixin):
             if image is None:
                 image = NSImage.alloc().initWithContentsOfFile_(path)
                 if image is None:
-                    raise NodeBoxError, "Can't read image %r" % path
+                    invalid = "Can't read image %r" % path
+                    raise NodeBoxError(invalid)
                 image.setFlipped_(True)
                 image.setCacheMode_(NSImageCacheNever)
                 self._ctx._imagecache[path] = (image, curtime)
@@ -1253,7 +1272,8 @@ class Text(Grob, TransformMixin, ColorMixin):
         try:
             textStorage.setFont_(self.font)
         except ValueError:
-            raise NodeBoxError("Text.draw(): font '%s' not available.\n" % self._fontname)
+            nofont = "Text.draw(): font '%s' not available.\n" % self._fontname
+            raise NodeBoxError(nofont)
             return
 
         layoutManager = NSLayoutManager.alloc().init()
