@@ -384,6 +384,7 @@ class NodeBoxDocument(NSDocument):
         """
         self.animationSpinner.startAnimation_(None)
         if (self.outputView):
+            # self.editorView.clearErrors()
             self.outputView.clear(timestamp=True)
 
         # Compile the script
@@ -532,6 +533,7 @@ class NodeBoxDocument(NSDocument):
         if self.vm.session:
             self.vm.session.cancel()
 
+        self.editorView.report(self.vm.crashed, self.path)
         self.outputView.report(self.vm.crashed, self.vm.namespace['FRAME'] if self.vm.animated else None)
 
     #

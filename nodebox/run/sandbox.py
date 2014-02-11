@@ -14,7 +14,7 @@ from nodebox.graphics import NodeBoxError
 from nodebox import util
 from nodebox import graphics
 from nodebox.run.export import MovieExportSession, ImageExportSession
-from nodebox.run import stacktrace, stackframes
+from nodebox.run import stacktrace, coredump
 from nodebox import __MAGIC as MAGICVAR
 
 __all__ = ['Sandbox']
@@ -185,7 +185,7 @@ class Sandbox(object):
                 self._code = compile("%s\n\n"%self._source, scriptname.encode('ascii', 'ignore'), "exec")
             result = self.call(compileScript)
             if not result.ok:
-                self.crashed = stackframes()
+                self.crashed = coredump() # why isn't this redundant?
                 return result
 
         # Reset the frame / animation status
@@ -317,8 +317,8 @@ class Sandbox(object):
             method()
         except:
             # print the stacktrace and quit
-            self.crashed = stackframes()
-            errtxt = stacktrace(self._path)
+            self.crashed = coredump(self._path, self._source)
+            errtxt = stacktrace(self._path, self._source)
             sys.stderr.write(errtxt)
             return Outcome(False, output.data)
         finally:

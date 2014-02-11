@@ -1,17 +1,17 @@
+import linecache
 from sys import exc_info
 from os.path import abspath, dirname, relpath
-from traceback import format_list, format_exception_only, extract_tb
+from traceback import format_list, format_exception_only
 
-def stacktrace(script=None):
+def stacktrace(script=None, src=None):
     """print a clean traceback and optionally rewrite the paths relative to a script path"""
-
-    # use the most recently caught exception
-    etype, value, tb = exc_info()
 
     # preprocess the stacktrace
     stack = []
     basedir = dirname(script) if script else None
-    for frame in stackframes():
+    err_msg, frames = coredump(script, src)
+    # print "raw", format_list(frames)
+    for frame in frames:
         # rewrite file paths relative to the script's path (but only if it's shorter)
         if basedir:
             full = frame[0]
@@ -20,20 +20,41 @@ def stacktrace(script=None):
         stack.append(frame)
 
     # return formatted traceback as a single string (with multiple newlines)
-    return "Traceback (most recent call last):\n%s" % "".join(format_list(stack) + format_exception_only(etype, value))
-
-def stackframes(debug=True):
-    """get the last traceback formatted as a list of tuples (with internal frames removed)"""
+    return "Traceback (most recent call last):\n%s" % "".join(format_list(stack) + err_msg)
+    
+def coredump(script=None, src=None):
+    """Get a clean stacktrace with absolute paths and source pulled from the editor rather than disk"""
     # use the most recently caught exception
-    tb = exc_info()[2]
+    etype, value, tb = exc_info()
+    script = script or '<Untitled>' if src else None
+    frames = extract_tb(tb, script, src)
+    return [format_exception_only(etype, value), frames]
 
-    stack = extract_tb(tb)
-    moduledir = abspath(dirname(dirname(__file__)))
+def extract_tb(tb, script=None, src=None, debug=False):
+    """Return a list of pre-processed entries from traceback."""
+    list = []
+    n = 0
+    while tb is not None:
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        co = f.f_code
+        filename = co.co_filename
+        name = co.co_name
+        if filename==script:
+            line = src.split('\n')[lineno-1]
+        else:
+            linecache.checkcache(filename)
+            line = linecache.getline(filename, lineno, f.f_globals)
+        if line: line = line.strip()
+        else: line = None
+        list.append((filename, lineno, name, line))
+        tb = tb.tb_next
+
+    # omit the internal nodebox stack frames unless debugging
     if not debug:
-        # omit nodebox internals from stacktrace (unless debugging)
-        stack = [frame for frame in stack if moduledir not in frame[0]]
-
-    return stack
+        moduledir = abspath(dirname(dirname(__file__)))
+        list = [frame for frame in list if moduledir not in frame[0]]
+    return list
 
 # make the main classes from the submodules accessible
 from nodebox.run.export import MovieExportSession, ImageExportSession

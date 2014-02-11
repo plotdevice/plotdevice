@@ -152,6 +152,12 @@ var Editor = function(elt){
         selected:function(){
             var sel = ed.getSelection()
             var rng = ed.getSelectionRange()
+            var tok = sess.getTokens(rng.start.row)
+            console.log('tokens',_.map(tok, function(t){return t.type}))
+            var at = sess.getTokenAt(rng.start.row,rng.start.column)
+            _.each(tok, function(t, i){
+                if (t===at) console.log('FOUND', t,'at',i)
+            })
             var word_rng = sess.getAWordRange(rng.start.row,rng.start.column)
             var word = sess.getTextRange(word_rng)
             return word
@@ -179,14 +185,18 @@ var Editor = function(elt){
         redo:function(){
             undo.redo()
         },
-        mark:function(){
-            sess.setAnnotations([{
-              row: 1, column: 10,
-              text: "error description",
-              type: "warning" // error warning information
-            }]);            
-            // ed.focus()
-            ed.gotoLine(2, 10, true)
+        mark:function(err, lines){
+            if (err==null){
+                sess.clearAnnotations()
+            }else{
+                var anns = _.map(lines, function(line, i){
+                    var ann = {row:line, col:0, type:"warning"}
+                    if (i==0) _.extend(ann, {type:"error", text:err})
+                    return ann
+                })
+                sess.setAnnotations(anns)                
+            }
+
         }
     }
   

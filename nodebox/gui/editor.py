@@ -63,7 +63,7 @@ class EditorView(NSView):
         ]
 
         # once a doc viewer exists, add a lookup-ref menu item pointing to it
-        # word = self.js('editor.selected')
+        word = self.js('editor.selected')
         # _ns = ['curveto', 'TEXT', 'BezierPath', 'random', 'WIDTH', 'colors', 'closepath', 'font', 'speed', 'JUSTIFY', 'HSB', '_copy_attr', 'KEY_UP', 'text', 'ClippingPath', 'Rect', 'FORTYFIVE', 'colormode', 'choice', 'KEY_BACKSPACE', 'inch', 'rotate', 'grid', 'background', 'geo', 'LINETO', 'textpath', 'fonts', 'findpath', 'DEFAULT_HEIGHT', 'arrow', 'NodeBoxError', 'PathElement', 'beginpath', 'NORMAL', 'textwidth', 'DEFAULT_WIDTH', 'joinstyle', 'RGB', 'export', 'ROUND', '_copy_attrs', 'canvas', 'scale', 'CENTER', 'CMYK', 'SQUARE', 'nofill', 'MITER', 'nostroke', 'TransformContext', 'capstyle', 'lineheight', 'endclip', 'Point', 'BUTTON', 'Grob', 'KEY_TAB', 'KEY_LEFT', 'findvar', 'cm', 'color', 'image', 'autoclosepath', 'Transform', 'pop', 'KEY_ESC', 'BUTT', 'oval', 'CORNER', 'ellipse', 'addvar', 'size', 'ximport', 'MOVETO', 'lineto', 'skew', 'transform', 'rect', 'Variable', 'CLOSE', 'translate', 'LEFT', 'files', 'drawpath', 'outputmode', 'imagesize', 'var', 'fontsize', 'endpath', 'line', 'KEY_DOWN', 'colorrange', 'reset', 'moveto', 'save', 'mm', 'Text', 'align', 'BOOLEAN', 'Oval', 'Image', 'clip', 'NUMBER', 'stroke', 'fill', 'strokewidth', 'bezier', 'KEY_RIGHT', 'autotext', 'BEVEL', 'star', 'state_vars', 'HEIGHT', 'Context', 'textheight', 'RIGHT', 'CURVETO', 'Color', 'beginclip', 'textmetrics', 'push']
         # def ref_url(proc):
         #     if proc in _ns:
@@ -109,6 +109,12 @@ class EditorView(NSView):
 
     # App-initiated actions
 
+    def _get_source(self):
+        return self.webview.stringByEvaluatingJavaScriptFromString_('editor.source();')
+    def _set_source(self, src):
+        self.js(u'editor.source', args(src))
+    source = property(_get_source, _set_source)
+
     def fontChanged(self, note=None):
         info = editor_info()
         self.js('editor.font', args(info['family'], info['px']))
@@ -125,11 +131,17 @@ class EditorView(NSView):
     def blur(self):
         self.js('editor.blur')
 
-    def _get_source(self):
-        return self.webview.stringByEvaluatingJavaScriptFromString_('editor.source();')
-    def _set_source(self, src):
-        self.js(u'editor.source', args(src))
-    source = property(_get_source, _set_source)
+    def clearErrors(self):
+        self.js('editor.mark', args(None))
+
+    def report(self, crashed, script):
+        if not crashed: 
+            self.js('editor.mark', args(None))
+            return
+        
+        exc, traceback = crashed
+        err_lines = [line-1 for fn, line, env, src in reversed(traceback) if fn==script]
+        self.js('editor.mark', args("\n".join(exc), err_lines))
 
     # Menubar actions
 
@@ -324,9 +336,11 @@ class OutputTextView(NSTextView):
         self.performFindPanelAction_(sender)
 
     def performFindPanelAction_(self, sender):
-        # same timer-based hack as PyDETextView.performFindPanelAction_
-        # what could be the problem? something in the tab-ordering of the
-        # views? or is the containing splitview getting involved?
+        # frustrating bug:
+        # when the find bar is dismissed with esc, the *other* textview becomes
+        # first responder. the `solution' here is to monitor the find bar's field
+        # editor and notice when it is detached from the view hierarchy. it then
+        # re-sets itself as first responder
         super(OutputTextView, self).performFindPanelAction_(sender)
         if self._findTimer:
             self._findTimer.invalidate()
