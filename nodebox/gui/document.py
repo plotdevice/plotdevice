@@ -536,6 +536,11 @@ class NodeBoxDocument(NSDocument):
         self.editorView.report(self.vm.crashed, self.path)
         self.outputView.report(self.vm.crashed, self.vm.namespace['FRAME'] if self.vm.animated else None)
 
+    def crash(self):
+        # called by the graphicsview when a grob blows up with unexpected input
+        errtxt = self.vm.crash()
+        self.echo([(True, errtxt)])
+        self.stopScript()
     #
     # Pasteboards
     #

@@ -20,7 +20,10 @@ def stacktrace(script=None, src=None):
         stack.append(frame)
 
     # return formatted traceback as a single string (with multiple newlines)
-    return "Traceback (most recent call last):\n%s" % "".join(format_list(stack) + err_msg)
+    if stack:
+        return "Traceback (most recent call last):\n%s" % "".join(format_list(stack) + err_msg)
+    else:
+        return "\n".join(err_msg)
     
 def coredump(script=None, src=None):
     """Get a clean stacktrace with absolute paths and source pulled from the editor rather than disk"""
@@ -53,7 +56,7 @@ def extract_tb(tb, script=None, src=None, debug=False):
     # omit the internal nodebox stack frames unless debugging
     if not debug:
         moduledir = abspath(dirname(dirname(__file__)))
-        list = [frame for frame in list if moduledir not in frame[0]]
+        return [frame for frame in list if moduledir not in frame[0]]
     return list
 
 # make the main classes from the submodules accessible

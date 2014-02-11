@@ -194,6 +194,10 @@ class Sandbox(object):
         self.canvas.speed = None
         return result
 
+    def crash(self):
+        self.crashed = coredump(self._path, self._source)
+        return stacktrace(self._path, self._source)
+
     def stop(self):
         """Called once the script has stopped running (voluntarily or otherwise)"""
         # print "stopping at", self._meta.next-1, "of", self._meta.last

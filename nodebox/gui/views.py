@@ -127,8 +127,8 @@ class NodeBoxGraphicsView(NSView):
                 # wait, really? won't this always be a dupe of something that was
                 # rendered during the volatile phase?
                 # 
-                errtxt = stacktrace(self.document.fileName())
-                self.document.echo([(True, errtxt)])
+                # self.document.crash()
+                pass
 
     def _get_zoom(self):
         return self._zoom
@@ -234,8 +234,7 @@ class NodeBoxGraphicsView(NSView):
             except:
                 # Display the error in the output view.
                 # (this is where invalid args passed to grobs will throw exceptions)
-                errtxt = stacktrace(self.document.fileName())
-                self.document.echo([(True, errtxt)])
+                self.document.crash()
             NSGraphicsContext.currentContext().restoreGraphicsState()
 
 
