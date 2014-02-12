@@ -273,7 +273,7 @@ class OutputTextView(NSTextView):
         self.setSelectedTextAttributes_({"NSBackgroundColor":clr['selection']})
         scrollview = self.superview().superview()
         scrollview.setScrollerKnobStyle_(2 if editor_info('dark') else 1)
-        
+
         # recolor previous contents
         attrs = self._attrs()
         self.ts.beginEditing()
@@ -346,6 +346,7 @@ class OutputTextView(NSTextView):
         msg = "%i frame%s"%(frames, '' if frames==1 else 's') if frames else "rendered"
         outcome = "%s in %s\n"%(msg, dur)
         self.append(outcome, 'info')
+        del self._begin
 
     @objc.IBAction
     def performFindAction_(self, sender):

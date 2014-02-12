@@ -75,13 +75,20 @@ class NodeBoxDocument(NSDocument):
         # win.makeFirstResponder_(self.editorView)
         self.currentView = self.graphicsView
 
+
+        # move the spinning progress indicator out of the status bar
+        frame = win.frame()
+        win.contentView().superview().addSubview_(self.animationSpinner)
+        self.animationSpinner.setFrame_( ((frame.size.width-18,frame.size.height-18), (15,15)) )
+        self.animationSpinner.setAutoresizingMask_(NSViewMinYMargin|NSViewMinXMargin)
+        # self.outputView.superview().superview().addFloatingSubview_forAxis_(self.animationSpinner,NSEventGestureAxisVertical)
+        # x = self.outputView.frame().size.width - 17
+        # self.animationSpinner.setFrame_(((x,3),(16,16)))
+        # # self.animationSpinner.setControlTint_(NSGraphiteControlTint)
+
+        # deal with the textured bottom-bar
         win.setAutorecalculatesContentBorderThickness_forEdge_(True,NSMinYEdge)
         win.setContentBorderThickness_forEdge_(22.0,NSMinYEdge)
-
-        self.outputView.superview().superview().addFloatingSubview_forAxis_(self.animationSpinner,NSEventGestureAxisVertical)
-        x = self.outputView.frame().size.width - 17
-        self.animationSpinner.setFrame_(((x,3),(16,16)))
-        # self.animationSpinner.setControlTint_(NSGraphiteControlTint)
         self.toggleStatusBar_(self)
 
 
@@ -502,9 +509,8 @@ class NodeBoxDocument(NSDocument):
 
     def stopScript(self):
         # run stop() method if the script defines one
-        if not self.vm.crashed:
-            result = self.vm.stop()
-            self.echo(result.output)
+        result = self.vm.stop()
+        self.echo(result.output)
 
         # disable ui feedback and return from fullscreen (if applicable)
         self.animationSpinner.stopAnimation_(None)
@@ -536,7 +542,7 @@ class NodeBoxDocument(NSDocument):
             self.vm.session.cancel()
 
         self.editorView.report(self.vm.crashed, self.path)
-        self.outputView.report(self.vm.crashed, self.vm.namespace['FRAME'] if self.vm.animated else None)
+        self.outputView.report(self.vm.crashed, self.vm.namespace.get('FRAME') if self.vm.animated else None)
 
     def crash(self):
         # called by the graphicsview when a grob blows up with unexpected input

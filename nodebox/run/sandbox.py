@@ -203,7 +203,8 @@ class Sandbox(object):
         # print "stopping at", self._meta.next-1, "of", self._meta.last
         result = Outcome(True, [])
         if self._meta.running:
-            result = self.call("stop")
+            if not self.crashed:
+                result = self.call("stop")
             self._meta.running = False
         self._meta.first, self._meta.last = (1,None)
         if self._meta.console and not self.live:
