@@ -356,15 +356,16 @@ class NodeBoxDocument(NSDocument):
 
             # Run setup routine
             self.invoke("setup")
-            window = self.currentView.window()
-            window.makeFirstResponder_(self.currentView)
+            if not self.vm.crashed:
+                window = self.currentView.window()
+                window.makeFirstResponder_(self.currentView)
 
-            # Start the timer
-            self.animationTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-                1.0 / self.vm.speed, self, objc.selector(self.step, signature="v@:@"), None, True)
-            
-            # Start the spinner
-            self.animationSpinner.startAnimation_(None)
+                # Start the timer
+                self.animationTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+                    1.0 / self.vm.speed, self, objc.selector(self.step, signature="v@:@"), None, True)
+                
+                # Start the spinner
+                self.animationSpinner.startAnimation_(None)
         else:
             # clean up after successful non-animated run
             self.stopScript()
@@ -384,7 +385,7 @@ class NodeBoxDocument(NSDocument):
         """
         self.animationSpinner.startAnimation_(None)
         if (self.outputView):
-            # self.editorView.clearErrors()
+            self.editorView.clearErrors()
             self.outputView.clear(timestamp=True)
 
         # Compile the script
@@ -423,7 +424,7 @@ class NodeBoxDocument(NSDocument):
         # Display the output of the script
         if result.ok and redraw:
             self.currentView.setCanvas(self.vm.canvas)
-        if not result.ok and method is None:
+        if not result.ok and method in (None, "setup"):
             self.stopScript()
 
         return result.ok
@@ -501,8 +502,9 @@ class NodeBoxDocument(NSDocument):
 
     def stopScript(self):
         # run stop() method if the script defines one
-        result = self.vm.stop()
-        self.echo(result.output)
+        if not self.vm.crashed:
+            result = self.vm.stop()
+            self.echo(result.output)
 
         # disable ui feedback and return from fullscreen (if applicable)
         self.animationSpinner.stopAnimation_(None)
