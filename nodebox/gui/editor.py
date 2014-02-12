@@ -23,6 +23,8 @@ def args(*jsargs):
 
 class EditorView(NSView):
     document = objc.IBOutlet()
+    jumpPanel = objc.IBOutlet()
+    jumpLine = objc.IBOutlet()
 
     # WebKit mgmt
 
@@ -92,6 +94,10 @@ class EditorView(NSView):
 
     def resizeWebview(self):
         self.webview.setFrame_(self.bounds())
+
+    def windowDidResignKey_(self, note):
+        if note.object() is self.jumpPanel:
+            self.jumpPanel.orderOut_(self)
 
     def js(self, cmd, args=''):
         op = '%s(%s);'%(cmd,args)
@@ -164,8 +170,30 @@ class EditorView(NSView):
     @objc.IBAction
     def editorAction_(self, sender):
         cmds = ['selectline', 'splitIntoLines', 'addCursorAboveSkipCurrent', 'addCursorBelowSkipCurrent', 'centerselection', # Edit menu
-                'blockindent', 'blockoutdent', 'togglecomment', 'gotoline'] # Python menu
+                'blockindent', 'blockoutdent', 'togglecomment'] # Python menu
         self.js('editor.exec', args(cmds[sender.tag()]))
+
+    @objc.IBAction
+    def jumpToLine_(self, sender):
+        # place the panel in the middle of the editor's rect and display it
+        e_frame = self.frame()
+        p_frame = self.jumpPanel.frame()
+        w_frame = self.window().frame()
+        e_frame.origin.x = w_frame.origin.x + (w_frame.size.width - e_frame.size.width)
+        e_frame.origin.y = w_frame.origin.y + (w_frame.size.height - e_frame.size.height) - 22
+        p_frame.origin.x = int(e_frame.origin.x + (e_frame.size.width-p_frame.size.width)/2.0)
+        p_frame.origin.y = int(e_frame.origin.y + (e_frame.size.height-p_frame.size.height)/2.0)
+        self.jumpLine.setStringValue_('')
+        self.jumpPanel.setFrame_display_(p_frame, False)
+        self.jumpPanel.makeKeyAndOrderFront_(self)
+
+    @objc.IBAction
+    def performJump_(self, sender):
+        # if triggered by the ok button, jump to the line. otherwise just hide the panel if sender.tag():
+        if sender.tag():
+            line = int(self.jumpLine.stringValue().replace(',',''))
+            self.js('editor.jump', args(line))
+        self.jumpPanel.orderOut_(self)
 
     @objc.IBAction
     def aceAutocomplete_(self, sender):

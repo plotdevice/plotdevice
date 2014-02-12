@@ -43,14 +43,9 @@ NODEBOX_KEYBINDINGS=[
             })
         }
     },{
-        name: "gotoline",
-        bindKey: "Command-J",
-        exec: function(editor) {
-            var line = parseInt(prompt("Enter line number:"), 10);
-            if (!isNaN(line)) {
-                editor.gotoLine(line);
-            }
-        },
+        name: "gotoline", // knock out the binding for the javascript-dialog version
+        // bindKey: "Command-J",
+        exec: function(editor) {},
         readOnly: true
     },{
         name: "selectline",

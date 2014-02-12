@@ -63,7 +63,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="Gog-0j-9A9">
-                                    <rect key="frame" x="317" y="0.0" width="16" height="463"/>
+                                    <rect key="frame" x="318" y="0.0" width="15" height="463"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
@@ -76,6 +76,8 @@
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                         <connections>
                                             <outlet property="document" destination="-2" id="mci-ng-ded"/>
+                                            <outlet property="jumpLine" destination="pgr-OC-ZWo" id="IxA-0X-EWL"/>
+                                            <outlet property="jumpPanel" destination="s95-6p-5Oy" id="6Is-Oc-qhw"/>
                                         </connections>
                                     </customView>
                                     <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="30">
@@ -506,9 +508,15 @@ bered page-00003.pdf</string>
                         <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="52i-G1-4da">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+Gw
+</string>
                         </buttonCell>
+                        <connections>
+                            <action selector="performJump:" target="M8a-Fy-5V5" id="M66-AL-suY"/>
+                        </connections>
                     </button>
-                    <button verticalHuggingPriority="750" id="wxK-iX-eUj">
+                    <button verticalHuggingPriority="750" tag="1" id="wxK-iX-eUj">
                         <rect key="frame" x="96" y="13" width="58" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Go" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="kCs-na-DXO">
@@ -518,9 +526,15 @@ bered page-00003.pdf</string>
 DQ
 </string>
                         </buttonCell>
+                        <connections>
+                            <action selector="performJump:" target="M8a-Fy-5V5" id="N1h-Bo-h21"/>
+                        </connections>
                     </button>
                 </subviews>
             </view>
+            <connections>
+                <outlet property="delegate" destination="M8a-Fy-5V5" id="zjB-lh-FMk"/>
+            </connections>
         </window>
     </objects>
     <resources>

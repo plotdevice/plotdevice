@@ -400,7 +400,7 @@ CQ
                             </menuItem>
                             <menuItem title="Jump to line..." tag="8" keyEquivalent="j" id="389">
                                 <connections>
-                                    <action selector="editorAction:" target="-1" id="Yb7-yC-xvE"/>
+                                    <action selector="jumpToLine:" target="-1" id="LeI-CV-GrA"/>
                                 </connections>
                             </menuItem>
                         </items>

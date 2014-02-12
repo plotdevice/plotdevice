@@ -216,6 +216,9 @@ var Editor = function(elt){
         redo:function(){
             undo.redo()
         },
+        jump:function(line){
+            ed.gotoLine(line);
+        },
         mark:function(err, lines){
             if (err==null){
                 sess.clearAnnotations()
