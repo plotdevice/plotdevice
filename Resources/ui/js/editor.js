@@ -85,6 +85,7 @@ var Editor = function(elt){
         "Edit":['selectline', 'splitIntoLines', 'addCursorAboveSkipCurrent', 'addCursorBelowSkipCurrent', 'centerselection'], 
         "Python":['blockindent', 'blockoutdent', 'togglecomment', 'gotoline', 'expandSnippet', 'startAutocomplete']
     }
+    var _htimer = null, _vtimer = null, _hmin=0, _vmin=0;
     var that = {
         init:function(){
             
@@ -106,6 +107,11 @@ var Editor = function(elt){
             sess.setUndoManager(undo);
             sess.setUndoSelect(false);
 
+            // being able to switch between light and dark scrollbars also means being
+            // responsible for their hide/show behavior, sadly....
+            sess.on("changeScrollLeft", that._scroll_h)
+            sess.on("changeScrollTop", that._scroll_v)
+            that.ready = true // flag that the objc side can start sending messages
             return that
         },
         _commandStream:function(e){
@@ -116,6 +122,31 @@ var Editor = function(elt){
                 if (_.contains(cmds, cmd)) app.flash(menu)
             })
         },
+        _scroll_h:function(x){
+            var now = Date.now()
+            if (_htimer) clearTimeout(_htimer)
+            else{
+                _hmin = now + 500
+                dom.addClass('scrolling-h')
+            }
+            _htimer = setTimeout(function(){
+                dom.removeClass('scrolling-h'); 
+                _htimer=null
+            }, Math.max(_hmin-now, 180))
+        },
+        _scroll_v:function(y){
+            var now = Date.now()
+            if (_vtimer) clearTimeout(_vtimer)
+            else{
+                _vmin = now + 500
+                dom.addClass('scrolling-v')
+            }
+            _vtimer = setTimeout(function(){
+                dom.removeClass('scrolling-v'); 
+                _vtimer=null
+            }, Math.max(_vmin-now, 180))
+        },
+
         blur:function(){
             ed.blur()
         },

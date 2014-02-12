@@ -4,13 +4,46 @@
     <style type="text/css" media="screen">
         #editor { 
             line-height: 1.4em;
-            font-family:"Source Code Pro";
+            font-family:"Menlo";
             position: absolute;
             top: 0;
             right: 0;
             bottom: 0;
             left: 0;
         }
+        
+        div.ace_scrollbar{
+            -webkit-transition:opacity, 0.333s;
+            opacity:0!important;
+        }
+        #editor.scrolling-v div.ace_scrollbar-v{
+            opacity:1!important;
+        }
+        #editor.scrolling-h div.ace_scrollbar-h{
+            opacity:1!important;
+        }
+        div.ace_scrollbar-v{ right:2px!important; bottom:3px!important; top:3px!important;}
+        div.ace_scrollbar-h{ right:4px!important; bottom:3px!important;}
+        div.ace_scrollbar-v::-webkit-scrollbar {width: 0.48em;}
+        div.ace_scrollbar-h::-webkit-scrollbar {height: 0.48em;}
+        div.ace_scrollbar::-webkit-scrollbar-thumb {
+            color:transparent;
+            background: rgba(80, 80, 80, 0.6); 
+            border-radius:.48em;
+            box-shadow: inset 0 0 6px rgba(80, 80, 80, 0.3);
+        }
+        #editor.ace_dark div.ace_scrollbar-v{ right:3px!important; bottom:3px!important; top:3px!important;}
+        #editor.ace_dark div.ace_scrollbar-h{ right:4px!important; bottom:3px!important;}
+        #editor.ace_dark div.ace_scrollbar-v::-webkit-scrollbar {width: 0.3em;}
+        #editor.ace_dark div.ace_scrollbar-h::-webkit-scrollbar {height: 0.3em;}
+        #editor.ace_dark div.ace_scrollbar::-webkit-scrollbar-thumb {
+            color:transparent;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius:.2em;
+            box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.3);
+        }
+
+        
     </style>
     <script src="js/jquery-2.1.0.js" charset="utf-8"></script>
     <script src="js/underscore-1.5.2.min.js" charset="utf-8"></script>

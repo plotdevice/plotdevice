@@ -23,7 +23,7 @@ def stacktrace(script=None, src=None):
     if stack:
         return "Traceback (most recent call last):\n%s" % "".join(format_list(stack) + err_msg)
     else:
-        return "\n".join(err_msg)
+        return "".join(err_msg)
     
 def coredump(script=None, src=None):
     """Get a clean stacktrace with absolute paths and source pulled from the editor rather than disk"""

@@ -36,11 +36,23 @@ class EditorView(NSView):
         ui = file(html).read().decode('utf-8')
         baseurl = NSURL.fileURLWithPath_(os.path.dirname(html))
         self.webview.mainFrame().loadHTMLString_baseURL_(ui, baseurl)
+        
+        # set a theme-derived background for the webview's clipview
+        docview = self.webview.mainFrame().frameView().documentView()
+        clipview = docview.superview()
+        scrollview = clipview.superview()
+        if clipview is not None:
+            bgcolor = editor_info('colors')['background']
+            clipview.setDrawsBackground_(True)
+            clipview.setBackgroundColor_(bgcolor)
+            scrollview.setVerticalScrollElasticity_(1)
+            scrollview.setScrollerKnobStyle_(2)
+
         nc = NSNotificationCenter.defaultCenter()
         nc.addObserver_selector_name_object_(self, "themeChanged", "ThemeChanged", None)
         nc.addObserver_selector_name_object_(self, "fontChanged", "FontChanged", None)
         nc.addObserver_selector_name_object_(self, "bindingsChanged", "BindingsChanged", None)
-        self._wakeup = set_timeout(self, '_jostle', 0.2, repeat=True)
+        self._wakeup = set_timeout(self, '_jostle', 0.05, repeat=True)
         self._queue = []
         self._edits = 0
         self.themeChanged()
@@ -89,7 +101,8 @@ class EditorView(NSView):
             return self.webview.stringByEvaluatingJavaScriptFromString_(op)
 
     def _jostle(self):
-        if not self.webview.isLoading():
+        awoke = self.webview.stringByEvaluatingJavaScriptFromString_('window.editor && window.editor.ready')
+        if awoke:
             for op in self._queue:
                 self.webview.stringByEvaluatingJavaScriptFromString_(op)
             self._wakeup.invalidate()
@@ -120,7 +133,10 @@ class EditorView(NSView):
         self.js('editor.font', args(info['family'], info['px']))
 
     def themeChanged(self, note=None):
-        self.js('editor.theme', args(editor_info('module')))
+        info = editor_info()
+        clipview = self.webview.mainFrame().frameView().documentView().superview()
+        clipview.setBackgroundColor_(info['colors']['background'])
+        self.js('editor.theme', args(info['module']))
 
     def bindingsChanged(self, note=None):
         self.js('editor.bindings', args(get_default('bindings')))
@@ -225,9 +241,11 @@ class OutputTextView(NSTextView):
         self.ts = self.textStorage()
         self.colorize()
         self.setTextContainerInset_( (0,4) ) # a pinch of top-margin
-        self.setUsesFindBar_(True)
+        # self.textContainer().setWidthTracksTextView_(NO) # disable word-wrap
+        # self.textContainer().setContainerSize_((10000000, 10000000))
 
         # use a FindBar rather than FindPanel
+        self.setUsesFindBar_(True)
         self._finder = NSTextFinder.alloc().init()
         self._finder.setClient_(self)
         self._finder.setFindBarContainer_(self.enclosingScrollView())
