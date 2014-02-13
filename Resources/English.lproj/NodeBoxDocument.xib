@@ -63,7 +63,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="Gog-0j-9A9">
-                                    <rect key="frame" x="318" y="0.0" width="15" height="463"/>
+                                    <rect key="frame" x="317" y="0.0" width="16" height="463"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
@@ -538,6 +538,6 @@ DQ
         </window>
     </objects>
     <resources>
-        <image name="NSStopProgressFreestandingTemplate" width="12" height="12"/>
+        <image name="NSStopProgressFreestandingTemplate" width="83" height="83"/>
     </resources>
 </document>

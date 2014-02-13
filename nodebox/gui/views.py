@@ -35,6 +35,8 @@ class NodeBoxBackdrop(NSView):
             minsize = self.gfxView.bounds().size
             frame.size.width = max(visible.size.width, minsize.width)
             frame.size.height = max(visible.size.height, minsize.height)
+            scrollview.horizontalScroller().setControlSize_(1) #NSSmallControlSize
+            scrollview.verticalScroller().setControlSize_(1)
         self = super(NodeBoxBackdrop, self).setFrame_(frame)
 
     def didAddSubview_(self, subview):
@@ -101,7 +103,10 @@ class NodeBoxGraphicsView(NSView):
     def setCanvas(self, canvas, rasterize=False):
         self.canvas = canvas
         if canvas is not None:
+            is_dark = bool(canvas.background and canvas.background.brightness <= .5)
             scrollview = self.superview().superview().superview()
+            scrollview.setScrollerKnobStyle_(2 if is_dark else 1) # NSScrollerKnobStyleDark/Light
+
             visible = scrollview.documentVisibleRect()
             oldframe = self.frame()
             x_pct = NSMidX(visible) / NSWidth(oldframe)
