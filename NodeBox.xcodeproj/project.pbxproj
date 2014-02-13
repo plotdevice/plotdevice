@@ -274,11 +274,11 @@
 		2A4812EE188CF45800B47700 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		2A4812F0188CF45800B47700 /* themes.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = themes.py; sourceTree = "<group>"; };
 		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		2A66ECDE18A992BD002903DE /* ace.js */ = {isa = PBXFileReference; lastKnownFileType = file; name = ace.js; path = Resources/ui/js/ace.js; sourceTree = "<group>"; };
-		2A66ECDF18A992BD002903DE /* editor.js */ = {isa = PBXFileReference; lastKnownFileType = file; name = editor.js; path = Resources/ui/js/editor.js; sourceTree = "<group>"; };
-		2A66ECE018A992BD002903DE /* jquery-2.1.0.js */ = {isa = PBXFileReference; lastKnownFileType = file; name = "jquery-2.1.0.js"; path = "Resources/ui/js/jquery-2.1.0.js"; sourceTree = "<group>"; };
-		2A66ECE118A992BD002903DE /* keybindings.js */ = {isa = PBXFileReference; lastKnownFileType = file; name = keybindings.js; path = Resources/ui/js/keybindings.js; sourceTree = "<group>"; };
-		2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */ = {isa = PBXFileReference; lastKnownFileType = file; name = "underscore-1.5.2.min.js"; path = "Resources/ui/js/underscore-1.5.2.min.js"; sourceTree = "<group>"; };
+		2A66ECDE18A992BD002903DE /* ace.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = ace.js; path = Resources/ui/js/ace.js; sourceTree = "<group>"; };
+		2A66ECDF18A992BD002903DE /* editor.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = editor.js; path = Resources/ui/js/editor.js; sourceTree = "<group>"; };
+		2A66ECE018A992BD002903DE /* jquery-2.1.0.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "jquery-2.1.0.js"; path = "Resources/ui/js/jquery-2.1.0.js"; sourceTree = "<group>"; };
+		2A66ECE118A992BD002903DE /* keybindings.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = keybindings.js; path = Resources/ui/js/keybindings.js; sourceTree = "<group>"; };
+		2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "underscore-1.5.2.min.js"; path = "Resources/ui/js/underscore-1.5.2.min.js"; sourceTree = "<group>"; };
 		2A827CC91859E9FE00A126BA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		2A9B4B2818988829004F91DB /* names.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = names.json; sourceTree = "<group>"; };
 		2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = ../../../../../../usr/lib/libpython2.7.dylib; sourceTree = "<group>"; };
@@ -682,7 +682,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "ditto doc/examples $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\nchmod 644 $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples/*/*.py";
+			shellScript = "ditto doc/examples $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\nchmod 644 $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples/*/*.nb";
 		};
 		6156AAC410BC110E00C3CE99 /* Copy External Libraries */ = {
 			isa = PBXShellScriptBuildPhase;

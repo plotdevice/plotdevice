@@ -191,6 +191,32 @@
                                     <action selector="paste:" target="-1" id="226"/>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" id="32v-aL-p8z"/>
+                            <menuItem title="Tab Completion" id="lxu-Ni-axm">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Tab Completion" id="7Ct-ew-C3t">
+                                    <items>
+                                        <menuItem title="Autocomplete" id="nUY-Pr-sbV">
+                                            <string key="keyEquivalent" base64-UTF8="YES">
+CQ
+</string>
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES"/>
+                                            <connections>
+                                                <action selector="aceAutocomplete:" target="-1" id="SEI-Fv-251"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Expand Snippet" tag="1" id="400">
+                                            <string key="keyEquivalent" base64-UTF8="YES">
+CQ
+</string>
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="aceAutocomplete:" target="-1" id="TW5-YS-X9B"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="214">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
@@ -257,6 +283,40 @@
                                             <modifierMask key="keyEquivalentModifierMask" control="YES"/>
                                             <connections>
                                                 <action selector="editorAction:" target="-1" id="pWG-JF-EhA"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <menuItem title="Line" id="hlx-WP-JsA">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Line" id="gjZ-vo-aoJ">
+                                    <items>
+                                        <menuItem title="Shift Right" tag="5" keyEquivalent="]" id="394">
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="nbB-aj-hoG"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Shift Left" tag="6" keyEquivalent="[" id="399">
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="onZ-bq-h6D"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Shift Upward" keyEquivalent="" id="ide-G8-bu2">
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES"/>
+                                        </menuItem>
+                                        <menuItem title="Shift Downward" keyEquivalent="" id="cVe-PP-big">
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES"/>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="OSl-8q-kaa"/>
+                                        <menuItem title="Toggle Comment" tag="7" keyEquivalent="/" id="398">
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="qTQ-Bb-wDW"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Jump to Line..." tag="8" keyEquivalent="j" id="389">
+                                            <connections>
+                                                <action selector="jumpToLine:" target="-1" id="LeI-CV-GrA"/>
                                             </connections>
                                         </menuItem>
                                     </items>
@@ -356,53 +416,10 @@
                                     <action selector="stopScript:" target="-1" id="483"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="GZS-GI-N7W">
-                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
-                            </menuItem>
-                            <menuItem title="Autocomplete" id="nUY-Pr-sbV">
-                                <string key="keyEquivalent" base64-UTF8="YES">
-CQ
-</string>
-                                <modifierMask key="keyEquivalentModifierMask" option="YES"/>
-                                <connections>
-                                    <action selector="aceAutocomplete:" target="-1" id="SEI-Fv-251"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Expand Snippet" tag="1" id="400">
-                                <string key="keyEquivalent" base64-UTF8="YES">
-CQ
-</string>
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="aceAutocomplete:" target="-1" id="TW5-YS-X9B"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="478">
-                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
-                            </menuItem>
-                            <menuItem title="Indent" tag="5" keyEquivalent="]" id="394">
-                                <connections>
-                                    <action selector="editorAction:" target="-1" id="nbB-aj-hoG"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Dedent" tag="6" keyEquivalent="[" id="399">
-                                <connections>
-                                    <action selector="editorAction:" target="-1" id="onZ-bq-h6D"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Toggle Comment" tag="7" keyEquivalent="/" id="398">
-                                <connections>
-                                    <action selector="editorAction:" target="-1" id="qTQ-Bb-wDW"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="393">
-                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
-                            </menuItem>
-                            <menuItem title="Jump to line..." tag="8" keyEquivalent="j" id="389">
-                                <connections>
-                                    <action selector="jumpToLine:" target="-1" id="LeI-CV-GrA"/>
-                                </connections>
-                            </menuItem>
+                            <menuItem isSeparatorItem="YES" hidden="YES" id="4G6-J4-mcN"/>
+                            <menuItem title="Adjust Color" hidden="YES" keyEquivalent="k" id="b2K-9m-mWk"/>
+                            <menuItem title="Adjust Number" hidden="YES" keyEquivalent="K" id="SOC-pz-nRf"/>
+                            <menuItem title="Lookup in Manual" hidden="YES" keyEquivalent="'" id="yXE-1P-kku"/>
                         </items>
                     </menu>
                 </menuItem>

@@ -82,8 +82,10 @@ var Editor = function(elt){
     var undo = new UndoMgr()
     var sess = null
     var _menu_cmds = { // commands whose keyboard shortcuts are caught by ace rather than NSView
-        "Edit":['selectline', 'splitIntoLines', 'addCursorAboveSkipCurrent', 'addCursorBelowSkipCurrent', 'centerselection'], 
-        "Python":['blockindent', 'blockoutdent', 'togglecomment', 'gotoline', 'expandSnippet', 'startAutocomplete']
+        "Edit":['selectline', 'splitIntoLines', 'addCursorAboveSkipCurrent', 'addCursorBelowSkipCurrent', 'centerselection', 
+                'blockindent', 'blockoutdent', 'togglecomment','gotoline', 
+                'expandSnippet', 'startAutocomplete'], 
+        "Python":[]
     }
     var _htimer = null, _vtimer = null, _hmin=0, _vmin=0;
     var that = {
@@ -218,6 +220,9 @@ var Editor = function(elt){
         },
         jump:function(line){
             ed.gotoLine(line);
+        },
+        insert:function(txt){
+            ed.insert(txt)
         },
         mark:function(err, lines){
             if (err==null){
