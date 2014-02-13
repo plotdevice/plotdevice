@@ -21,6 +21,28 @@ __all__ = ['EditorView', 'OutputTextView']
 def args(*jsargs):
     return ', '.join([json.dumps(v, ensure_ascii=False) for v in jsargs])
 
+class DraggyWebView(WebView):
+    def draggingEntered_(self, sender):
+        pb = sender.draggingPasteboard()
+        options = { NSPasteboardURLReadingFileURLsOnlyKey:True,
+                    NSPasteboardURLReadingContentsConformToTypesKey:NSImage.imageTypes() }
+        urls = pb.readObjectsForClasses_options_([NSURL], options)
+        strs = pb.readObjectsForClasses_options_([NSString], {})
+        rewrite = u"\n".join([u'"%s"'%u.path() for u in urls] + strs) + u"\n"
+        pb.declareTypes_owner_([NSStringPboardType], self)
+        pb.setString_forType_(rewrite, NSStringPboardType)
+        return super(DraggyWebView, self).draggingEntered_(sender)
+
+    def performDragOperation_(self, sender):
+        pb = sender.draggingPasteboard()
+        txt = pb.readObjectsForClasses_options_([NSString], None)
+        if txt:
+            nc = NSNotificationCenter.defaultCenter()
+            nc.postNotificationName_object_userInfo_('DropOperation', self, txt[0])
+            sender.setAnimatesToDestination_(True)
+            return True
+        return False
+
 class EditorView(NSView):
     document = objc.IBOutlet()
     jumpPanel = objc.IBOutlet()
@@ -29,7 +51,7 @@ class EditorView(NSView):
     # WebKit mgmt
 
     def awakeFromNib(self):
-        self.webview = WebView.alloc().init()
+        self.webview = DraggyWebView.alloc().init()
         self.webview.setAllowsUndo_(False)
         self.webview.setFrameLoadDelegate_(self)
         self.webview.setUIDelegate_(self)
@@ -54,6 +76,7 @@ class EditorView(NSView):
         nc.addObserver_selector_name_object_(self, "themeChanged", "ThemeChanged", None)
         nc.addObserver_selector_name_object_(self, "fontChanged", "FontChanged", None)
         nc.addObserver_selector_name_object_(self, "bindingsChanged", "BindingsChanged", None)
+        nc.addObserver_selector_name_object_(self, "insertDroppedFiles:", "DropOperation", self.webview)
         self._wakeup = set_timeout(self, '_jostle', 0.05, repeat=True)
         self._queue = []
         self._edits = 0
@@ -95,9 +118,23 @@ class EditorView(NSView):
     def resizeWebview(self):
         self.webview.setFrame_(self.bounds())
 
+    def insertDroppedFiles_(self, note):
+        self.js('editor.insert', args(note.userInfo()))
+        
+    def isSelectorExcludedFromWebScript_(self, sel):
+        return False
+
     def windowDidResignKey_(self, note):
         if note.object() is self.jumpPanel:
             self.jumpPanel.orderOut_(self)
+
+    def validateMenuItem_(self, item):
+        # we're the delegate for the Edit menu
+        if item.title=='Undo':
+            return self.document.undoManager().canUndo()
+        elif item.title=='Redo':
+            return self.document.undoManager().canRedo()
+        return True
 
     def js(self, cmd, args=''):
         op = '%s(%s);'%(cmd,args)
@@ -114,17 +151,6 @@ class EditorView(NSView):
             self._wakeup.invalidate()
             self._wakeup = None
             self._queue = None
-
-    def isSelectorExcludedFromWebScript_(self, sel):
-        return False
-
-    def validateMenuItem_(self, item):
-        # we're the delegate for the Edit menu
-        if item.title=='Undo':
-            return self.document.undoManager().canUndo()
-        elif item.title=='Redo':
-            return self.document.undoManager().canRedo()
-        return True
 
     # App-initiated actions
 
@@ -406,5 +432,6 @@ class OutputTextView(NSTextView):
         nc = NSNotificationCenter.defaultCenter()
         nc.removeObserver_name_object_(self, "ThemeChanged", None)
         nc.removeObserver_name_object_(self, "FontChanged", None)
+        nc.removeObserver_name_object_(self, "DropOperation", self.webview)
         if self._findTimer:
             self._findTimer.invalidate()
