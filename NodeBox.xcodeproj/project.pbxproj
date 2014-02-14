@@ -71,7 +71,6 @@
 		611CC57910BA8FA800B55455 /* __init__.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 611CC4D710BA8C1B00B55455 /* __init__.py */; };
 		611CC57A10BA8FA800B55455 /* kgp.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 611CC4D910BA8C1B00B55455 /* kgp.py */; };
 		611CC57B10BA8FA800B55455 /* ottobot.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 611CC4DA10BA8C1B00B55455 /* ottobot.py */; };
-		611CC57D10BA8FA800B55455 /* PyFontify.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 611CC4DC10BA8C1B00B55455 /* PyFontify.py */; };
 		611CC58110BA8FA800B55455 /* vdiff.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 611CC4E010BA8C1B00B55455 /* vdiff.py */; };
 		611CC58310BA8FD700B55455 /* __init__.py in Copy nodebox.graphics */ = {isa = PBXBuildFile; fileRef = 611CC4BE10BA8C1B00B55455 /* __init__.py */; };
 		611CC58410BA8FD700B55455 /* bezier.py in Copy nodebox.graphics */ = {isa = PBXBuildFile; fileRef = 611CC4C010BA8C1B00B55455 /* bezier.py */; };
@@ -212,7 +211,6 @@
 				611CC57910BA8FA800B55455 /* __init__.py in Copy nodebox.util */,
 				611CC57A10BA8FA800B55455 /* kgp.py in Copy nodebox.util */,
 				611CC57B10BA8FA800B55455 /* ottobot.py in Copy nodebox.util */,
-				611CC57D10BA8FA800B55455 /* PyFontify.py in Copy nodebox.util */,
 				611CC58110BA8FA800B55455 /* vdiff.py in Copy nodebox.util */,
 				2A4812E71884AF3B00B47700 /* fsevents.py in Copy nodebox.util */,
 			);
@@ -309,7 +307,6 @@
 		611CC4D710BA8C1B00B55455 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		611CC4D910BA8C1B00B55455 /* kgp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = kgp.py; sourceTree = "<group>"; };
 		611CC4DA10BA8C1B00B55455 /* ottobot.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ottobot.py; sourceTree = "<group>"; };
-		611CC4DC10BA8C1B00B55455 /* PyFontify.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PyFontify.py; sourceTree = "<group>"; };
 		611CC4E010BA8C1B00B55455 /* vdiff.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = vdiff.py; sourceTree = "<group>"; };
 		611CC59F10BA908C00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/NodeBoxDocument.xib; sourceTree = "<group>"; };
 		611CC5A710BA919A00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/NodeBoxPreferences.xib; sourceTree = "<group>"; };
@@ -530,7 +527,6 @@
 				611CC4D710BA8C1B00B55455 /* __init__.py */,
 				611CC4D910BA8C1B00B55455 /* kgp.py */,
 				611CC4DA10BA8C1B00B55455 /* ottobot.py */,
-				611CC4DC10BA8C1B00B55455 /* PyFontify.py */,
 				611CC4E010BA8C1B00B55455 /* vdiff.py */,
 				2A4812E51884AF3100B47700 /* fsevents.py */,
 			);
