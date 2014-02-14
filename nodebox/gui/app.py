@@ -133,7 +133,7 @@ class NodeBoxDocumentController(NSDocumentController):
     _resume = None   # timer (to update the observer's path list)
     _update = None   # timer (to stat the files in checklist)
     watching = {}    # keys are dirs, vals are lists of file paths within the dir
-    checklist = {0}  # files within dirs that had change notifications
+    checklist = set()# files within dirs that had change notifications
 
     def init(self):
         nc = NSNotificationCenter.defaultCenter()
@@ -143,6 +143,7 @@ class NodeBoxDocumentController(NSDocumentController):
         return super(NodeBoxDocumentController, self).init()
 
     def addDocument_(self, doc):
+        # print "add", doc
         super(NodeBoxDocumentController, self).addDocument_(doc)
         self.updateWatchList_(None)
 
@@ -151,6 +152,9 @@ class NodeBoxDocumentController(NSDocumentController):
         self.updateWatchList_(None)
 
     def updateWatchList_(self, note):
+        return False # bail
+
+
         if self._resume:
             self._resume.invalidate()
         self._resume = set_timeout(self, "keepWatching:", 0.2)
@@ -168,7 +172,7 @@ class NodeBoxDocumentController(NSDocumentController):
             dirname = os.path.dirname(p)
             files = self.watching.get(dirname, [])
             self.watching[dirname] = files + [p]
-
+        # print "watching", self.watching.values()
         if self.watching:
             self._stream = Stream(self.fileEvent, *set(self.watching.keys()))
             self._observer.schedule(self._stream)
@@ -196,8 +200,8 @@ class NodeBoxDocumentController(NSDocumentController):
             if pth in self.checklist:
 
                 # note that the file might have disappeared and pth is dangling...
-                time = os.path.getmtime(pth)
-                if time != doc.mtime:
+                mtime = os.path.getmtime(pth)
+                if mtime != doc.mtime:
                     doc.refresh()
         self.checklist = set()
 
