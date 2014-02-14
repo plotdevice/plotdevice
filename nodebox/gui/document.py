@@ -9,13 +9,13 @@ import objc
 
 from Foundation import *
 from AppKit import *
-from nodebox.run import Sandbox
 
 from nodebox.gui.preferences import editor_info
 from nodebox.gui.editor import OutputTextView, EditorView
 from nodebox.gui.widgets import DashboardController, ExportSheet
 from nodebox.gui.views import FullscreenWindow, FullscreenView
 from nodebox.gui.app import set_timeout
+from nodebox.run import Sandbox
 from nodebox import util, graphics
 
 NSEventGestureAxisVertical = 2
@@ -45,15 +45,13 @@ class NodeBoxDocument(NSDocument):
         self.fullScreen = None
         self.currentView = None
         self.stationery = None
-        self.mtime = None
         self._showFooter = True
         return self
 
-    def windowControllerDidLoadNib_(self, controller):
-        super(NodeBoxDocument, self).windowControllerDidLoadNib_(controller)
-        pth = self.path or self.stationery
-        if pth:
-            self.readFromUTF8(pth)
+    def awaken(self):
+        # print "awake with stationery <%s>"%self.stationery
+        # print "           path <%s>"%self.path
+        self.readFromUTF8(self.path or self.stationery)
         if self.stationery:
             self.setDisplayName_(os.path.basename(self.stationery).replace('.nb',''))
             self.vm.stationery = self.stationery
@@ -62,35 +60,65 @@ class NodeBoxDocument(NSDocument):
         win.setRestorable_(True)
         win.setIdentifier_("nodebox-doc")
 
+        # improve on the xor-ish clicked state for the zoom buttons
         self.graphicsView.zoomLevel.cell().setHighlightsBy_(NSContentsCellMask)
         self.graphicsView.zoomLevel.cell().setShowsStateBy_(NSContentsCellMask)
 
-        # would like to set:
-        #   win.setRestorationClass_(NodeBoxDocument)
-        # but the built-in pyobjc can't deal with the block arg in:
-        #   restoreDocumentWindowWithIdentifier_state_completionHandler_
-        # which we'd need to implement for restoration to work. try
-        # again in 10.9.x, or is there a way to monkeypatch the metadata?
-
-        # win.makeFirstResponder_(self.editorView)
+        # maintain reference to either the in-window view or a fullscreen view
         self.currentView = self.graphicsView
-
 
         # move the spinning progress indicator out of the status bar
         frame = win.frame()
         win.contentView().superview().addSubview_(self.animationSpinner)
         self.animationSpinner.setFrame_( ((frame.size.width-18,frame.size.height-18), (15,15)) )
         self.animationSpinner.setAutoresizingMask_(NSViewMinYMargin|NSViewMinXMargin)
-        # self.outputView.superview().superview().addFloatingSubview_forAxis_(self.animationSpinner,NSEventGestureAxisVertical)
-        # x = self.outputView.frame().size.width - 17
-        # self.animationSpinner.setFrame_(((x,3),(16,16)))
-        # # self.animationSpinner.setControlTint_(NSGraphiteControlTint)
 
         # deal with the textured bottom-bar
         win.setAutorecalculatesContentBorderThickness_forEdge_(True,NSMinYEdge)
         win.setContentBorderThickness_forEdge_(22.0,NSMinYEdge)
         self.toggleStatusBar_(self)
 
+    ## Properties
+
+    @property
+    def path(self):
+        url = self.fileURL()
+        return url.path() if url else None
+
+    @property
+    def mtime(self):
+        moddate = self.fileModificationDate()
+        return moddate.timeIntervalSince1970() if moddate else None
+
+    # .source
+    def _get_source(self):
+        return self.editorView.source
+    def _set_source(self, src):
+        self.editorView.source = src
+    source = property(_get_source, _set_source)
+
+
+    ## Autosave & restoration on re-launch
+
+    def autosavesInPlace(self):
+        return True
+
+    def encodeRestorableStateWithCoder_(self, coder):
+        super(NodeBoxDocument, self).encodeRestorableStateWithCoder_(coder)
+        if self.stationery and not self.undoManager().canUndo():
+            # print "put in", self.stationery
+            coder.encodeObject_forKey_(self.stationery, "nodebox:stationery")
+
+    def restoreStateWithCoder_(self, coder):
+        super(NodeBoxDocument, self).restoreStateWithCoder_(coder)
+        self.stationery = coder.decodeObjectForKey_("nodebox:stationery")
+        # ... unfortunately, this runs after awake() does, so reincarnation still fails...
+
+    ## Window behavior
+
+    def windowControllerDidLoadNib_(self, controller):
+        super(NodeBoxDocument, self).windowControllerDidLoadNib_(controller)
+        self.awaken()
 
     def windowDidResignKey_(self, note):
         self.editorView.blur()
@@ -129,9 +157,6 @@ class NodeBoxDocument(NSDocument):
         # catch the occasions where we don't modify the size and cancel the zoom
         return win.frame().size != rect.size
 
-    def autosavesInPlace(self):
-        return True
-
     def updateChangeCount_(self, chg):
         # print "change",chg
         # NSChangeDone              = 0
@@ -148,13 +173,8 @@ class NodeBoxDocument(NSDocument):
         self.stopScript()
         super(NodeBoxDocument, self).close()
 
-    def source(self):
-        return self.editorView.source
-
-    def setSource_(self, source):
-        self.editorView.source = source
-
     def cancelOperation_(self, sender):
+        # for the various times that some other control caught a cmd-period
         self.stopScript()        
 
     def _updateWindowAutosave(self):
@@ -216,19 +236,11 @@ class NodeBoxDocument(NSDocument):
 
     def refresh(self):
         """Reload source from file if it has been modified while the app was inactive"""
-        if os.path.exists(self.path):
-            try:
-                mtime = os.path.getmtime(self.path)
-                if mtime != self.mtime:
-                    print "reload", self.path
-                    url = NSURL.fileURLWithPath_(self.path)
-                    self.revertToContentsOfURL_ofType_error_(url, self.fileType(), None)
-                    if self.vm.live:
-                        self.runScript()
-                else:
-                    print "unchanged"
-            except IOError:
-                pass
+        print "refresh", self.path
+        if self.path and self.mtime:
+            current = os.path.getmtime(self.path)
+            if current != self.mtime:
+                self.revertToContentsOfURL_ofType_error_(self.fileURL(), self.fileType(), None)
 
     def __del__(self):
         # remove the circular references in our helper objects
@@ -238,55 +250,39 @@ class NodeBoxDocument(NSDocument):
     # Reading & writing the script file (and keeping track of its path)
     # 
     def setFileURL_(self, url):
+        oldpath = self.path
         super(NodeBoxDocument, self).setFileURL_(url)
 
-        if not url: 
-            self.path = None
-            return
-        pth = url.fileSystemRepresentation()
-        if self.path != pth:
+        if self.path != oldpath:
             nc = NSNotificationCenter.defaultCenter()
             nc.postNotificationName_object_("watch", None)
-        self.path = pth
         self._updateWindowAutosave()
         if self.vm:
             self.vm.path = self.path
 
-    def readFromFile_ofType_(self, path, tp):
-        if self.editorView is None:
-            # we're not yet fully loaded
-            self.path = path
-        else:
-            # "revert"
-            self.readFromUTF8(path)
-        return True
-
-    def writeToFile_ofType_(self, path, tp):
-        text = self.source().encode("utf8")
+    def writeToURL_ofType_error_(self, url, tp, err):
+        path = url.fileSystemRepresentation()
+        # print "write",tp,path
+        text = self.source.encode("utf8")
         with file(path, 'w', 0) as f:
             f.write(text)
-        return True
+        return True, err
+
+    def readFromURL_ofType_error_(self, url, tp, err):
+        path = url.fileSystemRepresentation()
+        self.readFromUTF8(path)
+        return True, err
 
     def readFromUTF8(self, path):
+        if path is None: return
+
         with file(path) as f:
-            text = f.read()
-            self.mtime = os.path.getmtime(path)
+            text = f.read().decode("utf-8")
             self._updateWindowAutosave()
-            self.setSource_(text.decode("utf-8"))
+            if self.editorView:
+                self.source = text
+            self.vm.source = text
             self.vm.path = path
-            self.vm.source = text.decode("utf-8")
-
-    def saveToURL_ofType_forSaveOperation_error_(self, url, type, op, err):
-        ok = super(NodeBoxDocument, self).saveToURL_ofType_forSaveOperation_error_(url, type, op, err)
-        if self.path and os.path.exists(self.path):
-            self.mtime = os.path.getmtime(self.path)
-
-        # if the save operation left a backup file around (why!), rm it here...
-        bak = self.backupFileURL().fileSystemRepresentation() if self.backupFileURL() else None
-        if ok and bak and os.path.exists(bak) and os.path.basename(bak).startswith('.'):
-            os.unlink(bak)
-
-        return ok
 
     def prepareSavePanel_(self, panel):
         # saving modifications to .py files is fine, but if a Save As operation happens, restrict it to .nb files
@@ -294,17 +290,23 @@ class NodeBoxDocument(NSDocument):
         panel.setAccessoryView_(None)
         return True
 
-    def backupFileURL(self):
-        # by default a backup file is left in the original file's directory with a tilde appended to
-        # the filename (before the extension). since for some reason the NSDocument infrastructure isn't
-        # clearing it away after a save, we'll prepend a dot to the name so the user doesn't see the 
-        # backup file appearing on save. then in saveToURL, we clean out the backup file
-        pth = super(NodeBoxDocument, self).backupFileURL()
-        if not pth:
-            return None
-        pth = pth.fileSystemRepresentation()
-        tmp = os.path.join(os.path.dirname(pth), '.'+os.path.basename(pth))
-        return NSURL.fileURLWithPath_(tmp)
+    # def fileAttributesToWriteToURL_ofType_forSaveOperation_originalContentsURL_error_(self, url, typ, op, orig, err):
+    #     attrs, err = super(NodeBoxDocument, self).fileAttributesToWriteToURL_ofType_forSaveOperation_originalContentsURL_error_(url, typ, op, orig, err)
+    #     attrs = dict(attrs)
+    #     attrs.update({NSFilePosixPermissions:int('755',8)})
+    #     # print attrs
+    #     return attrs, err
+
+    # def writeSafelyToURL_ofType_forSaveOperation_error_(self, url, tp, op, err):
+    #     path = url.fileSystemRepresentation()
+    #     print "swrite",tp,op,path, err
+    #     text = self.source.encode("utf8")
+    #     attrs, err = super(NodeBoxDocument, self).fileAttributesToWriteToURL_ofType_forSaveOperation_originalContentsURL_error_(url, tp, op, self.fileURL(), err)
+    #     print attrs
+    #     with file(path, 'w', 0) as f:
+    #         f.write(text)
+    #     return True, err
+
 
     # 
     # Running the script in the main window
@@ -396,7 +398,7 @@ class NodeBoxDocument(NSDocument):
             self.outputView.clear(timestamp=True)
 
         # Compile the script
-        compilation = self.vm.compile(self.source())
+        compilation = self.vm.compile(self.source)
         self.echo(compilation.output)
         if not compilation.ok:
             return False
@@ -454,7 +456,7 @@ class NodeBoxDocument(NSDocument):
 
     def exportConfig(self, kind, fname, opts):
         """Begin actual export (invoked by self.exportSheet unless sheet was cancelled)"""
-        self.vm.source = self.source()
+        self.vm.source = self.source
         if self.animationTimer is not None:
             self.stopScript()
         if not self._showFooter:
@@ -595,6 +597,21 @@ class NodeBoxDocument(NSDocument):
         if self.fullScreen is not None: return
         self.graphicsView.zoomToFit_(sender)
 
+# separate document class for public.python-source files
+class PythonScriptDocument(NodeBoxDocument):
+    pass
+
+def make_bookmark(path):
+    bkmk, err = path.bookmarkDataWithOptions_includingResourceValuesForKeys_relativeToURL_error_(
+        NSURLBookmarkCreationSuitableForBookmarkFile, None, None, None
+    )
+    return bkmk
+
+def read_bookmark(bkmk):
+    path, stale, err = NSURL.URLByResolvingBookmarkData_options_relativeToURL_bookmarkDataIsStale_error_(
+        bkmk, NSURLBookmarkResolutionWithoutUI, None, None, None
+    )
+    return path
 
 def errorAlert(msgText, infoText):
     # Force NSApp initialisation.

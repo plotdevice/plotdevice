@@ -107,7 +107,7 @@ class NodeBoxAppDelegate(NSObject):
         kind = ['sketch','anim','ottobot'][sender.tag()]        
         doc = self._docsController.newDocument_(sender)
         doc = self._docsController.currentDocument()
-        doc.setSource_(genTemplate(kind))
+        doc.source = genTemplate(kind)
         if kind=='ottobot':
             doc.runScript()
 

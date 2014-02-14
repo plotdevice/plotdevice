@@ -48,7 +48,7 @@
 			<key>LSTypeIsPackage</key>
 			<integer>0</integer>
 			<key>NSDocumentClass</key>
-			<string>NodeBoxDocument</string>
+			<string>PythonScriptDocument</string>
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
@@ -90,9 +90,17 @@
 			<string>net.nodebox.NodeBox.document</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
+				<key>com.apple.ostype</key>
+				<array>
+					<string>TEXT</string>
+				</array>
 				<key>public.filename-extension</key>
 				<array>
 					<string>nb</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>text/plain</string>
 				</array>
 			</dict>
 		</dict>
