@@ -1,3 +1,8 @@
+#
+# The non-C portions of https://github.com/malthe/macfsevents
+#
+# See also libs/macfsevents for the files linked into cEvents.so 
+#
 import os
 import sys
 import threading
