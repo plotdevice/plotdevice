@@ -55,15 +55,9 @@ class NodeBoxAppDelegate(NSObject):
             flicker.setHidden_(True)
             menu.submenu().insertItem_atIndex_(flicker,0)
 
-    def listenOnPort_(self, port):
-        if self._listener and self._listener.port == port:
-            return
-        newlistener = CommandListener(port=port)
-        if self._listener:
-            self._listener.join()
-        self._listener = newlistener
-        newlistener.start()
-        return newlistener.active
+    def applicationWillBecomeActive_(self, note):
+        # rescan the examples dir every time?
+        self.updateExamples()
 
     def updateExamples(self):
         examples_folder = bundle_path("Contents/Resources/examples")
@@ -81,18 +75,26 @@ class NodeBoxAppDelegate(NSObject):
             folders[cat].addItem_(item)
         self.examplesMenu.setHidden_(not pyfiles)
 
+    @objc.IBAction
+    def newSketch_(self, sender):
+        kind = ['sketch','anim','ottobot'][sender.tag()]
+        self.docFromTemplate_('TMPL:'+kind)
+        if kind=='ottobot':
+            doc.runScript()
+
+    @objc.IBAction
     def openExample_(self, sender):
-        pth = sender.representedObject()
-        # doc, err = self._docsController.makeUntitledDocumentOfType_error_("public.python-script", None)
-        doc, err = self._docsController.makeUntitledDocumentOfType_error_("net.nodebox.NodeBox.document", None)
-        doc.stationery = pth
+        tmpl = sender.representedObject()
+        self.docFromTemplate_(tmpl)
+
+    def docFromTemplate_(self, tmpl):
+        """Open a doc with no undo state which contains either an example, or a new-sketch template"""
+        doc, err = self._docsController.makeUntitledDocumentOfType_error_("net.nodebox.document", None)
+        doc.stationery = tmpl
         self._docsController.addDocument_(doc)
         doc.makeWindowControllers()
         doc.showWindows()
-
-    def applicationWillBecomeActive_(self, note):
-        # rescan the examples dir every time?
-        self.updateExamples()
+        return doc
 
     @objc.IBAction
     def showPreferencesPanel_(self, sender):
@@ -100,16 +102,6 @@ class NodeBoxAppDelegate(NSObject):
             from nodebox.gui.preferences import NodeBoxPreferencesController
             self._prefsController = NodeBoxPreferencesController.alloc().init()
         self._prefsController.showWindow_(sender)
-
-    @objc.IBAction
-    def newSketch_(self, sender):
-        from nodebox.util.ottobot import genTemplate
-        kind = ['sketch','anim','ottobot'][sender.tag()]        
-        doc = self._docsController.newDocument_(sender)
-        doc = self._docsController.currentDocument()
-        doc.source = genTemplate(kind)
-        if kind=='ottobot':
-            doc.runScript()
 
     @objc.IBAction
     def showHelp_(self, sender):
@@ -120,6 +112,16 @@ class NodeBoxAppDelegate(NSObject):
     def showSite_(self, sender):
         url = NSURL.URLWithString_("http://nodebox.net/")
         NSWorkspace.sharedWorkspace().openURL_(url)
+
+    def listenOnPort_(self, port):
+        if self._listener and self._listener.port == port:
+            return
+        newlistener = CommandListener(port=port)
+        if self._listener:
+            self._listener.join()
+        self._listener = newlistener
+        newlistener.start()
+        return newlistener.active
 
     def applicationWillTerminate_(self, note):
         self._listener.join()

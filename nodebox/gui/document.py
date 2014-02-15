@@ -33,8 +33,6 @@ class NodeBoxDocument(NSDocument):
     mainView = objc.IBOutlet()
     exportSheet = objc.IBOutlet()
 
-    path = None   # the script file
-
     def windowNibName(self):
         return "NodeBoxDocument"
 
@@ -49,12 +47,7 @@ class NodeBoxDocument(NSDocument):
         return self
 
     def awaken(self):
-        # print "awake with stationery <%s>"%self.stationery
-        # print "           path <%s>"%self.path
-        self.readFromUTF8(self.path or self.stationery)
-        if self.stationery:
-            self.setDisplayName_(os.path.basename(self.stationery).replace('.nb',''))
-            self.vm.stationery = self.stationery
+        # sign up for restoration
         win = self.editorView.window()
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
         win.setRestorable_(True)
@@ -78,6 +71,17 @@ class NodeBoxDocument(NSDocument):
         win.setContentBorderThickness_forEdge_(22.0,NSMinYEdge)
         self.toggleStatusBar_(self)
 
+        # if this is a previously-saved doc, the readfromURL: call has already happened
+        # and the vm has the source text. Now that the editor has woken up, populate it.
+        if self.vm.source and self.editorView.source != self.vm.source:
+            self.editorView.source = self.vm.source
+
+        # when a new document is created via cmd-n, the doc controller communicates the
+        # starter template through the stationery attr. conditionally set the editor
+        # text based on the path/tmpl-name (but only if this is an untitled doc or a script
+        # from the examples folder)
+        self.restoreFromStationery()
+        
     ## Properties
 
     @property
@@ -92,11 +96,12 @@ class NodeBoxDocument(NSDocument):
 
     # .source
     def _get_source(self):
-        return self.editorView.source
+        return self.editorView.source if self.editorView else self.vm.source
     def _set_source(self, src):
-        self.editorView.source = src
+        self.vm.source = src
+        if self.editorView:
+            self.editorView.source = src
     source = property(_get_source, _set_source)
-
 
     ## Autosave & restoration on re-launch
 
@@ -106,13 +111,26 @@ class NodeBoxDocument(NSDocument):
     def encodeRestorableStateWithCoder_(self, coder):
         super(NodeBoxDocument, self).encodeRestorableStateWithCoder_(coder)
         if self.stationery and not self.undoManager().canUndo():
-            # print "put in", self.stationery
             coder.encodeObject_forKey_(self.stationery, "nodebox:stationery")
 
     def restoreStateWithCoder_(self, coder):
         super(NodeBoxDocument, self).restoreStateWithCoder_(coder)
         self.stationery = coder.decodeObjectForKey_("nodebox:stationery")
-        # ... unfortunately, this runs after awake() does, so reincarnation still fails...
+        self.restoreFromStationery()
+
+    def restoreFromStationery(self):
+        if self.stationery:
+            is_untitled = self.stationery.startswith('TMPL:')
+            is_example = os.path.exists(self.stationery) and not is_untitled
+            if is_example:
+                self.source = file(self.stationery).read().decode("utf-8")
+                self.vm.stationery = self.stationery
+                self.setDisplayName_(os.path.basename(self.stationery).replace('.nb',''))
+                self.windowControllers()[0].synchronizeWindowTitleWithDocumentName()
+            elif is_untitled:
+                from nodebox.util.ottobot import genTemplate
+                self.source = genTemplate(self.stationery.split(':',1)[1])
+    
 
     ## Window behavior
 
@@ -262,7 +280,6 @@ class NodeBoxDocument(NSDocument):
 
     def writeToURL_ofType_error_(self, url, tp, err):
         path = url.fileSystemRepresentation()
-        # print "write",tp,path
         text = self.source.encode("utf8")
         with file(path, 'w', 0) as f:
             f.write(text)
@@ -275,14 +292,15 @@ class NodeBoxDocument(NSDocument):
 
     def readFromUTF8(self, path):
         if path is None: return
-
-        with file(path) as f:
-            text = f.read().decode("utf-8")
-            self._updateWindowAutosave()
-            if self.editorView:
-                self.source = text
-            self.vm.source = text
+        if os.path.exists(path):
+            text = file(path).read().decode("utf-8")
             self.vm.path = path
+        elif path.startswith('TMPL:'):
+            from nodebox.util.ottobot import genTemplate
+            tmpl = path.split(':',1)[1]
+            text = genTemplate(tmpl)
+        self._updateWindowAutosave()
+        self.source = text
 
     def prepareSavePanel_(self, panel):
         # saving modifications to .py files is fine, but if a Save As operation happens, restrict it to .nb files
@@ -370,8 +388,7 @@ class NodeBoxDocument(NSDocument):
                 window.makeFirstResponder_(self.currentView)
 
                 # Start the timer
-                self.animationTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-                    1.0 / self.vm.speed, self, objc.selector(self.step, signature="v@:@"), None, True)
+                self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
                 
                 # Start the spinner
                 self.animationSpinner.startAnimation_(None)
