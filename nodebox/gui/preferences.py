@@ -6,7 +6,6 @@ from Foundation import *
 from subprocess import Popen, PIPE
 from nodebox import bundle_path
 
-
 def get_default(label):
     if not re.match(r'^(NS|Web)', label):
         label = 'nodebox:%s'%label
@@ -224,12 +223,12 @@ class NodeBoxPreferencesController(NSWindowController):
 
     @objc.IBAction
     def modifyPort_(self, sender):
+        from nodebox.gui.app import set_timeout
         newport = sender.intValue()
         self.toolPort.setStringValue_(str(newport))
-
         if self.toolPortTimer:
             self.toolPortTimer.invalidate()
-        self.toolPortTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0.4, self, "switchPort:", None, False)
+        self.toolPortTimer = set_timeout(self, "switchPort:", 0.4)
 
     def switchPort_(self, timer):
         newport = self.toolPortStepper.intValue()

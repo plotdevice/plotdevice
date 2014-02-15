@@ -418,8 +418,7 @@ class OutputTextView(NSTextView):
         if self._findTimer:
             self._findTimer.invalidate()
         self._findEditor = self.window().firstResponder().superview().superview()
-        self._findTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-                                    0.05, self, "stillFinding:", None, True)
+        self._findTimer = set_timeout(self, 'stillFinding:', 0.05, repeat=True)
 
     def stillFinding_(self, note):
         active = self._findEditor.superview().superview() is not None
