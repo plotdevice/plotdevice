@@ -220,7 +220,7 @@ if BUILD_APP:
             self.copy_file('README.md', '%s/Readme.txt'%DEST)
 
             # Copy examples
-            self.copy_tree('%s/examples'%TOP, '%s/Examples'%DEST)
+            self.copy_tree('%s/doc/examples'%TOP, '%s/Examples'%DEST)
             # chmod 755 Examples/*/*.py
 
             # Make DMG
