@@ -11,7 +11,6 @@ from Foundation import *
 from AppKit import *
 from WebKit import * # (defaults write net.nodebox.NodeBox WebKitDeveloperExtras -bool true)
 from nodebox.gui.preferences import get_default, editor_info
-from nodebox.util.PyFontify import fontify
 from nodebox.gui.widgets import ValueLadder
 from nodebox.gui.app import set_timeout
 from nodebox import bundle_path
