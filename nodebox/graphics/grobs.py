@@ -1,7 +1,9 @@
+# encoding: utf-8
 import os
 import re
 import json
 import warnings
+import math
 from random import choice, shuffle
 from AppKit import *
 from Foundation import *
@@ -15,7 +17,7 @@ except ImportError, e:
 
 __all__ = [
         "DEFAULT_WIDTH", "DEFAULT_HEIGHT",
-        "inch", "cm", "mm",
+        "inch", "cm", "mm", "pi", "tau",
         "RGB", "HSB", "CMYK",
         "CENTER", "CORNER",
         "MOVETO", "LINETO", "CURVETO", "CLOSE",
@@ -33,6 +35,8 @@ DEFAULT_WIDTH, DEFAULT_HEIGHT = 500, 500
 inch = 72
 cm = 28.3465
 mm = 2.8346
+pi = math.pi
+tau = 2*pi
 
 RGB = "rgb"
 HSB = "hsb"
@@ -66,10 +70,16 @@ _CAPSTYLE=dict(
     square = NSSquareLineCapStyle,
 )
 
-LEFT = NSLeftTextAlignment
-RIGHT = NSRightTextAlignment
-CENTER = NSCenterTextAlignment
-JUSTIFY = NSJustifiedTextAlignment
+LEFT = "left"
+RIGHT = "right"
+CENTER = "center"
+JUSTIFY = "justify"
+_TEXT=dict(
+    left = NSLeftTextAlignment,
+    right = NSRightTextAlignment,
+    center = NSCenterTextAlignment,
+    justify = NSJustifiedTextAlignment
+)
 
 NORMAL = "normal"
 FORTYFIVE = "fortyfive"
@@ -900,27 +910,21 @@ class TransformContext(object):
     _xforms = ['reset','rotate','translate','scale','skew']
 
     def __init__(self, ctx, mode=None, *xforms):
-        self._oldmode = ctx._transformmode
-        self._oldtransform = ctx._transform.matrix
-        self._mode = mode or self._oldmode
         self._ctx = ctx
+        self._rollback = Transform(ctx._transform)
+        for xf in reversed(xforms): # make a local copy of the current state and apply inverses of 
+            xf.invert()             # any transformation calls that occurred in the arguments
+            self._rollback.prepend(xf)
 
-        # walk through the transformations in the args and apply them
+        self._oldmode = ctx._transformmode # remember the old center/corner setting
+        self._mode = mode or self._oldmode # and apply the new one
         ctx._transformmode = self._mode
-        for xf in [xforms[i:i+2] for i,t in enumerate(xforms) if callable(t)]:
-            cmd, arg = xf[0], [a for a in xf[1:] if not callable(a)]
-            if arg and isinstance(arg[0], tuple):
-                arg = arg[0]
-            if cmd.__name__ not in self._xforms:
-                unknown = "Unknown transformation method: %s." % cmd.__name__
-                raise NodeBoxError(unknown)
-            cmd(*arg)
 
     def __enter__(self):
         return self._ctx._transform
 
     def __exit__(self, type, value, tb):
-        self._ctx._transform = Transform(self._oldtransform)
+        self._ctx._transform = self._rollback
         self._ctx._transformmode = self._oldmode
 
     def __eq__(self, other):
@@ -982,26 +986,35 @@ class Transform(object):
     matrix = property(_get_matrix, _set_matrix)
 
     def rotate(self, degrees=0, radians=0):
+        xf = NSAffineTransform.transform()
         if degrees:
-            self._nsAffineTransform.rotateByDegrees_(degrees)
+            xf.rotateByDegrees_(degrees)
         else:
-            self._nsAffineTransform.rotateByRadians_(radians)
+            xf.rotateByRadians_(radians)
+        self.prepend(xf)
+        return xf
 
     def translate(self, x=0, y=0):
-        self._nsAffineTransform.translateXBy_yBy_(x, y)
+        xf = NSAffineTransform.transform()
+        xf.translateXBy_yBy_(x, y)
+        self.prepend(xf)
+        return xf
 
     def scale(self, x=1, y=None):
         if y is None:
             y = x
-        self._nsAffineTransform.scaleXBy_yBy_(x, y)
+        xf = NSAffineTransform.transform()
+        xf.scaleXBy_yBy_(x, y)
+        self.prepend(xf)
+        return xf
 
     def skew(self, x=0, y=0):
-        import math
         x = math.pi * x / 180
         y = math.pi * y / 180
         t = Transform()
-        t.matrix = 1, math.tan(y), -math.tan(x), 1, 0, 0
+        t.matrix = (1, math.tan(y), -math.tan(x), 1, 0, 0)
         self.prepend(t)
+        return t._nsAffineTransform
 
     def invert(self):
         self._nsAffineTransform.invert()
@@ -1260,7 +1273,7 @@ class Text(Grob, TransformMixin, ColorMixin):
 
     def _getLayoutManagerTextContainerTextStorage(self, clr=__dummy_color):
         paraStyle = NSMutableParagraphStyle.alloc().init()
-        paraStyle.setAlignment_(self._align)
+        paraStyle.setAlignment_(_TEXT[self._align])
         paraStyle.setLineBreakMode_(NSLineBreakByWordWrapping)
         paraStyle.setLineHeightMultiple_(self._lineheight)
 

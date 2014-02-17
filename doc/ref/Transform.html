@@ -79,9 +79,24 @@ with <span class="kw">transform</span>(<span class="kw">CORNER</span>):
         <h2>Inline Transformations</h2>
 
         <div class="row">
-          <p>In addition to the optional <code>mode</code> parameter, the transform() function will
-          also search its arguments for transformation commands. Each command can be listed by name
-          and followed by its argument (if any).</p>
+          <p>In addition to the optional <code>mode</code> parameter, the transform() function also
+          accepts a sequence of transformation commands. These commands will affect the global
+          state and are equivalent to calling them on separate lines of your script.</p>
+          <table border="0">
+            <tbody>
+              <tr>
+                <td>
+<pre>
+<span class="kw">rotate</span>(radians=pi/2)
+scale(2.0)
+</pre>
+                </td><td><em>or</em>
+                </td><td>
+<pre>
+<span class="kw">transform</span>(rotate(radians=pi/2), scale(2.0))
+</pre>
+                </td></tr></tbody></table>
+
           <p>When used in a <code>with</code>-statement, the commands will be applied at the
           beginning of the block and then reset at the end. For example, the following usages are
           equivalent:</p>
@@ -98,7 +113,7 @@ with <span class="kw">transform</span>(<span class="kw">CORNER</span>):
 </pre>
                 </td><td>
 <pre>
-<span class="kw">with transform</span>(<span class="kw">reset</span>, <span class="kw">translate</span>, (40,40), <span class="kw">rotate</span>, 45):
+<span class="kw">with transform</span>(<span class="kw">reset</span>(), <span class="kw">translate</span>(40,40), <span class="kw">rotate</span>(45)):
     <span class="kw">rect</span>(0,0,20,20)
 </pre>
                 </td></tr></tbody></table>
@@ -148,10 +163,11 @@ parallelogram = t.<span class="kw">apply</span>(square) <span class="grey"># cre
 <span class="kw">rotate</span>(90)
 <span class="kw">text</span>(<span class="str">"one"</span>, 40, 80)
  
-<span class="kw">with</span> <span class="kw">transform</span>(<span class="kw">rotate</span>, -90):
+<span class="kw">with</span> <span class="kw">transform</span>(<span class="kw">rotate(-90)):
     <span class="kw">text</span>(<span class="str">"two"</span>, 40, 40)
  
 <span class="kw">text</span>(<span class="str">"three"</span>, 50, 80)
+</span>
 </pre>
                 </td><td><em>or</em>
                 </td><td>
@@ -431,13 +447,16 @@ parallelogram = t.<span class="kw">apply</span>(square) <span class="grey"># cre
         <h2>Description</h2>
 
         <div class="row">
-          NodeBox is a so-called state-machine. For example, once rotate(45) is called, all
-          subsequent shapes, paths, text and images are rotated 45 degrees. The rotation state is
-          45 degrees. The push() and pop() commands allow for a state within a state. All
-          transformations, such as <a href="#rotate()">rotate()</a> and <a href="#skew()">skew()</a>, defined between a push() and pop() call last only until pop() is
+          <p>NodeBox is a so-called state-machine. For example, once <code>rotate(45)</code> is
+          called, all subsequent shapes, paths, text and images are rotated 45 degrees – the
+          rotation ‘state’ has been set to 45°. While the <a href="#transform()">transform()</a>
+          command provides a mechanism for controlling the scope of these state changes within
+          blocks, the push() &amp; pop() commands allow your script to save and restore the state
+          manually.</p>
+          <p>All transformations, such as <a href="#rotate()">rotate()</a> and <a href="#skew()">skew()</a>, defined between a push() and pop() call last only until pop() is
           called. Thereafter the previous state is used. For example, a rotate(-30) within a
           rotate(45) means a rotation state of 15 degrees until pop() is called and the rotation
-          state becomes 45 degrees again.
+          state becomes 45 degrees again.</p>
         </div>
 
         <h2>Tutorial</h2>

@@ -402,29 +402,36 @@ class Context(object):
             raise NodeBoxError, "pop: too many pops!"
             
     def transform(self, *args):
-        xforms = list(args)
-        mode = xforms.pop(0) if len(xforms) and not callable(xforms[0]) else None
+        mode = args[0] if args and args[0] in (CENTER, CORNER) else None
         if mode is not None and mode not in (CORNER, CENTER):
             raise NodeBoxError, "transform: mode must be CORNER or CENTER"
+        elif mode:
+            args = args[1:]
+        xforms = [xf for xf in args if isinstance(xf, NSAffineTransform)]
+        if len(xforms) != len(args):
+            raise NodeBoxError, "transform: valid arguments are reset(), rotate(), scale(), skew(), and translate()"
         return self.TransformContext(mode, *xforms)
         
     def translate(self, x, y):
-        self._transform.translate(x, y)
+        return self._transform.translate(x, y)
         
     def reset(self):
+        rollback = Transform(self._transform)
+        rollback.invert()
         self._transform = Transform()
+        return rollback._nsAffineTransform
 
     def rotate(self, degrees=0, radians=0):
-        self._transform.rotate(-degrees,-radians)
+        return self._transform.rotate(-degrees,-radians)
 
     def translate(self, x=0, y=0):
-        self._transform.translate(x,y)
+        return self._transform.translate(x,y)
 
     def scale(self, x=1, y=None):
-        self._transform.scale(x,y)
+        return self._transform.scale(x,y)
 
     def skew(self, x=0, y=0):
-        self._transform.skew(x,y)
+        return self._transform.skew(x,y)
 
     ### Color Commands ###
 
