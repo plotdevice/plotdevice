@@ -249,18 +249,33 @@ parallelogram = t.<span class="kw">apply</span>(square) <span class="grey"># cre
 
         <div class="row">
 <pre>
-<span class="kw">rotate</span><span class="s">(</span>degrees=<span class="s">0</span>, radians=<span class="s">0</span><span class="s">)</span>
+<span class="kw">rotate</span>(amount) <span class="grey"># amount to rotate (in default unit)</span>
+</pre>
+<pre>
+<span class="kw">rotate</span>(UNITS)  <span class="grey"># set default unit to DEGREES, RADIANS, or PERCENT</span>
+</pre>
+<pre>
+<span class="kw">rotate</span>(percent=0.5) <span class="grey"># 0 ... 1.0</span>
+<span class="kw">rotate</span>(degrees=180) <span class="grey"># 0 ... 360</span>
+<span class="kw">rotate</span>(radians=pi)  <span class="grey"># 0 ... 2*pi (a.k.a. tau)</span>
 </pre>
         </div>
 
         <h2>Description</h2>
 
         <div class="row">
-          Rotates all subsequent shape, path, text, image commands. The rotate() command is called
-          with one parameter, by default specifying the angle in degrees. Optionally, the angle can
-          be specified in radians, by calling rotate(radians=0.5) for example. The rotate() command
-          works incrementally: if you call rotate(30), and later on call rotate(60), all commands
-          following that second rotate() will be rotated 90 degrees (30+60).
+          <p>Rotates all subsequent shape, path, text, image commands. The rotate() command is
+          called with one parameter, by default specifying the angle in degrees. The default unit
+          can be changed by calling rotate() with <code class="kw">DEGREES</code>, <code class="kw">RADIANS</code>, or <code class="kw">PERCENT</code> as its only argument. Subsequent
+          calls to rotate() will then be interpreted in those units</p>
+          <p>Alternatively, a rotation can specify its units explicitly by using a keyword
+          argument. For example, <code><span class="kw">rotate</span>(radians=tau/2)</code> will
+          flip the canvas upside down (regardless of the current default unit). Like other
+          transform operations, the rotate() command works incrementallyly: if you call
+          <code>rotate(30)</code>, and later on call <code>rotate(60)</code>, all commands
+          following that second rotate() will be rotated 90 degrees (30+60).</p>
+          <p>The default rotation unit is part of the graphics state handled by the <a href="#transform()">transform()</a> command. When units are redefined within a transform()
+          block, the original units will be restored when the block completes.</p>
         </div>
 
         <h2>Tutorial</h2>
