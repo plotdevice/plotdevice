@@ -20,31 +20,42 @@ __all__ = [
         "inch", "cm", "mm", "pi", "tau",
         "RGB", "HSB", "CMYK",
         "CENTER", "CORNER",
+        "DEGREES", "RADIANS", "PERCENT",
         "MOVETO", "LINETO", "CURVETO", "CLOSE",
         "MITER", "ROUND", "BEVEL", "BUTT", "SQUARE",
         "LEFT", "RIGHT", "CENTER", "JUSTIFY",
         "NORMAL","FORTYFIVE",
         "NUMBER", "TEXT", "BOOLEAN","BUTTON",
         "NodeBoxError",
-        "Point", "Grob", "BezierPath", "PathElement", "ClippingPath", "Rect", "Oval", "Color", "Transform", "Image", "Text",
+        "Point", "Grob", "BezierPath", "PathElement", "ClippingPath", 
+        "Rect", "Oval", "Color", "Transform", "Image", "Text",
         "Variable",
         ]
 
 DEFAULT_WIDTH, DEFAULT_HEIGHT = 500, 500
 
+# scale factors
 inch = 72
 cm = 28.3465
 mm = 2.8346
 pi = math.pi
 tau = 2*pi
 
+# color/output modes
 RGB = "rgb"
 HSB = "hsb"
 CMYK = "cmyk"
 
+# transform modes
 CENTER = "center"
 CORNER = "corner"
 
+# rotation modes
+DEGREES = "degrees"
+RADIANS = "radians"
+PERCENT = "percent"
+
+# path commands
 MOVETO = NSMoveToBezierPathElement
 LINETO = NSLineToBezierPathElement
 CURVETO = NSCurveToBezierPathElement
@@ -70,6 +81,7 @@ _CAPSTYLE=dict(
     square = NSSquareLineCapStyle,
 )
 
+# text alignments
 LEFT = "left"
 RIGHT = "right"
 CENTER = "center"
@@ -81,14 +93,17 @@ _TEXT=dict(
     justify = NSJustifiedTextAlignment
 )
 
+# arrow styles
 NORMAL = "normal"
 FORTYFIVE = "fortyfive"
 
+# var datatypes
 NUMBER = 1
 TEXT = 2
 BOOLEAN = 3
 BUTTON = 4
 
+# ui events
 KEY_UP = 126
 KEY_DOWN = 125
 KEY_LEFT = 123
@@ -909,15 +924,17 @@ class TransformContext(object):
     """Performs the setup/cleanup for a `with transform()` block (and changes the mode)"""
     _xforms = ['reset','rotate','translate','scale','skew']
 
-    def __init__(self, ctx, mode=None, *xforms):
+    def __init__(self, ctx, mode=None, rotation=None, *xforms):
         self._ctx = ctx
         self._rollback = Transform(ctx._transform)
         for xf in reversed(xforms): # make a local copy of the current state and apply inverses of 
             xf.invert()             # any transformation calls that occurred in the arguments
             self._rollback.prepend(xf)
-
-        self._oldmode = ctx._transformmode # remember the old center/corner setting
-        self._mode = mode or self._oldmode # and apply the new one
+        
+        # remember the old center/corner setting and rotation units, then apply the new ones
+        self._oldmode = ctx._transformmode
+        self._oldrotation = rotation or ctx._rotationmode
+        self._mode = mode or self._oldmode
         ctx._transformmode = self._mode
 
     def __enter__(self):

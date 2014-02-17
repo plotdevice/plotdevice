@@ -14,7 +14,7 @@ class Context(object):
     KEY_BACKSPACE = grobs.KEY_BACKSPACE
     KEY_TAB = grobs.KEY_TAB
     KEY_ESC = grobs.KEY_ESC
-    state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_path', '_autoclosepath', '_transform', '_transformmode', '_transformstack', '_fontname', '_fontsize', '_lineheight', '_align', '_noImagesHint', '_oldvars', '_vars'
+    state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_path', '_autoclosepath', '_transform', '_transformmode', '_rotationmode', '_transformstack', '_fontname', '_fontsize', '_lineheight', '_align', '_noImagesHint', '_oldvars', '_vars'
     
     def __init__(self, canvas=None, ns=None):
 
@@ -66,6 +66,7 @@ class Context(object):
         self._autoclosepath = True
         self._transform = Transform()
         self._transformmode = CENTER
+        self._rotationmode = DEGREES
         self._transformstack = []
         self._fontname = "Helvetica"
         self._fontsize = 24
@@ -407,10 +408,17 @@ class Context(object):
             raise NodeBoxError, "transform: mode must be CORNER or CENTER"
         elif mode:
             args = args[1:]
+
+        # filter for return values from transform ops. note mode-changes for rotation
+        # separately so the state before the block can be reconstructed
         xforms = [xf for xf in args if isinstance(xf, NSAffineTransform)]
-        if len(xforms) != len(args):
+        rotations = [xf for xf in args if xf in (DEGREES, RADIANS, PERCENT)]
+        rotation = rotations[0] if rotations else None
+
+        # if the args validate, return a context manager (which also mimics CENTER/CORNER)
+        if len(xforms)+len(rotations) != len(args):
             raise NodeBoxError, "transform: valid arguments are reset(), rotate(), scale(), skew(), and translate()"
-        return self.TransformContext(mode, *xforms)
+        return self.TransformContext(mode, rotation, *xforms)
         
     def translate(self, x, y):
         return self._transform.translate(x, y)
@@ -419,9 +427,35 @@ class Context(object):
         rollback = Transform(self._transform)
         rollback.invert()
         self._transform = Transform()
+        self._rotationmode = DEGREES
         return rollback._nsAffineTransform
 
-    def rotate(self, degrees=0, radians=0):
+    def rotate(self, arg=None, **kwargs):
+        # with no args, return the current mode
+        if arg is None and not kwargs:
+            return self._rotationmode
+
+        # when setting the mode, update the context then return the prior mode
+        if arg in (DEGREES, RADIANS, PERCENT):
+            oldmode, self._rotationmode = self._rotationmode, arg
+            print oldmode,"->",self._rotationmode
+            return oldmode
+
+        # check the kwargs for unit-specific settings
+        units = {k:v for k,v in kwargs.items() if k in ['degrees', 'radians', 'percent']}
+        if len(units) > 1:
+            badunits = 'rotate: specify one rotation at a time (got %s)' % " & ".join(units.keys())
+            raise NodeBoxError(badunits)
+        
+        # if nothing in the kwargs, use the current mode and take the quantity from the first arg
+        if not units:
+            units[self._rotationmode] = arg or 0
+
+        # add rotation to the graphics state
+        degrees = units.get('degrees', 0)
+        radians = units.get('radians', 0)
+        if 'percent' in units:
+            degrees, radians = 0, tau*units['percent']
         return self._transform.rotate(-degrees,-radians)
 
     def translate(self, x=0, y=0):
