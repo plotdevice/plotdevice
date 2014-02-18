@@ -63,6 +63,7 @@
 		2AE5AD2B186236C400CCDD45 /* editor.py in Copy nodebox.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD291862366300CCDD45 /* editor.py */; };
 		2AE5AD2E1862387200CCDD45 /* widgets.py in Copy nodebox.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD2C1862386400CCDD45 /* widgets.py */; };
 		2AE5AD80186249F300CCDD45 /* listener.py in Copy nodebox.run */ = {isa = PBXBuildFile; fileRef = 2AE5AD7E186249E100CCDD45 /* listener.py */; };
+		2AEE843C18B3285F00CF91D4 /* foundry.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 2AEE843A18B3285600CF91D4 /* foundry.py */; };
 		611CC49810BA8B9E00B55455 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48110BA8B9E00B55455 /* Credits.rtf */; };
 		611CC49C10BA8B9E00B55455 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48910BA8B9E00B55455 /* InfoPlist.strings */; };
 		611CC4A110BA8B9E00B55455 /* NodeBox.icns in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49310BA8B9E00B55455 /* NodeBox.icns */; };
@@ -212,6 +213,7 @@
 				611CC57A10BA8FA800B55455 /* kgp.py in Copy nodebox.util */,
 				611CC57B10BA8FA800B55455 /* ottobot.py in Copy nodebox.util */,
 				611CC58110BA8FA800B55455 /* vdiff.py in Copy nodebox.util */,
+				2AEE843C18B3285F00CF91D4 /* foundry.py in Copy nodebox.util */,
 				2A4812E71884AF3B00B47700 /* fsevents.py in Copy nodebox.util */,
 			);
 			name = "Copy nodebox.util";
@@ -295,6 +297,7 @@
 		2AE5AD291862366300CCDD45 /* editor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = editor.py; sourceTree = "<group>"; };
 		2AE5AD2C1862386400CCDD45 /* widgets.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = widgets.py; sourceTree = "<group>"; };
 		2AE5AD7E186249E100CCDD45 /* listener.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = listener.py; sourceTree = "<group>"; };
+		2AEE843A18B3285600CF91D4 /* foundry.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = foundry.py; sourceTree = "<group>"; };
 		611CC48210BA8B9E00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = English; path = English.lproj/Credits.rtf; sourceTree = "<group>"; };
 		611CC48A10BA8B9E00B55455 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		611CC49310BA8B9E00B55455 /* NodeBox.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = NodeBox.icns; path = Resources/NodeBox.icns; sourceTree = "<group>"; };
@@ -529,6 +532,7 @@
 				611CC4DA10BA8C1B00B55455 /* ottobot.py */,
 				611CC4E010BA8C1B00B55455 /* vdiff.py */,
 				2A4812E51884AF3100B47700 /* fsevents.py */,
+				2AEE843A18B3285600CF91D4 /* foundry.py */,
 			);
 			path = util;
 			sourceTree = "<group>";

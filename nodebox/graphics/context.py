@@ -153,6 +153,8 @@ class Context(object):
         return Color(self, *args, **kwargs)
     def Image(self, *args, **kwargs):
         return Image(self, *args, **kwargs)
+    def Typeface(self, *args, **kwargs):
+        return Typeface(self, *args, **kwargs)
     def Text(self, *args, **kwargs):
         return Text(self, *args, **kwargs)
     def TransformContext(self, *args, **kwargs):
@@ -438,7 +440,6 @@ class Context(object):
         # when setting the mode, update the context then return the prior mode
         if arg in (DEGREES, RADIANS, PERCENT):
             oldmode, self._rotationmode = self._rotationmode, arg
-            print oldmode,"->",self._rotationmode
             return oldmode
 
         # check the kwargs for unit-specific settings
@@ -520,15 +521,13 @@ class Context(object):
 
     ### Font Commands ###
 
-    def font(self, fontname=None, fontsize = None):
-        if fontname is not None:
-            if not Text.font_exists(fontname):
-                raise NodeBoxError, 'Font "%s" not found.' % fontname
-            else:
-                self._fontname = fontname
-        if fontsize is not None:
-            self._fontsize = fontsize
-        return self._fontname
+    def font(self, *family_size_and_weight, **traits):
+        traits['use'] = True
+        return self.Typeface(*family_size_and_weight, **traits)
+
+    def typeface(self, *family_size_and_weight, **traits):
+        traits['use'] = False
+        return self.Typeface(*family_size_and_weight, **traits)
 
     def fontsize(self, fontsize=None):
         if fontsize is not None:

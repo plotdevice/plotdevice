@@ -4,11 +4,17 @@ import re
 import json
 import warnings
 import math
+from operator import itemgetter
+from collections import OrderedDict as odict
 from random import choice, shuffle
 from AppKit import *
 from Foundation import *
 
 from nodebox.util import _copy_attr, _copy_attrs
+from nodebox.util.foundry import *
+# Canonicalizers: font_exists, family_exists, weight_exists
+# NSFont attrs:   font_family, font_italicized, font_weight, font_w
+# Family utils:   family_weights, font_face, closest_weight
 
 try:
     import cPolymagic
@@ -28,7 +34,7 @@ __all__ = [
         "NUMBER", "TEXT", "BOOLEAN","BUTTON",
         "NodeBoxError",
         "Point", "Grob", "BezierPath", "PathElement", "ClippingPath", 
-        "Rect", "Oval", "Color", "Transform", "Image", "Text",
+        "Rect", "Oval", "Color", "Transform", "Image", "Text", "Typeface",
         "Variable",
         ]
 
@@ -1249,6 +1255,194 @@ class Image(Grob, TransformMixin):
                 t.concat()
                 self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), srcRect, NSCompositeSourceOver, self.alpha)
             _restore()
+
+class Typeface(object):
+    kwargs = ('family','size','weight','face','italic','heavier','lighter','bold','fontname','fontsize','use')
+
+    def __init__(self, ctx, *args, **kwargs):
+        for k in kwargs:
+            if k not in Typeface.kwargs:
+                badarg = 'Typeface: unknown keyword argument "%s"'%k
+                raise NodeBoxError(badarg)
+
+        # gather specs from the args and fill in the blanks from the global state
+        traits = {k:v for k,v in kwargs.items() if k in ('italic','bold')}
+        spec = {k:v for k,v in kwargs.items() if k in ('family','size','weight','face')}
+        if 'fontsize' in kwargs: # be backward compatible with the old arg names
+            spec.setdefault('size', kwargs['fontsize'])
+        face = kwargs.get('fontname', spec.get('face'))
+        
+        for item in args:
+            if isinstance(item, Typeface):
+                traits.setdefault('italic', item.italic)
+                spec.setdefault('family', item.family)
+                spec.setdefault('weight', item.weight)
+                spec.setdefault('size', item.size)
+            if isinstance(item, basestring):
+                if 'family' not in spec:
+                    spec['family'] = item
+                elif 'weight' not in spec:
+                    spec['weight'] = item
+            elif isinstance(item, (int, float, long)):
+                spec.setdefault('size', item)
+        if face is not None and font_exists(face):
+            traits.setdefault('italic', font_italicized(face))
+            spec.update({"family":font_family(face), "weight":font_weight(face)})
+        elif face is not None:
+            notfound = 'Typeface: no matches for Postscript name "%s"'%face
+            raise NodeBoxError(notfound)
+
+        # inherit any omitted args from the context
+        if not spec.get('family'):
+            traits.setdefault('italic', font_italicized(ctx._fontname))
+        spec.setdefault('family', font_family(ctx._fontname))
+        spec.setdefault('size', ctx._fontsize)
+        spec.setdefault('weight', font_weight(ctx._fontname))
+
+        # validate the strings
+        spec['family'] = family_exists(spec['family'])
+        spec['weight'] = weight_exists(spec['family'], spec['weight'], traits.get('italic'))
+
+        self._ctx = ctx
+        self._spec = spec
+        self._traits = traits
+
+        # generate a postscript name if all we have is a spec
+        if 'face' not in spec: 
+            self._update_face()
+
+        # bold is just a shortcut to picking a real weight, so no point in persisting it
+        if 'bold' in traits:
+            self._update_attrs()
+            del traits['bold']
+
+        # keep track of explicit weight settings (as an apple-weight int) to use as a target 
+        # heaviness when switching family or italicization
+        self._w = font_w(self.face)
+
+        # if a weight-modulation arg was included, step the weight
+        mod = kwargs.get('heavier', kwargs.get('lighter', 0))
+        mod = 1 if mod is True else mod
+        if kwargs.get('lighter'):
+            mod = -mod
+        if mod:
+            self.modulate(mod)
+
+        use = kwargs.get('use', True)
+        if use:
+            self._prior = self._get_ctx()
+            self._update_ctx()
+        
+    def __repr__(self):
+        spec = u'"%(family)s" %(size)rpt %(weight)s'%(self._spec)
+        return (u'Typeface(%s <%s>)'%(spec, self._spec['face'])).encode('utf-8')
+    def __enter__(self):
+        if hasattr(self, '_prior'):
+            self._rollback = self._prior
+            del self._prior
+        else:
+            self._rollback = self._get_ctx()
+        self._update_ctx()
+        return self
+
+    def __exit__(self, type, value, tb):
+        self._update_ctx(*self._rollback)
+
+    def _get_ctx(self):
+        return (self._ctx._fontname, self._ctx._fontsize)
+
+    def _update_ctx(self, face=None, size=None):
+        face = face or self.face
+        size = size or self.size
+        self._ctx._fontname, self._ctx._fontsize = face, size
+
+    def _update_weight(self):
+        # choose a weight from the family based on the cached _w value
+        if self.weight not in family_weights(self.family, self.italic):
+            self._spec['weight'] = closest_weight(self._w, self.family, self.italic)
+
+    def _update_face(self):
+        # find a matching postscript name given the attr settings
+        self._spec['face'] = font_face(self.family, self.weight, **self._traits)
+
+    def _update_attrs(self):
+        # rewrite the attrs to reflect the new postscript name
+        self._spec['family'] = font_family(self.face)
+        self._spec['weight'] = font_weight(self.face)
+        self._traits['italic'] = font_italicized(self.face)
+        self._w = font_w(self.face)
+
+    # .family
+    def _get_family(self):
+        return self._spec.get('family')
+    def _set_family(self, f):
+        fam = family_exists(f)
+        if fam and fam != self.family:
+            self._spec['family'] = fam
+            self._update_weight()
+            self._update_face()
+    family = property(_get_family, _set_family)
+
+    # .weight
+    def _get_weight(self):
+        return self._spec.get('weight')
+    def _set_weight(self, w):
+        weight = weight_exists(self.family, w, self.italic)
+        if weight and weight != self.weight:
+            self._spec['weight'] = weight
+            self._update_face()
+            self._w = font_w(self.face)
+    weight = property(_get_weight, _set_weight)
+
+    # .size
+    def _get_size(self):
+        return self._spec.get('size')
+    def _set_size(self, s):
+        self._spec['size'] = s
+    size = property(_get_size, _set_size)
+
+    # .italic
+    def _get_italic(self):
+        return self._traits.get('italic', False)
+    def _set_italic(self, ital):
+        if ital != self.italic:
+            self._traits['italic'] = ital
+            self._update_weight()
+            self._update_face()
+    italic = property(_get_italic, _set_italic)
+
+    # .face
+    def _get_face(self):
+        return self._spec.get('face')
+    def _set_face(self, face):
+        if font_exists(face) and face != self.face:
+            self._spec['face'] = face
+            self._update_attrs()
+    face = property(_get_face, _set_face)
+
+    @property
+    def weights(self):
+        return family_weights(self.family, self.italic).keys()
+
+    def heavier(self, steps=1):
+        self.modulate(steps)
+
+    def lighter(self, steps=1):
+        self.modulate(-steps)
+
+    def modulate(self, steps):
+        if not steps: return
+
+        seq = family_weights(self.family, self.italic).keys()
+        idx = seq.index(self.weight)
+        less, more = list(reversed(seq[:idx+1])), seq[idx:]
+        if steps<0:
+            match = less[abs(steps):abs(steps)+1] or [less[-1]]
+        elif steps>0:
+            match = more[steps:steps+1] or [more[-1]]
+        self.weight = match[0]
+
+
 
 class Text(Grob, TransformMixin, ColorMixin):
 

@@ -1,5 +1,5 @@
 import re
-from AppKit import NSFontManager, NSFont, NSMacOSRomanStringEncoding
+from AppKit import NSFontManager, NSFont, NSMacOSRomanStringEncoding, NSItalicFontMask
 from random import choice
 
 __all__ = ('grid', 'random', 'choice', 'files', 'fonts', 'autotext', '_copy_attr', '_copy_attrs')
@@ -67,26 +67,47 @@ def files(path="*"):
         path = path.decode('utf-8')
     return glob(path)
 
-def fonts(like=None, western=True):
+from nodebox.util.foundry import family_weights
+def fonts(like=None, western=True, weights=False):
     """Returns a list of all fonts installed on the system (with filtering capabilities)
 
     If `like` is a string, only fonts whose names contain those characters will be returned.
 
     If `western` is True (the default), fonts with non-western character sets will be omitted.
     If False, only non-western fonts will be returned.
+
+    If `weights` is True, rather than returning a list, a dictionary will be returned with
+    keys representing the matching family names. Their values are a mapping of Postscript
+    fontnames for the family members and their corresponding numeric weight values.
     """
-    def in_region(fontname):
-        # always filter out the system menu fonts
-        if fontname.startswith('.'):
+    fm = NSFontManager.sharedFontManager()
+    def in_region(famname):
+        # find font encoding (as a best guess to the region)
+        facename = fm.availableMembersOfFontFamily_(famname)[0][0]
+        face = NSFont.fontWithName_size_(facename, 12)
+        enc = face.mostCompatibleStringEncoding()
+        
+        # filter out the system menu fonts
+        if face.fontName().startswith('.'):
             return False
-        # filter based on region preference
-        enc = NSFont.fontWithName_size_(fontname, 12).mostCompatibleStringEncoding()
+
+        # filter by region
         if western: return enc==NSMacOSRomanStringEncoding
         else: return enc!=NSMacOSRomanStringEncoding
-    all_fonts = [f for f in NSFontManager.sharedFontManager().availableFonts() if in_region(f)]
+
+    
+    all_fams = [f for f in fm.availableFontFamilies() if in_region(f)]
     if like:
-        return [name for name in all_fonts if like.lower() in name.lower()]
-    return all_fonts
+        all_fams = [name for name in all_fams if like.lower() in name.lower()]
+
+    if weights:
+        families = {}
+        for famname in all_fams:
+            families[famname] = dict(italic=family_weights(famname, italic=True), 
+                                     roman=family_weights(famname))
+        return families
+        
+    return all_fams
 
 def autotext(sourceFile):
     from nodebox.util.kgp import KantGenerator
