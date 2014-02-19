@@ -33,7 +33,7 @@ def coredump(script=None, src=None):
     frames = extract_tb(tb, script, src)
     return [format_exception_only(etype, value), frames]
 
-def extract_tb(tb, script=None, src=None, debug=False):
+def extract_tb(tb, script=None, src=None, debug=True):
     """Return a list of pre-processed entries from traceback."""
     list = []
     n = 0

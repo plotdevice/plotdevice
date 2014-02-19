@@ -259,8 +259,8 @@ class NodeBoxPreferencesController(NSWindowController):
                     os.makedirs(dirname)
                 os.symlink(console_py, pth)
             except OSError:
-                Installer = objc.lookUpClass('Installer')
-                Installer.createLink_(pth)
+                SysAdmin = objc.lookUpClass('SysAdmin')
+                SysAdmin.createSymlink_(pth)
         self.checkTool()
         NSApp().endSheet_(self.toolInstallSheet)
         self.toolInstallSheet.orderOut_(self)

@@ -1,5 +1,5 @@
 //
-//  Installer.h
+//  SysAdmin.h
 //  NodeBox
 //
 //  Created by Christian Swinehart on 12/13/13.
@@ -8,6 +8,6 @@
 
 #import <Foundation/Foundation.h>
 
-@interface Installer : NSObject
-+ (BOOL)createLink:(NSString *)toolPath;
+@interface SysAdmin : NSObject
++ (BOOL)createSymlink:(NSString *)toolPath;
 @end

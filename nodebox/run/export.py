@@ -8,7 +8,7 @@ import nodebox
 try:
     # map in the objc classes from the cIO module
     import cIO
-    for c in "AnimatedGif", "ImageSequence", "Installer", "Video":
+    for c in "AnimatedGif", "ImageSequence", "SysAdmin", "Video":
         globals()[c] = objc.lookUpClass(c)
 except ImportError:
     notfound = "Couldn't locate C extensions (try running `python setup.py build` before running from the source dist)."
