@@ -33,6 +33,12 @@ def font_w(font):
         font = NSFont.fontWithName_size_(font, 12)
     return _fm.weightOfFont_(font)
 
+def font_traits(font):
+    if isinstance(font, basestring):
+        font = NSFont.fontWithName_size_(font, 12)
+    bytes = _fm.traitsOfFont_(font)
+    return [k for k,v in ns_traits.items() if v&bytes]
+
 # introspection methods for family names
 
 def family_exists(famname):
@@ -52,8 +58,14 @@ def weight_exists(famname, weight, italic=False):
         if wname in group: 
             return closest_weight(w, family, italic)
     return None
-    
-def family_weights(famname, italic=False, rows=False):
+
+def family_members(famname):
+    fam = []
+    for nm, dname, w, traits in _fm.availableMembersOfFontFamily_(famname):
+        fam.append(dict(face=nm, w=w, style=dname, traits=[k for k,v in ns_traits.items() if v&traits]))
+    return fam
+
+def family_weights(famname, italic=False, condensed=False, rows=False):
     weights = []
     regular = None
     for nm, dname, w, traits in _fm.availableMembersOfFontFamily_(famname):
@@ -61,19 +73,23 @@ def family_weights(famname, italic=False, rows=False):
             if not italic: continue
         elif italic:
             continue
+        if traits&NSCondensedFontMask:
+            if not condensed: continue
+        elif condensed:
+            continue
         wname = _sanitize_weight(dname)
         if not wname:
-            regular = (nm, w)
+            regular = (nm, w, traits)
             continue
-        weights.append(dict(psname=nm, wname=wname, w=w))
+        weights.append(dict(psname=nm, wname=wname, w=w, t=traits))
     if regular:
         # should really be marking this in some other way. it would be nice if the 
         # 'regular' font for each family was called regular...
-        nm, w = regular
+        nm, w, traits = regular
         curr_weights = [f['wname'] for f in weights]
         for default in std_weights[w]:
             if default not in curr_weights:
-               weights.append(dict(psname=nm, wname=unicode(default), w=w))
+               weights.append(dict(psname=nm, wname=unicode(default), w=w, t=traits))
                break
     if rows:
         return weights
@@ -92,6 +108,8 @@ def font_face(family, weight, **traits):
             f = _fm.convertFont_toHaveTrait_(f, NSBoldFontMask if traits['bold'] else NSUnboldFontMask)
         if 'italic' in traits:
             f = _fm.convertFont_toHaveTrait_(f, NSItalicFontMask if traits['italic'] else NSUnitalicFontMask)        
+        if 'condensed' in traits:
+            f = _fm.convertFont_toHaveTrait_(f, NSCondensedFontMask if traits['condensed'] else NSExpandedFontMask)
         return f.fontName()
 
     # otherwise use apple's ‘standard’ mapping to the 1-14 scale
@@ -127,7 +145,21 @@ std_weights = [
    ["extra", "extrabold"], ["heavy", "heavyface"], ["black", "super"], 
    ["ultra", "ultrablack", "fat"], ["extrablack", "obese", "nord"]
 ]
+ns_traits = {
+   "italic":0x00000001,
+   "bold":0x00000002,
+   "unbold":0x00000004,
+   "nonstandardcharset":0x00000008,
+   "narrow":0x00000010,
+   "expanded":0x00000020,
+   "condensed":0x00000040,
+   "smallcaps":0x00000080,
+   "poster":0x00000100,
+   "compressed":0x00000200,
+   "fixedpitch":0x00000400,
+   "unitalic":0x01000000
+}
 
-__all__ = ("font_exists", "font_family", "font_italicized", "font_weight", "font_w", 
+__all__ = ("font_exists", "font_family", "font_italicized", "font_weight", "font_w", "font_traits",
            "family_exists", "weight_exists", "family_weights", 
            "font_face", "closest_weight")

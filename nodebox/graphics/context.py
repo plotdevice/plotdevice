@@ -5,6 +5,8 @@ from nodebox.graphics import grobs
 from nodebox.util import _copy_attr
 import nodebox.geo
 
+
+
 class Context(object):
     
     KEY_UP = grobs.KEY_UP
@@ -17,7 +19,6 @@ class Context(object):
     state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_path', '_autoclosepath', '_transform', '_transformmode', '_rotationmode', '_transformstack', '_fontname', '_fontsize', '_lineheight', '_align', '_noImagesHint', '_oldvars', '_vars'
     
     def __init__(self, canvas=None, ns=None):
-
         """Initializes the context.
         
         Note that we have to give the namespace of the executing script, 
@@ -38,6 +39,7 @@ class Context(object):
 
         # cache a list of all of the exportable attr names (for use when making namespaces)
         self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_') or a.endswith('_')))
+
 
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context.state_vars]
@@ -153,13 +155,12 @@ class Context(object):
         return Color(self, *args, **kwargs)
     def Image(self, *args, **kwargs):
         return Image(self, *args, **kwargs)
-    def Typeface(self, *args, **kwargs):
-        return Typeface(self, *args, **kwargs)
+    def Font(self, *args, **kwargs):
+        return Font(self, *args, **kwargs)
     def Text(self, *args, **kwargs):
         return Text(self, *args, **kwargs)
     def TransformContext(self, *args, **kwargs):
-        from nodebox.graphics.grobs import TransformContext
-        return TransformContext(self, *args, **kwargs)
+        return grobs.TransformContext(self, *args, **kwargs)
 
     ### Primitives ###
 
@@ -522,12 +523,7 @@ class Context(object):
     ### Font Commands ###
 
     def font(self, *family_size_and_weight, **traits):
-        traits['use'] = True
-        return self.Typeface(*family_size_and_weight, **traits)
-
-    def typeface(self, *family_size_and_weight, **traits):
-        traits['use'] = False
-        return self.Typeface(*family_size_and_weight, **traits)
+        return self.Font(*family_size_and_weight, **traits)._use()
 
     def fontsize(self, fontsize=None):
         if fontsize is not None:

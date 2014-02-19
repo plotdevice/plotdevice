@@ -34,7 +34,7 @@ __all__ = [
         "NUMBER", "TEXT", "BOOLEAN","BUTTON",
         "NodeBoxError",
         "Point", "Grob", "BezierPath", "PathElement", "ClippingPath", 
-        "Rect", "Oval", "Color", "Transform", "Image", "Text", "Typeface",
+        "Rect", "Oval", "Color", "Transform", "Image", "Text", "Font",
         "Variable",
         ]
 
@@ -1256,24 +1256,26 @@ class Image(Grob, TransformMixin):
                 self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), srcRect, NSCompositeSourceOver, self.alpha)
             _restore()
 
-class Typeface(object):
-    kwargs = ('family','size','weight','face','italic','heavier','lighter','bold','fontname','fontsize','use')
+
+class Font(object):
+    kwargs = ('family','size','weight','face','italic','heavier','lighter','bold','condensed','fontname','fontsize')
 
     def __init__(self, ctx, *args, **kwargs):
         for k in kwargs:
-            if k not in Typeface.kwargs:
-                badarg = 'Typeface: unknown keyword argument "%s"'%k
+            if k not in Font.kwargs:
+                badarg = 'Font: unknown keyword argument "%s"'%k
                 raise NodeBoxError(badarg)
 
         # gather specs from the args and fill in the blanks from the global state
-        traits = {k:v for k,v in kwargs.items() if k in ('italic','bold')}
+        traits = {k:v for k,v in kwargs.items() if k in ('italic','bold','condensed')}
         spec = {k:v for k,v in kwargs.items() if k in ('family','size','weight','face')}
         if 'fontsize' in kwargs: # be backward compatible with the old arg names
             spec.setdefault('size', kwargs['fontsize'])
         face = kwargs.get('fontname', spec.get('face'))
         
+        # search the positional args for either name/size or a Font object
         for item in args:
-            if isinstance(item, Typeface):
+            if isinstance(item, Font):
                 traits.setdefault('italic', item.italic)
                 spec.setdefault('family', item.family)
                 spec.setdefault('weight', item.weight)
@@ -1289,7 +1291,7 @@ class Typeface(object):
             traits.setdefault('italic', font_italicized(face))
             spec.update({"family":font_family(face), "weight":font_weight(face)})
         elif face is not None:
-            notfound = 'Typeface: no matches for Postscript name "%s"'%face
+            notfound = 'Font: no matches for Postscript name "%s"'%face
             raise NodeBoxError(notfound)
 
         # inherit any omitted args from the context
@@ -1308,7 +1310,7 @@ class Typeface(object):
         self._traits = traits
 
         # generate a postscript name if all we have is a spec
-        if 'face' not in spec: 
+        if 'face' not in self._spec: 
             self._update_face()
 
         # bold is just a shortcut to picking a real weight, so no point in persisting it
@@ -1328,11 +1330,6 @@ class Typeface(object):
         if mod:
             self.modulate(mod)
 
-        use = kwargs.get('use', True)
-        if use:
-            self._prior = self._get_ctx()
-            self._update_ctx()
-        
     def __enter__(self):
         if hasattr(self, '_prior'):
             self._rollback = self._prior
@@ -1347,7 +1344,7 @@ class Typeface(object):
 
     def __repr__(self):
         spec = u'"%(family)s" %(size)rpt %(weight)s <%(face)s>'%(self._spec)
-        return (u'Typeface(%s)'%spec).encode('utf-8')
+        return (u'Font(%s)'%spec).encode('utf-8')
 
     def _get_ctx(self):
         return (self._ctx._fontname, self._ctx._fontsize)
@@ -1372,6 +1369,14 @@ class Typeface(object):
         self._spec['weight'] = font_weight(self.face)
         self._traits['italic'] = font_italicized(self.face)
         self._w = font_w(self.face)
+
+    def _use(self):
+        # called right after allocation by the font() command. remembers the font state
+        # from before applying itself since by the time __enter__ takes a snapshot the 
+        # prior state will already be overwritten
+        self._prior = self._get_ctx()
+        self._update_ctx()
+        return self
 
     # .family
     def _get_family(self):
@@ -1412,6 +1417,16 @@ class Typeface(object):
             self._update_face()
     italic = property(_get_italic, _set_italic)
 
+    # .condensed
+    def _get_condensed(self):
+        return self._traits.get('condensed', False)
+    def _set_condensed(self, cond):
+        if cond != self.condensed:
+            self._traits['condensed'] = cond
+            self._update_weight()
+            self._update_face()
+    condensed = property(_get_condensed, _set_condensed)
+
     # .face
     def _get_face(self):
         return self._spec.get('face')
@@ -1422,8 +1437,16 @@ class Typeface(object):
     face = property(_get_face, _set_face)
 
     @property
+    def traits(self):
+        return font_traits(self.face)
+
+    @property
     def weights(self):
         return family_weights(self.family, self.italic).keys()
+
+    @property
+    def faces(self):
+        return family_weights(self.family, self.italic)
 
     def heavier(self, steps=1):
         self.modulate(steps)
@@ -1443,6 +1466,9 @@ class Typeface(object):
             match = more[steps:steps+1] or [more[-1]]
         self.weight = match[0]
 
+    @property
+    def dump(self):
+        return family_weights(self.family, self.italic, rows=True)
 
 
 class Text(Grob, TransformMixin, ColorMixin):
@@ -1472,12 +1498,6 @@ class Text(Grob, TransformMixin, ColorMixin):
             ('x', 'y', 'width', 'height', '_transform', '_transformmode', 
             '_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight'))
         return new
-        
-    def font_exists(cls, fontname):
-        # Check if the font exists.
-        f = NSFont.fontWithName_size_(fontname, 12)
-        return f is not None
-    font_exists = classmethod(font_exists)
 
     @property
     def font(self):
