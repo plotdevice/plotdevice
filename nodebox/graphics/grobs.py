@@ -341,10 +341,10 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
             self.draw()
         self._finished = True
 
-    def _get_path(self):
+    @property
+    def path(self):
         warnings.warn("The 'path' attribute is deprecated. Please use _nsBezierPath instead.", DeprecationWarning, stacklevel=2)
         return self._nsBezierPath
-    path = property(_get_path)
 
     def copy(self):
         return self.__class__(self._ctx, self)
@@ -462,14 +462,15 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
         elif el.cmd == CLOSE:
             self.closepath()
             
-    def _get_contours(self):
+    @property
+    def contours(self):
         from nodebox.graphics import bezier
         return bezier.contours(self)
-    contours = property(_get_contours)
 
     ### Drawing methods ###
 
-    def _get_transform(self):
+    @property
+    def transform(self):
         trans = self._transform.copy()
         if (self._transformmode == CENTER):
             (x, y), (w, h) = self.bounds
@@ -482,7 +483,6 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
             t.translate(deltax,deltay)
             trans.append(t)
         return trans
-    transform = property(_get_transform)
 
     def _draw(self):
         _save()
@@ -548,10 +548,10 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
         else:
             return bezier.segment_lengths(self, relative=False, n=n)
 
-    def _get_length(self, segmented=False, n=10):
+    @property
+    def length(self, segmented=False, n=10):
         import bezier
         return bezier.length(self, segmented=segmented, n=n)
-    length = property(_get_length)
         
     def point(self, t):
         import bezier
@@ -763,12 +763,12 @@ class Color(object):
     def set(self):
         self.nsColor.set()
     
-    def _get_nsColor(self):
+    @property
+    def nsColor(self):
         if self._ctx._outputmode == RGB:
             return self._rgb
         else:
             return self._cmyk
-    nsColor = property(_get_nsColor)
         
 
     def copy(self):
@@ -980,10 +980,10 @@ class Transform(object):
             raise NodeBoxError(wrongtype)
         self._nsAffineTransform = transform
         
-    def _get_transform(self):
+    @property
+    def transform(self):
         warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", DeprecationWarning, stacklevel=2)
         return self._nsAffineTransform
-    transform = property(_get_transform)
     
     def set(self):
         self._nsAffineTransform.set()
@@ -1137,10 +1137,10 @@ class Image(Grob, TransformMixin):
         self.alpha = alpha
         self.debugImage = False
 
-    def _get_image(self):
+    @property
+    def image(self):
         warnings.warn("The 'image' attribute is deprecated. Please use _nsImage instead.", DeprecationWarning, stacklevel=2)
         return self._nsImage
-    image = property(_get_image)
 
     def copy(self):
         new = self.__class__(self._ctx)
@@ -1333,9 +1333,6 @@ class Typeface(object):
             self._prior = self._get_ctx()
             self._update_ctx()
         
-    def __repr__(self):
-        spec = u'"%(family)s" %(size)rpt %(weight)s'%(self._spec)
-        return (u'Typeface(%s <%s>)'%(spec, self._spec['face'])).encode('utf-8')
     def __enter__(self):
         if hasattr(self, '_prior'):
             self._rollback = self._prior
@@ -1347,6 +1344,10 @@ class Typeface(object):
 
     def __exit__(self, type, value, tb):
         self._update_ctx(*self._rollback)
+
+    def __repr__(self):
+        spec = u'"%(family)s" %(size)rpt %(weight)s <%(face)s>'%(self._spec)
+        return (u'Typeface(%s)'%spec).encode('utf-8')
 
     def _get_ctx(self):
         return (self._ctx._fontname, self._ctx._fontsize)
@@ -1478,9 +1479,9 @@ class Text(Grob, TransformMixin, ColorMixin):
         return f is not None
     font_exists = classmethod(font_exists)
 
-    def _get_font(self):
+    @property
+    def font(self):
         return NSFont.fontWithName_size_(self._fontname, self._fontsize)
-    font = property(_get_font)
 
     def _getLayoutManagerTextContainerTextStorage(self, clr=__dummy_color):
         paraStyle = NSMutableParagraphStyle.alloc().init()
@@ -1539,14 +1540,15 @@ class Text(Grob, TransformMixin, ColorMixin):
         _restore()
         return (w, h)
 
-    def _get_metrics(self):
+    @property
+    def metrics(self):
         layoutManager, textContainer, textStorage = self._getLayoutManagerTextContainerTextStorage()
         glyphRange = layoutManager.glyphRangeForTextContainer_(textContainer)
         (dx, dy), (w, h) = layoutManager.boundingRectForGlyphRange_inTextContainer_(glyphRange, textContainer)
         return w,h
-    metrics = property(_get_metrics)
 
-    def _get_path(self):
+    @property
+    def path(self):
         layoutManager, textContainer, textStorage = self._getLayoutManagerTextContainerTextStorage()
         x, y = self.x, self.y
         glyphRange = layoutManager.glyphRangeForTextContainer_(textContainer)
@@ -1584,7 +1586,6 @@ class Text(Grob, TransformMixin, ColorMixin):
         path = trans.transformBezierPath(path)
         path.inheritFromContext()
         return path
-    path = property(_get_path)
     
 class Variable(object):
     def __init__(self, name, type, default=None, min=0, max=100, value=None):
