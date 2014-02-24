@@ -10,6 +10,7 @@ from random import choice, shuffle
 from AppKit import *
 from Foundation import *
 
+from nodebox import NodeBoxError
 from nodebox.util import _copy_attr, _copy_attrs
 
 try:
@@ -28,11 +29,10 @@ __all__ = [
         "LEFT", "RIGHT", "CENTER", "JUSTIFY",
         "NORMAL","FORTYFIVE",
         "NUMBER", "TEXT", "BOOLEAN","BUTTON",
-        "NodeBoxError",
-        "Point", "Grob", "BezierPath", "PathElement", "ClippingPath", 
-        # "Rect", "Oval", 
+        "Point", "Size", "Region",
+        "Grob", "BezierPath", "PathElement", "ClippingPath", # "Rect", "Oval", 
         "Color", "Transform", "Image", "Text", 
-        "Variable",
+        "Variable", "NodeBoxError", 
         ]
 
 DEFAULT_WIDTH, DEFAULT_HEIGHT = 500, 500
@@ -139,10 +139,11 @@ def _save():
 def _restore():
     NSGraphicsContext.currentContext().restoreGraphicsState()
 
-class NodeBoxError(Exception): pass
+def trim_zeroes(func):
+    # a handy decorator for tidying up numbers in repr strings
+    return lambda slf: re.sub(r'\.?0+(?=[,\)])', '', func(slf))
 
 class Point(object):
-
     def __init__(self, *args):
         if len(args) == 2:
             self.x, self.y = args
@@ -154,6 +155,7 @@ class Point(object):
             badcoords = "Wrong initializer for Point object"
             raise NodeBoxError(badcoords)
 
+    @trim_zeroes
     def __repr__(self):
         return "Point(x=%.3f, y=%.3f)" % (self.x, self.y)
         
@@ -163,6 +165,42 @@ class Point(object):
         
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __iter__(self):
+        # allow for assignments like: x,y = Point()
+        return iter([self.x, self.y])
+
+class Size(tuple):
+    def __new__(cls, width, height):
+        this = tuple.__new__(cls, (width, height))
+        for attr in ('w','width'): setattr(this, attr, width)
+        for attr in ('h','height'): setattr(this, attr, height)
+        return this
+
+    @trim_zeroes
+    def __repr__(self):
+        return 'Size(width=%.3f, height=%.3f)'%self
+
+class Region(tuple):
+    # Bug?: maybe this actually needs to be mutable...
+    def __new__(cls, x=0, y=0, w=0, h=0, **kwargs):
+        try: # accept a pair of 2-tuples as origin/size
+            (x,y), (width,height) = x,y
+        except TypeError:
+            # accept both w/h and width/height spellings
+            width = kwargs.get('width', w)
+            height = kwargs.get('height', h)
+        this = tuple.__new__(cls, [(x,y), (width, height)])
+        for nm in ('x','y','width','height'):
+            if nm[1:]: setattr(this, nm[0], locals()[nm])
+            setattr(this, nm, locals()[nm])
+        this.origin = Point(x,y)
+        this.size = Size(width, height)
+        return this
+
+    @trim_zeroes
+    def __repr__(self):
+        return 'Region(x=%.3f, y=%.3f, w=%.3f, h=%.3f)'%(self[0]+self[1])
 
 class Grob(object):
     """A GRaphic OBject is the base class for all DrawingPrimitives."""
@@ -392,11 +430,10 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
 
     def _get_bounds(self):
         try:
-            return self._nsBezierPath.bounds()
+            return Region(*self._nsBezierPath.bounds())
         except:
             # Path is empty -- no bounds
-            return (0,0) , (0,0)
-
+            return Region()
     bounds = property(_get_bounds)
 
     def contains(self, x, y):
@@ -623,6 +660,7 @@ class PathElement(object):
             self.ctrl1 = Point()
             self.ctrl2 = Point()
 
+    @trim_zeroes
     def __repr__(self):
         if self.cmd == MOVETO:
             return "PathElement(MOVETO, ((%.3f, %.3f),))" % (self.x, self.y)
@@ -753,6 +791,7 @@ class Color(object):
         self._cmyk = clr.colorUsingColorSpaceName_(NSDeviceCMYKColorSpace)
         self._rgb = clr.colorUsingColorSpaceName_(NSDeviceRGBColorSpace)
 
+    @trim_zeroes
     def __repr__(self):
         return "%s(%.3f, %.3f, %.3f, %.3f)" % (self.__class__.__name__, self.red,
                 self.green, self.blue, self.alpha)
@@ -1145,7 +1184,7 @@ class Image(Grob, TransformMixin):
         return new
 
     def getSize(self):
-        return self._nsImage.size()
+        return Size(*self._nsImage.size())
 
     size = property(getSize)
 
@@ -1347,7 +1386,7 @@ class Text(Grob, TransformMixin, ColorMixin):
         layoutManager, textContainer, textStorage = self._getLayoutManagerTextContainerTextStorage()
         glyphRange = layoutManager.glyphRangeForTextContainer_(textContainer)
         (dx, dy), (w, h) = layoutManager.boundingRectForGlyphRange_inTextContainer_(glyphRange, textContainer)
-        return w,h
+        return Size(w,h)
 
     @property
     def path(self):
@@ -1445,6 +1484,7 @@ class Variable(object):
             return True
         return False
 
+    @trim_zeroes
     def __repr__(self):
         return "Variable(name=%s, type=%s, default=%s, min=%s, max=%s, value=%s)" % (self.name, self.type, self.default, self.min, self.max, self.value)
 
