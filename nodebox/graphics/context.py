@@ -1,14 +1,14 @@
+import types
 from contextlib import contextmanager
 from AppKit import *
 from nodebox.graphics.grobs import *
-from nodebox.graphics import grobs
-from nodebox.util import _copy_attr
+from nodebox.util.foundry import *
+from nodebox.graphics import grobs, typography
+from nodebox.util import _copy_attr, foundry
 import nodebox.geo
 
 
-
 class Context(object):
-    
     KEY_UP = grobs.KEY_UP
     KEY_DOWN = grobs.KEY_DOWN
     KEY_LEFT = grobs.KEY_LEFT
@@ -25,6 +25,13 @@ class Context(object):
         which is a hack to keep the WIDTH and HEIGHT properties updated.
         Python's getattr only looks up property values once: at assign time."""
 
+        # all the grobs.* & typography.* classes need a reference to this parent context.
+        # create subclasses for each of them with a curried call to __init__, swapping
+        # `self` in for the ctx arg they all expect in the 0th position. Assign an
+        # instance method for each of the classes that calls the proper constructor
+        for name, meth in self._contextualizedGrobs():
+            setattr(self, name, meth)
+
         if canvas is None:
             canvas = Canvas()
         if ns is None:
@@ -39,6 +46,32 @@ class Context(object):
 
         # cache a list of all of the exportable attr names (for use when making namespaces)
         self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_') or a.endswith('_')))
+
+    def _contextualizedGrobs(self):
+        from inspect import getargspec, formatargspec as fspec
+        modules = dict(
+            grobs=[getattr(grobs, c) for c in ("BezierPath", "ClippingPath", "Color", "Image", "Text", "TransformContext")],
+            typography=[getattr(typography, c) for c in ("Font", "Family")]
+        )
+        for mod, classes in modules.items():
+            for klazz in classes:
+                # create a method with the name of the target class and make sure it has
+                # the same args and docstring.
+                # 
+                # eval is evil, but so is presenting an argspec of (self, *args, **kwargs)...
+                name, init = klazz.__name__, klazz.__init__
+                def_spec = getargspec(init)
+                call_spec = fspec(*def_spec._replace(args=def_spec.args[1:], defaults=None))
+                wrap_spec = fspec(*def_spec._replace(args=['self']+def_spec.args[2:]))
+                fmt = dict(wrap=wrap_spec, call=call_spec, doc=init.__doc__ or '', 
+                           meth=name, grob=mod+'.'+name, )
+                defdef = '''def %(meth)s%(wrap)s:
+                  """%(doc)s"""
+                  return %(grob)s%(call)s\n''' % fmt
+                # print defdef
+                ns = dict(ctx=self, grobs=grobs, typography=typography)
+                exec defdef in ns
+                yield fmt['meth'], types.MethodType(ns[fmt['meth']], self, Context)
 
 
     def _saveContext(self):
@@ -140,27 +173,6 @@ class Context(object):
             if v.name == name:
                 return v
         return None
-
-    ### Objects (whose contexts are set to this Context instance) ###
-
-    def BezierPath(self, *args, **kwargs):
-        return BezierPath(self, *args, **kwargs)
-    def ClippingPath(self, *args, **kwargs):
-        return ClippingPath(self, *args, **kwargs)
-    def Rect(self, *args, **kwargs):
-        return Rect(self, *args, **kwargs)
-    def Oval(self, *args, **kwargs):
-        return Oval(self, *args, **kwargs)
-    def Color(self, *args, **kwargs):
-        return Color(self, *args, **kwargs)
-    def Image(self, *args, **kwargs):
-        return Image(self, *args, **kwargs)
-    def Font(self, *args, **kwargs):
-        return Font(self, *args, **kwargs)
-    def Text(self, *args, **kwargs):
-        return Text(self, *args, **kwargs)
-    def TransformContext(self, *args, **kwargs):
-        return grobs.TransformContext(self, *args, **kwargs)
 
     ### Primitives ###
 
@@ -522,13 +534,33 @@ class Context(object):
 
     ### Font Commands ###
 
-    def font(self, *family_size_and_weight, **traits):
-        return self.Font(*family_size_and_weight, **traits)._use()
+    def font(self, *args, **kwargs):
+        """Set the current font to be used in subsequent calls to text()"""
+        return self.Font(*args, **kwargs)._use()
 
     def fontsize(self, fontsize=None):
         if fontsize is not None:
             self._fontsize = fontsize
         return self._fontsize
+
+    def fonts(self, like=None, western=True):
+        """Returns a list of all fonts installed on the system (with filtering capabilities)
+
+        If `like` is a string, only fonts whose names contain those characters will be returned.
+
+        If `western` is True (the default), fonts with non-western character sets will be omitted.
+        If False, only non-western fonts will be returned.
+        """
+        all_fams = family_names()
+        if like:
+            all_fams = [name for name in all_fams if sanitized(like) in sanitized(name)]
+
+        representatives = {fam:family_members(fam, names=True)[0] for fam in all_fams}
+        in_region = {fam:font_encoding(fnt)=="MacOSRoman" for fam,fnt in representatives.items()}
+        if not western:
+            in_region = {fam:not macroman for fam,macroman in in_region.items()}
+
+        return [self.Family(fam) for fam in all_fams if in_region[fam]]
 
     def lineheight(self, lineheight=None):
         if lineheight is not None:
@@ -717,3 +749,4 @@ class Canvas(Grob):
         data = self._getImageData(format)
         fname = NSString.stringByExpandingTildeInPath(fname)
         data.writeToFile_atomically_(fname, False)
+
