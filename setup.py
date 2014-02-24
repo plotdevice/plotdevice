@@ -73,7 +73,7 @@ ext_modules = [
     Extension('cGeo', ['libs/cGeo/cGeo.c'], **quiet),
     Extension('cPathmatics', ['libs/pathmatics/pathmatics.c'], **quiet),
     Extension('cPolymagic', ['libs/polymagic/gpc.c', 'libs/polymagic/polymagic.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation'], **quiet),
-    Extension('cIO', ['libs/IO/module.m','libs/IO/Installer.m', 'libs/IO/ImageSequence.m', 'libs/IO/AnimatedGif.m', 'libs/IO/Video.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation', '-framework', 'Security', '-framework', 'AVFoundation', '-framework', 'CoreMedia', '-framework', 'CoreVideo'], **quiet),
+    Extension('cIO', ['libs/IO/module.m','libs/IO/SysAdmin.m', 'libs/IO/ImageSequence.m', 'libs/IO/AnimatedGif.m', 'libs/IO/Video.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation', '-framework', 'Security', '-framework', 'AVFoundation', '-framework', 'CoreMedia', '-framework', 'CoreVideo'], **quiet),
     Extension('cEvents', ['libs/macfsevents/_fsevents.c', 'libs/macfsevents/compat.c'], extra_link_args = ["-framework","CoreFoundation", "-framework","CoreServices"], **quiet),
 ]
 
