@@ -8,6 +8,8 @@ from collections import namedtuple, Counter, OrderedDict as odict, defaultdict a
 from AppKit import *
 from Foundation import *
 
+from nodebox import NodeBoxError
+
 __all__ = ["standardized", "sanitized", "fammy", "facey", "widthy", "weighty",
            "font_exists", "font_family", "font_encoding", "font_face",
            "family_names", "family_name", "family_members", "Face"]
@@ -94,6 +96,8 @@ def family_name(word):
         # look for whole substring
         if sanitized(q) in sanitized(m):
             return m
+        # bug: this means 'univers' will match 'Univers LT Std' even though "Univers Next" is comparable....
+        #      should only accept it if it's not `really' ambiguous (i.e. len(q in matches)==1)
     
     word_bits = set(word.lower().split(' '))
     for m in matches:
@@ -364,4 +368,3 @@ def parse_display_name(dname):
 
     return weight, wgt_val, width, wid_val, variant
 
-class NodeBoxError(Exception): pass

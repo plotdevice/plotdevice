@@ -69,3 +69,6 @@ def initialize(mode='headless'):
     # print python exceptions to the console rather than silently failing
     import objc
     objc.setVerbose(True) 
+
+class NodeBoxError(Exception): 
+    pass

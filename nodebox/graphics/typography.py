@@ -4,6 +4,7 @@ from nodebox.util import odict, ddict
 from AppKit import *
 from Foundation import *
 
+from nodebox import NodeBoxError
 from nodebox.util.foundry import *
 
 class Font(object):
@@ -358,9 +359,6 @@ class Family(object):
         if wval in w_vals:
             wname = w_names[w_vals.index(wval)]
         return wname, wval
-
-class NodeBoxError(Exception): pass
-
 
 if __name__=='__main__':
     test()
