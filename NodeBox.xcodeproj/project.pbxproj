@@ -64,6 +64,7 @@
 		2AE5AD2E1862387200CCDD45 /* widgets.py in Copy nodebox.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD2C1862386400CCDD45 /* widgets.py */; };
 		2AE5AD80186249F300CCDD45 /* listener.py in Copy nodebox.run */ = {isa = PBXBuildFile; fileRef = 2AE5AD7E186249E100CCDD45 /* listener.py */; };
 		2AEE843C18B3285F00CF91D4 /* foundry.py in Copy nodebox.util */ = {isa = PBXBuildFile; fileRef = 2AEE843A18B3285600CF91D4 /* foundry.py */; };
+		2AEE846218B96C2F00CF91D4 /* typography.py in Copy nodebox.graphics */ = {isa = PBXBuildFile; fileRef = 2AEE846018B96C2000CF91D4 /* typography.py */; };
 		611CC49810BA8B9E00B55455 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48110BA8B9E00B55455 /* Credits.rtf */; };
 		611CC49C10BA8B9E00B55455 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48910BA8B9E00B55455 /* InfoPlist.strings */; };
 		611CC4A110BA8B9E00B55455 /* NodeBox.icns in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49310BA8B9E00B55455 /* NodeBox.icns */; };
@@ -229,6 +230,7 @@
 				611CC58410BA8FD700B55455 /* bezier.py in Copy nodebox.graphics */,
 				2A294480185E596200E9F650 /* context.py in Copy nodebox.graphics */,
 				2A294481185E596800E9F650 /* grobs.py in Copy nodebox.graphics */,
+				2AEE846218B96C2F00CF91D4 /* typography.py in Copy nodebox.graphics */,
 			);
 			name = "Copy nodebox.graphics";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -298,6 +300,8 @@
 		2AE5AD2C1862386400CCDD45 /* widgets.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = widgets.py; sourceTree = "<group>"; };
 		2AE5AD7E186249E100CCDD45 /* listener.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = listener.py; sourceTree = "<group>"; };
 		2AEE843A18B3285600CF91D4 /* foundry.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = foundry.py; sourceTree = "<group>"; };
+		2AEE843D18B5603900CF91D4 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
+		2AEE846018B96C2000CF91D4 /* typography.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = typography.py; sourceTree = "<group>"; };
 		611CC48210BA8B9E00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = English; path = English.lproj/Credits.rtf; sourceTree = "<group>"; };
 		611CC48A10BA8B9E00B55455 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		611CC49310BA8B9E00B55455 /* NodeBox.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = NodeBox.icns; path = Resources/NodeBox.icns; sourceTree = "<group>"; };
@@ -327,11 +331,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */,
-				2A15C42D18A1FA14006BDFF0 /* WebKit.framework in Frameworks */,
-				2A591FF0185C17D200D1833D /* Security.framework in Frameworks */,
 				2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */,
 				2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */,
 				2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */,
+				2A15C42D18A1FA14006BDFF0 /* WebKit.framework in Frameworks */,
+				2A591FF0185C17D200D1833D /* Security.framework in Frameworks */,
 				8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -438,6 +442,7 @@
 		2A37F4C3FDCFA73011CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2AEE843D18B5603900CF91D4 /* CoreText.framework */,
 				2A15C42C18A1FA14006BDFF0 /* WebKit.framework */,
 				2A591FEF185C17D200D1833D /* Security.framework */,
 				2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */,
@@ -506,6 +511,7 @@
 				611CC4C010BA8C1B00B55455 /* bezier.py */,
 				2A29447C185E595000E9F650 /* context.py */,
 				2A29447D185E595000E9F650 /* grobs.py */,
+				2AEE846018B96C2000CF91D4 /* typography.py */,
 			);
 			path = graphics;
 			sourceTree = "<group>";
