@@ -7,7 +7,6 @@ from nodebox.graphics import grobs, typography
 from nodebox.util import _copy_attr, foundry
 import nodebox.geo
 
-
 class Context(object):
     KEY_UP = grobs.KEY_UP
     KEY_DOWN = grobs.KEY_DOWN
@@ -71,6 +70,9 @@ class Context(object):
                 # print defdef
                 ns = dict(ctx=self, grobs=grobs, typography=typography)
                 exec defdef in ns
+                # hmm. so `class methods' really could just be hooked onto the method
+                # before attaching it to the context...
+                # ns[fmt['meth']].classmeth = lambda: 'hello user'
                 yield fmt['meth'], types.MethodType(ns[fmt['meth']], self, Context)
 
 
@@ -624,7 +626,7 @@ class Context(object):
     def imagesize(self, path, data=None):
         img = self.Image(path, data=data)
         return img.size
-        
+
     ### Canvas proxy ###
     
     def save(self, fname, format=None):
@@ -635,6 +637,25 @@ class Context(object):
     @property
     def geo(self):
         return nodebox.geo
+
+    def measure(self, obj, width=None, height=None, **kwargs):
+        """Returns a Size tuple for graphics objects, text, or file objects pointing to images"""
+        if isinstance(obj, basestring):
+            txt = self.Text(obj, 0, 0, width, height, **kwargs)
+            txt.inheritFromContext(kwargs.keys())
+            return txt.metrics
+        elif isinstance(obj, file):
+            return self.Image(data=obj.read()).size
+        elif isinstance(obj, Text):
+            return obj.metrics()
+        elif isinstance(obj, Image):
+            return obj.getSize()
+        elif isinstance(obj, BezierPath):
+            return obj.bounds.size
+        else:
+            badtype = "measure() can only handle Text, Images, BezierPaths, and file() objects (got %s)"%type(obj)
+            raise NodeBoxError(badtype)
+        
 
 class _PDFRenderView(NSView):
     
@@ -749,4 +770,3 @@ class Canvas(Grob):
         data = self._getImageData(format)
         fname = NSString.stringByExpandingTildeInPath(fname)
         data.writeToFile_atomically_(fname, False)
-
