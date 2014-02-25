@@ -1,7 +1,7 @@
 import types
 from contextlib import contextmanager
 from AppKit import *
-from nodebox.graphics.typography import DEFAULT
+from nodebox.graphics.typography import *
 from nodebox.graphics.grobs import *
 from nodebox.util.foundry import *
 from nodebox.graphics import grobs, typography
@@ -48,10 +48,11 @@ class Context(object):
         self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_') or a.endswith('_')))
 
     def _contextualizedGrobs(self):
+
         from inspect import getargspec, formatargspec as fspec
         modules = dict(
-            grobs=[getattr(grobs, c) for c in ("BezierPath", "ClippingPath", "Color", "Image", "Text", "TransformContext")],
-            typography=[getattr(typography, c) for c in ("Font", "Family", "Stylesheet")]
+            grobs=[getattr(grobs, c) for c in ("BezierPath", "ClippingPath", "Color", "Image", "TransformContext")],
+            typography=[getattr(typography, c) for c in ("Text", "Family", "Font", "Stylesheet")]
         )
         for mod, classes in modules.items():
             for klazz in classes:

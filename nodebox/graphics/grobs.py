@@ -26,12 +26,11 @@ __all__ = [
         "DEGREES", "RADIANS", "PERCENT",
         "MOVETO", "LINETO", "CURVETO", "CLOSE",
         "MITER", "ROUND", "BEVEL", "BUTT", "SQUARE",
-        "LEFT", "RIGHT", "CENTER", "JUSTIFY",
         "NORMAL","FORTYFIVE",
         "NUMBER", "TEXT", "BOOLEAN","BUTTON",
         "Point", "Size", "Region",
         "Grob", "BezierPath", "PathElement", "ClippingPath", # "Rect", "Oval", 
-        "Color", "Transform", "Image", "Text", 
+        "Color", "Transform", "Image", 
         "Variable", "NodeBoxError", 
         ]
 
@@ -82,18 +81,6 @@ _CAPSTYLE=dict(
     butt = NSButtLineCapStyle,
     round = NSRoundLineCapStyle,
     square = NSSquareLineCapStyle,
-)
-
-# text alignments
-LEFT = "left"
-RIGHT = "right"
-CENTER = "center"
-JUSTIFY = "justify"
-_TEXT=dict(
-    left = NSLeftTextAlignment,
-    right = NSRightTextAlignment,
-    center = NSCenterTextAlignment,
-    justify = NSJustifiedTextAlignment
 )
 
 # arrow styles
@@ -960,7 +947,7 @@ class Color(object):
         if r == 1.0: return lst
         return [v / r for v in lst]
 
-color = Color
+color = Color # hmmmmm... is this here for good or ill?
 
 class TransformContext(object):
     """Performs the setup/cleanup for a `with transform()` block (and changes the mode)"""
@@ -1292,141 +1279,6 @@ class Image(Grob, TransformMixin):
                 self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), srcRect, NSCompositeSourceOver, self.alpha)
             _restore()
 
-class Text(Grob, TransformMixin, ColorMixin):
-
-    stateAttributes = ('_transform', '_transformmode', '_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight')
-    kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight')
-
-    __dummy_color = NSColor.blackColor()
-    
-    def __init__(self, ctx, text, x=0, y=0, width=None, height=None, **kwargs):
-        super(Text, self).__init__(ctx)
-        TransformMixin.__init__(self)
-        ColorMixin.__init__(self, **kwargs)
-        self.text = unicode(text)
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self._fontname = kwargs.get('font', "Helvetica")
-        self._fontsize = kwargs.get('fontsize', 24)
-        self._lineheight = max(kwargs.get('lineheight', 1.2), 0.01)
-        self._align = kwargs.get('align', NSLeftTextAlignment)
-
-    def copy(self):
-        new = self.__class__(self._ctx, self.text)
-        _copy_attrs(self, new,
-            ('x', 'y', 'width', 'height', '_transform', '_transformmode', 
-            '_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight'))
-        return new
-
-    @property
-    def font(self):
-        return NSFont.fontWithName_size_(self._fontname, self._fontsize)
-
-    def _getLayoutManagerTextContainerTextStorage(self, clr=__dummy_color):
-        paraStyle = NSMutableParagraphStyle.alloc().init()
-        paraStyle.setAlignment_(_TEXT[self._align])
-        paraStyle.setLineBreakMode_(NSLineBreakByWordWrapping)
-        paraStyle.setLineHeightMultiple_(self._lineheight)
-
-        dict = {NSParagraphStyleAttributeName:paraStyle,
-                NSForegroundColorAttributeName:clr,
-                NSFontAttributeName:self.font}
-
-        textStorage = NSTextStorage.alloc().initWithString_attributes_(self.text, dict)
-        try:
-            textStorage.setFont_(self.font)
-        except ValueError:
-            nofont = "Text.draw(): font '%s' not available.\n" % self._fontname
-            raise NodeBoxError(nofont)
-            return
-
-        layoutManager = NSLayoutManager.alloc().init()
-        textContainer = NSTextContainer.alloc().init()
-        if self.width != None:
-            textContainer.setContainerSize_((self.width,1000000))
-            textContainer.setWidthTracksTextView_(False)
-            textContainer.setHeightTracksTextView_(False)
-        layoutManager.addTextContainer_(textContainer)
-        textStorage.addLayoutManager_(layoutManager)
-        return layoutManager, textContainer, textStorage
-
-    def _draw(self):
-        if self._fillcolor is None: return
-        layoutManager, textContainer, textStorage = self._getLayoutManagerTextContainerTextStorage(self._fillcolor.nsColor)
-        x,y = self.x, self.y
-        glyphRange = layoutManager.glyphRangeForTextContainer_(textContainer)
-        (dx, dy), (w, h) = layoutManager.boundingRectForGlyphRange_inTextContainer_(glyphRange, textContainer)
-        preferredWidth, preferredHeight = textContainer.containerSize()
-        if self.width is not None:
-            if self._align == RIGHT:
-                x += preferredWidth - w
-            elif self._align == CENTER:
-                x += preferredWidth/2 - w/2
-
-        _save()
-        # Center-mode transforms: translate to image center
-        if self._transformmode == CENTER:
-            deltaX = w / 2
-            deltaY = h / 2
-            t = Transform()
-            t.translate(x+deltaX, y-self.font.defaultLineHeightForFont()+deltaY)
-            t.concat()
-            self._transform.concat()
-            layoutManager.drawGlyphsForGlyphRange_atPoint_(glyphRange, (-deltaX-dx,-deltaY-dy))
-        else:
-            self._transform.concat()
-            layoutManager.drawGlyphsForGlyphRange_atPoint_(glyphRange, (x-dx,y-dy-self.font.defaultLineHeightForFont()))
-        _restore()
-        return (w, h)
-
-    @property
-    def metrics(self):
-        layoutManager, textContainer, textStorage = self._getLayoutManagerTextContainerTextStorage()
-        glyphRange = layoutManager.glyphRangeForTextContainer_(textContainer)
-        (dx, dy), (w, h) = layoutManager.boundingRectForGlyphRange_inTextContainer_(glyphRange, textContainer)
-        return Size(w,h)
-
-    @property
-    def path(self):
-        layoutManager, textContainer, textStorage = self._getLayoutManagerTextContainerTextStorage()
-        x, y = self.x, self.y
-        glyphRange = layoutManager.glyphRangeForTextContainer_(textContainer)
-        (dx, dy), (w, h) = layoutManager.boundingRectForGlyphRange_inTextContainer_(glyphRange, textContainer)
-        preferredWidth, preferredHeight = textContainer.containerSize()
-        if self.width is not None:
-           if self._align == RIGHT:
-               x += preferredWidth - w
-           elif self._align == CENTER:
-               x += preferredWidth/2 - w/2
-        length = layoutManager.numberOfGlyphs()
-        path = NSBezierPath.bezierPath()
-        for glyphIndex in range(length):
-            lineFragmentRect = layoutManager.lineFragmentRectForGlyphAtIndex_effectiveRange_(glyphIndex, None)
-            # HACK: PyObjc 2.0 and 2.2 are subtly different:
-            #  - 2.0 (bundled with OS X 10.5) returns one argument: the rectangle.
-            #  - 2.2 (bundled with OS X 10.6) returns two arguments: the rectangle and the range.
-            # So we check if we got one or two arguments back (in a tuple) and unpack them.
-            if isinstance(lineFragmentRect, tuple):
-                lineFragmentRect = lineFragmentRect[0]
-            layoutPoint = layoutManager.locationForGlyphAtIndex_(glyphIndex)
-            # Here layoutLocation is the location (in container coordinates) where the glyph was laid out. 
-            finalPoint = [lineFragmentRect[0][0],lineFragmentRect[0][1]]
-            finalPoint[0] += layoutPoint[0] - dx
-            finalPoint[1] += layoutPoint[1] - dy
-            g = layoutManager.glyphAtIndex_(glyphIndex)
-            if g == 0: continue
-            path.moveToPoint_((finalPoint[0], -finalPoint[1]))
-            path.appendBezierPathWithGlyph_inFont_(g, self.font)
-            path.closePath()
-        path = BezierPath(self._ctx, path)
-        trans = Transform()
-        trans.translate(x,y-self.font.defaultLineHeightForFont())
-        trans.scale(1.0,-1.0)
-        path = trans.transformBezierPath(path)
-        path.inheritFromContext()
-        return path
     
 class Variable(object):
     def __init__(self, name, type, default=None, min=0, max=100, value=None):
