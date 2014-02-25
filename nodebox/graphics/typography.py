@@ -1,5 +1,5 @@
 # encoding: utf-8
-import xml.parsers.expat
+from xml.parsers import expat
 from operator import itemgetter, attrgetter
 from nodebox.util import odict, ddict
 from AppKit import *
@@ -14,34 +14,60 @@ from nodebox.util.foundry import *
 DEFAULT = '_p_l_o_t_d_e_v_i_c_e_'
 
 class Typesetter(object):
-    _expat = xml.parsers.expat.ParserCreate()
-    
+    _expat = expat.ParserCreate()
+    _log = 0
+
     @classmethod
-    def render(cls, ctx, txt, stylesheet):
-        cls._log = 0
-        cls.stack = []
-        cls.cursor = 0
-        cls.runs = ddict(list)
-        cls.body = []
+    def render(cls, ctx, txt, styles):
+
+        # don't bother parsing if the necessary tag characters aren't there
+        if not set(txt) >= set(u'</>'):
+            attrs = styles._cascade(DEFAULT)
+            if isinstance(txt, str):
+                txt = txt.decode('utf-8')
+            return NSMutableAttributedString.alloc().initWithString_attributes_(txt, attrs)
+
         if isinstance(txt, unicode):
             txt = txt.encode('utf-8')
         wrap = "<%s>" % ">%s</".join([DEFAULT]*2)
         xml = wrap % txt
+        try:
+            cls.stack = []
+            cls.cursor = 0
+            cls.runs = ddict(list)
+            cls.body = []
+            cls._expat.Parse(xml)
+        except expat.ExpatError, e:
+            # go a little overboard providing context for syntax errors
+            measure = 80
+            line = xml.split('\n')[e.lineno-1]
+            col = e.offset
 
-        cls._expat.Parse(xml)
-        print "using", stylesheet,"|", stylesheet._default
+            if line.startswith('<%s>'%DEFAULT):
+                line = line[len('<%s>'%DEFAULT):]
+                col -= len('<%s>'%DEFAULT)
+            if line.endswith('</%s>'%DEFAULT):
+                line = line[:-len('</%s>'%DEFAULT)]
+
+            snippet = line
+            if col>measure:
+                snippet = snippet[col-measure:]
+                col -= col-measure
+
+            snippet = snippet[:col+12]
+            if not line.endswith(snippet):
+                snippet = snippet+'...'
+            if not line.startswith(snippet):
+                snippet = '...'+snippet
+                col+=3
+            caret = ' '*col + '^'
+            msg = 'Text: ' + "\n".join(e.args)
+            stack = 'stack: ' + " ".join(['<%s>'%tag for tag in cls.stack[1:]]) + ' ...'
+            xmlfail = "\n".join([msg, snippet, caret, stack])
+            raise NodeBoxError(xmlfail)
 
         # generate a Font for each unique cascade of style tags
-        attrs = {}
-        default = stylesheet._default # basis face/size/color
-        for cascade in sorted(cls.runs):
-            spec = dict(default)
-            for tag in cascade:
-                spec.update(stylesheet[tag] or {})
-
-            color = spec.pop('color').nsColor
-            font = Font(ctx, **spec)
-            attrs[cascade] = {"NSFont":font._nsFont, "NSColor":color}
+        attrs = {seq:styles._cascade(*seq) for seq in sorted(cls.runs)}
 
         # convert the Fonts into attr dicts then apply them to the runs found in the parse
         astr = NSMutableAttributedString.alloc().initWithString_(cls.body)
@@ -79,13 +105,15 @@ Typesetter._expat.EndElementHandler = Typesetter.end_element
 Typesetter._expat.CharacterDataHandler = Typesetter.char_data
 
 class Stylesheet(object):
-    def __init__(self, ctx, styles=None, base=None):
+    def __init__(self, ctx, styles=None):
         self._ctx = ctx
-        self._base = base or None
         self._styles = styles or {}
 
     def __repr__(self):
-        return "Stylesheet%r"%self._styles
+        styles = repr({k.replace(DEFAULT,'DEFAULT'):v for k,v in self._styles.items() if k is not DEFAULT})
+        if DEFAULT in self._styles:
+            styles = '{DEFAULT: %r, '%self._styles[DEFAULT] + styles[1:]
+        return "Stylesheet(%s)"%(styles)
 
     def __iter__(self):
         return iter(self._styles.keys())
@@ -110,22 +138,26 @@ class Stylesheet(object):
         if key in self._styles:
             del self._styles[key]
 
-    def default(self, *args, **kwargs):
-        if not kwargs and any(sanitized(a) in (None,'inherit') for a in args):
-            self._base = None
-        elif args or kwargs:
-            self._base = Font._spec(*args, **kwargs)
-        return 'inherit' if self._base is None else dict(self._base)
+    def _cascade(self, *styles):
+        """Apply the listed styles in order and return nsattibutedstring attrs"""
+        
+        # use the context's font and color settings unless the DEFAULT style has overrides
+        spec = {"face":self._ctx._fontname, "size":self._ctx._fontsize, "color":self._ctx._fillcolor}
+        spec.update(self._styles.get(DEFAULT,{}))
+
+        # layer the styles to generate a final font and color
+        for tag in styles:
+            spec.update(self._styles.get(tag,{}))
+        color = spec.pop('color').nsColor
+        font = Font(self._ctx, **spec)
+        return {"NSFont":font._nsFont, "NSColor":color}
 
     @property
-    def _default(self):
-        inherit = {"face":self._ctx._fontname, "size":self._ctx._fontsize, "color":self._ctx._fillcolor}
-        if self._base:
-            inherit.update(self._base)
-        return inherit
+    def styles(self):
+        return dict(self._styles)
 
     def style(self, name, *args, **kwargs):
-        if not kwargs and any(a is None for a in args[:1]):
+        if not kwargs and any(a in (None,'inherit') for a in args[:1]):
             del self[name]
         elif args or kwargs:
             color = kwargs.pop('color', None)
@@ -140,7 +172,7 @@ class Stylesheet(object):
         return self[name]
 
     def test(self, txt):
-        Typesetter.render(self._ctx, txt, self)
+        print Typesetter.render(self._ctx, txt, self)
 
 class Font(object):
     kwargs = ('family','size','weight','width','variant','italic','heavier','lighter','face','fontname','fontsize')

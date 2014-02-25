@@ -602,9 +602,7 @@ class Context(object):
             It acts as a dictionary with all currently defined styles as its keys.
 
         """
-        if name is DEFAULT:
-            return self._stylesheet.default(*args, **kwargs)
-        elif name is None:
+        if name is None:
             return self._stylesheet
         else:
             return self._stylesheet.style(name, *args, **kwargs)
