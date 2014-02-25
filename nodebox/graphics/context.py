@@ -1,6 +1,7 @@
 import types
 from contextlib import contextmanager
 from AppKit import *
+from nodebox.graphics.typography import DEFAULT
 from nodebox.graphics.grobs import *
 from nodebox.util.foundry import *
 from nodebox.graphics import grobs, typography
@@ -50,7 +51,7 @@ class Context(object):
         from inspect import getargspec, formatargspec as fspec
         modules = dict(
             grobs=[getattr(grobs, c) for c in ("BezierPath", "ClippingPath", "Color", "Image", "Text", "TransformContext")],
-            typography=[getattr(typography, c) for c in ("Font", "Family")]
+            typography=[getattr(typography, c) for c in ("Font", "Family", "Stylesheet")]
         )
         for mod, classes in modules.items():
             for klazz in classes:
@@ -112,6 +113,7 @@ class Context(object):
         self._noImagesHint = False
         self._oldvars = self._vars
         self._vars = []
+        self._stylesheet = self.Stylesheet()
         self.canvas.background = self.Color(1.0)
         
     def ximport(self, libName):
@@ -485,7 +487,8 @@ class Context(object):
 
     ### Color Commands ###
 
-    color = Color
+    def color(self, *args):
+        return self.Color(*args)
     
     def colormode(self, mode=None, range=None):
         if mode is not None:
@@ -563,6 +566,48 @@ class Context(object):
             in_region = {fam:not macroman for fam,macroman in in_region.items()}
 
         return [self.Family(fam) for fam in all_fams if in_region[fam]]
+
+    def stylesheet(self, name=None, *args, **kwargs):
+        """Access the context's Stylesheet (used by the text() command to format marked-up strings)
+
+        The stylesheet() command allows for both reading and writing of the global state depending
+        on the number and style of arguments received:
+
+        stylesheet("stylename", ...)
+            To set a style, pass the desired tag name as the first argument, followed by any number of
+            arguments to specify the font. The argument format is identical to the font() command, e.g.:
+
+                stylesheet('foo', family="Avenir", italic=True)
+
+            now when you call the text command, you can use html-ish markup to use the style:
+
+            text("<foo>This is avenir oblique</foo> This is whatever the context's default font is", 0,0)
+
+            Ordinarily any text not contained within style tags will inherit its font from the context's
+            state (whatever the most recent font() call set it to). This can be useful if you define your
+            styles as modifications of that basic state rather than complete overrides of the face.
+
+            If you'd prefer to use a fixed style for 
+
+        stylesheet("stylename", None)
+           To delete a style, pass None along with the style name
+
+        stylesheet("stylename")
+            When called with a style name and no other arguments, returns a dictionary with the specification
+            for the style (or None if it doesn't exist). This dictionary is only a copy, to modify the style,
+            update
+
+        stylesheet()
+            With no arguments, returns the context's Stylesheet object for you to monkey with directly.
+            It acts as a dictionary with all currently defined styles as its keys.
+
+        """
+        if name is DEFAULT:
+            return self._stylesheet.default(*args, **kwargs)
+        elif name is None:
+            return self._stylesheet
+        else:
+            return self._stylesheet.style(name, *args, **kwargs)
 
     def lineheight(self, lineheight=None):
         if lineheight is not None:

@@ -1,11 +1,146 @@
 # encoding: utf-8
+import xml.parsers.expat
 from operator import itemgetter, attrgetter
 from nodebox.util import odict, ddict
 from AppKit import *
 from Foundation import *
 
+from pprint import pprint
+
 from nodebox import NodeBoxError
+from nodebox.graphics.grobs import Color
 from nodebox.util.foundry import *
+
+DEFAULT = '_p_l_o_t_d_e_v_i_c_e_'
+
+class Typesetter(object):
+    _expat = xml.parsers.expat.ParserCreate()
+    
+    @classmethod
+    def render(cls, ctx, txt, stylesheet):
+        cls._log = 0
+        cls.stack = []
+        cls.cursor = 0
+        cls.runs = ddict(list)
+        cls.body = []
+        if isinstance(txt, unicode):
+            txt = txt.encode('utf-8')
+        wrap = "<%s>" % ">%s</".join([DEFAULT]*2)
+        xml = wrap % txt
+
+        cls._expat.Parse(xml)
+        print "using", stylesheet,"|", stylesheet._default
+
+        # generate a Font for each unique cascade of style tags
+        attrs = {}
+        default = stylesheet._default # basis face/size/color
+        for cascade in sorted(cls.runs):
+            spec = dict(default)
+            for tag in cascade:
+                spec.update(stylesheet[tag] or {})
+
+            color = spec.pop('color').nsColor
+            font = Font(ctx, **spec)
+            attrs[cascade] = {"NSFont":font._nsFont, "NSColor":color}
+
+        # convert the Fonts into attr dicts then apply them to the runs found in the parse
+        astr = NSMutableAttributedString.alloc().initWithString_(cls.body)
+        for cascade, runs in cls.runs.items():
+            style = attrs[cascade]
+            for rng in runs:
+                astr.setAttributes_range_(style, rng)
+        return astr
+
+    @classmethod
+    def log(cls, s=u'', indent=0):
+        if not cls._log: return
+        if indent<0: cls._log-=1
+        msg = (u'  '*cls._log)+(s if s.startswith('<') else repr(s))
+        print msg.encode('utf-8')
+        if indent>0: cls._log+=1
+    @classmethod
+    def start_element(cls, name, attrs):
+        cls.stack.append(name)
+        cls.log(u'<%s>'%(name), indent=1)
+    @classmethod
+    def end_element(cls, name):
+        if name == DEFAULT: 
+            cls.body = u"".join(cls.body)
+        cls.stack.pop()
+        cls.log(u'</%s>'%(name), indent=-1)
+    @classmethod
+    def char_data(cls, data):
+        cls.runs[tuple(cls.stack)].append(tuple([cls.cursor, len(data)]))
+        cls.cursor += len(data)
+        cls.body.append(data)
+        cls.log(u'"%s"'%(data))
+Typesetter._expat.StartElementHandler = Typesetter.start_element
+Typesetter._expat.EndElementHandler = Typesetter.end_element
+Typesetter._expat.CharacterDataHandler = Typesetter.char_data
+
+class Stylesheet(object):
+    def __init__(self, ctx, styles=None, base=None):
+        self._ctx = ctx
+        self._base = base or None
+        self._styles = styles or {}
+
+    def __repr__(self):
+        return "Stylesheet%r"%self._styles
+
+    def __iter__(self):
+        return iter(self._styles.keys())
+
+    def __len__(self):
+        return len(self._styles)
+
+    def __getitem__(self, key):
+        item = self._styles.get(key)
+        return dict(item) if item else None
+
+    def __setitem__(self, key, val):
+        if val is None:
+            del self[key]
+        elif hasattr(val, 'items'):
+            self.style(key, **val)
+        else:
+            badtype = 'Stylesheet: when directly assigning styles, pass them as dictionaries (not %s)'%type(val)
+            raise NodeBoxError(badtype)
+
+    def __delitem__(self, key):
+        if key in self._styles:
+            del self._styles[key]
+
+    def default(self, *args, **kwargs):
+        if not kwargs and any(sanitized(a) in (None,'inherit') for a in args):
+            self._base = None
+        elif args or kwargs:
+            self._base = Font._spec(*args, **kwargs)
+        return 'inherit' if self._base is None else dict(self._base)
+
+    @property
+    def _default(self):
+        inherit = {"face":self._ctx._fontname, "size":self._ctx._fontsize, "color":self._ctx._fillcolor}
+        if self._base:
+            inherit.update(self._base)
+        return inherit
+
+    def style(self, name, *args, **kwargs):
+        if not kwargs and any(a is None for a in args[:1]):
+            del self[name]
+        elif args or kwargs:
+            color = kwargs.pop('color', None)
+            spec = Font._spec(*args, **kwargs)
+            if color and not isinstance(color, Color):
+                if isinstance(color, basestring):
+                    color = (color,)
+                color = Color(self._ctx, *color)
+            if color:
+                spec['color'] = color
+            self._styles[name] = spec
+        return self[name]
+
+    def test(self, txt):
+        Typesetter.render(self._ctx, txt, self)
 
 class Font(object):
     kwargs = ('family','size','weight','width','variant','italic','heavier','lighter','face','fontname','fontsize')
@@ -16,9 +151,30 @@ class Font(object):
             eg = '"'+'", "'.join(badargs)+'"'
             badarg = 'Font: unknown keyword argument%s %s'%('' if len(badargs)==1 else 's', eg)
             raise NodeBoxError(badarg)
+        spec = self._spec(*args, **kwargs)
 
+        # initialize our internals based on the spec
+        self._ctx = ctx
+        if 'face' not in spec or any(arg not in ('face','size') for arg in spec):
+            # we only need to search if no face arg was supplied or if there are 
+            # style modifications to be applied on top of it
+            self._update_face(**spec)
+        else:
+            self._face = spec['face']
+        self._size = float(spec.get('size', ctx._fontsize))
+
+        # if a weight-modulation arg was included, step the weight
+        mod = kwargs.get('heavier', kwargs.get('lighter', 0))
+        mod = 1 if mod is True else mod
+        if kwargs.get('lighter'):
+            mod = -mod
+        if mod:
+            self.modulate(mod)
+
+    @classmethod
+    def _spec(cls, *args, **kwargs):
         # Gather specs from the args/kwargs and fill in the blanks from the global state
-        _spec = ('family','size','weight','italic','width','variant')
+        _spec = ('family','size','weight','italic','width','variant','color')
 
         # start with kwarg values as the canonical settings
         spec = {k:v for k,v in kwargs.items() if k in _spec}
@@ -29,21 +185,23 @@ class Font(object):
         # it into a Face tuple
         basis = kwargs.get('face', kwargs.get('fontname'))
         if isinstance(basis, basestring):
-            basis = font_face(basis)
+            basis = font_face(basis) # this will bomb out if the name is invalid
         if isinstance(basis, Face):
-            spec['basis'] = basis
+            spec['face'] = basis
+                
+
 
         # search the positional args for either name/size or a Font object
         # we want the kwargs to have higher priority, so setdefault everywhere...
         for item in args:
             if isinstance(item, Face):
-                spec.setdefault('basis', item)
+                spec.setdefault('face', item)
             if isinstance(item, Font):
-                spec.setdefault('basis', item._face)
+                spec.setdefault('face', item._face)
                 spec.setdefault('size', item._size)
             elif isinstance(item, basestring):
                 if facey(item):
-                    spec.setdefault('basis', item)
+                    spec.setdefault('face', item)
                 elif widthy(item):
                     spec.setdefault('width', item)
                 elif weighty(item):
@@ -54,22 +212,7 @@ class Font(object):
                     print 'No clue what to make of "%s"'%item
             elif isinstance(item, (int, float, long)):
                 spec.setdefault('size', item)
-
-        # initialize our internals based on the spec
-        self._ctx = ctx
-        if not basis or any(arg not in ('basis','size') for arg in spec):
-            self._update_face(**spec)
-        else:
-            self._face = spec['basis']
-        self._size = float(spec.get('size', ctx._fontsize))
-
-        # if a weight-modulation arg was included, step the weight
-        mod = kwargs.get('heavier', kwargs.get('lighter', 0))
-        mod = 1 if mod is True else mod
-        if kwargs.get('lighter'):
-            mod = -mod
-        if mod:
-            self.modulate(mod)
+        return spec
 
     def __enter__(self):
         if hasattr(self, '_prior'):
@@ -104,7 +247,7 @@ class Font(object):
 
     def _update_face(self, **spec):
         # use the basis kwarg (or this _face if omitted) as a starting point
-        basis = spec.get('basis', getattr(self,'_face', self._ctx._fontname))
+        basis = spec.get('face', getattr(self,'_face', self._ctx._fontname))
         if isinstance(basis, basestring):
             basis = font_face(basis)
 
@@ -117,7 +260,7 @@ class Font(object):
         # otherwise try to find the best match for the new attributes within either
         # the family in the spec, or the current family if omitted
         try:
-            spec['basis'] = basis
+            spec['face'] = basis
             fam = Family(self._ctx, spec.get('family', basis.family))
             candidates, scores = zip(*fam.select(spec).items())
             self._face = candidates[0]
@@ -132,6 +275,14 @@ class Font(object):
         self._prior = self._get_ctx()
         self._update_ctx()
         return self
+
+    @property
+    def _nsFont(self):
+        return NSFont.fontWithName_size_(self._face.psname, self._size)
+
+    @property
+    def _nsColor(self):
+        return self._ctx._fillcolor.nsColor
 
     # .name
     def _get_name(self):
@@ -296,7 +447,7 @@ class Family(object):
         return odict( (k,Font(self._ctx, v)) for k,v in self._faces.items())
 
     def select(self, spec):
-        current = spec.get('basis', self._ctx._fontname)
+        current = spec.get('face', self._ctx._fontname)
         if isinstance(current, basestring):
             current = font_face(current)
 
@@ -363,4 +514,4 @@ class Family(object):
 if __name__=='__main__':
     test()
 
-__all__ = ["Family", "Font"]
+__all__ = ["Family", "Font", "Stylesheet", "DEFAULT"]

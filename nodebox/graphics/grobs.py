@@ -739,7 +739,7 @@ class Color(object):
                 clr = args[0]._cmyk
         elif params == 1 and isinstance(args[0], NSColor):
             clr = args[0]
-        elif params>=1 and isinstance(args[0], (str, unicode)):
+        elif params>=1 and isinstance(args[0], basestring):
             if re.search(r'#?[0-9a-f]{3,8}', args[0]): # rgb & rgba hex strings
                 hexclr = args[0].lstrip('#')
                 if len(hexclr) in (3,4):
