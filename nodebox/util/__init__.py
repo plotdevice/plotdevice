@@ -1,9 +1,11 @@
+import os
 import re
 from collections import OrderedDict, defaultdict
 from AppKit import NSFontManager, NSFont, NSMacOSRomanStringEncoding, NSItalicFontMask
-from random import choice
+from random import choice, shuffle
+from nodebox import NodeBoxError
 
-__all__ = ('grid', 'random', 'choice', 'files', 'autotext', '_copy_attr', '_copy_attrs', 'odict', 'ddict')
+__all__ = ('grid', 'random', 'shuffled', 'choice', 'ordered', 'order', 'files', 'autotext', '_copy_attr', '_copy_attrs', 'odict', 'ddict', 'adict')
 
 ### Utilities ###
 
@@ -57,21 +59,63 @@ def random(v1=None, v2=None):
     else: # No values means 0.0 -> 1.0
         return random.random()
 
-def files(path="*"):
+def files(path="*", case=True):
     """Returns a list of files.
     
     You can use wildcards to specify which files to pick, e.g.
-        f = files('*.gif')
+        f = files('~/Pictures/*.jpg')
+
+    For a case insensitive search, call files() with case=False
     """
-    from glob import glob
-    if not type(path)==unicode:
-        path = path.decode('utf-8')
-    return glob(path)
+    from iglob import iglob 
+    if type(path)==unicode:
+        path.encode('utf-8')
+    path = re.sub(r'^~(?=/|$)',os.getenv('HOME'),path)
+    return list(iglob(path.decode('utf-8'), case=case))
 
 def autotext(sourceFile):
     from nodebox.util.kgp import KantGenerator
     k = KantGenerator(sourceFile)
     return k.output()
+
+### Permutation sugar ###
+
+def _is_sequence(seq):
+    if not isinstance(seq, (list, tuple) ):
+        badtype = 'ordered, shuffled, and friends only work for tuples and lists (not %d)' % type(seq)
+        raise NodeBoxError(badtype)
+
+def _getter(seq, names):
+    from operator import itemgetter, attrgetter
+    return itemgetter(*names) if names[0] in seq[0] else attrgetter(*names)
+
+def order(seq, *names, **kwargs):
+    _is_sequence(seq)
+    if not names or not seq:
+        reordered = [(it,idx) for idx,it in enumerate(seq)]
+    else:
+        getter = _getter(seq, names)
+        reordered = [(getter(it), idx) for idx,it in enumerate(seq)]
+    reordered.sort(**kwargs)
+    return [it[1] for it in reordered]
+
+def ordered(seq, *names, **kwargs):
+    _is_sequence(seq)
+    if kwargs.get('perm') and seq:
+        return [seq[idx] for idx in kwargs['perm']]
+
+    if not names or not seq:
+        return list(sorted(seq, **kwargs))
+
+    return list(sorted(seq, key=_getter(seq, names), **kwargs))
+
+def shuffled(seq):
+    _is_sequence(seq)
+    perm = list(seq)
+    shuffle(perm)
+    return perm
+
+### deepcopy helpers ###
 
 def _copy_attr(v):
     if v is None:
@@ -91,6 +135,8 @@ def _copy_attrs(source, target, attrs):
     for attr in attrs:
         setattr(target, attr, _copy_attr(getattr(source, attr)))
 
+### give ordered- and default-dict a nicer repr ###
+
 class BetterRepr(object):
     def __repr__(self, indent=2):
         result = '%s{'%self.__class__.__name__
@@ -105,8 +151,63 @@ class BetterRepr(object):
         result += '}'
         return result
 
-# give ordered- and default-dict a nicer repr
 class odict(BetterRepr,OrderedDict):
+    """Dictionary that remembers insertion order
+
+    Normal dict objects return keys in an arbitrary order. An odict will return them in
+    the order you add them. To initialize an odict and not lose the ordering in the process,
+    avoid using keyword arguments and instead pass a list of (key,val) tuples:
+
+        odict([ ('foo',12), ('bar',14), ('baz', 33) ])
+
+    or as part of a generator expression:
+
+        odict( (k,other[k]) for k in sorted(other.keys()) )
+
+    """
     pass
+
 class ddict(BetterRepr,defaultdict):
+    """Dictionary with default factory
+
+    Any time you access a key that was previously undefined, the factory function 
+    is called and a default value is inserted in the dictionary. e.g.,
+
+        normal_dict = {}
+        normal_dict['foo'].append(42) # raises a KeyError
+
+        lst_dict = ddict(list)
+        lst_dict['foo'].append(42)    # sets 'foo' to [42]
+
+        num_dict = ddict(int)
+        print num_dict['bar']         # prints '0'
+        num_dict['baz'] += 2          # increments 'baz' from 0 to 2
+
+    """
     pass
+
+### the not very pythonic but often convenient dot-notation dict ###
+
+class adict(BetterRepr, dict):
+    """A dictionary object whose items may also be accessed with dot notation."""
+    def __init__(self, *args, **kw):
+        super(adict, self).__init__(*args, **kw)
+        self.__initialised = True
+
+    def __getattr__(self, key): 
+        try:
+            return self[key]
+        except KeyError, k:
+            raise AttributeError, k
+    
+    def __setattr__(self, key, value): 
+        # this test allows attributes to be set in the __init__ method
+        if not self.__dict__.has_key('_adict__initialised'):
+            return dict.__setattr__(self, key, value)
+        self[key] = value
+    
+    def __delattr__(self, key):
+        try:
+            del self[key]
+        except KeyError, k:
+            raise AttributeError, k

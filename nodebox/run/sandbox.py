@@ -42,33 +42,6 @@ class Delegate(object):
     def exportProgress(self, written, total, cancelled):
         pass
 
-class StateVar(dict):
-    """A dictionary object whose items may also be accessed with dot notation."""
-    def __init__(self, *args, **kw):
-        super(StateVar, self).__init__(*args, **kw)
-        self.__initialised = True
-
-    def __getattr__(self, key): 
-        try:
-            return self[key]
-        except KeyError, k:
-            raise AttributeError, k
-    
-    def __setattr__(self, key, value): 
-        # this test allows attributes to be set in the __init__ method
-        if not self.__dict__.has_key('_StateVar__initialised'):
-            return dict.__setattr__(self, key, value)
-        self[key] = value
-    
-    def __delattr__(self, key):
-        try:
-            del self[key]
-        except KeyError, k:
-            raise AttributeError, k
-    
-    def __repr__(self):     
-        return dict.__repr__(self)
-
 class Sandbox(object):
 
     def __init__(self, delegate=None):
@@ -252,7 +225,7 @@ class Sandbox(object):
                     if func and getargspec(func).args:
                         self._stateful.append(routine)
                 # allocate a fresh state var if any routines are using it
-                self._statevar = StateVar() if self._stateful else None
+                self._statevar = util.adict() if self._stateful else None
 
             elif method=='draw':
                 # tick the frame ahead after each draw call
