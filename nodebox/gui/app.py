@@ -9,7 +9,8 @@ from AppKit import *
 from nodebox.util.fsevents import Observer, Stream
 from nodebox.gui.preferences import get_default
 from nodebox.run import CommandListener
-from nodebox import util, bundle_path
+from nodebox.gui import bundle_path
+from nodebox import util
 
 LIB_DIR_README = """"You can put NodeBox libraries In this directory to make them available to your scripts.
 If your script has used the `colors.theme()` function, the `colors` folder in this directory

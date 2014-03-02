@@ -13,7 +13,7 @@ from WebKit import * # (defaults write net.nodebox.NodeBox WebKitDeveloperExtras
 from nodebox.gui.preferences import get_default, editor_info
 from nodebox.gui.widgets import ValueLadder
 from nodebox.gui.app import set_timeout
-from nodebox import bundle_path
+from nodebox.gui import bundle_path
 
 __all__ = ['EditorView', 'OutputTextView']
 

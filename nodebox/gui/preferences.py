@@ -4,7 +4,7 @@ import json
 from AppKit import *
 from Foundation import *
 from subprocess import Popen, PIPE
-from nodebox import bundle_path
+from nodebox.gui import bundle_path
 
 def get_default(label):
     if not re.match(r'^(NS|Web)', label):
