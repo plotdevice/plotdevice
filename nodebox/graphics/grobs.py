@@ -34,7 +34,7 @@ __all__ = [
         "Variable", "NodeBoxError", 
         ]
 
-DEFAULT_WIDTH, DEFAULT_HEIGHT = 500, 500
+DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
 # scale factors
 inch = 72
@@ -131,6 +131,10 @@ def trim_zeroes(func):
     return lambda slf: re.sub(r'\.?0+(?=[,\)])', '', func(slf))
 
 class Point(object):
+    # TODO:
+    # add geo.(angle, distance, coordinates, reflect) as methods?
+    #
+
     def __init__(self, *args):
         if len(args) == 2:
             self.x, self.y = args
@@ -171,6 +175,9 @@ class Size(tuple):
 class Region(tuple):
     # Bug?: maybe this actually needs to be mutable...
     def __new__(cls, x=0, y=0, w=0, h=0, **kwargs):
+        if isinstance(x, NSRect):
+            return Region(*x)
+
         try: # accept a pair of 2-tuples as origin/size
             (x,y), (width,height) = x,y
         except TypeError:
@@ -208,6 +215,8 @@ class Grob(object):
     def inheritFromContext(self, ignore=()):
         attrs_to_copy = list(self.__class__.stateAttributes)
         [attrs_to_copy.remove(k) for k, v in _STATE_NAMES.items() if v in ignore]
+        # print "inherit ->", self
+        # print "attrs", attrs_to_copy
         _copy_attrs(self._ctx, self, attrs_to_copy)
         
     def checkKwargs(self, kwargs):
@@ -273,7 +282,7 @@ class ColorMixin(object):
             self._strokecolor = Color(self._ctx, kwargs['stroke'])
         except KeyError:
             self._strokecolor = None
-        self._strokewidth = kwargs.get('strokewidth', 1.0)
+        self._strokewidth = kwargs.get('nib', kwargs.get('strokewidth', 1.0))
         
     def _get_fill(self):
         return self._fillcolor
@@ -297,8 +306,7 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
     """A BezierPath provides a wrapper around NSBezierPath."""
     
     stateAttributes = ('_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_transform', '_transformmode')
-    kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle')
-
+    kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle', 'nib', 'cap', 'join')
 
     def __init__(self, ctx, path=None, immediate=False, **kwargs):
         super(BezierPath, self).__init__(ctx)
@@ -325,8 +333,8 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
             raise NodeBoxError(badpath)
 
         # use any drawstyle settings in kwargs (the rest will be inherited)
-        self.capstyle = kwargs.get('capstyle', self._ctx._capstyle)
-        self.joinstyle = kwargs.get('joinstyle', self._ctx._joinstyle)
+        self.capstyle = kwargs.get('cap', kwargs.get('capstyle', self._ctx._capstyle))
+        self.joinstyle = kwargs.get('join', kwargs.get('joinstyle', self._ctx._joinstyle))
         self._overrides = {k:_copy_attr(v) for k,v in kwargs.items() if k in BezierPath.kwargs}
         self._autoclose = kwargs.get('close', self._ctx._autoclosepath)
         self._autodraw = kwargs.get('draw', False)
@@ -412,8 +420,9 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
         self._segment_cache = None
         self._nsBezierPath.closePath()
         
-    def setlinewidth(self, width):
-        self.linewidth = width
+    # why ... does this method exist?
+    # def setlinewidth(self, width):
+    #     self.linewidth = width
 
     def _get_bounds(self):
         try:
@@ -706,82 +715,93 @@ class ClippingPath(Grob):
 #     def copy(self):
 #         raise NotImplementedError, "Please don't use Oval anymore"
 
+
+
 class Color(object):
+
+    @classmethod
+    def _nscolor(cls, scheme, *components):
+        factory = {RGB:     NSColor.colorWithDeviceRed_green_blue_alpha_,
+                   HSB:     NSColor.colorWithDeviceHue_saturation_brightness_alpha_,
+                   CMYK:    NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_,
+                   "grey": NSColor.colorWithDeviceWhite_alpha_}
+        return factory[scheme](*components)
+
+    @classmethod
+    def _str2rgb(cls, clrstr):
+        if re.search(r'#?[0-9a-f]{3,8}', clrstr): # rgb & rgba hex strings
+            hexclr = clrstr.lstrip('#')
+            if len(hexclr) in (3,4):
+                hexclr = "".join(map("".join, zip(hexclr,hexclr)))
+            if len(hexclr) not in (6,8):
+                invalid = "Don't know how to interpret hex color '#%s'." % hexclr
+                raise NodeBoxError(invalid)
+            r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
+            a = 1.0 if len(hexclr)!=8 else int(hexclr[6:], 16)/255.0
+        elif clrstr in _CSS_COLORS: # handle css color names
+            try:
+                r, g, b, a = _CSS_COLORS[clrstr]
+            except ValueError:
+                r, g, b = _CSS_COLORS[clrstr]
+                a = 1
+        else:
+            invalid = "Color strings must be 3/6/8-character hex codes or valid css-names"
+            raise NodeBoxError(invalid)
+        return r, g, b, a
 
     def __init__(self, ctx, *args):
         self._ctx = ctx
-        params = len(args)
 
         # Decompose the arguments into tuples. 
-        if params == 1 and isinstance(args[0], tuple):
+        if args and isinstance(args[0], tuple):
             args = args[0]
-            params = len(args)
 
+        if args and args[0] in (RGB, HSB, CMYK):
+            mode, args = args[0], args[1:]
+            if not args:
+                ctx._colormode = mode
+                return mode
+        else:
+            mode = ctx._colormode
+
+        params = len(args)
         if params == 1 and args[0] is None:
-            clr = NSColor.colorWithDeviceWhite_alpha_(0.0, 0.0)
+            clr = Color._nscolor("grey", 0, 0)
         elif params == 1 and isinstance(args[0], Color):
-            if self._ctx._outputmode == RGB:
-                clr = args[0]._rgb
-            else:
-                clr = args[0]._cmyk
+            is_rgb = self._ctx._outputmode == RGB
+            clr = args[0]._rgb if is_rgb else args[0]._cmyk
         elif params == 1 and isinstance(args[0], NSColor):
             clr = args[0]
         elif params>=1 and isinstance(args[0], basestring):
-            if re.search(r'#?[0-9a-f]{3,8}', args[0]): # rgb & rgba hex strings
-                hexclr = args[0].lstrip('#')
-                if len(hexclr) in (3,4):
-                    hexclr = "".join(map("".join, zip(hexclr,hexclr)))
-                if len(hexclr) not in (6,8):
-                    invalid = "Don't know how to interpret hex color '#%s'." % hexclr
-                    raise NodeBoxError(invalid)
-                r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
-                a = args[1] if params==2 else 1.0
-                if len(hexclr)==8:
-                    a = int(hexclr[6:], 16)/255.0                
-            elif args[0] in _CSS_COLORS: # handle css color names
-                try:
-                    r, g, b, a = _CSS_COLORS[args[0]]
-                except ValueError:
-                    r, g, b = _CSS_COLORS[args[0]]
-                    a = args[1] if params==2 else 1.0
-            else:
-                invalid = "Color strings must be 3/6/8-character hex codes or valid css-names"
-                raise NodeBoxError(invalid)
-            clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, a)
-        elif params == 1: # Gray, no alpha
-            g, = self._normalizeList(args)
-            clr = NSColor.colorWithDeviceWhite_alpha_(g, 1)
-        elif params == 2: # Gray and alpha
-            g, a = self._normalizeList(args)
-            clr = NSColor.colorWithDeviceWhite_alpha_(g, a)
-        elif params == 3 and self._ctx._colormode == RGB: # RGB, no alpha
-            r,g,b = self._normalizeList(args)
-            clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, 1)
-        elif params == 3 and self._ctx._colormode == HSB: # HSB, no alpha
-            h, s, b = self._normalizeList(args)
-            clr = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, s, b, 1)
-        elif params == 4 and self._ctx._colormode == RGB: # RGB and alpha
-            r,g,b, a = self._normalizeList(args)
-            clr = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, a)
-        elif params == 4 and self._ctx._colormode == HSB: # HSB and alpha
-            h, s, b, a = self._normalizeList(args)
-            clr = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, s, b, a)
-        elif params == 4 and self._ctx._colormode == CMYK: # CMYK, no alpha
-            c, m, y, k  = self._normalizeList(args)
-            clr = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, m, y, k, 1)
-        elif params == 5 and self._ctx._colormode == CMYK: # CMYK and alpha
-            c, m, y, k, a  = self._normalizeList(args)
-            clr = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, m, y, k, a)
-        else:
-            clr = NSColor.colorWithDeviceWhite_alpha_(0, 1)
+            r, g, b, a = Color._str2rgb(args[0])    # Hex string or named color
+            if args[1:]:
+                a = args[1]
+            clr = Color._nscolor(RGB, r, g, b, a)
+        elif 1<=params<=2:                          # Greyscale (+ alpha)
+            gscale = self._normalizeList(args)
+            if params<2:
+                gscale += (1,)
+            clr = Color._nscolor("grey", *gscale)
+        elif 3<=params<=4 and mode in (RGB, HSB):   # RGB(a) & HSB(a)
+            rgba_hsba = self._normalizeList(args)
+            if params<4:
+                rgba_hsba += (1,)
+            clr = Color._nscolor(mode, *rgba_hsba)
+        elif 4<=params<=5 and mode==CMYK:           # CMYK(a)
+            cmyka = self._normalizeList(args)
+            if params<5:
+                cmyka += (1,)
+            clr = Color._nscolor(CMYK, *cmyka)
+        else:                                       # default is the new black
+            clr = Color._nscolor("grey", 0, 1)
 
         self._cmyk = clr.colorUsingColorSpaceName_(NSDeviceCMYKColorSpace)
         self._rgb = clr.colorUsingColorSpaceName_(NSDeviceRGBColorSpace)
 
     @trim_zeroes
     def __repr__(self):
-        return "%s(%.3f, %.3f, %.3f, %.3f)" % (self.__class__.__name__, self.red,
-                self.green, self.blue, self.alpha)
+        args = repr(self.hexa) if self.a!=1.0 else '(%r)'%self.hex
+        return '%s%s'%(self.__class__.__name__, args)
 
     def set(self):
         self.nsColor.set()
@@ -792,8 +812,18 @@ class Color(object):
             return self._rgb
         else:
             return self._cmyk
-        
 
+    def _values(self, mode):
+        outargs = [None] * 4
+        if mode is RGB:
+            return self._rgb.getRed_green_blue_alpha_(*outargs)
+        elif mode is HSB:
+            return self._rgb.getHue_saturation_brightness_alpha_(*outargs)
+        elif mode is CMYK:
+            return (self._cmyk.cyanComponent(), self._cmyk.magentaComponent(), 
+                    self._cmyk.yellowComponent(), self._cmyk.blackComponent(), 
+                    self._cmyk.alphaComponent())
+        
     def copy(self):
         new = self.__class__(self._ctx)
         new._rgb = self._rgb.copy()
@@ -810,8 +840,8 @@ class Color(object):
         return self._rgb.hueComponent()
     def _set_hue(self, val):
         val = self._normalize(val)
-        h, s, b, a = self._rgb.getHue_saturation_brightness_alpha_(None, None, None, None)
-        self._rgb = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(val, s, b, a)
+        h, s, b, a = self._values(HSB)
+        self._rgb = Color._nscolor(HSB, val, s, b, a)
         self._updateCmyk()
     h = hue = property(_get_hue, _set_hue, doc="the hue of the color")
 
@@ -819,8 +849,8 @@ class Color(object):
         return self._rgb.saturationComponent()
     def _set_saturation(self, val):
         val = self._normalize(val)
-        h, s, b, a = self._rgb.getHue_saturation_brightness_alpha_(None, None, None, None)
-        self._rgb = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, val, b, a)
+        h, s, b, a = self._values(HSB)
+        self._rgb = Color._nscolor(HSB, h, val, b, a)
         self._updateCmyk()
     s = saturation = property(_get_saturation, _set_saturation, doc="the saturation of the color")
 
@@ -828,17 +858,16 @@ class Color(object):
         return self._rgb.brightnessComponent()
     def _set_brightness(self, val):
         val = self._normalize(val)
-        h, s, b, a = self._rgb.getHue_saturation_brightness_alpha_(None, None, None, None)
-        self._rgb = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, s, val, a)
+        h, s, b, a = self._values(HSB)
+        self._rgb = Color._nscolor(HSB, h, s, val, a)
         self._updateCmyk()
     v = brightness = property(_get_brightness, _set_brightness, doc="the brightness of the color")
 
     def _get_hsba(self):
-        return self._rgb.getHue_saturation_brightness_alpha_(None, None, None, None)
+        return self._values(HSB)
     def _set_hsba(self, values):
-        val = self._normalize(val)
-        h, s, b, a = values
-        self._rgb = NSColor.colorWithDeviceHue_saturation_brightness_alpha_(h, s, b, a)
+        h, s, b, a = self._normalizeList(values)
+        self._rgb = Color._nscolor(HSB, h, s, b, a)
         self._updateCmyk()
     hsba = property(_get_hsba, _set_hsba, doc="the hue, saturation, brightness and alpha of the color")
 
@@ -846,8 +875,8 @@ class Color(object):
         return self._rgb.redComponent()
     def _set_red(self, val):
         val = self._normalize(val)
-        r, g, b, a = self._rgb.getRed_green_blue_alpha_(None, None, None, None)
-        self._rgb = NSColor.colorWithDeviceRed_green_blue_alpha_(val, g, b, a)
+        r, g, b, a = self._values(RGB)
+        self._rgb = Color._nscolor(RGB, val, g, b, a)
         self._updateCmyk()
     r = red = property(_get_red, _set_red, doc="the red component of the color")
 
@@ -855,8 +884,8 @@ class Color(object):
         return self._rgb.greenComponent()
     def _set_green(self, val):
         val = self._normalize(val)
-        r, g, b, a = self._rgb.getRed_green_blue_alpha_(None, None, None, None)
-        self._rgb = NSColor.colorWithDeviceRed_green_blue_alpha_(r, val, b, a)
+        r, g, b, a = self._values(RGB)
+        self._rgb = Color._nscolor(RGB, r, val, b, a)
         self._updateCmyk()
     g = green = property(_get_green, _set_green, doc="the green component of the color")
 
@@ -864,8 +893,8 @@ class Color(object):
         return self._rgb.blueComponent()
     def _set_blue(self, val):
         val = self._normalize(val)
-        r, g, b, a = self._rgb.getRed_green_blue_alpha_(None, None, None, None)
-        self._rgb = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, val, a)
+        r, g, b, a = self._values(RGB)
+        self._rgb = Color._nscolor(RGB, r, g, val, a)
         self._updateCmyk()
     b = blue = property(_get_blue, _set_blue, doc="the blue component of the color")
 
@@ -873,17 +902,16 @@ class Color(object):
         return self._rgb.alphaComponent()
     def _set_alpha(self, val):
         val = self._normalize(val)
-        r, g, b, a = self._rgb.getRed_green_blue_alpha_(None, None, None, None)
-        self._rgb = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, val)
+        r, g, b, a = self._values(RGB)
+        self._rgb = Color._nscolor(RGB, r, g, b, val)
         self._updateCmyk()
     a = alpha = property(_get_alpha, _set_alpha, doc="the alpha component of the color")
 
     def _get_rgba(self):
-        return self._rgb.getRed_green_blue_alpha_(None, None, None, None)
-    def _set_rgba(self, val):
-        val = self._normalizeList(val)
-        r, g, b, a = val
-        self._rgb = NSColor.colorWithDeviceRed_green_blue_alpha_(r, g, b, a)
+        return self._values(RGB)
+    def _set_rgba(self, values):
+        r, g, b, a = self._normalizeList(values)
+        self._rgb = Color._nscolor(RGB, r, g, b, a)
         self._updateCmyk()
     rgba = property(_get_rgba, _set_rgba, doc="the red, green, blue and alpha values of the color")
 
@@ -892,7 +920,7 @@ class Color(object):
     def _set_cyan(self, val):
         val = self._normalize(val)
         c, m, y, k, a = self.cmyka
-        self._cmyk = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(val, m, y, k, a)
+        self._cmyk = Color._nscolor(CMYK, val, m, y, k, a)
         self._updateRgb()
     c = cyan = property(_get_cyan, _set_cyan, doc="the cyan component of the color")
 
@@ -901,7 +929,7 @@ class Color(object):
     def _set_magenta(self, val):
         val = self._normalize(val)
         c, m, y, k, a = self.cmyka
-        self._cmyk = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, val, y, k, a)
+        self._cmyk = Color._nscolor(CMYK, c, val, y, k, a)
         self._updateRgb()
     m = magenta = property(_get_magenta, _set_magenta, doc="the magenta component of the color")
 
@@ -910,7 +938,7 @@ class Color(object):
     def _set_yellow(self, val):
         val = self._normalize(val)
         c, m, y, k, a = self.cmyka
-        self._cmyk = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, m, val, k, a)
+        self._cmyk = Color._nscolor(CMYK, c, m, val, k, a)
         self._updateRgb()
     y = yellow = property(_get_yellow, _set_yellow, doc="the yellow component of the color")
 
@@ -919,13 +947,45 @@ class Color(object):
     def _set_black(self, val):
         val = self._normalize(val)
         c, m, y, k, a = self.cmyka
-        self._cmyk = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(c, m, y, val, a)
+        self._cmyk = Color._nscolor(CMYK, c, m, y, val, a)
         self._updateRgb()
     k = black = property(_get_black, _set_black, doc="the black component of the color")
 
     def _get_cmyka(self):
         return (self._cmyk.cyanComponent(), self._cmyk.magentaComponent(), self._cmyk.yellowComponent(), self._cmyk.blackComponent(), self._cmyk.alphaComponent())
     cmyka = property(_get_cmyka, doc="a tuple containing the CMYKA values for this color")
+
+    def _get_hex(self):
+        r, g, b, a = self._values(RGB)
+        return "#"+"".join('%02x'%int(255*c) for c in (r,g,b))
+    def _set_hex(self, val):
+        hexclr = val.lstrip('#')
+        if len(hexclr) in (3,4):
+            hexclr = "".join(map("".join, zip(hexclr,hexclr)))
+        if len(hexclr) not in (6,8):
+            invalid = "Don't know how to interpret hex color '#%s'." % hexclr
+            raise NodeBoxError(invalid)
+        r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
+        self._rgb = Color._nscolor(RGB, r, g, b, 1.0)
+        self._updateCmyk()
+    hex = property(_get_hex, _set_hex, doc="the rgb hex string for the color")
+
+    def _get_hexa(self):
+        r, g, b, a = self._values(RGB)
+        hexclr = "#"+"".join('%02x'%int(255*c) for c in (r,g,b))
+        return (hexclr, a)
+    def _set_hexa(self, val):
+        clr, a = val[0], self._normalize(val[1])
+        hexclr = clr.lstrip('#')
+        if len(hexclr) in (3,4):
+            hexclr = "".join(map("".join, zip(hexclr,hexclr)))
+        if len(hexclr) not in (6,8):
+            invalid = "Don't know how to interpret hex color '#%s'." % hexclr
+            raise NodeBoxError(invalid)
+        r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
+        self._rgb = Color._nscolor(RGB, r, g, b, a)
+        self._updateCmyk()
+    hexa = property(_get_hexa, _set_hexa, doc="a tuple containing the color's rgb hex string and an alpha float")
 
     def blend(self, otherColor, factor):
         """Blend the color with otherColor with a factor; return the new color. Factor

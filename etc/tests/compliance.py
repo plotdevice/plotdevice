@@ -1,13 +1,14 @@
 size(800,2600)
 
 def header():
-    font("Helvetica Neue", 12)
+    font("Helvetica Neue", 18)
     text("NodeBox Compliance Tests", 20, 60)
-    stroke(0)
+    stroke(0.5)
     line(0,60,WIDTH,60)
-    fontsize(8.5)
+    fontsize(12)
     nostroke()
-    text("This functional suite tests all the available NodeBox functions, to see if they comply to their contract." , 20, 80, width=200)
+    text("This functional suite tests all the available NodeBox functions, to see if they comply to their contract." , 20, 80, width=300)
+    fontsize(10)
     
 def primitives(x, y):
     nostroke()
@@ -89,28 +90,31 @@ def textblock(x, y):
 def grays(x, y):
     nostroke()
     colormode(RGB)
+    align(CENTER)
     for i in range(11):
         fill(i/10.0)
         rect(x, y, 50, 50)
         fill(0)
-        text(str(i), x, y+62)
+        text(str(i), x, y+62, 50)
         x += 60
 
 def alphas(x, y):
     nostroke()
     colormode(RGB)
+    align(CENTER)
     for i in range(11):
         fill(0, i/10.0)
         rect(x, y, 50, 50)
         fill(0)
-        text(str(i), x, y+62)
+        text(str(i), x, y+62, 50)
         x += 60
     
 def _clr(x, y, *args):
     fill(args)
     rect(x, y, 50, 50)
     fill(0)
-    text(str(args), x, y+62)
+    align(CENTER)
+    text(str(args), x, y+62, 50)
     return x + 60
 
 def rgbColors(x, y):
@@ -151,7 +155,8 @@ def hsbColors(x, y):
     x = _clr(x, y, 1,1,1)    
     
 def marker(y,h=25):
-    stroke(1,0,0)
+    colormode(CMYK)
+    stroke(1, 0.1, 0.1, 0.1)
     line(0, y+h, WIDTH, y+h)
 
 # Draw the header

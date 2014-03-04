@@ -8,7 +8,8 @@ from Foundation import *
 from pprint import pprint
 
 from nodebox import NodeBoxError
-from nodebox.graphics.grobs import Color, Grob, TransformMixin, ColorMixin
+from nodebox.graphics.grobs import TransformMixin, ColorMixin, Color, Region, Size
+from nodebox.graphics.grobs import _save, _restore, Transform, Grob, BezierPath
 from nodebox.util.foundry import *
 
 __all__ = ["Text", "Family", "Font", "Stylesheet", 
@@ -30,10 +31,74 @@ _TEXT=dict(
 # hopefully non-conflicting style name for the stylesheet defaults
 DEFAULT = '_p_l_o_t_d_e_v_i_c_e_'
 
+class Singleton(type):
+  def __init__(cls, name, bases, dict):
+      super(Singleton, cls).__init__(name, bases, dict)
+      cls.instance = None 
+
+  def __call__(cls,*args,**kw):
+      if cls.instance is None:
+          cls.instance = super(Singleton, cls).__call__()
+      cls.instance.render(*args, **kw)
+      return cls.instance
+
+class Typesetter(object):
+    __metaclass__ = Singleton
+    # collect nstext system objects
+    store = NSTextStorage.alloc().init()
+    layout = NSLayoutManager.alloc().init()
+    column = NSTextContainer.alloc().init()
+
+    # assemble nsmachinery
+    layout.addTextContainer_(column)
+    store.addLayoutManager_(layout)
+    column.setLineFragmentPadding_(0)
+
+    def render(cls, ctx, txt, inherit, styles, w=None, h=None):
+        w,h = [d or 1000000 for d in w,h]
+
+        # find any tagged regions that need styling
+        parser = XMLParser(txt)
+
+        # generate a Font for each unique cascade of style tags
+        attrs = {seq:styles._cascade(inherit, *seq) for seq in sorted(parser.regions)}
+
+        # convert the Fonts into attr dicts then apply them to the runs found in the parse
+        astr = NSMutableAttributedString.alloc().initWithString_(parser.text)
+        for cascade, runs in parser.regions.items():
+            style = attrs[cascade]
+            for rng in runs:
+                astr.setAttributes_range_(style, rng)
+
+        cls.store.beginEditing()
+        cls.store.setAttributedString_(astr)
+        cls.store.endEditing()
+        cls.column.setContainerSize_((w,h))
+
+        print '[[%s]]' % parser.text
+        # print "colsize", cls.colsize
+        # print "visible chars", cls.visible
+        # print "typeblock", cls.typeblock
+        cls.astr = astr
+
+    def draw_glyphs(cls, x, y):
+        cls.layout.drawGlyphsForGlyphRange_atPoint_(cls.visible, (x,y))
+
+    @property
+    def typeblock(cls):
+        return Region(*cls.layout.boundingRectForGlyphRange_inTextContainer_(cls.visible, cls.column))
+
+    @property
+    def visible(cls):
+        return cls.layout.glyphRangeForTextContainer_(cls.column)
+
+    @property
+    def colsize(cls):
+        return Size(*cls.column.containerSize())
 
 class Text(Grob, TransformMixin, ColorMixin):
 
-    stateAttributes = ('_transform', '_transformmode', '_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight')
+    stateAttributes = ('_transform', '_transformmode', '_stylesheet', '_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight')
     kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight')
 
     __dummy_color = NSColor.blackColor()
@@ -50,7 +115,7 @@ class Text(Grob, TransformMixin, ColorMixin):
         self._fontname = kwargs.get('font', "Helvetica")
         self._fontsize = kwargs.get('fontsize', 24)
         self._lineheight = max(kwargs.get('lineheight', 1.2), 0.01)
-        self._align = kwargs.get('align', NSLeftTextAlignment)
+        self._align = kwargs.get('align', LEFT)
 
     def copy(self):
         new = self.__class__(self._ctx, self.text)
@@ -63,41 +128,19 @@ class Text(Grob, TransformMixin, ColorMixin):
     def font(self):
         return NSFont.fontWithName_size_(self._fontname, self._fontsize)
 
-    def _getLayoutManagerTextContainerTextStorage(self, clr=__dummy_color):
-        paraStyle = NSMutableParagraphStyle.alloc().init()
-        paraStyle.setAlignment_(_TEXT[self._align])
-        paraStyle.setLineBreakMode_(NSLineBreakByWordWrapping)
-        paraStyle.setLineHeightMultiple_(self._lineheight)
-
-        dict = {NSParagraphStyleAttributeName:paraStyle,
-                NSForegroundColorAttributeName:clr,
-                NSFontAttributeName:self.font}
-
-        textStorage = NSTextStorage.alloc().initWithString_attributes_(self.text, dict)
-        try:
-            textStorage.setFont_(self.font)
-        except ValueError:
-            nofont = "Text.draw(): font '%s' not available.\n" % self._fontname
-            raise NodeBoxError(nofont)
-            return
-
-        layoutManager = NSLayoutManager.alloc().init()
-        textContainer = NSTextContainer.alloc().init()
-        if self.width != None:
-            textContainer.setContainerSize_((self.width,1000000))
-            textContainer.setWidthTracksTextView_(False)
-            textContainer.setHeightTracksTextView_(False)
-        layoutManager.addTextContainer_(textContainer)
-        textStorage.addLayoutManager_(layoutManager)
-        return layoutManager, textContainer, textStorage
-
     def _draw(self):
-        if self._fillcolor is None: return
-        layoutManager, textContainer, textStorage = self._getLayoutManagerTextContainerTextStorage(self._fillcolor.nsColor)
         x,y = self.x, self.y
-        glyphRange = layoutManager.glyphRangeForTextContainer_(textContainer)
-        (dx, dy), (w, h) = layoutManager.boundingRectForGlyphRange_inTextContainer_(glyphRange, textContainer)
-        preferredWidth, preferredHeight = textContainer.containerSize()
+        # print "text w/", {nm:getattr(self, nm) for nm in Text.stateAttributes}
+
+        rewrites = dict(face="_fontname", size="_fontsize", color="_fillcolor", align="_align", 
+                        leading="_lineheight")
+        inherit = {style:getattr(self, attr) for style,attr in rewrites.items()}
+        print "draw w/", inherit
+
+        printer = Typesetter(self._ctx, self.text, inherit, self._stylesheet, self.width, self.height)
+        (dx, dy), (w, h) = printer.typeblock
+        preferredWidth, preferredHeight = printer.colsize
+
         if self.width is not None:
             if self._align == RIGHT:
                 x += preferredWidth - w
@@ -113,51 +156,54 @@ class Text(Grob, TransformMixin, ColorMixin):
             t.translate(x+deltaX, y-self.font.defaultLineHeightForFont()+deltaY)
             t.concat()
             self._transform.concat()
-            layoutManager.drawGlyphsForGlyphRange_atPoint_(glyphRange, (-deltaX-dx,-deltaY-dy))
+            printer.draw_glyphs(-deltaX-dx, -deltaY-dy)
         else:
             self._transform.concat()
-            layoutManager.drawGlyphsForGlyphRange_atPoint_(glyphRange, (x-dx,y-dy-self.font.defaultLineHeightForFont()))
+            printer.draw_glyphs(x-dx, y-dy-self.font.defaultLineHeightForFont())
         _restore()
         return (w, h)
 
     @property
     def metrics(self):
-        layoutManager, textContainer, textStorage = self._getLayoutManagerTextContainerTextStorage()
-        glyphRange = layoutManager.glyphRangeForTextContainer_(textContainer)
-        (dx, dy), (w, h) = layoutManager.boundingRectForGlyphRange_inTextContainer_(glyphRange, textContainer)
-        return Size(w,h)
+        rewrites = dict(face="_fontname", size="_fontsize", color="_fillcolor", align="_align", 
+                        leading="_lineheight")
+        inherit = {style:getattr(self, attr) for style,attr in rewrites.items()}
+        print "metrics w/", inherit
+        printer = Typesetter(self._ctx, self.text, inherit, self._stylesheet, self.width, self.height)
+        return printer.typeblock.size
 
     @property
     def path(self):
-        layoutManager, textContainer, textStorage = self._getLayoutManagerTextContainerTextStorage()
-        x, y = self.x, self.y
-        glyphRange = layoutManager.glyphRangeForTextContainer_(textContainer)
-        (dx, dy), (w, h) = layoutManager.boundingRectForGlyphRange_inTextContainer_(glyphRange, textContainer)
-        preferredWidth, preferredHeight = textContainer.containerSize()
+        rewrites = dict(face="_fontname", size="_fontsize", color="_fillcolor", align="_align", 
+                        leading="_lineheight")
+        inherit = {style:getattr(self, attr) for style,attr in rewrites.items()}
+        print "path w/", inherit
+        x,y = self.x, self.y
+        printer = Typesetter(self._ctx, self.text, inherit, self._stylesheet, self.width, self.height)
+        (dx, dy), (w, h) = printer.typeblock
+        preferredWidth, preferredHeight = printer.colsize
+
         if self.width is not None:
            if self._align == RIGHT:
                x += preferredWidth - w
            elif self._align == CENTER:
                x += preferredWidth/2 - w/2
-        length = layoutManager.numberOfGlyphs()
+        length = printer.layout.numberOfGlyphs()
         path = NSBezierPath.bezierPath()
         for glyphIndex in range(length):
-            lineFragmentRect = layoutManager.lineFragmentRectForGlyphAtIndex_effectiveRange_(glyphIndex, None)
-            # HACK: PyObjc 2.0 and 2.2 are subtly different:
-            #  - 2.0 (bundled with OS X 10.5) returns one argument: the rectangle.
-            #  - 2.2 (bundled with OS X 10.6) returns two arguments: the rectangle and the range.
-            # So we check if we got one or two arguments back (in a tuple) and unpack them.
-            if isinstance(lineFragmentRect, tuple):
-                lineFragmentRect = lineFragmentRect[0]
-            layoutPoint = layoutManager.locationForGlyphAtIndex_(glyphIndex)
+            txtIndex = printer.layout.characterIndexForGlyphAtIndex_(glyphIndex)
+            txtFont, txtRng = printer.store.attribute_atIndex_effectiveRange_("NSFont", txtIndex, None)
+            lineFragmentRect, _ = printer.layout.lineFragmentRectForGlyphAtIndex_effectiveRange_(glyphIndex, None)
+
             # Here layoutLocation is the location (in container coordinates) where the glyph was laid out. 
+            layoutPoint = printer.layout.locationForGlyphAtIndex_(glyphIndex)
             finalPoint = [lineFragmentRect[0][0],lineFragmentRect[0][1]]
             finalPoint[0] += layoutPoint[0] - dx
             finalPoint[1] += layoutPoint[1] - dy
-            g = layoutManager.glyphAtIndex_(glyphIndex)
+            g = printer.layout.glyphAtIndex_(glyphIndex)
             if g == 0: continue
             path.moveToPoint_((finalPoint[0], -finalPoint[1]))
-            path.appendBezierPathWithGlyph_inFont_(g, self.font)
+            path.appendBezierPathWithGlyph_inFont_(g, txtFont)
             path.closePath()
         path = BezierPath(self._ctx, path)
         trans = Transform()
@@ -167,101 +213,108 @@ class Text(Grob, TransformMixin, ColorMixin):
         path.inheritFromContext()
         return path
 
-class Typesetter(object):
-    _expat = expat.ParserCreate()
+class XMLParser(object):
     _log = 0
 
-    @classmethod
-    def render(cls, ctx, txt, styles):
-
-        # don't bother parsing if the necessary tag characters aren't there
-        if not set(txt) >= set(u'</>'):
-            attrs = styles._cascade(DEFAULT)
-            if isinstance(txt, str):
-                txt = txt.decode('utf-8')
-            return NSMutableAttributedString.alloc().initWithString_attributes_(txt, attrs)
-
+    def __init__(self, txt):
+        p = expat.ParserCreate()
+        p.StartElementHandler = self._enter
+        p.EndElementHandler = self._leave
+        p.CharacterDataHandler = self._chars
+        self._expat = p
         if isinstance(txt, unicode):
             txt = txt.encode('utf-8')
         wrap = "<%s>" % ">%s</".join([DEFAULT]*2)
-        xml = wrap % txt
-        try:
-            cls.stack = []
-            cls.cursor = 0
-            cls.runs = ddict(list)
-            cls.body = []
-            cls._expat.Parse(xml)
-        except expat.ExpatError, e:
-            # go a little overboard providing context for syntax errors
-            measure = 80
-            line = xml.split('\n')[e.lineno-1]
-            col = e.offset
+        self.xml = wrap % txt
+        self.text = None
 
-            if line.startswith('<%s>'%DEFAULT):
-                line = line[len('<%s>'%DEFAULT):]
-                col -= len('<%s>'%DEFAULT)
-            if line.endswith('</%s>'%DEFAULT):
-                line = line[:-len('</%s>'%DEFAULT)]
+    @property
+    def regions(self):
+        if self.text is None:
+            try:
+                self.stack = []
+                self.cursor = 0
+                self.runs = ddict(list)
+                self.body = []
+                self._expat.Parse(self.xml, True)
+            except expat.ExpatError, e:
+                # go a little overboard providing context for syntax errors
+                print '%r'%xml
+                raise e
+                line = xml.split('\n')[e.lineno-1]
+                self._expat_error(e, line)
+            self.text = "".join(self.body)
 
-            snippet = line
-            if col>measure:
-                snippet = snippet[col-measure:]
-                col -= col-measure
+        return self.runs
 
-            snippet = snippet[:col+12]
-            if not line.endswith(snippet):
-                snippet = snippet+'...'
-            if not line.startswith(snippet):
-                snippet = '...'+snippet
-                col+=3
-            caret = ' '*col + '^'
-            msg = 'Text: ' + "\n".join(e.args)
-            stack = 'stack: ' + " ".join(['<%s>'%tag for tag in cls.stack[1:]]) + ' ...'
-            xmlfail = "\n".join([msg, snippet, caret, stack])
-            raise NodeBoxError(xmlfail)
+    def _expat_error(self, e, line):
+        measure = 80
+        col = e.offset
+        start, end = len('<%s>'%DEFAULT), -len('</%s>'%DEFAULT)
+        line = line[start:end]
+        col -= start
 
-        # generate a Font for each unique cascade of style tags
-        attrs = {seq:styles._cascade(*seq) for seq in sorted(cls.runs)}
+        # move the column range with the typo into `measure` chars
+        snippet = line
+        if col>measure:
+            snippet = snippet[col-measure:]
+            col -= col-measure
+        snippet = snippet[:max(col+12, measure-col)]
+        
+        # show which ends of the line are truncated
+        clipped = [snippet]
+        if not line.endswith(snippet):
+            clipped.append('...')
+        if not line.startswith(snippet):
+            clipped.insert(0, '...')
+            col+=3
+        caret = ' '*col + '^'
 
-        # convert the Fonts into attr dicts then apply them to the runs found in the parse
-        astr = NSMutableAttributedString.alloc().initWithString_(cls.body)
-        for cascade, runs in cls.runs.items():
-            style = attrs[cascade]
-            for rng in runs:
-                astr.setAttributes_range_(style, rng)
-        return astr
+        # raise the exception
+        msg = 'Text: ' + "\n".join(e.args)
+        stack = 'stack: ' + " ".join(['<%s>'%tag for tag in self.stack[1:]]) + ' ...'
+        xmlfail = "\n".join([msg, "".join(clipped), caret, stack])
+        raise NodeBoxError(xmlfail)
 
-    @classmethod
-    def log(cls, s=u'', indent=0):
-        if not cls._log: return
-        if indent<0: cls._log-=1
-        msg = (u'  '*cls._log)+(s if s.startswith('<') else repr(s))
+    def log(self, s=None, indent=0):
+        if not isinstance(s, basestring):
+            if s is None:
+                return self._log
+            self._log = int(s)
+            return
+        if not self._log: return
+        if indent<0: self._log-=1
+        msg = (u'  '*self._log)+(s if s.startswith('<') else repr(s))
         print msg.encode('utf-8')
-        if indent>0: cls._log+=1
-    @classmethod
-    def start_element(cls, name, attrs):
-        cls.stack.append(name)
-        cls.log(u'<%s>'%(name), indent=1)
-    @classmethod
-    def end_element(cls, name):
+        if indent>0: self._log+=1
+
+    def _enter(self, name, attrs):
+        self.stack.append(name)
+        self.log(u'<%s>'%(name), indent=1)
+
+    def _leave(self, name):
         if name == DEFAULT: 
-            cls.body = u"".join(cls.body)
-        cls.stack.pop()
-        cls.log(u'</%s>'%(name), indent=-1)
-    @classmethod
-    def char_data(cls, data):
-        cls.runs[tuple(cls.stack)].append(tuple([cls.cursor, len(data)]))
-        cls.cursor += len(data)
-        cls.body.append(data)
-        cls.log(u'"%s"'%(data))
-Typesetter._expat.StartElementHandler = Typesetter.start_element
-Typesetter._expat.EndElementHandler = Typesetter.end_element
-Typesetter._expat.CharacterDataHandler = Typesetter.char_data
+            self.body = u"".join(self.body)
+        self.stack.pop()
+        self.log(u'</%s>'%(name), indent=-1)
+
+    def _chars(self, data):
+        self.runs[tuple(self.stack)].append(tuple([self.cursor, len(data)]))
+        self.cursor += len(data)
+        self.body.append(data)
+        self.log(u'"%s"'%(data))
+
+
+
+
+
 
 class Stylesheet(object):
+    kwargs = ('family','size','leading','weight','width','variant','italic','heavier','lighter','color','face','fontname','fontsize','lineheight')
+
     def __init__(self, ctx, styles=None):
         self._ctx = ctx
-        self._styles = styles or {}
+        self._styles = dict(styles or {})
 
     def __repr__(self):
         styles = repr({k.replace(DEFAULT,'DEFAULT'):v for k,v in self._styles.items() if k is not DEFAULT})
@@ -292,20 +345,10 @@ class Stylesheet(object):
         if key in self._styles:
             del self._styles[key]
 
-    def _cascade(self, *styles):
-        """Apply the listed styles in order and return nsattibutedstring attrs"""
-        
-        # use the context's font and color settings unless the DEFAULT style has overrides
-        spec = {"face":self._ctx._fontname, "size":self._ctx._fontsize, "color":self._ctx._fillcolor}
-        spec.update(self._styles.get(DEFAULT,{}))
-
-        # layer the styles to generate a final font and color
-        for tag in styles:
-            spec.update(self._styles.get(tag,{}))
-        color = spec.pop('color').nsColor
-        font = Font(self._ctx, **spec)
-        return {"NSFont":font._nsFont, "NSColor":color}
-
+    def copy(self):
+        new = self.__class__(self._ctx, self._styles)
+        return new
+    
     @property
     def styles(self):
         return dict(self._styles)
@@ -314,8 +357,8 @@ class Stylesheet(object):
         if not kwargs and any(a in (None,'inherit') for a in args[:1]):
             del self[name]
         elif args or kwargs:
-            color = kwargs.pop('color', None)
-            spec = Font._spec(*args, **kwargs)
+            spec = Stylesheet._spec(*args, **kwargs)
+            color = kwargs.get('color')
             if color and not isinstance(color, Color):
                 if isinstance(color, basestring):
                     color = (color,)
@@ -325,57 +368,82 @@ class Stylesheet(object):
             self._styles[name] = spec
         return self[name]
 
-    def test(self, txt):
-        print Typesetter.render(self._ctx, txt, self)
+    def _cascade(self, inherit, *styles):
+        """Apply the listed styles in order and return nsattibutedstring attrs"""
+        
+        # use the context's font and color settings unless the DEFAULT style has overrides
+        # inherit = dict(face="_fontname", size="_fontsize", color="_fillcolor",
+        #                 align="_align", leading="_lineheight")
+        # spec = {style:getattr(self._ctx, attr) for style,attr in inherit.items()}
+        # print 'inheritance', inherit
+        spec = dict(inherit)
+        print 'inherited', spec
+        spec.update(self._styles.get(DEFAULT,{}))
 
-class Font(object):
-    kwargs = ('family','size','weight','width','variant','italic','heavier','lighter','face','fontname','fontsize')
+        # layer the styles to generate a final font and color
+        for tag in styles:
+            spec.update(self._styles.get(tag,{}))
 
-    def __init__(self, ctx, *args, **kwargs):
-        badargs = [k for k in kwargs if k not in Font.kwargs]
-        if badargs:
-            eg = '"'+'", "'.join(badargs)+'"'
-            badarg = 'Font: unknown keyword argument%s %s'%('' if len(badargs)==1 else 's', eg)
-            raise NodeBoxError(badarg)
-        spec = self._spec(*args, **kwargs)
-
-        # initialize our internals based on the spec
-        self._ctx = ctx
-        if 'face' not in spec or any(arg not in ('face','size') for arg in spec):
-            # we only need to search if no face arg was supplied or if there are 
-            # style modifications to be applied on top of it
-            self._update_face(**spec)
+        # OOPS: what about transparent fills? 
+        if spec.get('color') is None:
+            color = Color._nscolor('grey',0,0)
         else:
-            self._face = spec['face']
-        self._size = float(spec.get('size', ctx._fontsize))
+            color = Color(self._ctx, spec.pop('color')).nsColor
+        alignment = _TEXT[spec['align']]
 
-        # if a weight-modulation arg was included, step the weight
-        mod = kwargs.get('heavier', kwargs.get('lighter', 0))
-        mod = 1 if mod is True else mod
-        if kwargs.get('lighter'):
-            mod = -mod
-        if mod:
-            self.modulate(mod)
+        graf = NSMutableParagraphStyle.alloc().init()
+        graf.setLineBreakMode_(NSLineBreakByWordWrapping)
+        graf.setAlignment_(alignment)
+        graf.setLineHeightMultiple_(spec['leading'])
+        # graf.setLineSpacing_(extra_px_of_lead)
+        # graf.setParagraphSpacing_(1em?)
+        # graf.setMinimumLineHeight_(self._lineheight)
+
+        font = Font(self._ctx, **{k:v for k,v in spec.items() if k in Stylesheet.kwargs} )
+        print font.name, color, spec.get('color')
+        return {"NSFont":font._nsFont, "NSColor":color, NSParagraphStyleAttributeName:graf}
 
     @classmethod
     def _spec(cls, *args, **kwargs):
-        # Gather specs from the args/kwargs and fill in the blanks from the global state
-        _spec = ('family','size','weight','italic','width','variant','color')
+        badargs = [k for k in kwargs if k not in Stylesheet.kwargs]
+        if badargs:
+            eg = '"'+'", "'.join(badargs)+'"'
+            badarg = 'unknown keyword argument%s for font style: %s'%('' if len(badargs)==1 else 's', eg)
+            raise NodeBoxError(badarg)
 
         # start with kwarg values as the canonical settings
-        spec = {k:v for k,v in kwargs.items() if k in _spec}
-        if 'fontsize' in kwargs: # be backward compatible with the old arg names
+        _canon = ('family','size','weight','italic','width','variant','leading','color')
+        spec = {k:v for k,v in kwargs.items() if k in _canon}
+
+        # be backward compatible with the old arg names
+        if 'fontsize' in kwargs: 
             spec.setdefault('size', kwargs['fontsize'])
+        if 'fill' in kwargs: 
+            spec.setdefault('color', kwargs['fill'])
+        if 'lineheight' in kwargs: 
+            spec.setdefault('leading', kwargs['lineheight'])
 
-        # look for a postscript name passed as `face` or `fontname` and convert
-        # it into a Face tuple
+        # look for a postscript name passed as `face` or `fontname` and validate it
         basis = kwargs.get('face', kwargs.get('fontname'))
-        if isinstance(basis, basestring):
-            basis = font_face(basis) # this will bomb out if the name is invalid
-        if isinstance(basis, Face):
+        if basis and not font_exists(basis):
+            notfound = 'Font: no matches for Postscript name "%s"'%basis
+            raise NodeBoxError(badarg)
+        elif basis:
             spec['face'] = basis
-                
 
+
+
+        # TODO
+        # should also serialize colors somehow. maybe just as tuples...
+
+
+
+        # allow for negative values in the weight step params, but
+        # normalize them in the spec
+        mod = int(kwargs.get('heavier', -kwargs.get('lighter', 0)))
+        if mod:
+            direction = 'lighter' if mod < 0 else 'heavier'
+            spec[direction] = abs(mod)
 
         # search the positional args for either name/size or a Font object
         # we want the kwargs to have higher priority, so setdefault everywhere...
@@ -399,6 +467,40 @@ class Font(object):
             elif isinstance(item, (int, float, long)):
                 spec.setdefault('size', item)
         return spec
+
+
+
+    def test(self, txt):
+        print Typesetter(self._ctx, txt, self).astr
+
+# UIFontDescriptor* desc =
+#     [UIFontDescriptor fontDescriptorWithName:@"Didot" size:18];
+#     NSArray* arr =
+#     @[@{UIFontFeatureTypeIdentifierKey:@(kLetterCaseType),
+#         UIFontFeatureSelectorIdentifierKey:@(kSmallCapsSelector)}];
+#     desc =
+#     [desc fontDescriptorByAddingAttributes:
+#      @{UIFontDescriptorFeatureSettingsAttribute:arr}];
+#     UIFont* f = [UIFont fontWithDescriptor:desc size:0];
+
+class Font(object):
+
+    def __init__(self, ctx, *args, **kwargs):
+        # normalize the names of the keyword args and do fuzzy matching on positional args
+        # to create a specification with just the valid keys
+        spec = Stylesheet._spec(*args, **kwargs)
+
+        # initialize our internals based on the spec
+        self._ctx = ctx
+        if 'face' not in spec or any(arg not in ('face','size') for arg in spec):
+            # we only need to search if no face arg was supplied or if there are 
+            # style modifications to be applied on top of it
+            self._update_face(**spec)
+        else:
+            self._face = font_face(spec['face'])
+
+        # BUG: probably don't want to inherit this immediately...
+        self._size = float(spec.get('size', ctx._fontsize))
 
     def __enter__(self):
         if hasattr(self, '_prior'):
