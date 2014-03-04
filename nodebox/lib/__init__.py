@@ -9,12 +9,11 @@ inplace = exists(join(lib_root, '../../etc/main.m'))
 if inplace:
     sys.path.append(join(lib_root, '../../build/ext'))
 
-import geometry, io, pathmatics, polymagic
-# try:
-#     import geometry, io, pathmatics, polymagic
-# except ImportError:
-#     print "failed with path", sys.path
-#     suggest = ' (try running `python setup.py build` before using the module from within the repository)'
-#     notfound = "Couldn't locate C extensions%s." % (suggest if inplace else '')
-#     raise RuntimeError(notfound)
+try:
+    import geometry, io, pathmatics, polymagic
+except ImportError:
+    print "failed with path", sys.path
+    suggest = ' (try running `python setup.py build` before using the module from within the repository)'
+    notfound = "Couldn't locate C extensions%s." % (suggest if inplace else '')
+    raise RuntimeError(notfound)
 

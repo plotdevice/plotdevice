@@ -26,7 +26,6 @@ else:
     import time, sys, re
     from contextlib import contextmanager
     from Quartz.PDFKit import *
-    from nodebox.graphics import colors
     from nodebox import graphics
     from nodebox import util
 
@@ -301,7 +300,6 @@ else:
     ns = {"export":export}
     canvas = graphics.Canvas()
     context = graphics.Context(canvas, ns)
-    colors._ctx = context
 
     from os import getenv
     from os.path import join

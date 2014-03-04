@@ -13,8 +13,6 @@ from nodebox.gui import bundle_path
 from nodebox import util
 
 LIB_DIR_README = """"You can put NodeBox libraries In this directory to make them available to your scripts.
-If your script has used the `colors.theme()` function, the `colors` folder in this directory
-contains a set of json files with color schemes derived from various keywords.
 """
 
 def set_timeout(target, sel, delay, info=None, repeat=False):

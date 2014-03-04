@@ -118,8 +118,6 @@ class Context(object):
         self.canvas.background = self.Color(1.0)
         
     def ximport(self, libName):
-        if libName=='colors':
-            return self._ns[libName]
         lib = __import__(libName)
         self._ns[libName] = lib
         lib._ctx = self

@@ -7,8 +7,6 @@ def get_version():
 app = None
 def initialize(mode='headless'):
     """vestigial"""
-    
-    # make sure repeated calls don't keep running the setup routine
     global app
     if app is not None: return
     app = {'headless':False, 'gui':True}.get(mode)
@@ -30,14 +28,11 @@ except ImportError:
 objc.setVerbose(True) 
 
 # create a canvas and graphics context for the draw functions to operate on
-import sys
-from nodebox.graphics import colors
 from nodebox import graphics
 from nodebox import util
 ns = {}
 canvas = graphics.Canvas()
 context = graphics.Context(canvas, ns)
-colors._ctx = context
 
 from os import getenv
 from os.path import join

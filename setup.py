@@ -275,7 +275,7 @@ if __name__=='__main__':
         classifiers = CLASSIFIERS,
         # ext_modules = ext_modules,
         packages = find_packages(),
-        package_data = {'nodebox.graphics.colors':['context.json','names.json','default.themes']},
+        package_data = {'nodebox.graphics':['colors.json']},
         scripts = ["etc/nodebox"],
         zip_safe=False,
         cmdclass={

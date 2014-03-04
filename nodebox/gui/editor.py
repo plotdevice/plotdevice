@@ -100,7 +100,7 @@ class EditorView(NSView):
 
         # once a doc viewer exists, add a lookup-ref menu item pointing to it
         word = self.js('editor.selected')
-        # _ns = ['curveto', 'TEXT', 'BezierPath', 'random', 'WIDTH', 'colors', 'closepath', 'font', 'speed', 'JUSTIFY', 'HSB', '_copy_attr', 'KEY_UP', 'text', 'ClippingPath', 'Rect', 'FORTYFIVE', 'colormode', 'choice', 'KEY_BACKSPACE', 'inch', 'rotate', 'grid', 'background', 'geo', 'LINETO', 'textpath', 'fonts', 'findpath', 'DEFAULT_HEIGHT', 'arrow', 'NodeBoxError', 'PathElement', 'beginpath', 'NORMAL', 'textwidth', 'DEFAULT_WIDTH', 'joinstyle', 'RGB', 'export', 'ROUND', '_copy_attrs', 'canvas', 'scale', 'CENTER', 'CMYK', 'SQUARE', 'nofill', 'MITER', 'nostroke', 'TransformContext', 'capstyle', 'lineheight', 'endclip', 'Point', 'BUTTON', 'Grob', 'KEY_TAB', 'KEY_LEFT', 'findvar', 'cm', 'color', 'image', 'autoclosepath', 'Transform', 'pop', 'KEY_ESC', 'BUTT', 'oval', 'CORNER', 'ellipse', 'addvar', 'size', 'ximport', 'MOVETO', 'lineto', 'skew', 'transform', 'rect', 'Variable', 'CLOSE', 'translate', 'LEFT', 'files', 'drawpath', 'outputmode', 'imagesize', 'var', 'fontsize', 'endpath', 'line', 'KEY_DOWN', 'colorrange', 'reset', 'moveto', 'save', 'mm', 'Text', 'align', 'BOOLEAN', 'Oval', 'Image', 'clip', 'NUMBER', 'stroke', 'fill', 'strokewidth', 'bezier', 'KEY_RIGHT', 'autotext', 'BEVEL', 'star', 'state_vars', 'HEIGHT', 'Context', 'textheight', 'RIGHT', 'CURVETO', 'Color', 'beginclip', 'textmetrics', 'push']
+        # _ns = ['curveto', 'TEXT', 'BezierPath', ...]
         # def ref_url(proc):
         #     if proc in _ns:
         #         return proc
