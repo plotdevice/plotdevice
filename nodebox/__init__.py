@@ -1,3 +1,20 @@
+"""
+nodebox
+
+Provides the standard drawing environment to external scripts (see README.md for details).
+
+Begin your script with:
+
+    from nodebox import *
+
+and all of the familiar NodeBox drawing commands will be added to the environment. Two additional 
+variables are also part of the global namespace:
+
+    canvas (holder of the graphics context and a writer of image files)
+    export (a helper function for doing batch image/animation exports)
+
+"""
+
 __version__='1.10'
 __MAGIC = "_n_o_d_e_b_o_x_"
 
@@ -30,7 +47,8 @@ objc.setVerbose(True)
 # create a canvas and graphics context for the draw functions to operate on
 from nodebox import graphics
 from nodebox import util
-ns = {}
+from nodebox.run.export import export
+ns = {"export":export}
 canvas = graphics.Canvas()
 context = graphics.Context(canvas, ns)
 
