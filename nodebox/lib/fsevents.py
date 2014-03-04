@@ -7,7 +7,7 @@ import os
 import sys
 import threading
 
-from cEvents import (
+from nodebox.lib.cEvents import (
     loop,
     stop,
     schedule,

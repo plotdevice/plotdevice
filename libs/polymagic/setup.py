@@ -1,9 +1,10 @@
-from distutils.core import setup, Extension
+from setuptools import setup, find_packages
+from setuptools.extension import Extension
 
 #CFLAGS=[]
 
-#cPolymagic = Extension("cPolymagic", sources = ["gpc.c", "polymagic.m"], extra_compile_args=CFLAGS)
-cPolymagic = Extension("cPolymagic", sources = ["gpc.c", "polymagic.m"])
+quiet = {"extra_compile_args":['-Qunused-arguments']}
+cPolymagic = Extension("cPolymagic", sources = ["gpc.c", "polymagic.m"], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation'], **quiet)
 
 setup (name = "polymagic",
        version = "0.1",

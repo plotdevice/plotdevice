@@ -145,7 +145,7 @@ class Text(Grob, TransformMixin, ColorMixin):
             if self._align == RIGHT:
                 x += preferredWidth - w
             elif self._align == CENTER:
-                x += preferredWidth/2 - w/2
+                x += (preferredWidth-w)/2
 
         _save()
         # Center-mode transforms: translate to image center

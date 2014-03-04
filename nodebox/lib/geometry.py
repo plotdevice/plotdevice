@@ -6,11 +6,11 @@ from math import radians, sin, cos
 
 try:
     # Faster C versions.
-    import cGeo
-    isqrt = inverse_sqrt = cGeo.fast_inverse_sqrt
-    angle = cGeo.angle
-    distance = cGeo.distance
-    coordinates = cGeo.coordinates
+    import cGeometry as geo
+    isqrt = inverse_sqrt = geo.fast_inverse_sqrt
+    angle = geo.angle
+    distance = geo.distance
+    coordinates = geo.coordinates
 except ImportError:
     def inverse_sqrt(x):
         return 1.0 / sqrt(x)

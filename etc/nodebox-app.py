@@ -6,7 +6,7 @@ from os.path import dirname, abspath, join
 from PyObjCTools import AppHelper
 
 # rather than hijacking PYTHONPATH in the .m loader, add the module + .so directory here
-sys.path.append('%s/Contents/Resources/python'%abspath(Foundation.NSBundle.mainBundle().bundlePath()))
+sys.path.insert(0, '%s/Contents/Resources/python'%abspath(Foundation.NSBundle.mainBundle().bundlePath()))
 
 # set up the c-extensions path
 import nodebox

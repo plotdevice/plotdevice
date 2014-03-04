@@ -97,7 +97,7 @@ class ScriptAppDelegate(NSObject):
         if self.mode=='headless' or quit:
             NSApp().terminate_(None)
 
-from nodebox.util.fsevents import Observer
+from nodebox.lib.fsevents import Observer
 from nodebox.gui.app import NodeBoxDocumentController
 class NodeBoxScriptReloader(NodeBoxDocumentController):
     def initWithScript_(self, doc):

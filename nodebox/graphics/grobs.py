@@ -12,11 +12,11 @@ from Foundation import *
 
 from nodebox import NodeBoxError
 from nodebox.util import _copy_attr, _copy_attrs
-
-try:
-    import cPolymagic
-except ImportError, e:
-    warnings.warn('Could not load cPolymagic: %s' % e)
+from nodebox.lib import polymagic
+# try:
+#     import cPolymagic
+# except ImportError, e:
+#     warnings.warn('Could not load cPolymagic: %s' % e)
 
 __all__ = [
         "DEFAULT_WIDTH", "DEFAULT_HEIGHT",
@@ -613,19 +613,19 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
     ### Clipping operations ###
     
     def intersects(self, other):
-        return cPolymagic.intersects(self._nsBezierPath, other._nsBezierPath)
+        return polymagic.intersects(self._nsBezierPath, other._nsBezierPath)
         
     def union(self, other, flatness=0.6):
-        return BezierPath(self._ctx, cPolymagic.union(self._nsBezierPath, other._nsBezierPath, flatness))
+        return BezierPath(self._ctx, polymagic.union(self._nsBezierPath, other._nsBezierPath, flatness))
     
     def intersect(self, other, flatness=0.6):
-        return BezierPath(self._ctx, cPolymagic.intersect(self._nsBezierPath, other._nsBezierPath, flatness))
+        return BezierPath(self._ctx, polymagic.intersect(self._nsBezierPath, other._nsBezierPath, flatness))
 
     def difference(self, other, flatness=0.6):
-        return BezierPath(self._ctx, cPolymagic.difference(self._nsBezierPath, other._nsBezierPath, flatness))
+        return BezierPath(self._ctx, polymagic.difference(self._nsBezierPath, other._nsBezierPath, flatness))
 
     def xor(self, other, flatness=0.6):
-        return BezierPath(self._ctx, cPolymagic.xor(self._nsBezierPath, other._nsBezierPath, flatness))
+        return BezierPath(self._ctx, polymagic.xor(self._nsBezierPath, other._nsBezierPath, flatness))
 
 class PathElement(object):
 

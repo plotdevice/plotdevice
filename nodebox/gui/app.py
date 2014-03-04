@@ -6,7 +6,7 @@ from glob import glob
 import nodebox
 from Foundation import *
 from AppKit import *
-from nodebox.util.fsevents import Observer, Stream
+from nodebox.lib.fsevents import Observer, Stream
 from nodebox.gui.preferences import get_default
 from nodebox.run import CommandListener
 from nodebox.gui import bundle_path

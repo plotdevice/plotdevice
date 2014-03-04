@@ -5,14 +5,7 @@ from PyObjCTools import AppHelper
 from math import floor
 import nodebox
 
-try:
-    # map in the objc classes from the cIO module
-    import cIO
-    for c in "AnimatedGif", "ImageSequence", "SysAdmin", "Video":
-        globals()[c] = objc.lookUpClass(c)
-except ImportError:
-    notfound = "Couldn't locate C extensions (try running `python setup.py build` before running from the source dist)."
-    raise RuntimeError(notfound)
+from nodebox.lib.io import AnimatedGif, ImageSequence, SysAdmin, Video
 
 IMG_BATCH_SIZE = 8
 MOV_BATCH_SIZE = 16

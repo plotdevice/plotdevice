@@ -1,6 +1,8 @@
-from distutils.core import setup, Extension
+from setuptools import setup, find_packages
+from setuptools.extension import Extension
 
-cPathmatics = Extension("cPathmatics", sources = ["pathmatics.c"])
+quiet = {"extra_compile_args":['-Qunused-arguments']}
+cPathmatics = Extension("cPathmatics", sources = ["pathmatics.c"], **quiet)
 
 setup (name = "pathmatics",
        version = "1.0",

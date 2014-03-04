@@ -308,7 +308,7 @@ else:
     sys.path.append(join(getenv('HOME'), 'Library', 'Application Support', 'NodeBox'))
 
     # set up the standard nodebox global namespace, all tied to the module-level canvas
-    # (note that this means you shouldn't `import *` from this in more than one acript file
+    # (note that this means you shouldn't `import *` from this in more than one script file
     # or unpredictable things may happen as you mutate global state in multiple places.)
     for module in graphics, util, context:
         ns.update( (a,getattr(module,a)) for a in module.__all__  )

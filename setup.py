@@ -17,10 +17,10 @@ import sys,os
 from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
-import nodebox
+# import nodebox
 
 NAME = 'NodeBox'
-VERSION = nodebox.__version__
+VERSION = '1.10'
 CREATOR = 'NdBx'
 BUNDLE_ID = "net.nodebox.NodeBox"
 HELP = "NodeBox Help"
@@ -67,15 +67,15 @@ Requires:
 * Mac OS X 10.9+
 """
 
-quiet = {"extra_compile_args":['-Qunused-arguments']}
+# quiet = {"extra_compile_args":['-Qunused-arguments']}
 
-ext_modules = [
-    Extension('cGeo', ['libs/cGeo/cGeo.c'], **quiet),
-    Extension('cPathmatics', ['libs/pathmatics/pathmatics.c'], **quiet),
-    Extension('cPolymagic', ['libs/polymagic/gpc.c', 'libs/polymagic/polymagic.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation'], **quiet),
-    Extension('cIO', ['libs/IO/module.m','libs/IO/SysAdmin.m', 'libs/IO/ImageSequence.m', 'libs/IO/AnimatedGif.m', 'libs/IO/Video.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation', '-framework', 'Security', '-framework', 'AVFoundation', '-framework', 'CoreMedia', '-framework', 'CoreVideo'], **quiet),
-    Extension('cEvents', ['libs/macfsevents/_fsevents.c', 'libs/macfsevents/compat.c'], extra_link_args = ["-framework","CoreFoundation", "-framework","CoreServices"], **quiet),
-]
+# ext_modules = [
+#     Extension('cGeo', ['libs/cGeo/cGeo.c'], **quiet),
+#     Extension('cPathmatics', ['libs/pathmatics/pathmatics.c'], **quiet),
+#     Extension('cPolymagic', ['libs/polymagic/gpc.c', 'libs/polymagic/polymagic.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation'], **quiet),
+#     Extension('cIO', ['libs/IO/module.m','libs/IO/SysAdmin.m', 'libs/IO/ImageSequence.m', 'libs/IO/AnimatedGif.m', 'libs/IO/Video.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation', '-framework', 'Security', '-framework', 'AVFoundation', '-framework', 'CoreMedia', '-framework', 'CoreVideo'], **quiet),
+#     Extension('cEvents', ['libs/macfsevents/_fsevents.c', 'libs/macfsevents/compat.c'], extra_link_args = ["-framework","CoreFoundation", "-framework","CoreServices"], **quiet),
+# ]
 
 plist={
     'CFBundleDocumentTypes': [{
@@ -99,12 +99,14 @@ plist={
     "NSPrincipalClass": 'NSApplication',
 }
 
+
 rsrc = [
     "Resources/English.lproj/AskString.xib",
     "Resources/English.lproj/Credits.rtf",
     "Resources/English.lproj/MainMenu.xib",
     "Resources/English.lproj/NodeBoxDocument.xib",
     "Resources/English.lproj/NodeBoxPreferences.xib",
+    "Resources/ui",
     "Resources/NodeBox.icns",
     "Resources/NodeBoxFile.icns",
 ]
@@ -124,19 +126,30 @@ class CleanCommand(Command):
         os.system('rm -rf ./build ./dist')
         os.system('rm -rf ./libs/*/build')
 
-from distutils.command.build_ext import build_ext
-class BuildExtCommand(build_ext):
-    def run(self):
-        # c-extensions post-build hook:
-        #   - move all the .so files out of the top-level directory
+# from distutils.command.build_ext import build_ext
+# class BuildExtCommand(build_ext):
+#     def run(self):
+#         # c-extensions post-build hook:
+#         #   - move all the .so files out of the top-level directory
 
-        build_ext.run(self) # first let the real build_ext routine do its thing
-        if BUILD_APP: return # py2app moves the libraries to lib-dynload instead
-        self.mkpath('%s/nodebox/ext'%self.build_lib)
-        for ext in self.extensions:
-            src = "%s/%s.so"%(self.build_lib, ext.name)
-            dst = "%s/nodebox/ext/%s.so"%(self.build_lib, ext.name)
-            self.move_file(src, dst)
+#         if BUILD_APP: 
+#             build_ext.run(self) # first let the real build_ext routine do its thing
+#             return # py2app moves the libraries to lib-dynload instead
+        
+#         self.spawn(['/usr/bin/python', 'libs/buildlibs.py'])
+#         print "built libs from", os.getcwd()
+#         self.spawn(['/usr/bin/ditto', 'build/libs', '%s/nodebox/lib'%self.build_lib])
+
+#         # build_ext.run(self) # first let the real build_ext routine do its thing
+#         # if BUILD_APP: return # py2app moves the libraries to lib-dynload instead
+#         # self.mkpath('%s/nodebox/ext'%self.build_lib)
+
+#         # for ext in self.extensions:
+#         #     print "each", self.build_lib, ext.name
+#         #     src = "%s/%s.so"%(self.build_lib, ext.name)
+#         #     dst = "%s/nodebox/libs/%s.so"%(self.build_lib, ext.name)
+#         #     self.move_file(src, dst)
+#             # self.spawn(['/usr/bin/touch',"%s/nodebox/ext/__init__.py"%self.build_lib])
 
 from distutils.command.build_py import build_py
 class BuildCommand(build_py):
@@ -145,11 +158,16 @@ class BuildCommand(build_py):
         #   - include some ui resources for running a script from the command line
         
         build_py.run(self) # first let the real build_py routine do its thing
+        self.spawn(['/usr/bin/python', 'libs/buildlibs.py']) # then build the extensions
+        print "built libs from", os.getcwd()
+
         if BUILD_APP: return # the app bundle doesn't need the NodeBoxScript nib
         rsrc_dir = '%s/nodebox/rsrc'%self.build_lib
         self.mkpath(rsrc_dir)
         self.spawn(['/usr/bin/ibtool','--compile', '%s/NodeBoxScript.nib'%rsrc_dir, "Resources/English.lproj/NodeBoxScript.xib"])
         self.copy_file("Resources/NodeBoxFile.icns", '%s/icon.icns'%rsrc_dir)
+        self.spawn(['/usr/bin/ditto', 'build/ext', '%s/nodebox/lib'%self.build_lib])
+
         
 if BUILD_APP:
     # virtualenv doesn't include pyobjc, py2app, etc. in the sys.path for some reason, so make sure 
@@ -185,7 +203,10 @@ if BUILD_APP:
             # put the module and .so files in a known location (primarily so the
             # tool can find task.py)
             self.copy_tree('%s/nodebox'%TOP, '%s/python/nodebox'%RSRC)
-            self.copy_tree('%s/lib/python2.7/lib-dynload'%RSRC, '%s/python/nodebox/ext'%RSRC)
+            # self.copy_tree('%s/lib/python2.7/lib-dynload'%RSRC, '%s/python/nodebox/ext'%RSRC)
+            self.spawn(['/usr/bin/ditto', '%s/build/ext'%TOP, '%s/python/nodebox/lib'%RSRC])
+            self.spawn(['/usr/bin/ditto', '%s/build/ext'%TOP, '%s/lib/python2.7/lib-dynload'%RSRC])
+
             # find $TOP/nodebox -name \*pyc -exec rm {} \;
 
             # install the documentation
@@ -252,14 +273,15 @@ if __name__=='__main__':
         author_email = AUTHOR_EMAIL,
         url = URL,
         classifiers = CLASSIFIERS,
-        ext_modules = ext_modules,
+        # ext_modules = ext_modules,
         packages = find_packages(),
+        package_data = {'nodebox.graphics.colors':['context.json','names.json','default.themes']},
         scripts = ["etc/nodebox"],
         zip_safe=False,
         cmdclass={
             'clean': CleanCommand,
             'build_py': BuildCommand,
-            'build_ext': BuildExtCommand,
+            # 'build_ext': BuildExtCommand,
         },
     ))
 

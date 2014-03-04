@@ -1,7 +1,9 @@
 import os
-import glob
 import errno
+from glob import glob
 from os.path import dirname, basename, abspath, isdir
+
+libs_root = dirname(abspath(__file__))
 
 def mkdirs(newdir, mode=0777):
     try: os.makedirs(newdir, mode)
@@ -11,32 +13,31 @@ def mkdirs(newdir, mode=0777):
             raise
 
 def build_libraries():
-    print "Building all required NodeBox libraries..."
+    print "Compiling required c-extensions"
 
     # Store the current working directory for later.
-    lib_root = dirname(abspath(__file__))
     # Find all setup.py files in the current folder
-    setup_scripts = glob.glob('%s/*/setup.py'%lib_root)
+    setup_scripts = glob('%s/*/setup.py'%libs_root)
     for setup_script in setup_scripts:
         lib_name = basename(dirname(setup_script))
-        print "Building", lib_name
+        print "Building %s..."% lib_name
         # run_setup gave some wonky errors, so we're defaulting to a simple os.system call.
         os.chdir(dirname(setup_script))
-        result = os.system('python2.7 setup.py build')
+        result = os.system('python2.7 setup.py -q build')
         if result > 0:
             raise OSError("Could not build %s" % lib_name)
-        os.chdir(lib_root)
+        os.chdir(libs_root)
 
     # Make sure the destination folder exists.
-    mkdirs('../build/libs')
+    mkdirs('../build/ext')
 
-    # Copy all build results to the ../build/libs folder.
-    build_dirs = glob.glob("*/build/lib*")
+    # Copy all build results to the ../build/ext folder.
+    build_dirs = glob("%s/*/build/lib*"%libs_root)
     for build_dir in build_dirs:
         lib_name = dirname(dirname(build_dir))
-        print "Copying", lib_name
-        cmd = 'cp -R -p %s/* ../build/libs' % build_dir
-        print cmd
+        # print "Copying", lib_name
+        cmd = 'cp -R -p %s/* ../build/ext' % build_dir
+        # print cmd
         result = os.system(cmd)
         if result > 0:
             raise OSError("Could not copy %s" % lib_name)
@@ -44,7 +45,7 @@ def build_libraries():
 def clean_build_files():
     print "Cleaning all library build files..."
 
-    build_dirs = glob.glob('*/build')
+    build_dirs = glob('%s/*/build'%libs_root)
     for build_dir in build_dirs:
         lib_name = dirname(build_dir)
         print "Cleaning", lib_name

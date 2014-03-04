@@ -11,12 +11,12 @@ def read(fname):
     with open(os.path.join(os.path.dirname(__file__), fname)) as f:
         return f.read()
 
+quiet = {"extra_compile_args":['-Qunused-arguments']}
 ext_modules = [
     Extension(name = 'cEvents',
               sources = ['_fsevents.c', 'compat.c'],
               extra_link_args = ["-framework","CoreFoundation",
-                               "-framework","CoreServices"],
-             ),
+                               "-framework","CoreServices"], **quiet),
     ]
 
 setup(name = "MacFSEvents",
@@ -47,5 +47,5 @@ setup(name = "MacFSEvents",
       ],
       zip_safe=False,
       test_suite="tests",
-      py_modules=['fsevents'],
+      # py_modules=['fsevents'],
      )

@@ -6,7 +6,7 @@ from nodebox.graphics.grobs import *
 from nodebox.util.foundry import *
 from nodebox.graphics import grobs, typography
 from nodebox.util import _copy_attr, foundry
-import nodebox.geo
+from nodebox.lib import geometry
 
 class Context(object):
     KEY_UP = grobs.KEY_UP
@@ -634,7 +634,7 @@ class Context(object):
         if not all(isinstance(c, (int,float)) for c in (x,y)):
             badargs = "text() requires x & y coordinates as its second and third arguments"
             raise NodeBoxError(badargs)
-        
+
         txt = self.Text(txt, x, y, width, height, **kwargs)
         txt.inheritFromContext(kwargs.keys())
         if outline:
@@ -680,7 +680,7 @@ class Context(object):
 
     @property
     def geo(self):
-        return nodebox.geo
+        return geometry
 
     def measure(self, obj, width=None, height=None, **kwargs):
         """Returns a Size tuple for graphics objects, text, or file objects pointing to images"""
