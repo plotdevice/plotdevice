@@ -5,7 +5,7 @@ from nodebox.graphics.typography import *
 from nodebox.graphics.grobs import *
 from nodebox.util.foundry import *
 from nodebox.graphics import grobs, typography
-from nodebox.util import _copy_attr, foundry
+from nodebox.util import _copy_attr, _copy_attrs, foundry
 from nodebox.lib import geometry
 
 class Context(object):
@@ -616,37 +616,22 @@ class Context(object):
             self._align = align
         return self._align
 
-    def textwidth(self, txt, width=None, **kwargs):
-        """Calculates the width of a single-line string."""
-        return self.textmetrics(txt, width, **kwargs)[0]
-
-    def textheight(self, txt, width=None, **kwargs):
-        """Calculates the height of a (probably) multi-line string."""
-        return self.textmetrics(txt, width, **kwargs)[1]
-
     def text(self, txt, x, y, width=None, height=None, outline=False, draw=True, **kwargs):
-        Text.checkKwargs(kwargs)
-        if not isinstance(txt, basestring):
-            badargs = "text() must be called with a string as its first argument"
-            raise NodeBoxError(badargs)
-        if not all(isinstance(c, (int,float)) for c in (x,y)):
-            badargs = "text() requires x & y coordinates as its second and third arguments"
-            raise NodeBoxError(badargs)
-
         txt = self.Text(txt, x, y, width, height, **kwargs)
         txt.inheritFromContext(kwargs.keys())
+
         if outline:
-          path = txt.path
-          if draw:
-              path.draw()
-          return path
+            path = txt.path
+            _copy_attrs(txt, path, {'fill', 'stroke', 'strokewidth'}.intersection(kwargs))
+            if draw:
+                path.draw()
+            return path
         else:
           if draw:
             txt.draw()
           return txt
 
     def textpath(self, txt, x, y, width=None, height=None, **kwargs):
-        Text.checkKwargs(kwargs)
         txt = self.Text(txt, x, y, width, height, **kwargs)
         txt.inheritFromContext(kwargs.keys())
         return txt.path
@@ -655,6 +640,14 @@ class Context(object):
         txt = self.Text(txt, 0, 0, width, height, **kwargs)
         txt.inheritFromContext(kwargs.keys())
         return txt.metrics
+
+    def textwidth(self, txt, width=None, **kwargs):
+        """Calculates the width of a single-line string."""
+        return self.textmetrics(txt, width, **kwargs)[0]
+
+    def textheight(self, txt, width=None, **kwargs):
+        """Calculates the height of a (probably) multi-line string."""
+        return self.textmetrics(txt, width, **kwargs)[1]
 
     ### Image commands ###
 
@@ -683,9 +676,7 @@ class Context(object):
     def measure(self, obj, width=None, height=None, **kwargs):
         """Returns a Size tuple for graphics objects, text, or file objects pointing to images"""
         if isinstance(obj, basestring):
-            txt = self.Text(obj, 0, 0, width, height, **kwargs)
-            txt.inheritFromContext(kwargs.keys())
-            return txt.metrics
+            return self.Text(obj, 0, 0, width, height, **kwargs).metrics
         elif isinstance(obj, file):
             return self.Image(data=obj.read()).size
         elif isinstance(obj, Text):

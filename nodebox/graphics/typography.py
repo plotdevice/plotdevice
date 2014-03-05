@@ -9,8 +9,9 @@ from pprint import pprint
 
 from nodebox import NodeBoxError
 from nodebox.graphics.grobs import TransformMixin, ColorMixin, Color, Region, Size
-from nodebox.graphics.grobs import _save, _restore, Transform, Grob, BezierPath
+from nodebox.graphics.grobs import _save, _restore, _STATE_NAMES, Transform, Grob, BezierPath
 from nodebox.util.foundry import *
+from nodebox.util import _copy_attrs
 
 __all__ = ["Text", "Family", "Font", "Stylesheet", 
            "LEFT", "RIGHT", "CENTER", "JUSTIFY",
@@ -54,31 +55,43 @@ class Typesetter(object):
     store.addLayoutManager_(layout)
     column.setLineFragmentPadding_(0)
 
-    def render(cls, ctx, txt, inherit, styles, w=None, h=None):
-        w,h = [d or 1000000 for d in w,h]
+    def render(cls, text_obj):
+        w,h = [d or 1000000 for d in text_obj.width,text_obj.height]
+        sheet = text_obj._stylesheet
+        style = DEFAULT if text_obj._style is None else text_obj._style
+        words = text_obj.text
 
-        # find any tagged regions that need styling
-        parser = XMLParser(txt)
+        if style in sheet:
+            # user specified a style name
+            attrs = sheet._cascade(DEFAULT, style)
+            astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
+        elif not style:
+            # user disabled the stylesheet
+            attrs = sheet._cascade(DEFAULT)
+            astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
+        else:
+            # find any tagged regions that need styling
+            parser = XMLParser(words)
 
-        # generate a Font for each unique cascade of style tags
-        attrs = {seq:styles._cascade(inherit, *seq) for seq in sorted(parser.regions)}
+            # generate a Font for each unique cascade of style tags
+            attrs = {seq:sheet._cascade(*seq) for seq in sorted(parser.regions)}
 
-        # convert the Fonts into attr dicts then apply them to the runs found in the parse
-        astr = NSMutableAttributedString.alloc().initWithString_(parser.text)
-        for cascade, runs in parser.regions.items():
-            style = attrs[cascade]
-            for rng in runs:
-                astr.setAttributes_range_(style, rng)
+            # convert the Fonts into attr dicts then apply them to the runs found in the parse
+            astr = NSMutableAttributedString.alloc().initWithString_(parser.text)
+            for cascade, runs in parser.regions.items():
+                style = attrs[cascade]
+                for rng in runs:
+                    astr.setAttributes_range_(style, rng)
+    
+            # print '[[%s]]' % parser.text
+            # print "colsize", cls.colsize
+            # print "visible chars", cls.visible
+            # print "typeblock", cls.typeblock
 
         cls.store.beginEditing()
         cls.store.setAttributedString_(astr)
         cls.store.endEditing()
         cls.column.setContainerSize_((w,h))
-
-        print '[[%s]]' % parser.text
-        # print "colsize", cls.colsize
-        # print "visible chars", cls.visible
-        # print "typeblock", cls.typeblock
         cls.astr = astr
 
     def draw_glyphs(cls, x, y):
@@ -96,10 +109,16 @@ class Typesetter(object):
     def colsize(cls):
         return Size(*cls.column.containerSize())
 
+    @property
+    def offset(cls):
+        txtFont, _ = cls.store.attribute_atIndex_effectiveRange_("NSFont", 0, None)
+        h = cls.layout.defaultLineHeightForFont_(txtFont)
+        return h
+
 class Text(Grob, TransformMixin, ColorMixin):
 
-    stateAttributes = ('_transform', '_transformmode', '_stylesheet', '_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight')
-    kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight')
+    stateAttributes = ('_transform', '_transformmode', '_stylesheet')
+    kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
 
     __dummy_color = NSColor.blackColor()
     
@@ -107,37 +126,45 @@ class Text(Grob, TransformMixin, ColorMixin):
         super(Text, self).__init__(ctx)
         TransformMixin.__init__(self)
         ColorMixin.__init__(self, **kwargs)
+
+        badargs = None
+        if not isinstance(text, basestring):
+            badargs = "text() must be called with a string as its first argument"
+        elif not all(isinstance(c, (int,float)) for c in (x,y)):
+            badargs = "text() requires x & y coordinates as its second and third arguments"
+        if badargs:
+            raise NodeBoxError(badargs)
+        if 'stroke' in kwargs:
+            del kwargs['stroke']
+
         self.text = unicode(text)
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self._fontname = kwargs.get('font', "Helvetica")
-        self._fontsize = kwargs.get('fontsize', 24)
-        self._lineheight = max(kwargs.get('lineheight', 1.2), 0.01)
+        self._stylesheet = None
+        self._style = kwargs.pop('style', True)
+        self._spec = Stylesheet._spec(**kwargs)
         self._align = kwargs.get('align', LEFT)
 
     def copy(self):
         new = self.__class__(self._ctx, self.text)
         _copy_attrs(self, new,
             ('x', 'y', 'width', 'height', '_transform', '_transformmode', 
-            '_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight'))
+            '_align', '_stylesheet', '_style', '_spec'))
         return new
+
+    def inheritFromContext(self, ignore=[]):
+        super(Text, self).inheritFromContext(ignore)
+        self._stylesheet._inherit(self._spec)
 
     @property
     def font(self):
-        return NSFont.fontWithName_size_(self._fontname, self._fontsize)
+        return NSFont.fontWithName_size_(self._ctx._fontname, self._ctx._fontsize)
 
     def _draw(self):
         x,y = self.x, self.y
-        # print "text w/", {nm:getattr(self, nm) for nm in Text.stateAttributes}
-
-        rewrites = dict(face="_fontname", size="_fontsize", color="_fillcolor", align="_align", 
-                        leading="_lineheight")
-        inherit = {style:getattr(self, attr) for style,attr in rewrites.items()}
-        print "draw w/", inherit
-
-        printer = Typesetter(self._ctx, self.text, inherit, self._stylesheet, self.width, self.height)
+        printer = Typesetter(self)
         (dx, dy), (w, h) = printer.typeblock
         preferredWidth, preferredHeight = printer.colsize
 
@@ -153,33 +180,25 @@ class Text(Grob, TransformMixin, ColorMixin):
             deltaX = w / 2
             deltaY = h / 2
             t = Transform()
-            t.translate(x+deltaX, y-self.font.defaultLineHeightForFont()+deltaY)
+            t.translate(x+deltaX, y-printer.offset+deltaY)
             t.concat()
             self._transform.concat()
             printer.draw_glyphs(-deltaX-dx, -deltaY-dy)
         else:
             self._transform.concat()
-            printer.draw_glyphs(x-dx, y-dy-self.font.defaultLineHeightForFont())
+            printer.draw_glyphs(x-dx, y-dy-printer.offset)
         _restore()
         return (w, h)
 
     @property
     def metrics(self):
-        rewrites = dict(face="_fontname", size="_fontsize", color="_fillcolor", align="_align", 
-                        leading="_lineheight")
-        inherit = {style:getattr(self, attr) for style,attr in rewrites.items()}
-        print "metrics w/", inherit
-        printer = Typesetter(self._ctx, self.text, inherit, self._stylesheet, self.width, self.height)
+        printer = Typesetter(self)
         return printer.typeblock.size
 
     @property
     def path(self):
-        rewrites = dict(face="_fontname", size="_fontsize", color="_fillcolor", align="_align", 
-                        leading="_lineheight")
-        inherit = {style:getattr(self, attr) for style,attr in rewrites.items()}
-        print "path w/", inherit
         x,y = self.x, self.y
-        printer = Typesetter(self._ctx, self.text, inherit, self._stylesheet, self.width, self.height)
+        printer = Typesetter(self)
         (dx, dy), (w, h) = printer.typeblock
         preferredWidth, preferredHeight = printer.colsize
 
@@ -207,7 +226,7 @@ class Text(Grob, TransformMixin, ColorMixin):
             path.closePath()
         path = BezierPath(self._ctx, path)
         trans = Transform()
-        trans.translate(x,y-self.font.defaultLineHeightForFont())
+        trans.translate(x,y-printer.offset)
         trans.scale(1.0,-1.0)
         path = trans.transformBezierPath(path)
         path.inheritFromContext()
@@ -239,9 +258,7 @@ class XMLParser(object):
                 self._expat.Parse(self.xml, True)
             except expat.ExpatError, e:
                 # go a little overboard providing context for syntax errors
-                print '%r'%xml
-                raise e
-                line = xml.split('\n')[e.lineno-1]
+                line = self.xml.split('\n')[e.lineno-1]
                 self._expat_error(e, line)
             self.text = "".join(self.body)
 
@@ -260,6 +277,7 @@ class XMLParser(object):
             snippet = snippet[col-measure:]
             col -= col-measure
         snippet = snippet[:max(col+12, measure-col)]
+        col = min(col, len(snippet))
         
         # show which ends of the line are truncated
         clipped = [snippet]
@@ -304,16 +322,12 @@ class XMLParser(object):
         self.body.append(data)
         self.log(u'"%s"'%(data))
 
-
-
-
-
-
-class Stylesheet(object):
-    kwargs = ('family','size','leading','weight','width','variant','italic','heavier','lighter','color','face','fontname','fontsize','lineheight')
+class Stylesheet(Grob):
+    stateAttributes = ('_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight')
+    kwargs = ('family','size','leading','weight','width','variant','italic','heavier','lighter','color','fill','face','fontname','fontsize','lineheight')
 
     def __init__(self, ctx, styles=None):
-        self._ctx = ctx
+        super(Stylesheet, self).__init__(ctx)
         self._styles = dict(styles or {})
 
     def __repr__(self):
@@ -368,39 +382,40 @@ class Stylesheet(object):
             self._styles[name] = spec
         return self[name]
 
-    def _cascade(self, inherit, *styles):
+    def _inherit(self, spec):
+        """Merge overrides from the text() invocation with the context's state"""
+        self.inheritFromContext()
+        self._override = spec
+
+    def _cascade(self, *styles):
         """Apply the listed styles in order and return nsattibutedstring attrs"""
-        
-        # use the context's font and color settings unless the DEFAULT style has overrides
-        # inherit = dict(face="_fontname", size="_fontsize", color="_fillcolor",
-        #                 align="_align", leading="_lineheight")
-        # spec = {style:getattr(self._ctx, attr) for style,attr in inherit.items()}
-        # print 'inheritance', inherit
-        spec = dict(inherit)
-        print 'inherited', spec
-        spec.update(self._styles.get(DEFAULT,{}))
+
+        # use the inherited context settings as a baseline spec
+        rewrites = dict(face="_fontname", size="_fontsize", color="_fillcolor", 
+                        align="_align", leading="_lineheight")
+        spec = {style:getattr(self, attr) for style,attr in rewrites.items()}
 
         # layer the styles to generate a final font and color
         for tag in styles:
             spec.update(self._styles.get(tag,{}))
 
-        # OOPS: what about transparent fills? 
-        if spec.get('color') is None:
-            color = Color._nscolor('grey',0,0)
-        else:
-            color = Color(self._ctx, spec.pop('color')).nsColor
-        alignment = _TEXT[spec['align']]
+        # let any spec-ish args passed in the text() call get final say
+        spec.update(self._override)
 
+        # assign a font and color based on the coalesced spec
+        color = Color(self._ctx, spec.pop('color')).nsColor
+        font = Font(self._ctx, **{k:v for k,v in spec.items() if k in Stylesheet.kwargs} )
+
+        # factor the relevant attrs into a paragraph style
         graf = NSMutableParagraphStyle.alloc().init()
         graf.setLineBreakMode_(NSLineBreakByWordWrapping)
-        graf.setAlignment_(alignment)
+        graf.setAlignment_(_TEXT[spec['align']])
         graf.setLineHeightMultiple_(spec['leading'])
         # graf.setLineSpacing_(extra_px_of_lead)
         # graf.setParagraphSpacing_(1em?)
         # graf.setMinimumLineHeight_(self._lineheight)
 
-        font = Font(self._ctx, **{k:v for k,v in spec.items() if k in Stylesheet.kwargs} )
-        print font.name, color, spec.get('color')
+        # build the dict of features for this combination of styles
         return {"NSFont":font._nsFont, "NSColor":color, NSParagraphStyleAttributeName:graf}
 
     @classmethod
@@ -430,13 +445,13 @@ class Stylesheet(object):
             raise NodeBoxError(badarg)
         elif basis:
             spec['face'] = basis
-
-
-
-        # TODO
-        # should also serialize colors somehow. maybe just as tuples...
-
-
+            # hrm... 
+            # 
+            # for cascading purposes this might be better expanded to its
+            # fam/wgt/wid/var values. otherwise a rule that sets a face over a
+            # previously imposed family ends up getting overruled from below.
+            # unclear whether it's better to handle this in _inherit to avoid
+            # messing with the way Font uses _spec...
 
         # allow for negative values in the weight step params, but
         # normalize them in the spec
@@ -482,6 +497,7 @@ class Stylesheet(object):
 #     [desc fontDescriptorByAddingAttributes:
 #      @{UIFontDescriptorFeatureSettingsAttribute:arr}];
 #     UIFont* f = [UIFont fontWithDescriptor:desc size:0];
+
 
 class Font(object):
 
