@@ -1,11 +1,14 @@
 import os
 import re
+import json
+import csv
+from codecs import open
 from collections import OrderedDict, defaultdict
 from AppKit import NSFontManager, NSFont, NSMacOSRomanStringEncoding, NSItalicFontMask
 from random import choice, shuffle
 from nodebox import NodeBoxError
 
-__all__ = ('grid', 'random', 'shuffled', 'choice', 'ordered', 'order', 'files', 'autotext', '_copy_attr', '_copy_attrs', 'odict', 'ddict', 'adict')
+__all__ = ('grid', 'random', 'shuffled', 'choice', 'ordered', 'order', 'files', 'read', 'autotext', '_copy_attr', '_copy_attrs', 'odict', 'ddict', 'adict')
 
 ### Utilities ###
 
@@ -213,3 +216,53 @@ class adict(BetterRepr, dict):
             del self[key]
         except KeyError, k:
             raise AttributeError, k
+
+
+### datafile unpackers ###
+
+def csv_reader(pth, encoding, dialect=csv.excel, **kwargs):
+    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
+    with open(pth, 'Urb', encoding) as unicode_csv_data:
+        csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
+                                dialect=dialect, **kwargs)
+        for row in csv_reader:
+            # decode UTF-8 back to Unicode, cell by cell:
+            yield [unicode(cell, 'utf-8') for cell in row]
+
+def csv_dictreader(pth, encoding, dialect=csv.excel, cols=None, **kwargs):
+    if not isinstance(cols, (list, tuple)):
+        cols=None
+    with open(pth, 'Urb', encoding) as unicode_csv_data:
+        csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
+                                dialect=dialect, **kwargs)
+
+        for row in csv_reader:
+            if not cols:
+              cols = [unicode(cell, 'utf-8') for cell in row]
+              continue
+            # decode UTF-8 back to Unicode, cell by cell:
+            yield odict( (col, unicode(cell, 'utf-8')) for (col,cell) in zip(cols,row) )
+
+def csv_dialect(pth):
+    with file(pth, 'Urb') as f:
+        return csv.Sniffer().sniff(f.read(1024))
+
+def utf_8_encoder(unicode_csv_data):
+    for line in unicode_csv_data:
+        yield line.encode('utf-8')
+
+def read(pth, format=None, encoding='utf-8', cols=None):
+    pth = re.sub(r'^~(?=/|$)',os.getenv('HOME'),pth)
+    format = format.lstrip('.') if format else pth.rsplit('.',1)[-1]
+
+    if format=='json':
+        return json.load(file(pth), object_hook=odict, encoding=encoding)
+    elif format=='csv':
+        dialect = csv_dialect(pth)
+        if cols:
+            return list(csv_dictreader(pth, encoding, dialect=dialect, cols=cols))
+        return list(csv_reader(pth, encoding, dialect=dialect))
+    else:
+        with open(pth, 'Urb', encoding=encoding) as f:
+            return f.read()
+    
