@@ -80,40 +80,42 @@ def autotext(sourceFile):
 
 ### Permutation sugar ###
 
-def _is_sequence(seq):
-    if not isinstance(seq, (list, tuple) ):
-        badtype = 'ordered, shuffled, and friends only work for tuples and lists (not %d)' % type(seq)
+def _as_sequence(seq):
+    if not isinstance(seq, (basestring, list, tuple) ):
+        badtype = 'ordered, shuffled, and friends only work for strings, tuples and lists (not %d)' % type(seq)
         raise NodeBoxError(badtype)
+    return list(seq)
+
+def _as_before(orig, lst):
+    return "".join(lst) if isinstance(orig, basestring) else list(lst)
 
 def _getter(seq, names):
     from operator import itemgetter, attrgetter
     return itemgetter(*names) if names[0] in seq[0] else attrgetter(*names)
 
 def order(seq, *names, **kwargs):
-    _is_sequence(seq)
+    lst = _as_sequence(seq)
     if not names or not seq:
-        reordered = [(it,idx) for idx,it in enumerate(seq)]
+        reordered = [(it,idx) for idx,it in enumerate(lst)]
     else:
-        getter = _getter(seq, names)
-        reordered = [(getter(it), idx) for idx,it in enumerate(seq)]
+        getter = _getter(lst, names)
+        reordered = [(getter(it), idx) for idx,it in enumerate(lst)]
     reordered.sort(**kwargs)
     return [it[1] for it in reordered]
 
 def ordered(seq, *names, **kwargs):
-    _is_sequence(seq)
-    if kwargs.get('perm') and seq:
-        return [seq[idx] for idx in kwargs['perm']]
+    lst = _as_sequence(seq)
+    if kwargs.get('perm') and lst:
+        return _as_before(seq, [lst[idx] for idx in kwargs['perm']])
 
-    if not names or not seq:
-        return list(sorted(seq, **kwargs))
-
-    return list(sorted(seq, key=_getter(seq, names), **kwargs))
+    if not names or not lst:
+        return _as_before(seq, sorted(lst, **kwargs))
+    return _as_before(seq, sorted(lst, key=_getter(lst, names), **kwargs))
 
 def shuffled(seq):
-    _is_sequence(seq)
-    perm = list(seq)
-    shuffle(perm)
-    return perm
+    lst = _as_sequence(seq)
+    shuffle(lst)
+    return _as_before(seq, lst)
 
 ### deepcopy helpers ###
 
