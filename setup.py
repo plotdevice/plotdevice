@@ -17,7 +17,6 @@ import sys,os
 from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
-# import nodebox
 
 NAME = 'NodeBox'
 VERSION = '1.10'

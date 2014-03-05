@@ -232,10 +232,8 @@ class Grob(object):
         raise NotImplementedError, "Copy is not implemented on this Grob class."
         
     def inheritFromContext(self, ignore=()):
-        attrs_to_copy = list(self.__class__.stateAttributes)
-        [attrs_to_copy.remove(k) for k, v in _STATE_NAMES.items() if v in ignore]
-        # print "inherit ->", self
-        # print "attrs", attrs_to_copy
+        attrs_to_skip = [k for k, v in _STATE_NAMES.items() if v in ignore]
+        attrs_to_copy = set(self.__class__.stateAttributes).difference(attrs_to_skip)
         _copy_attrs(self._ctx, self, attrs_to_copy)
         
     def checkKwargs(self, kwargs):
@@ -952,32 +950,21 @@ class Color(object):
 
     def _get_hex(self):
         r, g, b, a = self._values(RGB)
-        return "#"+"".join('%02x'%int(255*c) for c in (r,g,b))
+        s = "".join('%02x'%int(255*c) for c in (r,g,b))
+        if all([len(set(pair))==1 for pair in zip(s[::2], s[1::2])]):
+            s = "".join(s[::2])
+        return "#"+s
     def _set_hex(self, val):
-        hexclr = val.lstrip('#')
-        if len(hexclr) in (3,4):
-            hexclr = "".join(map("".join, zip(hexclr,hexclr)))
-        if len(hexclr) not in (6,8):
-            invalid = "Don't know how to interpret hex color '#%s'." % hexclr
-            raise NodeBoxError(invalid)
-        r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
-        self._rgb = Color._nscolor(RGB, r, g, b, 1.0)
+        r, g, b, a = Color._str2rgb(clr)
+        self._rgb = Color._nscolor(RGB, r, g, b, a)
         self._updateCmyk()
     hex = property(_get_hex, _set_hex, doc="the rgb hex string for the color")
 
     def _get_hexa(self):
-        r, g, b, a = self._values(RGB)
-        hexclr = "#"+"".join('%02x'%int(255*c) for c in (r,g,b))
-        return (hexclr, a)
-    def _set_hexa(self, val):
-        clr, a = val[0], self._normalize(val[1])
-        hexclr = clr.lstrip('#')
-        if len(hexclr) in (3,4):
-            hexclr = "".join(map("".join, zip(hexclr,hexclr)))
-        if len(hexclr) not in (6,8):
-            invalid = "Don't know how to interpret hex color '#%s'." % hexclr
-            raise NodeBoxError(invalid)
-        r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
+        return (self.hex, self.a)
+    def _set_hexa(self, clr, alpha):
+        a = self._normalize(alpha)
+        r, g, b, _ = Color._str2rgb(clr)
         self._rgb = Color._nscolor(RGB, r, g, b, a)
         self._updateCmyk()
     hexa = property(_get_hexa, _set_hexa, doc="a tuple containing the color's rgb hex string and an alpha float")
@@ -991,10 +978,10 @@ class Color(object):
         return self.__class__(color=self._rgb.blendedColorWithFraction_ofColor_(
                 factor, otherColor))
 
-    def _normalize(self, v):
+    def _normalize(self, v, rng=None):
         """Bring the color into the 0-1 scale for the current colorrange"""
-        if self._ctx._colorrange == 1.0: return v
-        return v / self._ctx._colorrange
+        r = self._ctx._colorrange if rng is None else rng
+        return v if r==1.0 else v/r
 
     def _normalizeList(self, lst, rng=None):
         """Bring the color into the 0-1 scale for the current colorrange"""
