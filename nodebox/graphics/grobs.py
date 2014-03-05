@@ -12,7 +12,7 @@ from Foundation import *
 
 from nodebox import NodeBoxError
 from nodebox.util import _copy_attr, _copy_attrs
-from nodebox.lib import polymagic
+from nodebox.lib import polymagic, geometry
 # try:
 #     import cPolymagic
 # except ImportError, e:
@@ -21,7 +21,7 @@ from nodebox.lib import polymagic
 __all__ = [
         "DEFAULT_WIDTH", "DEFAULT_HEIGHT",
         "inch", "cm", "mm", "pi", "tau",
-        "RGB", "HSB", "CMYK",
+        "RGB", "HSB", "CMYK", "GREY",
         "CENTER", "CORNER",
         "DEGREES", "RADIANS", "PERCENT",
         "MOVETO", "LINETO", "CURVETO", "CLOSE",
@@ -47,6 +47,7 @@ tau = 2*pi
 RGB = "rgb"
 HSB = "hsb"
 CMYK = "cmyk"
+GREY = "grey"
 
 # transform modes
 CENTER = "center"
@@ -131,9 +132,6 @@ def trim_zeroes(func):
     return lambda slf: re.sub(r'\.?0+(?=[,\)])', '', func(slf))
 
 class Point(object):
-    # TODO:
-    # add geo.(angle, distance, coordinates, reflect) as methods?
-    #
 
     def __init__(self, *args):
         if len(args) == 2:
@@ -143,7 +141,7 @@ class Point(object):
         elif len(args) == 0:
             self.x = self.y = 0.0
         else:
-            badcoords = "Wrong initializer for Point object"
+            badcoords = "Bad initial coordinates for Point object"
             raise NodeBoxError(badcoords)
 
     @trim_zeroes
@@ -160,6 +158,27 @@ class Point(object):
     def __iter__(self):
         # allow for assignments like: x,y = Point()
         return iter([self.x, self.y])
+
+    # lib.geometry methods (accept either x,y pairs or Point args)
+
+    def angle(self, x=0, y=0):
+        if isinstance(x, Point):
+            x, y = x.__iter__()
+        return geometry.angle(self.x, self.y, x, y)
+
+    def distance(self, x=0, y=0):
+        if isinstance(x, Point):
+            x, y = x.__iter__()
+        return geometry.distance(self.x, self.y, x, y)
+
+    def reflect(self, x=0, y=0, d=1.0, a=180):
+        if isinstance(x, Point):
+            d, a = y, d
+            x, y = x.__iter__()
+        return geometry.reflect(self.x, self.y, x, y, d, a)
+
+    def coordinates(self, distance, angle):
+        return geometry.coordinates(self.x, self.y, distance, angle)
 
 class Size(tuple):
     def __new__(cls, width, height):
@@ -719,78 +738,57 @@ class ClippingPath(Grob):
 
 class Color(object):
 
-    @classmethod
-    def _nscolor(cls, scheme, *components):
-        factory = {RGB:     NSColor.colorWithDeviceRed_green_blue_alpha_,
-                   HSB:     NSColor.colorWithDeviceHue_saturation_brightness_alpha_,
-                   CMYK:    NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_,
-                   "grey": NSColor.colorWithDeviceWhite_alpha_}
-        return factory[scheme](*components)
-
-    @classmethod
-    def _str2rgb(cls, clrstr):
-        if clrstr in _CSS_COLORS: # handle css color names
-            clrstr = _CSS_COLORS[clrstr]
-
-        if re.search(r'#?[0-9a-f]{3,8}', clrstr): # rgb & rgba hex strings
-            hexclr = clrstr.lstrip('#')
-            if len(hexclr) in (3,4):
-                hexclr = "".join(map("".join, zip(hexclr,hexclr)))
-            if len(hexclr) not in (6,8):
-                invalid = "Don't know how to interpret hex color '#%s'." % hexclr
-                raise NodeBoxError(invalid)
-            r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
-            a = 1.0 if len(hexclr)!=8 else int(hexclr[6:], 16)/255.0
-        else:
-            invalid = "Color strings must be 3/6/8-character hex codes or valid css-names"
-            raise NodeBoxError(invalid)
-        return r, g, b, a
-
-    def __init__(self, ctx, *args):
+    def __init__(self, ctx, *args, **kwargs):
         self._ctx = ctx
+        rng = kwargs.get('range', ctx._colorrange)
 
-        # Decompose the arguments into tuples. 
-        if args and isinstance(args[0], tuple):
-            args = args[0]
+        # flatten any tuples in the arguments list
+        args = sum( ([x] if not isinstance(x, (list,tuple)) else list(x) for x in args), [] )
 
-        if args and args[0] in (RGB, HSB, CMYK):
+        # if the first arg is a color mode, use that to interpret the args
+        if args and args[0] in (RGB, HSB, CMYK, GREY):
             mode, args = args[0], args[1:]
-            if not args:
-                ctx._colormode = mode
-                return mode
         else:
+            mode=kwargs.get('mode')
+
+        if mode and not args:
+            # if called without any component values just update the context's mode
+            ctx._colormode = mode
+            return mode
+        elif mode not in (RGB, HSB, CMYK, GREY):
+            # otherwise interpret the components in the context's current mode
             mode = ctx._colormode
 
         params = len(args)
-        if params == 1 and args[0] is None:
-            clr = Color._nscolor("grey", 0, 0)
-        elif params == 1 and isinstance(args[0], Color):
+        if params == 1 and args[0] is None:                # None -> transparent
+            clr = Color._nscolor(GREY, 0, 0)
+        elif params == 1 and isinstance(args[0], Color):   # Color object
             is_rgb = self._ctx._outputmode == RGB
             clr = args[0]._rgb if is_rgb else args[0]._cmyk
-        elif params == 1 and isinstance(args[0], NSColor):
+        elif params == 1 and isinstance(args[0], NSColor): # NSColor object
             clr = args[0]
         elif params>=1 and isinstance(args[0], basestring):
-            r, g, b, a = Color._str2rgb(args[0])    # Hex string or named color
+            r, g, b, a = Color._str2rgb(args[0])           # Hex string or named color
             if args[1:]:
                 a = args[1]
             clr = Color._nscolor(RGB, r, g, b, a)
-        elif 1<=params<=2:                          # Greyscale (+ alpha)
-            gscale = self._normalizeList(args)
+        elif 1<=params<=2:                                 # Greyscale (+ alpha)
+            gscale = self._normalizeList(args, rng)
             if params<2:
                 gscale += (1,)
-            clr = Color._nscolor("grey", *gscale)
-        elif 3<=params<=4 and mode in (RGB, HSB):   # RGB(a) & HSB(a)
-            rgba_hsba = self._normalizeList(args)
+            clr = Color._nscolor(GREY, *gscale)
+        elif 3<=params<=4 and mode in (RGB, HSB):          # RGB(a) & HSB(a)
+            rgba_hsba = self._normalizeList(args, rng)
             if params<4:
                 rgba_hsba += (1,)
             clr = Color._nscolor(mode, *rgba_hsba)
-        elif 4<=params<=5 and mode==CMYK:           # CMYK(a)
-            cmyka = self._normalizeList(args)
+        elif 4<=params<=5 and mode==CMYK:                  # CMYK(a)
+            cmyka = self._normalizeList(args, rng)
             if params<5:
                 cmyka += (1,)
             clr = Color._nscolor(CMYK, *cmyka)
-        else:                                       # default is the new black
-            clr = Color._nscolor("grey", 0, 1)
+        else:                                              # default is the new black
+            clr = Color._nscolor(GREY, 0, 1)
 
         self._cmyk = clr.colorUsingColorSpaceName_(NSDeviceCMYKColorSpace)
         self._rgb = clr.colorUsingColorSpaceName_(NSDeviceRGBColorSpace)
@@ -998,11 +996,39 @@ class Color(object):
         if self._ctx._colorrange == 1.0: return v
         return v / self._ctx._colorrange
 
-    def _normalizeList(self, lst):
+    def _normalizeList(self, lst, rng=None):
         """Bring the color into the 0-1 scale for the current colorrange"""
-        r = self._ctx._colorrange
+        r = self._ctx._colorrange if rng is None else rng
         if r == 1.0: return lst
         return [v / r for v in lst]
+
+    @classmethod
+    def _nscolor(cls, scheme, *components):
+        factory = {RGB: NSColor.colorWithDeviceRed_green_blue_alpha_,
+                   HSB: NSColor.colorWithDeviceHue_saturation_brightness_alpha_,
+                   CMYK: NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_,
+                   GREY: NSColor.colorWithDeviceWhite_alpha_}
+        return factory[scheme](*components)
+
+    @classmethod
+    def _str2rgb(cls, clrstr):
+        if clrstr in _CSS_COLORS: # handle css color names
+            clrstr = _CSS_COLORS[clrstr]
+
+        if re.search(r'#?[0-9a-f]{3,8}', clrstr): # rgb & rgba hex strings
+            hexclr = clrstr.lstrip('#')
+            if len(hexclr) in (3,4):
+                hexclr = "".join(map("".join, zip(hexclr,hexclr)))
+            if len(hexclr) not in (6,8):
+                invalid = "Don't know how to interpret hex color '#%s'." % hexclr
+                raise NodeBoxError(invalid)
+            r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
+            a = 1.0 if len(hexclr)!=8 else int(hexclr[6:], 16)/255.0
+        else:
+            invalid = "Color strings must be 3/6/8-character hex codes or valid css-names"
+            raise NodeBoxError(invalid)
+        return r, g, b, a
+
 
 color = Color # hmmmmm... is this here for good or ill?
 
