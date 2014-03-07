@@ -9,10 +9,6 @@ from PyObjCTools import AppHelper
 # (we insert rather than append to avoid getting trapped in py2app's zipfile)
 sys.path.insert(0, '%s/Contents/Resources/python'%abspath(Foundation.NSBundle.mainBundle().bundlePath()))
 
-# set up the c-extensions path
-import nodebox
-nodebox.initialize('gui')
-
 # NodeBox is a typical document-based application. We'll import the NodeBoxDocument
 # class et al from the gui module and the corresponding document-type defined in the
 # info.plist will do the rest.

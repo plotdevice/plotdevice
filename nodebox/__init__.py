@@ -21,19 +21,16 @@ __MAGIC = "_n_o_d_e_b_o_x_"
 def get_version():
     return __version__
 
-app = None
-def initialize(mode='headless'):
-    """vestigial"""
-    global app
-    if app is not None: return
-    app = {'headless':False, 'gui':True}.get(mode)
-    if app is None: return
-
 class NodeBoxError(Exception): 
     pass
 
+# note whether the module is being used within the .app, via task.py, or from the repl
+import sys, re
+called_from = getattr(sys.modules['__main__'], '__file__', '<interactive>')
+is_windowed = bool(re.search(r'nodebox(-app|/run/task)\.py$', called_from))
+app = bool(called_from=='nodebox-app.py') if is_windowed else None
+
 # add the Extras directory to sys.path since every module depends on PyObjC and friends    
-import sys
 try:
     import objc
 except ImportError:
@@ -44,22 +41,27 @@ except ImportError:
 # print python exceptions to the console rather than silently failing
 objc.setVerbose(True) 
 
-# create a canvas and graphics context for the draw functions to operate on
-from nodebox import graphics
-from nodebox import util
-from nodebox.run.export import export
-ns = {"export":export}
-canvas = graphics.Canvas()
-context = graphics.Context(canvas, ns)
-
+# add any installed Libraries to the sys path
 from os import getenv
 from os.path import join
 sys.path.append(join(getenv('HOME'), 'Library', 'Application Support', 'NodeBox'))
 
-# set up the standard nodebox global namespace, all tied to the module-level canvas
-# (note that this means you shouldn't `import *` from this in more than one script file
-# or unpredictable things may happen as you mutate global state in multiple places.)
-for module in graphics, util, context:
-    ns.update( (a,getattr(module,a)) for a in module.__all__  )
-globals().update(ns)
-__all__ = ns.keys()
+# if imported from an external module, set up a drawing environment in __all__.
+# (note that since this happens at the module level, the canvas will be shared
+# among all the files in a given process that `import *`).
+if not is_windowed:
+    # create a global canvas and graphics context for the draw functions to operate on
+    from nodebox import graphics
+    from nodebox import util
+    from nodebox.run.export import export
+    ns = {"export":export}
+    canvas = graphics.Canvas()
+    context = graphics.Context(canvas, ns)
+
+    # set up the standard nodebox global namespace, all tied to the module-level canvas
+    for module in graphics, util, context:
+        ns.update( (a,getattr(module,a)) for a in module.__all__  )
+    globals().update(ns)
+    __all__ = ns.keys()
+else:
+    __all__ = ('app',)

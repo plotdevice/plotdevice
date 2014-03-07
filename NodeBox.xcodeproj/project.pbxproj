@@ -43,7 +43,6 @@
 		2A32958E18C59D8000EEDD1C /* polymagic.py in Copy nodebox.lib */ = {isa = PBXBuildFile; fileRef = 2A32957B18C59D0A00EEDD1C /* polymagic.py */; };
 		2A32959118C6879F00EEDD1C /* colors.json in Copy nodebox.graphics */ = {isa = PBXBuildFile; fileRef = 2A32958F18C6879500EEDD1C /* colors.json */; };
 		2A3BD55E189C653600748EA3 /* NodeBoxFile-nb.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2A3BD55D189C653600748EA3 /* NodeBoxFile-nb.icns */; };
-		2A3DB1F7187E85190062635B /* script.py in Copy nodebox root */ = {isa = PBXBuildFile; fileRef = 2A3DB1F5187E85130062635B /* script.py */; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
 		2A66ECEB18A99328002903DE /* ace.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDE18A992BD002903DE /* ace.js */; };
 		2A66ECEC18A99328002903DE /* editor.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDF18A992BD002903DE /* editor.js */; };
@@ -165,7 +164,6 @@
 			dstSubfolderSpec = 7;
 			files = (
 				611CC52F10BA8DDF00B55455 /* __init__.py in Copy nodebox root */,
-				2A3DB1F7187E85190062635B /* script.py in Copy nodebox root */,
 			);
 			name = "Copy nodebox root";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -263,7 +261,6 @@
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		2A3BD55D189C653600748EA3 /* NodeBoxFile-nb.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "NodeBoxFile-nb.icns"; path = "Resources/NodeBoxFile-nb.icns"; sourceTree = "<group>"; };
-		2A3DB1F5187E85130062635B /* script.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = script.py; sourceTree = "<group>"; };
 		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		2A66ECDE18A992BD002903DE /* ace.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = ace.js; path = Resources/ui/js/ace.js; sourceTree = "<group>"; };
 		2A66ECDF18A992BD002903DE /* editor.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = editor.js; path = Resources/ui/js/editor.js; sourceTree = "<group>"; };
@@ -473,7 +470,6 @@
 			isa = PBXGroup;
 			children = (
 				611CC4AF10BA8C1B00B55455 /* __init__.py */,
-				2A3DB1F5187E85130062635B /* script.py */,
 				2A32957118C59D0A00EEDD1C /* lib */,
 				611CC4BA10BA8C1B00B55455 /* geo */,
 				611CC4BD10BA8C1B00B55455 /* graphics */,

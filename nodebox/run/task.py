@@ -24,13 +24,13 @@ from os.path import dirname, abspath, exists, join
 from codecs import open
 
 import nodebox
-nodebox.initialize('gui') # adds pyobjc to sys.path as a side effect...
+# nodebox.initialize('gui') # adds pyobjc to sys.path as a side effect...
 import objc # ...otherwise this would fail
 from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
 from nodebox.run import Sandbox, resource_path
-from nodebox.gui import *
+# from nodebox.gui import *
 STDOUT = sys.stdout
 STDERR = sys.stderr
 ERASER = '\r%s\r'%(' '*80)
@@ -97,13 +97,13 @@ class ScriptAppDelegate(NSObject):
         if self.mode=='headless' or quit:
             NSApp().terminate_(None)
 
-from nodebox.lib.fsevents import Observer
+# from nodebox.lib.fsevents import Observer
 from nodebox.gui.app import NodeBoxDocumentController
 class NodeBoxScriptReloader(NodeBoxDocumentController):
     def initWithScript_(self, doc):
         self._script = doc
-        self._observer = Observer()
-        self._observer.start()
+        # self._observer = Observer()
+        # self._observer.start()
         self.updateWatchList_(None)
         return self
         
