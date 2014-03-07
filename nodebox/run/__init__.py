@@ -68,7 +68,7 @@ def resource_path(resource=None):
     if not exists(rsrc_root):
         # hack to run in-place in sdist
         from glob import glob
-        for pth in glob(join(module_root, '../build/lib.*-2.7/nodebox/rsrc')):
+        for pth in glob(join(module_root, '../../build/lib/nodebox/rsrc')):
             rsrc_root = abspath(pth)
             break
         else:
