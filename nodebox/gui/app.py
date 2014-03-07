@@ -9,14 +9,11 @@ from AppKit import *
 from nodebox.lib.fsevents import Observer, Stream
 from nodebox.gui.preferences import get_default
 from nodebox.run import CommandListener
-from nodebox.gui import bundle_path
+from nodebox.gui import bundle_path, set_timeout
 from nodebox import util
 
 LIB_DIR_README = """"You can put NodeBox libraries In this directory to make them available to your scripts.
 """
-
-def set_timeout(target, sel, delay, info=None, repeat=False):
-    return NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(delay, target, sel, info, repeat)
 
 class NodeBoxAppDelegate(NSObject):
     examplesMenu = None
@@ -59,7 +56,7 @@ class NodeBoxAppDelegate(NSObject):
         self.updateExamples()
 
     def updateExamples(self):
-        examples_folder = bundle_path("Contents/Resources/examples")
+        examples_folder = bundle_path(rsrc="examples")
         pyfiles = glob('%s/*/*.nb'%examples_folder)
         categories = self.examplesMenu.submenu()
         folders = {}
@@ -104,7 +101,7 @@ class NodeBoxAppDelegate(NSObject):
 
     @objc.IBAction
     def showHelp_(self, sender):
-        url = NSURL.fileURLWithPath_(bundle_path('Contents/Resources/doc/manual.html'))
+        url = NSURL.fileURLWithPath_(bundle_path(rsrc='doc/manual.html'))
         opened = NSWorkspace.sharedWorkspace().openURL_(url)
 
     @objc.IBAction

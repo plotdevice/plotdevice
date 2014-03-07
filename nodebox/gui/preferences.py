@@ -4,7 +4,7 @@ import json
 from AppKit import *
 from Foundation import *
 from subprocess import Popen, PIPE
-from nodebox.gui import bundle_path
+from nodebox.gui import bundle_path, set_timeout
 
 def get_default(label):
     if not re.match(r'^(NS|Web)', label):
@@ -28,7 +28,7 @@ def defaultDefaults():
         "nodebox:font-size":11,
     }
 NSUserDefaults.standardUserDefaults().registerDefaults_(defaultDefaults())
-THEMES = json.load(file(bundle_path('Contents/Resources/ui/themes.json')))
+THEMES = json.load(file(bundle_path(rsrc='ui/themes.json')))
 ERR_COL = NSColor.colorWithRed_green_blue_alpha_(167/255.0, 41/255.0, 34/255.0, 1.0)
 OK_COL = NSColor.colorWithRed_green_blue_alpha_(60/255.0, 60/255.0, 60/255.0, 1.0)
 
@@ -223,7 +223,6 @@ class NodeBoxPreferencesController(NSWindowController):
 
     @objc.IBAction
     def modifyPort_(self, sender):
-        from nodebox.gui.app import set_timeout
         newport = sender.intValue()
         self.toolPort.setStringValue_(str(newport))
         if self.toolPortTimer:

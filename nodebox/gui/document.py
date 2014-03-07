@@ -10,11 +10,11 @@ import objc
 from Foundation import *
 from AppKit import *
 
-from nodebox.gui.preferences import editor_info
+# from nodebox.gui.preferences import editor_info
 from nodebox.gui.editor import OutputTextView, EditorView
 from nodebox.gui.widgets import DashboardController, ExportSheet
 from nodebox.gui.views import FullscreenWindow, FullscreenView
-from nodebox.gui.app import set_timeout
+from nodebox.gui import set_timeout
 from nodebox.run import Sandbox
 from nodebox import util, graphics
 

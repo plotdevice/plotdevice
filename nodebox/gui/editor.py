@@ -12,8 +12,7 @@ from AppKit import *
 from WebKit import * # (defaults write net.nodebox.NodeBox WebKitDeveloperExtras -bool true)
 from nodebox.gui.preferences import get_default, editor_info
 from nodebox.gui.widgets import ValueLadder
-from nodebox.gui.app import set_timeout
-from nodebox.gui import bundle_path
+from nodebox.gui import bundle_path, set_timeout
 
 __all__ = ['EditorView', 'OutputTextView']
 
@@ -55,7 +54,7 @@ class EditorView(NSView):
         self.webview.setFrameLoadDelegate_(self)
         self.webview.setUIDelegate_(self)
         self.addSubview_(self.webview)
-        html = bundle_path('Contents/Resources/ui/editor.html')
+        html = bundle_path(rsrc='ui/editor.html')
         ui = file(html).read().decode('utf-8')
         baseurl = NSURL.fileURLWithPath_(os.path.dirname(html))
         self.webview.mainFrame().loadHTMLString_baseURL_(ui, baseurl)
