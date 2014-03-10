@@ -486,8 +486,28 @@ class Context(object):
 
     ### Color Commands ###
 
-    def color(self, *args):
-        return self.Color(*args)
+    def pen(self, nib=None, caps=None, joins=None, dash=None, stroke=None, fill=None, *args):
+        pass
+
+
+    def color(self, *args, **kwargs):
+        # flatten any tuples in the arguments list
+        args = sum( ([x] if not isinstance(x, (list,tuple)) else list(x) for x in args), [] )
+
+        # if the first arg is a color mode, use that to interpret the args
+        if args and args[0] in (RGB, HSB, CMYK, GREY):
+            mode, args = args[0], args[1:]
+            kwargs.setdefault('mode', mode)
+
+        if not args:
+            # if called without any component values just update the context's mode/range
+            if 'range' in kwargs:
+                self._colorrange = kwargs['range']
+            if 'mode':
+                self._colormode = kwargs['mode']
+            return (self._colormode, self._colorrange)
+
+        return self.Color(*args, **kwargs)
     
     def colormode(self, mode=None, range=None):
         if mode is not None:
@@ -506,7 +526,10 @@ class Context(object):
 
     def fill(self, *args):
         if len(args) > 0:
-            self._fillcolor = self.Color(*args)
+            annotated = self.Color(*args)
+            setattr(annotated, '_replay', dict(fill=self._fillcolor))
+            self._fillcolor = annotated
+            # self._fillcolor = self.Color(*args)
         return self._fillcolor
 
     def nostroke(self):
@@ -514,7 +537,10 @@ class Context(object):
 
     def stroke(self, *args):
         if len(args) > 0:
-            self._strokecolor = self.Color(*args)
+            annotated = self.Color(*args)
+            setattr(annotated, '_replay', dict(stroke=self._strokecolor))
+            self._strokecolor = annotated
+            # self._strokecolor = self.Color(*args)
         return self._strokecolor
 
     def strokewidth(self, width=None):

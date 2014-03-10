@@ -738,8 +738,7 @@ class Color(object):
 
     def __init__(self, ctx, *args, **kwargs):
         self._ctx = ctx
-        rng = kwargs.get('range', ctx._colorrange)
-
+        
         # flatten any tuples in the arguments list
         args = sum( ([x] if not isinstance(x, (list,tuple)) else list(x) for x in args), [] )
 
@@ -749,13 +748,12 @@ class Color(object):
         else:
             mode=kwargs.get('mode')
 
-        if mode and not args:
-            # if called without any component values just update the context's mode
-            ctx._colormode = mode
-            return mode
-        elif mode not in (RGB, HSB, CMYK, GREY):
-            # otherwise interpret the components in the context's current mode
+        if mode not in (RGB, HSB, CMYK, GREY):
+            # if no mode was specified, interpret the components in the context's current mode
             mode = ctx._colormode
+
+        # use the specified range for int values, or leave it as None to use the default 0-1 scale
+        rng = kwargs.get('range')
 
         params = len(args)
         if params == 1 and args[0] is None:                # None -> transparent
@@ -980,12 +978,12 @@ class Color(object):
 
     def _normalize(self, v, rng=None):
         """Bring the color into the 0-1 scale for the current colorrange"""
-        r = self._ctx._colorrange if rng is None else rng
+        r = float(self._ctx._colorrange if rng is None else rng)
         return v if r==1.0 else v/r
 
     def _normalizeList(self, lst, rng=None):
         """Bring the color into the 0-1 scale for the current colorrange"""
-        r = self._ctx._colorrange if rng is None else rng
+        r = float(self._ctx._colorrange if rng is None else rng)
         if r == 1.0: return lst
         return [v / r for v in lst]
 
