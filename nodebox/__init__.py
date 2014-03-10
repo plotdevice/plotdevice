@@ -46,10 +46,14 @@ from os import getenv
 from os.path import join
 sys.path.append(join(getenv('HOME'), 'Library', 'Application Support', 'NodeBox'))
 
-# if imported from an external module, set up a drawing environment in __all__.
-# (note that since this happens at the module level, the canvas will be shared
-# among all the files in a given process that `import *`).
-if not is_windowed:
+if is_windowed:
+    # if imported from within the app/tool, all we need is the path-manipulation side
+    # effects and a flag to our gui/headless status in the `app` variable
+    __all__ = ('app',)
+else:
+    # if imported from an external module, set up a drawing environment in __all__.
+    # (note that since this happens at the module level, the canvas will be shared
+    # among all the files in a given process that `import *`).
     from nodebox import graphics, util
 
     # create a global canvas and graphics context for the draw functions to operate on
@@ -61,5 +65,4 @@ if not is_windowed:
         ns.update( (a,getattr(module,a)) for a in module.__all__  )
     globals().update(ns)
     __all__ = ns.keys()
-else:
-    __all__ = ('app',)
+   
