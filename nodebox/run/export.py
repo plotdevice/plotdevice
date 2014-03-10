@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, re
 from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
@@ -148,6 +148,7 @@ from Quartz.PDFKit import *
 # create the appropriate context manager and return it
 def export(ctx, fname, fps=None, loop=None, bitrate=1.0):
     format = fname.rsplit('.',1)[1]
+    fname = re.sub(r'^~(?=/|$)',os.getenv('HOME'),fname)
     if format=='mov' or (format=='gif' and fps or loop is not None):
         fps = fps or 30 # set a default for .mov exports
         loop = {True:-1, False:0, None:0}.get(loop, loop) # convert bool args to int
