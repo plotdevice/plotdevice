@@ -85,7 +85,7 @@ def autotext(sourceFile):
 
 def _as_sequence(seq):
     if not isinstance(seq, (basestring, list, tuple) ):
-        badtype = 'ordered, shuffled, and friends only work for strings, tuples and lists (not %d)' % type(seq)
+        badtype = 'ordered, shuffled, and friends only work for strings, tuples and lists (not %s)' % type(seq)
         raise NodeBoxError(badtype)
     return list(seq)
 

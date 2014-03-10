@@ -513,7 +513,9 @@ class Font(object):
             # style modifications to be applied on top of it
             self._update_face(**spec)
         else:
-            self._face = font_face(spec['face'])
+            if not isinstance(spec['face'], Face):
+                spec['face'] = font_face(spec['face'])
+            self._face = spec['face']
 
         # BUG: probably don't want to inherit this immediately...
         self._size = float(spec.get('size', ctx._fontsize))
