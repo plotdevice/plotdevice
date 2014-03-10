@@ -280,6 +280,7 @@ class ImageSequence(object):
         if self.idx is None:
             self._ctx.canvas.save(self.fname, self.format)
         self._ctx._restoreContext()
+
     @property
     @contextmanager
     def sequence(self):
@@ -377,17 +378,6 @@ class PDF(object):
         if self.doc:
             self.doc.writeToFile_(self.fname)
         return self.doc
-
-
-# # add references to the export context managers (so users can call help() on them)
-# export.PDF = PDF
-# export.Movie = Movie
-# export.ImageSequence = ImageSequence
-
-
-
-
-
 
 
 

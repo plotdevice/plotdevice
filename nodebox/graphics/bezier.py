@@ -6,12 +6,7 @@
 # Thanks to Dr. Florimond De Smedt at the Free University of Brussels for the math routines.
 
 from nodebox.graphics import BezierPath, PathElement, NodeBoxError, Point, MOVETO, LINETO, CURVETO, CLOSE
-
 from nodebox.lib.pathmatics import linepoint, linelength, curvepoint, curvelength
-# try:
-#     from cPathmatics import linepoint, linelength, curvepoint, curvelength
-# except:
-#     from nodebox.geo.pathmatics import linepoint, linelength, curvepoint, curvelength
     
 def segment_lengths(path, relative=False, n=20):
     """Returns a list with the lengths of each segment in the path.

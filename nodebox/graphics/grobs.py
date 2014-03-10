@@ -766,7 +766,7 @@ class Color(object):
         elif params == 1 and isinstance(args[0], NSColor): # NSColor object
             clr = args[0]
         elif params>=1 and isinstance(args[0], basestring):
-            r, g, b, a = Color._str2rgb(args[0])           # Hex string or named color
+            r, g, b, a = Color._parse(args[0])           # Hex string or named color
             if args[1:]:
                 a = args[1]
             clr = Color._nscolor(RGB, r, g, b, a)
@@ -955,7 +955,7 @@ class Color(object):
             s = "".join(s[::2])
         return "#"+s
     def _set_hex(self, val):
-        r, g, b, a = Color._str2rgb(clr)
+        r, g, b, a = Color._parse(clr)
         self._rgb = Color._nscolor(RGB, r, g, b, a)
         self._updateCmyk()
     hex = property(_get_hex, _set_hex, doc="the rgb hex string for the color")
@@ -964,7 +964,7 @@ class Color(object):
         return (self.hex, self.a)
     def _set_hexa(self, clr, alpha):
         a = self._normalize(alpha)
-        r, g, b, _ = Color._str2rgb(clr)
+        r, g, b, _ = Color._parse(clr)
         self._rgb = Color._nscolor(RGB, r, g, b, a)
         self._updateCmyk()
     hexa = property(_get_hexa, _set_hexa, doc="a tuple containing the color's rgb hex string and an alpha float")
@@ -998,7 +998,10 @@ class Color(object):
         return factory[scheme](*components)
 
     @classmethod
-    def _str2rgb(cls, clrstr):
+    def _parse(cls, clrstr):
+        """Returns an r/g/b/a tuple based on a css color name or a hex string of the form:
+        RRGGBBAA, RRGGBB, RGBA, or RGB (with or without a leading #)
+        """
         if clrstr in _CSS_COLORS: # handle css color names
             clrstr = _CSS_COLORS[clrstr]
 
