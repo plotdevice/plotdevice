@@ -101,6 +101,7 @@ class Context(object):
         self._strokewidth = 1.0
         self._capstyle = BUTT
         self._joinstyle = MITER
+        self._dashstyle = None
         self._path = None
         self._autoclosepath = True
         self._transform = Transform()
@@ -738,6 +739,16 @@ class Context(object):
     @property
     def geo(self):
         return geometry
+
+    def plot(self, obj, **kwargs):
+        if not isinstance(obj, Grob):
+            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
+            raise NodeBoxError(notdrawable)
+        obj.__class__.checkKwargs(kwargs)
+        for arg_key, arg_val in kwargs.items():
+            setattr(obj, arg_key, _copy_attr(arg_val))
+        obj.inheritFromContext(kwargs.keys())
+        obj.draw()
 
     def measure(self, obj, width=None, height=None, **kwargs):
         """Returns a Size tuple for graphics objects, text, or file objects pointing to images"""
