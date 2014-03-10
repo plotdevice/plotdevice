@@ -50,15 +50,13 @@ sys.path.append(join(getenv('HOME'), 'Library', 'Application Support', 'NodeBox'
 # (note that since this happens at the module level, the canvas will be shared
 # among all the files in a given process that `import *`).
 if not is_windowed:
-    # create a global canvas and graphics context for the draw functions to operate on
-    from nodebox import graphics
-    from nodebox import util
-    from nodebox.run.export import export
-    ns = {"export":export}
-    canvas = graphics.Canvas()
-    context = graphics.Context(canvas, ns)
+    from nodebox import graphics, util
 
-    # set up the standard nodebox global namespace, all tied to the module-level canvas
+    # create a global canvas and graphics context for the draw functions to operate on
+    context = graphics.Context()
+    ns = context._ns
+
+    # set up the standard nodebox global namespace, all tied to the module-level context/canvas
     for module in graphics, util, context:
         ns.update( (a,getattr(module,a)) for a in module.__all__  )
     globals().update(ns)

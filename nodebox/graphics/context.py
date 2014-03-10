@@ -667,6 +667,43 @@ class Context(object):
     def save(self, fname, format=None):
         self.canvas.save(fname, format)
 
+    def export(self, fname, fps=None, loop=None, bitrate=1.0):
+        """Context manager for image/animation batch exports.
+
+        When writing multiple images or frames of animation, the export manager keeps track of when
+        the canvas needs to be cleared, when to write the graphics to file, and preventing the python
+        script from exiting before the background thread has completed writing the file.
+
+        To export an image:
+            with export('output.pdf') as image:
+                ... # (do some drawing)
+
+        To export a movie:
+            with export('anim.mov', fps=30, bitrate=1.8) as movie:
+                for i in xrange(100):
+                    with movie.frame:
+                        ... # draw the next frame
+
+        The file format is selected based on the file extension of the fname argument. If the format 
+        is `gif`, an image will be exported unless an `fps` or `loop` argument (of any value) is
+        also provided, in which case an animated gif will be created. Otherwise all arguments aside
+        from the fname are optional and default to:
+            fps: 30      (relevant for both gif and mov exports)
+            loop: False  (set to True to loop forever or an integer for a fixed number of repetitions)
+            bitrate: 1.0 (in megabits per second)
+
+        Note that the `loop` argument only applies to animated gifs and `bitrate` is used in the H.264 
+        encoding of `mov` files.
+
+        For implementational details, inspect the format-specific exporters in the repl:
+            help(export.PDF)
+            help(export.Movie)
+            help(export.ImageSequence)
+        """
+        from nodebox.run.export import export
+        return export(self, fname, fps=fps, loop=loop, bitrate=bitrate)
+
+
     ### Geometry
 
     @property

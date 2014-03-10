@@ -146,48 +146,16 @@ from contextlib import contextmanager
 from Quartz.PDFKit import *
 
 # create the appropriate context manager and return it
-def export(fname, fps=None, loop=None, bitrate=1.0):
-    """Context manager for image/animation batch exports.
-
-    When writing multiple images or frames of animation, the export manager keeps track of when
-    the canvas needs to be cleared, when to write the graphics to file, and preventing the python
-    script from exiting before the background thread has completed writing the file.
-
-    To export an image:
-        with export('output.pdf') as image:
-            ... # (do some drawing)
-
-    To export a movie:
-        with export('anim.mov', fps=30, bitrate=1.8) as movie:
-            for i in xrange(100):
-                with movie.frame:
-                    ... # draw the next frame
-
-    The file format is selected based on the file extension of the fname argument. If the format 
-    is `gif`, an image will be exported unless an `fps` or `loop` argument (of any value) is
-    also provided, in which case an animated gif will be created. Otherwise all arguments aside
-    from the fname are optional and default to:
-        fps: 30      (relevant for both gif and mov exports)
-        loop: False  (set to True to loop forever or an integer for a fixed number of repetitions)
-        bitrate: 1.0 (in megabits per second)
-
-    Note that the `loop` argument only applies to animated gifs and `bitrate` is used in the H.264 
-    encoding of `mov` files.
-
-    For implementational details, inspect the format-specific exporters in the repl:
-        help(export.PDF)
-        help(export.Movie)
-        help(export.ImageSequence)
-    """
+def export(ctx, fname, fps=None, loop=None, bitrate=1.0):
     format = fname.rsplit('.',1)[1]
     if format=='mov' or (format=='gif' and fps or loop is not None):
         fps = fps or 30 # set a default for .mov exports
         loop = {True:-1, False:0, None:0}.get(loop, loop) # convert bool args to int
-        return Movie(fname, format, fps=fps, bitrate=bitrate, loop=loop)
+        return Movie(ctx, fname, format, fps=fps, bitrate=bitrate, loop=loop)
     elif format=='pdf':
-        return PDF(fname)
+        return PDF(ctx, fname)
     elif format in ('eps','png','jpg','gif','tiff'):
-        return ImageSequence(fname, format)
+        return ImageSequence(ctx, fname, format)
     else:
         unknown = 'Unknown export format "%s"'%format
         raise RuntimeError(unknown)
@@ -213,8 +181,8 @@ class Movie(object):
                 with movie.frame:
                     ... # draw the next frame
     """
-    def __init__(self, *args, **opts):
-        from nodebox.run.export import MovieExportSession
+    def __init__(self, ctx, *args, **opts):
+        self._ctx = ctx
         self.session = MovieExportSession(*args, **opts)
 
     def __enter__(self):
@@ -241,11 +209,11 @@ class Movie(object):
                 with movie.frame:
                     ... # draw the frame
         """
-        context._saveContext()
-        canvas.clear()
+        self._ctx._saveContext()
+        self._ctx.canvas.clear()
         yield
         self.add()
-        context._restoreContext()
+        self._ctx._restoreContext()
 
     def add(self):
         """Add a new frame to the movie with the current contents of the canvas."""
@@ -293,7 +261,8 @@ class ImageSequence(object):
                     ... # draw the next image in the sequence                    
 
     """
-    def __init__(self, fname, format):
+    def __init__(self, ctx, fname, format):
+        self._ctx = ctx
         self.fname = fname
         self.format = format
         self.idx = None
@@ -304,13 +273,13 @@ class ImageSequence(object):
         else:
             self.tmpl = re.sub(r'^(.*)(\.[a-z]{3,4})$', r'\1-%04i\2', fname)
     def __enter__(self):
-        context._saveContext()
-        canvas.clear()
+        self._ctx._saveContext()
+        self._ctx.canvas.clear()
         return self
     def __exit__(self, type, value, tb):
         if self.idx is None:
-            canvas.save(self.fname, self.format)
-        context._restoreContext()
+            self._ctx.canvas.save(self.fname, self.format)
+        self._ctx._restoreContext()
     @property
     @contextmanager
     def sequence(self):
@@ -322,14 +291,14 @@ class ImageSequence(object):
                     with image.sequence:
                         ... # draw the next image in the sequence
         """
-        context._saveContext()
-        canvas.clear()
+        self._ctx._saveContext()
+        self._ctx.canvas.clear()
         yield
         if self.idx is None:
             self.idx = 1
-        canvas.save(self.tmpl%self.idx, self.format)
+        self._ctx.canvas.save(self.tmpl%self.idx, self.format)
         self.idx += 1
-        context._restoreContext()
+        self._ctx._restoreContext()
 
 # Context manager returned by `export` for PDF files (allowing single or multi-page docs)
 class PDF(object):
@@ -354,16 +323,17 @@ class PDF(object):
         with export('singlepage.pdf') as pdf:
             ... # draw the one and only page
     """
-    def __init__(self, fname):
+    def __init__(self, ctx, fname):
+        self._ctx = ctx
         self.fname = fname
         self.doc = None
     def __enter__(self):
-        context._saveContext()
-        canvas.clear()
+        self._ctx._saveContext()
+        self._ctx.canvas.clear()
         return self
     def __exit__(self, type, value, tb):
-        self.finish() or canvas.save(self.fname, 'pdf')
-        context._restoreContext()
+        self.finish() or self._ctx.canvas.save(self.fname, 'pdf')
+        self._ctx._restoreContext()
 
     @property
     @contextmanager
@@ -388,11 +358,11 @@ class PDF(object):
                 with pdf.page:
                     ... # draw the next page
         """
-        context._saveContext()
-        canvas.clear()
+        self._ctx._saveContext()
+        self._ctx.canvas.clear()
         yield
         self.add()            
-        context._restoreContext()
+        self._ctx._restoreContext()
 
     def add(self):
         """Add a new page to the PDF with the current contents of the canvas."""
@@ -409,10 +379,10 @@ class PDF(object):
         return self.doc
 
 
-# add references to the export context managers (so users can call help() on them)
-export.PDF = PDF
-export.Movie = Movie
-export.ImageSequence = ImageSequence
+# # add references to the export context managers (so users can call help() on them)
+# export.PDF = PDF
+# export.Movie = Movie
+# export.ImageSequence = ImageSequence
 
 
 
