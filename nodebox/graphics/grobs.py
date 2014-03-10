@@ -470,9 +470,17 @@ class BezierPath(Grob, TransformMixin, ColorMixin, PenMixin):
 
     ### Basic shapes ###
     
-    def rect(self, x, y, width, height):
+    def rect(self, x, y, width, height, radius=None):
         self._segment_cache = None
-        self._nsBezierPath.appendBezierPathWithRect_( ((x, y), (width, height)) )
+        if radius is None:
+            self._nsBezierPath.appendBezierPathWithRect_( ((x, y), (width, height)) )
+        else:
+            if isinstance(radius, (int,float,long)):
+                radius = (radius, radius)
+            elif not isinstance(radius, (list, tuple)) or len(radius)!=2:
+                badradius = 'the radius for a rect must be either a number or an (x,y) tuple'
+                raise NodeBoxError(badradius)
+            self._nsBezierPath.appendBezierPathWithRoundedRect_xRadius_yRadius_( ((x,y), (width,height)), *radius)
         
     def oval(self, x, y, width, height):
         self._segment_cache = None

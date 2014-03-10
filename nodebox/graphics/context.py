@@ -180,12 +180,10 @@ class Context(object):
 
     ### Primitives ###
 
-    def rect(self, x, y, width, height, roundness=0.0, draw=True, **kwargs):
+    def rect(self, x, y, width, height, radius=None, roundness=0.0, draw=True, **kwargs):
         BezierPath.checkKwargs(kwargs)
-        if roundness == 0:
-            p = self.BezierPath(**kwargs)
-            p.rect(x, y, width, height)
-        else:
+        if roundness > 0:
+            # support the pre-10.5 roundrect behavior via the roundness arg
             curve = min(width*roundness, height*roundness)
             p = self.BezierPath(**kwargs)
             p.moveto(x, y+curve)
@@ -197,6 +195,10 @@ class Context(object):
             p.lineto(x+curve, y+height)
             p.curveto(x, y+height, x, y+height, x, y+height-curve)
             p.closepath()
+        else:
+            # otherwise let the nsbezier use its built-in support for rect radii
+            p = self.BezierPath(**kwargs)
+            p.rect(x, y, width, height, radius=radius)
         p.inheritFromContext(kwargs.keys())
 
         if draw:
