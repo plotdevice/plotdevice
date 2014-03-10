@@ -295,7 +295,6 @@ class ColorMixin(object):
             self._strokecolor = Color(self._ctx, kwargs['stroke'])
         except KeyError:
             self._strokecolor = None
-        self._strokewidth = kwargs.get('nib', kwargs.get('strokewidth', 1.0))
         
     def _get_fill(self):
         return self._fillcolor
@@ -309,13 +308,55 @@ class ColorMixin(object):
         self._strokecolor = Color(self._ctx, *args)
     stroke = property(_get_stroke, _set_stroke)
     
+class PenMixin(object):
+    
+    """Mixin class for color support.
+    Adds the _capstyle, _joinstyle, _dashstyle, and _strokewidth attributes to the class."""
+
+    def __init__(self, **kwargs):
+        self.strokewidth = kwargs.get('nib', kwargs.get('strokewidth', self._ctx._strokewidth))
+        self.capstyle = kwargs.get('cap', kwargs.get('capstyle', self._ctx._capstyle))
+        self.joinstyle = kwargs.get('join', kwargs.get('joinstyle', self._ctx._joinstyle))
+        self.dashstyle = kwargs.get('dash', kwargs.get('dashstyle', self._ctx._dashstyle))
+
     def _get_strokewidth(self):
         return self._strokewidth
     def _set_strokewidth(self, strokewidth):
         self._strokewidth = max(strokewidth, 0.0001)
-    strokewidth = property(_get_strokewidth, _set_strokewidth)
+    nib = strokewidth = property(_get_strokewidth, _set_strokewidth)
 
-class BezierPath(Grob, TransformMixin, ColorMixin):
+    def _get_capstyle(self):
+        return self._capstyle
+    def _set_capstyle(self, style):
+        if style not in (BUTT, ROUND, SQUARE):
+            badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
+            raise NodeBoxError(badstyle)
+        self._capstyle = style
+    cap = capstyle = property(_get_capstyle, _set_capstyle)
+
+    def _get_joinstyle(self):
+        return self._joinstyle
+    def _set_joinstyle(self, style):
+        if style not in (MITER, ROUND, BEVEL):
+            badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
+            raise NodeBoxError(badstyle)
+        self._joinstyle = style
+    join = joinstyle = property(_get_joinstyle, _set_joinstyle)
+
+    def _get_dashstyle(self):
+        return self._dashstyle
+    def _set_dashstyle(self, *segments):
+        if None in segments:
+            self._dashstyle = None
+        else:
+            steps = map(int, _flatten(segments))
+            if len(steps)%2:
+                steps += steps[-1:] # assume even spacing for omitted skip sizes
+            self._dashstyle = steps
+    dash = dashstyle = property(_get_dashstyle, _set_dashstyle)
+    
+
+class BezierPath(Grob, TransformMixin, ColorMixin, PenMixin):
     """A BezierPath provides a wrapper around NSBezierPath."""
     
     stateAttributes = ('_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_transform', '_transformmode')
@@ -325,6 +366,7 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
         super(BezierPath, self).__init__(ctx)
         TransformMixin.__init__(self)
         ColorMixin.__init__(self, **kwargs)
+        PenMixin.__init__(self, **kwargs)
         self._segment_cache = None
         self._finished = False
 
@@ -345,9 +387,7 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
             badpath = "Don't know what to do with %s." % path
             raise NodeBoxError(badpath)
 
-        # use any drawstyle settings in kwargs (the rest will be inherited)
-        self.capstyle = kwargs.get('cap', kwargs.get('capstyle', self._ctx._capstyle))
-        self.joinstyle = kwargs.get('join', kwargs.get('joinstyle', self._ctx._joinstyle))
+        # use any plotstyle settings in kwargs (the rest will be inherited)
         self._overrides = {k:_copy_attr(v) for k,v in kwargs.items() if k in BezierPath.kwargs}
         self._autoclose = kwargs.get('close', self._ctx._autoclosepath)
         self._autodraw = kwargs.get('draw', False)
@@ -392,26 +432,6 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
     def copy(self):
         return self.__class__(self._ctx, self)
     
-    ### Cap and Join style ###
-    
-    def _get_capstyle(self):
-        return self._capstyle
-    def _set_capstyle(self, style):
-        if style not in (BUTT, ROUND, SQUARE):
-            badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
-            raise NodeBoxError(badstyle)
-        self._capstyle = style
-    capstyle = property(_get_capstyle, _set_capstyle)
-
-    def _get_joinstyle(self):
-        return self._joinstyle
-    def _set_joinstyle(self, style):
-        if style not in (MITER, ROUND, BEVEL):
-            badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
-            raise NodeBoxError(badstyle)
-        self._joinstyle = style
-    joinstyle = property(_get_joinstyle, _set_joinstyle)
-
     ### Path methods ###
 
     def moveto(self, x, y):
@@ -538,6 +558,8 @@ class BezierPath(Grob, TransformMixin, ColorMixin):
             self._nsBezierPath.setLineWidth_(self._strokewidth)
             self._nsBezierPath.setLineCapStyle_(_CAPSTYLE[self._capstyle])
             self._nsBezierPath.setLineJoinStyle_(_JOINSTYLE[self._joinstyle])
+            if self._dashstyle:
+                self._nsBezierPath.setLineDash_count_phase_(self._dashstyle, len(self._dashstyle), 0)
             self._nsBezierPath.stroke()
         _restore()
 
@@ -1032,7 +1054,7 @@ color = Color # hmmmmm... is this here for good or ill?
 
 class InkContext(object):
     """Performs the setup/cleanup for a `with pen()/stroke()/fill()/color(mode,range)` block"""
-    _statevars = dict(nib='_strokewidth', caps='_capstyle', joins='_joinstyle', 
+    _statevars = dict(nib='_strokewidth', cap='_capstyle', join='_joinstyle', dash='_dashstyle',
                       mode='_colormode', range='_colorrange', stroke='_strokecolor', fill='_fillcolor')
 
     def __init__(self, ctx, restore=None, **spec):
