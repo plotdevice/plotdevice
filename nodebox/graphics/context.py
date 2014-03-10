@@ -1,11 +1,11 @@
 import types
-from contextlib import contextmanager
+from contextlib import contextmanager, nested
 from AppKit import *
 from nodebox.graphics.typography import *
 from nodebox.graphics.grobs import *
 from nodebox.util.foundry import *
 from nodebox.graphics import grobs, typography
-from nodebox.util import _copy_attr, _copy_attrs, foundry
+from nodebox.util import _copy_attr, _copy_attrs, _flatten, foundry
 from nodebox.lib import geometry
 
 class Context(object):
@@ -51,7 +51,7 @@ class Context(object):
 
         from inspect import getargspec, formatargspec as fspec
         modules = dict(
-            grobs=[getattr(grobs, c) for c in ("BezierPath", "ClippingPath", "Color", "Image", "TransformContext")],
+            grobs=[getattr(grobs, c) for c in ("BezierPath", "ClippingPath", "Color", "Image", "TransformContext", "InkContext")],
             typography=[getattr(typography, c) for c in ("Text", "Family", "Font", "Stylesheet")]
         )
         for mod, classes in modules.items():
@@ -486,13 +486,19 @@ class Context(object):
 
     ### Color Commands ###
 
-    def pen(self, nib=None, caps=None, joins=None, dash=None, stroke=None, fill=None, *args):
-        pass
+    def plotstyle(self, *ops):
+        context_mgrs = [mgr for mgr in ops if hasattr(mgr, '__enter__')]
+        context_mgrs.append(self.InkContext(restore=all))
+        return nested(*context_mgrs)
 
+    def pen(self, nib=None, **spec): # spec: caps, joins, dash
+        if nib is not None:
+            spec.setdefault('nib', nib)
+        return self.InkContext(**spec)
 
     def color(self, *args, **kwargs):
         # flatten any tuples in the arguments list
-        args = sum( ([x] if not isinstance(x, (list,tuple)) else list(x) for x in args), [] )
+        args = _flatten(args)
 
         # if the first arg is a color mode, use that to interpret the args
         if args and args[0] in (RGB, HSB, CMYK, GREY):
@@ -500,15 +506,14 @@ class Context(object):
             kwargs.setdefault('mode', mode)
 
         if not args:
-            # if called without any component values just update the context's mode/range
-            if 'range' in kwargs:
-                self._colorrange = kwargs['range']
-            if 'mode':
-                self._colormode = kwargs['mode']
-            return (self._colormode, self._colorrange)
+            # if called without any component values update the global mode/range,
+            # and return a context manager for `with color(mode=...)` usage
+            if {'range', 'mode'}.intersection(kwargs):
+                return self.InkContext(**kwargs)
 
+        # if we got at least one numerical/string arg, parse it
         return self.Color(*args, **kwargs)
-    
+
     def colormode(self, mode=None, range=None):
         if mode is not None:
             self._colormode = mode
@@ -522,25 +527,23 @@ class Context(object):
         return self._colorrange
 
     def nofill(self):
-        self._fillcolor = None
+        return self.fill(None)
 
     def fill(self, *args):
         if len(args) > 0:
             annotated = self.Color(*args)
-            setattr(annotated, '_replay', dict(fill=self._fillcolor))
+            setattr(annotated, '_rollback', dict(fill=self._fillcolor))
             self._fillcolor = annotated
-            # self._fillcolor = self.Color(*args)
         return self._fillcolor
 
     def nostroke(self):
-        self._strokecolor = None
+        return self.stroke(None)
 
     def stroke(self, *args):
         if len(args) > 0:
             annotated = self.Color(*args)
-            setattr(annotated, '_replay', dict(stroke=self._strokecolor))
+            setattr(annotated, '_rollback', dict(stroke=self._strokecolor))
             self._strokecolor = annotated
-            # self._strokecolor = self.Color(*args)
         return self._strokecolor
 
     def strokewidth(self, width=None):

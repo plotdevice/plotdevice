@@ -11,12 +11,8 @@ from AppKit import *
 from Foundation import *
 
 from nodebox import NodeBoxError
-from nodebox.util import _copy_attr, _copy_attrs
+from nodebox.util import _copy_attr, _copy_attrs, _flatten
 from nodebox.lib import polymagic, geometry
-# try:
-#     import cPolymagic
-# except ImportError, e:
-#     warnings.warn('Could not load cPolymagic: %s' % e)
 
 __all__ = [
         "DEFAULT_WIDTH", "DEFAULT_HEIGHT",
@@ -740,7 +736,7 @@ class Color(object):
         self._ctx = ctx
         
         # flatten any tuples in the arguments list
-        args = sum( ([x] if not isinstance(x, (list,tuple)) else list(x) for x in args), [] )
+        args = _flatten(args)
 
         # if the first arg is a color mode, use that to interpret the args
         if args and args[0] in (RGB, HSB, CMYK, GREY):
@@ -764,7 +760,7 @@ class Color(object):
         elif params == 1 and isinstance(args[0], NSColor): # NSColor object
             clr = args[0]
         elif params>=1 and isinstance(args[0], basestring):
-            r, g, b, a = Color._parse(args[0])           # Hex string or named color
+            r, g, b, a = Color._parse(args[0])             # Hex string or named color
             if args[1:]:
                 a = args[1]
             clr = Color._nscolor(RGB, r, g, b, a)
@@ -796,6 +792,19 @@ class Color(object):
 
     def set(self):
         self.nsColor.set()
+
+    # fill() and stroke() both cache the previous canvas state by creating a _rollback attr.
+    # act as a context manager if there's a fill/stroke state to revert to at the end of the block.
+    def __enter__(self):
+        if not hasattr(self, '_rollback'):
+            badcontext = 'the with-statement can only be used with fill() and stroke(), not arbitrary colors'
+            raise NodeBoxError(badcontext)
+        return self
+
+    def __exit__(self, type, value, tb):
+        for param, val in self._rollback.items():
+            statevar = {"fill":"_fillcolor", "stroke":"_strokecolor"}[param]
+            setattr(self._ctx, statevar, val)
     
     @property
     def nsColor(self):
@@ -1019,6 +1028,44 @@ class Color(object):
 
 
 color = Color # hmmmmm... is this here for good or ill?
+
+
+class InkContext(object):
+    """Performs the setup/cleanup for a `with pen()/stroke()/fill()/color(mode,range)` block"""
+    _statevars = dict(nib='_strokewidth', caps='_capstyle', joins='_joinstyle', 
+                      mode='_colormode', range='_colorrange', stroke='_strokecolor', fill='_fillcolor')
+
+    def __init__(self, ctx, restore=None, **spec):
+        self._ctx = ctx
+
+        # start with the current context state as a baseline
+        prior = {k:getattr(ctx, v) for k,v in self._statevars.items() if k in spec or restore==all}
+        snapshots = {k:v._rollback for k,v in spec.items() if hasattr(v, '_rollback')}
+        prior.update(snapshots)
+
+        for param, val in spec.items():
+            # make sure fill & stroke are Color objects (or None)
+            if param in ('stroke','fill'):
+                if val is None: continue
+                val = Color(ctx, val) 
+                spec[param] = val
+            setattr(ctx, self._statevars[param], val)
+
+        # keep the dictionary of prior state around for restoration at the end of the block
+        self._rollback = prior
+        self._spec = spec
+
+    def __enter__(self):
+        return dict(self._spec)
+
+    def __exit__(self, type, value, tb):
+        for param, val in self._rollback.items():
+            setattr(self._ctx, self._statevars[param], val)
+
+    def __repr__(self):
+        spec = ", ".join('%s=%r'%(k,v) for k,v in self._spec.items())
+        return 'InkContext(%s)'%spec
+
 
 class TransformContext(object):
     """Performs the setup/cleanup for a `with transform()` block (and changes the mode)"""
