@@ -140,6 +140,11 @@ def _copy_attrs(source, target, attrs):
     for attr in attrs:
         setattr(target, attr, _copy_attr(getattr(source, attr)))
 
+### tuple/list de-nester ###
+
+def _flatten(seq):
+    return sum( ([x] if not isinstance(x, (list,tuple)) else list(x) for x in seq), [] )
+
 ### give ordered- and default-dict a nicer repr ###
 
 class BetterRepr(object):
