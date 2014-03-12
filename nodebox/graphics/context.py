@@ -742,15 +742,16 @@ class Context(object):
     def geo(self):
         return geometry
 
-    def plot(self, obj, **kwargs):
+    def plot(self, obj, copy=False, **kwargs):
         if not isinstance(obj, Grob):
             notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
             raise NodeBoxError(notdrawable)
         obj.__class__.checkKwargs(kwargs)
+        grob = obj.copy() if copy else obj
         for arg_key, arg_val in kwargs.items():
-            setattr(obj, arg_key, _copy_attr(arg_val))
-        obj.inheritFromContext(kwargs.keys())
-        obj.draw()
+            setattr(grob, arg_key, _copy_attr(arg_val))
+        grob.inheritFromContext(kwargs.keys())
+        grob.draw()
 
     def measure(self, obj, width=None, height=None, **kwargs):
         """Returns a Size tuple for graphics objects, text, or file objects pointing to images"""
