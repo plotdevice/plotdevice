@@ -25,7 +25,8 @@ __all__ = [
         "NORMAL","FORTYFIVE",
         "NUMBER", "TEXT", "BOOLEAN","BUTTON",
         "Point", "Size", "Region",
-        "Grob", "BezierPath", "PathElement", "ClippingPath", # "Rect", "Oval", 
+        "Grob", "ClippingPath", # "Rect", "Oval", 
+        "BezierPath", "Bezier", "PathElement", "Curve",
         "Color", "Transform", "Image", 
         "Variable", "NodeBoxError", 
         ]
@@ -356,14 +357,14 @@ class PenMixin(object):
     dash = dashstyle = property(_get_dashstyle, _set_dashstyle)
     
 
-class BezierPath(Grob, TransformMixin, ColorMixin, PenMixin):
-    """A BezierPath provides a wrapper around NSBezierPath."""
+class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
+    """A Bezier provides a wrapper around NSBezierPath."""
     
     stateAttributes = ('_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_transform', '_transformmode')
     kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle', 'nib', 'cap', 'join')
 
     def __init__(self, ctx, path=None, immediate=False, **kwargs):
-        super(BezierPath, self).__init__(ctx)
+        super(Bezier, self).__init__(ctx)
         TransformMixin.__init__(self)
         ColorMixin.__init__(self, **kwargs)
         PenMixin.__init__(self, **kwargs)
@@ -378,7 +379,7 @@ class BezierPath(Grob, TransformMixin, ColorMixin, PenMixin):
         elif isinstance(path, (list,tuple)):
             self._nsBezierPath = NSBezierPath.bezierPath()
             self.extend(path)
-        elif isinstance(path, BezierPath):
+        elif isinstance(path, Bezier):
             self._nsBezierPath = path._nsBezierPath.copy()
             _copy_attrs(path, self, self.stateAttributes)
         elif isinstance(path, NSBezierPath):
@@ -388,7 +389,7 @@ class BezierPath(Grob, TransformMixin, ColorMixin, PenMixin):
             raise NodeBoxError(badpath)
 
         # use any plotstyle settings in kwargs (the rest will be inherited)
-        self._overrides = {k:_copy_attr(v) for k,v in kwargs.items() if k in BezierPath.kwargs}
+        self._overrides = {k:_copy_attr(v) for k,v in kwargs.items() if k in Bezier.kwargs}
         self._autoclose = kwargs.get('close', self._ctx._autoclosepath)
         self._autodraw = kwargs.get('draw', False)
         
@@ -497,7 +498,7 @@ class BezierPath(Grob, TransformMixin, ColorMixin, PenMixin):
 
     def __getitem__(self, index):
         cmd, el = self._nsBezierPath.elementAtIndex_associatedPoints_(index)
-        return PathElement(cmd, el)
+        return Curve(cmd, el)
 
     def __iter__(self):
         for i in range(len(self)):
@@ -515,8 +516,8 @@ class BezierPath(Grob, TransformMixin, ColorMixin, PenMixin):
                     cmd = MOVETO
                 else:
                     cmd = LINETO
-                self.append(PathElement(cmd, ((x, y),)))
-            elif isinstance(el, PathElement):
+                self.append(Curve(cmd, ((x, y),)))
+            elif isinstance(el, Curve):
                 self.append(el)
             else:
                 wrongtype = "Don't know how to handle %s" % el
@@ -659,18 +660,21 @@ class BezierPath(Grob, TransformMixin, ColorMixin, PenMixin):
         return polymagic.intersects(self._nsBezierPath, other._nsBezierPath)
         
     def union(self, other, flatness=0.6):
-        return BezierPath(self._ctx, polymagic.union(self._nsBezierPath, other._nsBezierPath, flatness))
+        return Bezier(self._ctx, polymagic.union(self._nsBezierPath, other._nsBezierPath, flatness))
     
     def intersect(self, other, flatness=0.6):
-        return BezierPath(self._ctx, polymagic.intersect(self._nsBezierPath, other._nsBezierPath, flatness))
+        return Bezier(self._ctx, polymagic.intersect(self._nsBezierPath, other._nsBezierPath, flatness))
 
     def difference(self, other, flatness=0.6):
-        return BezierPath(self._ctx, polymagic.difference(self._nsBezierPath, other._nsBezierPath, flatness))
+        return Bezier(self._ctx, polymagic.difference(self._nsBezierPath, other._nsBezierPath, flatness))
 
     def xor(self, other, flatness=0.6):
-        return BezierPath(self._ctx, polymagic.xor(self._nsBezierPath, other._nsBezierPath, flatness))
+        return Bezier(self._ctx, polymagic.xor(self._nsBezierPath, other._nsBezierPath, flatness))
 
-class PathElement(object):
+class BezierPath(Bezier):
+    pass # compat...
+
+class Curve(object):
 
     def __init__(self, cmd=None, pts=None):
         self.cmd = cmd
@@ -702,14 +706,14 @@ class PathElement(object):
     @trim_zeroes
     def __repr__(self):
         if self.cmd == MOVETO:
-            return "PathElement(MOVETO, ((%.3f, %.3f),))" % (self.x, self.y)
+            return "Curve(MOVETO, ((%.3f, %.3f),))" % (self.x, self.y)
         elif self.cmd == LINETO:
-            return "PathElement(LINETO, ((%.3f, %.3f),))" % (self.x, self.y)
+            return "Curve(LINETO, ((%.3f, %.3f),))" % (self.x, self.y)
         elif self.cmd == CURVETO:
-            return "PathElement(CURVETO, ((%.3f, %.3f), (%.3f, %s), (%.3f, %.3f))" % \
+            return "Curve(CURVETO, ((%.3f, %.3f), (%.3f, %s), (%.3f, %.3f))" % \
                 (self.ctrl1.x, self.ctrl1.y, self.ctrl2.x, self.ctrl2.y, self.x, self.y)
         elif self.cmd == CLOSE:
-            return "PathElement(CLOSE)"
+            return "Curve(CLOSE)"
             
     def __eq__(self, other):
         if other is None: return False
@@ -719,6 +723,9 @@ class PathElement(object):
         
     def __ne__(self, other):
         return not self.__eq__(other)
+
+class PathElement(Curve):
+    pass # compat...
 
 class ClippingPath(Grob):
 
@@ -738,20 +745,20 @@ class ClippingPath(Grob):
             grob._draw()
         _restore()
 
-# class Rect(BezierPath):
+# class Rect(Bezier):
 
 #     def __init__(self, ctx, x, y, width, height, **kwargs):
-#         warnings.warn("Rect is deprecated. Use BezierPath's rect method.", DeprecationWarning, stacklevel=2)
+#         warnings.warn("Rect is deprecated. Use Bezier's rect method.", DeprecationWarning, stacklevel=2)
 #         r = (x,y), (width,height)
 #         super(Rect, self).__init__(ctx, NSBezierPath.bezierPathWithRect_(r), **kwargs)
 
 #     def copy(self):
 #         raise NotImplementedError, "Please don't use Rect anymore"
 
-# class Oval(BezierPath):
+# class Oval(Bezier):
 
 #     def __init__(self, ctx, x, y, width, height, **kwargs):
-#         warnings.warn("Oval is deprecated. Use BezierPath's oval method.", DeprecationWarning, stacklevel=2)
+#         warnings.warn("Oval is deprecated. Use Bezier's oval method.", DeprecationWarning, stacklevel=2)
 #         r = (x,y), (width,height)
 #         super(Oval, self).__init__(ctx, NSBezierPath.bezierPathWithOvalInRect_(r), **kwargs)
 
@@ -1224,25 +1231,28 @@ class Transform(object):
         self._nsAffineTransform.prependTransform_(other)
 
     def apply(self, point_or_path):
-        if isinstance(point_or_path, BezierPath):
-            return self.transformBezierPath(point_or_path)
+        if isinstance(point_or_path, Bezier):
+            return self.transformBezier(point_or_path)
         elif isinstance(point_or_path, Point):
             return self.transformPoint(point_or_path)
         else:
-            wrongtype = "Can only transform BezierPaths or Points"
+            wrongtype = "Can only transform Beziers or Points"
             raise NodeBoxError(wrongtype)
 
     def transformPoint(self, point):
         return Point(self._nsAffineTransform.transformPoint_((point.x,point.y)))
 
-    def transformBezierPath(self, path):
-        if isinstance(path, BezierPath):
-            path = BezierPath(path._ctx, path)
+    def transformBezier(self, path):
+        if isinstance(path, Bezier):
+            path = Bezier(path._ctx, path)
         else:
-            wrongtype = "Can only transform BezierPaths"
+            wrongtype = "Can only transform Beziers"
             raise NodeBoxError(wrongtype)
         path._nsBezierPath = self._nsAffineTransform.transformBezierPath_(path._nsBezierPath)
         return path
+
+    def transformBezierPath(self, path):
+        return self.transformBezier(path)
 
 class Image(Grob, TransformMixin):
 
@@ -1386,7 +1396,7 @@ class Image(Grob, TransformMixin):
             # A debugImage draws a black rectangle instead of an image.
             if self.debugImage:
                 Color(self._ctx).set()
-                pt = BezierPath()
+                pt = Bezier()
                 pt.rect(0, 0, srcW / factor, srcH / factor)
                 pt.fill()
             else:
@@ -1410,7 +1420,7 @@ class Image(Grob, TransformMixin):
             # A debugImage draws a black rectangle instead of an image.
             if self.debugImage:
                 Color(self._ctx).set()
-                pt = BezierPath()
+                pt = Bezier()
                 pt.rect(x, y, srcW, srcH)
                 pt.fill()
             else:

@@ -51,7 +51,7 @@ class Context(object):
 
         from inspect import getargspec, formatargspec as fspec
         modules = dict(
-            grobs=[getattr(grobs, c) for c in ("BezierPath", "ClippingPath", "Color", "Image", "TransformContext", "InkContext")],
+            grobs=[getattr(grobs, c) for c in ("Bezier", "BezierPath", "ClippingPath", "Color", "Image", "TransformContext", "InkContext")],
             typography=[getattr(typography, c) for c in ("Text", "Family", "Font", "Stylesheet")]
         )
         for mod, classes in modules.items():
@@ -181,11 +181,11 @@ class Context(object):
     ### Primitives ###
 
     def rect(self, x, y, width, height, radius=None, roundness=0.0, draw=True, **kwargs):
-        BezierPath.checkKwargs(kwargs)
+        Bezier.checkKwargs(kwargs)
         if roundness > 0:
             # support the pre-10.5 roundrect behavior via the roundness arg
             curve = min(width*roundness, height*roundness)
-            p = self.BezierPath(**kwargs)
+            p = self.Bezier(**kwargs)
             p.moveto(x, y+curve)
             p.curveto(x, y, x, y, x+curve, y)
             p.lineto(x+width-curve, y)
@@ -197,7 +197,7 @@ class Context(object):
             p.closepath()
         else:
             # otherwise let the nsbezier use its built-in support for rect radii
-            p = self.BezierPath(**kwargs)
+            p = self.Bezier(**kwargs)
             p.rect(x, y, width, height, radius=radius)
         p.inheritFromContext(kwargs.keys())
 
@@ -206,8 +206,8 @@ class Context(object):
         return p
 
     def oval(self, x, y, width, height, draw=True, **kwargs):
-        BezierPath.checkKwargs(kwargs)
-        path = self.BezierPath(**kwargs)
+        Bezier.checkKwargs(kwargs)
+        path = self.Bezier(**kwargs)
         path.oval(x, y, width, height)
         path.inheritFromContext(kwargs.keys())
 
@@ -219,8 +219,8 @@ class Context(object):
 
     def line(self, x1, y1, x2, y2, draw=True, **kwargs):
         if self._path is None:
-            BezierPath.checkKwargs(kwargs)
-            p = self.BezierPath(**kwargs)
+            Bezier.checkKwargs(kwargs)
+            p = self.Bezier(**kwargs)
             p.line(x1, y1, x2, y2)
             p.inheritFromContext(kwargs.keys())
             if draw:
@@ -233,10 +233,10 @@ class Context(object):
         return p
 
     def star(self, startx, starty, points=20, outer=100, inner=50, draw=True, **kwargs):
-        BezierPath.checkKwargs(kwargs)
+        Bezier.checkKwargs(kwargs)
         from math import sin, cos, pi
 
-        p = self.BezierPath(**kwargs)
+        p = self.Bezier(**kwargs)
         p.moveto(startx, starty + outer)
 
         for i in range(1, int(2 * points)):
@@ -265,7 +265,7 @@ class Context(object):
         There are two different types of arrows: NORMAL and trendy FORTYFIVE degrees arrows.
         When draw=False then the arrow's path is not ended, similar to endpath(draw=False)."""
 
-        BezierPath.checkKwargs(kwargs)
+        Bezier.checkKwargs(kwargs)
         if type==NORMAL:
           return self._arrow(x, y, width, draw, **kwargs)
         elif type==FORTYFIVE:
@@ -278,7 +278,7 @@ class Context(object):
         head = width * .4
         tail = width * .2
 
-        p = self.BezierPath(**kwargs)
+        p = self.Bezier(**kwargs)
         p.moveto(x, y)
         p.lineto(x-head, y+head)
         p.lineto(x-head, y+tail)
@@ -298,7 +298,7 @@ class Context(object):
         head = .3
         tail = 1 + head
 
-        p = self.BezierPath(**kwargs)
+        p = self.Bezier(**kwargs)
         p.moveto(x, y)
         p.lineto(x, y+width*(1-head))
         p.lineto(x-width*head, y+width)
@@ -319,23 +319,23 @@ class Context(object):
     def bezier(self, x=None, y=None, **kwargs):
         origin = (x,y) if all(isinstance(c, (int,float)) for c in (x,y)) else None
         kwargs.setdefault('draw', True)
-        if isinstance(x, (BezierPath, list, tuple)):
-            # if a list of point tuples or a BezierPath is the first arg, there's
+        if isinstance(x, (Bezier, list, tuple)):
+            # if a list of point tuples or a Bezier is the first arg, there's
             # no need to open a context (since the path is already defined). Instead
             # handle the path immediately (passing along styles and `draw` kwarg)
             kwargs.setdefault('close', False)
-            return self.BezierPath(path=x, immediate=True, **kwargs)
+            return self.Bezier(path=x, immediate=True, **kwargs)
         else:
             # otherwise start a new path with the presumption that it will be populated
             # in a `with` block or by adding points manually. begins with a moveto
             # element if an x,y coord was provided
-            p = self.BezierPath(**kwargs)
+            p = self.Bezier(**kwargs)
             if origin:
                 p.moveto(*origin)
             return p
 
     def beginpath(self, x=None, y=None):
-        self._path = self.BezierPath()
+        self._path = self.Bezier()
         self._pathclosed = False
         if x != None and y != None:
             self._path.moveto(x,y)
@@ -376,9 +376,9 @@ class Context(object):
         return p
 
     def drawpath(self, path, **kwargs):
-        BezierPath.checkKwargs(kwargs)
+        Bezier.checkKwargs(kwargs)
         if isinstance(path, (list, tuple)):
-            path = self.BezierPath(path, **kwargs)
+            path = self.Bezier(path, **kwargs)
         else: # Set the values in the current bezier path with the kwargs
             for arg_key, arg_val in kwargs.items():
                 setattr(path, arg_key, _copy_attr(arg_val))
@@ -763,10 +763,10 @@ class Context(object):
             return obj.metrics()
         elif isinstance(obj, Image):
             return obj.getSize()
-        elif isinstance(obj, BezierPath):
+        elif isinstance(obj, Bezier):
             return obj.bounds.size
         else:
-            badtype = "measure() can only handle Text, Images, BezierPaths, and file() objects (got %s)"%type(obj)
+            badtype = "measure() can only handle Text, Images, Beziers, and file() objects (got %s)"%type(obj)
             raise NodeBoxError(badtype)
         
 

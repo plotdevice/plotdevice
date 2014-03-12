@@ -5,13 +5,13 @@
 # Refer to the "Use" section on http://nodebox.net/code
 # Thanks to Dr. Florimond De Smedt at the Free University of Brussels for the math routines.
 
-from nodebox.graphics import BezierPath, PathElement, NodeBoxError, Point, MOVETO, LINETO, CURVETO, CLOSE
+from nodebox.graphics import Bezier, Curve, NodeBoxError, Point, MOVETO, LINETO, CURVETO, CLOSE
 from nodebox.lib.pathmatics import linepoint, linelength, curvepoint, curvelength
     
 def segment_lengths(path, relative=False, n=20):
     """Returns a list with the lengths of each segment in the path.
     
-    >>> path = BezierPath(None)
+    >>> path = Bezier(None)
     >>> segment_lengths(path)
     []
     >>> path.moveto(0, 0)
@@ -25,7 +25,7 @@ def segment_lengths(path, relative=False, n=20):
     [100.0, 300.0]
     >>> segment_lengths(path, relative=True)
     [0.25, 0.75]
-    >>> path = BezierPath(None)
+    >>> path = Bezier(None)
     >>> path.moveto(1, 2)
     >>> path.curveto(3, 4, 5, 6, 7, 8)
     >>> segment_lengths(path)
@@ -77,7 +77,7 @@ def length(path, segmented=False, n=20):
     in relation to the total path length.
     
     The length of an empty path is zero:
-    >>> path = BezierPath(None)
+    >>> path = Bezier(None)
     >>> length(path)
     0.0
 
@@ -104,7 +104,7 @@ def _locate(path, t, segments=None):
     
     """Locates t on a specific segment in the path.
     
-    Returns (index, t, PathElement)
+    Returns (index, t, Curve)
     
     A path is a combination of lines and curves (segments).
     The returned index indicates the start of the segment
@@ -120,10 +120,10 @@ def _locate(path, t, segments=None):
     point() works about thirty times faster in a for-loop,
     since it doesn't need to recalculate the length
     during each iteration. Note that this has been deprecated:
-    the BezierPath now caches the segment lengths the moment you use
+    the Bezier now caches the segment lengths the moment you use
     them.
     
-    >>> path = BezierPath(None)
+    >>> path = Bezier(None)
     >>> _locate(path, 0.0)
     Traceback (most recent call last):
         ...
@@ -172,10 +172,10 @@ def point(path, t, segments=None):
     point() works about thirty times faster in a for-loop,
     since it doesn't need to recalculate the length
     during each iteration. Note that this has been deprecated:
-    the BezierPath now caches the segment lengths the moment you use
+    the Bezier now caches the segment lengths the moment you use
     them.
     
-    >>> path = BezierPath(None)
+    >>> path = Bezier(None)
     >>> point(path, 0.0)
     Traceback (most recent call last):
         ...
@@ -187,9 +187,9 @@ def point(path, t, segments=None):
     NodeBoxError: The given path is empty
     >>> path.lineto(100, 0)
     >>> point(path, 0.0)
-    PathElement(LINETO, ((0.0, 0.0),))
+    Curve(LINETO, ((0.0, 0.0),))
     >>> point(path, 0.1)
-    PathElement(LINETO, ((10.0, 0.0),))
+    Curve(LINETO, ((10.0, 0.0),))
     """
 
     if len(path) == 0:
@@ -202,15 +202,15 @@ def point(path, t, segments=None):
 
     if p1.cmd == CLOSE:
         x, y = linepoint(t, x0, y0, closeto.x, closeto.y)
-        return PathElement(LINETO, ((x, y),))
+        return Curve(LINETO, ((x, y),))
     elif p1.cmd == LINETO:
         x1, y1 = p1.x, p1.y
         x, y = linepoint(t, x0, y0, x1, y1)
-        return PathElement(LINETO, ((x, y),))
+        return Curve(LINETO, ((x, y),))
     elif p1.cmd == CURVETO:
         x3, y3, x1, y1, x2, y2 = p1.x, p1.y, p1.ctrl1.x, p1.ctrl1.y, p1.ctrl2.x, p1.ctrl2.y
         x, y, c1x, c1y, c2x, c2y = curvepoint(t, x0, y0, x1, y1, x2, y2, x3, y3)
-        return PathElement(CURVETO, ((c1x, c1y), (c2x, c2y), (x, y)))
+        return Curve(CURVETO, ((c1x, c1y), (c2x, c2y), (x, y)))
     else:
         raise NodeBoxError, "Unknown cmd for p1 %s" % p1
         
@@ -219,7 +219,7 @@ def points(path, amount=100):
     This method calls the point method <amount> times, increasing t,
     distributing point spacing linearly.
 
-    >>> path = BezierPath(None)
+    >>> path = Bezier(None)
     >>> list(points(path))
     Traceback (most recent call last):
         ...
@@ -231,7 +231,7 @@ def points(path, amount=100):
     NodeBoxError: The given path is empty
     >>> path.lineto(100, 0)
     >>> list(points(path, amount=4))
-    [PathElement(LINETO, ((0.0, 0.0),)), PathElement(LINETO, ((25.0, 0.0),)), PathElement(LINETO, ((50.0, 0.0),)), PathElement(LINETO, ((75.0, 0.0),))]
+    [Curve(LINETO, ((0.0, 0.0),)), Curve(LINETO, ((25.0, 0.0),)), Curve(LINETO, ((50.0, 0.0),)), Curve(LINETO, ((75.0, 0.0),))]
     """
 
     if len(path) == 0:
@@ -258,7 +258,7 @@ def contours(path):
     For example, the glyph "o" has two contours:
     the inner circle and the outer circle.
 
-    >>> path = BezierPath(None)
+    >>> path = Bezier(None)
     >>> path.moveto(0, 0)
     >>> path.lineto(100, 100)
     >>> len(contours(path))
@@ -288,7 +288,7 @@ def contours(path):
         if el.cmd == MOVETO:
             if not empty:
                 contours.append(current_contour)
-            current_contour = BezierPath(path._ctx)
+            current_contour = Bezier(path._ctx)
             current_contour.moveto(el.x, el.y)
             empty = True
         elif el.cmd == LINETO:
@@ -328,11 +328,11 @@ def findpath(points, curvature=1.0):
     
     if len(points) == 0: return None
     if len(points) == 1:
-        path = BezierPath(None)
+        path = Bezier(None)
         path.moveto(points[0].x, points[0].y)
         return path
     if len(points) == 2:
-        path = BezierPath(None)
+        path = Bezier(None)
         path.moveto(points[0].x, points[0].y)
         path.lineto(points[1].x, points[1].y)
         return path
@@ -341,7 +341,7 @@ def findpath(points, curvature=1.0):
     
     curvature = max(0, min(1, curvature))
     if curvature == 0:
-        path = BezierPath(None)
+        path = Bezier(None)
         path.moveto(points[0].x, points[0].y)
         for i in range(len(points)): 
             path.lineto(points[i].x, points[i].y)
@@ -366,7 +366,7 @@ def findpath(points, curvature=1.0):
         dx[i] = ax[i] + dx[i+1] * bi[i]
         dy[i] = ay[i] + dy[i+1] * bi[i]
 
-    path = BezierPath(None)
+    path = Bezier(None)
     path.moveto(points[0].x, points[0].y)
     for i in range(len(points)-1):
         path.curveto(points[i].x + dx[i], 
@@ -381,7 +381,7 @@ def findpath(points, curvature=1.0):
 def insert_point(path, t):
     
     """Returns a path copy with an extra point at t.
-    >>> path = BezierPath(None)
+    >>> path = Bezier(None)
     >>> path.moveto(0, 0)
     >>> insert_point(path, 0.1)
     Traceback (most recent call last):
@@ -399,13 +399,13 @@ def insert_point(path, t):
     >>> len(path)
     3
     >>> path[1]
-    PathElement(LINETO, ((50.0, 25.0),))
-    >>> path = BezierPath(None)
+    Curve(LINETO, ((50.0, 25.0),))
+    >>> path = Bezier(None)
     >>> path.moveto(0, 100)
     >>> path.curveto(0, 50, 100, 50, 100, 100)
     >>> path = insert_point(path, 0.5)
     >>> path[1]
-    PathElement(LINETO, ((25.0, 62.5), (0.0, 75.0), (50.0, 62.5))
+    Curve(LINETO, ((25.0, 62.5), (0.0, 75.0), (50.0, 62.5))
     """
     
     i, t, closeto = _locate(path, t)
@@ -428,7 +428,7 @@ def insert_point(path, t):
     else:
         raise NodeBoxError, "Locate should not return a MOVETO"
     
-    new_path = BezierPath(None)
+    new_path = Bezier(None)
     new_path.moveto(path[0].x, path[0].y)
     for j in range(1, len(path)):
         if j == i+1:

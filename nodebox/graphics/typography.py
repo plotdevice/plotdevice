@@ -9,7 +9,7 @@ from pprint import pprint
 
 from nodebox import NodeBoxError
 from nodebox.graphics.grobs import TransformMixin, ColorMixin, Color, Region, Size
-from nodebox.graphics.grobs import _save, _restore, _STATE_NAMES, Transform, Grob, BezierPath
+from nodebox.graphics.grobs import _save, _restore, _STATE_NAMES, Transform, Grob, Bezier
 from nodebox.util.foundry import *
 from nodebox.util import _copy_attrs
 
@@ -224,7 +224,7 @@ class Text(Grob, TransformMixin, ColorMixin):
             path.moveToPoint_((finalPoint[0], -finalPoint[1]))
             path.appendBezierPathWithGlyph_inFont_(g, txtFont)
             path.closePath()
-        path = BezierPath(self._ctx, path)
+        path = Bezier(self._ctx, path)
         trans = Transform()
         trans.translate(x,y-printer.offset)
         trans.scale(1.0,-1.0)
