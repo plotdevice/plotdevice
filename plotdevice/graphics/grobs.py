@@ -14,6 +14,7 @@ from plotdevice import PlotDeviceError
 from plotdevice.util import _copy_attr, _copy_attrs, _flatten
 from plotdevice.lib import polymagic, geometry
 
+_ctx = None
 __all__ = [
         "DEFAULT_WIDTH", "DEFAULT_HEIGHT",
         "inch", "cm", "mm", "pi", "tau",
@@ -25,12 +26,12 @@ __all__ = [
         "NORMAL","FORTYFIVE",
         "NUMBER", "TEXT", "BOOLEAN","BUTTON",
         "Point", "Size", "Region",
-        "Grob", "ClippingPath", # "Rect", "Oval",
+        "Grob", "Transform", "PlotDeviceError",
+        "ClippingPath", # "Rect", "Oval",
         "BezierPath", "Bezier", "PathElement", "Curve",
-        "Color", "Transform", "Image",
-        "Variable", "PlotDeviceError",
+        "Color", "Image",
+        "Variable",
         ]
-
 DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
 # scale factors
@@ -215,14 +216,10 @@ class Region(tuple):
 class Grob(object):
     """A GRaphic OBject is the base class for all DrawingPrimitives."""
 
-    def __init__(self, ctx):
-        """Initializes this object with the current context."""
-        self._ctx = ctx
-
     def draw(self):
         """Appends the grob to the canvas.
-           This will result in a draw later on, when the scene graph is rendered."""
-        self._ctx.canvas.append(self)
+           This will result in a _draw later on, when the scene graph is rendered."""
+        _ctx.canvas.append(self)
 
     def copy(self):
         """Returns a deep copy of this grob."""
@@ -231,7 +228,7 @@ class Grob(object):
     def inheritFromContext(self, ignore=()):
         attrs_to_skip = [k for k, v in _STATE_NAMES.items() if v in ignore]
         attrs_to_copy = set(self.__class__.stateAttributes).difference(attrs_to_skip)
-        _copy_attrs(self._ctx, self, attrs_to_copy)
+        _copy_attrs(_ctx, self, attrs_to_copy)
 
     def checkKwargs(self, kwargs):
         remaining = [arg for arg in kwargs.keys() if arg not in self.kwargs]
@@ -289,36 +286,36 @@ class ColorMixin(object):
 
     def __init__(self, **kwargs):
         try:
-            self._fillcolor = Color(self._ctx, kwargs['fill'])
+            self._fillcolor = Color(kwargs['fill'])
         except KeyError:
-            self._fillcolor = Color(self._ctx)
+            self._fillcolor = Color()
         try:
-            self._strokecolor = Color(self._ctx, kwargs['stroke'])
+            self._strokecolor = Color(kwargs['stroke'])
         except KeyError:
             self._strokecolor = None
 
     def _get_fill(self):
         return self._fillcolor
     def _set_fill(self, *args):
-        self._fillcolor = Color(self._ctx, *args)
+        self._fillcolor = Color(*args)
     fill = property(_get_fill, _set_fill)
 
     def _get_stroke(self):
         return self._strokecolor
     def _set_stroke(self, *args):
-        self._strokecolor = Color(self._ctx, *args)
+        self._strokecolor = Color(*args)
     stroke = property(_get_stroke, _set_stroke)
 
 class PenMixin(object):
 
-    """Mixin class for color support.
+    """Mixin class for linestyle support.
     Adds the _capstyle, _joinstyle, _dashstyle, and _strokewidth attributes to the class."""
 
     def __init__(self, **kwargs):
-        self.strokewidth = kwargs.get('nib', kwargs.get('strokewidth', self._ctx._strokewidth))
-        self.capstyle = kwargs.get('cap', kwargs.get('capstyle', self._ctx._capstyle))
-        self.joinstyle = kwargs.get('join', kwargs.get('joinstyle', self._ctx._joinstyle))
-        self.dashstyle = kwargs.get('dash', kwargs.get('dashstyle', self._ctx._dashstyle))
+        self.strokewidth = kwargs.get('nib', kwargs.get('strokewidth', _ctx._strokewidth))
+        self.capstyle = kwargs.get('cap', kwargs.get('capstyle', _ctx._capstyle))
+        self.joinstyle = kwargs.get('join', kwargs.get('joinstyle', _ctx._joinstyle))
+        self.dashstyle = kwargs.get('dash', kwargs.get('dashstyle', _ctx._dashstyle))
 
     def _get_strokewidth(self):
         return self._strokewidth
@@ -363,8 +360,7 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
     stateAttributes = ('_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_transform', '_transformmode')
     kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle', 'nib', 'cap', 'join')
 
-    def __init__(self, ctx, path=None, immediate=False, **kwargs):
-        super(Bezier, self).__init__(ctx)
+    def __init__(self, path=None, immediate=False, **kwargs):
         TransformMixin.__init__(self)
         ColorMixin.__init__(self, **kwargs)
         PenMixin.__init__(self, **kwargs)
@@ -390,7 +386,7 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
 
         # use any plotstyle settings in kwargs (the rest will be inherited)
         self._overrides = {k:_copy_attr(v) for k,v in kwargs.items() if k in Bezier.kwargs}
-        self._autoclose = kwargs.get('close', self._ctx._autoclosepath)
+        self._autoclose = kwargs.get('close', _ctx._autoclosepath)
         self._autodraw = kwargs.get('draw', False)
 
         # finish the path (and potentially draw it) immediately if flagged to do so.
@@ -403,17 +399,17 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
         if self._finished:
             reentrant = "Bezier already complete. Only use `with bezier()` when defining a path using moveto, lineto, etc."
             raise PlotDeviceError(reentrant)
-        elif self._ctx._path is not None:
+        elif _ctx._path is not None:
             recursive = "Already defining a bezier path. Don't nest `with bezier()` blocks"
             raise PlotDeviceError(recursive)
-        self._ctx._saveContext()
-        self._ctx._path = self
+        _ctx._saveContext()
+        _ctx._path = self
         return self
 
     def __exit__(self, type, value, tb):
         self._autofinish()
-        self._ctx._path = None
-        self._ctx._restoreContext()
+        _ctx._path = None
+        _ctx._restoreContext()
 
     def _autofinish(self):
         if self._autoclose:
@@ -431,7 +427,7 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
         return self._nsBezierPath
 
     def copy(self):
-        return self.__class__(self._ctx, self)
+        return self.__class__(self)
 
     ### Path methods ###
 
@@ -660,16 +656,16 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
         return polymagic.intersects(self._nsBezierPath, other._nsBezierPath)
 
     def union(self, other, flatness=0.6):
-        return Bezier(self._ctx, polymagic.union(self._nsBezierPath, other._nsBezierPath, flatness))
+        return Bezier(polymagic.union(self._nsBezierPath, other._nsBezierPath, flatness))
 
     def intersect(self, other, flatness=0.6):
-        return Bezier(self._ctx, polymagic.intersect(self._nsBezierPath, other._nsBezierPath, flatness))
+        return Bezier(polymagic.intersect(self._nsBezierPath, other._nsBezierPath, flatness))
 
     def difference(self, other, flatness=0.6):
-        return Bezier(self._ctx, polymagic.difference(self._nsBezierPath, other._nsBezierPath, flatness))
+        return Bezier(polymagic.difference(self._nsBezierPath, other._nsBezierPath, flatness))
 
     def xor(self, other, flatness=0.6):
-        return Bezier(self._ctx, polymagic.xor(self._nsBezierPath, other._nsBezierPath, flatness))
+        return Bezier(polymagic.xor(self._nsBezierPath, other._nsBezierPath, flatness))
 
 class BezierPath(Bezier):
     pass # compat...
@@ -729,8 +725,7 @@ class PathElement(Curve):
 
 class ClippingPath(Grob):
 
-    def __init__(self, ctx, path):
-        self._ctx = ctx
+    def __init__(self, path):
         self.path = path
         self._grobs = []
 
@@ -769,8 +764,7 @@ class ClippingPath(Grob):
 
 class Color(object):
 
-    def __init__(self, ctx, *args, **kwargs):
-        self._ctx = ctx
+    def __init__(self, *args, **kwargs):
 
         # flatten any tuples in the arguments list
         args = _flatten(args)
@@ -783,7 +777,7 @@ class Color(object):
 
         if mode not in (RGB, HSB, CMYK, GREY):
             # if no mode was specified, interpret the components in the context's current mode
-            mode = ctx._colormode
+            mode = _ctx._colormode
 
         # use the specified range for int values, or leave it as None to use the default 0-1 scale
         rng = kwargs.get('range')
@@ -792,7 +786,7 @@ class Color(object):
         if params == 1 and args[0] is None:                # None -> transparent
             clr = Color._nscolor(GREY, 0, 0)
         elif params == 1 and isinstance(args[0], Color):   # Color object
-            is_rgb = self._ctx._outputmode == RGB
+            is_rgb = _ctx._outputmode == RGB
             clr = args[0]._rgb if is_rgb else args[0]._cmyk
         elif params == 1 and isinstance(args[0], NSColor): # NSColor object
             clr = args[0]
@@ -841,11 +835,11 @@ class Color(object):
     def __exit__(self, type, value, tb):
         for param, val in self._rollback.items():
             statevar = {"fill":"_fillcolor", "stroke":"_strokecolor"}[param]
-            setattr(self._ctx, statevar, val)
+            setattr(_ctx, statevar, val)
 
     @property
     def nsColor(self):
-        if self._ctx._outputmode == RGB:
+        if _ctx._outputmode == RGB:
             return self._rgb
         else:
             return self._cmyk
@@ -862,7 +856,7 @@ class Color(object):
                     self._cmyk.alphaComponent())
 
     def copy(self):
-        new = self.__class__(self._ctx)
+        new = self.__class__()
         new._rgb = self._rgb.copy()
         new._updateCmyk()
         return new
@@ -1024,12 +1018,12 @@ class Color(object):
 
     def _normalize(self, v, rng=None):
         """Bring the color into the 0-1 scale for the current colorrange"""
-        r = float(self._ctx._colorrange if rng is None else rng)
+        r = float(_ctx._colorrange if rng is None else rng)
         return v if r==1.0 else v/r
 
     def _normalizeList(self, lst, rng=None):
         """Bring the color into the 0-1 scale for the current colorrange"""
-        r = float(self._ctx._colorrange if rng is None else rng)
+        r = float(_ctx._colorrange if rng is None else rng)
         if r == 1.0: return lst
         return [v / r for v in lst]
 
@@ -1072,11 +1066,9 @@ class InkContext(object):
     _statevars = dict(nib='_strokewidth', cap='_capstyle', join='_joinstyle', dash='_dashstyle',
                       mode='_colormode', range='_colorrange', stroke='_strokecolor', fill='_fillcolor')
 
-    def __init__(self, ctx, restore=None, **spec):
-        self._ctx = ctx
-
+    def __init__(self, restore=None, **spec):
         # start with the current context state as a baseline
-        prior = {k:getattr(ctx, v) for k,v in self._statevars.items() if k in spec or restore==all}
+        prior = {k:getattr(_ctx, v) for k,v in self._statevars.items() if k in spec or restore==all}
         snapshots = {k:v._rollback for k,v in spec.items() if hasattr(v, '_rollback')}
         prior.update(snapshots)
 
@@ -1084,9 +1076,9 @@ class InkContext(object):
             # make sure fill & stroke are Color objects (or None)
             if param in ('stroke','fill'):
                 if val is None: continue
-                val = Color(ctx, val)
+                val = Color(val)
                 spec[param] = val
-            setattr(ctx, self._statevars[param], val)
+            setattr(_ctx, self._statevars[param], val)
 
         # keep the dictionary of prior state around for restoration at the end of the block
         self._rollback = prior
@@ -1097,7 +1089,7 @@ class InkContext(object):
 
     def __exit__(self, type, value, tb):
         for param, val in self._rollback.items():
-            setattr(self._ctx, self._statevars[param], val)
+            setattr(_ctx, self._statevars[param], val)
 
     def __repr__(self):
         spec = ", ".join('%s=%r'%(k,v) for k,v in self._spec.items())
@@ -1108,25 +1100,24 @@ class TransformContext(object):
     """Performs the setup/cleanup for a `with transform()` block (and changes the mode)"""
     _xforms = ['reset','rotate','translate','scale','skew']
 
-    def __init__(self, ctx, mode=None, rotation=None, *xforms):
-        self._ctx = ctx
-        self._rollback = Transform(ctx._transform)
+    def __init__(self, mode=None, rotation=None, *xforms):
+        self._rollback = Transform(_ctx._transform)
         for xf in reversed(xforms): # make a local copy of the current state and apply inverses of
             xf.invert()             # any transformation calls that occurred in the arguments
             self._rollback.prepend(xf)
 
         # remember the old center/corner setting and rotation units, then apply the new ones
-        self._oldmode = ctx._transformmode
-        self._oldrotation = rotation or ctx._rotationmode
+        self._oldmode = _ctx._transformmode
+        self._oldrotation = rotation or _ctx._rotationmode
         self._mode = mode or self._oldmode
-        ctx._transformmode = self._mode
+        _ctx._transformmode = self._mode
 
     def __enter__(self):
-        return self._ctx._transform
+        return _ctx._transform
 
     def __exit__(self, type, value, tb):
-        self._ctx._transform = self._rollback
-        self._ctx._transformmode = self._oldmode
+        _ctx._transform = self._rollback
+        _ctx._transformmode = self._oldmode
 
     def __eq__(self, other):
         return self._mode == other
@@ -1136,7 +1127,7 @@ class TransformContext(object):
 
     @property
     def mode(self):
-        return self._ctx._transformmode
+        return _ctx._transformmode
 
 class Transform(object):
 
@@ -1244,7 +1235,7 @@ class Transform(object):
 
     def transformBezier(self, path):
         if isinstance(path, Bezier):
-            path = Bezier(path._ctx, path)
+            path = Bezier(path)
         else:
             wrongtype = "Can only transform Beziers"
             raise PlotDeviceError(wrongtype)
@@ -1259,7 +1250,7 @@ class Image(Grob, TransformMixin):
     stateAttributes = ('_transform', '_transformmode')
     kwargs = ()
 
-    def __init__(self, ctx, path=None, x=0, y=0, width=None, height=None, alpha=1.0, image=None, data=None):
+    def __init__(self, path=None, x=0, y=0, width=None, height=None, alpha=1.0, image=None, data=None):
         """
         Parameters:
          - path: A path to a certain image on the local filesystem.
@@ -1273,7 +1264,6 @@ class Image(Grob, TransformMixin):
          - image: optionally, an Image or NSImage object.
          - data: a stream of bytes of image data.
         """
-        super(Image, self).__init__(ctx)
         TransformMixin.__init__(self)
         if data is not None:
             if not isinstance(data, NSData):
@@ -1297,7 +1287,7 @@ class Image(Grob, TransformMixin):
                 raise PlotDeviceError(notfound)
             curtime = os.path.getmtime(path)
             try:
-                image, lasttime = self._ctx._imagecache[path]
+                image, lasttime = _ctx._imagecache[path]
                 if lasttime != curtime:
                     image = None
             except KeyError:
@@ -1309,7 +1299,7 @@ class Image(Grob, TransformMixin):
                     raise PlotDeviceError(invalid)
                 image.setFlipped_(True)
                 image.setCacheMode_(NSImageCacheNever)
-                self._ctx._imagecache[path] = (image, curtime)
+                _ctx._imagecache[path] = (image, curtime)
             self._nsImage = image
         self.x = x
         self.y = y
@@ -1324,7 +1314,7 @@ class Image(Grob, TransformMixin):
         return self._nsImage
 
     def copy(self):
-        new = self.__class__(self._ctx)
+        new = self.__class__()
         _copy_attrs(self, new, ('image', 'x', 'y', 'width', 'height', '_transform', '_transformmode', 'alpha', 'debugImage'))
         return new
 
@@ -1395,7 +1385,7 @@ class Image(Grob, TransformMixin):
 
             # A debugImage draws a black rectangle instead of an image.
             if self.debugImage:
-                Color(self._ctx).set()
+                Color().set()
                 pt = Bezier()
                 pt.rect(0, 0, srcW / factor, srcH / factor)
                 pt.fill()
@@ -1419,7 +1409,7 @@ class Image(Grob, TransformMixin):
             self._transform.concat()
             # A debugImage draws a black rectangle instead of an image.
             if self.debugImage:
-                Color(self._ctx).set()
+                Color().set()
                 pt = Bezier()
                 pt.rect(x, y, srcW, srcH)
                 pt.fill()

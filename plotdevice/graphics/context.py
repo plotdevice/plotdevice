@@ -1,6 +1,6 @@
 import types
-from contextlib import contextmanager, nested
 from AppKit import *
+from contextlib import contextmanager, nested
 from plotdevice.graphics.typography import *
 from plotdevice.graphics.grobs import *
 from plotdevice.util.foundry import *
@@ -24,14 +24,6 @@ class Context(object):
         Note that we have to give the namespace of the executing script,
         which is a hack to keep the WIDTH and HEIGHT properties updated.
         Python's getattr only looks up property values once: at assign time."""
-
-        # all the grobs.* & typography.* classes need a reference to this parent context.
-        # create subclasses for each of them with a curried call to __init__, swapping
-        # `self` in for the ctx arg they all expect in the 0th position. Assign an
-        # instance method for each of the classes that calls the proper constructor
-        for name, meth in self._contextualizedGrobs():
-            setattr(self, name, meth)
-
         if canvas is None:
             canvas = Canvas()
         if ns is None:
@@ -43,40 +35,14 @@ class Context(object):
         self._resetContext()
         self._statestack = []
         self.canvas._ctx = self
+        self._activate()
 
         # cache a list of all of the exportable attr names (for use when making namespaces)
         self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_') or a.endswith('_')))
 
-    def _contextualizedGrobs(self):
-
-        from inspect import getargspec, formatargspec as fspec
-        modules = dict(
-            grobs=[getattr(grobs, c) for c in ("Bezier", "BezierPath", "ClippingPath", "Color", "Image", "TransformContext", "InkContext")],
-            typography=[getattr(typography, c) for c in ("Text", "Family", "Font", "Stylesheet")]
-        )
-        for mod, classes in modules.items():
-            for klazz in classes:
-                # create a method with the name of the target class and make sure it has
-                # the same args and docstring.
-                #
-                # eval is evil, but so is presenting an argspec of (self, *args, **kwargs)...
-                name, init = klazz.__name__, klazz.__init__
-                def_spec = getargspec(init)
-                call_spec = fspec(*def_spec._replace(args=def_spec.args[1:], defaults=None))
-                wrap_spec = fspec(*def_spec._replace(args=['self']+def_spec.args[2:]))
-                fmt = dict(wrap=wrap_spec, call=call_spec, doc=init.__doc__ or '',
-                           meth=name, grob=mod+'.'+name, )
-                defdef = '''def %(meth)s%(wrap)s:
-                  """%(doc)s"""
-                  return %(grob)s%(call)s\n''' % fmt
-                # print defdef
-                ns = dict(ctx=self, grobs=grobs, typography=typography)
-                exec defdef in ns
-                # hmm. so `class methods' really could just be hooked onto the method
-                # before attaching it to the context...
-                # ns[fmt['meth']].classmeth = lambda: 'hello user'
-                yield fmt['meth'], types.MethodType(ns[fmt['meth']], self, Context)
-
+    def _activate(self):
+        grobs._ctx = self
+        typography._ctx = self
 
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context.state_vars]
@@ -96,7 +62,7 @@ class Context(object):
         self._outputmode = RGB
         self._colormode = RGB
         self._colorrange = 1.0
-        self._fillcolor = self.Color()
+        self._fillcolor = Color()
         self._strokecolor = None
         self._strokewidth = 1.0
         self._capstyle = BUTT
@@ -115,8 +81,8 @@ class Context(object):
         self._noImagesHint = False
         self._oldvars = self._vars
         self._vars = []
-        self._stylesheet = self.Stylesheet()
-        self.canvas.background = self.Color(1.0)
+        self._stylesheet = Stylesheet()
+        self.canvas.background = Color(1.0)
 
     def ximport(self, libName):
         lib = __import__(libName)
@@ -150,7 +116,7 @@ class Context(object):
             if len(args) == 1 and args[0] is None:
                 self.canvas.background = None
             else:
-                self.canvas.background = self.Color(args)
+                self.canvas.background = Color(args)
         return self.canvas.background
 
     def outputmode(self, mode=None):
@@ -185,7 +151,7 @@ class Context(object):
         if roundness > 0:
             # support the pre-10.5 roundrect behavior via the roundness arg
             curve = min(width*roundness, height*roundness)
-            p = self.Bezier(**kwargs)
+            p = Bezier(**kwargs)
             p.moveto(x, y+curve)
             p.curveto(x, y, x, y, x+curve, y)
             p.lineto(x+width-curve, y)
@@ -197,7 +163,7 @@ class Context(object):
             p.closepath()
         else:
             # otherwise let the nsbezier use its built-in support for rect radii
-            p = self.Bezier(**kwargs)
+            p = Bezier(**kwargs)
             p.rect(x, y, width, height, radius=radius)
         p.inheritFromContext(kwargs.keys())
 
@@ -207,7 +173,7 @@ class Context(object):
 
     def oval(self, x, y, width, height, draw=True, **kwargs):
         Bezier.checkKwargs(kwargs)
-        path = self.Bezier(**kwargs)
+        path = Bezier(**kwargs)
         path.oval(x, y, width, height)
         path.inheritFromContext(kwargs.keys())
 
@@ -220,7 +186,7 @@ class Context(object):
     def line(self, x1, y1, x2, y2, draw=True, **kwargs):
         if self._path is None:
             Bezier.checkKwargs(kwargs)
-            p = self.Bezier(**kwargs)
+            p = Bezier(**kwargs)
             p.line(x1, y1, x2, y2)
             p.inheritFromContext(kwargs.keys())
             if draw:
@@ -236,7 +202,7 @@ class Context(object):
         Bezier.checkKwargs(kwargs)
         from math import sin, cos, pi
 
-        p = self.Bezier(**kwargs)
+        p = Bezier(**kwargs)
         p.moveto(startx, starty + outer)
 
         for i in range(1, int(2 * points)):
@@ -278,7 +244,7 @@ class Context(object):
         head = width * .4
         tail = width * .2
 
-        p = self.Bezier(**kwargs)
+        p = Bezier(**kwargs)
         p.moveto(x, y)
         p.lineto(x-head, y+head)
         p.lineto(x-head, y+tail)
@@ -298,7 +264,7 @@ class Context(object):
         head = .3
         tail = 1 + head
 
-        p = self.Bezier(**kwargs)
+        p = Bezier(**kwargs)
         p.moveto(x, y)
         p.lineto(x, y+width*(1-head))
         p.lineto(x-width*head, y+width)
@@ -324,18 +290,18 @@ class Context(object):
             # no need to open a context (since the path is already defined). Instead
             # handle the path immediately (passing along styles and `draw` kwarg)
             kwargs.setdefault('close', False)
-            return self.Bezier(path=x, immediate=True, **kwargs)
+            return Bezier(path=x, immediate=True, **kwargs)
         else:
             # otherwise start a new path with the presumption that it will be populated
             # in a `with` block or by adding points manually. begins with a moveto
             # element if an x,y coord was provided
-            p = self.Bezier(**kwargs)
+            p = Bezier(**kwargs)
             if origin:
                 p.moveto(*origin)
             return p
 
     def beginpath(self, x=None, y=None):
-        self._path = self.Bezier()
+        self._path = Bezier()
         self._pathclosed = False
         if x != None and y != None:
             self._path.moveto(x,y)
@@ -378,7 +344,7 @@ class Context(object):
     def drawpath(self, path, **kwargs):
         Bezier.checkKwargs(kwargs)
         if isinstance(path, (list, tuple)):
-            path = self.Bezier(path, **kwargs)
+            path = Bezier(path, **kwargs)
         else: # Set the values in the current bezier path with the kwargs
             for arg_key, arg_val in kwargs.items():
                 setattr(path, arg_key, _copy_attr(arg_val))
@@ -404,7 +370,7 @@ class Context(object):
         self.endclip()
 
     def beginclip(self, path):
-        cp = self.ClippingPath(path)
+        cp = ClippingPath(path)
         self.canvas.push(cp)
         return cp
 
@@ -439,7 +405,7 @@ class Context(object):
         # if the args validate, return a context manager (which also mimics CENTER/CORNER)
         if len(xforms)+len(rotations) != len(args):
             raise PlotDeviceError, "transform: valid arguments are reset(), rotate(), scale(), skew(), and translate()"
-        return self.TransformContext(mode, rotation, *xforms)
+        return TransformContext(mode, rotation, *xforms)
 
     def translate(self, x, y):
         return self._transform.translate(x, y)
@@ -491,13 +457,13 @@ class Context(object):
 
     def plotstyle(self, *ops):
         context_mgrs = [mgr for mgr in ops if hasattr(mgr, '__enter__')]
-        context_mgrs.append(self.InkContext(restore=all))
+        context_mgrs.append(InkContext(restore=all))
         return nested(*context_mgrs)
 
     def pen(self, nib=None, **spec): # spec: caps, joins, dash
         if nib is not None:
             spec.setdefault('nib', nib)
-        return self.InkContext(**spec)
+        return InkContext(**spec)
 
     def color(self, *args, **kwargs):
         # flatten any tuples in the arguments list
@@ -512,10 +478,10 @@ class Context(object):
             # if called without any component values update the global mode/range,
             # and return a context manager for `with color(mode=...)` usage
             if {'range', 'mode'}.intersection(kwargs):
-                return self.InkContext(**kwargs)
+                return InkContext(**kwargs)
 
         # if we got at least one numerical/string arg, parse it
-        return self.Color(*args, **kwargs)
+        return Color(*args, **kwargs)
 
     def colormode(self, mode=None, range=None):
         if mode is not None:
@@ -534,7 +500,7 @@ class Context(object):
 
     def fill(self, *args):
         if len(args) > 0:
-            annotated = self.Color(*args)
+            annotated = Color(*args)
             setattr(annotated, '_rollback', dict(fill=self._fillcolor))
             self._fillcolor = annotated
         return self._fillcolor
@@ -544,7 +510,7 @@ class Context(object):
 
     def stroke(self, *args):
         if len(args) > 0:
-            annotated = self.Color(*args)
+            annotated = Color(*args)
             setattr(annotated, '_rollback', dict(stroke=self._strokecolor))
             self._strokecolor = annotated
         return self._strokecolor
@@ -572,7 +538,7 @@ class Context(object):
 
     def font(self, *args, **kwargs):
         """Set the current font to be used in subsequent calls to text()"""
-        return self.Font(*args, **kwargs)._use()
+        return Font(*args, **kwargs)._use()
 
     def fontsize(self, fontsize=None):
         if fontsize is not None:
@@ -596,7 +562,7 @@ class Context(object):
         if not western:
             in_region = {fam:not macroman for fam,macroman in in_region.items()}
 
-        return [self.Family(fam) for fam in all_fams if in_region[fam]]
+        return [Family(fam) for fam in all_fams if in_region[fam]]
 
     def stylesheet(self, name=None, *args, **kwargs):
         """Access the context's Stylesheet (used by the text() command to format marked-up strings)
@@ -649,7 +615,7 @@ class Context(object):
         return self._align
 
     def text(self, txt, x, y, width=None, height=None, outline=False, draw=True, **kwargs):
-        txt = self.Text(txt, x, y, width, height, **kwargs)
+        txt = Text(txt, x, y, width, height, **kwargs)
         txt.inheritFromContext(kwargs.keys())
 
         if outline:
@@ -664,12 +630,12 @@ class Context(object):
           return txt
 
     def textpath(self, txt, x, y, width=None, height=None, **kwargs):
-        txt = self.Text(txt, x, y, width, height, **kwargs)
+        txt = Text(txt, x, y, width, height, **kwargs)
         txt.inheritFromContext(kwargs.keys())
         return txt.path
 
     def textmetrics(self, txt, width=None, height=None, **kwargs):
-        txt = self.Text(txt, 0, 0, width, height, **kwargs)
+        txt = Text(txt, 0, 0, width, height, **kwargs)
         txt.inheritFromContext(kwargs.keys())
         return txt.metrics
 
@@ -684,14 +650,14 @@ class Context(object):
     ### Image commands ###
 
     def image(self, path, x, y, width=None, height=None, alpha=1.0, data=None, draw=True, **kwargs):
-        img = self.Image(path, x, y, width, height, alpha, data=data, **kwargs)
+        img = Image(path, x, y, width, height, alpha, data=data, **kwargs)
         img.inheritFromContext(kwargs.keys())
         if draw:
             img.draw()
         return img
 
     def imagesize(self, path, data=None):
-        img = self.Image(path, data=data)
+        img = Image(path, data=data)
         return img.size
 
     ### Canvas proxy ###
@@ -756,9 +722,9 @@ class Context(object):
     def measure(self, obj, width=None, height=None, **kwargs):
         """Returns a Size tuple for graphics objects, text, or file objects pointing to images"""
         if isinstance(obj, basestring):
-            return self.Text(obj, 0, 0, width, height, **kwargs).metrics
+            return Text(obj, 0, 0, width, height, **kwargs).metrics
         elif isinstance(obj, file):
-            return self.Image(data=obj.read()).size
+            return Image(data=obj.read()).size
         elif isinstance(obj, Text):
             return obj.metrics()
         elif isinstance(obj, Image):

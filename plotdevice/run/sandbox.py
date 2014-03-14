@@ -198,6 +198,7 @@ class Sandbox(object):
         # settings should persist to allow unchanging settings to be placed in setup()
         # if method is None:
         self.context._resetContext()
+        self.context._activate()
 
         # Initalize the magicvar
         self.namespace[MAGICVAR] = self.magicvar

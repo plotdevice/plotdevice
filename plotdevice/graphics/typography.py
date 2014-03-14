@@ -13,9 +13,9 @@ from plotdevice.graphics.grobs import _save, _restore, _STATE_NAMES, Transform, 
 from plotdevice.util.foundry import *
 from plotdevice.util import _copy_attrs
 
-__all__ = ["Text", "Family", "Font", "Stylesheet",
-           "LEFT", "RIGHT", "CENTER", "JUSTIFY",
-           "DEFAULT", ]
+_ctx = None
+__all__ = ("Text", "Family", "Font", "Stylesheet",
+           "LEFT", "RIGHT", "CENTER", "JUSTIFY", "DEFAULT")
 
 # text alignments
 LEFT = "left"
@@ -122,8 +122,8 @@ class Text(Grob, TransformMixin, ColorMixin):
 
     __dummy_color = NSColor.blackColor()
 
-    def __init__(self, ctx, text, x=0, y=0, width=None, height=None, **kwargs):
-        super(Text, self).__init__(ctx)
+    def __init__(self, text, x=0, y=0, width=None, height=None, **kwargs):
+        super(Text, self).__init__()
         TransformMixin.__init__(self)
         ColorMixin.__init__(self, **kwargs)
 
@@ -148,7 +148,7 @@ class Text(Grob, TransformMixin, ColorMixin):
         self._align = kwargs.get('align', LEFT)
 
     def copy(self):
-        new = self.__class__(self._ctx, self.text)
+        new = self.__class__(self.text)
         _copy_attrs(self, new,
             ('x', 'y', 'width', 'height', '_transform', '_transformmode',
             '_align', '_stylesheet', '_style', '_spec'))
@@ -160,7 +160,7 @@ class Text(Grob, TransformMixin, ColorMixin):
 
     @property
     def font(self):
-        return NSFont.fontWithName_size_(self._ctx._fontname, self._ctx._fontsize)
+        return NSFont.fontWithName_size_(_ctx._fontname, _ctx._fontsize)
 
     def _draw(self):
         x,y = self.x, self.y
@@ -224,7 +224,7 @@ class Text(Grob, TransformMixin, ColorMixin):
             path.moveToPoint_((finalPoint[0], -finalPoint[1]))
             path.appendBezierPathWithGlyph_inFont_(g, txtFont)
             path.closePath()
-        path = Bezier(self._ctx, path)
+        path = Bezier(path)
         trans = Transform()
         trans.translate(x,y-printer.offset)
         trans.scale(1.0,-1.0)
@@ -326,8 +326,8 @@ class Stylesheet(Grob):
     stateAttributes = ('_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight')
     kwargs = ('family','size','leading','weight','width','variant','italic','heavier','lighter','color','fill','face','fontname','fontsize','lineheight')
 
-    def __init__(self, ctx, styles=None):
-        super(Stylesheet, self).__init__(ctx)
+    def __init__(self, styles=None):
+        super(Stylesheet, self).__init__()
         self._styles = dict(styles or {})
 
     def __repr__(self):
@@ -360,7 +360,7 @@ class Stylesheet(Grob):
             del self._styles[key]
 
     def copy(self):
-        new = self.__class__(self._ctx, self._styles)
+        new = self.__class__(self._styles)
         return new
 
     @property
@@ -376,7 +376,7 @@ class Stylesheet(Grob):
             if color and not isinstance(color, Color):
                 if isinstance(color, basestring):
                     color = (color,)
-                color = Color(self._ctx, *color)
+                color = Color(*color)
             if color:
                 spec['color'] = color
             self._styles[name] = spec
@@ -403,8 +403,8 @@ class Stylesheet(Grob):
         spec.update(self._override)
 
         # assign a font and color based on the coalesced spec
-        color = Color(self._ctx, spec.pop('color')).nsColor
-        font = Font(self._ctx, **{k:v for k,v in spec.items() if k in Stylesheet.kwargs} )
+        color = Color(spec.pop('color')).nsColor
+        font = Font(**{k:v for k,v in spec.items() if k in Stylesheet.kwargs} )
 
         # factor the relevant attrs into a paragraph style
         graf = NSMutableParagraphStyle.alloc().init()
@@ -486,7 +486,7 @@ class Stylesheet(Grob):
 
 
     def test(self, txt):
-        print Typesetter(self._ctx, txt, self).astr
+        print Typesetter(txt, self).astr
 
 # UIFontDescriptor* desc =
 #     [UIFontDescriptor fontDescriptorWithName:@"Didot" size:18];
@@ -501,13 +501,12 @@ class Stylesheet(Grob):
 
 class Font(object):
 
-    def __init__(self, ctx, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         # normalize the names of the keyword args and do fuzzy matching on positional args
         # to create a specification with just the valid keys
         spec = Stylesheet._spec(*args, **kwargs)
 
         # initialize our internals based on the spec
-        self._ctx = ctx
         if 'face' not in spec or any(arg not in ('face','size') for arg in spec):
             # we only need to search if no face arg was supplied or if there are
             # style modifications to be applied on top of it
@@ -518,7 +517,7 @@ class Font(object):
             self._face = spec['face']
 
         # BUG: probably don't want to inherit this immediately...
-        self._size = float(spec.get('size', ctx._fontsize))
+        self._size = float(spec.get('size', _ctx._fontsize))
 
     def __enter__(self):
         if hasattr(self, '_prior'):
@@ -542,18 +541,18 @@ class Font(object):
         return (u'Font(%s)'%" ".join(spec)).encode('utf-8')
 
     def __call__(self, *args, **kwargs):
-        return Font(self._ctx, self, *args, **kwargs)
+        return Font(self, *args, **kwargs)
 
     def _get_ctx(self):
-        return (self._ctx._fontname, self._ctx._fontsize)
+        return (_ctx._fontname, _ctx._fontsize)
 
     def _update_ctx(self, face=None, size=None):
         face, size = (face or self.face), (size or self.size)
-        self._ctx._fontname, self._ctx._fontsize = face, size
+        _ctx._fontname, _ctx._fontsize = face, size
 
     def _update_face(self, **spec):
         # use the basis kwarg (or this _face if omitted) as a starting point
-        basis = spec.get('face', getattr(self,'_face', self._ctx._fontname))
+        basis = spec.get('face', getattr(self,'_face', _ctx._fontname))
         if isinstance(basis, basestring):
             basis = font_face(basis)
 
@@ -567,7 +566,7 @@ class Font(object):
         # the family in the spec, or the current family if omitted
         try:
             spec['face'] = basis
-            fam = Family(self._ctx, spec.get('family', basis.family))
+            fam = Family(spec.get('family', basis.family))
             candidates, scores = zip(*fam.select(spec).items())
             self._face = candidates[0]
         except IndexError:
@@ -588,7 +587,7 @@ class Font(object):
 
     @property
     def _nsColor(self):
-        return self._ctx._fillcolor.nsColor
+        return _ctx._fillcolor.nsColor
 
     # .name
     def _get_name(self):
@@ -599,7 +598,7 @@ class Font(object):
 
     # .family
     def _get_family(self):
-        return Family(self._ctx, self._face.family)
+        return Family(self._face.family)
     def _set_family(self, f):
         if isinstance(f, Family):
             f = f.name
@@ -688,8 +687,7 @@ class Font(object):
         self.weight = match[0]
 
 class Family(object):
-    def __init__(self, ctx, famname=None, of=None):
-        self._ctx = ctx
+    def __init__(self, famname=None, of=None):
         if of:
             famname = font_family(of)
         elif not famname:
@@ -750,10 +748,10 @@ class Family(object):
 
     @property
     def fonts(self):
-        return odict( (k,Font(self._ctx, v)) for k,v in self._faces.items())
+        return odict( (k,Font(v)) for k,v in self._faces.items())
 
     def select(self, spec):
-        current = spec.get('face', self._ctx._fontname)
+        current = spec.get('face', _ctx._fontname)
         if isinstance(current, basestring):
             current = font_face(current)
 
