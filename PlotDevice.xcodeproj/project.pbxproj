@@ -49,6 +49,7 @@
 		2A66ECED18A99328002903DE /* jquery-2.1.0.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE018A992BD002903DE /* jquery-2.1.0.js */; };
 		2A66ECEE18A99328002903DE /* keybindings.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE118A992BD002903DE /* keybindings.js */; };
 		2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */; };
+		2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = 2A7AF5C718D2AFAA00F8FFC2 /* examples */; };
 		2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */; };
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
 		2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FB18540246001C4E0A /* CoreVideo.framework */; };
@@ -267,6 +268,7 @@
 		2A66ECE018A992BD002903DE /* jquery-2.1.0.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "jquery-2.1.0.js"; path = "Resources/ui/js/jquery-2.1.0.js"; sourceTree = "<group>"; };
 		2A66ECE118A992BD002903DE /* keybindings.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = keybindings.js; path = Resources/ui/js/keybindings.js; sourceTree = "<group>"; };
 		2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "underscore-1.5.2.min.js"; path = "Resources/ui/js/underscore-1.5.2.min.js"; sourceTree = "<group>"; };
+		2A7AF5C718D2AFAA00F8FFC2 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = examples; path = Resources/examples; sourceTree = "<group>"; };
 		2A827CC91859E9FE00A126BA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = ../../../../../../usr/lib/libpython2.7.dylib; sourceTree = "<group>"; };
 		2ABBB2F91854018B001C4E0A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
@@ -359,6 +361,7 @@
 		2A15C44018A20971006BDFF0 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				2A7AF5C718D2AFAA00F8FFC2 /* examples */,
 				2A66ECE918A992CD002903DE /* js */,
 				2A15C44418A329AE006BDFF0 /* editor.html */,
 				2A15C45418A48765006BDFF0 /* autocomplete.css */,
@@ -638,6 +641,7 @@
 				611CC68010BAA08300B55455 /* MainMenu.xib in Resources */,
 				2A3BD55E189C653600748EA3 /* PlotDeviceFile-nb.icns in Resources */,
 				611CC68710BAA0A600B55455 /* AskString.xib in Resources */,
+				2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */,
 				2A26314B188E1A3A000B792A /* doc in Resources */,
 				6155D9F413E2B79E00675A92 /* CHANGES.md in Resources */,
 				6155D9F513E2B79E00675A92 /* README.md in Resources */,
@@ -673,7 +677,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "ditto doc/examples $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\nchmod 644 $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples/*/*.nb";
+			shellScript = "#ditto doc/examples $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\n#chmod 644 $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples/*/*.nb";
 		};
 		6156AAC410BC110E00C3CE99 /* Copy External Libraries */ = {
 			isa = PBXShellScriptBuildPhase;

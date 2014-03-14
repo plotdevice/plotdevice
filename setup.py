@@ -1,3 +1,5 @@
+# encoding:utf-8
+
 # This is your standard setup.py, so to install the module & command line tool, use:
 #     python setup.py install
 #
@@ -211,7 +213,7 @@ if BUILD_APP:
             # find $TOP/plotdevice -name \*pyc -exec rm {} \;
 
             # install the documentation
-            self.copy_tree('%s/doc/examples'%TOP, '%s/examples'%RSRC)
+            self.copy_tree('%s/Resources/examples'%TOP, '%s/examples'%RSRC)
 
             print "done building PlotDevice.app in ./dist"
 
@@ -242,7 +244,7 @@ if BUILD_APP:
             self.copy_file('README.md', '%s/Readme.txt'%DEST)
 
             # Copy examples
-            self.copy_tree('%s/doc/examples'%TOP, '%s/Examples'%DEST)
+            self.copy_tree('%s/Resources/examples'%TOP, '%s/Examples'%DEST)
             # chmod 755 Examples/*/*.py
 
             # Make DMG
