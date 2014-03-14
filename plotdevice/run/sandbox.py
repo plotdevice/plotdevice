@@ -10,7 +10,7 @@ from collections import namedtuple
 from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
-from plotdevice.graphics import PlotDeviceError
+from plotdevice.graphics import DeviceError
 from plotdevice import util
 from plotdevice import graphics
 from plotdevice.run.export import MovieExportSession, ImageExportSession

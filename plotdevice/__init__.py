@@ -1,27 +1,10 @@
-"""
-plotdevice
-
-Provides the standard drawing environment to external scripts (see README.md for details).
-
-Begin your script with:
-
-    from plotdevice import *
-
-and all of the familiar PlotDevice drawing commands will be added to the environment. Two additional
-variables are also part of the global namespace:
-
-    canvas (holder of the graphics context and a writer of image files)
-    export (a helper function for doing batch image/animation exports)
-
-"""
-
-__version__='1.10'
-__MAGIC = "_n_o_d_e_b_o_x_"
+__version__='1.0'
+__MAGIC = '_p_l_o_t_d_e_v_i_c_e_'
 
 def get_version():
     return __version__
 
-class PlotDeviceError(Exception):
+class DeviceError(Exception):
     pass
 
 # note whether the module is being used within the .app, via task.py, or from the repl

@@ -7,7 +7,7 @@ from Foundation import *
 
 from pprint import pprint
 
-from plotdevice import PlotDeviceError
+from plotdevice import DeviceError
 from plotdevice.graphics.grobs import TransformMixin, ColorMixin, Color, Region, Size
 from plotdevice.graphics.grobs import _save, _restore, _STATE_NAMES, Transform, Grob, Bezier
 from plotdevice.util.foundry import *
@@ -30,7 +30,7 @@ _TEXT=dict(
 )
 
 # hopefully non-conflicting style name for the stylesheet defaults
-DEFAULT = '_p_l_o_t_d_e_v_i_c_e_'
+from plotdevice import __MAGIC as DEFAULT
 
 class Singleton(type):
   def __init__(cls, name, bases, dict):
@@ -133,7 +133,7 @@ class Text(Grob, TransformMixin, ColorMixin):
         elif not all(isinstance(c, (int,float)) for c in (x,y)):
             badargs = "text() requires x & y coordinates as its second and third arguments"
         if badargs:
-            raise PlotDeviceError(badargs)
+            raise DeviceError(badargs)
         if 'stroke' in kwargs:
             del kwargs['stroke']
 
@@ -292,7 +292,7 @@ class XMLParser(object):
         msg = 'Text: ' + "\n".join(e.args)
         stack = 'stack: ' + " ".join(['<%s>'%tag for tag in self.stack[1:]]) + ' ...'
         xmlfail = "\n".join([msg, "".join(clipped), caret, stack])
-        raise PlotDeviceError(xmlfail)
+        raise DeviceError(xmlfail)
 
     def log(self, s=None, indent=0):
         if not isinstance(s, basestring):
@@ -353,7 +353,7 @@ class Stylesheet(Grob):
             self.style(key, **val)
         else:
             badtype = 'Stylesheet: when directly assigning styles, pass them as dictionaries (not %s)'%type(val)
-            raise PlotDeviceError(badtype)
+            raise DeviceError(badtype)
 
     def __delitem__(self, key):
         if key in self._styles:
@@ -424,7 +424,7 @@ class Stylesheet(Grob):
         if badargs:
             eg = '"'+'", "'.join(badargs)+'"'
             badarg = 'unknown keyword argument%s for font style: %s'%('' if len(badargs)==1 else 's', eg)
-            raise PlotDeviceError(badarg)
+            raise DeviceError(badarg)
 
         # start with kwarg values as the canonical settings
         _canon = ('family','size','weight','italic','width','variant','leading','color')
@@ -442,7 +442,7 @@ class Stylesheet(Grob):
         basis = kwargs.get('face', kwargs.get('fontname'))
         if basis and not font_exists(basis):
             notfound = 'Font: no matches for Postscript name "%s"'%basis
-            raise PlotDeviceError(badarg)
+            raise DeviceError(badarg)
         elif basis:
             spec['face'] = basis
             # hrm...
@@ -571,7 +571,7 @@ class Font(object):
             self._face = candidates[0]
         except IndexError:
               nomatch = "Font: couldn't find a face matching criteria %r"%spec
-              raise PlotDeviceError(nomatch)
+              raise DeviceError(nomatch)
 
     def _use(self):
         # called right after allocation by the font() command. remembers the font state
@@ -692,13 +692,13 @@ class Family(object):
             famname = font_family(of)
         elif not famname:
             badarg = 'Family: requires either a name or a Font object'%famname
-            raise PlotDeviceError(badarg)
+            raise DeviceError(badarg)
 
         q = famname.strip().lower().replace(' ','')
         matches = [fam for fam in family_names() if q==fam.lower().replace(' ','')]
         if not matches:
             notfound = 'Unknown font family "%s"'%famname
-            raise PlotDeviceError(notfound)
+            raise DeviceError(notfound)
         self._name = matches[0]
 
         faces = family_members(self._name)

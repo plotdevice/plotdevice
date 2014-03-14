@@ -6,7 +6,7 @@ from codecs import open
 from collections import OrderedDict, defaultdict
 from AppKit import NSFontManager, NSFont, NSMacOSRomanStringEncoding, NSItalicFontMask
 from random import choice, shuffle
-from plotdevice import PlotDeviceError
+from plotdevice import DeviceError
 
 __all__ = ('grid', 'random', 'shuffled', 'choice', 'ordered', 'order', 'files', 'read', 'autotext', '_copy_attr', '_copy_attrs', 'odict', 'ddict', 'adict')
 
@@ -86,7 +86,7 @@ def autotext(sourceFile):
 def _as_sequence(seq):
     if not isinstance(seq, (basestring, list, tuple) ):
         badtype = 'ordered, shuffled, and friends only work for strings, tuples and lists (not %s)' % type(seq)
-        raise PlotDeviceError(badtype)
+        raise DeviceError(badtype)
     return list(seq)
 
 def _as_before(orig, lst):
@@ -134,7 +134,7 @@ def _copy_attr(v):
     elif isinstance(v, (int, str, unicode, float, bool, long)):
         return v
     else:
-        raise PlotDeviceError, "Don't know how to copy '%s'." % v
+        raise DeviceError, "Don't know how to copy '%s'." % v
 
 def _copy_attrs(source, target, attrs):
     for attr in attrs:

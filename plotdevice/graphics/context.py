@@ -52,7 +52,7 @@ class Context(object):
         try:
             cached = self._statestack.pop(0)
         except IndexError:
-            raise PlotDeviceError, "Too many Context._restoreState calls."
+            raise DeviceError, "Too many Context._restoreState calls."
 
         for attr, val in zip(Context.state_vars, cached):
             setattr(self, attr, val)
@@ -237,7 +237,7 @@ class Context(object):
         elif type==FORTYFIVE:
           return self._arrow45(x, y, width, draw, **kwargs)
         else:
-          raise PlotDeviceError("arrow: available types for arrow() are NORMAL and FORTYFIVE\n")
+          raise DeviceError("arrow: available types for arrow() are NORMAL and FORTYFIVE\n")
 
     def _arrow(self, x, y, width, draw, **kwargs):
 
@@ -308,29 +308,29 @@ class Context(object):
 
     def moveto(self, x, y):
         if self._path is None:
-            raise PlotDeviceError, "No current path. Use bezier() or beginpath() first."
+            raise DeviceError, "No current path. Use bezier() or beginpath() first."
         self._path.moveto(x,y)
 
     def lineto(self, x, y):
         if self._path is None:
-            raise PlotDeviceError, "No current path. Use bezier() or beginpath() first."
+            raise DeviceError, "No current path. Use bezier() or beginpath() first."
         self._path.lineto(x, y)
 
     def curveto(self, x1, y1, x2, y2, x3, y3):
         if self._path is None:
-            raise PlotDeviceError, "No current path. Use bezier() or beginpath() first."
+            raise DeviceError, "No current path. Use bezier() or beginpath() first."
         self._path.curveto(x1, y1, x2, y2, x3, y3)
 
     def closepath(self):
         if self._path is None:
-            raise PlotDeviceError, "No current path. Use bezier() or beginpath() first."
+            raise DeviceError, "No current path. Use bezier() or beginpath() first."
         if not self._pathclosed:
             self._path.closepath()
             self._pathclosed = True
 
     def endpath(self, draw=True):
         if self._path is None:
-            raise PlotDeviceError, "No current path. Use bezier() or beginpath() first."
+            raise DeviceError, "No current path. Use bezier() or beginpath() first."
         if self._autoclosepath:
             self.closepath()
         p = self._path
@@ -387,12 +387,12 @@ class Context(object):
             self._transform = Transform(self._transformstack[0])
             del self._transformstack[0]
         except IndexError, e:
-            raise PlotDeviceError, "pop: too many pops!"
+            raise DeviceError, "pop: too many pops!"
 
     def transform(self, *args):
         mode = args[0] if args and args[0] in (CENTER, CORNER) else None
         if mode is not None and mode not in (CORNER, CENTER):
-            raise PlotDeviceError, "transform: mode must be CORNER or CENTER"
+            raise DeviceError, "transform: mode must be CORNER or CENTER"
         elif mode:
             args = args[1:]
 
@@ -404,7 +404,7 @@ class Context(object):
 
         # if the args validate, return a context manager (which also mimics CENTER/CORNER)
         if len(xforms)+len(rotations) != len(args):
-            raise PlotDeviceError, "transform: valid arguments are reset(), rotate(), scale(), skew(), and translate()"
+            raise DeviceError, "transform: valid arguments are reset(), rotate(), scale(), skew(), and translate()"
         return TransformContext(mode, rotation, *xforms)
 
     def translate(self, x, y):
@@ -431,7 +431,7 @@ class Context(object):
         units = {k:v for k,v in kwargs.items() if k in ['degrees', 'radians', 'percent']}
         if len(units) > 1:
             badunits = 'rotate: specify one rotation at a time (got %s)' % " & ".join(units.keys())
-            raise PlotDeviceError(badunits)
+            raise DeviceError(badunits)
 
         # if nothing in the kwargs, use the current mode and take the quantity from the first arg
         if not units:
@@ -523,14 +523,14 @@ class Context(object):
     def capstyle(self, style=None):
         if style is not None:
             if style not in (BUTT, ROUND, SQUARE):
-                raise PlotDeviceError, 'Line cap style should be BUTT, ROUND or SQUARE.'
+                raise DeviceError, 'Line cap style should be BUTT, ROUND or SQUARE.'
             self._capstyle = style
         return self._capstyle
 
     def joinstyle(self, style=None):
         if style is not None:
             if style not in (MITER, ROUND, BEVEL):
-                raise PlotDeviceError, 'Line join style should be MITER, ROUND or BEVEL.'
+                raise DeviceError, 'Line join style should be MITER, ROUND or BEVEL.'
             self._joinstyle = style
         return self._joinstyle
 
@@ -711,7 +711,7 @@ class Context(object):
     def plot(self, obj, copy=False, **kwargs):
         if not isinstance(obj, Grob):
             notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
-            raise PlotDeviceError(notdrawable)
+            raise DeviceError(notdrawable)
         obj.__class__.checkKwargs(kwargs)
         grob = obj.copy() if copy else obj
         for arg_key, arg_val in kwargs.items():
@@ -733,7 +733,7 @@ class Context(object):
             return obj.bounds.size
         else:
             badtype = "measure() can only handle Text, Images, Beziers, and file() objects (got %s)"%type(obj)
-            raise PlotDeviceError(badtype)
+            raise DeviceError(badtype)
 
 
 class _PDFRenderView(NSView):
@@ -797,7 +797,7 @@ class Canvas(Grob):
             del self._grobstack[0]
             self._container = self._grobstack[0]
         except IndexError, e:
-            raise PlotDeviceError, "pop: too many canvas pops!"
+            raise DeviceError, "pop: too many canvas pops!"
 
     def draw(self):
         if self.background is not None:
@@ -833,7 +833,7 @@ class Canvas(Grob):
                         "tiff": NSTIFFFileType}
             if format not in imgTypes:
                 badformat = "Filename should end in .pdf, .eps, .tiff, .gif, .jpg or .png"
-                raise PlotDeviceError(badformat)
+                raise DeviceError(badformat)
             data = self.rasterize().TIFFRepresentation()
             if format != 'tiff':
                 imgType = imgTypes[format]

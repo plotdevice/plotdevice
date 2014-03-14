@@ -10,7 +10,7 @@ from random import choice, shuffle
 from AppKit import *
 from Foundation import *
 
-from plotdevice import PlotDeviceError
+from plotdevice import DeviceError
 from plotdevice.util import _copy_attr, _copy_attrs, _flatten
 from plotdevice.lib import polymagic, geometry
 
@@ -26,7 +26,7 @@ __all__ = [
         "NORMAL","FORTYFIVE",
         "NUMBER", "TEXT", "BOOLEAN","BUTTON",
         "Point", "Size", "Region",
-        "Grob", "Transform", "PlotDeviceError",
+        "Grob", "Transform", "DeviceError",
         "ClippingPath", # "Rect", "Oval",
         "BezierPath", "Bezier", "PathElement", "Curve",
         "Color", "Image",
@@ -140,7 +140,7 @@ class Point(object):
             self.x = self.y = 0.0
         else:
             badcoords = "Bad initial coordinates for Point object"
-            raise PlotDeviceError(badcoords)
+            raise DeviceError(badcoords)
 
     @trim_zeroes
     def __repr__(self):
@@ -234,7 +234,7 @@ class Grob(object):
         remaining = [arg for arg in kwargs.keys() if arg not in self.kwargs]
         if remaining:
             unknown = "Unknown argument(s) '%s'" % ", ".join(remaining)
-            raise PlotDeviceError(unknown)
+            raise DeviceError(unknown)
     checkKwargs = classmethod(checkKwargs)
 
 class TransformMixin(object):
@@ -328,7 +328,7 @@ class PenMixin(object):
     def _set_capstyle(self, style):
         if style not in (BUTT, ROUND, SQUARE):
             badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
-            raise PlotDeviceError(badstyle)
+            raise DeviceError(badstyle)
         self._capstyle = style
     cap = capstyle = property(_get_capstyle, _set_capstyle)
 
@@ -337,7 +337,7 @@ class PenMixin(object):
     def _set_joinstyle(self, style):
         if style not in (MITER, ROUND, BEVEL):
             badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
-            raise PlotDeviceError(badstyle)
+            raise DeviceError(badstyle)
         self._joinstyle = style
     join = joinstyle = property(_get_joinstyle, _set_joinstyle)
 
@@ -382,7 +382,7 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
             self._nsBezierPath = path
         else:
             badpath = "Don't know what to do with %s." % path
-            raise PlotDeviceError(badpath)
+            raise DeviceError(badpath)
 
         # use any plotstyle settings in kwargs (the rest will be inherited)
         self._overrides = {k:_copy_attr(v) for k,v in kwargs.items() if k in Bezier.kwargs}
@@ -398,10 +398,10 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
     def __enter__(self):
         if self._finished:
             reentrant = "Bezier already complete. Only use `with bezier()` when defining a path using moveto, lineto, etc."
-            raise PlotDeviceError(reentrant)
+            raise DeviceError(reentrant)
         elif _ctx._path is not None:
             recursive = "Already defining a bezier path. Don't nest `with bezier()` blocks"
-            raise PlotDeviceError(recursive)
+            raise DeviceError(recursive)
         _ctx._saveContext()
         _ctx._path = self
         return self
@@ -476,7 +476,7 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
                 radius = (radius, radius)
             elif not isinstance(radius, (list, tuple)) or len(radius)!=2:
                 badradius = 'the radius for a rect must be either a number or an (x,y) tuple'
-                raise PlotDeviceError(badradius)
+                raise DeviceError(badradius)
             self._nsBezierPath.appendBezierPathWithRoundedRect_xRadius_yRadius_( ((x,y), (width,height)), *radius)
 
     def oval(self, x, y, width, height):
@@ -517,7 +517,7 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
                 self.append(el)
             else:
                 wrongtype = "Don't know how to handle %s" % el
-                raise PlotDeviceError(wrongtype)
+                raise DeviceError(wrongtype)
 
     def append(self, el):
         self._segment_cache = None
@@ -631,7 +631,7 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
         import bezier
         if len(self) == 0:
             empty = "The given path is empty"
-            raise PlotDeviceError(empty)
+            raise DeviceError(empty)
 
         # The delta value is divided by amount - 1, because we also want the last point (t=1.0)
         # If I wouldn't use amount - 1, I fall one point short of the end.
@@ -829,7 +829,7 @@ class Color(object):
     def __enter__(self):
         if not hasattr(self, '_rollback'):
             badcontext = 'the with-statement can only be used with fill() and stroke(), not arbitrary colors'
-            raise PlotDeviceError(badcontext)
+            raise DeviceError(badcontext)
         return self
 
     def __exit__(self, type, value, tb):
@@ -1049,12 +1049,12 @@ class Color(object):
                 hexclr = "".join(map("".join, zip(hexclr,hexclr)))
             if len(hexclr) not in (6,8):
                 invalid = "Don't know how to interpret hex color '#%s'." % hexclr
-                raise PlotDeviceError(invalid)
+                raise DeviceError(invalid)
             r, g, b = [int(n, 16)/255.0 for n in (hexclr[0:2], hexclr[2:4], hexclr[4:6])]
             a = 1.0 if len(hexclr)!=8 else int(hexclr[6:], 16)/255.0
         else:
             invalid = "Color strings must be 3/6/8-character hex codes or valid css-names"
-            raise PlotDeviceError(invalid)
+            raise DeviceError(invalid)
         return r, g, b, a
 
 
@@ -1146,7 +1146,7 @@ class Transform(object):
             pass
         else:
             wrongtype = "Don't know how to handle transform %s." % transform
-            raise PlotDeviceError(wrongtype)
+            raise DeviceError(wrongtype)
         self._nsAffineTransform = transform
 
     @property
@@ -1228,7 +1228,7 @@ class Transform(object):
             return self.transformPoint(point_or_path)
         else:
             wrongtype = "Can only transform Beziers or Points"
-            raise PlotDeviceError(wrongtype)
+            raise DeviceError(wrongtype)
 
     def transformPoint(self, point):
         return Point(self._nsAffineTransform.transformPoint_((point.x,point.y)))
@@ -1238,7 +1238,7 @@ class Transform(object):
             path = Bezier(path)
         else:
             wrongtype = "Can only transform Beziers"
-            raise PlotDeviceError(wrongtype)
+            raise DeviceError(wrongtype)
         path._nsBezierPath = self._nsAffineTransform.transformBezierPath_(path._nsBezierPath)
         return path
 
@@ -1271,7 +1271,7 @@ class Image(Grob, TransformMixin):
             self._nsImage = NSImage.alloc().initWithData_(data)
             if self._nsImage is None:
                 unreadable = "can't read image %r" % path
-                raise PlotDeviceError(unreadable)
+                raise DeviceError(unreadable)
             self._nsImage.setFlipped_(True)
             self._nsImage.setCacheMode_(NSImageCacheNever)
         elif image is not None:
@@ -1280,11 +1280,11 @@ class Image(Grob, TransformMixin):
                 self._nsImage.setFlipped_(True)
             else:
                 wrongtype = "Don't know what to do with %s." % image
-                raise PlotDeviceError(wrongtype)
+                raise DeviceError(wrongtype)
         elif path is not None:
             if not os.path.exists(path):
                 notfound = 'Image "%s" not found.' % path
-                raise PlotDeviceError(notfound)
+                raise DeviceError(notfound)
             curtime = os.path.getmtime(path)
             try:
                 image, lasttime = _ctx._imagecache[path]
@@ -1296,7 +1296,7 @@ class Image(Grob, TransformMixin):
                 image = NSImage.alloc().initWithContentsOfFile_(path)
                 if image is None:
                     invalid = "Can't read image %r" % path
-                    raise PlotDeviceError(invalid)
+                    raise DeviceError(invalid)
                 image.setFlipped_(True)
                 image.setCacheMode_(NSImageCacheNever)
                 _ctx._imagecache[path] = (image, curtime)

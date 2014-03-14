@@ -8,7 +8,7 @@ from collections import namedtuple, Counter, OrderedDict as odict, defaultdict a
 from AppKit import *
 from Foundation import *
 
-from plotdevice import PlotDeviceError
+from plotdevice import DeviceError
 
 __all__ = ["standardized", "sanitized", "fammy", "facey", "widthy", "weighty",
            "font_exists", "font_family", "font_encoding", "font_face",
@@ -54,7 +54,7 @@ def font_face(font):
         if face.psname == font.fontName():
             return face
     notfound = 'Font: no matches for Postscript name "%s"'%basis
-    raise PlotDeviceError(notfound)
+    raise DeviceError(notfound)
 
 # introspection methods for family names
 
@@ -111,7 +111,7 @@ def family_name(word):
     nomatch = "ambiguous family name \"%s\""%word
     if matches:
         nomatch += '.\nDid you mean: %s'%[m.encode('utf-8') for m in matches]
-    raise PlotDeviceError(nomatch)
+    raise DeviceError(nomatch)
 
 def family_members(famname, names=False):
     """Returns a sorted list of Face tuples for the fonts in a family"""
