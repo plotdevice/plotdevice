@@ -5,7 +5,7 @@ from PyObjCTools import AppHelper
 from math import floor
 import nodebox
 
-from nodebox.lib.io import AnimatedGif, ImageSequence, SysAdmin, Video
+from nodebox.lib.io import AnimatedGif, SysAdmin, Video, ImageSequence as _ImageSequence
 
 IMG_BATCH_SIZE = 8
 MOV_BATCH_SIZE = 16
@@ -83,7 +83,7 @@ class ImageExportSession(ExportSession):
         self.fname = fname
         self.single_page = first==last
         self.batches = [(n, min(n+IMG_BATCH_SIZE-1,last)) for n in range(first, last+1, IMG_BATCH_SIZE)]
-        self.writer = ImageSequence.alloc().init()
+        self.writer = _ImageSequence.alloc().init()
 
     def add(self, canvas, frame):
         if self.cancelled: return
