@@ -583,7 +583,6 @@
 				8D15AC300486D014006FF6A4 /* Sources */,
 				8D15AC330486D014006FF6A4 /* Frameworks */,
 				6156AAC410BC110E00C3CE99 /* Copy External Libraries */,
-				2A591FF1185D38C800D1833D /* Stash examples in the app bundle */,
 				2ABDB76F1867D9560069EFC3 /* Copy plotdevice tool */,
 			);
 			buildRules = (
@@ -664,20 +663,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "cd related/ace\n#make install";
-		};
-		2A591FF1185D38C800D1833D /* Stash examples in the app bundle */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Stash examples in the app bundle";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "#ditto doc/examples $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\n#chmod 644 $TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples/*/*.nb";
 		};
 		6156AAC410BC110E00C3CE99 /* Copy External Libraries */ = {
 			isa = PBXShellScriptBuildPhase;
