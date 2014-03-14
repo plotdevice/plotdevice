@@ -1,5 +1,5 @@
-NodeBox 1.9.8
--------------
+PlotDevice 0.9 (unreleased)
+---------------------------
 * Enhanced command line interface.
 * Video export in H.264 or animated gif formats.
 * Build system now works with xcode or py2app for the application and pip for the module.
@@ -87,7 +87,7 @@ NodeBox 1.9.0
     rect(110, 0, 100, 100)
     canvas.save('two-rects.tiff')
     canvas.clear() # The canvas is now empty when drawn on-screen
-    
+
 * Access NodeBox from the command line for very simple scripts:
 
     from nodebox.console import make_movie
@@ -97,7 +97,7 @@ NodeBox 1.9.0
 * QuickTime export uses QTKit.
 * Errors while drawing now appear in the output view.
 * "graphicsView" is no longer set in the namespace.
-* Image.image, BezierPath.path and Transform.transform  are deprecated -- 
+* Image.image, BezierPath.path and Transform.transform  are deprecated --
   use Image._nsImage, BezierPath._nsBezierPath and Transform._nsAffineTransform instead.
 
 NodeBox 1.8.5
@@ -138,7 +138,7 @@ NodeBox 1.0rc7
 
     var("dothething", BUTTON)
 
-  If there is a method called "dothething" in your script, it will be called. 
+  If there is a method called "dothething" in your script, it will be called.
   The label on the button will be "dothething".
 
 * Fixed "Copy As PDF" to place PDF images, Postscript images, and TIFF files.
@@ -187,7 +187,7 @@ Version 1.0rc1
 * image command has a working w (width) and h (height) parameter, that constrain the bounds of the image to the given width and height.
 * the image cache is now updated in the imagesize command. Previously, if the image was not in cache, imagesize would keep reloading it from disk. Also, caches are kept between runs and check the modification date on the file.
 * All geometry commands (rect, oval, line, star, arrow, endpath) have a draw parameter that can be set to False. Each of them return the (transformed) path.
-* Added beginclip and endclip. Beginclip takes a path to use as the clipping path. 
+* Added beginclip and endclip. Beginclip takes a path to use as the clipping path.
 * Added textpath command which returns a (transformed) path of the text. Works exactly as the standard text command. (using optional width and height)
 * Fixed bug where having a last line with a tab character would fail the compile.
 * Fixed interface and unicode problems on the variables panel. Default values can now be accented strings.

@@ -221,7 +221,7 @@ def task_path():
 
 def default_port():
   from Foundation import NSUserDefaults
-  appdefaults = NSUserDefaults.standardUserDefaults().persistentDomainForName_('net.plotdevice.PlotDevice')
+  appdefaults = NSUserDefaults.standardUserDefaults().persistentDomainForName_('io.plotdevice.PlotDevice')
   return appdefaults.objectForKey_('plotdevice:remote-port') or 9001
 
 def read_and_echo(sock):

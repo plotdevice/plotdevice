@@ -85,7 +85,7 @@ class PlotDeviceAppDelegate(NSObject):
 
     def docFromTemplate_(self, tmpl):
         """Open a doc with no undo state which contains either an example, or a new-sketch template"""
-        doc, err = self._docsController.makeUntitledDocumentOfType_error_("net.plotdevice.document", None)
+        doc, err = self._docsController.makeUntitledDocumentOfType_error_("io.plotdevice.document", None)
         doc.stationery = tmpl
         self._docsController.addDocument_(doc)
         doc.makeWindowControllers()

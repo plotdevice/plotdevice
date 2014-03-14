@@ -9,7 +9,7 @@ from time import time
 from bisect import bisect
 from Foundation import *
 from AppKit import *
-from WebKit import * # (defaults write net.plotdevice.PlotDevice WebKitDeveloperExtras -bool true)
+from WebKit import * # (defaults write io.plotdevice.PlotDevice WebKitDeveloperExtras -bool true)
 from plotdevice.gui.preferences import get_default, editor_info
 from plotdevice.gui.widgets import ValueLadder
 from plotdevice.gui import bundle_path, set_timeout

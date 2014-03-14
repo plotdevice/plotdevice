@@ -1,12 +1,12 @@
 # This is your standard setup.py, so to install the module & command line tool, use:
 #     python setup.py install
-# 
+#
 # To build an application in the dist subdirectory, use:
 #     python setup.py py2app
-# 
+#
 # To build a distribution-friendly dmg & zip, use:
 #     python setup.py dist
-# 
+#
 # We require some dependencies:
 # - Mac OS X 10.9+
 # - py2app or xcode or just pip
@@ -19,10 +19,9 @@ from setuptools import setup, find_packages
 from setuptools.extension import Extension
 
 NAME = 'PlotDevice'
-VERSION = '1.10'
-CREATOR = 'NdBx'
-BUNDLE_ID = "net.plotdevice.PlotDevice"
-HELP = "PlotDevice Help"
+VERSION = '1.0'
+CREATOR = 'Plod'
+BUNDLE_ID = "io.plotdevice.PlotDevice"
 
 AUTHOR = "Frederik De Bleser",
 AUTHOR_EMAIL = "frederik@pandora.be",
@@ -45,22 +44,27 @@ CLASSIFIERS = (
     "Topic :: Text Editors :: Integrated Development Environments (IDE)",
 )
 
-DESCRIPTION = "Simple application for creating 2-dimensional graphics and animation using Python code"
-LONG_DESCRIPTION = """PlotDevice is a Mac OS X application that allows you to create visual output
-with programming code. The application targets an audience of designers, with an easy set of state 
-commands that is both intuitive and creative. It is essentially a learning environment and an automation tool.
+DESCRIPTION = "Create 2-dimensional graphics and animation using Python code"
+LONG_DESCRIPTION = """PlotDevice is a Macintosh application used in graphic design research. It provides an
+interactive Python environment where you can create two-dimensional graphics
+and output them in a variety of vector, bitmap, and animation formats. It is
+meant both as a sketch environment for exploring generative design and as a
+general purpose graphics library for use in external Python programs.
 
-The current version features:
-* State-based graphics context
-* Extensive reference documentation and tutorials
-* Vector (pdf/eps) or raster (png/jpg/gif/tiff) export for graphics
-* H.264 or Gif export for animations
-* Manipulate every numeric variable in a script by command-dragging it, even during animation
-* Creating simple user interfaces using text fields, sliders, and buttons
-* Stop a running script by typing command-period
-* Integrated bezier mathematics and boolean operations
-* Command-line interface
-* Zooming
+PlotDevice is a fork of NodeBox 1.9.7rc1 with support for modern versions of
+Python and Mac OS.
+
+The new version features:
+* Enhanced command line interface.
+* New text editor with tab completion, syntax color themes, and emacs/vi bindings.
+* Video export in H.264 or animated gif formats (with [GCD](http://en.wikipedia.org/wiki/Grand_Central_Dispatch)-based i/o).
+* Added support for external editors by reloading the source when changed.
+* Build system now works with Xcode or `py2app` for the application and `pip` for the module.
+* Virtualenv support (for both installation of the module and running scripts with dependencies).
+* External scripts can use `from plotdevice.script import *` to create a drawing environment.
+* Simplified bezier & affine transform api using the python ‘with’ statement
+* Now uses the system's Python 2.7 interpreter.
+* Includes refreshed offline docs.
 
 Requires:
 * Mac OS X 10.9+
@@ -91,8 +95,6 @@ plist={
     "CFBundleSignature": CREATOR,
     "CFBundleShortVersionString": VERSION,
     "CFBundleGetInfoString": DESCRIPTION,
-    "CFBundleHelpBookFolder":HELP,
-    "CFBundleHelpBookName":HELP,
     "LSMinimumSystemVersion":"10.9",
     "NSMainNibFile":"MainMenu",
     "NSPrincipalClass": 'NSApplication',
@@ -131,10 +133,10 @@ class CleanCommand(Command):
 #         # c-extensions post-build hook:
 #         #   - move all the .so files out of the top-level directory
 
-#         if BUILD_APP: 
+#         if BUILD_APP:
 #             build_ext.run(self) # first let the real build_ext routine do its thing
 #             return # py2app moves the libraries to lib-dynload instead
-        
+
 #         self.spawn(['/usr/bin/python', 'libs/buildlibs.py'])
 #         print "built libs from", os.getcwd()
 #         self.spawn(['/usr/bin/ditto', 'build/libs', '%s/plotdevice/lib'%self.build_lib])
@@ -155,7 +157,7 @@ class BuildCommand(build_py):
     def run(self):
         # plotdevice module post-build hook:
         #   - include some ui resources for running a script from the command line
-        
+
         build_py.run(self) # first let the real build_py routine do its thing
         self.spawn(['/usr/bin/python', 'libs/buildlibs.py']) # then build the extensions
         print "built libs from", os.getcwd()
@@ -167,9 +169,9 @@ class BuildCommand(build_py):
         self.copy_file("Resources/PlotDeviceFile.icns", '%s/icon.icns'%rsrc_dir)
         self.spawn(['/usr/bin/ditto', 'build/ext', '%s/plotdevice/lib'%self.build_lib])
 
-        
+
 if BUILD_APP:
-    # virtualenv doesn't include pyobjc, py2app, etc. in the sys.path for some reason, so make sure 
+    # virtualenv doesn't include pyobjc, py2app, etc. in the sys.path for some reason, so make sure
     # we only try to import them if an app (or dist) build was explicitly requested (implying we're using
     # the system's python interpreter rather than pip+virtualenv)
     import py2app
