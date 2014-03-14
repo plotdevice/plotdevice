@@ -450,10 +450,6 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
         self._segment_cache = None
         self._nsBezierPath.closePath()
 
-    # why ... does this method exist?
-    # def setlinewidth(self, width):
-    #     self.linewidth = width
-
     def _get_bounds(self):
         try:
             return Region(*self._nsBezierPath.bounds())
@@ -668,7 +664,7 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
         return Bezier(polymagic.xor(self._nsBezierPath, other._nsBezierPath, flatness))
 
 class BezierPath(Bezier):
-    pass # compat...
+    pass # NodeBox compat...
 
 class Curve(object):
 
@@ -721,7 +717,7 @@ class Curve(object):
         return not self.__eq__(other)
 
 class PathElement(Curve):
-    pass # compat...
+    pass # NodeBox compat...
 
 class ClippingPath(Grob):
 
@@ -739,28 +735,6 @@ class ClippingPath(Grob):
         for grob in self._grobs:
             grob._draw()
         _restore()
-
-# class Rect(Bezier):
-
-#     def __init__(self, ctx, x, y, width, height, **kwargs):
-#         warnings.warn("Rect is deprecated. Use Bezier's rect method.", DeprecationWarning, stacklevel=2)
-#         r = (x,y), (width,height)
-#         super(Rect, self).__init__(ctx, NSBezierPath.bezierPathWithRect_(r), **kwargs)
-
-#     def copy(self):
-#         raise NotImplementedError, "Please don't use Rect anymore"
-
-# class Oval(Bezier):
-
-#     def __init__(self, ctx, x, y, width, height, **kwargs):
-#         warnings.warn("Oval is deprecated. Use Bezier's oval method.", DeprecationWarning, stacklevel=2)
-#         r = (x,y), (width,height)
-#         super(Oval, self).__init__(ctx, NSBezierPath.bezierPathWithOvalInRect_(r), **kwargs)
-
-#     def copy(self):
-#         raise NotImplementedError, "Please don't use Oval anymore"
-
-
 
 class Color(object):
 

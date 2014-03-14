@@ -5,7 +5,8 @@
 # Refer to the "Use" section on http://nodebox.net/code
 # Thanks to Dr. Florimond De Smedt at the Free University of Brussels for the math routines.
 
-from plotdevice.graphics import Bezier, Curve, DeviceError, Point, MOVETO, LINETO, CURVETO, CLOSE
+from plotdevice import DeviceError
+from plotdevice.graphics import Bezier, Curve, Point, MOVETO, LINETO, CURVETO, CLOSE
 from plotdevice.lib.pathmatics import linepoint, linelength, curvepoint, curvelength
 
 def segment_lengths(path, relative=False, n=20):

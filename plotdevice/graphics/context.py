@@ -35,14 +35,12 @@ class Context(object):
         self._resetContext()
         self._statestack = []
         self.canvas._ctx = self
-        self._activate()
 
         # cache a list of all of the exportable attr names (for use when making namespaces)
         self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_') or a.endswith('_')))
 
     def _activate(self):
-        grobs._ctx = self
-        typography._ctx = self
+        grobs._ctx = typography._ctx = self
 
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context.state_vars]
@@ -52,13 +50,14 @@ class Context(object):
         try:
             cached = self._statestack.pop(0)
         except IndexError:
-            raise DeviceError, "Too many Context._restoreState calls."
+            raise DeviceError, "Too many Context._restoreContext calls."
 
         for attr, val in zip(Context.state_vars, cached):
             setattr(self, attr, val)
 
     def _resetContext(self):
         """Do a thorough reset of all the state variables"""
+        self._activate()
         self._outputmode = RGB
         self._colormode = RGB
         self._colorrange = 1.0

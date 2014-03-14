@@ -1,21 +1,13 @@
 import os, sys, re
-import traceback
-import random
 from os.path import dirname, basename, abspath, relpath, isdir
-from hashlib import md5
-from codecs import open
 from functools import partial
 from inspect import getargspec
 from collections import namedtuple
 from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
-from plotdevice.graphics import DeviceError
-from plotdevice import util
-from plotdevice import graphics
-from plotdevice.run.export import MovieExportSession, ImageExportSession
-from plotdevice.run import stacktrace, coredump
-from plotdevice import __MAGIC as MAGICVAR
+from plotdevice.run import MovieExportSession, ImageExportSession, stacktrace, coredump
+from plotdevice import util, graphics, DeviceError, __MAGIC as MAGICVAR
 
 __all__ = ['Sandbox']
 
@@ -197,8 +189,8 @@ class Sandbox(object):
         # Reset the context, but only if this is the beginning of a run. Otherwise
         # settings should persist to allow unchanging settings to be placed in setup()
         # if method is None:
-        self.context._resetContext()
         self.context._activate()
+        self.context._resetContext()
 
         # Initalize the magicvar
         self.namespace[MAGICVAR] = self.magicvar
