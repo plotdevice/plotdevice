@@ -2,65 +2,64 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Tutorials: Libraries</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Tutorials: Libraries</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Tutorials</span></a></h1>
 
     <h3>Libraries</h3>
 
     <ul class="chapter">
-      <li><a href="Classes.html">Classes →</a>
-      </li><li>Chapter 10
-      </li><li><a href="Commands.html">← Commands</a>
-    </li></ul>
+      <li><a href="Classes.html">Classes →</a></li>
+      <li>Chapter 10</li>
+      <li><a href="Commands.html">← Commands</a></li>
+    </ul>
   </div>
 
   <div class="article">
-    <p>NodeBox can be extended with a wealth of functionality (for example, Google queries, or
+    <p>PlotDevice can be extended with a wealth of functionality (for example, Google queries, or
     image manipulation) by importing the right external libraries. All of these tools are kept
-    apart from NodeBox for the simple reason that it would make NodeBox to unwieldy and complex if
-    they would all be included.</p>
-    <h2>Libraries from the NodeBox site</h2>
+    apart from PlotDevice for the simple reason that it would make PlotDevice to unwieldy and
+    complex if they would all be included.</p>
+    <h2>Libraries from the PlotDevice site</h2>
 
-    <p>The NodeBox site has a lot of interesting libraries developed in and for NodeBox, for
+    <p>The PlotDevice site has a lot of interesting libraries developed in and for PlotDevice, for
     example <a href="../lib/WordNet.html">WordNet</a> functionality, or <a href="../lib/Core_Image.html">Core Image</a>, which offers PhotoShop-like commands. A list of all
     libraries is <a href="Library">here</a>.</p>
     <p>To use one of these libraries, you first need to download it to your computer. Then, you
-    need to put the files somewhere where your NodeBox script can find them: <strong>in the same
-    folder as your NodeBox script</strong> or <strong>in the Application Support folder</strong>
-    <em>(~/Library/Application Support/NodeBox/).</em></p>
+    need to put the files somewhere where your PlotDevice script can find them: <strong>in the same
+    folder as your PlotDevice script</strong> or <strong>in the Application Support folder</strong>
+    <em>(~/Library/Application Support/PlotDevice/).</em></p>
     <p>Then, import the library into your script with the <strong>ximport()</strong> command.</p>
     <p>Notice how the <em>wordnet.py</em> library and the <em>pywordnet</em> folder (both came from
     the WordNet download) are in the same folder as the <em>dictionary.py</em> script (which we
     just created):</p>
     <p><br/>
-    <span class="media"><img alt="" height="391" src="media/libraries1.jpg" width="574"/></span>
-    <span class="media"><img alt="" height="520" src="media/libraries2.jpg" width="574"/></span></p>
+    <span class="media"><img alt="" height="391" src="../etc/tut/libraries1.jpg" width="574"/></span> <span class="media"><img alt="" height="520" src="../etc/tut/libraries2.jpg" width="574"/></span></p>
     <h2>Python libraries</h2>
 
-    <p>The scripts you write in NodeBox is in fact <a href="http://www.python.org/">Python</a>
+    <p>The scripts you write in PlotDevice is in fact <a href="http://www.python.org/">Python</a>
     code. Since Python is installed on your Mac by default, you can access and import all of
-    Python’s libraries in your NodeBox projects.</p>
+    Python’s libraries in your PlotDevice projects.</p>
     <p>Take a look at the list of Python libraries <a href="http://docs.python.org/modindex.html">here</a>.</p>
     <p>You can import a library command into your script with the following statement:<br/></p>
-<pre>variable = <span class="kw">ximport</span><span class="s">(</span><span class="str">"library"</span><span class="s">)</span>
+<pre>variable <span class="o">=</span> <span class="nf">ximport</span>(<span class="s">"library"</span>)
 </pre>
 
     <p>For example, if you look at the <em>random</em> library on the above list of Python
     libraries, you see the <em>random</em> library has a <em>shuffle()</em> command to randomly
-    reorder a <a href="Lists.html">list</a>. To use this command in a NodeBox project:</p>
+    reorder a <a href="Lists.html">list</a>. To use this command in a PlotDevice project:</p>
 <pre>
-<span class="s">list</span> = <span class="s">[</span><span class="s">1</span>, <span class="s">2</span>, <span class="s">3</span>, <span class="s">4</span>, <span class="s">5</span><span class="s">]</span>
-rnd = <span class="kw">ximport</span><span class="s">(</span><span class="str">"random"</span><span class="s">)</span>
-rnd.<span class="s">shuffle</span><span class="s">(</span><span class="s">list</span><span class="s">)</span> 
-<span class="kw">print</span> <span class="s">list</span>  
-&gt;&gt;&gt; <span class="s">[</span><span class="s">3</span>, <span class="s">4</span>, <span class="s">1</span>, <span class="s">5</span>, <span class="s">2</span><span class="s">]</span>
+<span class="nb">list</span> <span class="o">=</span> [<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>, <span class="mi">4</span>, <span class="mi">5</span>]
+rnd <span class="o">=</span> <span class="nf">ximport</span>(<span class="s">"random"</span>)
+rnd<span class="o">.</span>shuffle(<span class="nb">list</span>) 
+<span class="k">print</span> <span class="nb">list</span>  
+<span class="o">&gt;&gt;&gt;</span> [<span class="mi">3</span>, <span class="mi">4</span>, <span class="mi">1</span>, <span class="mi">5</span>, <span class="mi">2</span>]
 </pre>
 
-    <p>You don’t need to install any files or anything, NodeBox knows where the Python libraries
+    <p>You don’t need to install any files or anything, PlotDevice knows where the Python libraries
     are.</p>
     <h2>For techies: why the ximport() command?</h2>
 

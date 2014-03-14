@@ -2,53 +2,54 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Tutorials: Interaction</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Tutorials: Interaction</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Tutorials</span></a></h1>
 
     <h3>Interaction</h3>
 
     <ul class="chapter">
-      <li><a href="Paths.html">Paths →</a>
-      </li><li>Chapter 13
-      </li><li><a href="Animation.html">← Animation</a>
-    </li></ul>
+      <li><a href="Paths.html">Paths →</a></li>
+      <li>Chapter 13</li>
+      <li><a href="Animation.html">← Animation</a></li>
+    </ul>
   </div>
 
   <div class="article">
-    <p>NodeBox is designed to output PDF documents or images, when you want to do all sorts of
+    <p>PlotDevice is designed to output PDF documents or images, when you want to do all sorts of
     moving and interactive things you’re probably better off with a tool like <a href="http://processing.org/">Processing</a>.</p>
-    <p>However, if you do want to experiment with interactivity in NodeBox, there’s some built-in
-    support that might be of help to you. This assumes you already know how to make an <a href="Animation.html">animation</a> in NodeBox.<br/></p>
+    <p>However, if you do want to experiment with interactivity in PlotDevice, there’s some
+    built-in support that might be of help to you. This assumes you already know how to make an
+    <a href="Animation.html">animation</a> in PlotDevice.<br/></p>
     <h2>Interacting with the mouse</h2>
 
-    <p>In a NodeBox animation, there are three predefined variables that store the current position
-    of the mouse cursor and the state of the mouse button:</p>
+    <p>In a PlotDevice animation, there are three predefined variables that store the current
+    position of the mouse cursor and the state of the mouse button:</p>
     <ul>
-      <li>MOUSEX: the horizontal location of the mouse cursor
-      </li><li>MOUSEY: the vertical location of the mouse cursor
-      </li><li>mousedown: is True when the mouse button is pressed, False otherwise
-    </li></ul>
+      <li>MOUSEX: the horizontal location of the mouse cursor</li>
+      <li>MOUSEY: the vertical location of the mouse cursor</li>
+      <li>mousedown: is True when the mouse button is pressed, False otherwise</li>
+    </ul>
 
     <p>You would typically use the mousedown variable in an if-statement:</p>
 <pre>
-<span class="kw">if</span> mousedown:
-     <span class="grey"># do stuff when the mouse is pressed</span>
-<span class="kw">else</span>:
-     <span class="grey"># do stuff when the mouse isn't pressed</span>
+<span class="k">if</span> mousedown:
+     <span class="c"># do stuff when the mouse is pressed</span>
+<span class="k">else</span>:
+     <span class="c"># do stuff when the mouse isn't pressed</span>
 </pre>
 
     <h2>Interacting with the keyboard</h2>
 
-    <p>Three predefined variables store the keys a user is pressing during a NodeBox animation:</p>
+    <p>Three predefined variables store the keys a user is pressing during a PlotDevice animation:</p>
     <ul>
-      <li>key: the last key pressed
-      </li><li>keycode: the integer keycode of the last key pressed
-      </li><li>keydown: is True when a key is being pressed, False otherwise
-    </li></ul>
+      <li>key: the last key pressed</li>
+      <li>keycode: the integer keycode of the last key pressed</li>
+      <li>keydown: is True when a key is being pressed, False otherwise</li>
+    </ul>
 
     <p>The key and keycode variables are updated as long as any key is being pressed.</p>
     <p>KEY_UP, KEY_DOWN_ KEY_LEFT, KEY_RIGHT, KEY_BACKSPACE contain the keycodes for the arrow keys
@@ -56,38 +57,38 @@
     <h2>Example</h2>
 
     <p>A fun example is this little sketch application. Simply run the code and draw some stuff on
-    the canvas! <img alt="interaction-sketch" height="541" src="media/interaction-sketch.gif" width="761"/></p>
+    the canvas! <img alt="interaction-sketch" height="541" src="../etc/tut/interaction-sketch.gif" width="761"/></p>
     <p><a href="http://nodebox.net/code/data/media/interaction-sketch.mov">Play movie</a></p>
 <pre>
-<span class="kw">size</span><span class="s">(</span><span class="s">400</span> ,<span class="s">400</span><span class="s">)</span>
-<span class="kw">speed</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>
+<span class="nf">size</span>(<span class="mi">400</span> ,<span class="mi">400</span>)
+<span class="nf">speed</span>(<span class="mi">30</span>)
  
-<span class="kw">def</span> <span class="red">setup</span><span class="s">(</span><span class="s">)</span>:
+<span class="k">def</span> <span class="nf">setup</span>():
     
-    <span class="kw">global</span> path, d
-    path = <span class="s">[</span><span class="s">]</span>
+    <span class="k">global</span> path, d
+    path <span class="o">=</span> []
  
-<span class="kw">def</span> <span class="red">draw</span><span class="s">(</span><span class="s">)</span>:
+<span class="k">def</span> <span class="nf">draw</span>():
     
-    <span class="kw">global</span> path
+    <span class="k">global</span> path
  
-    <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-    <span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
-    <span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
+    <span class="nf">nofill</span>()
+    <span class="nf">stroke</span>(<span class="mi">0</span>)
+    <span class="nf">autoclosepath</span>(<span class="bp">False</span>)
     
-    <span class="kw">if</span> mousedown:
-        pt = <span class="kw">Point</span><span class="s">(</span>MOUSEX, MOUSEY<span class="s">)</span>
-        path.<span class="s">append</span><span class="s">(</span>pt<span class="s">)</span>
+    <span class="k">if</span> mousedown:
+        pt <span class="o">=</span> <span class="nc">Point</span>(MOUSEX, MOUSEY)
+        path<span class="o">.</span>append(pt)
         
-    <span class="kw">if</span> <span class="s">len</span><span class="s">(</span>path<span class="s">)</span> &gt; <span class="s">0</span>:
-        first = <span class="kw">True</span>
-        <span class="kw">for</span> pt <span class="kw">in</span> path:
-            <span class="kw">if</span> first:
-                <span class="kw">beginpath</span><span class="s">(</span>pt.<span class="s">x</span>, pt.<span class="s">y</span><span class="s">)</span>
-                first = <span class="kw">False</span>
-            <span class="kw">else</span>:
-                <span class="kw">lineto</span><span class="s">(</span>pt.<span class="s">x</span>, pt.<span class="s">y</span><span class="s">)</span>
-        <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+    <span class="k">if</span> <span class="nb">len</span>(path) <span class="o">&gt;</span> <span class="mi">0</span>:
+        first <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">for</span> pt <span class="ow">in</span> path:
+            <span class="k">if</span> first:
+                <span class="nf">beginpath</span>(pt<span class="o">.</span>x, pt<span class="o">.</span>y)
+                first <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">else</span>:
+                <span class="nf">lineto</span>(pt<span class="o">.</span>x, pt<span class="o">.</span>y)
+        <span class="nf">endpath</span>()
 </pre>
   </div>
 

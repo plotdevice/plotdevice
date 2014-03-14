@@ -2,466 +2,414 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Reference: Primitives</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Reference: Primitives</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Reference</span></a></h1>
 
     <ul class="siblings">
+      <li><a href="Setup.html">Setup</a></li>
       <li>
-        <h3 style="margin:0;">Primitives</h3>
-      </li><li><a href="Path.html">Path</a>
-      </li><li><a href="Transform.html">Transform</a>
-      </li><li><a href="Color.html">Color</a>
-      </li><li><a href="Typography.html">Typography</a>
-      </li><li><a href="Utility.html">Utility</a>
-      </li><li><a href="Classes.html">Classes</a>
-      </li><li><a href="Globals.html">Globals</a>
-    </li></ul>
+        <h3 style="margin:0;">Primitives</h3></li>
+      <li><a href="Drawing.html">Drawing</a></li>
+      <li><a href="Line+Color.html">Line &amp; Color</a></li>
+      <li><a href="Typography.html">Typography</a></li>
+      <li><a href="Utility.html">Utility</a></li>
+    </ul>
   </div>
 
   <div class="article">
-    <a name="arrow()"></a>
+    <div class="commands">
+      <a name="arrow()"></a>
 
-    <div class="section">
-      <h3>arrow()</h3>
+      <div class="section">
+        <h3>arrow()</h3>
 
-      <div class="definition">
-        <h2>Syntax</h2>
+        <div class="definition">
+          <h2>Syntax</h2>
 
-        <div class="row">
+          <div class="row">
 <pre>
-<span class="kw">arrow</span><span class="s">(</span>x, y, width, <span class="s">type</span>=<span class="kw">NORMAL</span>, draw=<span class="kw">True</span><span class="s">)</span>
+<span class="nf">arrow</span>(x, y, width, <span class="nb">type</span><span class="o">=</span><span class="kc">NORMAL</span>, draw<span class="o">=</span><span class="bp">True</span>)
 </pre>
-        </div>
+          </div>
 
-        <h2>Description</h2>
+          <h2>Description</h2>
 
-        <div class="row">
-          Draws an arrow to the screen. The first two parameters set the location (measured from
-          the arrow’s head), the third sets the width. Optionally you can define the arrow type
-          with the fourth parameter. By default the arrow type is NORMAL, but there is also a
-          trendier FORTYFIVE version.
-        </div>
+          <div class="row">
+            Draws an arrow to the screen. The first two parameters set the location (measured from
+            the arrow’s head), the third sets the width. Optionally you can define the arrow type
+            with the fourth parameter. By default the arrow type is NORMAL, but there is also a
+            trendier FORTYFIVE version.
+          </div>
 
-        <h2>Returns</h2>
+          <h2>Returns</h2>
 
-        <div class="row">
-          <a href="Classes.html#BezierPath">BezierPath</a> containing the arrow
-        </div>
+          <div class="row">
+            <a href="Drawing.html#BezierPath">BezierPath</a> containing the arrow
+          </div>
 
-        <h2>Tutorial</h2>
+          <h2>Tutorial</h2>
 
-        <div class="row">
-          <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
-        </div>
+          <div class="row">
+            <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
+          </div>
 
-        <h2>Example</h2>
+          <h2>Example</h2>
 
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img height="125" src="media/arrow.jpg" width="125"/></span>
-                </td><td>
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/arrow.jpg" width="125"/></span>
+                  </td><td>
 <pre>
-<span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">arrow</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span>, <span class="s">50</span><span class="s">)</span>
+<span class="nf">fill</span>(<span class="mf">0.2</span>)
+<span class="nf">arrow</span>(<span class="mi">50</span>, <span class="mi">50</span>, <span class="mi">50</span>)
 </pre>
-                </td></tr></tbody></table>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="image()"></a>
+
+      <div class="section">
+        <h3>image()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">image</span>(path, x, y, width<span class="o">=</span><span class="bp">None</span>, height<span class="o">=</span><span class="bp">None</span>, alpha<span class="o">=</span><span class="mf">1.0</span>, data<span class="o">=</span><span class="bp">None</span>, draw<span class="o">=</span><span class="bp">True</span>)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Draws an image to the screen. An image is a JPEG-, GIF-, PNG-, AI-, EPS-, TIF-, PSD-,
+            or PDF-file stored on disk. For vector works, EPS is the best format to use. The first
+            parameter sets the pathname of the image file. By default, PlotDevice looks for files
+            in the Home folder, or the folder where the PlotDevice file is saved. The following two
+            parameters set the location of the image. The fourth and fifth parameters are optional
+            and define the width and height of the image. When set, the image is scaled to the
+            given width and height. The sixth parameter is optional as well, and sets the alpha
+            (opacity) value for the image. This value ranges between 0.0 and 1.0. The optional
+            <code>data</code> parameter is used when supplying an image as a data stream instead of
+            a file path. As with other primitives, setting the <code>draw</code> parameter to
+            <code>False</code> will return a drawable object but not add it to the canvas.
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img alt="superfolia" height="125" src="../etc/ref/superfolia.jpg" width="125"/></span>
+                  </td><td>
+<pre>
+<span class="nf">image</span>(<span class="s">"superfolia.jpg"</span>, <span class="mi">50</span>, <span class="mi">0</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="line()"></a>
+
+      <div class="section">
+        <h3>line()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">line</span>(x1, y1, x2, y2, draw<span class="o">=</span><span class="bp">True</span>)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Draws a line to the screen. A line is a straight path between two points. The first two
+            parameters set the location of the first point (origin), the following two parameters
+            set the location of the second point (destination). You will not notice a line if it’s
+            <a href="Line+Color.html#stroke()">stroke()</a> is the same as the background color, or
+            if the line’s <a href="Line+Color.html#strokewidth()">strokewidth()</a> is zero.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            <a href="Drawing.html#BezierPath">BezierPath</a> containing the line
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/line.jpg" width="125"/></span>
+                  </td><td>
+<pre>
+<span class="nf">stroke</span>(<span class="mf">0.2</span>)
+<span class="nf">strokewidth</span>(<span class="mi">2</span>)
+<span class="nf">line</span>(<span class="mi">10</span>, <span class="mi">20</span>, <span class="mi">80</span>, <span class="mi">80</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="oval()"></a>
+
+      <div class="section">
+        <h3>oval()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">oval</span>(x, y, width, height, draw<span class="o">=</span><span class="bp">True</span>)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Draws an oval (ellipse) to the screen. An oval with an equal width and height makes a
+            circle. The first two parameters set the location (measured from the oval’s top-left),
+            the third sets the width, and the fourth sets the height.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            <a href="Drawing.html#BezierPath">BezierPath</a> containing the oval
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/oval.jpg" width="125"/></span>
+                  </td><td>
+<pre>
+<span class="nf">fill</span>(<span class="mf">0.2</span>)
+<span class="nf">oval</span>(<span class="mi">10</span>, <span class="mi">20</span>, <span class="mi">40</span>, <span class="mi">40</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="rect()"></a>
+
+      <div class="section">
+        <h3>rect()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">rect</span>(x, y, width, height, roundness<span class="o">=</span><span class="mf">0.0</span>, draw<span class="o">=</span><span class="bp">True</span>)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Draws a rectangle to the screen. The first two parameters set the location (measured
+            from the rectangle’s top-left corner), the third sets the width, and the fourth sets
+            the height. An optional fifth parameter controls the corner roundness of the rectangle.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            <a href="Drawing.html#BezierPath">BezierPath</a> containing the rectangle
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/rect.jpg" width="125"/></span>
+                  </td><td>
+<pre>
+<span class="nf">fill</span>(<span class="mf">0.2</span>)
+<span class="nf">rect</span>(<span class="mi">10</span>, <span class="mi">20</span>, <span class="mi">60</span>, <span class="mi">40</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="star()"></a>
+
+      <div class="section">
+        <h3>star()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">star</span>(x, y, points<span class="o">=</span><span class="mi">20</span>, outer<span class="o">=</span><span class="mi">100</span>, inner<span class="o">=</span><span class="mi">50</span>, draw<span class="o">=</span><span class="bp">True</span>)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Draws a star to the screen. The first two parameters set the location, measured from
+            the star’s center. There are three optional parameters that set the number of points,
+            the outer radius and the inner radius (the fill radius).
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            <a href="Drawing.html#BezierPath">BezierPath</a> containing the star
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/star.jpg" width="125"/></span>
+                  </td><td>
+<pre>
+<span class="nf">fill</span>(<span class="mf">0.2</span>)
+<span class="nf">star</span>(<span class="mi">50</span>, <span class="mi">50</span>, <span class="mi">9</span>, <span class="mi">40</span>, <span class="mi">10</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
         </div>
       </div>
-    </div><a name="image()"></a>
+    </div>
 
-    <div class="section">
-      <h3>image()</h3>
+    <div class="types">
+      <div class="classic">
+        <p class="rose_text">Classes</p>
+      </div><a id="Image" name="Image"></a>
 
-      <div class="definition">
-        <h2>Syntax</h2>
+      <div class="section">
+        <h3>Image</h3>
 
-        <div class="row">
-<pre>
-<span class="kw">image</span><span class="s">(</span>path, x, y, width=<span class="kw">None</span>, height=<span class="kw">None</span>, alpha=<span class="s">1.0</span>, data=<span class="kw">None</span>, draw=<span class="kw">True</span><span class="s">)</span>
+        <div class="definition">
+          <h2>Description</h2>
+
+          <div class="row">
+            The <a href="#image()">image()</a> command in PlotDevice returns an Image object
+            representing a bitmap or vector image file. If you call image() with a
+            <code>draw=<span class="kw">False</span></code> argument, you can make copies of the
+            image and position or draw the object manually:
+          </div>
+
+          <h2>Methods</h2>
+
+          <div class="row">
+<pre>img<span class="o">.</span>draw()
 </pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          Draws an image to the screen. An image is a JPEG-, GIF-, PNG-, AI-, EPS-, TIF-, PSD-, or
-          PDF-file stored on disk. For vector works, EPS is the best format to use. The first
-          parameter sets the pathname of the image file. By default, NodeBox looks for files in the
-          Home folder, or the folder where the NodeBox file is saved. The following two parameters
-          set the location of the image. The fourth and fifth parameters are optional and define
-          the width and height of the image. When set, the image is scaled to the given width and
-          height. The sixth parameter is optional as well, and sets the alpha (opacity) value for
-          the image. This value ranges between 0.0 and 1.0. The optional <code>data</code>
-          parameter is used when supplying an image as a data stream instead of a file path. As
-          with other primitives, setting the <code>draw</code> parameter to <code>False</code> will
-          return a drawable object but not add it to the canvas.
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img alt="superfolia" height="125" src="media/superfolia.jpg" width="125"/></span>
-                </td><td>
-<pre>
-<span class="kw">image</span><span class="s">(</span><span class="str">"superfolia.jpg"</span>, <span class="s">50</span>, <span class="s">0</span><span class="s">)</span>
+<pre>img<span class="o">.</span>copy()
 </pre>
-                </td></tr></tbody></table>
+          </div>
+
+          <h2>Properties</h2>
+
+          <div class="row">
+<pre>img<span class="o">.</span>x
+img<span class="o">.</span>y
+img<span class="o">.</span>width
+img<span class="o">.</span>height
+img<span class="o">.</span><span class="nf">size</span>
+img<span class="o">.</span>alpha
+</pre>The <code>size</code> property returns the dimensions in a <code>(w,h)</code> tuple.
+          </div>
         </div>
       </div>
-    </div><a name="imagesize()"></a>
+    </div>
 
-    <div class="section">
-      <h3>imagesize()</h3>
+    <div class="compat">
+      <div class="classic">
+        <p class="pink_text">NodeBox Compatibility</p>
+        <p><em>Though their functionality has been subsumed by the commands listed above, the
+        following NodeBox Primitives commands may also be used in your scripts.</em></p>
+      </div><a name="imagesize()"></a>
 
-      <div class="definition">
-        <h2>Syntax</h2>
+      <div class="section">
+        <h3>imagesize()</h3>
 
-        <div class="row">
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
 <pre>
-<span class="kw">imagesize</span><span class="s">(</span>path<span class="s">)</span>
+<span class="nf">imagesize</span>(path)
 </pre>
-        </div>
+          </div>
 
-        <h2>Description</h2>
+          <h2>Description</h2>
 
-        <div class="row">
-          <p>Returns the dimensions (width and height) of an image located at the given path.
-          Obtaining the size of an image is useful when the image needs to scaled to an exact size,
-          for example. The return value is a list with the image’s width and the image’s height.</p>
-          <p>Note that these dimensions may also be retrieved from the <code>size</code> property
-          of the <a href="Classes.html#Image">Image</a> object returned by the <a href="#image()">image()</a> command.</p>
-        </div>
+          <div class="row">
+            <p>Returns the dimensions (width and height) of an image located at the given path.
+            Obtaining the size of an image is useful when the image needs to scaled to an exact
+            size, for example. The return value is a list with the image’s width and the image’s
+            height.</p>
+            <p>Note that these dimensions may also be retrieved from the <code>size</code> property
+            of the <a href="#Image">Image</a> object returned by the <a href="#image()">image()</a>
+            command.</p>
+          </div>
 
-        <h2>Returns</h2>
+          <h2>Returns</h2>
 
-        <div class="row">
-          a tuple with the width and height of the given image
-        </div>
+          <div class="row">
+            a tuple with the width and height of the given image
+          </div>
 
-        <h2>Example</h2>
+          <h2>Example</h2>
 
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td>
-<pre>
-w, h = <span class="kw">imagesize</span><span class="s">(</span><span class="str">"superfolia.jpg"</span><span class="s">)</span>
-<span class="kw">print</span> w
-<span class="kw">print</span> h
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td>
+<pre>w, h <span class="o">=</span> <span class="nf">imagesize</span>(<span class="s">"superfolia.jpg"</span>)
+<span class="k">print</span> w
+<span class="k">print</span> h
 </pre>
-                </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="line()"></a>
-
-    <div class="section">
-      <h3>line()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">line</span><span class="s">(</span>x1, y1, x2, y2, draw=<span class="kw">True</span><span class="s">)</span>
-</pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          Draws a line to the screen. A line is a straight path between two points. The first two
-          parameters set the location of the first point (origin), the following two parameters set
-          the location of the second point (destination). You will not notice a line if it’s
-          <a href="Color.html#stroke()">stroke()</a> is the same as the background color, or if the
-          line’s <a href="Color.html#strokewidth()">strokewidth()</a> is zero.
-        </div>
-
-        <h2>Returns</h2>
-
-        <div class="row">
-          <a href="Classes.html#BezierPath">BezierPath</a> containing the line
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img height="125" src="media/line.jpg" width="125"/></span>
-                </td><td>
-<pre>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">strokewidth</span><span class="s">(</span><span class="s">2</span><span class="s">)</span>
-<span class="kw">line</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">80</span>, <span class="s">80</span><span class="s">)</span>
-</pre>
-                </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="oval()"></a>
-
-    <div class="section">
-      <h3>oval()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">oval</span><span class="s">(</span>x, y, width, height, draw=<span class="kw">True</span><span class="s">)</span>
-</pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          Draws an oval (ellipse) to the screen. An oval with an equal width and height makes a
-          circle. The first two parameters set the location (measured from the oval’s top-left),
-          the third sets the width, and the fourth sets the height.
-        </div>
-
-        <h2>Returns</h2>
-
-        <div class="row">
-          <a href="Classes.html#BezierPath">BezierPath</a> containing the oval
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img height="125" src="media/oval.jpg" width="125"/></span>
-                </td><td>
-<pre>
-<span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">oval</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">40</span>, <span class="s">40</span><span class="s">)</span>
-</pre>
-                </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="rect()"></a>
-
-    <div class="section">
-      <h3>rect()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">rect</span><span class="s">(</span>x, y, width, height, roundness=<span class="s">0.0</span>, draw=<span class="kw">True</span><span class="s">)</span>
-</pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          Draws a rectangle to the screen. The first two parameters set the location (measured from
-          the rectangle’s top-left corner), the third sets the width, and the fourth sets the
-          height. An optional fifth parameter controls the corner roundness of the rectangle.
-        </div>
-
-        <h2>Returns</h2>
-
-        <div class="row">
-          <a href="Classes.html#BezierPath">BezierPath</a> containing the rectangle
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img height="125" src="media/rect.jpg" width="125"/></span>
-                </td><td>
-<pre>
-<span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">20</span>, <span class="s">60</span>, <span class="s">40</span><span class="s">)</span>
-</pre>
-                </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="size()"></a>
-
-    <div class="section">
-      <h3>size()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">size</span><span class="s">(</span>w, h<span class="s">)</span>
-</pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          Sets the size of the canvas in points. The first parameter sets the width, the second
-          parameter the height. If this command is used, it should be the first line in a script -
-          it’s illogical to set the size of the canvas halfway a script! The supplied values can be
-          multiplied by ‘inch’, ‘cm’ or ‘mm’. The predefined WIDTH and HEIGHT variables can be used
-          to obtain the canvas size.
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Variables.html">Variables</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td>
-<pre>
-<span class="kw">size</span><span class="s">(</span><span class="s">400</span>, <span class="s">600</span><span class="s">)</span>
-<span class="grey"># the canvas is 400 X 600 points</span>
-<span class="kw">print</span> <span class="kw">WIDTH</span> <span class="grey"># prints 400</span>
-<span class="kw">print</span> <span class="kw">HEIGHT</span> <span class="grey"># prints 600</span>
-</pre>
-<pre>
-<span class="kw">size</span><span class="s">(</span><span class="s">20</span>*<span class="kw">cm</span>, <span class="s">20</span>*<span class="kw">cm</span><span class="s">)</span>
-<span class="grey"># the canvas is 20 x 20 cm</span>
-</pre>
-                </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="speed()"></a>
-
-    <div class="section">
-      <h3>speed()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">speed</span>(fps)
-</pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          <p>Using the speed() command causes your script to be interpreted as an animation. In an
-          animation, your drawing code does not live in the top-level of the script, but instead is
-          factored into a trio of methods defined in the script: <code>setup()</code>,
-          <code>draw()</code>, and <code>stop()</code>. The <code>setup</code> method is called
-          once at the beginning of a run, and <code>stop</code> is called once the run is halted.
-          The <code>draw</code> method is called repeatedly with the canvas being cleared between
-          calls. The global variable called <code class="kw">FRAME</code> will be incremented
-          before every <code>draw</code> and can be used to track progress.</p>
-          <p>The <code>fps</code> argument specifies the maximum speed of the animation in frames
-          per second. Note that this is only a maximum and complex animations will likely update
-          less frequently.</p>
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Animation.html">Animation</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">speed</span>(30)
-
-<span class="red">def</span> <span class="kw">setup</span>(): <span class="grey"># initialize variables, etc.</span>
-    <span class="kw">pass</span>
-
-<span class="red">def</span> <span class="kw">draw</span>(): <span class="grey"># draw the next frame in the animation</span>
-    <span class="kw">pass</span>
-
-<span class="red">def</span> <span class="kw">stop</span>(): <span class="grey"># gather up accumulated data, print summary info, etc.</span>
-    <span class="kw">pass</span>
-</pre>
-        </div>
-      </div>
-    </div><a name="star()"></a>
-
-    <div class="section">
-      <h3>star()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">star</span><span class="s">(</span>x, y, points=<span class="s">20</span>, outer=<span class="s">100</span>, inner=<span class="s">50</span>, draw=<span class="kw">True</span><span class="s">)</span>
-</pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          Draws a star to the screen. The first two parameters set the location, measured from the
-          star’s center. There are three optional parameters that set the number of points, the
-          outer radius and the inner radius (the fill radius).
-        </div>
-
-        <h2>Returns</h2>
-
-        <div class="row">
-          <a href="Classes.html#BezierPath">BezierPath</a> containing the star
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Primitives.html">Primitives</a>, <a href="../tut/Paths.html">Paths</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img height="125" src="media/star.jpg" width="125"/></span>
-                </td><td>
-<pre>
-<span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">star</span><span class="s">(</span><span class="s">50</span>, <span class="s">50</span>, <span class="s">9</span>, <span class="s">40</span>, <span class="s">10</span><span class="s">)</span>
-</pre>
-                </td></tr></tbody></table>
+                  </td></tr></tbody></table>
+          </div>
         </div>
       </div>
     </div>

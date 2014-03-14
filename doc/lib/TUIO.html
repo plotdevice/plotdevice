@@ -2,12 +2,12 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: TUIO</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: TUIO</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Libraries</span></a></h1>
 
     <h3>TUIO</h3>
   </div>
@@ -15,14 +15,14 @@
   <div class="article">
     <h2>Description</h2>
 
-    <p><img align="right" alt="fiducial_example" height="168" src="media/fiducial_example.gif" width="152"/>The TUIO library is able to receive and parse data following the <a href="http://modin.yuri.at/publications/tuio_gw2005.pdf">TUIO protocol</a> by the <a href="http://mtg.upf.edu/">Music Technology Group</a>, ‘which was specially designed for
+    <p><img align="right" alt="fiducial_example" height="168" src="../etc/lib/fiducial_example.gif" width="152"/>The TUIO library is able to receive and parse data following the <a href="http://modin.yuri.at/publications/tuio_gw2005.pdf">TUIO protocol</a> by the <a href="http://mtg.upf.edu/">Music Technology Group</a>, ‘which was specially designed for
     transmitting the state of tangible objects and multi-touch control on a table surface.’</p>
     <h2>Download</h2>
 
     <table border="0">
       <tbody>
         <tr>
-          <td><a href="http://nodebox.net/code/data/media/tuio.zip"><img alt="download" height="20" src="media/download.gif" width="20"/></a>
+          <td><a href="http://nodebox.net/code/data/media/tuio.zip"><img alt="download" height="20" src="../etc/lib/download.gif" width="20"/></a>
           </td><td><a href="http://nodebox.net/code/data/media/tuio.zip">tuio.zip</a> (8.1KB)<br/>
           Version: 0.1 (initial release)<i><br/>
           Licensed under the MIT License<br/>
@@ -40,19 +40,19 @@
     <h2>Documentation</h2>
 
     <ul>
-      <li><a href="#BasicUse">Basic use</a>
-      </li><li><a href="#Tracking">The Tracking class</a>
-      </li><li><a href="#Objects">The objects submodule</a>
-      </li><li><a href="#Profiles">The profiles submodule</a>
-      </li><li><a href="#OSC">The OSC submodule</a>
-    </li></ul>
+      <li><a href="#BasicUse">Basic use</a></li>
+      <li><a href="#Tracking">The Tracking class</a></li>
+      <li><a href="#Objects">The objects submodule</a></li>
+      <li><a href="#Profiles">The profiles submodule</a></li>
+      <li><a href="#OSC">The OSC submodule</a></li>
+    </ul>
 
     <h2><a id="BasicUse" name="BasicUse"></a>Basic use</h2>
 
     <p>To use this library in general you should follow these steps:</p>
     <p>1. Get a camera or webcam, like iSight, Quickcam, etc., install its drivers if necessary,
     try it with the <a href="http://reactable.iua.upf.edu/?software" rel="nofollow">reacTIVision</a> software. Print the <a href="http://reactable.iua.upf.edu/pdfs/fiducials.pdf">fiducials</a> to attach them to objects.</p>
-    <p>2. Look at the <a href="http://code.google.com/p/pytuio/source/browse/trunk/examples/nodebox/"><tt>examples</tt></a>
+    <p>2. Look at the <a href="http://code.google.com/p/pytuio/source/browse/trunk/examples/plotdevice/"><tt>examples</tt></a>
     to get started.</p>
     <p>3. Build the tangible interface, table, stage, vehicle, game, whatever.</p>
     <p>4. Combine it with <a href="http://blender.org" rel="nofollow">Blender</a>, <a href="http://pygame.org" rel="nofollow">Pygame</a> or <a href="http://nodebox.net" rel="nofollow">Nodebox</a></p>
@@ -66,29 +66,29 @@
     initializes a callback manager from the <tt>OSC</tt> module.</p>
     <p>A simple example can be found in the <tt>examples</tt> directory in <tt>example1.py</tt>:</p>
     <p>1. Import it:</p>
-<pre>tuio = <span class="kw">ximport</span><span class="s">(</span><span class="str">"tuio"</span><span class="s">)</span>
+<pre>tuio <span class="o">=</span> <span class="nf">ximport</span>(<span class="s">"tuio"</span>)
 </pre>
 
     <p>2. Setup the tracking program:</p>
 <pre>
-<span class="kw">def</span> <span class="rose">setup</span><span class="s">(</span><span class="s">)</span>:
-    <span class="kw">global</span> tracking
-    tracking = tuio.<span class="s">Tracking</span><span class="s">(</span><span class="s">)</span>
+<span class="k">def</span> <span class="nf">setup</span>():
+    <span class="k">global</span> tracking
+    tracking <span class="o">=</span> tuio<span class="o">.</span>Tracking()
 </pre>
 
     <p>3. Setup the main loop and draw all recognized object and rotate them accordingly:</p>
 <pre>
-<span class="kw">def</span> <span class="rose">draw</span><span class="s">(</span><span class="s">)</span>:
-    <span class="kw">global</span> tracking
-    tracking.<span class="s">update</span><span class="s">(</span><span class="s">)</span>
-    <span class="kw">fontsize</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>
-    <span class="kw">for</span> obj <span class="kw">in</span> tracking.<span class="s">objects</span><span class="s">(</span><span class="s">)</span>:
-        x = obj.<span class="s">xpos</span> * <span class="kw">WIDTH</span>
-        y = obj.<span class="s">ypos</span> * <span class="kw">HEIGHT</span>
-        <span class="kw">rotate</span><span class="s">(</span>obj.<span class="s">angle</span><span class="s">)</span>
-        <span class="kw">rect</span><span class="s">(</span>x, y, <span class="s">20</span>, <span class="s">20</span><span class="s">)</span>
-        <span class="kw">reset</span><span class="s">(</span><span class="s">)</span>
-        <span class="kw">text</span><span class="s">(</span>obj, x, y<span class="s">)</span>
+<span class="k">def</span> <span class="nf">draw</span>():
+    <span class="k">global</span> tracking
+    tracking<span class="o">.</span>update()
+    <span class="nf">fontsize</span>(<span class="mi">10</span>)
+    <span class="k">for</span> obj <span class="ow">in</span> tracking<span class="o">.</span>objects():
+        x <span class="o">=</span> obj<span class="o">.</span>xpos <span class="o">*</span> <span class="kc">WIDTH</span>
+        y <span class="o">=</span> obj<span class="o">.</span>ypos <span class="o">*</span> <span class="kc">HEIGHT</span>
+        <span class="nf">rotate</span>(obj<span class="o">.</span>angle)
+        <span class="nf">rect</span>(x, y, <span class="mi">20</span>, <span class="mi">20</span>)
+        <span class="nf">reset</span>()
+        <span class="nf">text</span>(obj, x, y)
 </pre>
 
     <p>a) You need to update the tracking information on each loop manually.</p>
@@ -97,14 +97,14 @@
     <p>c) Stop the tracking manually on every exception to prevent socket errors</p>
     <p>4. Stop the tracking when Nodebox stops the program.</p>
 <pre>
-<span class="kw">def</span> <span class="rose">stop</span><span class="s">(</span><span class="s">)</span>:
-    <span class="kw">global</span> tracking
-    tracking.<span class="s">stop</span><span class="s">(</span><span class="s">)</span>
+<span class="k">def</span> <span class="nf">stop</span>():
+    <span class="k">global</span> tracking
+    tracking<span class="o">.</span>stop()
 </pre>
 
     <p>While holding two fiducials in front of the camera the visual output of this script was, for
     example:</p>
-    <h2 class="image_border"><img alt="tuio_objects" height="240" src="media/tuio_objects.png" width="320"/></h2>
+    <h2 class="image_border"><img alt="tuio_objects" height="240" src="../etc/lib/tuio_objects.png" width="320"/></h2>
 
     <p>The described script can also be <a href="http://nodebox.net/code/data/media/objects.py" rel="nofollow">found in the distribution</a> of pyTUIO.</p>
     <h2><a id="Objects" name="Objects"></a>The objects submodule</h2>
@@ -119,81 +119,81 @@
     on the table surface.</p>
     <p>It has the following attributes:</p>
     <ul>
-      <li><tt>sessionid</tt> - The unique sessionid it belongs to
-    </li></ul>
+      <li><tt>sessionid</tt> - The unique sessionid it belongs to</li>
+    </ul>
 
     <ul>
-      <li><tt>xpos</tt> - The relative position on the x-axis
-    </li></ul>
+      <li><tt>xpos</tt> - The relative position on the x-axis</li>
+    </ul>
 
     <ul>
-      <li><tt>ypos</tt> - The relative position on the y-axis
-    </li></ul>
+      <li><tt>ypos</tt> - The relative position on the y-axis</li>
+    </ul>
 
     <ul>
-      <li><tt>xmot</tt> - The movement vector on the x-axis
-    </li></ul>
+      <li><tt>xmot</tt> - The movement vector on the x-axis</li>
+    </ul>
 
     <ul>
-      <li><tt>ymot</tt> - The movement vector on the y-axis
-    </li></ul>
+      <li><tt>ymot</tt> - The movement vector on the y-axis</li>
+    </ul>
 
     <ul>
-      <li><tt>mot_accel</tt> - The motion acceleration
-    </li></ul>
+      <li><tt>mot_accel</tt> - The motion acceleration</li>
+    </ul>
 
     <p><tt>Tuio2DObject</tt> - An abstract object representing a fiducial. This object has detailed
     information about its state and is sent by reacTIVision if a fiducial was recognized.</p>
     <p>It has the following attributes:</p>
     <ul>
-      <li><tt>sessionid</tt> - The unique sessionid it belongs to
-    </li></ul>
+      <li><tt>sessionid</tt> - The unique sessionid it belongs to</li>
+    </ul>
 
     <ul>
-      <li><tt>xpos</tt> - The relative position on the x-axis
-    </li></ul>
+      <li><tt>xpos</tt> - The relative position on the x-axis</li>
+    </ul>
 
     <ul>
-      <li><tt>ypos</tt> - The relative position on the y-axis
-    </li></ul>
+      <li><tt>ypos</tt> - The relative position on the y-axis</li>
+    </ul>
 
     <ul>
-      <li><tt>angle</tt> - The current angle in degrees
-    </li></ul>
+      <li><tt>angle</tt> - The current angle in degrees</li>
+    </ul>
 
     <ul>
-      <li><tt>xmot</tt> - The movement vector on the x-axis
-    </li></ul>
+      <li><tt>xmot</tt> - The movement vector on the x-axis</li>
+    </ul>
 
     <ul>
-      <li><tt>ymot</tt> - The movement vector on the y-axis
-    </li></ul>
+      <li><tt>ymot</tt> - The movement vector on the y-axis</li>
+    </ul>
 
     <ul>
-      <li><tt>rot_vector</tt> - The rotation vector
-    </li></ul>
+      <li><tt>rot_vector</tt> - The rotation vector</li>
+    </ul>
 
     <ul>
-      <li><tt>mot_accel</tt> - The motion acceleration
-    </li></ul>
+      <li><tt>mot_accel</tt> - The motion acceleration</li>
+    </ul>
 
     <ul>
-      <li><tt>rot_accel</tt> - The rotation acceleration
-    </li></ul>
+      <li><tt>rot_accel</tt> - The rotation acceleration</li>
+    </ul>
 
     <p>The TUIO protocol provides even more possible object types, depending on the purpose of the
     intactive surface, e.g.:</p>
     <ul>
-      <li>2.5D Interactive Surface - <tt>Tuio25DCursor</tt> and <tt>Tuio25DObject</tt>
-    </li></ul>
+      <li>2.5D Interactive Surface - <tt>Tuio25DCursor</tt> and <tt>Tuio25DObject</tt></li>
+    </ul>
 
     <ul>
-      <li>3D Interactive Surface - <tt>Tuio3DCursor</tt> and <tt>Tuio3DObject</tt>
-    </li></ul>
+      <li>3D Interactive Surface - <tt>Tuio3DCursor</tt> and <tt>Tuio3DObject</tt></li>
+    </ul>
 
     <ul>
-      <li>raw profile - at the moment only <tt>dtouch</tt> specs are supported
-    </li></ul>
+      <li>raw profile - at the moment only <tt>dtouch</tt> specs are supported</li>
+    </ul>
 
     <p>But these profiles are left to be implemented by the user. Just have a look in
     <tt>objects.py</tt> and <tt>profiles.py</tt> and subclass the base classes there.</p>
@@ -209,36 +209,36 @@
     required methods whose names originate from the name of the raw OSC message:</p>
     <ul>
       <li><tt>set</tt> - The state of each alive (but unchanged) fiducial is periodically resent
-      with ’set’ messages. The attributes are sent as a list or tuple.
-    </li></ul>
+      with ’set’ messages. The attributes are sent as a list or tuple.</li>
+    </ul>
 
     <ul>
       <li><tt>alive</tt> - The ’alive’ message contains the session ids of all alive fiducials
-      known to reacTIVision.
-    </li></ul>
+      known to reacTIVision.</li>
+    </ul>
 
     <ul>
       <li><tt>fseq</tt> - fseq messages associate a unique frame id with a set of <tt>set</tt>and
-      <tt>alive</tt> messages
-    </li></ul>
+      <tt>alive</tt> messages</li>
+    </ul>
 
     <p>Other methods and attributes are:</p>
     <ul>
       <li><tt>list_label</tt> - Defines the names of the helper methods that are automatically
       created while initialization of the <tt>Tracking</tt> instance and maps to the <tt>objs</tt>
-      method of the used profile.
-    </li></ul>
+      method of the used profile.</li>
+    </ul>
 
     <ul>
       <li><tt>address</tt> - Defines the OSC address to bind to the <tt>CallBackmanager</tt>and
-      start listening to while starting the <tt>Tracking</tt> instance.
-    </li></ul>
+      start listening to while starting the <tt>Tracking</tt> instance.</li>
+    </ul>
 
     <ul>
       <li><tt>objs</tt> - Returns a generator list of all tracked objects which are recognized with
       this profile and are in the current session. Though please use the helper methods whose names
-      are defined in the class variable <tt>list_label</tt>.
-    </li></ul>
+      are defined in the class variable <tt>list_label</tt>.</li>
+    </ul>
 
     <h2><a id="OSC" name="OSC"></a>The OSC submodule</h2>
 

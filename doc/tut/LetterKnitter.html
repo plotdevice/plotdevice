@@ -2,85 +2,85 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Tutorials: LetterKnitter</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Tutorials: LetterKnitter</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Tutorials</span></a></h1>
 
     <h3>LetterKnitter</h3>
   </div>
 
   <div class="article">
-    <p><i>LetterKnitter</i> builds on some interesting NodeBox functionalities that allow you to
+    <p><i>LetterKnitter</i> builds on some interesting PlotDevice functionalities that allow you to
     control each point in a Bézier spline or font glyph individually. The LetterKnitter stitches
     and knits letters and words together, with an occasional error in the stitching process.</p>
     <p>LetterKnitter uses any font and text you supply it; it is not a new font, but a <i>point
     filter</i> that works on any typeface (Dolly and Arial in the examples below), and looks
     different each time you use it as well.</p>
     <p> </p>
-    <p><span class="media"><img height="200" src="media/letterknitter1a.jpg" width="550"/></span></p>
-    <p><span class="media"><img height="200" src="media/letterknitter2.jpg" width="550"/></span></p>
-    <p><span class="media"><img height="161" src="media/letterknitter-interface.jpg" width="323"/></span></p>
+    <p><span class="media"><img height="200" src="../etc/tut/letterknitter1a.jpg" width="550"/></span></p>
+    <p><span class="media"><img height="200" src="../etc/tut/letterknitter2.jpg" width="550"/></span></p>
+    <p><span class="media"><img height="161" src="../etc/tut/letterknitter-interface.jpg" width="323"/></span></p>
     <p> </p>
     <p><b>Source code:</b></p>
 <pre>
-<span class="kw">var</span><span class="s">(</span><span class="str">"typeface"</span>, <span class="kw">TEXT</span>, <span class="str">"Times-Bold"</span><span class="s">)</span>
-<span class="kw">var</span><span class="s">(</span><span class="str">"text"</span>, <span class="kw">TEXT</span>, <span class="str">" LetterKnitter"</span><span class="s">)</span>
-<span class="kw">var</span><span class="s">(</span><span class="str">"size"</span>, <span class="kw">NUMBER</span>, <span class="s">100</span>, <span class="s">10</span>, <span class="s">200</span><span class="s">)</span>
-<span class="kw">var</span><span class="s">(</span><span class="str">"stitches"</span>, <span class="kw">NUMBER</span>, <span class="s">700</span>, <span class="s">10</span>, <span class="s">1000</span><span class="s">)</span>
+<span class="nf">var</span>(<span class="s">"typeface"</span>, <span class="kc">TEXT</span>, <span class="s">"Times-Bold"</span>)
+<span class="nf">var</span>(<span class="s">"text"</span>, <span class="kc">TEXT</span>, <span class="s">" LetterKnitter"</span>)
+<span class="nf">var</span>(<span class="s">"size"</span>, <span class="kc">NUMBER</span>, <span class="mi">100</span>, <span class="mi">10</span>, <span class="mi">200</span>)
+<span class="nf">var</span>(<span class="s">"stitches"</span>, <span class="kc">NUMBER</span>, <span class="mi">700</span>, <span class="mi">10</span>, <span class="mi">1000</span>)
  
-<span class="kw">def</span> <span class="red">stitch</span><span class="s">(</span>txt, x, y, n=<span class="s">1000</span><span class="s">)</span>:
+<span class="k">def</span> <span class="nf">stitch</span>(txt, x, y, n<span class="o">=</span><span class="mi">1000</span>):
     
-    <span class="str">""</span><span class="str">" Stitches a given string of text (with n stitches).
+    <span class="sd">""" Stitches a given string of text (with n stitches).</span>
+<span class="sd">    </span>
+<span class="sd">    Creates a text path and finds n points on the path.</span>
+<span class="sd">    Connects each consecutive point with a little curve.</span>
+<span class="sd">    Sometimes connects to a random point on the path.</span>
+<span class="sd">    </span>
+<span class="sd">    """</span>
     
-    Creates a text path and finds n points on the path.
-    Connects each consecutive point with a little curve.
-    Sometimes connects to a random point on the path.
+    p <span class="o">=</span> <span class="nf">textpath</span>(txt, x, y)
+    pt0 <span class="o">=</span> p<span class="o">.</span>point(<span class="mi">0</span>)
+    <span class="nf">autoclosepath</span>(<span class="bp">False</span>)
+    <span class="nf">beginpath</span>(pt0<span class="o">.</span>x, pt0<span class="o">.</span>y)
     
-    "</span><span class="str">""</span>
-    
-    p = <span class="kw">textpath</span><span class="s">(</span>txt, x, y<span class="s">)</span>
-    pt0 = p.<span class="s">point</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
-    <span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
-    <span class="kw">beginpath</span><span class="s">(</span>pt0.<span class="s">x</span>, pt0.<span class="s">y</span><span class="s">)</span>
-    
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">int</span><span class="s">(</span>n<span class="s">)</span><span class="s">)</span>:    
-        t = <span class="s">float</span><span class="s">(</span>i<span class="s">)</span> / n
-        pt1 = p.<span class="s">point</span><span class="s">(</span>t<span class="s">)</span>
-        d = <span class="kw">fontsize</span><span class="s">(</span><span class="s">)</span> * <span class="s">0.05</span>
-        <span class="kw">curveto</span><span class="s">(</span>
-            pt0.<span class="s">x</span>, 
-            pt1.<span class="s">y</span>, 
-            pt1.<span class="s">x</span> + d, 
-            pt0.<span class="s">y</span> + d, 
-            pt1.<span class="s">x</span>, 
-            pt1.<span class="s">y</span>
-        <span class="s">)</span>
+    <span class="k">for</span> i <span class="ow">in</span> <span class="nb">range</span>(<span class="nb">int</span>(n)):    
+        t <span class="o">=</span> <span class="nb">float</span>(i) <span class="o">/</span> n
+        pt1 <span class="o">=</span> p<span class="o">.</span>point(t)
+        d <span class="o">=</span> <span class="nf">fontsize</span>() <span class="o">*</span> <span class="mf">0.05</span>
+        <span class="nf">curveto</span>(
+            pt0<span class="o">.</span>x, 
+            pt1<span class="o">.</span>y, 
+            pt1<span class="o">.</span>x <span class="o">+</span> d, 
+            pt0<span class="o">.</span>y <span class="o">+</span> d, 
+            pt1<span class="o">.</span>x, 
+            pt1<span class="o">.</span>y
+        )
         
-        <span class="kw">if</span> <span class="kw">random</span><span class="s">(</span><span class="s">)</span> &gt; <span class="s">0.995</span>:
-            pti = p.<span class="s">point</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">)</span><span class="s">)</span>
-            <span class="kw">curveto</span><span class="s">(</span>
-                pt0.<span class="s">x</span>, 
-                pt1.<span class="s">y</span> + d*<span class="s">10</span>, 
-                pti.<span class="s">x</span> + d, 
-                pti.<span class="s">y</span> + d, 
-                pti.<span class="s">x</span>, 
-                pti.<span class="s">y</span>
-            <span class="s">)</span>
+        <span class="k">if</span> <span class="nf">random</span>() <span class="o">&gt;</span> <span class="mf">0.995</span>:
+            pti <span class="o">=</span> p<span class="o">.</span>point(<span class="nf">random</span>())
+            <span class="nf">curveto</span>(
+                pt0<span class="o">.</span>x, 
+                pt1<span class="o">.</span>y <span class="o">+</span> d<span class="o">*</span><span class="mi">10</span>, 
+                pti<span class="o">.</span>x <span class="o">+</span> d, 
+                pti<span class="o">.</span>y <span class="o">+</span> d, 
+                pti<span class="o">.</span>x, 
+                pti<span class="o">.</span>y
+            )
             
-        pt0.<span class="s">x</span> = pt1.<span class="s">x</span>
-        pt0.<span class="s">y</span> = pt1.<span class="s">y</span>
+        pt0<span class="o">.</span>x <span class="o">=</span> pt1<span class="o">.</span>x
+        pt0<span class="o">.</span>y <span class="o">=</span> pt1<span class="o">.</span>y
  
-    <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+    <span class="nf">endpath</span>()
  
-<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">strokewidth</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
+<span class="nf">nofill</span>()
+<span class="nf">stroke</span>(<span class="mf">0.2</span>)
+<span class="nf">strokewidth</span>(<span class="mi">1</span>)
  
-<span class="kw">font</span><span class="s">(</span>typeface, <span class="kw">size</span><span class="s">)</span>
-stitch<span class="s">(</span><span class="kw">text</span>, <span class="s">50</span>, <span class="s">150</span>, n=stitches<span class="s">)</span>
+<span class="nf">font</span>(typeface, <span class="nf">size</span>)
+stitch(<span class="nf">text</span>, <span class="mi">50</span>, <span class="mi">150</span>, n<span class="o">=</span>stitches)
 </pre>
 
     <p> </p>

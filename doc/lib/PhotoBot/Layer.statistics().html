@@ -2,19 +2,20 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: photobot.Layer.statistics()</title>
-  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: Layer.statistics()</title>
+  <link charset="utf-8" href="../../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../../manual.html">Plot Device <span>Libraries</span></a></h1>
 
-    <h3>photobot.Layer.statistics()</h3>
+    <h3>Layer.statistics()</h3>
   </div>
 
   <div class="article">
     <h2>Syntax</h2>
-<pre>canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="s">statistics</span><span class="s">(</span><span class="s">)</span>
+<pre>
+<span class="nf">canvas</span><span class="o">.</span>layers[i]<span class="o">.</span>statistics()
 </pre>
 
     <h2>Description</h2>
@@ -22,25 +23,25 @@
     <p>Returns a number of statistics of layer <em>i</em>’s pixel data. These are:</p>
     <ul>
       <li>extrema: a list of 2-tuples giving the minimum and maximum pixel value for each band
-      (red/green/blue/alpha).
-      </li><li>count: a list giving the total number of pixels for each band.
-      </li><li>sum: a list giving the sum of all pixels for each band.
-      </li><li>sum2: a list giving the squared sum of all pixels for each band.
-      </li><li>mean: a list giving the average pixel value for each band.
-      </li><li>median: a list giving the median pixel value for each band.
-      </li><li>rms: a list giving the root-median-square pixel value for each band.
-      </li><li>var: a list giving the variance pixel value for each band.
-      </li><li>stddev: a list giving the standard deviation pixel value for each band.
-    </li></ul>
+      (red/green/blue/alpha).</li>
+      <li>count: a list giving the total number of pixels for each band.</li>
+      <li>sum: a list giving the sum of all pixels for each band.</li>
+      <li>sum2: a list giving the squared sum of all pixels for each band.</li>
+      <li>mean: a list giving the average pixel value for each band.</li>
+      <li>median: a list giving the median pixel value for each band.</li>
+      <li>rms: a list giving the root-median-square pixel value for each band.</li>
+      <li>var: a list giving the variance pixel value for each band.</li>
+      <li>stddev: a list giving the standard deviation pixel value for each band.</li>
+    </ul>
 
     <h2>Example</h2>
 <pre>
-<span class="kw">import</span> photobot
-canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
-canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"robot.jpg"</span><span class="s">)</span>
-stats = canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">statistics</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">print</span> stats.<span class="s">mean</span>
-&gt;&gt;&gt;<span class="s">[</span><span class="s">68.778499999999994</span>, <span class="s">57.926200000000001</span>, <span class="s">46.7866</span>, <span class="s">255.0</span><span class="s">]</span>
+<span class="kn">import</span> <span class="nn">photobot</span>
+<span class="nf">canvas</span> <span class="o">=</span> photobot<span class="o">.</span><span class="nf">canvas</span>(<span class="mi">100</span>,<span class="mi">100</span>)
+<span class="nf">canvas</span><span class="o">.</span>layer(<span class="s">"robot.jpg"</span>)
+stats <span class="o">=</span> <span class="nf">canvas</span><span class="o">.</span>layers[<span class="mi">1</span>]<span class="o">.</span>statistics()
+<span class="k">print</span> stats<span class="o">.</span>mean
+<span class="o">&gt;&gt;&gt;</span>[<span class="mf">68.778499999999994</span>, <span class="mf">57.926200000000001</span>, <span class="mf">46.7866</span>, <span class="mf">255.0</span>]
 </pre>
   </div>
 

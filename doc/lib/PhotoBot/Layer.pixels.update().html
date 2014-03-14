@@ -2,46 +2,47 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: photobot.Layer.pixels.update()</title>
-  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: Layer.pixels.update()</title>
+  <link charset="utf-8" href="../../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../../manual.html">Plot Device <span>Libraries</span></a></h1>
 
-    <h3>photobot.Layer.pixels.update()</h3>
+    <h3>Layer.pixels.update()</h3>
   </div>
 
   <div class="article">
     <h2>Syntax</h2>
-<pre>canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="s">pixels</span>.<span class="s">update</span><span class="s">(</span><span class="s">)</span>
+<pre>
+<span class="nf">canvas</span><span class="o">.</span>layers[i]<span class="o">.</span>pixels<span class="o">.</span>update()
 </pre>
 
     <h2>Description</h2>
 
     <p>Updates the pixels array of layer <em>i</em> after it has been modified. To save time,
-    changes to the <a href="PhotoBot/Layer.pixels[].html">Layer.pixels[]</a> pixels array only take
-    effect after calling this command.</p>
+    changes to the <a href="Layer.pixels[].html">Layer.pixels[]</a> pixels array only take effect
+    after calling this command.</p>
     <h2>Example</h2>
 
     <p>Remove all white pixels from the given image, with a feather at the edges of white areas:</p>
-<pre>photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
-canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">200</span>,<span class="s">200</span><span class="s">)</span>
-canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"smurf.gif"</span><span class="s">)</span>
+<pre>photobot <span class="o">=</span> <span class="nf">ximport</span>(<span class="s">"photobot"</span>)
+<span class="nf">canvas</span> <span class="o">=</span> photobot<span class="o">.</span><span class="nf">canvas</span>(<span class="mi">200</span>,<span class="mi">200</span>)
+<span class="nf">canvas</span><span class="o">.</span>layer(<span class="s">"smurf.gif"</span>)
  
-w = canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">w</span>
-feather = <span class="s">[</span>-w<span class="s">-1</span>, -w, -w<span class="s">+1</span>, <span class="s">-1</span>, <span class="s">1</span>, w<span class="s">-1</span>, w, w<span class="s">+1</span><span class="s">]</span>
+w <span class="o">=</span> <span class="nf">canvas</span><span class="o">.</span>layers[<span class="mi">1</span>]<span class="o">.</span>w
+feather <span class="o">=</span> [<span class="o">-</span>w<span class="o">-</span><span class="mi">1</span>, <span class="o">-</span>w, <span class="o">-</span>w<span class="o">+</span><span class="mi">1</span>, <span class="o">-</span><span class="mi">1</span>, <span class="mi">1</span>, w<span class="o">-</span><span class="mi">1</span>, w, w<span class="o">+</span><span class="mi">1</span>]
  
-pixels = canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">pixels</span>
-<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">len</span><span class="s">(</span>pixels<span class="s">)</span><span class="s">)</span>:
-    r, g, b, a = pixels<span class="s">[</span>i<span class="s">]</span>
-    <span class="kw">if</span> r == g == b == <span class="s">255</span>: 
-        pixels<span class="s">[</span>i<span class="s">]</span> = r, g, b, <span class="s">0</span>
-        <span class="kw">for</span> j <span class="kw">in</span> feather:
-            r, g, b, a = pixels<span class="s">[</span>i+j<span class="s">]</span>
-            pixels<span class="s">[</span>i+j<span class="s">]</span> = r, g, b, a/<span class="s">2</span>            
+pixels <span class="o">=</span> <span class="nf">canvas</span><span class="o">.</span>layers[<span class="mi">1</span>]<span class="o">.</span>pixels
+<span class="k">for</span> i <span class="ow">in</span> <span class="nb">range</span>(<span class="nb">len</span>(pixels)):
+    r, g, b, a <span class="o">=</span> pixels[i]
+    <span class="k">if</span> r <span class="o">==</span> g <span class="o">==</span> b <span class="o">==</span> <span class="mi">255</span>: 
+        pixels[i] <span class="o">=</span> r, g, b, <span class="mi">0</span>
+        <span class="k">for</span> j <span class="ow">in</span> feather:
+            r, g, b, a <span class="o">=</span> pixels[i<span class="o">+</span>j]
+            pixels[i<span class="o">+</span>j] <span class="o">=</span> r, g, b, a<span class="o">/</span><span class="mi">2</span>            
  
-pixels.<span class="s">update</span><span class="s">(</span><span class="s">)</span>
+pixels<span class="o">.</span>update()
 </pre>
   </div>
 

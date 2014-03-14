@@ -2,14 +2,14 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: photobot.Layer.copy()</title>
-  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: Layer.copy()</title>
+  <link charset="utf-8" href="../../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../../manual.html">Plot Device <span>Libraries</span></a></h1>
 
-    <h3>photobot.Layer.copy()</h3>
+    <h3>Layer.copy()</h3>
   </div>
 
   <div class="article">
@@ -18,26 +18,26 @@
     <p><em>canvas</em>.layers[<em>i</em>].copy()</p>
     <h2>Description</h2>
 
-    <p>Returns a copy of layer <em>i</em> on the canvas. This is different from the <a href="PhotoBot/Layer.duplicate().html">Layer.duplicate()</a> command, which duplicates the layer as
-    a new layer on the canvas. The Layer.copy() command returns a copy of the layer object, that
-    can be added to a different canvas with the <a href="PhotoBot/Canvas.layer().html">Canvas.layer()</a> command.</p>
+    <p>Returns a copy of layer <em>i</em> on the canvas. This is different from the <a href="Layer.duplicate().html">Layer.duplicate()</a> command, which duplicates the layer as a new
+    layer on the canvas. The Layer.copy() command returns a copy of the layer object, that can be
+    added to a different canvas with the <a href="Canvas.layer().html">Canvas.layer()</a> command.</p>
     <h2>Example</h2>
 
     <p>This example shows how you can automate tasks by creating functions that return a processed
     layer copy. The <em>brighten()</em> function brightens any image you pass to it, and returns a
     layer copy. More complex functions could manipulate an image in this way without having to
     retype the same manipulations over and over.</p>
-<pre>photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
+<pre>photobot <span class="o">=</span> <span class="nf">ximport</span>(<span class="s">"photobot"</span>)
  
-<span class="kw">def</span> <span class="rose">brighten</span><span class="s">(</span><span class="kw">image</span><span class="s">)</span>:
-  canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
-  canvas.<span class="s">layer</span><span class="s">(</span><span class="kw">image</span><span class="s">)</span>
-  canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">brightness</span><span class="s">(</span><span class="s">1.2</span><span class="s">)</span>
-  <span class="kw">return</span> canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">copy</span><span class="s">(</span><span class="s">)</span>
+<span class="k">def</span> <span class="nf">brighten</span>(<span class="nf">image</span>):
+  <span class="nf">canvas</span> <span class="o">=</span> photobot<span class="o">.</span><span class="nf">canvas</span>(<span class="mi">100</span>,<span class="mi">100</span>)
+  <span class="nf">canvas</span><span class="o">.</span>layer(<span class="nf">image</span>)
+  <span class="nf">canvas</span><span class="o">.</span>layers[<span class="mi">1</span>]<span class="o">.</span>brightness(<span class="mf">1.2</span>)
+  <span class="k">return</span> <span class="nf">canvas</span><span class="o">.</span>layers[<span class="mi">1</span>]<span class="o">.</span>copy()
  
-canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
-canvas.<span class="s">layer</span><span class="s">(</span>brighten<span class="s">(</span><span class="str">"robot.jpg"</span><span class="s">)</span><span class="s">)</span>
-canvas.<span class="s">layer</span><span class="s">(</span>brighten<span class="s">(</span><span class="str">"penguin.jpg"</span><span class="s">)</span><span class="s">)</span>
+<span class="nf">canvas</span> <span class="o">=</span> photobot<span class="o">.</span><span class="nf">canvas</span>(<span class="mi">100</span>,<span class="mi">100</span>)
+<span class="nf">canvas</span><span class="o">.</span>layer(brighten(<span class="s">"robot.jpg"</span>))
+<span class="nf">canvas</span><span class="o">.</span>layer(brighten(<span class="s">"penguin.jpg"</span>))
 </pre>
   </div>
 

@@ -1,0 +1,586 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+
+  <title>PlotDevice Reference: Line &amp; Color</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
+
+</head><body>
+  <div class="link" id="nav">
+    <h1><a href="../manual.html">Plot Device <span>Reference</span></a></h1>
+
+    <ul class="siblings">
+      <li><a href="Setup.html">Setup</a></li>
+      <li><a href="Primitives.html">Primitives</a></li>
+      <li><a href="Drawing.html">Drawing</a></li>
+      <li>
+        <h3 style="margin:0;">Line &amp; Color</h3></li>
+      <li><a href="Typography.html">Typography</a></li>
+      <li><a href="Utility.html">Utility</a></li>
+    </ul>
+  </div>
+
+  <div class="article">
+    <div class="commands">
+      <a name="color()"></a>
+
+      <div class="section">
+        <h3>color()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">color</span>(r, g, b, a)
+<span class="nf">color</span>(h, s, b, a)
+<span class="nf">color</span>(c, m, y, k, a)
+<span class="nf">color</span>(k, a)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Returns a color. The color is either specified in terms of RGB, HSB, or CMYK depending
+            on the current <a href="#colormode()">colormode()</a>. The default colormode is RGB.
+            Each RGB, HSB, or CMYK parameter ranges between 0.0 and 1.0. The last parameter is
+            optional and sets the alpha (opacity) value. Additionally, color() can be called with
+            just one parameter that sets the gray value. The returned color can be supplied as
+            parameter to the <a href="#fill()">fill()</a> or <a href="#stroke()">stroke()</a>
+            command.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            <a href="#Color">Color</a> containing the defined color values<a href="#Color"></a>
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../lib/Colors.html">Colors</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/color.jpg" width="125"/></span>
+                  </td><td>
+<pre>clr1 <span class="o">=</span> <span class="nf">color</span>(<span class="mf">1.0</span>, <span class="mf">0.0</span>, <span class="mf">0.5</span>)
+<span class="nf">fill</span>(clr1)
+<span class="nf">rect</span>(<span class="mi">10</span>, <span class="mi">10</span>, <span class="mi">25</span>, <span class="mi">25</span>)
+ 
+clr2 <span class="o">=</span> <span class="nf">color</span>(<span class="mf">0.3</span>, <span class="mf">0.0</span>, <span class="mf">0.4</span>)
+<span class="nf">fill</span>(clr2)
+<span class="nf">oval</span>(<span class="mi">40</span>, <span class="mi">40</span>, <span class="mi">40</span>, <span class="mi">40</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="fill()"></a>
+
+      <div class="section">
+        <h3>fill()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">fill</span>(r, g, b, a)
+<span class="nf">fill</span>(h, s, b, a)
+<span class="nf">fill</span>(c, m, y, k, a)
+<span class="nf">fill</span>(k, a)
+<span class="nf">fill</span>(<span class="nf">color</span>)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Sets the current fill color. All shapes, paths and text following this command will be
+            drawn in this fill color. The color is either specified in terms of RGB, HSB or CMYK
+            depending on the current <a href="#colormode()">colormode()</a>. Each RGB, HSB or CMYK
+            parameter ranges between 0.0 and 1.0. The default colormode is RGB. The last parameter
+            is optional and sets the alpha (opacity) value. Additionally, fill() can be called with
+            just one parameter that sets the gray value, or with the color value returned from the
+            <a href="#color()">color()</a> command.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            the current fill <a href="#Color">color</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/fill.jpg" width="125"/></span>
+                  </td><td>
+<pre>
+<span class="nf">fill</span>(<span class="mf">1.0</span>, <span class="mf">0.0</span>, <span class="mf">0.5</span>)
+<span class="nf">rect</span>(<span class="mi">10</span>, <span class="mi">10</span>, <span class="mi">25</span>, <span class="mi">25</span>)
+<span class="nf">fill</span>(<span class="o">.</span><span class="mi">3</span>, <span class="mf">0.0</span>, <span class="mf">0.4</span>)
+<span class="nf">oval</span>(<span class="mi">40</span>, <span class="mi">40</span>, <span class="mi">40</span>, <span class="mi">40</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="pen()"></a>
+
+      <div class="section">
+        <h3>pen()</h3>
+      </div><a name="plotstyle()"></a>
+
+      <div class="section">
+        <h3>plotstyle()</h3>
+      </div><a name="shadow()"></a>
+
+      <div class="section">
+        <h3>shadow()</h3>
+      </div><a name="stroke()"></a>
+
+      <div class="section">
+        <h3>stroke()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">stroke</span>(r, g, b, a)
+<span class="nf">stroke</span>(h, s, b, a)
+<span class="nf">stroke</span>(c, m, y, k, a)
+<span class="nf">stroke</span>(k, a)
+<span class="nf">stroke</span>(<span class="nf">color</span>)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Sets the current stroke color. The stroke color is used to draw lines around shapes,
+            paths and text. All shapes, paths and text following this command will be outlined in
+            this stroke color. The color is either specified in terms of RGB, HSB or CMYK depending
+            on the current <a href="#colormode()">colormode()</a>. Each RGB, HSB or CMYK parameter
+            ranges between 0.0 and 1.0. The default colormode is RGB. The last parameter is
+            optional and sets the alpha (opacity) value. Additionally, stroke() can be called with
+            just one parameter that sets the gray value, or with the color value returned from the
+            <a href="#color()">color()</a> command.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            <a href="#Color">Color</a> containing the defined color values<a href="#Color"></a>
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../lib/Colors.html">Colors</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/stroke.jpg" width="125"/></span>
+                  </td><td>
+<pre>
+<span class="nf">nofill</span>()
+<span class="nf">strokewidth</span>(<span class="mi">3</span>)
+<span class="nf">stroke</span>(<span class="mf">0.3</span>, <span class="mf">0.0</span>, <span class="mf">0.4</span>)
+<span class="nf">rect</span>(<span class="mi">10</span>, <span class="mi">10</span>, <span class="mi">20</span>, <span class="mi">40</span>)
+<span class="nf">stroke</span>(<span class="mf">1.0</span>, <span class="mf">0.0</span>, <span class="mf">0.5</span>)
+<span class="nf">rect</span>(<span class="mi">40</span>, <span class="mi">10</span>, <span class="mi">20</span>, <span class="mi">40</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="types">
+      <div class="classic">
+        <p class="rose_text">Classes</p>
+      </div><a id="Color" name="Color"></a>
+
+      <div class="section">
+        <h3>Color</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nc">Color</span>()
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            The color commands in PlotDevice (see for example, <a href="#color()">color()</a>,
+            <a href="#fill()">fill()</a>, <a href="#stroke()">stroke()</a>, <a href="Setup.html#background()">background()</a>) return a Color object. This object has a
+            number of properties to manipulate indivdual color values in different spaces and can
+            be passed to the fill() and stroke() command.
+          </div>
+
+          <h2>Methods</h2>
+
+          <div class="row">
+<pre>clr<span class="o">.</span>blend(clr)
+</pre>
+<pre>clr<span class="o">.</span>copy()
+</pre>
+          </div>
+
+          <h2>Properties</h2>
+
+          <div class="row">
+<pre>clr<span class="o">.</span>r
+clr<span class="o">.</span>g
+clr<span class="o">.</span>b
+clr<span class="o">.</span>a
+clr<span class="o">.</span>hue
+clr<span class="o">.</span>saturation
+clr<span class="o">.</span>brightness
+clr<span class="o">.</span>c
+clr<span class="o">.</span>m
+clr<span class="o">.</span>y
+clr<span class="o">.</span>k
+</pre>
+
+            <p>See the <a href="../tut/Color.html">tutorial on colors</a> to learn about all the
+            properties.</p>
+            <p>With the <i>blend()</i> method you can create an in-between of two colors.<br/></p>
+          </div>
+        </div>
+      </div><a id="Gradient" name="Gradient"></a>
+
+      <div class="section">
+        <h3>Gradient</h3>
+      </div>
+    </div>
+
+    <div class="compat">
+      <div class="classic">
+        <p class="pink_text">NodeBox Compatibility</p>
+        <p><em>Though their functionality has been subsumed by the commands listed above, the
+        following NodeBox Line+Color commands may also be used in your scripts.</em></p>
+      </div><a name="capstyle()"></a>
+
+      <div class="section">
+        <h3>capstyle()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">capstyle</span>(style)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Defines how endpoints of a path should be rendered. The style argument must be one of:
+            <code class="kw">BUTT</code> (the default), <code class="kw">ROUND</code>, or
+            <code class="kw">SQUARE</code>. Note that the latter two styles extend the length of
+            the path to add the endcaps.
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Paths.html">Paths</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img src="../etc/ref/capstyle.png"/></span>
+                  </td><td>
+<pre>
+<span class="nf">fill</span>(<span class="bp">None</span>)
+<span class="nf">stroke</span>(<span class="mi">0</span>)
+<span class="nf">strokewidth</span>(<span class="mi">10</span>)
+<span class="nf">capstyle</span>(<span class="kc">BUTT</span>)
+<span class="nf">line</span>(<span class="mi">20</span>,<span class="mi">20</span>, <span class="mi">50</span>,<span class="mi">20</span>)
+<span class="nf">capstyle</span>(<span class="kc">ROUND</span>)
+<span class="nf">line</span>(<span class="mi">20</span>,<span class="mi">40</span>, <span class="mi">50</span>,<span class="mi">40</span>)
+<span class="nf">capstyle</span>(<span class="kc">SQUARE</span>)
+<span class="nf">line</span>(<span class="mi">20</span>,<span class="mi">60</span>, <span class="mi">50</span>,<span class="mi">60</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="colormode()"></a>
+
+      <div class="section">
+        <h3>colormode()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">colormode</span>(mode, <span class="nb">range</span><span class="o">=</span><span class="mf">1.0</span>)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Changes the way PlotDevice interprets color data. By default, <a href="#fill()">fill()</a> and <a href="#stroke()">stroke()</a> are set by values between 0.0
+            and 1.0 using the RGB color model. RGB corresponds to Red/Green/Blue. Alternatively HSB
+            (Hue/Saturation/Brightness) or CMYK (Cyan/Magenta/Yellow/Black) can be specified.
+            Regardless of which colormode is specified, PDF’s and images are exported in the
+            specified <a href="Setup.html#outputmode()">outputmode()</a>. The optional range
+            parameter specifies whether color values are defined between 0.0 and 1.0, or something
+            else, 0 and 255 for example (range=255).
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            the current color mode (RGB, CMYK or HSB)
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../lib/Colors.html">Colors</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/colormode.jpg" width="125"/></span>
+                  </td><td>
+<pre>
+<span class="nf">colormode</span>(<span class="kc">RGB</span>)
+<span class="nf">fill</span>(<span class="mf">0.25</span>, <span class="mf">0.25</span>, <span class="mf">0.25</span>)
+<span class="nf">rect</span>(<span class="mi">10</span>, <span class="mi">10</span>, <span class="mi">40</span>, <span class="mi">40</span>)
+ 
+<span class="nf">colormode</span>(<span class="kc">HSB</span>)
+<span class="nf">fill</span>(<span class="mi">0</span>, <span class="mi">0</span>, <span class="mf">0.25</span>)
+<span class="nf">rect</span>(<span class="mi">60</span>, <span class="mi">10</span>, <span class="mi">40</span>, <span class="mi">40</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="joinstyle()"></a>
+
+      <div class="section">
+        <h3>joinstyle()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">joinstyle</span>(style)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Defines how vertices in a path should be rendered. The style argument must be one of:
+            <code class="kw">MITER</code> (the default), <code class="kw">ROUND</code>, or
+            <code class="kw">BEVEL</code>.
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Paths.html">Paths</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img src="../etc/ref/joinstyle.png"/></span>
+                  </td><td>
+<pre>
+<span class="nf">fill</span>(<span class="bp">None</span>)
+<span class="nf">stroke</span>(<span class="mi">0</span>)
+<span class="nf">strokewidth</span>(<span class="mi">10</span>)
+
+<span class="nf">joinstyle</span>(<span class="kc">MITER</span>)
+<span class="nf">bezier</span>([(<span class="mi">20</span>,<span class="mi">20</span>), (<span class="mi">40</span>,<span class="mi">40</span>), (<span class="mi">60</span>,<span class="mi">20</span>)], curvature<span class="o">=</span><span class="mi">0</span>)
+
+<span class="nf">joinstyle</span>(<span class="kc">ROUND</span>)
+<span class="nf">bezier</span>([(<span class="mi">20</span>,<span class="mi">50</span>), (<span class="mi">40</span>,<span class="mi">70</span>), (<span class="mi">60</span>,<span class="mi">50</span>)], curvature<span class="o">=</span><span class="mi">0</span>)
+
+<span class="nf">joinstyle</span>(<span class="kc">BEVEL</span>)
+<span class="nf">bezier</span>([(<span class="mi">20</span>,<span class="mi">80</span>), (<span class="mi">40</span>,<span class="mi">100</span>), (<span class="mi">60</span>,<span class="mi">80</span>)], curvature<span class="o">=</span><span class="mi">0</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="nofill()"></a>
+
+      <div class="section">
+        <h3>nofill()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">nofill</span>()
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Disables the current fill color. All shapes, paths and text following this command will
+            be drawn without a fill color.
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../lib/Colors.html">Colors</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/nofill.jpg" width="125"/></span>
+                  </td><td>
+<pre>
+<span class="nf">strokewidth</span>(<span class="mf">1.5</span>)
+<span class="nf">stroke</span>(<span class="mf">0.2</span>)
+<span class="nf">fill</span>(<span class="mf">0.2</span>)
+<span class="nf">rect</span>(<span class="mi">10</span>, <span class="mi">10</span>, <span class="mi">20</span>, <span class="mi">40</span>)
+<span class="nf">nofill</span>()
+<span class="nf">rect</span>(<span class="mi">40</span>, <span class="mi">10</span>, <span class="mi">20</span>, <span class="mi">40</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="nostroke()"></a>
+
+      <div class="section">
+        <h3>nostroke()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">nostroke</span>()
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Disables the current stroke color. All shapes, paths and text following this command
+            will be drawn without a stroke (outline) color.
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../lib/Colors.html">Colors</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/nostroke.jpg" width="125"/></span>
+                  </td><td>
+<pre>
+<span class="nf">fill</span>(<span class="mf">0.2</span>)
+<span class="nf">strokewidth</span>(<span class="mi">6</span>)
+<span class="nf">stroke</span>(<span class="mf">1.0</span>, <span class="mf">0.0</span>, <span class="mf">0.5</span>)
+<span class="nf">rect</span>(<span class="mi">10</span>, <span class="mi">10</span>, <span class="mi">20</span>, <span class="mi">40</span>)
+<span class="nf">nostroke</span>()
+<span class="nf">rect</span>(<span class="mi">40</span>, <span class="mi">10</span>, <span class="mi">20</span>, <span class="mi">40</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="strokewidth()"></a>
+
+      <div class="section">
+        <h3>strokewidth()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nf">strokewidth</span>(width)
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            Sets the width of the stroke used for lines around shapes, paths and text.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            the current stroke width
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/strokewidth.jpg" width="125"/></span>
+                  </td><td>
+<pre>
+<span class="nf">nofill</span>()
+<span class="nf">stroke</span>(<span class="mf">0.2</span>)
+<span class="nf">strokewidth</span>(<span class="mf">1.5</span>)
+<span class="nf">rect</span>(<span class="mi">10</span>, <span class="mi">10</span>, <span class="mi">20</span>, <span class="mi">40</span>)
+<span class="nf">strokewidth</span>(<span class="mi">3</span>)
+<span class="nf">rect</span>(<span class="mi">40</span>, <span class="mi">10</span>, <span class="mi">20</span>, <span class="mi">40</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body></html>

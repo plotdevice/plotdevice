@@ -2,20 +2,20 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Tutorials: Variables</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Tutorials: Variables</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Tutorials</span></a></h1>
 
     <h3>Variables</h3>
 
     <ul class="chapter">
-      <li><a href="Lists.html">Lists →</a>
-      </li><li>Chapter 5
-      </li><li><a href="Graphics_State.html">← Graphics State</a>
-    </li></ul>
+      <li><a href="Lists.html">Lists →</a></li>
+      <li>Chapter 5</li>
+      <li><a href="Graphics_State.html">← Graphics State</a></li>
+    </ul>
   </div>
 
   <div class="article">
@@ -25,7 +25,7 @@
     boxes to remember what is inside.</p>
     <p>It’s the same with variables. Each variable has a <i>name</i>, and a <i>value</i>. The name
     is like the label on a box: it’s a quick reminder of what item, or value, is inside the
-    variable. Just like boxes, variables can hold all sorts of stuff useful in a NodeBox script:
+    variable. Just like boxes, variables can hold all sorts of stuff useful in a PlotDevice script:
     pieces of text, an important number, the name of a font, a <a href="Lists.html">list</a> of
     colors, and so on.</p>
     <p>Another way to look at variables is to think of them as a sticky note.</p>
@@ -42,26 +42,25 @@
     <h2>Declaring variables</h2>
 
     <p>You can declare a variable at any point in your script, and give it <b>any name you
-    like</b>, except for names that NodeBox has already claimed (like <i>rect</i>, or <i>for</i>).
-    Usually, you pick a name that tells something about what kind of information the variable is
-    storing.</p>
+    like</b>, except for names that PlotDevice has already claimed (like <i>rect</i>, or
+    <i>for</i>). Usually, you pick a name that tells something about what kind of information the
+    variable is storing.</p>
     <p>Try to come up with good, short names. No one likes to type <i>theWidthOfAllRectangles</i>
     an dozen times, <i>width</i> says enough.</p>
     <table border="0">
       <tbody>
         <tr>
-          <td><img height="272" src="media/variables-width1.jpg" width="244"/>
+          <td><img height="272" src="../etc/tut/variables-width1.jpg" width="244"/>
           </td><td>
             <br/>
             <br/>
             It’s as easy as this: we think of a good name for a variable, and assign any value to
-            it we like. NodeBox keeps a small sticky note reminder for itself to know what value is
-            inside the variable.
-<pre>
-width = <span class="s">100</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, width, <span class="s">30</span><span class="s">)</span>
-</pre>Variables can be used as parameters. <b>NodeBox looks up what value it contains</b>. In this
-example, a rectangle is drawn at (10,10), with width of 100 and height of 30.
+            it we like. PlotDevice keeps a small sticky note reminder for itself to know what value
+            is inside the variable.
+<pre>width <span class="o">=</span> <span class="mi">100</span>
+<span class="nf">rect</span>(<span class="mi">10</span>, <span class="mi">10</span>, width, <span class="mi">30</span>)
+</pre>Variables can be used as parameters. <b>PlotDevice looks up what value it contains</b>. In
+this example, a rectangle is drawn at (10,10), with width of 100 and height of 30.
           </td></tr></tbody></table>
 
     <h2>Changing variables</h2>
@@ -71,23 +70,22 @@ example, a rectangle is drawn at (10,10), with width of 100 and height of 30.
     <table border="0">
       <tbody>
         <tr>
-          <td><img height="272" src="media/variables-width2.jpg" width="244"/>
+          <td><img height="272" src="../etc/tut/variables-width2.jpg" width="244"/>
           </td><td>
             <br/>
             <br/>
             The first rectangle’s width is 100, then the value of the variable changes to 20, so
             the two following rectangles use that new value and have width 20.
-<pre>
-width = <span class="s">100</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">10</span>, <span class="s">10</span>, width, <span class="s">30</span> <span class="s">)</span>
+<pre>width <span class="o">=</span> <span class="mi">100</span>
+<span class="nf">rect</span>(<span class="mi">10</span>, <span class="mi">10</span>, width, <span class="mi">30</span> )
  
-width = <span class="s">20</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">120</span>, <span class="s">10</span>, width, <span class="s">30</span><span class="s">)</span>
-<span class="kw">rect</span><span class="s">(</span><span class="s">330</span>, <span class="s">10</span>, width, <span class="s">30</span><span class="s">)</span>
+width <span class="o">=</span> <span class="mi">20</span>
+<span class="nf">rect</span>(<span class="mi">120</span>, <span class="mi">10</span>, width, <span class="mi">30</span>)
+<span class="nf">rect</span>(<span class="mi">330</span>, <span class="mi">10</span>, width, <span class="mi">30</span>)
 </pre>
         </td></tr><tr>
-          <td style="text-align: center"><img height="91" src="media/variables-width3.jpg" width="160"/>
-          </td><td>The resulting output in NodeBox.
+          <td style="text-align: center"><img height="91" src="../etc/tut/variables-width3.jpg" width="160"/>
+          </td><td>The resulting output in PlotDevice.
         </td></tr></tbody></table>
 
     <h2>Calculations with variables</h2>
@@ -102,28 +100,26 @@ width = <span class="s">20</span>
     <table border="0">
       <tbody>
         <tr>
-          <td><img height="272" src="media/variables-math1.jpg" width="244"/>
+          <td><img height="272" src="../etc/tut/variables-math1.jpg" width="244"/>
           </td><td>
-<pre>
-count = <span class="s">10</span>
-<span class="kw">print</span> count
-&gt;&gt;&gt; <span class="s">1</span>
+<pre>count <span class="o">=</span> <span class="mi">10</span>
+<span class="k">print</span> count
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">1</span>
  
-count += <span class="s">5</span>
-<span class="kw">print</span> count
-&gt;&gt;&gt; <span class="s">15</span>
+count <span class="o">+=</span> <span class="mi">5</span>
+<span class="k">print</span> count
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">15</span>
 </pre>
         </td></tr><tr>
-          <td><img height="85" src="media/variables-math2.jpg" width="222"/>
+          <td><img height="85" src="../etc/tut/variables-math2.jpg" width="222"/>
           </td><td>
-<pre>
-x = <span class="s">30</span>
-y = <span class="s">30</span>
-quote = <span class="str">"Nicely on the left"</span>
-<span class="kw">text</span><span class="s">(</span>quote, x, y<span class="s">)</span>
-y += <span class="kw">textheight</span><span class="s">(</span>quote<span class="s">)</span> 
-quote = <span class="str">"Nicely below each other"</span> 
-<span class="kw">text</span><span class="s">(</span>quote, x, y<span class="s">)</span>
+<pre>x <span class="o">=</span> <span class="mi">30</span>
+y <span class="o">=</span> <span class="mi">30</span>
+quote <span class="o">=</span> <span class="s">"Nicely on the left"</span>
+<span class="nf">text</span>(quote, x, y)
+y <span class="o">+=</span> <span class="nf">textheight</span>(quote) 
+quote <span class="o">=</span> <span class="s">"Nicely below each other"</span> 
+<span class="nf">text</span>(quote, x, y)
 </pre>
           </td></tr></tbody></table>
 
@@ -134,26 +130,26 @@ quote = <span class="str">"Nicely below each other"</span>
     other scripts.</p>
     <h2>Predefined variables</h2>
 
-    <p>NodeBox has a set of predefined variables that contain information about the state of your
-    script. These variables can only be looked at, not modified.</p>
+    <p>PlotDevice has a set of predefined variables that contain information about the state of
+    your script. These variables can only be looked at, not modified.</p>
     <ul>
-      <li>WIDTH: the width of the drawing area
-      </li><li>HEIGHT: the height of the drawing area
-      </li><li>PAGENUM: the current page being exported in a multi-page export.
-      </li><li>FRAME: the current frame in an <a href="Animation.html">animation</a>.<br/>
-    </li></ul>
+      <li>WIDTH: the width of the drawing area</li>
+      <li>HEIGHT: the height of the drawing area</li>
+      <li>PAGENUM: the current page being exported in a multi-page export.</li>
+      <li>FRAME: the current frame in an <a href="Animation.html">animation</a>.<br/></li>
+    </ul>
 
     <p>Some variables can be used to create interactive animations:</p>
     <ul>
-      <li>MOUSEX: the horizontal location of the mouse cursor
-      </li><li>MOUSEY: the vertical location of the mouse cursor
-      </li><li>mousedown: is True when the mouse button is pressed, False otherwise
-      </li><li>keydown: is True when a key is being pressed, False otherwise
-      </li><li>key: the last key pressed
-      </li><li>keycode: the integer keycode of the last key pressed
-      </li><li>KEY_UP, KEY_DOWN_ KEY_LEFT, KEY_RIGHT, KEY_BACKSPACE contain the keycodes for the arrow
-      keys and the backspace key.
-    </li></ul>
+      <li>MOUSEX: the horizontal location of the mouse cursor</li>
+      <li>MOUSEY: the vertical location of the mouse cursor</li>
+      <li>mousedown: is True when the mouse button is pressed, False otherwise</li>
+      <li>keydown: is True when a key is being pressed, False otherwise</li>
+      <li>key: the last key pressed</li>
+      <li>keycode: the integer keycode of the last key pressed</li>
+      <li>KEY_UP, KEY_DOWN_ KEY_LEFT, KEY_RIGHT, KEY_BACKSPACE contain the keycodes for the arrow
+      keys and the backspace key.</li>
+    </ul>
 
     <h2>The variable panel</h2>
 
@@ -163,14 +159,14 @@ quote = <span class="str">"Nicely below each other"</span>
     retained as long as you don’t re-run your script. In other words, random values change when you
     run a script, but not when you change values or drag sliders in the variable panel.</p>
     <p><br/>
-    <span class="media"><img height="523" src="media/variables.jpg" width="622"/></span></p>
+    <span class="media"><img height="523" src="../etc/tut/variables.jpg" width="622"/></span></p>
     <p>The command to add variables to the variable panel is the <b>var()</b> command.</p>
     <ul>
-      <li>var(<i>name</i>, NUMBER, <i>default</i>, <i>min</i>, <i>max</i>)
-      </li><li>var(<i>name</i>, TEXT, <i>default=’hello’</i>)
-      </li><li>var(<i>name</i>, BOOLEAN)
-      </li><li>var(<i>command</i>, BUTTON)
-    </li></ul>
+      <li>var(<i>name</i>, NUMBER, <i>default</i>, <i>min</i>, <i>max</i>)</li>
+      <li>var(<i>name</i>, TEXT, <i>default=’hello’</i>)</li>
+      <li>var(<i>name</i>, BOOLEAN)</li>
+      <li>var(<i>command</i>, BUTTON)</li>
+    </ul>
 
     <p>You can then use the <i>name</i> variable in your script like any other variable. Numbers
     produce a slider, text an input field and booleans (<i>True</i> or <i>False</i>) a checkbox.

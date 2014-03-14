@@ -2,12 +2,12 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: PhotoBot</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: PhotoBot</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Libraries</span></a></h1>
 
     <h3>PhotoBot</h3>
   </div>
@@ -16,18 +16,19 @@
     <h2>Description</h2>
 
     <p>PhotoBot implements Adobe Photoshop - or any other image manipulation software tool (like
-    Corel PhotoPaint or <a href="http://www.gimp.org/">Gimp</a>) - functionality in NodeBox. For
+    Corel PhotoPaint or <a href="http://www.gimp.org/">Gimp</a>) - functionality in PlotDevice. For
     example: with PhotoBot, you can create a tranparent canvas and add image layers to it;
     transform each layer with rotations, scaling, distort, flip; blend it with the layers below
     using multiply, overlay, hue blend modes, apply filters like blur, use gradient masks, make
     polygonal lasso selections, flatten the canvas, and export it to a .png image file with a
     transparent background.</p>
     <p>PhotoBot is built on PIL, the <a href="http://www.pythonware.com/products/pil/">Python
-    Imaging Library</a>, with an easy set of commands open to moderately experienced NodeBox-users.
-    PIL 1.1.4 is bundled in the download below. The advantage of PhotoBot over Photoshop, although
-    a lot slower, is that it can do things in a loop, or store your favourite image manipulations
-    in a function, which you can then use on any image. This way you invent the technique once,
-    store it as a NodeBox script, and apply it to your images while you go out to lunch.</p>
+    Imaging Library</a>, with an easy set of commands open to moderately experienced
+    PlotDevice-users. PIL 1.1.4 is bundled in the download below. The advantage of PhotoBot over
+    Photoshop, although a lot slower, is that it can do things in a loop, or store your favourite
+    image manipulations in a function, which you can then use on any image. This way you invent the
+    technique once, store it as a PlotDevice script, and apply it to your images while you go out
+    to lunch.</p>
     <p>Please report any errors (tom-at-organisms-dot-be). PhotoBot is currently at version Beta
     0.8, read the <a href="http://nodebox.net/code/index.php/PhotoBot_to-do_list">to-do</a> list
     here for a future release.</p>
@@ -37,70 +38,71 @@
     <table border="0">
       <tbody>
         <tr>
-          <td><a href="http://nodebox.net/code/data/media/photobot.zip"><img alt="download" height="20" src="media/download.gif" width="20"/></a>
+          <td><a href="http://nodebox.net/code/data/media/photobot.zip"><img alt="download" height="20" src="../etc/lib/download.gif" width="20"/></a>
           </td><td><a href="http://nodebox.net/code/data/media/photobot-powerpc.zip">PowerPC</a> |
           <a href="http://nodebox.net/code/data/media/photobot-intel.zip">Intel</a> (450KB)<br/>
-          <em>Last updated for NodeBox 1.0rc4.<br/></em><em>Author: Tom De Smedt</em><em><br/></em>
+          <em>Last updated for PlotDevice 1.0rc4.<br/></em><em>Author: Tom De
+          Smedt</em><em><br/></em>
         </td></tr></tbody></table>
 
     <h2>Canvas commands in the PhotoBot library</h2>
 
     <ul>
-      <li><a href="PhotoBot/canvas().html">canvas()</a>
-      </li><li><a href="PhotoBot/Canvas.layers[].html">Canvas.layers[]</a>
-      </li><li><a href="PhotoBot/Canvas.layer().html">Canvas.layer()</a>
-      </li><li><a href="PhotoBot/Canvas.fill().html">Canvas.fill()</a>
-      </li><li><a href="PhotoBot/Canvas.gradient().html">Canvas.gradient()</a>
-      </li><li><a href="PhotoBot/Canvas.merge().html">Canvas.merge()</a>
-      </li><li><a href="PhotoBot/Canvas.flatten().html">Canvas.flatten()</a>
-      </li><li><a href="PhotoBot/Canvas.export().html">Canvas.export()</a>
-      </li><li><a href="PhotoBot/Canvas.draw().html">Canvas.draw()</a>
-      </li><li><a href="PhotoBot/Canvas.preferences().html">Canvas.preferences()</a>
-    </li></ul>
+      <li><a href="PhotoBot/canvas().html">canvas()</a></li>
+      <li><a href="PhotoBot/Canvas.layers[].html">Canvas.layers[]</a></li>
+      <li><a href="PhotoBot/Canvas.layer().html">Canvas.layer()</a></li>
+      <li><a href="PhotoBot/Canvas.fill().html">Canvas.fill()</a></li>
+      <li><a href="PhotoBot/Canvas.gradient().html">Canvas.gradient()</a></li>
+      <li><a href="PhotoBot/Canvas.merge().html">Canvas.merge()</a></li>
+      <li><a href="PhotoBot/Canvas.flatten().html">Canvas.flatten()</a></li>
+      <li><a href="PhotoBot/Canvas.export().html">Canvas.export()</a></li>
+      <li><a href="PhotoBot/Canvas.draw().html">Canvas.draw()</a></li>
+      <li><a href="PhotoBot/Canvas.preferences().html">Canvas.preferences()</a></li>
+    </ul>
 
     <h2>Layer commands in the PhotoBot library</h2>
 
     <ul>
-      <li><a href="PhotoBot/Layer.index().html">Layer.index()</a>
-      </li><li><a href="PhotoBot/Layer.duplicate().html">Layer.duplicate()</a>
-      </li><li><a href="PhotoBot/Layer.copy().html">Layer.copy()</a>
-      </li><li><a href="PhotoBot/Layer.delete().html">Layer.delete()</a>
-      </li><li><a href="PhotoBot/Layer.up().html">Layer.up()</a>
-      </li><li><a href="PhotoBot/Layer.down().html">Layer.down()</a>
-      </li><li><a href="PhotoBot/Layer.opacity().html">Layer.opacity()</a>
-      </li><li><a href="PhotoBot/Layer.multiply().html">Layer.multiply()</a>
-      </li><li><a href="PhotoBot/Layer.screen().html">Layer.screen()</a>
-      </li><li><a href="PhotoBot/Layer.overlay().html">Layer.overlay()</a>
-      </li><li><a href="PhotoBot/Layer.hue().html">Layer.hue()</a>
-      </li><li><a href="PhotoBot/Layer.color().html">Layer.color()</a>
-      </li><li><a href="PhotoBot/Layer.mask().html">Layer.mask()</a>
-      </li><li><a href="PhotoBot/Layer.translate().html">Layer.translate()</a>
-      </li><li><a href="PhotoBot/Layer.scale().html">Layer.scale()</a>
-      </li><li><a href="PhotoBot/Layer.distort().html">Layer.distort()</a>
-      </li><li><a href="PhotoBot/Layer.rotate().html">Layer.rotate()</a>
-      </li><li><a href="PhotoBot/Layer.flip().html">Layer.flip()</a>
-      </li><li><a href="PhotoBot/Layer.levels().html">Layer.levels()</a>
-      </li><li><a href="PhotoBot/Layer.brightness().html">Layer.brightness()</a>
-      </li><li><a href="PhotoBot/Layer.contrast().html">Layer.contrast()</a>
-      </li><li><a href="PhotoBot/Layer.sharpness().html">Layer.sharpness()</a>
-      </li><li><a href="PhotoBot/Layer.desaturate().html">Layer.desaturate()</a>
-      </li><li><a href="PhotoBot/Layer.invert().html">Layer.invert()</a>
-      </li><li><a href="PhotoBot/Layer.blur().html">Layer.blur()</a>
-      </li><li><a href="PhotoBot/Layer.bounds().html">Layer.bounds()</a>
-      </li><li><a href="PhotoBot/Layer.select().html">Layer.select()</a>
-      </li><li><a href="PhotoBot/Layer.statistics().html">Layer.statistics()</a>
-    </li></ul>
+      <li><a href="PhotoBot/Layer.index().html">Layer.index()</a></li>
+      <li><a href="PhotoBot/Layer.duplicate().html">Layer.duplicate()</a></li>
+      <li><a href="PhotoBot/Layer.copy().html">Layer.copy()</a></li>
+      <li><a href="PhotoBot/Layer.delete().html">Layer.delete()</a></li>
+      <li><a href="PhotoBot/Layer.up().html">Layer.up()</a></li>
+      <li><a href="PhotoBot/Layer.down().html">Layer.down()</a></li>
+      <li><a href="PhotoBot/Layer.opacity().html">Layer.opacity()</a></li>
+      <li><a href="PhotoBot/Layer.multiply().html">Layer.multiply()</a></li>
+      <li><a href="PhotoBot/Layer.screen().html">Layer.screen()</a></li>
+      <li><a href="PhotoBot/Layer.overlay().html">Layer.overlay()</a></li>
+      <li><a href="PhotoBot/Layer.hue().html">Layer.hue()</a></li>
+      <li><a href="PhotoBot/Layer.color().html">Layer.color()</a></li>
+      <li><a href="PhotoBot/Layer.mask().html">Layer.mask()</a></li>
+      <li><a href="PhotoBot/Layer.translate().html">Layer.translate()</a></li>
+      <li><a href="PhotoBot/Layer.scale().html">Layer.scale()</a></li>
+      <li><a href="PhotoBot/Layer.distort().html">Layer.distort()</a></li>
+      <li><a href="PhotoBot/Layer.rotate().html">Layer.rotate()</a></li>
+      <li><a href="PhotoBot/Layer.flip().html">Layer.flip()</a></li>
+      <li><a href="PhotoBot/Layer.levels().html">Layer.levels()</a></li>
+      <li><a href="PhotoBot/Layer.brightness().html">Layer.brightness()</a></li>
+      <li><a href="PhotoBot/Layer.contrast().html">Layer.contrast()</a></li>
+      <li><a href="PhotoBot/Layer.sharpness().html">Layer.sharpness()</a></li>
+      <li><a href="PhotoBot/Layer.desaturate().html">Layer.desaturate()</a></li>
+      <li><a href="PhotoBot/Layer.invert().html">Layer.invert()</a></li>
+      <li><a href="PhotoBot/Layer.blur().html">Layer.blur()</a></li>
+      <li><a href="PhotoBot/Layer.bounds().html">Layer.bounds()</a></li>
+      <li><a href="PhotoBot/Layer.select().html">Layer.select()</a></li>
+      <li><a href="PhotoBot/Layer.statistics().html">Layer.statistics()</a></li>
+    </ul>
 
     <h2>Pixel commands in the PhotoBot library</h2>
 
     <ul>
-      <li><a href="PhotoBot/Layer.pixels[].html">Layer.pixels[]</a>
-      </li><li><a href="PhotoBot/Layer.pixels.update().html">Layer.pixels.update()</a>
-      </li><li><a href="PhotoBot/Layer.pixels.convolute().html">Layer.pixels.convolute()</a>
-    </li></ul>
+      <li><a href="PhotoBot/Layer.pixels[].html">Layer.pixels[]</a></li>
+      <li><a href="PhotoBot/Layer.pixels.update().html">Layer.pixels.update()</a></li>
+      <li><a href="PhotoBot/Layer.pixels.convolute().html">Layer.pixels.convolute()</a></li>
+    </ul>
 
     <p> </p>
-    <p><span class="media"><img alt="" height="350" src="media/photobot.jpg" width="350"/></span></p>
+    <p><span class="media"><img alt="" height="350" src="../etc/lib/photobot.jpg" width="350"/></span></p>
   </div>
 
 </body></html>

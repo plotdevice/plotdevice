@@ -2,19 +2,20 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: photobot.Canvas.fill()</title>
-  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: Canvas.fill()</title>
+  <link charset="utf-8" href="../../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../../manual.html">Plot Device <span>Libraries</span></a></h1>
 
-    <h3>photobot.Canvas.fill()</h3>
+    <h3>Canvas.fill()</h3>
   </div>
 
   <div class="article">
     <h2>Syntax</h2>
-<pre>canvas.<span class="kw">fill</span><span class="s">(</span>rgb, x=<span class="s">0</span>, y=<span class="s">0</span>, w=<span class="kw">None</span>, h=<span class="kw">None</span>, name=<span class="str">""</span><span class="s">)</span>
+<pre>
+<span class="nf">canvas</span><span class="o">.</span><span class="nf">fill</span>(rgb, x<span class="o">=</span><span class="mi">0</span>, y<span class="o">=</span><span class="mi">0</span>, w<span class="o">=</span><span class="bp">None</span>, h<span class="o">=</span><span class="bp">None</span>, name<span class="o">=</span><span class="s">""</span>)
 </pre>
 
     <h2>Description</h2>
@@ -27,15 +28,15 @@
     <h2>Example</h2>
 
     <p>This puts the <em>robot.jpg</em> image at 95% opacity on an orange background .</p>
-<pre>photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
-canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">200</span>,<span class="s">200</span><span class="s">)</span>
-canvas.<span class="kw">fill</span><span class="s">(</span><span class="s">(</span><span class="s">255</span>,<span class="s">128</span>,<span class="s">0</span><span class="s">)</span><span class="s">)</span>
-canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"images/robot.jpg"</span><span class="s">)</span>
-canvas.<span class="s">layers</span><span class="s">[</span><span class="s">2</span><span class="s">]</span>.<span class="s">opacity</span><span class="s">(</span><span class="s">95</span><span class="s">)</span>
+<pre>photobot <span class="o">=</span> <span class="nf">ximport</span>(<span class="s">"photobot"</span>)
+<span class="nf">canvas</span> <span class="o">=</span> photobot<span class="o">.</span><span class="nf">canvas</span>(<span class="mi">200</span>,<span class="mi">200</span>)
+<span class="nf">canvas</span><span class="o">.</span><span class="nf">fill</span>((<span class="mi">255</span>,<span class="mi">128</span>,<span class="mi">0</span>))
+<span class="nf">canvas</span><span class="o">.</span>layer(<span class="s">"images/robot.jpg"</span>)
+<span class="nf">canvas</span><span class="o">.</span>layers[<span class="mi">2</span>]<span class="o">.</span>opacity(<span class="mi">95</span>)
 </pre>
 
     <div class="example">
-      <img alt="" height="100" src="../media/photobot-fill.jpg" width="100"/>
+      <img alt="" height="100" src="../../etc/lib/photobot-fill.jpg" width="100"/>
     </div>
   </div>
 

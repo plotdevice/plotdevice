@@ -2,18 +2,18 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Tutorials: Path Filters</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Tutorials: Path Filters</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Tutorials</span></a></h1>
 
     <h3>Path Filters</h3>
   </div>
 
   <div class="article">
-    <p>In analogy to filter effects that manipulate pixels in an image, NodeBox provides the
+    <p>In analogy to filter effects that manipulate pixels in an image, PlotDevice provides the
     <a href="Paths.html">path mathematics</a> to create <b>filter effects that manipulate vector
     curves</b>. Below is some example code.</p>
     <p> </p>
@@ -25,45 +25,45 @@
     contour and then calculate a number of points on it, based on the length (so longer segments
     will get more hairs and shorter segments will get less). On each point we draw some wiggly
     curves.</p>
-    <p><img alt="pathfilter1" height="300" src="media/pathfilter1.jpg" width="550"/></p>
+    <p><img alt="pathfilter1" height="300" src="../etc/tut/pathfilter1.jpg" width="550"/></p>
 <pre>
-<span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
-<span class="kw">background</span><span class="s">(</span><span class="s">0.23</span>, <span class="s">0.21</span>, <span class="s">0.15</span><span class="s">)</span>
+<span class="nf">size</span>(<span class="mi">550</span>, <span class="mi">300</span>)
+<span class="nf">background</span>(<span class="mf">0.23</span>, <span class="mf">0.21</span>, <span class="mf">0.15</span>)
  
-<span class="kw">font</span><span class="s">(</span><span class="str">"Georgia-Bold"</span>, <span class="s">175</span><span class="s">)</span>
-path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"hairs"</span>, <span class="s">40</span>, <span class="s">200</span><span class="s">)</span>
+<span class="nf">font</span>(<span class="s">"Georgia-Bold"</span>, <span class="mi">175</span>)
+path <span class="o">=</span> <span class="nf">textpath</span>(<span class="s">"hairs"</span>, <span class="mi">40</span>, <span class="mi">200</span>)
  
-<span class="kw">for</span> contour <span class="kw">in</span> path.<span class="s">contours</span>:    
-    prev = <span class="kw">None</span>
-    n = contour.<span class="s">length</span>
-    <span class="kw">for</span> pt <span class="kw">in</span> contour.<span class="s">points</span><span class="s">(</span><span class="s">int</span><span class="s">(</span>n<span class="s">)</span><span class="s">)</span>:     
+<span class="k">for</span> contour <span class="ow">in</span> path<span class="o">.</span>contours:    
+    prev <span class="o">=</span> <span class="bp">None</span>
+    n <span class="o">=</span> contour<span class="o">.</span>length
+    <span class="k">for</span> pt <span class="ow">in</span> contour<span class="o">.</span>points(<span class="nb">int</span>(n)):     
    
-        <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-        <span class="kw">stroke</span><span class="s">(</span><span class="s">1</span>, <span class="s">0.75</span><span class="s">)</span>
-        <span class="kw">strokewidth</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">0.25</span>, <span class="s">0.5</span><span class="s">)</span><span class="s">)</span>
+        <span class="nf">nofill</span>()
+        <span class="nf">stroke</span>(<span class="mi">1</span>, <span class="mf">0.75</span>)
+        <span class="nf">strokewidth</span>(<span class="nf">random</span>(<span class="mf">0.25</span>, <span class="mf">0.5</span>))
  
-        <span class="kw">if</span> prev != <span class="kw">None</span>:
-            <span class="kw">autoclosepath</span><span class="s">(</span><span class="kw">False</span><span class="s">)</span>
-            <span class="kw">beginpath</span><span class="s">(</span>prev.<span class="s">x</span>, prev.<span class="s">y</span><span class="s">)</span>            
-            <span class="kw">curveto</span><span class="s">(</span>
-                pt.<span class="s">ctrl1</span>.<span class="s">x</span> - <span class="kw">random</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>, 
-                pt.<span class="s">ctrl1</span>.<span class="s">y</span>,
-                pt.<span class="s">ctrl2</span>.<span class="s">x</span>, 
-                pt.<span class="s">ctrl2</span>.<span class="s">y</span> + <span class="kw">random</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>,
-                pt.<span class="s">x</span>, 
-                pt.<span class="s">y</span>
-            <span class="s">)</span>
-            <span class="kw">curveto</span><span class="s">(</span>
-                pt.<span class="s">ctrl1</span>.<span class="s">x</span> + <span class="kw">random</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>, 
-                pt.<span class="s">ctrl1</span>.<span class="s">y</span>,
-                pt.<span class="s">ctrl2</span>.<span class="s">x</span>, 
-                pt.<span class="s">ctrl2</span>.<span class="s">y</span> - <span class="kw">random</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>,
-                pt.<span class="s">x</span> + <span class="kw">random</span><span class="s">(</span><span class="s">-20</span>, <span class="s">20</span><span class="s">)</span>,
-                pt.<span class="s">y</span> + <span class="kw">random</span><span class="s">(</span><span class="s">-10</span>, <span class="s">10</span><span class="s">)</span>
-            <span class="s">)</span>  
-            <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+        <span class="k">if</span> prev <span class="o">!=</span> <span class="bp">None</span>:
+            <span class="nf">autoclosepath</span>(<span class="bp">False</span>)
+            <span class="nf">beginpath</span>(prev<span class="o">.</span>x, prev<span class="o">.</span>y)            
+            <span class="nf">curveto</span>(
+                pt<span class="o">.</span>ctrl1<span class="o">.</span>x <span class="o">-</span> <span class="nf">random</span>(<span class="mi">30</span>), 
+                pt<span class="o">.</span>ctrl1<span class="o">.</span>y,
+                pt<span class="o">.</span>ctrl2<span class="o">.</span>x, 
+                pt<span class="o">.</span>ctrl2<span class="o">.</span>y <span class="o">+</span> <span class="nf">random</span>(<span class="mi">30</span>),
+                pt<span class="o">.</span>x, 
+                pt<span class="o">.</span>y
+            )
+            <span class="nf">curveto</span>(
+                pt<span class="o">.</span>ctrl1<span class="o">.</span>x <span class="o">+</span> <span class="nf">random</span>(<span class="mi">10</span>), 
+                pt<span class="o">.</span>ctrl1<span class="o">.</span>y,
+                pt<span class="o">.</span>ctrl2<span class="o">.</span>x, 
+                pt<span class="o">.</span>ctrl2<span class="o">.</span>y <span class="o">-</span> <span class="nf">random</span>(<span class="mi">10</span>),
+                pt<span class="o">.</span>x <span class="o">+</span> <span class="nf">random</span>(<span class="o">-</span><span class="mi">20</span>, <span class="mi">20</span>),
+                pt<span class="o">.</span>y <span class="o">+</span> <span class="nf">random</span>(<span class="o">-</span><span class="mi">10</span>, <span class="mi">10</span>)
+            )  
+            <span class="nf">endpath</span>()
  
-        prev = pt
+        prev <span class="o">=</span> pt
 </pre> 
 
     <p> </p>
@@ -75,39 +75,39 @@ path = <span class="kw">textpath</span><span class="s">(</span><span class="str"
     of a contour, a number of points are calculated along the contour. Then points are connected
     randomly with straight lines (as long as the distance between them is smaller than some given
     number, fontsize() / 5 in this case).</p>
-    <p><img alt="pathfilter2" height="300" src="media/pathfilter2.jpg" width="550"/></p>
+    <p><img alt="pathfilter2" height="300" src="../etc/tut/pathfilter2.jpg" width="550"/></p>
 <pre>
-<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sqrt
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> sqrt
  
-<span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
-<span class="kw">background</span><span class="s">(</span><span class="s">0.23</span>, <span class="s">0.21</span>, <span class="s">0.15</span><span class="s">)</span>
+<span class="nf">size</span>(<span class="mi">550</span>, <span class="mi">300</span>)
+<span class="nf">background</span>(<span class="mf">0.23</span>, <span class="mf">0.21</span>, <span class="mf">0.15</span>)
  
-<span class="kw">font</span><span class="s">(</span><span class="str">"Helvetica-Bold"</span>, <span class="s">125</span><span class="s">)</span>
-path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"SPIDER"</span>, <span class="s">20</span>, <span class="s">200</span><span class="s">)</span>
+<span class="nf">font</span>(<span class="s">"Helvetica-Bold"</span>, <span class="mi">125</span>)
+path <span class="o">=</span> <span class="nf">textpath</span>(<span class="s">"SPIDER"</span>, <span class="mi">20</span>, <span class="mi">200</span>)
  
-m = <span class="s">2.0</span>
-<span class="kw">for</span> contour <span class="kw">in</span> path.<span class="s">contours</span>:
+m <span class="o">=</span> <span class="mf">2.0</span>
+<span class="k">for</span> contour <span class="ow">in</span> path<span class="o">.</span>contours:
  
-    n = contour.<span class="s">length</span> + <span class="s">50</span>
-    points = <span class="s">list</span><span class="s">(</span>contour.<span class="s">points</span><span class="s">(</span>n<span class="s">)</span><span class="s">)</span>
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">int</span><span class="s">(</span>n<span class="s">)</span><span class="s">)</span>:
+    n <span class="o">=</span> contour<span class="o">.</span>length <span class="o">+</span> <span class="mi">50</span>
+    points <span class="o">=</span> <span class="nb">list</span>(contour<span class="o">.</span>points(n))
+    <span class="k">for</span> i <span class="ow">in</span> <span class="nb">range</span>(<span class="nb">int</span>(n)):
         
-        pt1 = <span class="kw">choice</span><span class="s">(</span>points<span class="s">)</span>
+        pt1 <span class="o">=</span> <span class="nf">choice</span>(points)
  
-        d = <span class="s">float</span><span class="s">(</span><span class="str">"inf"</span><span class="s">)</span>        
-        <span class="kw">while</span> d &gt; <span class="kw">fontsize</span><span class="s">(</span><span class="s">)</span>/<span class="s">5</span>:
-            pt2  = <span class="kw">choice</span><span class="s">(</span>points<span class="s">)</span>
-            d = sqrt<span class="s">(</span><span class="s">(</span>pt2.<span class="s">x</span>-pt1.<span class="s">x</span><span class="s">)</span>**<span class="s">2</span> + <span class="s">(</span>pt2.<span class="s">y</span>-pt1.<span class="s">y</span><span class="s">)</span>**<span class="s">2</span><span class="s">)</span>
+        d <span class="o">=</span> <span class="nb">float</span>(<span class="s">"inf"</span>)        
+        <span class="k">while</span> d <span class="o">&gt;</span> <span class="nf">fontsize</span>()<span class="o">/</span><span class="mi">5</span>:
+            pt2  <span class="o">=</span> <span class="nf">choice</span>(points)
+            d <span class="o">=</span> sqrt((pt2<span class="o">.</span>x<span class="o">-</span>pt1<span class="o">.</span>x)<span class="o">**</span><span class="mi">2</span> <span class="o">+</span> (pt2<span class="o">.</span>y<span class="o">-</span>pt1<span class="o">.</span>y)<span class="o">**</span><span class="mi">2</span>)
  
-        <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-        <span class="kw">stroke</span><span class="s">(</span><span class="s">1</span>, <span class="s">1</span>, <span class="s">1</span>, <span class="s">0.9</span><span class="s">)</span>
-        <span class="kw">strokewidth</span><span class="s">(</span><span class="s">0.35</span><span class="s">)</span>            
-        <span class="kw">line</span><span class="s">(</span>
-            pt1.<span class="s">x</span> + <span class="kw">random</span><span class="s">(</span>-m, m<span class="s">)</span>, 
-            pt1.<span class="s">y</span> + <span class="kw">random</span><span class="s">(</span>-m, m<span class="s">)</span>,
-            pt2.<span class="s">x</span> + <span class="kw">random</span><span class="s">(</span>-m, m<span class="s">)</span>, 
-            pt2.<span class="s">y</span> + <span class="kw">random</span><span class="s">(</span>-m, m<span class="s">)</span>
-        <span class="s">)</span>
+        <span class="nf">nofill</span>()
+        <span class="nf">stroke</span>(<span class="mi">1</span>, <span class="mi">1</span>, <span class="mi">1</span>, <span class="mf">0.9</span>)
+        <span class="nf">strokewidth</span>(<span class="mf">0.35</span>)            
+        <span class="nf">line</span>(
+            pt1<span class="o">.</span>x <span class="o">+</span> <span class="nf">random</span>(<span class="o">-</span>m, m), 
+            pt1<span class="o">.</span>y <span class="o">+</span> <span class="nf">random</span>(<span class="o">-</span>m, m),
+            pt2<span class="o">.</span>x <span class="o">+</span> <span class="nf">random</span>(<span class="o">-</span>m, m), 
+            pt2<span class="o">.</span>y <span class="o">+</span> <span class="nf">random</span>(<span class="o">-</span>m, m)
+        )
 </pre> 
 
     <p> </p>
@@ -119,43 +119,43 @@ m = <span class="s">2.0</span>
     optimizing) paths on top of each other. For each contour a number of points are calculated. Two
     points are roughly connected by a straight line. The connection gets more accurate as more
     layers are drawn.</p>
-    <p><img alt="pathfilter3" height="300" src="media/pathfilter3.jpg" width="550"/></p>
+    <p><img alt="pathfilter3" height="300" src="../etc/tut/pathfilter3.jpg" width="550"/></p>
 <pre>
-<span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
-<span class="kw">background</span><span class="s">(</span><span class="s">0.23</span>, <span class="s">0.21</span>, <span class="s">0.15</span><span class="s">)</span>
+<span class="nf">size</span>(<span class="mi">550</span>, <span class="mi">300</span>)
+<span class="nf">background</span>(<span class="mf">0.23</span>, <span class="mf">0.21</span>, <span class="mf">0.15</span>)
  
-<span class="kw">font</span><span class="s">(</span><span class="str">"Georgia-Bold"</span>, <span class="s">175</span><span class="s">)</span>
-path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"draft"</span>, <span class="s">40</span>, <span class="s">200</span><span class="s">)</span>
+<span class="nf">font</span>(<span class="s">"Georgia-Bold"</span>, <span class="mi">175</span>)
+path <span class="o">=</span> <span class="nf">textpath</span>(<span class="s">"draft"</span>, <span class="mi">40</span>, <span class="mi">200</span>)
  
-m = <span class="s">15</span>
+m <span class="o">=</span> <span class="mi">15</span>
  
-<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span>m<span class="s">)</span>:
-    m -= <span class="s">1</span>
+<span class="k">for</span> i <span class="ow">in</span> <span class="nb">range</span>(m):
+    m <span class="o">-=</span> <span class="mi">1</span>
  
-    <span class="kw">for</span> contour <span class="kw">in</span> path.<span class="s">contours</span>:    
-        prev = <span class="kw">None</span>
-        n = contour.<span class="s">length</span>    
-        <span class="kw">for</span> pt <span class="kw">in</span> contour.<span class="s">points</span><span class="s">(</span>n/<span class="s">80</span>*i<span class="s">)</span>: 
+    <span class="k">for</span> contour <span class="ow">in</span> path<span class="o">.</span>contours:    
+        prev <span class="o">=</span> <span class="bp">None</span>
+        n <span class="o">=</span> contour<span class="o">.</span>length    
+        <span class="k">for</span> pt <span class="ow">in</span> contour<span class="o">.</span>points(n<span class="o">/</span><span class="mi">80</span><span class="o">*</span>i): 
            
-            <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-            <span class="kw">stroke</span><span class="s">(</span><span class="s">1</span>, <span class="s">0.75</span><span class="s">)</span>
-            <span class="kw">strokewidth</span><span class="s">(</span><span class="s">0.25</span><span class="s">)</span>
+            <span class="nf">nofill</span>()
+            <span class="nf">stroke</span>(<span class="mi">1</span>, <span class="mf">0.75</span>)
+            <span class="nf">strokewidth</span>(<span class="mf">0.25</span>)
  
-            <span class="kw">if</span> prev != <span class="kw">None</span>:
-                <span class="kw">line</span><span class="s">(</span>
-                    pt.<span class="s">x</span>, 
-                    pt.<span class="s">y</span>, 
-                    prev.<span class="s">x</span> + <span class="kw">random</span><span class="s">(</span>-m, <span class="s">0</span><span class="s">)</span>, 
-                    prev.<span class="s">y</span> + <span class="kw">random</span><span class="s">(</span>-m, <span class="s">0</span><span class="s">)</span>
-                <span class="s">)</span>
-                <span class="kw">line</span><span class="s">(</span>
-                    pt.<span class="s">x</span> + <span class="kw">random</span><span class="s">(</span>-m, <span class="s">0</span><span class="s">)</span>, 
-                    pt.<span class="s">y</span> + <span class="kw">random</span><span class="s">(</span>-m, <span class="s">0</span><span class="s">)</span>, 
-                    prev.<span class="s">x</span>, 
-                    prev.<span class="s">y</span>
-                <span class="s">)</span>
+            <span class="k">if</span> prev <span class="o">!=</span> <span class="bp">None</span>:
+                <span class="nf">line</span>(
+                    pt<span class="o">.</span>x, 
+                    pt<span class="o">.</span>y, 
+                    prev<span class="o">.</span>x <span class="o">+</span> <span class="nf">random</span>(<span class="o">-</span>m, <span class="mi">0</span>), 
+                    prev<span class="o">.</span>y <span class="o">+</span> <span class="nf">random</span>(<span class="o">-</span>m, <span class="mi">0</span>)
+                )
+                <span class="nf">line</span>(
+                    pt<span class="o">.</span>x <span class="o">+</span> <span class="nf">random</span>(<span class="o">-</span>m, <span class="mi">0</span>), 
+                    pt<span class="o">.</span>y <span class="o">+</span> <span class="nf">random</span>(<span class="o">-</span>m, <span class="mi">0</span>), 
+                    prev<span class="o">.</span>x, 
+                    prev<span class="o">.</span>y
+                )
  
-            prev = pt
+            prev <span class="o">=</span> pt
 </pre> 
 
     <p> </p>
@@ -168,69 +168,69 @@ m = <span class="s">15</span>
     perpendicular angle jutting outwards from the curve. We then find the point halfway between the
     starting and ending point and push it upwards. If we connect a curve from the starting point to
     this point, and a curve from this point to the ending point, we get a spike connecting the two.</p>
-    <p><img alt="pathfilter4" height="300" src="media/pathfilter4.jpg" width="550"/><br/></p>
+    <p><img alt="pathfilter4" height="300" src="../etc/tut/pathfilter4.jpg" width="550"/><br/></p>
 <pre>
-<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> degrees, atan2
-<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sqrt, <span class="s">pow</span>
-<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> radians, sin, cos
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> degrees, atan2
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> sqrt, <span class="nb">pow</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> radians, sin, cos
  
-<span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
-<span class="kw">background</span><span class="s">(</span><span class="s">0.23</span>, <span class="s">0.21</span>, <span class="s">0.15</span><span class="s">)</span> 
+<span class="nf">size</span>(<span class="mi">550</span>, <span class="mi">300</span>)
+<span class="nf">background</span>(<span class="mf">0.23</span>, <span class="mf">0.21</span>, <span class="mf">0.15</span>) 
  
-<span class="kw">font</span><span class="s">(</span><span class="str">"Helvetica-Bold"</span>, <span class="s">125</span><span class="s">)</span>
-path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"SPIKED"</span>, <span class="s">40</span>, <span class="s">200</span><span class="s">)</span>
+<span class="nf">font</span>(<span class="s">"Helvetica-Bold"</span>, <span class="mi">125</span>)
+path <span class="o">=</span> <span class="nf">textpath</span>(<span class="s">"SPIKED"</span>, <span class="mi">40</span>, <span class="mi">200</span>)
  
-m = <span class="s">5</span>   <span class="grey"># spike length</span>
-c = <span class="s">0.8</span> <span class="grey"># spike curvature</span>
+m <span class="o">=</span> <span class="mi">5</span>   <span class="c"># spike length</span>
+c <span class="o">=</span> <span class="mf">0.8</span> <span class="c"># spike curvature</span>
  
-<span class="grey"># From the NodeBox math tutorial:</span>
-<span class="kw">def</span> <span class="red">angle</span><span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>:
-    <span class="kw">return</span> degrees<span class="s">(</span> atan2<span class="s">(</span>y1-y0, x1-x0<span class="s">)</span> <span class="s">)</span>
-<span class="kw">def</span> <span class="red">distance</span><span class="s">(</span>x0, y0, x1, y1<span class="s">)</span>:
-    <span class="kw">return</span> sqrt<span class="s">(</span><span class="s">pow</span><span class="s">(</span>x1-x0, <span class="s">2</span><span class="s">)</span> + <span class="s">pow</span><span class="s">(</span>y1-y0, <span class="s">2</span><span class="s">)</span><span class="s">)</span>
-<span class="kw">def</span> <span class="red">coordinates</span><span class="s">(</span>x0, y0, distance, angle<span class="s">)</span>:
-    x1 = x0 + cos<span class="s">(</span>radians<span class="s">(</span>angle<span class="s">)</span><span class="s">)</span> * distance
-    y1 = y0 + sin<span class="s">(</span>radians<span class="s">(</span>angle<span class="s">)</span><span class="s">)</span> * distance
-    <span class="kw">return</span> x1, y1
+<span class="c"># From the PlotDevice math tutorial:</span>
+<span class="k">def</span> <span class="nf">angle</span>(x0, y0, x1, y1):
+    <span class="k">return</span> degrees( atan2(y1<span class="o">-</span>y0, x1<span class="o">-</span>x0) )
+<span class="k">def</span> <span class="nf">distance</span>(x0, y0, x1, y1):
+    <span class="k">return</span> sqrt(<span class="nb">pow</span>(x1<span class="o">-</span>x0, <span class="mi">2</span>) <span class="o">+</span> <span class="nb">pow</span>(y1<span class="o">-</span>y0, <span class="mi">2</span>))
+<span class="k">def</span> <span class="nf">coordinates</span>(x0, y0, distance, angle):
+    x1 <span class="o">=</span> x0 <span class="o">+</span> cos(radians(angle)) <span class="o">*</span> distance
+    y1 <span class="o">=</span> y0 <span class="o">+</span> sin(radians(angle)) <span class="o">*</span> distance
+    <span class="k">return</span> x1, y1
  
-<span class="grey"># The "spike" function between two points.</span>
-<span class="kw">def</span> <span class="red">perpendicular_curve</span><span class="s">(</span>pt0, pt1, curvature=<span class="s">0.8</span><span class="s">)</span>:
+<span class="c"># The "spike" function between two points.</span>
+<span class="k">def</span> <span class="nf">perpendicular_curve</span>(pt0, pt1, curvature<span class="o">=</span><span class="mf">0.8</span>):
  
-    d = distance<span class="s">(</span>pt0.<span class="s">x</span>, pt0.<span class="s">y</span>, pt1.<span class="s">x</span>, pt1.<span class="s">y</span><span class="s">)</span>
-    a = angle<span class="s">(</span>pt0.<span class="s">x</span>, pt0.<span class="s">y</span>, pt1.<span class="s">x</span>, pt1.<span class="s">y</span><span class="s">)</span>
+    d <span class="o">=</span> distance(pt0<span class="o">.</span>x, pt0<span class="o">.</span>y, pt1<span class="o">.</span>x, pt1<span class="o">.</span>y)
+    a <span class="o">=</span> angle(pt0<span class="o">.</span>x, pt0<span class="o">.</span>y, pt1<span class="o">.</span>x, pt1<span class="o">.</span>y)
  
-    mid = <span class="kw">Point</span><span class="s">(</span>
-        pt0.<span class="s">x</span> + <span class="s">(</span>pt1.<span class="s">x</span>-pt0.<span class="s">x</span><span class="s">)</span> * <span class="s">0.5</span>,
-        pt0.<span class="s">y</span> + <span class="s">(</span>pt1.<span class="s">y</span>-pt0.<span class="s">y</span><span class="s">)</span> * <span class="s">0.5</span>
-    <span class="s">)</span>    
-    dx, dy = coordinates<span class="s">(</span>mid.<span class="s">x</span>, mid.<span class="s">y</span>, m, a<span class="s">-90</span><span class="s">)</span>    
+    mid <span class="o">=</span> <span class="nc">Point</span>(
+        pt0<span class="o">.</span>x <span class="o">+</span> (pt1<span class="o">.</span>x<span class="o">-</span>pt0<span class="o">.</span>x) <span class="o">*</span> <span class="mf">0.5</span>,
+        pt0<span class="o">.</span>y <span class="o">+</span> (pt1<span class="o">.</span>y<span class="o">-</span>pt0<span class="o">.</span>y) <span class="o">*</span> <span class="mf">0.5</span>
+    )    
+    dx, dy <span class="o">=</span> coordinates(mid<span class="o">.</span>x, mid<span class="o">.</span>y, m, a<span class="o">-</span><span class="mi">90</span>)    
  
-    vx = pt0.<span class="s">x</span> + <span class="s">(</span>mid.<span class="s">x</span>-pt0.<span class="s">x</span><span class="s">)</span> * curvature
-    vy = pt0.<span class="s">y</span> + <span class="s">(</span>mid.<span class="s">y</span>-pt0.<span class="s">y</span><span class="s">)</span> * curvature
-    <span class="kw">curveto</span><span class="s">(</span>vx, vy, dx, dy, dx, dy<span class="s">)</span>    
+    vx <span class="o">=</span> pt0<span class="o">.</span>x <span class="o">+</span> (mid<span class="o">.</span>x<span class="o">-</span>pt0<span class="o">.</span>x) <span class="o">*</span> curvature
+    vy <span class="o">=</span> pt0<span class="o">.</span>y <span class="o">+</span> (mid<span class="o">.</span>y<span class="o">-</span>pt0<span class="o">.</span>y) <span class="o">*</span> curvature
+    <span class="nf">curveto</span>(vx, vy, dx, dy, dx, dy)    
  
-    vx = pt1.<span class="s">x</span> + <span class="s">(</span>mid.<span class="s">x</span>-pt1.<span class="s">x</span><span class="s">)</span> * curvature
-    vy = pt1.<span class="s">y</span> + <span class="s">(</span>mid.<span class="s">y</span>-pt1.<span class="s">y</span><span class="s">)</span> * curvature
-    <span class="kw">curveto</span><span class="s">(</span>dx, dy, vx, vy, pt1.<span class="s">x</span>, pt1.<span class="s">y</span><span class="s">)</span>
+    vx <span class="o">=</span> pt1<span class="o">.</span>x <span class="o">+</span> (mid<span class="o">.</span>x<span class="o">-</span>pt1<span class="o">.</span>x) <span class="o">*</span> curvature
+    vy <span class="o">=</span> pt1<span class="o">.</span>y <span class="o">+</span> (mid<span class="o">.</span>y<span class="o">-</span>pt1<span class="o">.</span>y) <span class="o">*</span> curvature
+    <span class="nf">curveto</span>(dx, dy, vx, vy, pt1<span class="o">.</span>x, pt1<span class="o">.</span>y)
  
-<span class="kw">for</span> contour <span class="kw">in</span> path.<span class="s">contours</span>:
-    prev = <span class="kw">None</span>
-    n = contour.<span class="s">length</span> / <span class="s">8</span>
-    <span class="kw">for</span> pt <span class="kw">in</span> contour.<span class="s">points</span><span class="s">(</span>n<span class="s">)</span>:        
+<span class="k">for</span> contour <span class="ow">in</span> path<span class="o">.</span>contours:
+    prev <span class="o">=</span> <span class="bp">None</span>
+    n <span class="o">=</span> contour<span class="o">.</span>length <span class="o">/</span> <span class="mi">8</span>
+    <span class="k">for</span> pt <span class="ow">in</span> contour<span class="o">.</span>points(n):        
  
-        <span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
-        <span class="kw">stroke</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
-        <span class="kw">strokewidth</span><span class="s">(</span><span class="s">0.75</span><span class="s">)</span>        
+        <span class="nf">nofill</span>()
+        <span class="nf">stroke</span>(<span class="mi">1</span>)
+        <span class="nf">strokewidth</span>(<span class="mf">0.75</span>)        
  
-        <span class="kw">if</span> <span class="kw">not</span> prev:
-            <span class="kw">beginpath</span><span class="s">(</span>pt.<span class="s">x</span>, pt.<span class="s">y</span><span class="s">)</span>
-        <span class="kw">elif</span> pt.<span class="s">cmd</span> == <span class="kw">MOVETO</span>:
-            <span class="kw">moveto</span><span class="s">(</span>pt.<span class="s">x</span>, pt.<span class="s">y</span><span class="s">)</span>
-        <span class="kw">else</span>:
-            perpendicular_curve<span class="s">(</span>prev, pt, c<span class="s">)</span>
+        <span class="k">if</span> <span class="ow">not</span> prev:
+            <span class="nf">beginpath</span>(pt<span class="o">.</span>x, pt<span class="o">.</span>y)
+        <span class="k">elif</span> pt<span class="o">.</span>cmd <span class="o">==</span> <span class="kc">MOVETO</span>:
+            <span class="nf">moveto</span>(pt<span class="o">.</span>x, pt<span class="o">.</span>y)
+        <span class="k">else</span>:
+            perpendicular_curve(prev, pt, c)
  
-        prev = pt 
-    <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
+        prev <span class="o">=</span> pt 
+    <span class="nf">endpath</span>()
 </pre> 
 
     <p> </p>
@@ -239,63 +239,63 @@ c = <span class="s">0.8</span> <span class="grey"># spike curvature</span>
     <h2>Trashed</h2>
 
     <p>A path filter that trashes the path by inserting random line segments between two points.</p>
-    <p><img alt="pathfilter5" height="300" src="media/pathfilter5.jpg" width="550"/><br/></p>
+    <p><img alt="pathfilter5" height="300" src="../etc/tut/pathfilter5.jpg" width="550"/><br/></p>
 <pre>
-<span class="kw">size</span><span class="s">(</span><span class="s">550</span>, <span class="s">300</span><span class="s">)</span>
-<span class="kw">background</span><span class="s">(</span><span class="s">0.23</span>, <span class="s">0.21</span>, <span class="s">0.15</span><span class="s">)</span> 
+<span class="nf">size</span>(<span class="mi">550</span>, <span class="mi">300</span>)
+<span class="nf">background</span>(<span class="mf">0.23</span>, <span class="mf">0.21</span>, <span class="mf">0.15</span>) 
  
-<span class="kw">font</span><span class="s">(</span><span class="str">"Georgia-Bold"</span>, <span class="s">175</span><span class="s">)</span>
-path = <span class="kw">textpath</span><span class="s">(</span><span class="str">"trash"</span>, <span class="s">40</span>, <span class="s">200</span><span class="s">)</span>
+<span class="nf">font</span>(<span class="s">"Georgia-Bold"</span>, <span class="mi">175</span>)
+path <span class="o">=</span> <span class="nf">textpath</span>(<span class="s">"trash"</span>, <span class="mi">40</span>, <span class="mi">200</span>)
  
-<span class="kw">def</span> <span class="red">trash</span><span class="s">(</span>path, pt0, pt1, m=<span class="s">0.2</span>, n=<span class="s">20</span>, d=<span class="s">3.0</span><span class="s">)</span>:
+<span class="k">def</span> <span class="nf">trash</span>(path, pt0, pt1, m<span class="o">=</span><span class="mf">0.2</span>, n<span class="o">=</span><span class="mi">20</span>, d<span class="o">=</span><span class="mf">3.0</span>):
  
-    <span class="grey"># Add trash between two points.</span>
-    <span class="grey"># m: controls how much of the path is trashed.</span>
-    <span class="grey"># n: the number of lines to insert.</span>
-    <span class="grey"># d: the maximum length of inserted lines.</span>
-    <span class="kw">if</span> <span class="kw">random</span><span class="s">(</span><span class="s">)</span> &lt; m:
-        <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span>n<span class="s">)</span><span class="s">)</span>:
-            pt0.<span class="s">x</span> += <span class="kw">random</span><span class="s">(</span>-d, d<span class="s">)</span>
-            pt0.<span class="s">y</span> += <span class="kw">random</span><span class="s">(</span>-d, d<span class="s">)</span>
-            path.<span class="kw">lineto</span><span class="s">(</span>pt0.<span class="s">x</span>, pt0.<span class="s">y</span><span class="s">)</span>
+    <span class="c"># Add trash between two points.</span>
+    <span class="c"># m: controls how much of the path is trashed.</span>
+    <span class="c"># n: the number of lines to insert.</span>
+    <span class="c"># d: the maximum length of inserted lines.</span>
+    <span class="k">if</span> <span class="nf">random</span>() <span class="o">&lt;</span> m:
+        <span class="k">for</span> i <span class="ow">in</span> <span class="nb">range</span>(<span class="nf">random</span>(n)):
+            pt0<span class="o">.</span>x <span class="o">+=</span> <span class="nf">random</span>(<span class="o">-</span>d, d)
+            pt0<span class="o">.</span>y <span class="o">+=</span> <span class="nf">random</span>(<span class="o">-</span>d, d)
+            path<span class="o">.</span><span class="nf">lineto</span>(pt0<span class="o">.</span>x, pt0<span class="o">.</span>y)
  
-    path.<span class="kw">lineto</span><span class="s">(</span>pt1.<span class="s">x</span>, pt1.<span class="s">y</span><span class="s">)</span>
+    path<span class="o">.</span><span class="nf">lineto</span>(pt1<span class="o">.</span>x, pt1<span class="o">.</span>y)
  
-    <span class="grey"># Create a blot/speckle near the current point.</span>
-    <span class="grey"># We have to add this to the path at the end.</span>
-    <span class="kw">if</span> <span class="kw">random</span><span class="s">(</span><span class="s">)</span> &lt; m*<span class="s">0.3</span>:
-        x = pt1.<span class="s">x</span> - <span class="kw">random</span><span class="s">(</span>-d*<span class="s">4</span>, d*<span class="s">4</span><span class="s">)</span>
-        y = pt1.<span class="s">y</span> - <span class="kw">random</span><span class="s">(</span>-d*<span class="s">2</span>, d*<span class="s">2</span><span class="s">)</span>
-        blot = <span class="kw">BezierPath</span><span class="s">(</span><span class="s">)</span>
-        blot.<span class="kw">moveto</span><span class="s">(</span>x, y<span class="s">)</span>
-        <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span>n<span class="s">)</span><span class="s">)</span>:
-            x += <span class="kw">random</span><span class="s">(</span>-d, d<span class="s">)</span>
-            y += <span class="kw">random</span><span class="s">(</span>-d, d<span class="s">)</span>
-            blot.<span class="kw">lineto</span><span class="s">(</span>x, y<span class="s">)</span>
-        blot.<span class="kw">closepath</span><span class="s">(</span><span class="s">)</span>
-        <span class="kw">return</span> blot
+    <span class="c"># Create a blot/speckle near the current point.</span>
+    <span class="c"># We have to add this to the path at the end.</span>
+    <span class="k">if</span> <span class="nf">random</span>() <span class="o">&lt;</span> m<span class="o">*</span><span class="mf">0.3</span>:
+        x <span class="o">=</span> pt1<span class="o">.</span>x <span class="o">-</span> <span class="nf">random</span>(<span class="o">-</span>d<span class="o">*</span><span class="mi">4</span>, d<span class="o">*</span><span class="mi">4</span>)
+        y <span class="o">=</span> pt1<span class="o">.</span>y <span class="o">-</span> <span class="nf">random</span>(<span class="o">-</span>d<span class="o">*</span><span class="mi">2</span>, d<span class="o">*</span><span class="mi">2</span>)
+        blot <span class="o">=</span> <span class="nc">BezierPath</span>()
+        blot<span class="o">.</span><span class="nf">moveto</span>(x, y)
+        <span class="k">for</span> i <span class="ow">in</span> <span class="nb">range</span>(<span class="nf">random</span>(n)):
+            x <span class="o">+=</span> <span class="nf">random</span>(<span class="o">-</span>d, d)
+            y <span class="o">+=</span> <span class="nf">random</span>(<span class="o">-</span>d, d)
+            blot<span class="o">.</span><span class="nf">lineto</span>(x, y)
+        blot<span class="o">.</span><span class="nf">closepath</span>()
+        <span class="k">return</span> blot
  
-p = <span class="kw">BezierPath</span><span class="s">(</span><span class="s">)</span>
-extensions = <span class="s">[</span><span class="s">]</span>
-<span class="kw">for</span> contour <span class="kw">in</span> path.<span class="s">contours</span>:
-    prev = <span class="kw">None</span>
-    n = contour.<span class="s">length</span> / <span class="s">8</span>
-    <span class="kw">for</span> pt <span class="kw">in</span> contour.<span class="s">points</span><span class="s">(</span>n<span class="s">)</span>:         
-        <span class="kw">if</span> <span class="kw">not</span> prev:
-            p.<span class="kw">moveto</span><span class="s">(</span>pt.<span class="s">x</span>, pt.<span class="s">y</span><span class="s">)</span>
-        <span class="kw">elif</span> pt.<span class="s">cmd</span> == <span class="kw">MOVETO</span>:
-            p.<span class="kw">moveto</span><span class="s">(</span>pt.<span class="s">x</span>, pt.<span class="s">y</span><span class="s">)</span>
-        <span class="kw">else</span>:
-            blot = trash<span class="s">(</span>p, prev, pt<span class="s">)</span>
-            <span class="kw">if</span> blot: extensions.<span class="s">append</span><span class="s">(</span>blot<span class="s">)</span>
-        prev = pt 
+p <span class="o">=</span> <span class="nc">BezierPath</span>()
+extensions <span class="o">=</span> []
+<span class="k">for</span> contour <span class="ow">in</span> path<span class="o">.</span>contours:
+    prev <span class="o">=</span> <span class="bp">None</span>
+    n <span class="o">=</span> contour<span class="o">.</span>length <span class="o">/</span> <span class="mi">8</span>
+    <span class="k">for</span> pt <span class="ow">in</span> contour<span class="o">.</span>points(n):         
+        <span class="k">if</span> <span class="ow">not</span> prev:
+            p<span class="o">.</span><span class="nf">moveto</span>(pt<span class="o">.</span>x, pt<span class="o">.</span>y)
+        <span class="k">elif</span> pt<span class="o">.</span>cmd <span class="o">==</span> <span class="kc">MOVETO</span>:
+            p<span class="o">.</span><span class="nf">moveto</span>(pt<span class="o">.</span>x, pt<span class="o">.</span>y)
+        <span class="k">else</span>:
+            blot <span class="o">=</span> trash(p, prev, pt)
+            <span class="k">if</span> blot: extensions<span class="o">.</span>append(blot)
+        prev <span class="o">=</span> pt 
  
-<span class="kw">for</span> blot <span class="kw">in</span> extensions:
-    p.<span class="s">extend</span><span class="s">(</span>blot<span class="s">)</span>
+<span class="k">for</span> blot <span class="ow">in</span> extensions:
+    p<span class="o">.</span>extend(blot)
  
-<span class="kw">fill</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
-<span class="kw">nostroke</span><span class="s">(</span><span class="s">)</span>   
-<span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span>
+<span class="nf">fill</span>(<span class="mi">1</span>)
+<span class="nf">nostroke</span>()   
+<span class="nf">drawpath</span>(p)
 </pre> 
   </div>
 

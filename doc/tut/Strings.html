@@ -2,37 +2,37 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Tutorials: Strings</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Tutorials: Strings</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Tutorials</span></a></h1>
 
     <h3>Strings</h3>
 
     <ul class="chapter">
-      <li><a href="Repetition.html">Repetition →</a>
-      </li><li>Chapter 7
-      </li><li><a href="Lists.html">← Lists</a>
-    </li></ul>
+      <li><a href="Repetition.html">Repetition →</a></li>
+      <li>Chapter 7</li>
+      <li><a href="Lists.html">← Lists</a></li>
+    </ul>
   </div>
 
   <div class="article">
     <p><a href="Variables.html">Variables</a> often store pieces of text, called <em>strings</em>,
     that will be drawn to the screen.</p>
     <p>When a piece of text, a string, is assigned to a variable, it needs to be <strong>wrapped in
-    quotes</strong>; it needs to start and end with a quote. Otherwise NodeBox might think the
+    quotes</strong>; it needs to start and end with a quote. Otherwise PlotDevice might think the
     piece of text is the name of a variable, or something else.</p>
     <p>Consider the following example:</p>
-<pre>hello = <span class="s">20</span>
-<span class="s">str</span> = hello
-<span class="kw">print</span> <span class="s">str</span>
-&gt;&gt;&gt; <span class="s">20</span>
+<pre>hello <span class="o">=</span> <span class="mi">20</span>
+<span class="nb">str</span> <span class="o">=</span> hello
+<span class="k">print</span> <span class="nb">str</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">20</span>
  
-<span class="s">str</span> = <span class="str">"hello"</span>
-<span class="kw">print</span> <span class="s">str</span>
-&gt;&gt;&gt; hello
+<span class="nb">str</span> <span class="o">=</span> <span class="s">"hello"</span>
+<span class="k">print</span> <span class="nb">str</span>
+<span class="o">&gt;&gt;&gt;</span> hello
 </pre>
 
     <h2>Strings are lists of characters</h2>
@@ -43,61 +43,61 @@
     the <a href="../ref/Utility.html#choice()">choice()</a> command and drawing them to the screen
     <a href="http://www.joshuadavis.com">Joshua Davis</a>-style.</p>
     <p> </p>
-    <p><span class="media"><img alt="" height="510" src="media/strings-characters.jpg" width="667"/></span></p>
+    <p><span class="media"><img alt="" height="510" src="../etc/tut/strings-characters.jpg" width="667"/></span></p>
     <p> </p>
     <h2>Manipulating strings</h2>
 
     <p>Strings have a number of very useful methods:</p>
     <ul>
-      <li><em>string</em>.upper(): returns the string in uppercase.
-      </li><li><em>string</em>.lower(): returns the string in lowercase.
-      </li><li><em>string</em>.capitalize(): returns the string with the first character capitalized.
-      </li><li><em>string</em>.find(<em>text</em>, start=0): returns the index position of <em>text</em>
-      in the string.
-      </li><li><em>string</em>.replace(<em>old</em>, <em>new</em>): replaces all <em>old</em> text in
-      the string with <em>new</em>
-      </li><li><em>string</em>.split(): returns the string as a list of words.
-      </li><li><em>string</em>.join(<em>list</em>): concatenates a list of words.
-    </li></ul>
+      <li><em>string</em>.upper(): returns the string in uppercase.</li>
+      <li><em>string</em>.lower(): returns the string in lowercase.</li>
+      <li><em>string</em>.capitalize(): returns the string with the first character capitalized.</li>
+      <li><em>string</em>.find(<em>text</em>, start=0): returns the index position of <em>text</em>
+      in the string.</li>
+      <li><em>string</em>.replace(<em>old</em>, <em>new</em>): replaces all <em>old</em> text in
+      the string with <em>new</em></li>
+      <li><em>string</em>.split(): returns the string as a list of words.</li>
+      <li><em>string</em>.join(<em>list</em>): concatenates a list of words.</li>
+    </ul>
 
     <p>Strings can be converted to uppercase and lowercase with the <em>upper()</em> and
     <em>lower()</em> methods, or have the first character capitalized with <em>capitalize</em>.
     Remember, these are methods, so instead of saying <em>str = upper(str)</em> you need to say
     <em>str = str.upper()</em>.</p>
 <pre>
-<span class="s">str</span> = <span class="str">"Kumquats, Kumquats! I must have my Kumquats! - Oscar Wilde"</span>
-<span class="s">str</span> = <span class="s">str</span>.<span class="s">upper</span><span class="s">(</span><span class="s">)</span> 
-<span class="kw">print</span> <span class="s">str</span> 
-&gt;&gt;&gt; KUMQUATS, KUMQUATS! I MUST HAVE MY KUMQUATS! - OSCAR WILDE
+<span class="nb">str</span> <span class="o">=</span> <span class="s">"Kumquats, Kumquats! I must have my Kumquats! - Oscar Wilde"</span>
+<span class="nb">str</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span>upper() 
+<span class="k">print</span> <span class="nb">str</span> 
+<span class="o">&gt;&gt;&gt;</span> KUMQUATS, KUMQUATS<span class="err">!</span> I MUST HAVE MY KUMQUATS<span class="err">!</span> <span class="o">-</span> OSCAR WILDE
 </pre>
 
     <p>The <em>replace()</em> method is especially useful when you want to filter mistakes from the
     string, or when you want to alter portions of the content:</p>
 <pre>
-<span class="s">str</span> = <span class="str">"Something's rotten in the state of Denmark."</span>
-<span class="s">str</span> = <span class="s">str</span>.<span class="s">replace</span><span class="s">(</span><span class="str">"in"</span>, <span class="str">"in, like, "</span><span class="s">)</span>
-<span class="s">str</span> = <span class="s">str</span>.<span class="s">replace</span><span class="s">(</span><span class="str">"."</span>, <span class="str">" dude."</span><span class="s">)</span>
-<span class="s">str</span> = <span class="s">str</span>.<span class="s">replace</span><span class="s">(</span><span class="str">"rotten"</span>, <span class="str">"way uncool"</span><span class="s">)</span>
-<span class="kw">print</span> <span class="s">str</span>
-&gt;&gt;&gt; Something<span class="str">'s way uncool in, like, the state of Denmark dude.</span>
+<span class="nb">str</span> <span class="o">=</span> <span class="s">"Something's rotten in the state of Denmark."</span>
+<span class="nb">str</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span>replace(<span class="s">"in"</span>, <span class="s">"in, like, "</span>)
+<span class="nb">str</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span>replace(<span class="s">"."</span>, <span class="s">" dude."</span>)
+<span class="nb">str</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span>replace(<span class="s">"rotten"</span>, <span class="s">"way uncool"</span>)
+<span class="k">print</span> <span class="nb">str</span>
+<span class="o">&gt;&gt;&gt;</span> Something<span class="s">'s way uncool in, like, the state of Denmark dude.</span>
 </pre>
 
     <h2>Quotes in quotes</h2>
 
     <p>Text data often contain quotes themselves, especially if the text contains dialogue. When
-    NodeBox examines the string and encounters such a quote, it would logically assume that the
+    PlotDevice examines the string and encounters such a quote, it would logically assume that the
     string is terminated here.</p>
-    <p>The following example won’t work, NodeBox thinks <em>(On his death bed):</em> needs to be
+    <p>The following example won’t work, PlotDevice thinks <em>(On his death bed):</em> needs to be
     assigned to <em>str</em>, followed by garbage statements it doesn’t understand:</p>
 <pre>
-<span class="s">str</span> = <span class="str">"(On his death bed): "</span>Those curtains are hideous.<span class="str">" - Oscar Wilde"</span>
+<span class="nb">str</span> <span class="o">=</span> <span class="s">"(On his death bed): "</span>Those curtains are hideous<span class="o">.</span><span class="s">" - Oscar Wilde"</span>
 </pre>
 
     <p>Instead, the string needs to be wrapped in triple quotes:</p>
 <pre>
-<span class="s">str</span> = <span class="str">""</span><span class="str">"(On his death bed): "</span>Those curtains are hideous.<span class="str">" - Oscar Wilde"</span><span class="str">""</span> 
-<span class="kw">print</span> <span class="s">str</span> 
-&gt;&gt;&gt; <span class="s">(</span>On his death bed<span class="s">)</span>: <span class="str">"Those curtains are hideous."</span> - Oscar Wilde
+<span class="nb">str</span> <span class="o">=</span> <span class="s">"""(On his death bed): "Those curtains are hideous." - Oscar Wilde"""</span> 
+<span class="k">print</span> <span class="nb">str</span> 
+<span class="o">&gt;&gt;&gt;</span> (On his death bed): <span class="s">"Those curtains are hideous."</span> <span class="o">-</span> Oscar Wilde
 </pre>
 
     <h2>File input</h2>
@@ -106,8 +106,8 @@
     separate text file and assign that to a variable, this keeps your script clean, and you can
     edit the text separately from the script.</p>
     <p> </p>
-    <p><span class="media"><img alt="" height="334" src="media/strings-textedit.jpg" width="653"/></span></p>
-    <p><span class="media"><img alt="" height="504" src="media/strings-file.jpg" width="659"/></span></p>
+    <p><span class="media"><img alt="" height="334" src="../etc/tut/strings-textedit.jpg" width="653"/></span></p>
+    <p><span class="media"><img alt="" height="504" src="../etc/tut/strings-file.jpg" width="659"/></span></p>
     <p> </p>
     <p>Simply put the text in TextEdit, <strong>make it plain text</strong>, and import it into
     your script with the <a href="../ref/Utility.html#open()">open()</a> command.</p>
@@ -120,29 +120,29 @@
     <p>The first thing to make sure is that the <strong>typeface</strong> you are going to use
     includes Unicode characters, so the text can be drawn in the font. Usually, large font families
     like Helvetica include Unicode for almost any Unicode character.</p>
-    <p>Next, you’ll have to tell NodeBox that a piece of text includes special characters. This is
-    as simple as adding a ‘<strong>u’</strong> to the front of the string quotes.</p>
+    <p>Next, you’ll have to tell PlotDevice that a piece of text includes special characters. This
+    is as simple as adding a ‘<strong>u’</strong> to the front of the string quotes.</p>
 <pre>
-<span class="s">str</span> = u<span class="str">"?אתה מדבר אנגלית"</span>
-<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">50</span>, <span class="s">200</span><span class="s">)</span>
+<span class="nb">str</span> <span class="o">=</span> <span class="s">u"?אתה מדבר אנגלית"</span>
+<span class="nf">text</span>(<span class="nb">str</span>, <span class="mi">50</span>, <span class="mi">200</span>)
 </pre>
 
     <p> </p>
-    <p><img alt="strings-unicode1" height="459" src="media/strings-unicode1.jpg" width="658"/></p>
+    <p><img alt="strings-unicode1" height="459" src="../etc/tut/strings-unicode1.jpg" width="658"/></p>
     <p> </p>
     <p>When you are going to import text from a text file there are two things to look out for.
     First, the text file needs to <strong>saved as Unicode</strong>. In TextEdit, apply the plain
     text format and when you save it, select ‘Unicode (UTF-8)’ from the Plain Text Encoding list.</p>
     <p> </p>
-    <p><img alt="strings-unicode2" height="446" src="media/strings-unicode2.jpg" width="657"/></p>
+    <p><img alt="strings-unicode2" height="446" src="../etc/tut/strings-unicode2.jpg" width="657"/></p>
     <p> </p>
-    <p>Then when you import the contents of the file into NodeBox, you’ll have to
+    <p>Then when you import the contents of the file into PlotDevice, you’ll have to
     <strong>decode</strong> the text:</p>
 <pre>
-<span class="s">str</span> = <span class="kw">open</span><span class="s">(</span><span class="str">"hebrew.txt"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
-<span class="s">str</span> = <span class="s">str</span>.<span class="s">decode</span><span class="s">(</span><span class="str">"utf-8"</span><span class="s">)</span>
-<span class="kw">align</span><span class="s">(</span><span class="kw">RIGHT</span><span class="s">)</span>
-<span class="kw">text</span><span class="s">(</span><span class="s">str</span>, <span class="s">100</span>, <span class="s">200</span><span class="s">)</span>
+<span class="nb">str</span> <span class="o">=</span> <span class="nb">open</span>(<span class="s">"hebrew.txt"</span>)<span class="o">.</span>read()
+<span class="nb">str</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span>decode(<span class="s">"utf-8"</span>)
+<span class="nf">align</span>(<span class="kc">RIGHT</span>)
+<span class="nf">text</span>(<span class="nb">str</span>, <span class="mi">100</span>, <span class="mi">200</span>)
 </pre>
 
     <p> </p>

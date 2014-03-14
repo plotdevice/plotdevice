@@ -2,25 +2,25 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Tutorials: Animation</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Tutorials: Animation</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Tutorials</span></a></h1>
 
     <h3>Animation</h3>
 
     <ul class="chapter">
-      <li><a href="Interaction.html">Interaction →</a>
-      </li><li>Chapter 12
-      </li><li><a href="Classes.html">← Classes</a>
-    </li></ul>
+      <li><a href="Interaction.html">Interaction →</a></li>
+      <li>Chapter 12</li>
+      <li><a href="Classes.html">← Classes</a></li>
+    </ul>
   </div>
 
   <div class="article">
-    <p>NodeBox not only exports to PDF documents and images, but handles animation as well, which
-    can be exported to QuickTime movies. Using the same syntax as drawing, your can turn your
+    <p>PlotDevice not only exports to PDF documents and images, but handles animation as well,
+    which can be exported to QuickTime movies. Using the same syntax as drawing, your can turn your
     script into an animation, doing all kinds of wonderful, lively things.</p>
     <h2>The speed(), setup(), and draw() commands</h2>
 
@@ -28,14 +28,14 @@
     <ul>
       <li><b>speed()</b>: the speed() command indicates the speed of the animation in frames per
       second. Note that this is a maximum: big animations will require more work, and thus run
-      slower.
-      </li><li><b>setup()</b>: your own setup() definition, declaring global variables and initializing
-      them.
-      </li><li><b>draw()</b>: your own draw() definition, doing the actual drawing.
-    </li></ul>
+      slower.</li>
+      <li><b>setup()</b>: your own setup() definition, declaring global variables and initializing
+      them.</li>
+      <li><b>draw()</b>: your own draw() definition, doing the actual drawing.</li>
+    </ul>
 
     <p> </p>
-    <p><span class="media"><img height="586" src="media/animation-example.jpg" width="658"/></span></p>
+    <p><span class="media"><img height="586" src="../etc/tut/animation-example.jpg" width="658"/></span></p>
     <p> </p>
     <p>You may already know a little bit about defining your own commands from the <a href="Commands.html">Templating</a> tutorial.</p>
     <p>The setup() command is run once, at the beginning of the animation, and draw() is run on
@@ -45,14 +45,14 @@
     rendered on the canvas. The variable needs to be a global, because otherwise setup() and draw()
     can’t communicate, or <i>share</i> the variable.</p>
     <p>Now examine the draw() definition. It’s a typical example of an animation script. The draw()
-    command is called repetively by NodeBox, rendering frame after frame of animation. In the
+    command is called repetively by PlotDevice, rendering frame after frame of animation. In the
     example above, the draw() definition basically does four things:</p>
     <ul>
-      <li>Increase the <i>frame</i> variable by one (this is my frame counter)
-      </li><li>Use a colored rectangle to draw a background
-      </li><li>Draw thirty rotated curves
-      </li><li>Use the math sin() function to distort the curves fluidly
-    </li></ul>
+      <li>Increase the <i>frame</i> variable by one (this is my frame counter)</li>
+      <li>Use a colored rectangle to draw a background</li>
+      <li>Draw thirty rotated curves</li>
+      <li>Use the math sin() function to distort the curves fluidly</li>
+    </ul>
 
     <h2>Fluid movement</h2>
 
@@ -67,39 +67,39 @@
     curve.</p>
     <p>A sine function typically looks like this:</p>
 <pre>
-<span class="kw">from</span> <span class="s">math</span> <span class="kw">import</span> sin, radians
-ease = sin<span class="s">(</span>radians<span class="s">(</span>x<span class="s">)</span><span class="s">)</span> * y
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> sin, radians
+ease <span class="o">=</span> sin(radians(x)) <span class="o">*</span> y
 </pre>
 
     <h2>Tips for speed optimization</h2>
 
     <ul>
       <li>If you plan to use a lot of lines in your animation, group them in a single path with
-      <a href="../ref/Path.html#lineto()">lineto()</a> and <a href="../ref/Path.html#moveto()">moveto()</a>. A single big path renders faster than many small
-      paths. All the lines would have the same stroke color and width however.
-      </li><li>If you plan to use a lot of text in your animation, create cached <a href="../ref/Typography.html#textpath()">textpath()</a> versions in the setup() command and
+      <a href="../ref/Drawing.html#lineto()">lineto()</a> and <a href="../ref/Drawing.html#moveto()">moveto()</a>. A single big path renders faster than many small
+      paths. All the lines would have the same stroke color and width however.</li>
+      <li>If you plan to use a lot of text in your animation, create cached <a href="../ref/Typography.html#textpath()">textpath()</a> versions in the setup() command and
       <a href="../ref/Transform.html#translate()">translate()</a> those when drawing instead of
-      repeatedly calling <a href="../ref/Typography.html#text()">text()</a> in the draw() command.
-      </li><li>Tune the speed() command to exactly the speed you need. Setting it as high as possible
-      often works as a drawback because then NodeBox would attempt to update too much.
-      </li><li>Tune the <a href="../ref/Primitives.html#size()">size()</a> of the canvas to exactly what
-      you need - a smaller canvas means less screen to refresh.<br/>
-    </li></ul>
+      repeatedly calling <a href="../ref/Typography.html#text()">text()</a> in the draw() command.</li>
+      <li>Tune the speed() command to exactly the speed you need. Setting it as high as possible
+      often works as a drawback because then PlotDevice would attempt to update too much.</li>
+      <li>Tune the <a href="../ref/Setup.html#size()">size()</a> of the canvas to exactly what you
+      need - a smaller canvas means less screen to refresh.<br/></li>
+    </ul>
 
     <h2>Exporting as a Quicktime movie</h2>
 
     <p>You can export an animation as a Quicktime movie. Select ‘Export as Quicktime Movie...’ from
-    the NodeBox File menu, or press shift-apple-e. You can select a number of frames to export, and
-    a movie frame rate.</p>
-    <p>The Quicktime functionality in NodeBox is based on <a href="http://undefined.org/python/">PyQTSequence</a> written by Bob Ippolito.</p>
+    the PlotDevice File menu, or press shift-apple-e. You can select a number of frames to export,
+    and a movie frame rate.</p>
+    <p>The Quicktime functionality in PlotDevice is based on <a href="http://undefined.org/python/">PyQTSequence</a> written by Bob Ippolito.</p>
     <p> </p>
-    <p><span class="media"><img height="586" src="media/animation-export.jpg" width="658"/></span></p>
+    <p><span class="media"><img height="586" src="../etc/tut/animation-export.jpg" width="658"/></span></p>
     <p> </p>
     <p>The resulting movie is uncompressed, so it will likely be large in file size. You can
     compress it if you have Quicktime Pro, or some other movie editor.</p>
     <p>...and you have a movie to put on your website!</p>
     <p> </p>
-    <p><a href="http://nodebox.net/code/data/media/sinfulCurves.mov"><img class="border" height="300" src="media/animation-movie.gif" width="300"/></a><br/>
+    <p><a href="http://nodebox.net/code/data/media/sinfulCurves.mov"><img class="border" height="300" src="../etc/tut/animation-movie.gif" width="300"/></a><br/>
     <a href="http://nodebox.net/code/data/media/sinfulCurves.mov">Play movie</a></p>
   </div>
 

@@ -2,19 +2,20 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: photobot.Layer.scale()</title>
-  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: Layer.scale()</title>
+  <link charset="utf-8" href="../../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../../manual.html">Plot Device <span>Libraries</span></a></h1>
 
-    <h3>photobot.Layer.scale()</h3>
+    <h3>Layer.scale()</h3>
   </div>
 
   <div class="article">
     <h2>Syntax</h2>
-<pre>canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="kw">scale</span><span class="s">(</span>w=<span class="s">1.0</span>, h=<span class="s">1.0</span><span class="s">)</span>
+<pre>
+<span class="nf">canvas</span><span class="o">.</span>layers[i]<span class="o">.</span><span class="nf">scale</span>(w<span class="o">=</span><span class="mf">1.0</span>, h<span class="o">=</span><span class="mf">1.0</span>)
 </pre>
 
     <h2>Description</h2>
@@ -23,14 +24,14 @@
     <em>h</em> is a floating-point number, scales percentual (0.5 means 50%), otherwise scales to
     the given size in pixels.</p>
     <h2>Example</h2>
-<pre>photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
-canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
-canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"robot.jpg"</span><span class="s">)</span>
-canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="kw">scale</span><span class="s">(</span><span class="s">200</span><span class="s">)</span>
+<pre>photobot <span class="o">=</span> <span class="nf">ximport</span>(<span class="s">"photobot"</span>)
+<span class="nf">canvas</span> <span class="o">=</span> photobot<span class="o">.</span><span class="nf">canvas</span>(<span class="mi">100</span>,<span class="mi">100</span>)
+<span class="nf">canvas</span><span class="o">.</span>layer(<span class="s">"robot.jpg"</span>)
+<span class="nf">canvas</span><span class="o">.</span>layers[<span class="mi">1</span>]<span class="o">.</span><span class="nf">scale</span>(<span class="mi">200</span>)
 </pre>
 
     <div class="example">
-      <img alt="" height="100" src="../media/photobot-scale.jpg" width="100"/>
+      <img alt="" height="100" src="../../etc/lib/photobot-scale.jpg" width="100"/>
     </div>
   </div>
 

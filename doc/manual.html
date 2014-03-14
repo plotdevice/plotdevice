@@ -2,12 +2,205 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Manual</title>
-  <link charset="utf-8" href="nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Manual</title>
+  <link charset="utf-8" href="etc/manual.css" rel="stylesheet" type="text/css"/>
 
-</head><body>
+</head><body class="commands">
   <div class="nop" id="nav">
-    <h1><a>NodeBox <span>Manual</span></a></h1>
+    <h1><a>Plot Device <span>Manual</span></a></h1>
+  </div>
+
+  <div class="toc ref">
+    <h1>Reference</h1>
+
+    <ul class="filter">
+      <li class="commands active">Commands</li>
+      <li class="types">Types</li>
+      <li class="compat">Etc.</li>
+    </ul>
+
+    <div class="nodebox">
+      <p>NodeBox commands drawn in cyan are supported but have been obviated by an alternate
+      syntax.</p>
+      <p>Consult their reference entries for details.</p>
+    </div>
+
+    <div class="sections">
+      <div class="section setup">
+        <h2>Setup</h2>
+
+        <ul class="compat">
+          <li><a href="ref/Setup.html#outputmode()">outputmode()</a></li>
+          <li><a href="ref/Setup.html#size()">size()</a></li>
+        </ul>
+
+        <ul class="commands">
+          <li><a href="ref/Setup.html#canvas()">canvas()</a></li>
+          <li><a href="ref/Setup.html#speed()">speed()</a></li>
+          <li><a href="ref/Setup.html#export()">export()</a></li>
+          <li><a href="ref/Setup.html#background()">background()</a></li>
+        </ul>
+
+        <ul class="types">
+          <li><a href="ref/Setup.html#Canvas">Canvas</a></li>
+          <li>
+            <hr/></li>
+          <li><a href="ref/Setup.html#Constants">Constants</a></li>
+        </ul>
+      </div>
+
+      <div class="section primitives">
+        <h2>Primitives</h2>
+
+        <ul class="compat">
+          <li><a href="ref/Primitives.html#imagesize()">imagesize()</a></li>
+        </ul>
+
+        <ul class="commands">
+          <li><a href="ref/Primitives.html#image()">image()</a></li>
+          <li><a href="ref/Primitives.html#rect()">rect()</a></li>
+          <li><a href="ref/Primitives.html#oval()">oval()</a></li>
+          <li><a href="ref/Primitives.html#line()">line()</a></li>
+          <li><a href="ref/Primitives.html#arrow()">arrow()</a></li>
+          <li><a href="ref/Primitives.html#star()">star()</a></li>
+        </ul>
+
+        <ul class="types">
+          <li><a href="ref/Primitives.html#Image">Image</a></li>
+        </ul>
+      </div>
+
+      <div class="section drawing">
+        <h2>Drawing</h2>
+
+        <ul class="compat">
+          <li><a href="ref/Drawing.html#autoclosepath()">autoclosepath()</a></li>
+          <li><a href="ref/Drawing.html#beginclip()">beginclip()</a></li>
+          <li><a href="ref/Drawing.html#beginpath()">beginpath()</a></li>
+          <li><a href="ref/Drawing.html#drawpath()">drawpath()</a></li>
+          <li><a href="ref/Drawing.html#endclip()">endclip()</a></li>
+          <li><a href="ref/Drawing.html#endpath()">endpath()</a></li>
+          <li><a href="ref/Drawing.html#findpath()">findpath()</a></li>
+        </ul>
+
+        <ul class="commands">
+          <li><a href="ref/Drawing.html#bezier()">bezier()</a></li>
+          <li><a href="ref/Drawing.html#moveto()">moveto()</a></li>
+          <li><a href="ref/Drawing.html#lineto()">lineto()</a></li>
+          <li><a href="ref/Drawing.html#curveto()">curveto()</a></li>
+          <li><a href="ref/Drawing.html#clip()">clip()</a></li>
+          <li><a href="ref/Drawing.html#measure()">measure()</a></li>
+          <li><a href="ref/Drawing.html#plot()">plot()</a></li>
+        </ul>
+
+        <ul class="types">
+          <li><a href="ref/Drawing.html#Bezier">Bezier</a></li>
+          <li><a href="ref/Drawing.html#Curve">Curve</a></li>
+        </ul>
+      </div>
+
+      <div class="section line+color">
+        <h2>Line &amp; Color</h2>
+
+        <ul class="compat">
+          <li><a href="ref/Line+Color.html#capstyle()">capstyle()</a></li>
+          <li><a href="ref/Line+Color.html#colormode()">colormode()</a></li>
+          <li><a href="ref/Line+Color.html#joinstyle()">joinstyle()</a></li>
+          <li><a href="ref/Line+Color.html#nofill()">nofill()</a></li>
+          <li><a href="ref/Line+Color.html#nostroke()">nostroke()</a></li>
+          <li><a href="ref/Line+Color.html#strokewidth()">strokewidth()</a></li>
+        </ul>
+
+        <ul class="commands">
+          <li><a href="ref/Line+Color.html#plotstyle()">plotstyle()</a></li>
+          <li><a href="ref/Line+Color.html#color()">color()</a></li>
+          <li><a href="ref/Line+Color.html#pen()">pen()</a></li>
+          <li><a href="ref/Line+Color.html#fill()">fill()</a></li>
+          <li><a href="ref/Line+Color.html#stroke()">stroke()</a></li>
+          <li><a href="ref/Line+Color.html#shadow()">shadow()</a></li>
+        </ul>
+
+        <ul class="types">
+          <li><a href="ref/Line+Color.html#Color">Color</a></li>
+          <li><a href="ref/Line+Color.html#Gradient">Gradient</a></li>
+        </ul>
+      </div>
+
+      <div class="section transform">
+        <h2>Transform</h2>
+
+        <ul class="compat">
+          <li><a href="ref/Transform.html#pop()">pop()</a></li>
+          <li><a href="ref/Transform.html#push()">push()</a></li>
+        </ul>
+
+        <ul class="commands">
+          <li><a href="ref/Transform.html#transform()">transform()</a></li>
+          <li><a href="ref/Transform.html#translate()">translate()</a></li>
+          <li><a href="ref/Transform.html#rotate()">rotate()</a></li>
+          <li><a href="ref/Transform.html#scale()">scale()</a></li>
+          <li><a href="ref/Transform.html#skew()">skew()</a></li>
+          <li><a href="ref/Transform.html#reset()">reset()</a></li>
+        </ul>
+
+        <ul class="types">
+          <li><a href="ref/Transform.html#Transform">Transform</a></li>
+        </ul>
+      </div>
+
+      <div class="section typography">
+        <h2>Typography</h2>
+
+        <ul class="compat">
+          <li><a href="ref/Typography.html#fontsize()">fontsize()</a></li>
+          <li><a href="ref/Typography.html#lineheight()">lineheight()</a></li>
+          <li><a href="ref/Typography.html#textheight()">textheight()</a></li>
+          <li><a href="ref/Typography.html#textmetrics()">textmetrics()</a></li>
+          <li><a href="ref/Typography.html#textpath()">textpath()</a></li>
+          <li><a href="ref/Typography.html#textwidth()">textwidth()</a></li>
+        </ul>
+
+        <ul class="commands">
+          <li><a href="ref/Typography.html#font()">font()</a></li>
+          <li><a href="ref/Typography.html#text()">text()</a></li>
+          <li><a href="ref/Typography.html#align()">align()</a></li>
+          <li><a href="ref/Typography.html#stylesheet()">stylesheet()</a></li>
+        </ul>
+
+        <ul class="types">
+          <li><a href="ref/Typography.html#Family">Family</a></li>
+          <li><a href="ref/Typography.html#Font">Font</a></li>
+          <li><a href="ref/Typography.html#Stylesheet">Stylesheet</a></li>
+          <li><a href="ref/Typography.html#Text">Text</a></li>
+        </ul>
+      </div>
+
+      <div class="section utility">
+        <h2>Utility</h2>
+
+        <ul class="compat">
+          <li><a href="ref/Utility.html#autotext()">autotext()</a></li>
+          <li><a href="ref/Utility.html#open()">open()</a></li>
+        </ul>
+
+        <ul class="commands">
+          <li><a href="ref/Utility.html#read()">read()</a></li>
+          <li><a href="ref/Utility.html#grid()">grid()</a></li>
+          <li><a href="ref/Utility.html#files()">files()</a> <a href="ref/Utility.html#fonts()">fonts()</a></li>
+          <li><a href="ref/Utility.html#random()">random()</a> <a href="ref/Utility.html#choice()">choice()</a></li>
+          <li><a href="ref/Utility.html#shuffled()">shuffled()</a> <a href="ref/Utility.html#ordered()">ordered()</a></li>
+        </ul>
+
+        <ul class="types">
+          <li><a href="ref/Utility.html#Point">Point</a></li>
+          <li><a href="ref/Utility.html#Size">Size</a></li>
+          <li><a href="ref/Utility.html#Region">Region</a></li>
+          <li>
+            <hr/></li>
+          <li><a href="ref/Utility.html#dictionaries">dictionaries</a></li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <div class="toc tut">
@@ -18,173 +211,54 @@
         <h2>Basics</h2>
 
         <ul>
-          <li><a href="tut/Introduction.html">Introduction</a>
-          </li><li><a href="tut/Environment.html">Environment</a>
-          </li><li><a href="tut/Primitives.html">Primitives</a>
-          </li><li><a href="tut/Graphics_State.html">Graphics State</a>
-        </li></ul>
+          <li><a href="tut/Introduction.html">Introduction</a></li>
+          <li><a href="tut/Environment.html">Environment</a></li>
+          <li><a href="tut/Primitives.html">Primitives</a></li>
+          <li><a href="tut/Graphics_State.html">Graphics State</a></li>
+        </ul>
       </div>
 
       <div class="section">
         <h2>Data</h2>
 
         <ul>
-          <li><a href="tut/Variables.html">Variables</a>
-          </li><li><a href="tut/Lists.html">Lists</a>
-          </li><li><a href="tut/Strings.html">Strings</a>
-        </li></ul>
+          <li><a href="tut/Variables.html">Variables</a></li>
+          <li><a href="tut/Lists.html">Lists</a></li>
+          <li><a href="tut/Strings.html">Strings</a></li>
+        </ul>
       </div>
 
       <div class="section">
         <h2>Strategy</h2>
 
         <ul>
-          <li><a href="tut/Repetition.html">Repetition</a>
-          </li><li><a href="tut/Commands.html">Commands</a>
-          </li><li><a href="tut/Libraries.html">Libraries</a>
-          </li><li><a href="tut/Classes.html">Classes</a>
-        </li></ul>
+          <li><a href="tut/Repetition.html">Repetition</a></li>
+          <li><a href="tut/Commands.html">Commands</a></li>
+          <li><a href="tut/Libraries.html">Libraries</a></li>
+          <li><a href="tut/Classes.html">Classes</a></li>
+        </ul>
       </div>
 
       <div class="section">
         <h2>Specifics</h2>
 
         <ul>
-          <li><a href="tut/Animation.html">Animation</a>
-          </li><li><a href="tut/Interaction.html">Interaction</a>
-          </li><li><a href="tut/Paths.html">Paths</a>
-          </li><li><a href="tut/Color.html">Color</a>
-          </li><li><a href="tut/Math.html">Math</a>
-        </li></ul>
+          <li><a href="tut/Animation.html">Animation</a></li>
+          <li><a href="tut/Interaction.html">Interaction</a></li>
+          <li><a href="tut/Paths.html">Paths</a></li>
+          <li><a href="tut/Color.html">Color</a></li>
+          <li><a href="tut/Math.html">Math</a></li>
+        </ul>
       </div>
 
       <div class="section">
         <h2>Advanced</h2>
 
         <ul>
-          <li><a href="tut/Extending.html">Extending</a>
-          </li><li><a href="tut/Scripting.html">Scripting</a>
-          </li><li><a href="tut/nodebox.html">nodebox</a>
-        </li></ul>
-      </div>
-    </div>
-  </div>
-
-  <div class="toc ref">
-    <h1>Reference</h1>
-
-    <div class="sections">
-      <div class="section">
-        <h2>Primitives</h2>
-
-        <ul>
-          <li><a href="ref/Primitives.html#size()">size()</a>
-          </li><li><a href="ref/Primitives.html#speed()">speed()</a>
-          </li><li><a href="ref/Primitives.html#rect()">rect()</a>
-          </li><li><a href="ref/Primitives.html#oval()">oval()</a>
-          </li><li><a href="ref/Primitives.html#line()">line()</a>
-          </li><li><a href="ref/Primitives.html#arrow()">arrow()</a>
-          </li><li><a href="ref/Primitives.html#star()">star()</a>
-          </li><li><a href="ref/Primitives.html#image()">image()</a>
-        </li></ul>
-      </div>
-
-      <div class="section">
-        <h2>Path</h2>
-
-        <ul>
-          <li><a href="ref/Path.html#bezier()">bezier()</a>
-          </li><li><a href="ref/Path.html#moveto()">moveto()</a>
-          </li><li><a href="ref/Path.html#lineto()">lineto()</a>
-          </li><li><a href="ref/Path.html#curveto()">curveto()</a>
-          </li><li><a href="ref/Path.html#clip()">clip()</a>
-        </li></ul>
-      </div>
-
-      <div class="section">
-        <h2>Transform</h2>
-
-        <ul>
-          <li><a href="ref/Transform.html#transform()">transform()</a>
-          </li><li><a href="ref/Transform.html#translate()">translate()</a>
-          </li><li><a href="ref/Transform.html#rotate()">rotate()</a>
-          </li><li><a href="ref/Transform.html#scale()">scale()</a>
-          </li><li><a href="ref/Transform.html#skew()">skew()</a>
-          </li><li><a href="ref/Transform.html#reset()">reset()</a>
-        </li></ul>
-      </div>
-
-      <div class="section">
-        <h2>Color</h2>
-
-        <ul>
-          <li><a href="ref/Color.html#outputmode()">outputmode()</a>
-          </li><li><a href="ref/Color.html#colormode()">colormode()</a>
-          </li><li><a href="ref/Color.html#color()">color()</a>
-          </li><li><a href="ref/Color.html#fill()">fill()</a>
-          </li><li><a href="ref/Color.html#nofill()">nofill()</a>
-          </li><li><a href="ref/Color.html#stroke()">stroke()</a>
-          </li><li><a href="ref/Color.html#nostroke()">nostroke()</a>
-          </li><li><a href="ref/Color.html#strokewidth()">strokewidth()</a>
-          </li><li><a href="ref/Color.html#background()">background()</a>
-        </li></ul>
-      </div>
-
-      <div class="section">
-        <h2>Typography</h2>
-
-        <ul>
-          <li><a href="ref/Typography.html#font()">font()</a>
-          </li><li><a href="ref/Typography.html#fontsize()">fontsize()</a>
-          </li><li><a href="ref/Typography.html#text()">text()</a>
-          </li><li><a href="ref/Typography.html#textpath()">textpath()</a>
-          </li><li><a href="ref/Typography.html#textwidth()">textwidth()</a>
-          </li><li><a href="ref/Typography.html#textheight()">textheight()</a>
-          </li><li><a href="ref/Typography.html#textmetrics()">textmetrics()</a>
-          </li><li><a href="ref/Typography.html#lineheight()">lineheight()</a>
-          </li><li><a href="ref/Typography.html#align()">align()</a>
-        </li></ul>
-      </div>
-
-      <div class="section">
-        <h2>Utility</h2>
-
-        <ul>
-          <li><a href="ref/Utility.html#var()">var()</a>
-          </li><li><a href="ref/Utility.html#random()">random()</a>
-          </li><li><a href="ref/Utility.html#choice()">choice()</a>
-          </li><li><a href="ref/Utility.html#grid()">grid()</a>
-          </li><li><a href="ref/Utility.html#open()">open()</a>
-          </li><li><a href="ref/Utility.html#files()">files()</a>
-          </li><li><a href="ref/Utility.html#fonts()">fonts()</a>
-          </li><li><a href="ref/Utility.html#autotext()">autotext()</a>
-          </li><li><a href="ref/Utility.html#export()">export()</a>
-        </li></ul>
-      </div>
-
-      <div class="section">
-        <h2>Classes</h2>
-
-        <ul>
-          <li><a href="ref/Classes.html#BezierPath">BezierPath</a>
-          </li><li><a href="ref/Classes.html#ClippingPath">ClippingPath</a>
-          </li><li><a href="ref/Classes.html#PathElement">PathElement</a>
-          </li><li><a href="ref/Classes.html#Color">Color</a>
-          </li><li><a href="ref/Classes.html#Text">Text</a>
-          </li><li><a href="ref/Classes.html#Transform">Transform</a>
-          </li><li><a href="ref/Classes.html#Image">Image</a>
-        </li></ul>
-      </div>
-
-      <div class="section">
-        <h2>Globals</h2>
-
-        <ul>
-          <li><a href="ref/Globals.html#Constants">Constants</a>
-          </li><li><a href="ref/Globals.html#colors">colors</a>
-          </li><li><a href="ref/Globals.html#canvas">canvas</a>
-          </li><li><a href="ref/Globals.html#geo">geo</a>
-        </li></ul>
+          <li><a href="tut/Extending.html">Extending</a></li>
+          <li><a href="tut/Scripting.html">Scripting</a></li>
+          <li><a href="tut/plotdevice.html">plotdevice</a></li>
+        </ul>
       </div>
     </div>
   </div>
@@ -194,85 +268,105 @@
 
     <div class="sections">
       <div class="section">
-        <h2>Knowledge</h2>
+        <h2>Design</h2>
 
         <ul>
-          <li><a href="lib/WordNet.html">WordNet</a>
-          </li><li><a href="lib/Keywords.html">Keywords</a>
-          </li><li><a href="lib/Database.html">Database</a>
-          </li><li><a href="lib/Graph.html">Graph</a>
-          </li><li><a href="lib/Linguistics.html">Linguistics</a>
-          </li><li><a href="lib/Web.html">Web</a>
-          </li><li><a href="lib/Perception.html">Perception</a>
-        </li></ul>
+          <li><a href="lib/Colors.html">Colors</a></li>
+          <li><a href="lib/Grid.html">Grid</a></li>
+          <li><a href="lib/Pixie.html">Pixie</a></li>
+          <li><a href="lib/Fatpath.html">Fatpath</a></li>
+        </ul>
       </div>
 
       <div class="section">
         <h2>Pixels</h2>
 
         <ul>
-          <li><a href="lib/PhotoBot.html">PhotoBot</a>
-          </li><li><a href="lib/Core_Image.html">Core Image</a>
-          </li><li><a href="lib/iSight.html">iSight</a>
-          </li><li><a href="lib/Quicktime.html">Quicktime</a>
-        </li></ul>
+          <li><a href="lib/PhotoBot.html">PhotoBot</a></li>
+          <li><a href="lib/Core_Image.html">Core Image</a></li>
+          <li><a href="lib/iSight.html">iSight</a></li>
+          <li><a href="lib/Quicktime.html">Quicktime</a></li>
+        </ul>
       </div>
 
       <div class="section">
         <h2>Paths</h2>
 
         <ul>
-          <li><a href="lib/Cornu.html">Cornu</a>
-          </li><li><a href="lib/SVG.html">SVG</a>
-          </li><li><a href="lib/Supershape.html">Supershape</a>
-          </li><li><a href="lib/Bezier_Editor.html">Bezier Editor</a>
-        </li></ul>
+          <li><a href="lib/Cornu.html">Cornu</a></li>
+          <li><a href="lib/SVG.html">SVG</a></li>
+          <li><a href="lib/Supershape.html">Supershape</a></li>
+          <li><a href="lib/Bezier_Editor.html">Bezier Editor</a></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <h2>Bytes</h2>
+
+        <ul>
+          <li><a href="lib/Database.html">Database</a></li>
+          <li><a href="lib/Web.html">Web</a></li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <h2>Words</h2>
+
+        <ul>
+          <li><a href="lib/WordNet.html">WordNet</a></li>
+          <li><a href="lib/Keywords.html">Keywords</a></li>
+          <li><a href="lib/Graph.html">Graph</a></li>
+          <li><a href="lib/Linguistics.html">Linguistics</a></li>
+          <li><a href="lib/Perception.html">Perception</a></li>
+        </ul>
       </div>
 
       <div class="section">
         <h2>Systems</h2>
 
         <ul>
-          <li><a href="lib/Boids.html">Boids</a>
-          </li><li><a href="lib/Ants.html">Ants</a>
-          </li><li><a href="lib/L-system.html">L-system</a>
-          </li><li><a href="lib/Noise.html">Noise</a>
-        </li></ul>
-      </div>
-
-      <div class="section">
-        <h2>Design</h2>
-
-        <ul>
-          <li><a href="lib/Colors.html">Colors</a>
-          </li><li><a href="lib/Grid.html">Grid</a>
-        </li></ul>
-      </div>
-
-      <div class="section">
-        <h2>Type</h2>
-
-        <ul>
-          <li><a href="lib/Pixie.html">Pixie</a>
-          </li><li><a href="lib/Fatpath.html">Fatpath</a>
-        </li></ul>
+          <li><a href="lib/Boids.html">Boids</a></li>
+          <li><a href="lib/Ants.html">Ants</a></li>
+          <li><a href="lib/L-system.html">L-system</a></li>
+          <li><a href="lib/Noise.html">Noise</a></li>
+        </ul>
       </div>
 
       <div class="section">
         <h2>Tangible</h2>
 
         <ul>
-          <li><a href="lib/WiiNode.html">WiiNode</a>
-          </li><li><a href="lib/TUIO.html">TUIO</a>
-          </li><li><a href="lib/OSC_.html">OSC</a>
-        </li></ul>
+          <li><a href="lib/WiiNode.html">WiiNode</a></li>
+          <li><a href="lib/TUIO.html">TUIO</a></li>
+          <li><a href="lib/OSC_.html">OSC</a></li>
+        </ul>
       </div>
     </div>
   </div>
 
   <div class="toc footer">
-    Text &amp; images by <a class="noexternal" href="http://organisms.be">Tom De Smedt</a> and
-    <a class="noexternal" href="http://samizdat.cc">Christian Swinehart</a>. <a class="noexternal" href="http://nodebox.net/code">NodeBox</a> <a class="noexternal" href="http://www.emrg.be/" title="Experimental Media Research Group">© 2004-2014</a>
-  </div>
+    Derived from <a class="noexternal" href="http://organisms.be">Tom De Smedt</a>’s manual for
+    <a class="noexternal" href="http://nodebox.net/code">NodeBox</a> <a class="noexternal" href="http://www.emrg.be/" title="Experimental Media Research Group">© 2004-2012</a>.<br/>
+    Rewritten for <a class="noexternal" href="http://plotdevice.io">PlotDevice</a> by <a class="noexternal" href="http://samizdat.cc">Christian Swinehart</a>.
+  </div><script src="etc/zepto.min.js" type="text/javascript">
+</script><script type="text/javascript">
+  Zepto(function($){
+
+      // handle Commands/Types clicks for the refs
+      $('.filter').on('click', 'li', function(e){
+        var elt = $(e.target).closest('li')
+        $('.filter li.active').removeClass('active')
+        $('body').attr('class',elt.attr('class'))
+        elt.addClass('active')
+      })
+
+      // handle n-more clicks within a ref section
+      $('.ref .sections').on('click', 'li.others', function(e){
+        var sect = $(e.target).closest('.section')
+        sect.toggleClass('compat')
+        console.log(sect)
+      })
+    })
+  </script>
 
 </body></html>

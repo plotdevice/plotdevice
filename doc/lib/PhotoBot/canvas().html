@@ -2,19 +2,19 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: photobot.canvas()</title>
-  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: canvas()</title>
+  <link charset="utf-8" href="../../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../../manual.html">Plot Device <span>Libraries</span></a></h1>
 
-    <h3>photobot.canvas()</h3>
+    <h3>canvas()</h3>
   </div>
 
   <div class="article">
     <h2>Syntax</h2>
-<pre>variable = canvas<span class="s">(</span>width, height<span class="s">)</span>
+<pre>variable <span class="o">=</span> <span class="nf">canvas</span>(width, height)
 </pre>
 
     <h2>Description</h2>
@@ -23,8 +23,8 @@
     empty Photoshop document, where layers can be placed and manipulated. The canvas background is
     transparent, but a background color could be set using the canvas <a href="Canvas.fill().html">fill()</a> function, for example.</p>
     <h2>Example</h2>
-<pre>photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
-canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">200</span>, <span class="s">200</span><span class="s">)</span>
+<pre>photobot <span class="o">=</span> <span class="nf">ximport</span>(<span class="s">"photobot"</span>)
+<span class="nf">canvas</span> <span class="o">=</span> photobot<span class="o">.</span><span class="nf">canvas</span>(<span class="mi">200</span>, <span class="mi">200</span>)
 </pre>
   </div>
 

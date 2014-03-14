@@ -2,547 +2,458 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Reference: Utility</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Reference: Utility</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Reference</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Reference</span></a></h1>
 
     <ul class="siblings">
-      <li><a href="Primitives.html">Primitives</a>
-      </li><li><a href="Path.html">Path</a>
-      </li><li><a href="Transform.html">Transform</a>
-      </li><li><a href="Color.html">Color</a>
-      </li><li><a href="Typography.html">Typography</a>
-      </li><li>
-        <h3 style="margin:0;">Utility</h3>
-      </li><li><a href="Classes.html">Classes</a>
-      </li><li><a href="Globals.html">Globals</a>
-    </li></ul>
+      <li><a href="Setup.html">Setup</a></li>
+      <li><a href="Primitives.html">Primitives</a></li>
+      <li><a href="Drawing.html">Drawing</a></li>
+      <li><a href="Line+Color.html">Line &amp; Color</a></li>
+      <li><a href="Typography.html">Typography</a></li>
+      <li>
+        <h3 style="margin:0;">Utility</h3></li>
+      </ul>
   </div>
 
   <div class="article">
-    <a name="autotext()"></a>
+    <div class="commands">
+      <a name="choice()"></a>
 
-    <div class="section">
-      <h3>autotext()</h3>
+      <div class="section">
+        <h3>choice()</h3>
 
-      <div class="definition">
-        <h2>Syntax</h2>
+        <div class="definition">
+          <h2>Syntax</h2>
 
-        <div class="row">
+          <div class="row">
 <pre>
-<span class="kw">autotext</span><span class="s">(</span><span class="s">)</span>
+<span class="nf">choice</span>(<span class="nb">list</span>)
 </pre>
-        </div>
+          </div>
 
-        <h2>Description</h2>
+          <h2>Description</h2>
 
-        <div class="row">
-          Generates random text from an XML-document. Autotext is a very powerful feature once you
-          learn how to use it. NodeBox has a built-in implementation of the Kant Generator Pro.
-          XML-files for the Kant Generator have a specified structure. Further information can be
-          found at http://diveintopython.org/xml_processing/
-        </div>
+          <div class="row">
+            Returns one random item from the list supplied as parameter. Using the choice() command
+            is an alternative to the obscure <code>list[random(len(list)]</code> command.
+          </div>
 
-        <h2>Returns</h2>
+          <h2>Returns</h2>
 
-        <div class="row">
-          a string containing automatically generated text
-        </div>
+          <div class="row">
+            a random item from the given list
+          </div>
 
-        <h2>Tutorial</h2>
+          <h2>Tutorial</h2>
 
-        <div class="row">
-          <a href="../tut/Strings.html">Strings</a>
-        </div>
+          <div class="row">
+            <a href="../tut/Lists.html">Lists</a>
+          </div>
 
-        <h2>Example</h2>
+          <h2>Example</h2>
 
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img height="125" src="media/autotext.jpg" width="125"/></span>
-                </td><td>
-<pre>
-<span class="kw">fontsize</span><span class="s">(</span><span class="s">9</span><span class="s">)</span>
-<span class="kw">lineheight</span><span class="s">(</span><span class="s">0.8</span><span class="s">)</span>
-txt = <span class="kw">autotext</span><span class="s">(</span><span class="str">"kant.xml"</span><span class="s">)</span>
-<span class="kw">text</span><span class="s">(</span>txt, <span class="s">5</span>, <span class="s">10</span>, width=<span class="s">110</span><span class="s">)</span>
-</pre>
-                </td></tr></tbody></table>
-        </div>
-
-        <div class="row">
-           
-        </div>
-
-        <h2>Download</h2>
-
-        <div class="row">
-          <a href="../tut/media/kant.xml">kant.xml</a>
-        </div>
-      </div>
-    </div><a name="choice()"></a>
-
-    <div class="section">
-      <h3>choice()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">choice</span><span class="s">(</span><span class="s">list</span><span class="s">)</span>
-</pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          Returns one random item from the list supplied as parameter. Using the choice() command
-          is an alternative to the obscure list[random(len(list)] command.
-        </div>
-
-        <h2>Returns</h2>
-
-        <div class="row">
-          a random item from the given list
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Lists.html">Lists</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td>
-<pre>
-words = <span class="s">[</span><span class="str">"NodeBox"</span>, <span class="str">"Ekky-ekky!"</span>, <span class="str">"z'Boing!"</span><span class="s">]</span>
-c = <span class="kw">choice</span><span class="s">(</span>words<span class="s">)</span> 
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td>
+<pre>words <span class="o">=</span> [<span class="s">"PlotDevice"</span>, <span class="s">"Ekky-ekky!"</span>, <span class="s">"z'Boing!"</span>]
+c <span class="o">=</span> <span class="nf">choice</span>(words) 
  
-<span class="grey"># Variable c contains a random item from the words list</span>
-<span class="grey"># So variable c might now be "NodeBox"...</span>
-<span class="grey"># or "Ekky-ekky!"...</span>
-<span class="grey"># or "z'Boing!"</span>
+<span class="c"># Variable c contains a random item from the words list</span>
+<span class="c"># So variable c might now be "PlotDevice"...</span>
+<span class="c"># or "Ekky-ekky!"...</span>
+<span class="c"># or "z'Boing!"</span>
 </pre>
-                </td></tr></tbody></table>
+                  </td></tr></tbody></table>
+          </div>
         </div>
-      </div>
-    </div><a name="export()"></a>
+      </div><a name="files()"></a>
 
-    <div class="section">
-      <h3>export()</h3>
+      <div class="section">
+        <h3>files()</h3>
 
-      <div class="definition">
-        <p class="pink_text">The <code>export</code> function is only of use to scripts that are
-        using NodeBox externally via a <code><a href="../tut/Scripting.html#nodebox.script">from
-        nodebox.script import *</a></code> line. For scripts run within the application, use the
-        Export as… commands in the file menu. Exports can also be batched using the <a href="../tut/nodebox.html"><code>nodebox</code></a> command.</p>
-        <h2>Generating output from external scripts</h2>
+        <div class="definition">
+          <h2>Syntax</h2>
 
-        <p>The <code>export</code> function returns a <a href="http://docs.python.org/2/reference/compound_stmts.html#the-with-statement">context
-        manager</a> that takes care of canvas-setup and file-generation for both single images and
-        animations. By enclosing your drawing code in a <code>with</code> block, you can ensure
-        that the correct sequence of <code>clear</code> and <code>save</code> calls are made to the
-        <code><a href="#canvas">canvas</a></code> automatically. For instance these two methods of
-        generating a png are equivalent:</p>
+          <div class="row">
 <pre>
-<span class="kw">from</span> <span class="nn">nodebox.script</span> <span class="kw">import</span> <span class="o">*</span>
-
-<span class="grey"># export an image</span>
-<span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span>
-<span class="o">...</span> <span class="grey"># (do some drawing)</span>
-<span class="kw">canvas</span><span class="o">.</span><span class="kw">save</span><span class="s">(</span><span class="str">'output.png'</span><span class="s">)</span>
-
-<span class="grey"># export an image</span>
-<span class="grey"># (with the context manager clearing and saving the canvas automatically)</span>
-<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'output.png'</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">image</span><span class="s">:</span>
-    <span class="o">...</span> <span class="grey"># (do some drawing)</span>
+<span class="nf">files</span>(pattern, case<span class="o">=</span><span class="bp">True</span>)
 </pre>
+          </div>
 
-        <h2><a class="anchor" href="#animations" id="animations" name="animations"></a>Animations</h2>
+          <h2>Description</h2>
 
-        <p>If you specify a filename ending in <code>mov</code> (or <code>gif</code> if you also
-        pass a <code>loop</code> or <code>fps</code> argument), the <code>export</code> context
-        manager will return a <code>Movie</code> object. Each time you call its <code>add</code>
-        method, a new frame with the contents of the canvas will be added to the end of the
-        animation. Once you’ve added the final frame, you must call <code>finish</code> to wait for
-        the video encoder thread to complete its work.</p>
-        <p>As with the single-image version of the <code>export</code> call, you can use the
-        <code>with</code> statement in your code to tidy up some of the frame-drawing boilerplate.
-        All three examples are equivalent (note the use of a nested <code>with</code> statement in
-        the final example):</p>
+          <div class="row">
+            Retrieves the names of all files at a given path matching a wildcard pattern. By
+            default a case-sensitive search is performed but this can be relaxed by passing
+            <code class="kw">False</code> as the <code>case</code> parameter.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            a list with the names of the files matching the given pattern
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td>
+<pre>f <span class="o">=</span> <span class="nf">files</span>(<span class="s">"~/Pictures/*.jpg"</span>)
+<span class="nf">image</span>(<span class="nf">choice</span>(f), <span class="mi">10</span>, <span class="mi">10</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="fonts()"></a>
+
+      <div class="section">
+        <h3>fonts()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
 <pre>
-<span class="grey"># export a 100-frame movie</span>
-<span class="kw">movie</span> <span class="o">=</span> <span class="kw">export</span><span class="s">(</span><span class="str">'anim.mov'</span><span class="s">,</span> <span class="kw">fps</span><span class="o">=</span><span class="mi">50</span><span class="s">,</span> <span class="kw">bitrate</span><span class="o">=</span><span class="mf">1.8</span><span class="s">)</span>
-<span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
-    <span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span> <span class="grey"># erase the previous frame from the canvas</span>
-    <span class="o">...</span>            <span class="grey"># (do some drawing)</span>
-    <span class="kw">movie</span><span class="o">.</span><span class="kw">add</span><span class="s">()</span>    <span class="grey"># add the canvas to the movie</span>
-<span class="kw">movie</span><span class="o">.</span><span class="kw">finish</span><span class="s">()</span>     <span class="grey"># wait for i/o to complete</span>
-
-<span class="grey"># export a movie (with the context manager closing the file when done)</span>
-<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'anim.mov'</span><span class="s">,</span> <span class="kw">fps</span><span class="o">=</span><span class="mi">50</span><span class="s">,</span> <span class="kw">bitrate</span><span class="o">=</span><span class="mf">1.8</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">movie</span><span class="s">:</span>
-    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
-        <span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span> <span class="grey"># erase the previous frame from the canvas</span>
-        <span class="o">...</span>            <span class="grey"># (do some drawing)</span>
-        <span class="kw">movie</span><span class="o">.</span><span class="kw">add</span><span class="s">()</span>    <span class="grey"># add the canvas to the movie</span>
-
-<span class="grey"># export a movie</span>
-<span class="grey"># (with the movie.frame context manager clearing and adding the frame)</span>
-<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'anim.mov'</span><span class="s">,</span> <span class="kw">fps</span><span class="o">=</span><span class="mi">50</span><span class="s">,</span> <span class="kw">bitrate</span><span class="o">=</span><span class="mf">1.8</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">movie</span><span class="s">:</span>
-    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
-        <span class="kw">with</span> <span class="kw">movie</span><span class="o">.</span><span class="kw">frame</span><span class="s">:</span>
-            <span class="o">...</span> <span class="grey"># draw the next frame</span>
+<span class="nf">fonts</span>(like<span class="o">=</span><span class="bp">None</span>, western<span class="o">=</span><span class="bp">True</span>)
 </pre>
+          </div>
 
-        <h2><a class="anchor" href="#multi-page-pdfs" id="multi-page-pdfs" name="multi-page-pdfs"></a>Multi-page PDFs</h2>
+          <h2>Description</h2>
 
-        <p>Creating PDF documents works the same way, letting you either manually
-        <code>clear</code>, <code>add</code> and <code>finish</code> the export or take advantage
-        of the <code>with</code> statement to hide the repetitive bits. Note that PDF exports use
-        the <code>page</code> attribute rather than <code>frame</code>:</p>
+          <div class="row">
+            The fonts() command searches the fonts installed on the system and can filter the list
+            in a few ways. When called with no arguments, the list contains all fonts on the system
+            with a latin character set. To retrieve the set of non-latin fonts, pass False as the
+            western parameter. To filter the list through a (case-insensitive) font name match,
+            pass a substring as the like parameter.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            a list of “Postscript Names” which can be used as arguments for the <a href="Typography.html#font()">font()</a> command
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+<pre>romans <span class="o">=</span> <span class="nf">fonts</span>() <span class="c"># Get a list of all the text-friendly fonts on the system</span>
+jenson <span class="o">=</span> <span class="nf">fonts</span>(like<span class="o">=</span><span class="s">"jenson"</span>) <span class="c"># all installed weights of Adobe Jenson.</span>
+
+eastern <span class="o">=</span> <span class="nf">fonts</span>(western<span class="o">=</span><span class="bp">False</span>) <span class="c"># all asian-character fonts, math fonts, etc.</span>
+kozuka <span class="o">=</span> <span class="nf">fonts</span>(western<span class="o">=</span><span class="bp">False</span>, like<span class="o">=</span><span class="s">"koz"</span>) <span class="c"># the weights in the Kozuka families</span>
+</pre>
+          </div>
+        </div>
+      </div><a name="grid()"></a>
+
+      <div class="section">
+        <h3>grid()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
 <pre>
-<span class="grey"># export a five-page pdf document</span>
-<span class="kw">pdf</span> <span class="o">=</span> <span class="kw">export</span><span class="s">(</span><span class="str">'multipage.pdf'</span><span class="s">)</span>
-<span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">5</span><span class="s">):</span>
-    <span class="kw">canvas</span><span class="o">.</span><span class="kw">clear</span><span class="s">()</span> <span class="grey"># erase the previous page's graphics from the canvas</span>
-    <span class="o">...</span>            <span class="grey"># (do some drawing)</span>
-    <span class="kw">pdf</span><span class="o">.</span><span class="kw">add</span><span class="s">()</span>      <span class="grey"># add the canvas to the pdf as a new page</span>
-<span class="kw">pdf</span><span class="o">.</span><span class="kw">finish</span><span class="s">()</span>       <span class="grey"># write the pdf document to disk</span>
-
-<span class="grey"># export a pdf document more succinctly</span>
-<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'multipage.pdf'</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">pdf</span><span class="s">:</span>
-    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">5</span><span class="s">):</span>
-        <span class="kw">with</span> <span class="kw">pdf</span><span class="o">.</span><span class="kw">page</span><span class="s">:</span>
-            <span class="o">...</span> <span class="grey"># draw the next page</span>
+<span class="nf">grid</span>(cols, rows, colsize<span class="o">=</span><span class="mi">1</span>, rowsize<span class="o">=</span><span class="mi">1</span>)
 </pre>
+          </div>
 
-        <h2><a class="anchor" href="#image-sequences" id="image-sequences" name="image-sequences"></a>Image sequences</h2>
+          <h2>Description</h2>
 
-        <p>If you’re generating a series of images, <code>export</code> will automatically give
-        them consecutive names derived from the filename you pass as an argument. If the filename
-        is a simple <code class="str">’name.ext’</code> string, the sequence number will be
-        appended with 4 characters of padding (<code class="str">’name-0001.ext’</code>,
-        <code class="str">’name-0002.ext’</code>, etc.). If the filename contains a block of
-        <code>###</code> characters, they will be replaced with the sequence number and zero padded
-        to the same width:</p>
+          <div class="row">
+            The grid() command returns an iteratable object, something that can be traversed in a
+            for-loop (like the range() command for example). The grid() is a more complex, but very
+            powerful command. The first two parameters define the number of columns and rows in the
+            grid. The next two parameters are optional, and set the width and height of one cell in
+            the grid. Each iteration in a for-loop, the offset for the current column and row is
+            returned.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            tuples of x/y coordinates that can be used in a for-loop
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/grid.jpg" width="125"/></span>
+                  </td><td>
 <pre>
-<span class="grey"># export a sequence of images to output-0001.png, output-0002.png, ...</span>
-<span class="grey">#                                output-0099.png, output-0100.png</span>
-<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'output.png'</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">image</span><span class="s">:</span>
-    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
-        <span class="kw">with</span> <span class="kw">image</span><span class="o">.</span><span class="kw">sequence</span><span class="s">:</span>
-            <span class="o">...</span> <span class="grey"># draw the next image in the sequence</span>
-
-<span class="grey"># export a sequence of images to 01-img.png, 02-img.png, ...</span>
-<span class="grey">#                                99-img.png, 100-img.png</span>
-<span class="kw">with</span> <span class="kw">export</span><span class="s">(</span><span class="str">'##-img.png'</span><span class="s">)</span> <span class="kw">as</span> <span class="kw">image</span><span class="s">:</span>
-    <span class="kw">for</span> <span class="kw">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="s">(</span><span class="mi">100</span><span class="s">):</span>
-        <span class="kw">with</span> <span class="kw">image</span><span class="o">.</span><span class="kw">sequence</span><span class="s">:</span>
-            <span class="o">...</span> <span class="grey"># draw the next image in the sequence</span>
+<span class="nf">fill</span>(<span class="mf">0.2</span>)
+<span class="k">for</span> x, y <span class="ow">in</span> <span class="nf">grid</span>(<span class="mi">7</span>, <span class="mi">5</span>, <span class="mi">12</span>, <span class="mi">12</span>):
+    <span class="nf">rect</span>(<span class="mi">10</span><span class="o">+</span>x, <span class="mi">10</span><span class="o">+</span>y, <span class="mi">10</span>, <span class="mi">10</span>)
 </pre>
-      </div>
-    </div><a name="files()"></a>
+                  </td></tr></tbody></table>
+          </div>
+        </div>
+      </div><a name="ordered()"></a>
 
-    <div class="section">
-      <h3>files()</h3>
+      <div class="section">
+        <h3>ordered()</h3>
 
-      <div class="definition">
-        <h2>Syntax</h2>
+        <div class="definition">
+          <h2>Syntax</h2>
 
-        <div class="row">
+          <div class="row">
 <pre>
-<span class="kw">files</span><span class="s">(</span>path<span class="s">)</span>
+<span class="nf">ordered</span>(<span class="nb">list</span>, <span class="o">*</span>names, reverse<span class="o">=</span><span class="bp">False</span>)
 </pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            <p>Returns a sorted copy of a list of objects (similar to Python’s built-in <a href="https://wiki.python.org/moin/HowTo/Sorting"><code>sorted</code></a> function). Lists
+            of dictionaries or objects can be sorted based on a common key or attribute if one or
+            more <code>name</code> arguments are provided.</p>
+            <p>Lists are returned in ascending order unless the <code>reverse</code> parameter is
+            <code class="kw">True</code>.</p>
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            a sorted copy of the original list
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Lists.html">Lists</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td>
+<pre>itemlst <span class="o">=</span> [<span class="nb">dict</span>(foo<span class="o">=</span><span class="mi">1</span>, bar<span class="o">=</span><span class="mi">10</span>), <span class="nb">dict</span>(foo<span class="o">=</span><span class="mi">12</span>, bar<span class="o">=</span><span class="mi">0</span>), <span class="nb">dict</span>(foo<span class="o">=</span><span class="mi">13</span>, bar<span class="o">=</span><span class="mi">1</span>)]
+<span class="k">print</span> <span class="nf">ordered</span>(itemlst, <span class="s">'foo'</span>, reverse<span class="o">=</span><span class="bp">True</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
         </div>
+      </div><a name="random()"></a>
 
-        <h2>Description</h2>
+      <div class="section">
+        <h3>random()</h3>
 
-        <div class="row">
-          Retrieves all files from a given path and returns their names as a list.
-        </div>
+        <div class="definition">
+          <h2>Syntax</h2>
 
-        <h2>Returns</h2>
-
-        <div class="row">
-          a list with the names of the files in the given path
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td>
+          <div class="row">
 <pre>
-f = <span class="kw">files</span><span class="s">(</span><span class="str">"images/*.jpg"</span><span class="s">)</span>
-<span class="kw">image</span><span class="s">(</span><span class="kw">choice</span><span class="s">(</span>f<span class="s">)</span>, <span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
+<span class="nf">random</span>(v1<span class="o">=</span><span class="bp">None</span>, v2<span class="o">=</span><span class="bp">None</span>)
 </pre>
-                </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="fonts()"></a>
+          </div>
 
-    <div class="section">
-      <h3>fonts()</h3>
+          <h2>Description</h2>
 
-      <div class="definition">
-        <h2>Syntax</h2>
+          <div class="row">
+            Returns a random number that can be assigned to a variable or a parameter. When no
+            parameters are supplied, returns a floating-point (decimal) number between 0.0 and 1.0
+            (including 0.0 and 1.0). When one parameter is supplied, returns a number between 0 and
+            this parameter. When two parameters are supplied, returns a number between the first
+            and the second parameter. The random() command is useful for all sorts of operations,
+            from random colors to lines with a random width.
 
-        <div class="row">
-<pre>
-<span class="kw">fonts</span><span class="s">(</span>like=<span class="kw">None</span>, western=<span class="kw">True</span><span class="s">)</span>
-</pre>
-        </div>
+            <p>Note: new random values are returned each time the script runs. The variation can be
+            locked by supplying a custom random seed:<br/>
+            <span class="inline_code">from random import seed<br/>
+            seed(0)</span><br/></p>
+          </div>
 
-        <h2>Description</h2>
+          <h2>Returns</h2>
 
-        <div class="row">
-          The fonts() command searches the fonts installed on the system and can filter the list in
-          a few ways. When called with no arguments, the list contains all fonts on the system with
-          a latin character set. To retrieve the set of non-latin fonts, pass False as the western
-          parameter. To filter the list through a (case-insensitive) font name match, pass a
-          substring as the like parameter.
-        </div>
+          <div class="row">
+            a random number (either an integer or floating-point) within the given boundaries
+          </div>
 
-        <h2>Returns</h2>
+          <h2>Tutorial</h2>
 
-        <div class="row">
-          a list of “Postscript Names” which can be used as arguments for the <a href="../ref/Typography.html#font()">font()</a> command
-        </div>
+          <div class="row">
+            <a href="../tut/Repetition.html">Repetition</a>
+          </div>
 
-        <h2>Example</h2>
+          <h2>Example</h2>
 
-        <div class="row">
-<pre>romans = <span class="kw">fonts</span><span class="s">()</span> <span class="grey"># Get a list of all the text-friendly fonts on the system</span>
-jenson = <span class="kw">fonts</span><span class="s">(like=<span class="str">"jenson"</span>)</span> <span class="grey"># all installed weights of Adobe Jenson.</span>
-
-eastern = <span class="kw">fonts</span><span class="s">(western=<span class="kw">False</span>)</span> <span class="grey"># all asian-character fonts, math fonts, etc.</span>
-kozuka = <span class="kw">fonts</span><span class="s">(western=<span class="kw">False</span>, like=<span class="str">"koz"</span>)</span> <span class="grey"># the weights in the Kozuka families</span>
-</pre>
-        </div>
-      </div>
-    </div><a name="grid()"></a>
-
-    <div class="section">
-      <h3>grid()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">grid</span><span class="s">(</span>cols, rows, colsize=<span class="s">1</span>, rowsize=<span class="s">1</span><span class="s">)</span>
-</pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          The grid() command returns an iteratable object, something that can be traversed in a
-          for-loop (like the range() command for example). The grid() is a more complex, but very
-          powerful command. The first two parameters define the number of columns and rows in the
-          grid. The next two parameters are optional, and set the width and height of one cell in
-          the grid. Each iteration in a for-loop, the offset for the current column and row is
-          returned.
-        </div>
-
-        <h2>Returns</h2>
-
-        <div class="row">
-          tuples of x/y coordinates that can be used in a for-loop
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img height="125" src="media/grid.jpg" width="125"/></span>
-                </td><td>
-<pre>
-<span class="kw">fill</span><span class="s">(</span><span class="s">0.2</span><span class="s">)</span>
-<span class="kw">for</span> x, y <span class="kw">in</span> <span class="kw">grid</span><span class="s">(</span><span class="s">7</span>, <span class="s">5</span>, <span class="s">12</span>, <span class="s">12</span><span class="s">)</span>:
-    <span class="kw">rect</span><span class="s">(</span><span class="s">10</span>+x, <span class="s">10</span>+y, <span class="s">10</span>, <span class="s">10</span><span class="s">)</span>
-</pre>
-                </td></tr></tbody></table>
-        </div>
-      </div>
-    </div><a name="open()"></a>
-
-    <div class="section">
-      <h3>open()</h3>
-
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">open</span><span class="s">(</span>path<span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
-</pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          The open() command opens a file specified by the path parameter. The open() command can
-          be used in two ways: open(path).read(), which returns the file’s text content as a
-          string, or, alternatively, open(path).readlines(), which returns a list of text lines.
-        </div>
-
-        <h2>Returns</h2>
-
-        <div class="row">
-          the file’s text content, as a string
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Strings.html">Strings</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td>
-<pre>
-<span class="grey"># Prints the contents of sample.txt as a whole</span>
-txt = <span class="kw">open</span><span class="s">(</span><span class="str">"sample.txt"</span><span class="s">)</span>.<span class="s">read</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">print</span> txt
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td>
+<pre>r <span class="o">=</span> <span class="nf">random</span>() <span class="c"># returns a float between 0 and 1</span>
+r <span class="o">=</span> <span class="nf">random</span>(<span class="mf">2.5</span>) <span class="c"># returns a float between 0 and 2.5 </span>
+r <span class="o">=</span> <span class="nf">random</span>(<span class="o">-</span><span class="mf">1.0</span>, <span class="mf">1.0</span>) <span class="c"># returns a float between -1.0 and 1.0</span>
+r <span class="o">=</span> <span class="nf">random</span>(<span class="mi">5</span>) <span class="c"># returns an int between 0 and 5</span>
+r <span class="o">=</span> <span class="nf">random</span>(<span class="mi">1</span>, <span class="mi">10</span>) <span class="c"># returns an int between 1 and 10</span>
  
-<span class="grey"># Prints the contents line per line</span>
-txt = <span class="kw">open</span><span class="s">(</span><span class="str">"sample.txt"</span><span class="s">)</span>.<span class="s">readlines</span><span class="s">(</span><span class="s">)</span>
-<span class="kw">for</span> <span class="kw">line</span> <span class="kw">in</span> txt:
-    <span class="kw">print</span> <span class="kw">line</span>
+<span class="c"># sets the fill to anything from </span>
+<span class="c"># black (0.0,0,0) to red (1.0,0,0)</span>
+<span class="nf">fill</span>(<span class="nf">random</span>(), <span class="mi">0</span>, <span class="mi">0</span>)
 </pre>
-                </td></tr></tbody></table>
+                  </td></tr></tbody></table>
+          </div>
         </div>
+      </div><a name="read()"></a>
+
+      <div class="section">
+        <h3>read()</h3>
+      </div><a name="shuffled()"></a>
+
+      <div class="section">
+        <h3>shuffled()</h3>
       </div>
-    </div><a name="random()"></a>
+    </div>
 
-    <div class="section">
-      <h3>random()</h3>
+    <div class="types">
+      <div class="classic">
+        <p class="rose_text">Classes</p>
+      </div><a id="dictionaries" name="dictionaries"></a>
 
-      <div class="definition">
-        <h2>Syntax</h2>
-
-        <div class="row">
-<pre>
-<span class="kw">random</span><span class="s">(</span>v1=<span class="kw">None</span>, v2=<span class="kw">None</span><span class="s">)</span>
-</pre>
-        </div>
-
-        <h2>Description</h2>
-
-        <div class="row">
-          Returns a random number that can be assigned to a variable or a parameter. When no
-          parameters are supplied, returns a floating-point (decimal) number between 0.0 and 1.0
-          (including 0.0 and 1.0). When one parameter is supplied, returns a number between 0 and
-          this parameter. When two parameters are supplied, returns a number between the first and
-          the second parameter. The random() command is useful for all sorts of operations, from
-          random colors to lines with a random width.
-
-          <p>Note: new random values are returned each time the script runs. The variation can be
-          locked by supplying a custom random seed:<br/>
-          <span class="inline_code">from random import seed<br/>
-          seed(0)</span><br/></p>
-        </div>
-
-        <h2>Returns</h2>
-
-        <div class="row">
-          a random number (either an integer or floating-point) within the given boundaries
-        </div>
-
-        <h2>Tutorial</h2>
-
-        <div class="row">
-          <a href="../tut/Repetition.html">Repetition</a>
-        </div>
-
-        <h2>Example</h2>
-
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td>
-<pre>
-r = <span class="kw">random</span><span class="s">(</span><span class="s">)</span> <span class="grey"># returns a float between 0 and 1</span>
-r = <span class="kw">random</span><span class="s">(</span><span class="s">2.5</span><span class="s">)</span> <span class="grey"># returns a float between 0 and 2.5 </span>
-r = <span class="kw">random</span><span class="s">(</span><span class="s">-1.0</span>, <span class="s">1.0</span><span class="s">)</span> <span class="grey"># returns a float between -1.0 and 1.0</span>
-r = <span class="kw">random</span><span class="s">(</span><span class="s">5</span><span class="s">)</span> <span class="grey"># returns an int between 0 and 5</span>
-r = <span class="kw">random</span><span class="s">(</span><span class="s">1</span>, <span class="s">10</span><span class="s">)</span> <span class="grey"># returns an int between 1 and 10</span>
- 
-<span class="grey"># sets the fill to anything from </span>
-<span class="grey"># black (0.0,0,0) to red (1.0,0,0)</span>
-<span class="kw">fill</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="s">0</span>, <span class="s">0</span><span class="s">)</span>
-</pre>
-                </td></tr></tbody></table>
-        </div>
+      <div class="section">
+        <h3>dictionaries</h3>
       </div>
-    </div><a name="var()"></a>
+    </div>
 
-    <div class="section">
-      <h3>var()</h3>
+    <div class="compat">
+      <div class="classic">
+        <p class="pink_text">NodeBox Compatibility</p>
+        <p><em>Though their functionality has been subsumed by the commands listed above, the
+        following NodeBox Utility commands may also be used in your scripts.</em></p>
+      </div><a name="autotext()"></a>
 
-      <div class="definition">
-        <h2>Syntax</h2>
+      <div class="section">
+        <h3>autotext()</h3>
 
-        <div class="row">
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
 <pre>
-<span class="kw">var</span><span class="s">(</span>name, <span class="s">type</span>, default, <span class="s">min</span>, <span class="s">max</span><span class="s">)</span>
+<span class="nf">autotext</span>()
 </pre>
-        </div>
+          </div>
 
-        <h2>Description</h2>
+          <h2>Description</h2>
 
-        <div class="row">
-          The variables sheet creates connections between a variable and a user interface control,
-          such as a slider, textfield or check box. The most convenient way of creating variables
-          is through the Python &gt; Variables menu. Variables created like this become part of the
-          global namespace, meaning you can access them just like any other variable.
-        </div>
+          <div class="row">
+            Generates random text from an XML-document. Autotext is a very powerful feature once
+            you learn how to use it. PlotDevice has a built-in implementation of the Kant Generator
+            Pro. XML-files for the Kant Generator have a specified structure. Further information
+            can be found at http://diveintopython.org/xml_processing/
+          </div>
 
-        <h2>Tutorial</h2>
+          <h2>Returns</h2>
 
-        <div class="row">
-          <a href="../tut/Variables.html">Variables</a>
-        </div>
+          <div class="row">
+            a string containing automatically generated text
+          </div>
 
-        <h2>Example</h2>
+          <h2>Tutorial</h2>
 
-        <div class="row">
-          <table border="0">
-            <tbody>
-              <tr>
-                <td><span class="image_border"><img height="125" src="media/var.jpg" width="125"/></span>
-                </td><td>
+          <div class="row">
+            <a href="../tut/Strings.html">Strings</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td><span class="image_border"><img height="125" src="../etc/ref/autotext.jpg" width="125"/></span>
+                  </td><td>
 <pre>
-<span class="kw">var</span><span class="s">(</span><span class="str">"amount"</span>, <span class="kw">NUMBER</span>, <span class="s">30</span>, <span class="s">0</span>, <span class="s">100</span><span class="s">)</span>
+<span class="nf">fontsize</span>(<span class="mi">9</span>)
+<span class="nf">lineheight</span>(<span class="mf">0.8</span>)
+txt <span class="o">=</span> <span class="nf">autotext</span>(<span class="s">"kant.xml"</span>)
+<span class="nf">text</span>(txt, <span class="mi">5</span>, <span class="mi">10</span>, width<span class="o">=</span><span class="mi">110</span>)
+</pre>
+                  </td></tr></tbody></table>
+          </div>
+
+          <div class="row">
+             
+          </div>
+
+          <h2>Download</h2>
+
+          <div class="row">
+            <a href="../tut/media/kant.xml">kant.xml</a>
+          </div>
+        </div>
+      </div><a name="open()"></a>
+
+      <div class="section">
+        <h3>open()</h3>
+
+        <div class="definition">
+          <h2>Syntax</h2>
+
+          <div class="row">
+<pre>
+<span class="nb">open</span>(path)<span class="o">.</span>read()
+</pre>
+          </div>
+
+          <h2>Description</h2>
+
+          <div class="row">
+            The open() command opens a file specified by the path parameter. The open() command can
+            be used in two ways: open(path).read(), which returns the file’s text content as a
+            string, or, alternatively, open(path).readlines(), which returns a list of text lines.
+          </div>
+
+          <h2>Returns</h2>
+
+          <div class="row">
+            the file’s text content, as a string
+          </div>
+
+          <h2>Tutorial</h2>
+
+          <div class="row">
+            <a href="../tut/Strings.html">Strings</a>
+          </div>
+
+          <h2>Example</h2>
+
+          <div class="row">
+            <table border="0">
+              <tbody>
+                <tr>
+                  <td>
+<pre>
+<span class="c"># Prints the contents of sample.txt as a whole</span>
+txt <span class="o">=</span> <span class="nb">open</span>(<span class="s">"sample.txt"</span>)<span class="o">.</span>read()
+<span class="k">print</span> txt
  
-<span class="kw">background</span><span class="s">(</span><span class="s">0.1</span>, <span class="s">0</span>, <span class="s">0.0</span><span class="s">)</span>
-<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">int</span><span class="s">(</span>amount<span class="s">)</span><span class="s">)</span>:
-    <span class="kw">rotate</span><span class="s">(</span><span class="s">15</span><span class="s">)</span>
-    <span class="kw">image</span><span class="s">(</span><span class="str">"10.png"</span>, <span class="s">5</span>, <span class="s">5</span>, alpha=<span class="s">0.25</span><span class="s">)</span>
+<span class="c"># Prints the contents line per line</span>
+txt <span class="o">=</span> <span class="nb">open</span>(<span class="s">"sample.txt"</span>)<span class="o">.</span>readlines()
+<span class="k">for</span> <span class="nf">line</span> <span class="ow">in</span> txt:
+    <span class="k">print</span> <span class="nf">line</span>
 </pre>
-                </td></tr></tbody></table>
+                  </td></tr></tbody></table>
+          </div>
         </div>
       </div>
     </div>

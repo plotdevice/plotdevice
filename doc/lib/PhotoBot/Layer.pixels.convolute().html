@@ -2,19 +2,20 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: photobot.Layer.pixels.convolute()</title>
-  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: Layer.pixels.convolute()</title>
+  <link charset="utf-8" href="../../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../../manual.html">Plot Device <span>Libraries</span></a></h1>
 
-    <h3>photobot.Layer.pixels.convolute()</h3>
+    <h3>Layer.pixels.convolute()</h3>
   </div>
 
   <div class="article">
     <h2>Syntax</h2>
-<pre>canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="s">pixels</span>.<span class="s">convolute</span><span class="s">(</span>kernel, <span class="kw">scale</span>=<span class="kw">None</span>, offset=<span class="s">0</span><span class="s">)</span>
+<pre>
+<span class="nf">canvas</span><span class="o">.</span>layers[i]<span class="o">.</span>pixels<span class="o">.</span>convolute(kernel, <span class="nf">scale</span><span class="o">=</span><span class="bp">None</span>, offset<span class="o">=</span><span class="mi">0</span>)
 </pre>
 
     <h2>Description</h2>
@@ -27,14 +28,14 @@
     <h2>Example</h2>
 
     <p>A simple convolution kernel is the Gaussian blur:</p>
-<pre>kernel = <span class="s">[</span><span class="s">0</span>, <span class="s">1</span>, <span class="s">0</span>,
-          <span class="s">1</span>, <span class="s">4</span>, <span class="s">1</span>,
-          <span class="s">0</span>, <span class="s">1</span>, <span class="s">0</span><span class="s">]</span>
+<pre>kernel <span class="o">=</span> [<span class="mi">0</span>, <span class="mi">1</span>, <span class="mi">0</span>,
+          <span class="mi">1</span>, <span class="mi">4</span>, <span class="mi">1</span>,
+          <span class="mi">0</span>, <span class="mi">1</span>, <span class="mi">0</span>]
  
-<span class="kw">import</span> photobot
-canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
-canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"robot.jpg"</span><span class="s">)</span>
-canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">pixels</span>.<span class="s">convolute</span><span class="s">(</span>kernel<span class="s">)</span>
+<span class="kn">import</span> <span class="nn">photobot</span>
+<span class="nf">canvas</span> <span class="o">=</span> photobot<span class="o">.</span><span class="nf">canvas</span>(<span class="mi">100</span>,<span class="mi">100</span>)
+<span class="nf">canvas</span><span class="o">.</span>layer(<span class="s">"robot.jpg"</span>)
+<span class="nf">canvas</span><span class="o">.</span>layers[<span class="mi">1</span>]<span class="o">.</span>pixels<span class="o">.</span>convolute(kernel)
 </pre>
   </div>
 

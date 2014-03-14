@@ -2,19 +2,20 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: photobot.Canvas.flatten()</title>
-  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: Canvas.flatten()</title>
+  <link charset="utf-8" href="../../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../../manual.html">Plot Device <span>Libraries</span></a></h1>
 
-    <h3>photobot.Canvas.flatten()</h3>
+    <h3>Canvas.flatten()</h3>
   </div>
 
   <div class="article">
     <h2>Syntax</h2>
-<pre>canvas.<span class="s">flatten</span><span class="s">(</span>layers=<span class="s">[</span><span class="s">]</span><span class="s">)</span>
+<pre>
+<span class="nf">canvas</span><span class="o">.</span>flatten(layers<span class="o">=</span>[])
 </pre>
 
     <h2>Description</h2>
@@ -22,18 +23,18 @@
     <p>Flattens the canvas, merging all layers according to their blend modes and opacities. Once
     flattened, the stack of layers except for a single flattened layer - <em>canvas</em>.layer(1).
     Optionally, <em>layers</em> specifies exactly which layers to merge, but you should use the
-    <a href="PhotoBot/Canvas.merge().html">Canvas.merge()</a> command instead. Flattened layers
-    retain any transparency when saved as a .png file with the <a href="PhotoBot/Canvas.export().html">Canvas.export(</a>) command, since the canvas has a transparent
+    <a href="Canvas.merge().html">Canvas.merge()</a> command instead. Flattened layers retain any
+    transparency when saved as a .png file with the <a href="Canvas.export().html">Canvas.export(</a>) command, since the canvas has a transparent
     background by default. Other options are .jpg and .gif.</p>
     <h2>Syntax</h2>
 
     <p>Flattens a set of layers so it can be exported to a .png image file.</p>
-<pre>photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
-canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">200</span>,<span class="s">200</span><span class="s">)</span>
-canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"robot.jpg"</span><span class="s">)</span>
-canvas.<span class="kw">fill</span><span class="s">(</span><span class="s">(</span><span class="s">255</span>,<span class="s">128</span>,<span class="s">0</span><span class="s">)</span><span class="s">)</span>.<span class="s">hue</span><span class="s">(</span><span class="s">)</span>
-canvas.<span class="s">flatten</span><span class="s">(</span><span class="s">)</span>
-canvas.<span class="s">export</span><span class="s">(</span><span class="str">"orange-robot.png"</span><span class="s">)</span>
+<pre>photobot <span class="o">=</span> <span class="nf">ximport</span>(<span class="s">"photobot"</span>)
+<span class="nf">canvas</span> <span class="o">=</span> photobot<span class="o">.</span><span class="nf">canvas</span>(<span class="mi">200</span>,<span class="mi">200</span>)
+<span class="nf">canvas</span><span class="o">.</span>layer(<span class="s">"robot.jpg"</span>)
+<span class="nf">canvas</span><span class="o">.</span><span class="nf">fill</span>((<span class="mi">255</span>,<span class="mi">128</span>,<span class="mi">0</span>))<span class="o">.</span>hue()
+<span class="nf">canvas</span><span class="o">.</span>flatten()
+<span class="nf">canvas</span><span class="o">.</span><span class="nf">export</span>(<span class="s">"orange-robot.png"</span>)
 </pre>
   </div>
 

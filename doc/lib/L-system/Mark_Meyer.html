@@ -2,20 +2,20 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: L-system</title>
-  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: Mark Meyer</title>
+  <link charset="utf-8" href="../../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../../manual.html">Plot Device <span>Libraries</span></a></h1>
 
-    <h3>L-system</h3>
+    <h3>Mark Meyer</h3>
   </div>
 
   <div class="article">
     <p>Mark Meyer has created an <a href="http://en.wikipedia.org/wiki/L-system">L-system</a>
-    algorithm in NodeBox. An L-system or Lindenmayer system is a set of rules and symbols used to
-    model the growth processes of plant development - you may remember it from <a href="L-system/Dryad.html">Dryad</a>. L-systems are based on recursion - a programming principle in
+    algorithm in PlotDevice. An L-system or Lindenmayer system is a set of rules and symbols used
+    to model the growth processes of plant development - you may remember it from <a href="L-system/Dryad.html">Dryad</a>. L-systems are based on recursion - a programming principle in
     which parts of the whole involve invoking the whole again (e.g. a branch of a tree is a small
     tree in itself, etc.) Mark has shared his code with us so now we can all experiment with
     L-systems!</p>
@@ -25,7 +25,7 @@
 
     <h2>Grass</h2>
 
-    <p><img alt="lsystem-grass" height="550" src="../media/lsystem-grass.jpg" width="550"/></p>
+    <p><img alt="lsystem-grass" height="550" src="../../etc/lib/lsystem-grass.jpg" width="550"/></p>
     <p>Here are the rules used to create the output. The rule system is a simple dictionary - it
     should be pretty self explanatory. For a rule like: <i>X -&gt; F[+X][-X]FX</i> just add a entry
     to the rules dictionary like <i>rules[’X’] = ’F[+X][-X]FX’</i>. The letters represent other
@@ -45,7 +45,7 @@
 
     <h2>Plant</h2>
 
-    <p><img alt="lsystem-plant" height="550" src="../media/lsystem-plant.jpg" width="550"/></p>
+    <p><img alt="lsystem-plant" height="550" src="../../etc/lib/lsystem-plant.jpg" width="550"/></p>
     <p class="small_text">segmentLength = 3<br/>
     angles: 25.7 -8<br/>
     begin -&gt; X<br/>
@@ -57,7 +57,7 @@
 
     <h2>Tree</h2>
 
-    <p><img alt="lsystem-tree" height="550" src="../media/lsystem-tree.jpg" width="550"/></p>
+    <p><img alt="lsystem-tree" height="550" src="../../etc/lib/lsystem-tree.jpg" width="550"/></p>
     <p><span class="small_text">segmentLength = 18<br/>
     angles: 30, -30<br/>
     begin -&gt; A<br/>
@@ -69,7 +69,7 @@
 
     <h2>Sierpinski</h2>
 
-    <p><img alt="lsystem-sierpinski1" height="550" src="../media/lsystem-sierpinski1.jpg" width="550"/></p>
+    <p><img alt="lsystem-sierpinski1" height="550" src="../../etc/lib/lsystem-sierpinski1.jpg" width="550"/></p>
     <p>The famous Sierpinksi Triangle.<br/>
     <span class="small_text"><br/>
     segmentLength = 1<br/>
@@ -83,7 +83,7 @@
 
     <h2>Sierpinski variant</h2>
 
-    <p><img alt="lsystem-sierpinski2" height="550" src="../media/lsystem-sierpinski2.jpg" width="550"/></p>
+    <p><img alt="lsystem-sierpinski2" height="550" src="../../etc/lib/lsystem-sierpinski2.jpg" width="550"/></p>
     <p>Illustrates how a minor change has major effects - same rules but one angle changed by .25
     degree.<br/>
     <span class="small_text"><br/>
@@ -98,7 +98,7 @@
 
     <h2>Spirograph</h2>
 
-    <p><img alt="lsystem-spirograph" height="550" src="../media/lsystem-spirograph.jpg" width="550"/></p>
+    <p><img alt="lsystem-spirograph" height="550" src="../../etc/lib/lsystem-spirograph.jpg" width="550"/></p>
     <p>Single rule, no branching.<br/>
     <span class="small_text"><br/>
     segmentLength = 350<br/>
@@ -111,59 +111,59 @@
 
     <p>The source:</p>
 <pre>
-<span class="grey"># by mark meyer | http://www.photo-mark.com | enjoy. </span>
-<span class="kw">size</span><span class="s">(</span><span class="s">600</span>, <span class="s">800</span><span class="s">)</span>
-<span class="kw">strokewidth</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
-<span class="kw">stroke</span><span class="s">(</span>.<span class="s">45</span>, .<span class="s">45</span>, .<span class="s">25</span>, .<span class="s">35</span><span class="s">)</span>
-<span class="kw">nofill</span><span class="s">(</span><span class="s">)</span>
+<span class="c"># by mark meyer | http://www.photo-mark.com | enjoy. </span>
+<span class="nf">size</span>(<span class="mi">600</span>, <span class="mi">800</span>)
+<span class="nf">strokewidth</span>(<span class="mi">1</span>)
+<span class="nf">stroke</span>(<span class="o">.</span><span class="mi">45</span>, <span class="o">.</span><span class="mi">45</span>, <span class="o">.</span><span class="mi">25</span>, <span class="o">.</span><span class="mi">35</span>)
+<span class="nf">nofill</span>()
  
-<span class="kw">translate</span><span class="s">(</span><span class="s">300</span>, <span class="s">800</span><span class="s">)</span> <span class="grey">#starting point</span>
+<span class="nf">translate</span>(<span class="mi">300</span>, <span class="mi">800</span>) <span class="c">#starting point</span>
  
-segmentLength = <span class="s">3</span>
-rightTurnAngle = <span class="s">25.7</span>
-leftTurnAngle =  <span class="s">-25.7</span>
+segmentLength <span class="o">=</span> <span class="mi">3</span>
+rightTurnAngle <span class="o">=</span> <span class="mf">25.7</span>
+leftTurnAngle <span class="o">=</span>  <span class="o">-</span><span class="mf">25.7</span>
  
-rules= <span class="s">{</span><span class="s">}</span>
-<span class="grey"># The symbold for the formal language are: </span>
-<span class="grey"># [ = save state (i.e push()).  ] = restore state (i.e. pop()). </span>
-<span class="grey"># + and - = turn right and left respectively (based on angles given above)</span>
-<span class="grey"># Other symbolds are recursively substituted </span>
-<span class="grey"># and then processed as a draw forward instruction</span>
-rules<span class="s">[</span><span class="str">'w'</span><span class="s">]</span> = <span class="str">'X'</span> <span class="grey"># This is the starting rule</span>
-rules<span class="s">[</span><span class="str">'X'</span><span class="s">]</span> = <span class="str">'F[+X][-X]FX'</span>
-rules<span class="s">[</span><span class="str">'F'</span><span class="s">]</span> = <span class="str">'FF'</span>
+rules<span class="o">=</span> {}
+<span class="c"># The symbold for the formal language are: </span>
+<span class="c"># [ = save state (i.e push()).  ] = restore state (i.e. pop()). </span>
+<span class="c"># + and - = turn right and left respectively (based on angles given above)</span>
+<span class="c"># Other symbolds are recursively substituted </span>
+<span class="c"># and then processed as a draw forward instruction</span>
+rules[<span class="s">'w'</span>] <span class="o">=</span> <span class="s">'X'</span> <span class="c"># This is the starting rule</span>
+rules[<span class="s">'X'</span>] <span class="o">=</span> <span class="s">'F[+X][-X]FX'</span>
+rules[<span class="s">'F'</span>] <span class="o">=</span> <span class="s">'FF'</span>
  
-<span class="grey"># Be careful with large numbers of iterations,</span>
-<span class="grey"># the complexity grows exponentially</span>
-iterations = <span class="s">8</span> 
+<span class="c"># Be careful with large numbers of iterations,</span>
+<span class="c"># the complexity grows exponentially</span>
+iterations <span class="o">=</span> <span class="mi">8</span> 
  
-<span class="kw">def</span> <span class="rose">draw</span><span class="s">(</span><span class="s">)</span>:
-    <span class="kw">beginpath</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span><span class="s">)</span>
-    <span class="kw">lineto</span><span class="s">(</span><span class="s">0</span>, -segmentLength<span class="s">)</span>
-    <span class="kw">endpath</span><span class="s">(</span><span class="s">)</span>
-    <span class="kw">transform</span><span class="s">(</span>mode=CORNER<span class="s">)</span>
-    <span class="kw">translate</span><span class="s">(</span><span class="s">0</span>, -segmentLength<span class="s">)</span>
+<span class="k">def</span> <span class="nf">draw</span>():
+    <span class="nf">beginpath</span>(<span class="mi">0</span>, <span class="mi">0</span>)
+    <span class="nf">lineto</span>(<span class="mi">0</span>, <span class="o">-</span>segmentLength)
+    <span class="nf">endpath</span>()
+    <span class="nf">transform</span>(mode<span class="o">=</span><span class="kc">CORNER</span>)
+    <span class="nf">translate</span>(<span class="mi">0</span>, <span class="o">-</span>segmentLength)
     
-<span class="kw">def</span> <span class="rose">iterate</span><span class="s">(</span>n, rule<span class="s">)</span>:
-    <span class="kw">if</span> rule == <span class="str">'+'</span>:
-        <span class="kw">rotate</span><span class="s">(</span>rightTurnAngle<span class="s">)</span>
-        <span class="kw">return</span>
-    <span class="kw">elif</span> rule == <span class="str">'-'</span>:
-        <span class="kw">rotate</span><span class="s">(</span>leftTurnAngle<span class="s">)</span>
-        <span class="kw">return</span>
-    <span class="kw">elif</span> rule == <span class="str">"["</span>: 
-        <span class="kw">push</span><span class="s">(</span><span class="s">)</span>
-        <span class="kw">return</span>
-    <span class="kw">elif</span> rule == <span class="str">"]"</span>:
-         <span class="kw">pop</span><span class="s">(</span><span class="s">)</span>
-         <span class="kw">return</span>
-    <span class="kw">if</span> n &gt; <span class="s">0</span>:
-        <span class="grey">#scale(.98) # scaling on each iteration is fun to play with</span>
-        <span class="kw">for</span> step <span class="kw">in</span> rules<span class="s">[</span>rule<span class="s">]</span>:
-            iterate<span class="s">(</span>n<span class="s">-1</span>, step<span class="s">)</span>
-    <span class="kw">else</span>: draw<span class="s">(</span><span class="s">)</span>
+<span class="k">def</span> <span class="nf">iterate</span>(n, rule):
+    <span class="k">if</span> rule <span class="o">==</span> <span class="s">'+'</span>:
+        <span class="nf">rotate</span>(rightTurnAngle)
+        <span class="k">return</span>
+    <span class="k">elif</span> rule <span class="o">==</span> <span class="s">'-'</span>:
+        <span class="nf">rotate</span>(leftTurnAngle)
+        <span class="k">return</span>
+    <span class="k">elif</span> rule <span class="o">==</span> <span class="s">"["</span>: 
+        <span class="nf">push</span>()
+        <span class="k">return</span>
+    <span class="k">elif</span> rule <span class="o">==</span> <span class="s">"]"</span>:
+         <span class="nf">pop</span>()
+         <span class="k">return</span>
+    <span class="k">if</span> n <span class="o">&gt;</span> <span class="mi">0</span>:
+        <span class="c">#scale(.98) # scaling on each iteration is fun to play with</span>
+        <span class="k">for</span> step <span class="ow">in</span> rules[rule]:
+            iterate(n<span class="o">-</span><span class="mi">1</span>, step)
+    <span class="k">else</span>: draw()
  
-iterate<span class="s">(</span>iterations, <span class="str">'w'</span><span class="s">)</span>
+iterate(iterations, <span class="s">'w'</span>)
 </pre>
 
     <p><a href="http://nodebox.net/code/data/media/markmeyer-lsystem.zip">Download source</a></p>

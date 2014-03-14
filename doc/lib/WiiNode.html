@@ -2,12 +2,12 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: WiiNode</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: WiiNode</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Libraries</span></a></h1>
 
     <h3>WiiNode</h3>
   </div>
@@ -15,16 +15,16 @@
   <div class="article">
     <h2>Description</h2>
 
-    <p><i>WiiNode</i> is a library for connecting your WiiMote to NodeBox. No actual Wii is needed,
-    just the remote.<img height="367" src="media/wiinode-in-action.jpg" width="550"/></p>
+    <p><i>WiiNode</i> is a library for connecting your WiiMote to PlotDevice. No actual Wii is
+    needed, just the remote.<img height="367" src="../etc/lib/wiinode-in-action.jpg" width="550"/></p>
     <h2>Download</h2>
 
     <table border="0">
       <tbody>
         <tr>
-          <td><a href="http://nodebox.net/code/data/media/wiinode.zip"><img alt="download" height="20" src="media/download.gif" width="20"/></a>
+          <td><a href="http://nodebox.net/code/data/media/wiinode.zip"><img alt="download" height="20" src="../etc/lib/download.gif" width="20"/></a>
           </td><td><a href="http://nodebox.net/code/data/media/wiinode.zip">wiinode.zip</a> (24KB)<br/>
-          <i>Last updated for NodeBox 1.9.4<br/>
+          <i>Last updated for PlotDevice 1.9.4<br/>
           Licensed under the GPL<br/>
           Author: Frederik De Bleser</i>
         </td></tr></tbody></table>
@@ -32,12 +32,12 @@
     <h2>Documentation</h2>
 
     <ul>
-      <li><a href="#prerequisites">Prerequisites</a>
-      </li><li><a href="#library">How to get the library up and running</a>
-      </li><li><a href="#mainloop">Setting up the main loop</a>
-      </li><li><a href="#wiimote">The WiiMote class</a>
-      </li><li><a href="#fooling">Show me someone fooling around with this</a>
-    </li></ul><br/>
+      <li><a href="#prerequisites">Prerequisites</a></li>
+      <li><a href="#library">How to get the library up and running</a></li>
+      <li><a href="#mainloop">Setting up the main loop</a></li>
+      <li><a href="#wiimote">The WiiMote class</a></li>
+      <li><a href="#fooling">Show me someone fooling around with this</a></li>
+    </ul><br/>
     <hr/>
     <a name="prerequisites" title="prerequisites"></a>
 
@@ -55,12 +55,12 @@
 
     <h2>How to get the library up and running</h2>
 
-    <p>Put the web library folder in the same folder as your script so NodeBox can find the
-    library. You can also put it in ~/Library/Application Support/NodeBox/.</p>
-<pre>wiinode = ximport("wiinode")<br/>
+    <p>Put the web library folder in the same folder as your script so PlotDevice can find the
+    library. You can also put it in ~/Library/Application Support/PlotDevice/.</p>
+<pre>wiinode <span class="o">=</span> <span class="nf">ximport</span>(<span class="s">"wiinode"</span>)
 </pre>
 
-    <p><small>Outside of NodeBox you can also just do import wiinode.</small></p>
+    <p><small>Outside of PlotDevice you can also just do import wiinode.</small></p>
     <hr/>
     <a name="mainloop" title="mainloop"></a>
 
@@ -68,7 +68,8 @@
 
     <p>In your animation, initialize the WiiMote object. Then, in each frame, call the update
     method:</p>
-<pre>def setup():<br/>    global wm<br/>    wm = wiinode.WiiMote()<br/><br/>def draw():<br/>    global wm<br/>    wm.update()<br/>    print wm.yaw<br/>
+<pre>
+<span class="k">def</span> <span class="nf">setup</span>():    <span class="k">global</span> wm    wm <span class="o">=</span> wiinode<span class="o">.</span>WiiMote()<span class="k">def</span> <span class="nf">draw</span>():    <span class="k">global</span> wm    wm<span class="o">.</span>update()    <span class="k">print</span> wm<span class="o">.</span>yaw
 </pre>
     <hr/>
     <a name="wiimote" title="wiimote"></a>
@@ -81,18 +82,18 @@
     <p>The WiiMote returns roll, pitch and yaw. See the <a href="http://en.wikipedia.org/wiki/Flight_dynamics">Wikipedia article on flight dynamics</a> for
     more information.</p>
     <p>See the <code>wiinode_example1.py</code> for a game that uses the roll value.</p>
-<pre>wm.pitch # The absolute pitch value<br/>wm.roll # The absolute roll value<br/>wm.yaw # The absolute yaw value<br/>
+<pre>wm<span class="o">.</span>pitch <span class="c"># The absolute pitch valuewm.roll # The absolute roll valuewm.yaw # The absolute yaw value</span>
 </pre>
 
     <p><span class="grey_box">Acceleration</span></p>
     <p>The WiiMote returns acceleration in both x, y and z positions. This is <b>not</b> the
     remote’s absolute position in space. You need an infrared sender for that.</p>
-<pre>wm.x # The horizontal (left-right) acceleration<br/>wm.y # The forward acceleration<br/>wm.z # The vertical (up-down) acceleration<br/>
+<pre>wm<span class="o">.</span>x <span class="c"># The horizontal (left-right) accelerationwm.y # The forward accelerationwm.z # The vertical (up-down) acceleration</span>
 </pre>
 
     <p><span class="grey_box">Buttons</span></p>
     <p>The WiiMote’s A and B buttons can be monitored as well.</p>
-<pre>wm.a # True if the A button is pressed<br/>wm.b # True if the B button is pressed<br/>
+<pre>wm<span class="o">.</span>a <span class="c"># True if the A button is pressedwm.b # True if the B button is pressed</span>
 </pre>
     <hr/>
     <a name="fooling" title="fooling"></a>

@@ -2,31 +2,31 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Tutorials: Extending</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Tutorials: Extending</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Tutorials</span></a></h1>
 
-    <h3>Extending NodeBox</h3>
+    <h3>Extending Plot Device</h3>
 
     <ul class="chapter">
-      <li><a href="Scripting.html">Scripting →</a>
-      </li><li>Chapter 17
-      </li><li><a href="Math.html">← Math</a>
-    </li></ul>
+      <li><a href="Scripting.html">Scripting →</a></li>
+      <li>Chapter 17</li>
+      <li><a href="Math.html">← Math</a></li>
+    </ul>
   </div>
 
   <div class="article">
-    <p>NodeBox is built on <a href="http://pyobjc.sourceforge.net/">PyObjC</a>, a bridge between
+    <p>PlotDevice is built on <a href="http://pyobjc.sourceforge.net/">PyObjC</a>, a bridge between
     the Python and Objective-C programming languages. The primary usage of PyObjC is writing
     <a href="http://developer.apple.com/cocoa/">Cocoa</a> applications for Mac OS X in pure python.
     Cocoa is the programming environment on Mac OS X that allows developers to create graphical
     applications with a typical Apple-look-and-feel.</p>
     <p>Cocoa’s two main libraries (<em>Foundation Kit</em> and <em>Application Kit</em>) are
-    bundled with NodeBox. If you know a little PyObjC it’s easy to start playing around with all
-    the magic in Mac OS X, right from your NodeBox script.</p>
+    bundled with PlotDevice. If you know a little PyObjC it’s easy to start playing around with all
+    the magic in Mac OS X, right from your PlotDevice script.</p>
     <p class="pink_text"><em>This tutorial contains advanced material.</em></p>
     <hr/>
 
@@ -54,106 +54,106 @@
     <em>object.initWithARangeOfParamaters()</em>.</p>
     <p>Also note that some things that are in Foundation like NSSize or NSRect can usually be
     substituted by simple Python tuples.</p>
-    <p>To start using AppKit in NodeBox simply import the library:</p>
+    <p>To start using AppKit in PlotDevice simply import the library:</p>
 <pre>
-<span class="kw">from</span> Appkit <span class="kw">import</span> *
+<span class="kn">from</span> <span class="nn">Appkit</span> <span class="kn">import</span> <span class="o">*</span>
 </pre>
 
     <p>I’ll show you some examples of what you can do with AppKit.</p>
     <hr/>
 
-    <h2>Playing sounds in NodeBox</h2>
+    <h2>Playing sounds in PlotDevice</h2>
 
     <p>The NSSound object in AppKit provides a very easy way to play AIFF and WAV sound files in
-    Mac applications. The class below is a NodeBox wrapper for NSSound.</p>
+    Mac applications. The class below is a PlotDevice wrapper for NSSound.</p>
 <pre>
-<span class="kw">from</span> AppKit <span class="kw">import</span> NSSound
+<span class="kn">from</span> <span class="nn">AppKit</span> <span class="kn">import</span> NSSound
  
-<span class="kw">class</span> sound:
-    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, <span class="s">file</span><span class="s">)</span>:
-        <span class="s">self</span>._sound = NSSound.<span class="s">alloc</span><span class="s">(</span><span class="s">)</span>
-        <span class="s">self</span>._sound.<span class="s">initWithContentsOfFile_byReference_</span><span class="s">(</span><span class="s">file</span>, <span class="kw">True</span><span class="s">)</span>
-    <span class="kw">def</span> <span class="red">play</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>: <span class="s">self</span>._sound.<span class="s">play</span><span class="s">(</span><span class="s">)</span>
-    <span class="kw">def</span> <span class="red">stop</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>: <span class="s">self</span>._sound.<span class="s">stop</span><span class="s">(</span><span class="s">)</span>
-    <span class="kw">def</span> <span class="red">is_playing</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>: <span class="kw">return</span> <span class="s">self</span>._sound.<span class="s">isPlaying</span><span class="s">(</span><span class="s">)</span>
+<span class="k">class</span> <span class="nc">sound</span>:
+    <span class="k">def</span> <span class="nf">__init__</span>(<span class="bp">self</span>, <span class="nb">file</span>):
+        <span class="bp">self</span><span class="o">.</span>_sound <span class="o">=</span> NSSound<span class="o">.</span>alloc()
+        <span class="bp">self</span><span class="o">.</span>_sound<span class="o">.</span>initWithContentsOfFile_byReference_(<span class="nb">file</span>, <span class="bp">True</span>)
+    <span class="k">def</span> <span class="nf">play</span>(<span class="bp">self</span>): <span class="bp">self</span><span class="o">.</span>_sound<span class="o">.</span>play()
+    <span class="k">def</span> <span class="nf">stop</span>(<span class="bp">self</span>): <span class="bp">self</span><span class="o">.</span>_sound<span class="o">.</span>stop()
+    <span class="k">def</span> <span class="nf">is_playing</span>(<span class="bp">self</span>): <span class="k">return</span> <span class="bp">self</span><span class="o">.</span>_sound<span class="o">.</span>isPlaying()
 </pre>
 
     <p>As you can see our <em>sound()</em> command takes a <em>file</em> parameter (that is the
     location of your sound file) and returns an object with a number of properties:</p>
     <ul>
-      <li><em>sound.play()</em>: start playing the sound
-      </li><li><em>sound.stop()</em>: stop playing
-      </li><li><em>sound.is_playing()</em>: returns True when playing
-    </li></ul>
-<pre>woof = sound<span class="s">(</span><span class="str">"dog.aiff"</span><span class="s">)</span>
-woof.<span class="s">play</span><span class="s">(</span><span class="s">)</span>
+      <li><em>sound.play()</em>: start playing the sound</li>
+      <li><em>sound.stop()</em>: stop playing</li>
+      <li><em>sound.is_playing()</em>: returns True when playing</li>
+    </ul>
+<pre>woof <span class="o">=</span> sound(<span class="s">"dog.aiff"</span>)
+woof<span class="o">.</span>play()
 </pre>
 
     <p>The following class defines a simple sound mixer/timeline. It has a number of channels that
     play sounds at a defined time.</p>
 <pre>
-<span class="kw">from</span> <span class="s">time</span> <span class="kw">import</span> <span class="s">time</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> time
  
-<span class="kw">class</span> mixer:   
-    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, channels=<span class="s">4</span><span class="s">)</span>:
-        <span class="s">self</span>.<span class="s">channels</span> = <span class="s">[</span><span class="s">[</span><span class="s">]</span> <span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span>channels<span class="s">)</span><span class="s">]</span>
-        <span class="s">self</span>.<span class="s">start</span> = <span class="s">time</span><span class="s">(</span><span class="s">)</span>
-        <span class="s">self</span>.<span class="s">playing</span> = <span class="s">[</span><span class="s">]</span>
-    <span class="kw">def</span> <span class="red">queue</span><span class="s">(</span><span class="s">self</span>, channel, <span class="s">time</span>, <span class="s">file</span><span class="s">)</span>:
-        <span class="s">self</span>.<span class="s">channels</span><span class="s">[</span>channel<span class="s">]</span>.<span class="s">append</span><span class="s">(</span> <span class="s">(</span><span class="s">time</span>, sound<span class="s">(</span><span class="s">file</span><span class="s">)</span><span class="s">)</span> <span class="s">)</span>
-        <span class="s">self</span>.<span class="s">channels</span><span class="s">[</span>channel<span class="s">]</span>.<span class="s">sort</span><span class="s">(</span><span class="s">)</span>
-    <span class="kw">def</span> <span class="red">play</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:
-        now = <span class="s">time</span><span class="s">(</span><span class="s">)</span> - <span class="s">self</span>.<span class="s">start</span>
-        <span class="kw">for</span> ch <span class="kw">in</span> <span class="s">self</span>.<span class="s">channels</span>:
-            <span class="kw">if</span> <span class="s">len</span><span class="s">(</span>ch<span class="s">)</span> &gt; <span class="s">0</span> <span class="kw">and</span> ch<span class="s">[</span><span class="s">0</span><span class="s">]</span><span class="s">[</span><span class="s">0</span><span class="s">]</span> &lt; now:
-                <span class="s">self</span>.<span class="s">playing</span>.<span class="s">append</span><span class="s">(</span>ch<span class="s">[</span><span class="s">0</span><span class="s">]</span><span class="s">[</span><span class="s">1</span><span class="s">]</span><span class="s">)</span>
-                ch<span class="s">[</span><span class="s">0</span><span class="s">]</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">play</span><span class="s">(</span><span class="s">)</span>
-                <span class="kw">del</span> ch<span class="s">[</span><span class="s">0</span><span class="s">]</span>
-    <span class="kw">def</span> <span class="red">stop</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:
-        <span class="kw">for</span> sound <span class="kw">in</span> <span class="s">self</span>.<span class="s">playing</span>:
-            sound.<span class="s">stop</span><span class="s">(</span><span class="s">)</span>
-        <span class="s">self</span>.<span class="s">playing</span> = <span class="s">[</span><span class="s">]</span>
-        <span class="s">self</span>.<span class="s">channels</span> = <span class="s">[</span><span class="s">[</span><span class="s">]</span> <span class="kw">for</span> ch <span class="kw">in</span> <span class="s">self</span>.<span class="s">channels</span><span class="s">]</span>
+<span class="k">class</span> <span class="nc">mixer</span>:   
+    <span class="k">def</span> <span class="nf">__init__</span>(<span class="bp">self</span>, channels<span class="o">=</span><span class="mi">4</span>):
+        <span class="bp">self</span><span class="o">.</span>channels <span class="o">=</span> [[] <span class="k">for</span> i <span class="ow">in</span> <span class="nb">range</span>(channels)]
+        <span class="bp">self</span><span class="o">.</span>start <span class="o">=</span> time()
+        <span class="bp">self</span><span class="o">.</span>playing <span class="o">=</span> []
+    <span class="k">def</span> <span class="nf">queue</span>(<span class="bp">self</span>, channel, time, <span class="nb">file</span>):
+        <span class="bp">self</span><span class="o">.</span>channels[channel]<span class="o">.</span>append( (time, sound(<span class="nb">file</span>)) )
+        <span class="bp">self</span><span class="o">.</span>channels[channel]<span class="o">.</span>sort()
+    <span class="k">def</span> <span class="nf">play</span>(<span class="bp">self</span>):
+        now <span class="o">=</span> time() <span class="o">-</span> <span class="bp">self</span><span class="o">.</span>start
+        <span class="k">for</span> ch <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span>channels:
+            <span class="k">if</span> <span class="nb">len</span>(ch) <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> ch[<span class="mi">0</span>][<span class="mi">0</span>] <span class="o">&lt;</span> now:
+                <span class="bp">self</span><span class="o">.</span>playing<span class="o">.</span>append(ch[<span class="mi">0</span>][<span class="mi">1</span>])
+                ch[<span class="mi">0</span>][<span class="mi">1</span>]<span class="o">.</span>play()
+                <span class="k">del</span> ch[<span class="mi">0</span>]
+    <span class="k">def</span> <span class="nf">stop</span>(<span class="bp">self</span>):
+        <span class="k">for</span> sound <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span>playing:
+            sound<span class="o">.</span>stop()
+        <span class="bp">self</span><span class="o">.</span>playing <span class="o">=</span> []
+        <span class="bp">self</span><span class="o">.</span>channels <span class="o">=</span> [[] <span class="k">for</span> ch <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span>channels]
 </pre>
 
     <p>Queueing multiple sounds is now very easy:<br/></p>
-<pre>m = mixer<span class="s">(</span><span class="s">2</span><span class="s">)</span>
-m.<span class="s">queue</span><span class="s">(</span><span class="s">0</span>, <span class="s">0.0</span>, <span class="str">"woof.aiff"</span><span class="s">)</span>
-m.<span class="s">queue</span><span class="s">(</span><span class="s">0</span>, <span class="s">0.4</span>, <span class="str">"woof.aiff"</span><span class="s">)</span>
-m.<span class="s">queue</span><span class="s">(</span><span class="s">0</span>, <span class="s">0.8</span>, <span class="str">"woof.aiff"</span><span class="s">)</span>
-m.<span class="s">queue</span><span class="s">(</span><span class="s">0</span>, <span class="s">1.2</span>, <span class="str">"woof.aiff"</span><span class="s">)</span>
-m.<span class="s">queue</span><span class="s">(</span><span class="s">1</span>, <span class="s">0.4</span>, <span class="str">"meow.aiff"</span><span class="s">)</span>
-m.<span class="s">queue</span><span class="s">(</span><span class="s">1</span>, <span class="s">1.2</span>, <span class="str">"meow.aiff"</span><span class="s">)</span>
+<pre>m <span class="o">=</span> mixer(<span class="mi">2</span>)
+m<span class="o">.</span>queue(<span class="mi">0</span>, <span class="mf">0.0</span>, <span class="s">"woof.aiff"</span>)
+m<span class="o">.</span>queue(<span class="mi">0</span>, <span class="mf">0.4</span>, <span class="s">"woof.aiff"</span>)
+m<span class="o">.</span>queue(<span class="mi">0</span>, <span class="mf">0.8</span>, <span class="s">"woof.aiff"</span>)
+m<span class="o">.</span>queue(<span class="mi">0</span>, <span class="mf">1.2</span>, <span class="s">"woof.aiff"</span>)
+m<span class="o">.</span>queue(<span class="mi">1</span>, <span class="mf">0.4</span>, <span class="s">"meow.aiff"</span>)
+m<span class="o">.</span>queue(<span class="mi">1</span>, <span class="mf">1.2</span>, <span class="s">"meow.aiff"</span>)
 </pre>
 
     <p> </p>
     <hr/>
 
-    <h2>BabbleBox: speech synthesis in NodeBox</h2>
+    <h2>BabbleBox: speech synthesis in PlotDevice</h2>
 
-    <p>The example below wraps the NSSpeechSynthesizer in two NodeBox commands. The
+    <p>The example below wraps the NSSpeechSynthesizer in two PlotDevice commands. The
     <em>voices()</em> command returns a list of all available voices. The <em>say()</em> command
-    makes NodeBox speak out a sentence. The optional <em>voice</em> parameter sets the voice you
+    makes PlotDevice speak out a sentence. The optional <em>voice</em> parameter sets the voice you
     want to use.<br/></p>
 <pre>
-<span class="kw">from</span> AppKit <span class="kw">import</span> NSSpeechSynthesizer
+<span class="kn">from</span> <span class="nn">AppKit</span> <span class="kn">import</span> NSSpeechSynthesizer
  
-<span class="kw">def</span> <span class="red">voices</span><span class="s">(</span><span class="s">)</span>:
-    voices = NSSpeechSynthesizer.<span class="s">availableVoices</span><span class="s">(</span><span class="s">)</span>
-    voices = <span class="s">[</span>x.<span class="s">split</span><span class="s">(</span><span class="str">"."</span><span class="s">)</span><span class="s">[</span><span class="s">-1</span><span class="s">]</span> <span class="kw">for</span> x <span class="kw">in</span> voices<span class="s">]</span>
-    <span class="kw">return</span> voices
+<span class="k">def</span> <span class="nf">voices</span>():
+    voices <span class="o">=</span> NSSpeechSynthesizer<span class="o">.</span>availableVoices()
+    voices <span class="o">=</span> [x<span class="o">.</span>split(<span class="s">"."</span>)[<span class="o">-</span><span class="mi">1</span>] <span class="k">for</span> x <span class="ow">in</span> voices]
+    <span class="k">return</span> voices
     
-<span class="kw">def</span> <span class="red">say</span><span class="s">(</span>txt, voice=<span class="kw">None</span><span class="s">)</span>:
-    <span class="kw">if</span> voice <span class="kw">in</span> voices<span class="s">(</span><span class="s">)</span>:
-        voice = <span class="str">"com.apple.speech.synthesis.voice."</span>+voice
-    <span class="kw">else</span>:
-        voice = NSSpeechSynthesizer.<span class="s">defaultVoice</span><span class="s">(</span><span class="s">)</span>
-    speech = NSSpeechSynthesizer.<span class="s">alloc</span><span class="s">(</span><span class="s">)</span>.<span class="s">initWithVoice_</span><span class="s">(</span>voice<span class="s">)</span>
-    speech.<span class="s">startSpeakingString_</span><span class="s">(</span>txt<span class="s">)</span>
+<span class="k">def</span> <span class="nf">say</span>(txt, voice<span class="o">=</span><span class="bp">None</span>):
+    <span class="k">if</span> voice <span class="ow">in</span> voices():
+        voice <span class="o">=</span> <span class="s">"com.apple.speech.synthesis.voice."</span><span class="o">+</span>voice
+    <span class="k">else</span>:
+        voice <span class="o">=</span> NSSpeechSynthesizer<span class="o">.</span>defaultVoice()
+    speech <span class="o">=</span> NSSpeechSynthesizer<span class="o">.</span>alloc()<span class="o">.</span>initWithVoice_(voice)
+    speech<span class="o">.</span>startSpeakingString_(txt)
 </pre>
 
     <p>Now say <em>hello</em> in a random voice:</p>
-<pre>say<span class="s">(</span><span class="str">"hello"</span>, voice=<span class="kw">choice</span><span class="s">(</span>voices<span class="s">(</span><span class="s">)</span><span class="s">)</span><span class="s">)</span>
+<pre>say(<span class="s">"hello"</span>, voice<span class="o">=</span><span class="nf">choice</span>(voices()))
 </pre><br/>
     <hr/>
 
@@ -162,106 +162,108 @@ m.<span class="s">queue</span><span class="s">(</span><span class="s">1</span>, 
     <p>The command below wraps the NSFontManager object. It returns a list with the PostScript name
     of each font installed on your system. Thanks to Mark for this one.</p>
 <pre>
-<span class="kw">from</span> AppKit <span class="kw">import</span> NSFontManager
+<span class="kn">from</span> <span class="nn">AppKit</span> <span class="kn">import</span> NSFontManager
  
-<span class="kw">def</span> <span class="red">fonts</span><span class="s">(</span><span class="s">)</span>:
-    <span class="kw">return</span> NSFontManager.<span class="s">sharedFontManager</span><span class="s">(</span><span class="s">)</span>.<span class="s">availableFonts</span><span class="s">(</span><span class="s">)</span>
+<span class="k">def</span> <span class="nf">fonts</span>():
+    <span class="k">return</span> NSFontManager<span class="o">.</span>sharedFontManager()<span class="o">.</span>availableFonts()
 </pre>
 
     <p>Now you can do lots of fun typography:</p>
 <pre>
-<span class="kw">background</span><span class="s">(</span><span class="s">0.15</span>, <span class="s">0.1</span>, <span class="s">0.1</span><span class="s">)</span>
+<span class="nf">background</span>(<span class="mf">0.15</span>, <span class="mf">0.1</span>, <span class="mf">0.1</span>)
  
-x, y, h = <span class="s">0</span>, <span class="s">0</span>, <span class="s">0</span>
-<span class="kw">lineheight</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
-<span class="kw">fontsize</span><span class="s">(</span><span class="s">14</span><span class="s">)</span>
-<span class="kw">for</span> f <span class="kw">in</span> fonts<span class="s">(</span><span class="s">)</span><span class="s">[</span>:<span class="s">250</span><span class="s">]</span>:
+x, y, h <span class="o">=</span> <span class="mi">0</span>, <span class="mi">0</span>, <span class="mi">0</span>
+<span class="nf">lineheight</span>(<span class="mi">1</span>)
+<span class="nf">fontsize</span>(<span class="mi">14</span>)
+<span class="k">for</span> f <span class="ow">in</span> <span class="nf">fonts</span>()[:<span class="mi">250</span>]:
  
-    <span class="kw">font</span><span class="s">(</span>f<span class="s">)</span>
+    <span class="nf">font</span>(f)
  
-    <span class="grey"># Random pink, blue or white color </span>
-    <span class="kw">fill</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="s">0.5</span><span class="s">)</span>, <span class="s">0.75</span><span class="s">)</span>
-    <span class="kw">if</span> <span class="kw">random</span><span class="s">(</span><span class="s">)</span> &gt; <span class="s">0.8</span>: <span class="kw">fill</span><span class="s">(</span><span class="s">1</span><span class="s">)</span>
+    <span class="c"># Random pink, blue or white color </span>
+    <span class="nf">fill</span>(<span class="nf">random</span>(), <span class="nf">random</span>(<span class="mf">0.5</span>), <span class="mf">0.75</span>)
+    <span class="k">if</span> <span class="nf">random</span>() <span class="o">&gt;</span> <span class="mf">0.8</span>: <span class="nf">fill</span>(<span class="mi">1</span>)
     
-    <span class="grey"># Wrap text to the next line </span>
-    <span class="kw">if</span> x + <span class="kw">textwidth</span><span class="s">(</span>f<span class="s">)</span> &gt; <span class="kw">WIDTH</span>:
-        x = <span class="s">0</span>
-        y += h
-        h = <span class="s">0</span>
+    <span class="c"># Wrap text to the next line </span>
+    <span class="k">if</span> x <span class="o">+</span> <span class="nf">textwidth</span>(f) <span class="o">&gt;</span> <span class="kc">WIDTH</span>:
+        x <span class="o">=</span> <span class="mi">0</span>
+        y <span class="o">+=</span> h
+        h <span class="o">=</span> <span class="mi">0</span>
  
-    <span class="kw">text</span><span class="s">(</span>f, x, y<span class="s">)</span>
+    <span class="nf">text</span>(f, x, y)
  
-    <span class="grey"># Line height is equal to biggest font </span>
-    h = <span class="s">max</span><span class="s">(</span>h, <span class="kw">textheight</span><span class="s">(</span>f<span class="s">)</span><span class="s">)</span>
-    x += <span class="kw">textwidth</span><span class="s">(</span>f<span class="s">)</span>
+    <span class="c"># Line height is equal to biggest font </span>
+    h <span class="o">=</span> <span class="nb">max</span>(h, <span class="nf">textheight</span>(f))
+    x <span class="o">+=</span> <span class="nf">textwidth</span>(f)
 </pre>
 
-    <p><img alt="pyobjc-fonts" height="550" src="media/pyobjc-fonts.jpg" width="550"/><br/></p>
+    <p><img alt="pyobjc-fonts" height="550" src="../etc/tut/pyobjc-fonts.jpg" width="550"/><br/></p>
     <p> </p>
     <hr/>
 
     <h2>Dashed lines</h2>
 
-    <p>Obviously all of the commands in NodeBox are wrappers to AppKit calls. In most cases you can
-    still manipulate them directly with PyObjC. For example, a BezierPath object has a
+    <p>Obviously all of the commands in PlotDevice are wrappers to AppKit calls. In most cases you
+    can still manipulate them directly with PyObjC. For example, a BezierPath object has a
     <em>path</em> property containing the actual NSBezierPath. This we can manipulate to create
     some custom effects.<br/></p>
 <pre>
-<span class="kw">def</span> <span class="red">linedash</span><span class="s">(</span>path, segment=<span class="s">10</span>, gap=<span class="s">5</span><span class="s">)</span>:
-    path.<span class="s">path</span>.<span class="s">setLineDash_count_phase_</span><span class="s">(</span><span class="s">[</span>segment, gap<span class="s">]</span>, <span class="s">2</span>, <span class="s">0</span><span class="s">)</span>
-    <span class="kw">return</span> path
+<span class="k">def</span> <span class="nf">linedash</span>(path, segment<span class="o">=</span><span class="mi">10</span>, gap<span class="o">=</span><span class="mi">5</span>):
+    path<span class="o">.</span>path<span class="o">.</span>setLineDash_count_phase_([segment, gap], <span class="mi">2</span>, <span class="mi">0</span>)
+    <span class="k">return</span> path
 </pre>
-<pre>p = <span class="kw">line</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">200</span>, <span class="s">200</span>, draw=<span class="kw">False</span><span class="s">)</span>
-linedash<span class="s">(</span>p, segment=<span class="s">5</span><span class="s">)</span>
-<span class="kw">stroke</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
-<span class="kw">drawpath</span><span class="s">(</span>p<span class="s">)</span>
+<pre>p <span class="o">=</span> <span class="nf">line</span>(<span class="mi">0</span>, <span class="mi">0</span>, <span class="mi">200</span>, <span class="mi">200</span>, draw<span class="o">=</span><span class="bp">False</span>)
+linedash(p, segment<span class="o">=</span><span class="mi">5</span>)
+<span class="nf">stroke</span>(<span class="mi">0</span>)
+<span class="nf">drawpath</span>(p)
 </pre>
 
-    <p><img alt="pyobjc-linedash" height="214" src="media/pyobjc-linedash.jpg" width="222"/><br/></p>
+    <p><img alt="pyobjc-linedash" height="214" src="../etc/tut/pyobjc-linedash.jpg" width="222"/><br/></p>
     <p> </p>
     <hr/>
 
-    <h2>Dropshadows in NodeBox</h2>
+    <h2>Dropshadows in PlotDevice</h2>
 
     <p>Here I create a wrapper for NSShadow. The result are two commands, <em>shadow()</em> and
-    <em>noshadow()</em> that work like <a href="../ref/Color.html#fill()">fill()</a> and <a href="../ref/Color.html#nofill()">nofill()</a>: every drawing command defined after
+    <em>noshadow()</em> that work like <a href="../ref/Line+Color.html#fill()">fill()</a> and
+    <a href="../ref/Line+Color.html#nofill()">nofill()</a>: every drawing command defined after
     <em>shadow()</em> will have a dropshadow until you call <em>noshadow()</em>.</p>
     <p>Note that the shadow class inherits from something called <em>Grob</em>. This is short for
     <em>Graphic Object</em>. A Grob executes its <em>_draw()</em> method the moment it is drawn.
     You need to initialise it with the current context (canvas) to draw in, that’s why we pass the
     global <em>_ctx</em> to Grob.__init__(). The <em>_ctx</em> contains the current context.</p>
-    <p>This is a typical example of what NodeBox drawing commands look like (also see the <a href="http://dev.nodebox.net/browser/nodebox/trunk/src/DrawingPrimitives.py">source</a>).</p>
+    <p>This is a typical example of what PlotDevice drawing commands look like (also see the
+    <a href="http://dev.nodebox.net/browser/plotdevice/trunk/src/DrawingPrimitives.py">source</a>).</p>
 <pre>
-<span class="kw">from</span> AppKit <span class="kw">import</span> NSShadow, NSColor
-<span class="kw">from</span> nodebox.<span class="s">graphics</span> <span class="kw">import</span> <span class="kw">Grob</span>
+<span class="kn">from</span> <span class="nn">AppKit</span> <span class="kn">import</span> NSShadow, NSColor
+<span class="kn">from</span> <span class="nn">plotdevice.graphics</span> <span class="kn">import</span> <span class="nc">Grob</span>
  
-<span class="kw">class</span> shadow<span class="s">(</span><span class="kw">Grob</span><span class="s">)</span>:
-    <span class="kw">def</span> <span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, x=<span class="s">10</span>, y=<span class="s">10</span>, alpha=<span class="s">0.25</span>, blur=<span class="s">4.0</span><span class="s">)</span>:
-        <span class="kw">Grob</span>.<span class="red">__init__</span><span class="s">(</span><span class="s">self</span>, _ctx<span class="s">)</span>
-        <span class="s">self</span>._shadow = NSShadow.<span class="s">alloc</span><span class="s">(</span><span class="s">)</span>.<span class="s">init</span><span class="s">(</span><span class="s">)</span>
-        <span class="s">self</span>._shadow.<span class="s">setShadowOffset_</span><span class="s">(</span><span class="s">(</span>x, -y<span class="s">)</span><span class="s">)</span>
-        <span class="s">self</span>._shadow.<span class="s">setShadowColor_</span><span class="s">(</span><span class="kw">color</span><span class="s">(</span><span class="s">0</span>, <span class="s">0</span>, <span class="s">0</span>, alpha<span class="s">)</span>._rgb<span class="s">)</span>
-        <span class="s">self</span>._shadow.<span class="s">setShadowBlurRadius_</span><span class="s">(</span>blur<span class="s">)</span>
-        <span class="s">self</span>.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
-    <span class="kw">def</span> <span class="red">_draw</span><span class="s">(</span><span class="s">self</span><span class="s">)</span>:
-        <span class="s">self</span>._shadow.<span class="s">set</span><span class="s">(</span><span class="s">)</span>
+<span class="k">class</span> <span class="nc">shadow</span>(<span class="nc">Grob</span>):
+    <span class="k">def</span> <span class="nf">__init__</span>(<span class="bp">self</span>, x<span class="o">=</span><span class="mi">10</span>, y<span class="o">=</span><span class="mi">10</span>, alpha<span class="o">=</span><span class="mf">0.25</span>, blur<span class="o">=</span><span class="mf">4.0</span>):
+        <span class="nc">Grob</span><span class="o">.</span>__init__(<span class="bp">self</span>, _ctx)
+        <span class="bp">self</span><span class="o">.</span>_shadow <span class="o">=</span> NSShadow<span class="o">.</span>alloc()<span class="o">.</span>init()
+        <span class="bp">self</span><span class="o">.</span>_shadow<span class="o">.</span>setShadowOffset_((x, <span class="o">-</span>y))
+        <span class="bp">self</span><span class="o">.</span>_shadow<span class="o">.</span>setShadowColor_(<span class="nf">color</span>(<span class="mi">0</span>, <span class="mi">0</span>, <span class="mi">0</span>, alpha)<span class="o">.</span>_rgb)
+        <span class="bp">self</span><span class="o">.</span>_shadow<span class="o">.</span>setShadowBlurRadius_(blur)
+        <span class="bp">self</span><span class="o">.</span>draw()
+    <span class="k">def</span> <span class="nf">_draw</span>(<span class="bp">self</span>):
+        <span class="bp">self</span><span class="o">.</span>_shadow<span class="o">.</span>set()
         
-<span class="kw">def</span> <span class="red">noshadow</span><span class="s">(</span><span class="s">)</span>:
-    shadow<span class="s">(</span>alpha=<span class="s">0</span><span class="s">)</span>
+<span class="k">def</span> <span class="nf">noshadow</span>():
+    shadow(alpha<span class="o">=</span><span class="mi">0</span>)
 </pre>
 
     <p>Shadows work very well to create a feeling of depth:<br/></p>
-<pre>shadow<span class="s">(</span>blur=<span class="s">10.0</span><span class="s">)</span>
+<pre>shadow(blur<span class="o">=</span><span class="mf">10.0</span>)
  
-<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">30</span><span class="s">)</span>:
-    <span class="kw">fill</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">0.75</span><span class="s">)</span>, <span class="s">0</span>, <span class="kw">random</span><span class="s">(</span><span class="s">0.25</span>,<span class="s">0.75</span><span class="s">)</span><span class="s">)</span>
-    r = <span class="kw">random</span><span class="s">(</span><span class="s">50</span><span class="s">)</span>
-    <span class="kw">oval</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span><span class="kw">HEIGHT</span><span class="s">)</span>, r, r<span class="s">)</span>
+<span class="k">for</span> i <span class="ow">in</span> <span class="nb">range</span>(<span class="mi">30</span>):
+    <span class="nf">fill</span>(<span class="nf">random</span>(<span class="mf">0.75</span>), <span class="mi">0</span>, <span class="nf">random</span>(<span class="mf">0.25</span>,<span class="mf">0.75</span>))
+    r <span class="o">=</span> <span class="nf">random</span>(<span class="mi">50</span>)
+    <span class="nf">oval</span>(<span class="nf">random</span>(<span class="kc">WIDTH</span>), <span class="nf">random</span>(<span class="kc">HEIGHT</span>), r, r)
 </pre> 
 
-    <p><img alt="pybobjc-shadow" height="397" src="media/pyobjc-shadow1.jpg" width="396"/></p>
+    <p><img alt="pybobjc-shadow" height="397" src="../etc/tut/pyobjc-shadow1.jpg" width="396"/></p>
     <p> </p>
-    <p><img alt="pyobjc-shadow2" height="296" src="media/pyobjc-shadow2.jpg" width="298"/><br/></p>
+    <p><img alt="pyobjc-shadow2" height="296" src="../etc/tut/pyobjc-shadow2.jpg" width="298"/><br/></p>
   </div>
 
 </body></html>

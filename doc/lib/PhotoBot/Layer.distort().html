@@ -2,45 +2,46 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Libraries: photobot.Layer.distort()</title>
-  <link charset="utf-8" href="../../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Libraries: Layer.distort()</title>
+  <link charset="utf-8" href="../../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../../manual.html">NodeBox <span>Libraries</span></a></h1>
+    <h1><a href="../../manual.html">Plot Device <span>Libraries</span></a></h1>
 
-    <h3>photobot.Layer.distort()</h3>
+    <h3>Layer.distort()</h3>
   </div>
 
   <div class="article">
     <h2>Syntax</h2>
-<pre>canvas.<span class="s">layers</span><span class="s">[</span>i<span class="s">]</span>.<span class="s">distort</span><span class="s">(</span>x1=<span class="s">0</span>,y1=<span class="s">0</span>, x2=<span class="s">0</span>,y2=<span class="s">0</span>, x3=<span class="s">0</span>,y3=<span class="s">0</span>, x4=<span class="s">0</span>,y4=<span class="s">0</span><span class="s">)</span>
+<pre>
+<span class="nf">canvas</span><span class="o">.</span>layers[i]<span class="o">.</span>distort(x1<span class="o">=</span><span class="mi">0</span>,y1<span class="o">=</span><span class="mi">0</span>, x2<span class="o">=</span><span class="mi">0</span>,y2<span class="o">=</span><span class="mi">0</span>, x3<span class="o">=</span><span class="mi">0</span>,y3<span class="o">=</span><span class="mi">0</span>, x4<span class="o">=</span><span class="mi">0</span>,y4<span class="o">=</span><span class="mi">0</span>)
 </pre>
 
     <h2>Description</h2>
 
-    <p>Distorts layer <em>i</em>. Distorts the layer by <a href="PhotoBot/Layer.translate().html">translating</a> the four corners of its bounding box to the
-    given coordinates: upper left (<em>x1</em>,<em>y1</em>), upper right(<em>x2</em>,<em>y2</em>),
-    lower right (<em>x3</em>,<em>y3</em>) and lower left (<em>x4</em>,<em>y4</em>).</p>
+    <p>Distorts layer <em>i</em>. Distorts the layer by <a href="Layer.translate().html">translating</a> the four corners of its bounding box to the given
+    coordinates: upper left (<em>x1</em>,<em>y1</em>), upper right(<em>x2</em>,<em>y2</em>), lower
+    right (<em>x3</em>,<em>y3</em>) and lower left (<em>x4</em>,<em>y4</em>).</p>
     <h2>Example</h2>
-<pre>photobot = <span class="kw">ximport</span><span class="s">(</span><span class="str">"photobot"</span><span class="s">)</span>
-canvas = photobot.<span class="s">canvas</span><span class="s">(</span><span class="s">100</span>,<span class="s">100</span><span class="s">)</span>
-canvas.<span class="s">layer</span><span class="s">(</span><span class="str">"robot.jpg"</span><span class="s">)</span>
-canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">opacity</span><span class="s">(</span><span class="s">60</span><span class="s">)</span>
-<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>:
-  canvas.<span class="s">layers</span><span class="s">[</span><span class="s">1</span><span class="s">]</span>.<span class="s">duplicate</span><span class="s">(</span><span class="s">)</span>
-  canvas.<span class="s">layers</span><span class="s">[</span><span class="s">2</span>+i<span class="s">]</span>.<span class="s">distort</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span><span class="s">-100</span>,<span class="s">100</span><span class="s">)</span>,
-                             <span class="kw">random</span><span class="s">(</span><span class="s">-100</span>,<span class="s">100</span><span class="s">)</span>,
-                             <span class="kw">random</span><span class="s">(</span><span class="s">-100</span>,<span class="s">100</span><span class="s">)</span>,
-                             <span class="kw">random</span><span class="s">(</span><span class="s">-100</span>,<span class="s">100</span><span class="s">)</span>,
-                             <span class="kw">random</span><span class="s">(</span><span class="s">-100</span>,<span class="s">100</span><span class="s">)</span>,           
-                             <span class="kw">random</span><span class="s">(</span><span class="s">-100</span>,<span class="s">100</span><span class="s">)</span>,
-                             <span class="kw">random</span><span class="s">(</span><span class="s">-100</span>,<span class="s">100</span><span class="s">)</span>,
-                             <span class="kw">random</span><span class="s">(</span><span class="s">-100</span>,<span class="s">100</span><span class="s">)</span><span class="s">)</span>
+<pre>photobot <span class="o">=</span> <span class="nf">ximport</span>(<span class="s">"photobot"</span>)
+<span class="nf">canvas</span> <span class="o">=</span> photobot<span class="o">.</span><span class="nf">canvas</span>(<span class="mi">100</span>,<span class="mi">100</span>)
+<span class="nf">canvas</span><span class="o">.</span>layer(<span class="s">"robot.jpg"</span>)
+<span class="nf">canvas</span><span class="o">.</span>layers[<span class="mi">1</span>]<span class="o">.</span>opacity(<span class="mi">60</span>)
+<span class="k">for</span> i <span class="ow">in</span> <span class="nb">range</span>(<span class="mi">10</span>):
+  <span class="nf">canvas</span><span class="o">.</span>layers[<span class="mi">1</span>]<span class="o">.</span>duplicate()
+  <span class="nf">canvas</span><span class="o">.</span>layers[<span class="mi">2</span><span class="o">+</span>i]<span class="o">.</span>distort(<span class="nf">random</span>(<span class="o">-</span><span class="mi">100</span>,<span class="mi">100</span>),
+                             <span class="nf">random</span>(<span class="o">-</span><span class="mi">100</span>,<span class="mi">100</span>),
+                             <span class="nf">random</span>(<span class="o">-</span><span class="mi">100</span>,<span class="mi">100</span>),
+                             <span class="nf">random</span>(<span class="o">-</span><span class="mi">100</span>,<span class="mi">100</span>),
+                             <span class="nf">random</span>(<span class="o">-</span><span class="mi">100</span>,<span class="mi">100</span>),           
+                             <span class="nf">random</span>(<span class="o">-</span><span class="mi">100</span>,<span class="mi">100</span>),
+                             <span class="nf">random</span>(<span class="o">-</span><span class="mi">100</span>,<span class="mi">100</span>),
+                             <span class="nf">random</span>(<span class="o">-</span><span class="mi">100</span>,<span class="mi">100</span>))
 </pre>
 
     <div class="example">
-      <img alt="" height="100" src="../media/photobot-distort.jpg" width="100"/>
+      <img alt="" height="100" src="../../etc/lib/photobot-distort.jpg" width="100"/>
     </div>
   </div>
 

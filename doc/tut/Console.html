@@ -2,127 +2,128 @@
 <html><head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 
-  <title>NodeBox Tutorials: Console</title>
-  <link charset="utf-8" href="../nodebox.css" rel="stylesheet" type="text/css"/>
+  <title>PlotDevice Tutorials: Console</title>
+  <link charset="utf-8" href="../etc/manual.css" rel="stylesheet" type="text/css"/>
 
 </head><body>
   <div class="link" id="nav">
-    <h1><a href="../manual.html">NodeBox <span>Tutorials</span></a></h1>
+    <h1><a href="../manual.html">Plot Device <span>Tutorials</span></a></h1>
 
     <h3>Console</h3>
   </div>
 
   <div class="article">
-    <h1>Using NodeBox in another application</h1>
+    <h1>Using PlotDevice in another application</h1>
 
-    <p>The NodeBox core is now split off from the UI functionality, so you can use it in any
-    project. There are a few different ways of using NodeBox.</p>
-    <h2>1. The easy way: from NodeBox itself</h2>
+    <p>The PlotDevice core is now split off from the UI functionality, so you can use it in any
+    project. There are a few different ways of using PlotDevice.</p>
+    <h2>1. The easy way: from PlotDevice itself</h2>
 
-    <p>One of the new features in NodeBox is that you can access the canvas object. It’s a
+    <p>One of the new features in PlotDevice is that you can access the canvas object. It’s a
     list-like structure, containing all your graphical objects (’grobs’). The canvas also has a
     ‘save’ method, so anywhere in your script you can do:</p>
-<pre>canvas.<span class="s">save</span><span class="s">(</span><span class="str">"partial.pdf"</span><span class="s">)</span>
+<pre>
+<span class="nf">canvas</span><span class="o">.</span><span class="nf">save</span>(<span class="s">"partial.pdf"</span>)
 </pre>
 
     <p>And it will save what it has drawn <em>up until that point.</em> Do it at the end of your
     script, and you get the full output.</p>
     <p>After saving, you might want to clear out the canvas. You can:</p>
-<pre>canvas.<span class="s">clear</span><span class="s">(</span><span class="s">)</span>
+<pre>
+<span class="nf">canvas</span><span class="o">.</span>clear()
 </pre>
 
     <p>This will remove all grobs already on the canvas; they will not show up in the render.</p>
-    <h2>2. Installing the NodeBox module</h2>
+    <h2>2. Installing the PlotDevice module</h2>
 
-    <p>If you want to use NodeBox from the command line, you will have to install it. We currently
-    recommend using <a href="http://subversion.tigris.org/" title="Subversion">Subversion</a> to
-    grab a copy:</p>
-<pre>svn co http://dev.<span class="s">nodebox</span>.<span class="s">net</span>/svn/nodebox/trunk/ nodebox
-<span class="s">cd</span> libs/Numeric
-python setup.<span class="s">py</span> install
-<span class="s">cd</span> ../..
+    <p>If you want to use PlotDevice from the command line, you will have to install it. We
+    currently recommend using <a href="http://subversion.tigris.org/" title="Subversion">Subversion</a> to grab a copy:</p>
+<pre>svn co http:<span class="o">//</span>dev<span class="o">.</span>nodebox<span class="o">.</span>net<span class="o">/</span>svn<span class="o">/</span>plotdevice<span class="o">/</span>trunk<span class="o">/</span> plotdevice
+cd libs<span class="o">/</span>Numeric
+python setup<span class="o">.</span>py install
+cd <span class="o">../..</span>
  
-<span class="s">cd</span> libs/pathmatics
-python setup.<span class="s">py</span> install
-<span class="s">cd</span> ../..
+cd libs<span class="o">/</span>pathmatics
+python setup<span class="o">.</span>py install
+cd <span class="o">../..</span>
  
-<span class="s">cd</span> libs/polymagic
-python setup.<span class="s">py</span> install
-<span class="s">cd</span> ../..
+cd libs<span class="o">/</span>polymagic
+python setup<span class="o">.</span>py install
+cd <span class="o">../..</span>
  
-<span class="s">cd</span> src
-python setup.<span class="s">py</span> install
+cd src
+python setup<span class="o">.</span>py install
 </pre>
 
     <p>The only outside dependency is <a href="http://pyobjc.sourceforge.net/" title="PyObjC">PyObjC</a>. We recommend the latest version from Subversion.</p>
     <h2>3. Using the console runner</h2>
 
-    <p>When you have a set of NodeBox scripts that you want to run to generate images or a movie,
-    use the following commands:</p>
+    <p>When you have a set of PlotDevice scripts that you want to run to generate images or a
+    movie, use the following commands:</p>
 <pre>
-<span class="kw">from</span> nodebox <span class="kw">import</span> console
-source = <span class="str">"size(200,200)<span class="s">\n</span>rect(random(WIDTH), random(HEIGHT), 20, 20)"</span>
-console.<span class="s">make_image</span><span class="s">(</span>source, <span class="str">"rect.png"</span><span class="s">)</span>
-console.<span class="s">make_movie</span><span class="s">(</span>source, <span class="str">"rect.mov"</span>, <span class="s">20</span>, fps=<span class="s">30</span><span class="s">)</span>
+<span class="kn">from</span> <span class="nn">plotdevice</span> <span class="kn">import</span> console
+source <span class="o">=</span> <span class="s">"size(200,200)</span><span class="se">\n</span><span class="s">rect(random(WIDTH), random(HEIGHT), 20, 20)"</span>
+console<span class="o">.</span>make_image(source, <span class="s">"rect.png"</span>)
+console<span class="o">.</span>make_movie(source, <span class="s">"rect.mov"</span>, <span class="mi">20</span>, fps<span class="o">=</span><span class="mi">30</span>)
 </pre>
 
     <p>Currently, there is no way to run the console from the command line, but we’re working on
     that.</p>
     <h2>4. Accessing the context directly</h2>
 
-    <p>If you want to have direct access to NodeBox’s drawing context, you can import everything
+    <p>If you want to have direct access to PlotDevice’s drawing context, you can import everything
     directly. The API remains the same, but you have to prefix everything with the context. Note
     also the initialization of Cocoa, necessary for using the API.</p>
 <pre>
-<span class="kw">from</span> AppKit <span class="kw">import</span> NSApplication
-NSApplication.<span class="s">sharedApplication</span><span class="s">(</span><span class="s">)</span>.<span class="s">activateIgnoringOtherApps_</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+<span class="kn">from</span> <span class="nn">AppKit</span> <span class="kn">import</span> NSApplication
+NSApplication<span class="o">.</span>sharedApplication()<span class="o">.</span>activateIgnoringOtherApps_(<span class="mi">0</span>)
  
-<span class="kw">from</span> nodebox.<span class="s">graphics</span> <span class="kw">import</span> Context
-<span class="kw">from</span> nodebox.<span class="s">util</span> <span class="kw">import</span> <span class="kw">random</span>, <span class="kw">choice</span>, <span class="kw">grid</span>, <span class="kw">files</span>
-ctx = Context<span class="s">(</span><span class="s">)</span>
-ctx.<span class="kw">size</span><span class="s">(</span><span class="s">200</span>, <span class="s">200</span><span class="s">)</span>
-ctx.<span class="kw">rect</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span>ctx.<span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span>ctx.<span class="kw">HEIGHT</span><span class="s">)</span>, <span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
-ctx.<span class="s">save</span><span class="s">(</span><span class="str">"test.png"</span><span class="s">)</span>
+<span class="kn">from</span> <span class="nn">plotdevice.graphics</span> <span class="kn">import</span> <span class="nc">Context</span>
+<span class="kn">from</span> <span class="nn">plotdevice.util</span> <span class="kn">import</span> <span class="nf">random</span>, <span class="nf">choice</span>, <span class="nf">grid</span>, <span class="nf">files</span>
+ctx <span class="o">=</span> <span class="nc">Context</span>()
+ctx<span class="o">.</span><span class="nf">size</span>(<span class="mi">200</span>, <span class="mi">200</span>)
+ctx<span class="o">.</span><span class="nf">rect</span>(<span class="nf">random</span>(ctx<span class="o">.</span><span class="kc">WIDTH</span>), <span class="nf">random</span>(ctx<span class="o">.</span><span class="kc">HEIGHT</span>), <span class="mi">100</span>, <span class="mi">100</span>)
+ctx<span class="o">.</span><span class="nf">save</span>(<span class="s">"test.png"</span>)
 </pre>
 
     <p>You can also make movies this way:</p>
 <pre>
-<span class="kw">from</span> AppKit <span class="kw">import</span> NSApplication
-NSApplication.<span class="s">sharedApplication</span><span class="s">(</span><span class="s">)</span>.<span class="s">activateIgnoringOtherApps_</span><span class="s">(</span><span class="s">0</span><span class="s">)</span>
+<span class="kn">from</span> <span class="nn">AppKit</span> <span class="kn">import</span> NSApplication
+NSApplication<span class="o">.</span>sharedApplication()<span class="o">.</span>activateIgnoringOtherApps_(<span class="mi">0</span>)
  
-<span class="kw">from</span> nodebox.<span class="s">graphics</span> <span class="kw">import</span> Context
-<span class="kw">from</span> nodebox.<span class="s">util</span> <span class="kw">import</span> <span class="kw">random</span>, <span class="kw">choice</span>, <span class="kw">grid</span>, <span class="kw">files</span>
-<span class="kw">from</span> nodebox.<span class="s">util</span>.<span class="s">QTSupport</span> <span class="kw">import</span> Movie
+<span class="kn">from</span> <span class="nn">plotdevice.graphics</span> <span class="kn">import</span> <span class="nc">Context</span>
+<span class="kn">from</span> <span class="nn">plotdevice.util</span> <span class="kn">import</span> <span class="nf">random</span>, <span class="nf">choice</span>, <span class="nf">grid</span>, <span class="nf">files</span>
+<span class="kn">from</span> <span class="nn">plotdevice.util.QTSupport</span> <span class="kn">import</span> Movie
  
-movie = Movie<span class="s">(</span><span class="str">"rects.mov"</span><span class="s">)</span>
-<span class="kw">for</span> i <span class="kw">in</span> <span class="s">range</span><span class="s">(</span><span class="s">10</span><span class="s">)</span>:
-   ctx = Context<span class="s">(</span><span class="s">)</span>
-    ctx.<span class="kw">size</span><span class="s">(</span><span class="s">200</span>, <span class="s">200</span><span class="s">)</span>
- ctx.<span class="kw">rect</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span>ctx.<span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span>ctx.<span class="kw">HEIGHT</span><span class="s">)</span>, <span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
-  movie.<span class="s">add</span><span class="s">(</span>ctx<span class="s">)</span>
-movie.<span class="s">save</span><span class="s">(</span><span class="s">)</span>
+movie <span class="o">=</span> Movie(<span class="s">"rects.mov"</span>)
+<span class="k">for</span> i <span class="ow">in</span> <span class="nb">range</span>(<span class="mi">10</span>):
+   ctx <span class="o">=</span> <span class="nc">Context</span>()
+    ctx<span class="o">.</span><span class="nf">size</span>(<span class="mi">200</span>, <span class="mi">200</span>)
+ ctx<span class="o">.</span><span class="nf">rect</span>(<span class="nf">random</span>(ctx<span class="o">.</span><span class="kc">WIDTH</span>), <span class="nf">random</span>(ctx<span class="o">.</span><span class="kc">HEIGHT</span>), <span class="mi">100</span>, <span class="mi">100</span>)
+  movie<span class="o">.</span>add(ctx)
+movie<span class="o">.</span><span class="nf">save</span>()
 </pre>
 
     <h2>5. Drawing in a Cocoa drawRect method</h2>
 
-    <p>If you want to implement your existing drawing using NodeBox, you can do the following in
+    <p>If you want to implement your existing drawing using PlotDevice, you can do the following in
     your class’s drawRect: method:</p>
 <pre>
-<span class="kw">def</span> <span class="red">drawRect_</span><span class="s">(</span><span class="s">self</span>, <span class="kw">rect</span><span class="s">)</span>:
-    <span class="kw">from</span> nodebox.<span class="s">graphics</span> <span class="kw">import</span> Context
-   <span class="kw">from</span> nodebox.<span class="s">util</span> <span class="kw">import</span> <span class="kw">random</span>
-    ctx.<span class="kw">size</span><span class="s">(</span>*<span class="kw">rect</span><span class="s">[</span><span class="s">1</span><span class="s">]</span><span class="s">)</span>
- ctx.<span class="kw">rect</span><span class="s">(</span><span class="kw">random</span><span class="s">(</span>ctx.<span class="kw">WIDTH</span><span class="s">)</span>, <span class="kw">random</span><span class="s">(</span>ctx.<span class="kw">HEIGHT</span><span class="s">)</span>, <span class="s">100</span>, <span class="s">100</span><span class="s">)</span>
-  ctx.<span class="s">canvas</span>.<span class="s">draw</span><span class="s">(</span><span class="s">)</span>
+<span class="k">def</span> <span class="nf">drawRect_</span>(<span class="bp">self</span>, <span class="nf">rect</span>):
+    <span class="kn">from</span> <span class="nn">plotdevice.graphics</span> <span class="kn">import</span> <span class="nc">Context</span>
+   <span class="kn">from</span> <span class="nn">plotdevice.util</span> <span class="kn">import</span> <span class="nf">random</span>
+    ctx<span class="o">.</span><span class="nf">size</span>(<span class="o">*</span><span class="nf">rect</span>[<span class="mi">1</span>])
+ ctx<span class="o">.</span><span class="nf">rect</span>(<span class="nf">random</span>(ctx<span class="o">.</span><span class="kc">WIDTH</span>), <span class="nf">random</span>(ctx<span class="o">.</span><span class="kc">HEIGHT</span>), <span class="mi">100</span>, <span class="mi">100</span>)
+  ctx<span class="o">.</span><span class="nf">canvas</span><span class="o">.</span>draw()
 </pre>
 
     <p>Note that creating the Context and drawing it are two separate steps:</p>
     <ul>
       <li>First, the context is created; all drawing commands are translated into graphic objects
-      (’grobs’) that are stored on the canvas.
-      </li><li>Then, the canvas is drawn; each grob now renders itself on the current Cocoa graphics
-      context.
-    </li></ul>
+      (’grobs’) that are stored on the canvas.</li>
+      <li>Then, the canvas is drawn; each grob now renders itself on the current Cocoa graphics
+      context.</li>
+    </ul>
 
     <p>This also means you can cache the context (or the canvas) and use it in a drawRect method
     during a later stage.</p>
