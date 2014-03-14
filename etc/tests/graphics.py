@@ -1,13 +1,13 @@
 import unittest
 import sys
 
-# To run the test, make sure you have at least built the NodeBox Extensions.
+# To run the test, make sure you have at least built the PlotDevice Extensions.
 # Run the following command in the Terminal:
 #   xcodebuild -target "Build Extensions"
 sys.path.append('..')
 sys.path.append('../build/libs')
 
-from nodebox.graphics import *
+from plotdevice.graphics import *
 
 class GraphicsTestCase(unittest.TestCase):
     
@@ -16,16 +16,16 @@ class GraphicsTestCase(unittest.TestCase):
 
     def test_arrow_type_error(self):
         """Test if passing a wrong arrow type raises an error."""
-        self.assertRaises(NodeBoxError, self.ctx.arrow, 0, 0, 100, type=42)
+        self.assertRaises(PlotDeviceError, self.ctx.arrow, 0, 0, 100, type=42)
 
     def test_too_many_pops(self):
         """Test if popping too many times raises an error."""
-        self.assertRaises(NodeBoxError, self.ctx.pop)
+        self.assertRaises(PlotDeviceError, self.ctx.pop)
         
     def test_font_not_found(self):
         """Test if setting an unexisting font raises an error."""
         old_font = self.ctx.font()
-        self.assertRaises(NodeBoxError, self.ctx.font, "THIS_FONT_DOES_NOT_EXIST")
+        self.assertRaises(PlotDeviceError, self.ctx.font, "THIS_FONT_DOES_NOT_EXIST")
         self.assertEquals(self.ctx.font(), old_font, "Current font has not changed.")
     
     def test_ellipse(self):
@@ -53,10 +53,10 @@ class BezierPathTestCase(unittest.TestCase):
         self.assertEquals(p.capstyle, ROUND)
         
     def test_capstyle_validation(self):
-        self.assertRaises(NodeBoxError, self.ctx.capstyle, 42)
-        self.assertRaises(NodeBoxError, BezierPath, self.ctx, capstyle=42)
+        self.assertRaises(PlotDeviceError, self.ctx.capstyle, 42)
+        self.assertRaises(PlotDeviceError, BezierPath, self.ctx, capstyle=42)
         p = BezierPath(self.ctx)
-        self.assertRaises(NodeBoxError, p._set_capstyle, 42)
+        self.assertRaises(PlotDeviceError, p._set_capstyle, 42)
         
     def test_joinstyle_context(self):
         self.ctx.joinstyle(ROUND)
@@ -70,10 +70,10 @@ class BezierPathTestCase(unittest.TestCase):
         self.assertEquals(p.joinstyle, ROUND)
 
     def test_joinstyle_validation(self):
-        self.assertRaises(NodeBoxError, self.ctx.joinstyle, 42)
-        self.assertRaises(NodeBoxError, BezierPath, self.ctx, joinstyle=42)
+        self.assertRaises(PlotDeviceError, self.ctx.joinstyle, 42)
+        self.assertRaises(PlotDeviceError, BezierPath, self.ctx, joinstyle=42)
         p = BezierPath(self.ctx)
-        self.assertRaises(NodeBoxError, p._set_joinstyle, 42)
+        self.assertRaises(PlotDeviceError, p._set_joinstyle, 42)
 
 if __name__=='__main__':
     unittest.main()

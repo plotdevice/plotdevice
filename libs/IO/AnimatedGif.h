@@ -1,6 +1,6 @@
 //
 //  AnimatedGif.h
-//  NodeBox
+//  PlotDevice
 //
 //  Created by Christian Swinehart on 12/6/13.
 //

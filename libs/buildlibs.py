@@ -8,8 +8,8 @@ libs_root = dirname(abspath(__file__))
 def mkdirs(newdir, mode=0777):
     try: os.makedirs(newdir, mode)
     except OSError, err:
-        # Reraise the error unless it's about an already existing directory 
-        if err.errno != errno.EEXIST or not isdir(newdir): 
+        # Reraise the error unless it's about an already existing directory
+        if err.errno != errno.EEXIST or not isdir(newdir):
             raise
 
 def build_libraries():
@@ -50,7 +50,7 @@ def clean_build_files():
         lib_name = dirname(build_dir)
         print "Cleaning", lib_name
         os.system('rm -r %s' % build_dir)
-    
+
 if __name__=='__main__':
     import sys
     clean = len(sys.argv)>1 and sys.argv[1]=='clean'

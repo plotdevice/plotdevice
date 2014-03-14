@@ -1,6 +1,6 @@
 //
 //  Animation.h
-//  NodeBox
+//  PlotDevice
 //
 //  Created by Christian Swinehart on 12/7/13.
 //

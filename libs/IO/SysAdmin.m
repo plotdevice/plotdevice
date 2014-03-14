@@ -1,6 +1,6 @@
 //
 //  SysAdmin.m
-//  NodeBox
+//  PlotDevice
 //
 //  Created by Christian Swinehart on 12/13/13.
 //
@@ -13,7 +13,7 @@
 + (BOOL)createSymlink:(NSString *)toolPath{
     NSString *toolDir = [toolPath stringByDeletingLastPathComponent];
     NSString *bundle_path = [[NSBundle mainBundle ] bundlePath];
-    NSString *console_py = [bundle_path stringByAppendingString:@"/Contents/SharedSupport/nodebox"];
+    NSString *console_py = [bundle_path stringByAppendingString:@"/Contents/SharedSupport/plotdevice"];
     OSStatus status;
     FILE *pipe = NULL;
         

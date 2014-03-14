@@ -1,6 +1,6 @@
 //
 //  ImageSequence.m
-//  NodeBox
+//  PlotDevice
 //
 //  Created by Christian Swinehart on 12/8/13.
 //

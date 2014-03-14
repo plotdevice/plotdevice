@@ -18,11 +18,11 @@ from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 
-NAME = 'NodeBox'
+NAME = 'PlotDevice'
 VERSION = '1.10'
 CREATOR = 'NdBx'
-BUNDLE_ID = "net.nodebox.NodeBox"
-HELP = "NodeBox Help"
+BUNDLE_ID = "net.plotdevice.PlotDevice"
+HELP = "PlotDevice Help"
 
 AUTHOR = "Frederik De Bleser",
 AUTHOR_EMAIL = "frederik@pandora.be",
@@ -46,7 +46,7 @@ CLASSIFIERS = (
 )
 
 DESCRIPTION = "Simple application for creating 2-dimensional graphics and animation using Python code"
-LONG_DESCRIPTION = """NodeBox is a Mac OS X application that allows you to create visual output
+LONG_DESCRIPTION = """PlotDevice is a Mac OS X application that allows you to create visual output
 with programming code. The application targets an audience of designers, with an easy set of state 
 commands that is both intuitive and creative. It is essentially a learning environment and an automation tool.
 
@@ -79,12 +79,12 @@ Requires:
 plist={
     'CFBundleDocumentTypes': [{
         'CFBundleTypeExtensions': [ 'py' ],
-        'CFBundleTypeIconFile': 'NodeBoxFile.icns',
+        'CFBundleTypeIconFile': 'PlotDeviceFile.icns',
         'CFBundleTypeName': "Python File",
         'CFBundleTypeRole': 'Editor',
         'LSItemContentTypes':['public.python-script'],
         'LSHandlerRank':'Owner',
-        'NSDocumentClass': 'NodeBoxDocument',
+        'NSDocumentClass': 'PlotDeviceDocument',
     }],
     "CFBundleIdentifier": BUNDLE_ID,
     "CFBundleName": NAME,
@@ -103,11 +103,11 @@ rsrc = [
     "Resources/English.lproj/AskString.xib",
     "Resources/English.lproj/Credits.rtf",
     "Resources/English.lproj/MainMenu.xib",
-    "Resources/English.lproj/NodeBoxDocument.xib",
-    "Resources/English.lproj/NodeBoxPreferences.xib",
+    "Resources/English.lproj/PlotDeviceDocument.xib",
+    "Resources/English.lproj/PlotDevicePreferences.xib",
     "Resources/ui",
-    "Resources/NodeBox.icns",
-    "Resources/NodeBoxFile.icns",
+    "Resources/PlotDevice.icns",
+    "Resources/PlotDeviceFile.icns",
 ]
 
 BUILD_APP = any(v in ('py2app','dist') for v in sys.argv)
@@ -137,35 +137,35 @@ class CleanCommand(Command):
         
 #         self.spawn(['/usr/bin/python', 'libs/buildlibs.py'])
 #         print "built libs from", os.getcwd()
-#         self.spawn(['/usr/bin/ditto', 'build/libs', '%s/nodebox/lib'%self.build_lib])
+#         self.spawn(['/usr/bin/ditto', 'build/libs', '%s/plotdevice/lib'%self.build_lib])
 
 #         # build_ext.run(self) # first let the real build_ext routine do its thing
 #         # if BUILD_APP: return # py2app moves the libraries to lib-dynload instead
-#         # self.mkpath('%s/nodebox/ext'%self.build_lib)
+#         # self.mkpath('%s/plotdevice/ext'%self.build_lib)
 
 #         # for ext in self.extensions:
 #         #     print "each", self.build_lib, ext.name
 #         #     src = "%s/%s.so"%(self.build_lib, ext.name)
-#         #     dst = "%s/nodebox/libs/%s.so"%(self.build_lib, ext.name)
+#         #     dst = "%s/plotdevice/libs/%s.so"%(self.build_lib, ext.name)
 #         #     self.move_file(src, dst)
-#             # self.spawn(['/usr/bin/touch',"%s/nodebox/ext/__init__.py"%self.build_lib])
+#             # self.spawn(['/usr/bin/touch',"%s/plotdevice/ext/__init__.py"%self.build_lib])
 
 from distutils.command.build_py import build_py
 class BuildCommand(build_py):
     def run(self):
-        # nodebox module post-build hook:
+        # plotdevice module post-build hook:
         #   - include some ui resources for running a script from the command line
         
         build_py.run(self) # first let the real build_py routine do its thing
         self.spawn(['/usr/bin/python', 'libs/buildlibs.py']) # then build the extensions
         print "built libs from", os.getcwd()
 
-        if BUILD_APP: return # the app bundle doesn't need the NodeBoxScript nib
-        rsrc_dir = '%s/nodebox/rsrc'%self.build_lib
+        if BUILD_APP: return # the app bundle doesn't need the PlotDeviceScript nib
+        rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
         self.mkpath(rsrc_dir)
-        self.spawn(['/usr/bin/ibtool','--compile', '%s/NodeBoxScript.nib'%rsrc_dir, "Resources/English.lproj/NodeBoxScript.xib"])
-        self.copy_file("Resources/NodeBoxFile.icns", '%s/icon.icns'%rsrc_dir)
-        self.spawn(['/usr/bin/ditto', 'build/ext', '%s/nodebox/lib'%self.build_lib])
+        self.spawn(['/usr/bin/ibtool','--compile', '%s/PlotDeviceScript.nib'%rsrc_dir, "Resources/English.lproj/PlotDeviceScript.xib"])
+        self.copy_file("Resources/PlotDeviceFile.icns", '%s/icon.icns'%rsrc_dir)
+        self.spawn(['/usr/bin/ditto', 'build/ext', '%s/plotdevice/lib'%self.build_lib])
 
         
 if BUILD_APP:
@@ -175,7 +175,7 @@ if BUILD_APP:
     import py2app
     from py2app.build_app import py2app as build_app
     class BuildAppCommand(build_app):
-        description = """Build NodeBox.app with py2app (then undo some of its questionable layout defaults)"""
+        description = """Build PlotDevice.app with py2app (then undo some of its questionable layout defaults)"""
         def initialize_options(self):
             self.cwd = None
             build_app.initialize_options(self)
@@ -189,29 +189,29 @@ if BUILD_APP:
 
             # Do some py2app `configuration' to make the bundle layout more
             # like what xcode produces
-            RSRC="%s/dist/NodeBox.app/Contents/Resources"%self.cwd
-            BIN="%s/dist/NodeBox.app/Contents/SharedSupport"%self.cwd
+            RSRC="%s/dist/PlotDevice.app/Contents/Resources"%self.cwd
+            BIN="%s/dist/PlotDevice.app/Contents/SharedSupport"%self.cwd
             self.mkpath(BIN)
             self.mkpath("%s/python"%RSRC)
             self.mkpath("%s/English.lproj"%RSRC)
             remove_tree("%s/../Frameworks"%RSRC, dry_run=self.dry_run)
 
             # place the command line tool in SharedSupport
-            self.copy_file("%s/etc/nodebox"%TOP, BIN)
+            self.copy_file("%s/etc/plotdevice"%TOP, BIN)
 
             # put the module and .so files in a known location (primarily so the
             # tool can find task.py)
-            self.copy_tree('%s/nodebox'%TOP, '%s/python/nodebox'%RSRC)
-            # self.copy_tree('%s/lib/python2.7/lib-dynload'%RSRC, '%s/python/nodebox/ext'%RSRC)
-            self.spawn(['/usr/bin/ditto', '%s/build/ext'%TOP, '%s/python/nodebox/lib'%RSRC])
+            self.copy_tree('%s/plotdevice'%TOP, '%s/python/plotdevice'%RSRC)
+            # self.copy_tree('%s/lib/python2.7/lib-dynload'%RSRC, '%s/python/plotdevice/ext'%RSRC)
+            self.spawn(['/usr/bin/ditto', '%s/build/ext'%TOP, '%s/python/plotdevice/lib'%RSRC])
             self.spawn(['/usr/bin/ditto', '%s/build/ext'%TOP, '%s/lib/python2.7/lib-dynload'%RSRC])
 
-            # find $TOP/nodebox -name \*pyc -exec rm {} \;
+            # find $TOP/plotdevice -name \*pyc -exec rm {} \;
 
             # install the documentation
             self.copy_tree('%s/doc/examples'%TOP, '%s/examples'%RSRC)
 
-            print "done building NodeBox.app in ./dist"
+            print "done building PlotDevice.app in ./dist"
 
     class DistCommand(Command):
         description = "Create distributable zip and dmg files containing the app + documentation"
@@ -222,9 +222,9 @@ if BUILD_APP:
             self.cwd = os.getcwd()
         def run(self):
             TOP = self.cwd
-            DEST = "%s/dist/NodeBox/NodeBox"%self.cwd
-            DMG = 'NodeBox-%s.dmg'%VERSION
-            ZIP = 'NodeBox-%s.zip'%VERSION
+            DEST = "%s/dist/PlotDevice/PlotDevice"%self.cwd
+            DMG = 'PlotDevice-%s.dmg'%VERSION
+            ZIP = 'PlotDevice-%s.zip'%VERSION
 
             # build the app
             self.run_command('py2app')
@@ -232,8 +232,8 @@ if BUILD_APP:
             # Make a staging area for the disk image
             self.mkpath(DEST)
 
-            # Copy the current NodeBox application.
-            self.copy_tree("dist/NodeBox.app", "%s/NodeBox.app"%DEST)
+            # Copy the current PlotDevice application.
+            self.copy_tree("dist/PlotDevice.app", "%s/PlotDevice.app"%DEST)
 
             # Copy changes and readme
             self.copy_file('CHANGES.md', '%s/Changes.txt'%DEST)
@@ -245,18 +245,18 @@ if BUILD_APP:
 
             # Make DMG
             os.chdir('dist')
-            self.spawn(['hdiutil','create',DMG,'-srcfolder','NodeBox'])
+            self.spawn(['hdiutil','create',DMG,'-srcfolder','PlotDevice'])
             self.spawn(['hdiutil','internet-enable',DMG])
 
             # Make Zip
-            os.chdir('NodeBox')
-            self.spawn(['zip','-r','-q',ZIP,'NodeBox'])
+            os.chdir('PlotDevice')
+            self.spawn(['zip','-r','-q',ZIP,'PlotDevice'])
             self.move_file(ZIP, '%s/dist'%TOP)
 
             # clean up the staging area
-            remove_tree('%s/dist/NodeBox'%TOP, verbose=False)
+            remove_tree('%s/dist/PlotDevice'%TOP, verbose=False)
 
-            print "done building NodeBox.app, %s, and %s in ./dist"%(ZIP,DMG)
+            print "done building PlotDevice.app, %s, and %s in ./dist"%(ZIP,DMG)
 
 
 if __name__=='__main__':
@@ -274,8 +274,8 @@ if __name__=='__main__':
         classifiers = CLASSIFIERS,
         # ext_modules = ext_modules,
         packages = find_packages(),
-        package_data = {'nodebox.graphics':['colors.json']},
-        scripts = ["etc/nodebox"],
+        package_data = {'plotdevice.graphics':['colors.json']},
+        scripts = ["etc/plotdevice"],
         zip_safe=False,
         cmdclass={
             'clean': CleanCommand,
@@ -289,13 +289,13 @@ if __name__=='__main__':
     if BUILD_APP:
         config.update(dict(
             app = [{
-                'script': "etc/nodebox-app.py",
+                'script': "etc/plotdevice-app.py",
                 "plist":plist,
             }],
             data_files = rsrc,
             options = {
                 "py2app": {
-                    "iconfile": "Resources/NodeBox.icns",
+                    "iconfile": "Resources/PlotDevice.icns",
                     "semi_standalone":True,
                     "site_packages":True,
                     "strip":False,

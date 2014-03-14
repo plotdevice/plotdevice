@@ -103,7 +103,7 @@ var Editor = function(elt){
 
             // configure the buffer
             sess = ed.getSession()
-            sess.setMode("ace/mode/nodebox");
+            sess.setMode("ace/mode/plotdevice");
             sess.setTabSize(4);
             sess.setUseSoftTabs(true);
             sess.setUndoManager(undo);

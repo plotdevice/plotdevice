@@ -12,12 +12,12 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application"/>
-        <menu title="NodeBox" systemMenu="main" id="29" userLabel="MainMenu">
+        <menu title="PlotDevice" systemMenu="main" id="29" userLabel="MainMenu">
             <items>
-                <menuItem title="NodeBox" id="56">
-                    <menu key="submenu" title="NodeBox" systemMenu="apple" id="57">
+                <menuItem title="PlotDevice" id="56">
+                    <menu key="submenu" title="PlotDevice" systemMenu="apple" id="57">
                         <items>
-                            <menuItem title="About NodeBox" id="58">
+                            <menuItem title="About PlotDevice" id="58">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="orderFrontStandardAboutPanel:" target="-2" id="142"/>
@@ -37,7 +37,7 @@
                             <menuItem isSeparatorItem="YES" id="144">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Hide NodeBox" keyEquivalent="h" id="134">
+                            <menuItem title="Hide PlotDevice" keyEquivalent="h" id="134">
                                 <connections>
                                     <action selector="hide:" target="-2" id="152"/>
                                 </connections>
@@ -56,7 +56,7 @@
                             <menuItem isSeparatorItem="YES" id="149">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Quit NodeBox" keyEquivalent="q" id="136">
+                            <menuItem title="Quit PlotDevice" keyEquivalent="q" id="136">
                                 <connections>
                                     <action selector="terminate:" target="-2" id="139"/>
                                 </connections>
@@ -556,12 +556,12 @@ CQ
                 <menuItem title="Help" id="103">
                     <menu key="submenu" title="Help" id="106">
                         <items>
-                            <menuItem title="NodeBox Manual" keyEquivalent="?" id="111">
+                            <menuItem title="PlotDevice Manual" keyEquivalent="?" id="111">
                                 <connections>
                                     <action selector="showHelp:" target="472" id="mV6-eM-nIj"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="NodeBox Site" id="470">
+                            <menuItem title="PlotDevice Site" id="470">
                                 <connections>
                                     <action selector="showSite:" target="472" id="476"/>
                                 </connections>
@@ -575,6 +575,6 @@ CQ
             </connections>
         </menu>
         <customObject id="277" userLabel="Font Manager" customClass="NSFontManager"/>
-        <customObject id="472" userLabel="NodeBoxAppDelegate" customClass="NodeBoxAppDelegate"/>
+        <customObject id="472" userLabel="PlotDeviceAppDelegate" customClass="PlotDeviceAppDelegate"/>
     </objects>
 </document>

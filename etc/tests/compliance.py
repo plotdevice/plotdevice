@@ -2,12 +2,12 @@ size(800,2600)
 
 def header():
     font("Helvetica Neue", 18)
-    text("NodeBox Compliance Tests", 20, 60)
+    text("PlotDevice Compliance Tests", 20, 60)
     stroke(0.5)
     line(0,60,WIDTH,60)
     fontsize(12)
     nostroke()
-    text("This functional suite tests all the available NodeBox functions, to see if they comply to their contract." , 20, 80, width=300)
+    text("This functional suite tests all the available PlotDevice functions, to see if they comply to their contract." , 20, 80, width=300)
     fontsize(10)
     
 def primitives(x, y):
