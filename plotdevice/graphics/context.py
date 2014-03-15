@@ -397,24 +397,30 @@ class Context(object):
 
         # filter for return values from transform ops. note mode-changes for rotation
         # separately so the state before the block can be reconstructed
-        xforms = [xf for xf in args if isinstance(xf, NSAffineTransform)]
+        xforms = [xf for xf in args if isinstance(xf, Transform)]
         rotations = [xf for xf in args if xf in (DEGREES, RADIANS, PERCENT)]
         rotation = rotations[0] if rotations else None
 
         # if the args validate, return a context manager (which also mimics CENTER/CORNER)
         if len(xforms)+len(rotations) != len(args):
             raise DeviceError, "transform: valid arguments are reset(), rotate(), scale(), skew(), and translate()"
-        return TransformContext(mode, rotation, *xforms)
-
-    def translate(self, x, y):
-        return self._transform.translate(x, y)
+        return grobs.TransformContext(mode, rotation, *xforms)
 
     def reset(self):
-        rollback = Transform(self._transform)
-        rollback.invert()
+        xf = self._transform.copy().inverse
+        xf._rollback = xf.inverse
         self._transform = Transform()
         self._rotationmode = DEGREES
-        return rollback._nsAffineTransform
+        return xf
+
+    def translate(self, x=0, y=0):
+        return self._transform.translate(x,y)
+
+    def scale(self, x=1, y=None):
+        return self._transform.scale(x,y)
+
+    def skew(self, x=0, y=0):
+        return self._transform.skew(x,y)
 
     def rotate(self, arg=None, **kwargs):
         # with no args, return the current mode
@@ -423,7 +429,7 @@ class Context(object):
 
         # when setting the mode, update the context then return the prior mode
         if arg in (DEGREES, RADIANS, PERCENT):
-            oldmode, self._rotationmode = self._rotationmode, arg
+            self._rotationmode, oldmode = arg, self._rotationmode
             return oldmode
 
         # check the kwargs for unit-specific settings
@@ -442,15 +448,6 @@ class Context(object):
         if 'percent' in units:
             degrees, radians = 0, tau*units['percent']
         return self._transform.rotate(-degrees,-radians)
-
-    def translate(self, x=0, y=0):
-        return self._transform.translate(x,y)
-
-    def scale(self, x=1, y=None):
-        return self._transform.scale(x,y)
-
-    def skew(self, x=0, y=0):
-        return self._transform.skew(x,y)
 
     ### Color Commands ###
 

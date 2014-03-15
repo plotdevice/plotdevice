@@ -1075,10 +1075,11 @@ class TransformContext(object):
     _xforms = ['reset','rotate','translate','scale','skew']
 
     def __init__(self, mode=None, rotation=None, *xforms):
-        self._rollback = Transform(_ctx._transform)
-        for xf in reversed(xforms): # make a local copy of the current state and apply inverses of
-            xf.invert()             # any transformation calls that occurred in the arguments
-            self._rollback.prepend(xf)
+        # work backwards from the current state and apply inverses of any transformation
+        # calls that occurred in the arguments
+        self._rollback = _ctx._transform.copy()
+        for xf in reversed(xforms):
+            self._rollback.prepend(xf.inverse)
 
         # remember the old center/corner setting and rotation units, then apply the new ones
         self._oldmode = _ctx._transformmode
@@ -1109,33 +1110,31 @@ class Transform(object):
         if transform is None:
             transform = NSAffineTransform.transform()
         elif isinstance(transform, Transform):
-            matrix = transform._nsAffineTransform.transformStruct()
-            transform = NSAffineTransform.transform()
-            transform.setTransformStruct_(matrix)
-        elif isinstance(transform, (list, tuple, NSAffineTransformStruct)):
-            matrix = tuple(transform)
-            transform = NSAffineTransform.transform()
-            transform.setTransformStruct_(matrix)
+            transform = transform._nsAffineTransform.copy()
         elif isinstance(transform, NSAffineTransform):
-            pass
+            transform = transform.copy()
+        elif isinstance(transform, (list, tuple, NSAffineTransformStruct)):
+            struct = tuple(transform)
+            transform = NSAffineTransform.transform()
+            transform.setTransformStruct_(struct)
         else:
             wrongtype = "Don't know how to handle transform %s." % transform
             raise DeviceError(wrongtype)
         self._nsAffineTransform = transform
 
-    @property
-    def transform(self):
-        warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", DeprecationWarning, stacklevel=2)
-        return self._nsAffineTransform
+    def __enter__(self):
+        # Transform objects get _rollback attrs when they're derived from an existing
+        # xform (in particular the graphics context's current transform). In that case
+        # the global state has already been changed before the context manager was
+        # invoked, so use the cached state this one time. On any subsequent with-
+        # statement invocations take a snapshot of the current global state
+        if not hasattr(self, '_rollback'):
+            self._rollback = Transform(_ctx._transform)
 
-    def set(self):
-        self._nsAffineTransform.set()
-
-    def concat(self):
-        self._nsAffineTransform.concat()
-
-    def copy(self):
-        return self.__class__(self._nsAffineTransform.copy())
+    def __exit__(self, type, value, tb):
+        # restore the context's transform and discard the snapshot
+        _ctx._transform = self._rollback
+        del self._rollback
 
     def __repr__(self):
         return "<%s [%.3f %.3f %.3f %.3f %.3f %.3f]>" % ((self.__class__.__name__,)
@@ -1145,11 +1144,20 @@ class Transform(object):
         for value in self._nsAffineTransform.transformStruct():
             yield value
 
+    def copy(self):
+        return self.__class__(self)
+
     def _get_matrix(self):
         return self._nsAffineTransform.transformStruct()
     def _set_matrix(self, value):
         self._nsAffineTransform.setTransformStruct_(value)
     matrix = property(_get_matrix, _set_matrix)
+
+    @property
+    def inverse(self):
+        inv = self.copy()
+        inv._nsAffineTransform.invert()
+        return inv
 
     def rotate(self, degrees=0, radians=0):
         xf = NSAffineTransform.transform()
@@ -1158,32 +1166,37 @@ class Transform(object):
         else:
             xf.rotateByRadians_(radians)
         self.prepend(xf)
-        return xf
+        return Transform(xf)
 
     def translate(self, x=0, y=0):
-        xf = NSAffineTransform.transform()
-        xf.translateXBy_yBy_(x, y)
+        xf = Transform()
+        xf._nsAffineTransform.translateXBy_yBy_(x, y)
+        xf._rollback = self.copy()
         self.prepend(xf)
         return xf
 
     def scale(self, x=1, y=None):
         if y is None:
             y = x
-        xf = NSAffineTransform.transform()
-        xf.scaleXBy_yBy_(x, y)
+        xf = Transform()
+        xf._nsAffineTransform.scaleXBy_yBy_(x, y)
+        xf._rollback = self.copy()
         self.prepend(xf)
         return xf
 
     def skew(self, x=0, y=0):
-        x = math.pi * x / 180
-        y = math.pi * y / 180
-        t = Transform()
-        t.matrix = (1, math.tan(y), -math.tan(x), 1, 0, 0)
-        self.prepend(t)
-        return t._nsAffineTransform
+        x,y = map(lambda n: n*pi/180, [x,y])
+        xf = Transform()
+        xf.matrix = (1, math.tan(y), -math.tan(x), 1, 0, 0)
+        xf._rollback = self.copy()
+        self.prepend(xf)
+        return xf
 
-    def invert(self):
-        self._nsAffineTransform.invert()
+    def set(self):
+        self._nsAffineTransform.set()
+
+    def concat(self):
+        self._nsAffineTransform.concat()
 
     def append(self, other):
         if isinstance(other, Transform):
@@ -1218,6 +1231,11 @@ class Transform(object):
 
     def transformBezierPath(self, path):
         return self.transformBezier(path)
+
+    @property
+    def transform(self):
+        warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", DeprecationWarning, stacklevel=2)
+        return self._nsAffineTransform
 
 class Image(Grob, TransformMixin):
 
