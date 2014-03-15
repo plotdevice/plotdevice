@@ -1069,41 +1069,6 @@ class InkContext(object):
         spec = ", ".join('%s=%r'%(k,v) for k,v in self._spec.items())
         return 'InkContext(%s)'%spec
 
-
-class TransformContext(object):
-    """Performs the setup/cleanup for a `with transform()` block (and changes the mode)"""
-    _xforms = ['reset','rotate','translate','scale','skew']
-
-    def __init__(self, mode=None, rotation=None, *xforms):
-        # work backwards from the current state and apply inverses of any transformation
-        # calls that occurred in the arguments
-        self._rollback = _ctx._transform.copy()
-        for xf in reversed(xforms):
-            self._rollback.prepend(xf.inverse)
-
-        # remember the old center/corner setting and rotation units, then apply the new ones
-        self._oldmode = _ctx._transformmode
-        self._oldrotation = rotation or _ctx._rotationmode
-        self._mode = mode or self._oldmode
-        _ctx._transformmode = self._mode
-
-    def __enter__(self):
-        return _ctx._transform
-
-    def __exit__(self, type, value, tb):
-        _ctx._transform = self._rollback
-        _ctx._transformmode = self._oldmode
-
-    def __eq__(self, other):
-        return self._mode == other
-
-    def __repr__(self):
-        return {CENTER:'CENTER', CORNER:'CORNER'}.get(self._mode)
-
-    @property
-    def mode(self):
-        return _ctx._transformmode
-
 class Transform(object):
 
     def __init__(self, transform=None):
@@ -1123,18 +1088,26 @@ class Transform(object):
         self._nsAffineTransform = transform
 
     def __enter__(self):
-        # Transform objects get _rollback attrs when they're derived from an existing
-        # xform (in particular the graphics context's current transform). In that case
+        # Transform objects get _rollback attrs when they're derived from the graphics
+        # context's current transform via a state-mutation command. In these cases
         # the global state has already been changed before the context manager was
-        # invoked, so use the cached state this one time. On any subsequent with-
-        # statement invocations take a snapshot of the current global state
+        # invoked, so don't re-apply it again here.
         if not hasattr(self, '_rollback'):
-            self._rollback = Transform(_ctx._transform)
+            _ctx._transform.prepend(self)
 
     def __exit__(self, type, value, tb):
-        # restore the context's transform and discard the snapshot
-        _ctx._transform = self._rollback
-        del self._rollback
+        # once we've been through a block the _rollback (if any) can be discarded
+        if hasattr(self, '_rollback'):
+            # _rollback is a dict containing any of _transform, _transformmode,
+            # and _rotationmode. in these cases do a direct overwrite then bail
+            # out rather than applying the inverse transform
+            for attr, priorval in self._rollback.items():
+                setattr(_ctx, attr, priorval)
+            del self._rollback
+            return
+        else:
+            # restore the context's transform
+            _ctx._transform.prepend(self.inverse)
 
     def __repr__(self):
         return "<%s [%.3f %.3f %.3f %.3f %.3f %.3f]>" % ((self.__class__.__name__,)
@@ -1159,36 +1132,41 @@ class Transform(object):
         inv._nsAffineTransform.invert()
         return inv
 
-    def rotate(self, degrees=0, radians=0):
-        xf = NSAffineTransform.transform()
-        if degrees:
-            xf.rotateByDegrees_(degrees)
-        else:
-            xf.rotateByRadians_(radians)
-        self.prepend(xf)
-        return Transform(xf)
-
-    def translate(self, x=0, y=0):
+    def rotate(self, degrees=0, radians=0, **opt):
         xf = Transform()
-        xf._nsAffineTransform.translateXBy_yBy_(x, y)
-        xf._rollback = self.copy()
+        if degrees:
+            xf._nsAffineTransform.rotateByDegrees_(degrees)
+        else:
+            xf._nsAffineTransform.rotateByRadians_(radians)
+        if opt.get('rollback'):
+            xf._rollback = {"_transform":self.copy()}
         self.prepend(xf)
         return xf
 
-    def scale(self, x=1, y=None):
+    def translate(self, x=0, y=0, **opt):
+        xf = Transform()
+        xf._nsAffineTransform.translateXBy_yBy_(x, y)
+        if opt.get('rollback'):
+            xf._rollback = {"_transform":self.copy()}
+        self.prepend(xf)
+        return xf
+
+    def scale(self, x=1, y=None, **opt):
         if y is None:
             y = x
         xf = Transform()
         xf._nsAffineTransform.scaleXBy_yBy_(x, y)
-        xf._rollback = self.copy()
+        if opt.get('rollback'):
+            xf._rollback = {"_transform":self.copy()}
         self.prepend(xf)
         return xf
 
-    def skew(self, x=0, y=0):
+    def skew(self, x=0, y=0, **opt):
         x,y = map(lambda n: n*pi/180, [x,y])
         xf = Transform()
         xf.matrix = (1, math.tan(y), -math.tan(x), 1, 0, 0)
-        xf._rollback = self.copy()
+        if opt.get('rollback'):
+            xf._rollback = {"_transform":self.copy()}
         self.prepend(xf)
         return xf
 

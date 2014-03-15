@@ -395,32 +395,43 @@ class Context(object):
         elif mode:
             args = args[1:]
 
-        # filter for return values from transform ops. note mode-changes for rotation
-        # separately so the state before the block can be reconstructed
         xforms = [xf for xf in args if isinstance(xf, Transform)]
-        rotations = [xf for xf in args if xf in (DEGREES, RADIANS, PERCENT)]
-        rotation = rotations[0] if rotations else None
+        if len(xforms) != len(args):
+            badarg = "transform: valid arguments are reset(), rotate(), scale(), skew(), and translate()"
+            raise DeviceError(badarg)
 
-        # if the args validate, return a context manager (which also mimics CENTER/CORNER)
-        if len(xforms)+len(rotations) != len(args):
-            raise DeviceError, "transform: valid arguments are reset(), rotate(), scale(), skew(), and translate()"
-        return grobs.TransformContext(mode, rotation, *xforms)
+        rollback = {"_transform":self._transform.copy(),
+                    "_transformmode":self._transformmode,
+                    "_rotationmode":self._rotationmode}
+        for xf in reversed(xforms):
+            if hasattr(xf, '_rollback'):
+                rollback.update(xf._rollback)
+            else:
+                # should probably apply any saved transforms i guess?
+                pass
+
+        if mode:
+            self._transformmode = mode
+
+        gworld = self._transform.copy()
+        gworld._rollback = rollback
+        return gworld
 
     def reset(self):
-        xf = self._transform.copy().inverse
-        xf._rollback = xf.inverse
+        xf = self._transform.inverse
+        xf._rollback = {'_transform':self._transform.copy(), '_rotationmode':self._rotationmode}
         self._transform = Transform()
         self._rotationmode = DEGREES
         return xf
 
     def translate(self, x=0, y=0):
-        return self._transform.translate(x,y)
+        return self._transform.translate(x,y, rollback=True)
 
     def scale(self, x=1, y=None):
-        return self._transform.scale(x,y)
+        return self._transform.scale(x,y, rollback=True)
 
     def skew(self, x=0, y=0):
-        return self._transform.skew(x,y)
+        return self._transform.skew(x,y, rollback=True)
 
     def rotate(self, arg=None, **kwargs):
         # with no args, return the current mode
@@ -429,8 +440,10 @@ class Context(object):
 
         # when setting the mode, update the context then return the prior mode
         if arg in (DEGREES, RADIANS, PERCENT):
-            self._rotationmode, oldmode = arg, self._rotationmode
-            return oldmode
+            xf = Transform()
+            xf._rollback = {'_rotationmode':self._rotationmode}
+            self._rotationmode = arg
+            return xf
 
         # check the kwargs for unit-specific settings
         units = {k:v for k,v in kwargs.items() if k in ['degrees', 'radians', 'percent']}
@@ -447,7 +460,7 @@ class Context(object):
         radians = units.get('radians', 0)
         if 'percent' in units:
             degrees, radians = 0, tau*units['percent']
-        return self._transform.rotate(-degrees,-radians)
+        return self._transform.rotate(-degrees,-radians, rollback=True)
 
     ### Color Commands ###
 
