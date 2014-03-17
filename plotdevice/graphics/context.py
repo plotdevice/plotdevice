@@ -5,11 +5,13 @@ from contextlib import contextmanager, nested
 from .typography import *
 from .bezier import *
 from .grobs import *
+from .grobs import PlotContext
 from . import grobs, typography, bezier
 
 from ..util.foundry import sanitized, font_encoding, family_names, family_name, family_members
 from ..util import _copy_attr, _copy_attrs, _flatten, foundry
 from ..lib import geometry
+
 
 class Context(object):
     KEY_UP = grobs.KEY_UP
@@ -61,30 +63,41 @@ class Context(object):
     def _resetContext(self):
         """Do a thorough reset of all the state variables"""
         self._activate()
+
+        # color state
         self._outputmode = RGB
         self._colormode = RGB
         self._colorrange = 1.0
         self._fillcolor = Color()
         self._strokecolor = None
-        self._strokewidth = 1.0
+        self.canvas.background = Color(1.0)
+
+        # line style
+        self._plotstyle = COPY
         self._capstyle = BUTT
         self._joinstyle = MITER
         self._dashstyle = None
-        self._path = None
+        self._strokewidth = 1.0
         self._autoclosepath = True
+
+        # transformation state
         self._transform = Transform()
         self._transformmode = CENTER
         self._rotationmode = DEGREES
-        self._transformstack = []
+
+        # type styles
+        self._stylesheet = Stylesheet()
         self._fontname = "Helvetica"
         self._fontsize = 24
         self._lineheight = 1.2
         self._align = LEFT
-        self._noImagesHint = False
+
+        # legacy internals
+        self._transformstack = [] # only used by push/pop
         self._oldvars = self._vars
         self._vars = []
-        self._stylesheet = Stylesheet()
-        self.canvas.background = Color(1.0)
+        self._path = None
+        self._noImagesHint = False
 
     def ximport(self, libName):
         lib = __import__(libName)
@@ -458,15 +471,10 @@ class Context(object):
 
     ### Color Commands ###
 
-    def plotstyle(self, *ops):
-        context_mgrs = [mgr for mgr in ops if hasattr(mgr, '__enter__')]
-        context_mgrs.append(InkContext(restore=all))
-        return nested(*context_mgrs)
-
     def pen(self, nib=None, **spec): # spec: caps, joins, dash
         if nib is not None:
             spec.setdefault('nib', nib)
-        return InkContext(**spec)
+        return PlotContext(**spec)
 
     def color(self, *args, **kwargs):
         # flatten any tuples in the arguments list
@@ -481,7 +489,7 @@ class Context(object):
             # if called without any component values update the global mode/range,
             # and return a context manager for `with color(mode=...)` usage
             if {'range', 'mode'}.intersection(kwargs):
-                return InkContext(**kwargs)
+                return PlotContext(**kwargs)
 
         # if we got at least one numerical/string arg, parse it
         return Color(*args, **kwargs)
@@ -536,6 +544,25 @@ class Context(object):
                 raise DeviceError, 'Line join style should be MITER, ROUND or BEVEL.'
             self._joinstyle = style
         return self._joinstyle
+
+    ### Drawing grobs with the current pen/stroke/fill ###
+
+    def plot(self, obj, copy=False, **kwargs):
+        if not isinstance(obj, Grob):
+            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
+            raise DeviceError(notdrawable)
+        obj.__class__.validate(kwargs)
+        grob = obj.copy() if copy else obj
+        for arg_key, arg_val in kwargs.items():
+            setattr(grob, arg_key, _copy_attr(arg_val))
+        grob.draw()
+
+    def plotstyle(self, *ops):
+        modal = [m for m in ops if m in (COPY,LIVE,OFF)]
+        mode = modal[0] if modal else self._plotstyle
+        context_mgrs = [mgr for mgr in ops if hasattr(mgr, '__enter__')]
+        context_mgrs.append(PlotContext(restore=all, style=mode))
+        return nested(*context_mgrs)
 
     ### Font Commands ###
 
@@ -709,16 +736,6 @@ class Context(object):
     @property
     def geo(self):
         return geometry
-
-    def plot(self, obj, copy=False, **kwargs):
-        if not isinstance(obj, Grob):
-            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
-            raise DeviceError(notdrawable)
-        obj.__class__.validate(kwargs)
-        grob = obj.copy() if copy else obj
-        for arg_key, arg_val in kwargs.items():
-            setattr(grob, arg_key, _copy_attr(arg_val))
-        grob.draw()
 
     def measure(self, obj, width=None, height=None, **kwargs):
         """Returns a Size tuple for graphics objects, text, or file objects pointing to images"""

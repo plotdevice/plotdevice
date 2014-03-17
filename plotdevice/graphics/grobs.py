@@ -14,6 +14,7 @@ from ..lib import geometry
 _ctx = None
 __all__ = [
         "DEFAULT_WIDTH", "DEFAULT_HEIGHT", "DEGREES", "RADIANS", "PERCENT",
+        "COPY", "LIVE", "OFF",
         "inch", "cm", "mm", "pi", "tau",
         "Color", "RGB", "HSB", "CMYK", "GREY",
         "Transform", "CENTER", "CORNER",
@@ -37,6 +38,11 @@ RGB = "rgb"
 HSB = "hsb"
 CMYK = "cmyk"
 GREY = "grey"
+
+# plotstyle mode
+COPY = "copy"
+LIVE = "live"
+OFF = "off"
 
 # transform modes
 CENTER = "center"
@@ -161,10 +167,12 @@ class Grob(object):
         attr_tuples = [getattr(cls,'stateAttributes',tuple()) for cls in self.__class__.__mro__]
         self.stateAttributes = sum(attr_tuples, tuple())
 
-    def draw(self, copy=True):
+    def draw(self):
         """Appends a copy of the grob to the canvas.
            This will result in a _draw later on, when the scene graph is rendered."""
-        grob = self.copy() if copy else self
+        if _ctx.plotstyle is OFF:
+            return
+        grob = self.copy() if _ctx._plotstyle is COPY else self
         grob.inherit()
         _ctx.canvas.append(grob)
 
@@ -509,10 +517,11 @@ class Color(object):
             raise DeviceError(invalid)
         return r, g, b, a
 
-class InkContext(object):
+class PlotContext(object):
     """Performs the setup/cleanup for a `with pen()/stroke()/fill()/color(mode,range)` block"""
     _statevars = dict(nib='_strokewidth', cap='_capstyle', join='_joinstyle', dash='_dashstyle',
-                      mode='_colormode', range='_colorrange', stroke='_strokecolor', fill='_fillcolor')
+                      mode='_colormode', range='_colorrange', stroke='_strokecolor', fill='_fillcolor',
+                      style='_plotstyle')
 
     def __init__(self, restore=None, **spec):
         # start with the current context state as a baseline
@@ -541,7 +550,7 @@ class InkContext(object):
 
     def __repr__(self):
         spec = ", ".join('%s=%r'%(k,v) for k,v in self._spec.items())
-        return 'InkContext(%s)'%spec
+        return 'PlotContext(%s)'%spec
 
 class TransformMixin(Grob):
     """Mixin class for transformation support.

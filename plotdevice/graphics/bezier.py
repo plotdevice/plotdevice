@@ -275,8 +275,10 @@ class Bezier(TransformMixin, ColorMixin, PenMixin, Grob):
 
     @property
     def transform(self):
-        trans = self._transform.copy()
-        if (self._transformmode == CENTER):
+        # we're shadowing the mixin method that merges the context state
+        # call super to get the inherited value
+        trans = super(Bezier,self).transform.copy()
+        if (self.transformmode == CENTER):
             (x, y), (w, h) = self.bounds
             deltax = x+w/2
             deltay = y+h/2
@@ -290,7 +292,7 @@ class Bezier(TransformMixin, ColorMixin, PenMixin, Grob):
 
     def _draw(self):
         _save()
-        self.transform.concat()
+        self.transform.concat() # super? or should it really use the adjusted xf from above?
         if (self._fillcolor):
             self._fillcolor.set()
             self._nsBezierPath.fill()
