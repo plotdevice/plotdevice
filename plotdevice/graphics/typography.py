@@ -116,17 +116,14 @@ class Typesetter(object):
         h = cls.layout.defaultLineHeightForFont_(txtFont)
         return h
 
-class Text(Grob, TransformMixin, ColorMixin):
-
-    stateAttributes = ('_transform', '_transformmode', '_stylesheet', '_fillcolor', '_strokecolor')
+class Text(TransformMixin, ColorMixin, Grob):
+    stateAttributes = ('_stylesheet',)
     kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
 
     __dummy_color = NSColor.blackColor()
 
     def __init__(self, text, x=0, y=0, width=None, height=None, **kwargs):
-        super(Text, self).__init__()
-        TransformMixin.__init__(self)
-        ColorMixin.__init__(self, **kwargs)
+        super(Text, self).__init__(**kwargs)
 
         badargs = None
         if not isinstance(text, basestring):

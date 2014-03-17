@@ -161,8 +161,12 @@ class Region(tuple):
 class Grob(object):
     """A GRaphic OBject is the base class for all DrawingPrimitives."""
 
+    def __init__(self, **kwargs):
+        attr_tuples = [getattr(cls,'stateAttributes',tuple()) for cls in self.__class__.__mro__]
+        self.stateAttributes = sum(attr_tuples, tuple())
+
     def draw(self, copy=True):
-        """Appends the grob to the canvas.
+        """Appends a copy of the grob to the canvas.
            This will result in a _draw later on, when the scene graph is rendered."""
         grob = self.copy() if copy else self
         grob.inherit()
@@ -173,23 +177,26 @@ class Grob(object):
         raise NotImplementedError, "Copy is not implemented on this Grob class."
 
     def inherit(self):
-        all_attrs = self.__class__.stateAttributes
-        attrs_to_copy = [a for a in all_attrs if getattr(self, a, INHERIT)==INHERIT]
+        """Fills in unspecified attributes with the graphics context's state"""
+        all_attrs = self.stateAttributes
+        attrs_to_copy = [a for a in all_attrs if getattr(self, a, INHERIT) is INHERIT]
         _copy_attrs(_ctx, self, attrs_to_copy)
 
-    def checkKwargs(self, kwargs):
+    def validate(self, kwargs):
+        """Sanity check a potential set of constructor kwargs"""
         remaining = [arg for arg in kwargs.keys() if arg not in self.kwargs]
         if remaining:
             unknown = "Unknown argument(s) '%s'" % ", ".join(remaining)
             raise DeviceError(unknown)
-    checkKwargs = classmethod(checkKwargs)
+    validate = classmethod(validate)
 
-class ColorMixin(object):
-
+class ColorMixin(Grob):
     """Mixin class for color support.
-    Adds the _fillcolor, _strokecolor and _strokewidth attributes to the class."""
+    Adds the _fillcolor and _strokecolor attributes to the class."""
+    stateAttributes = ('_fillcolor', '_strokecolor')
 
     def __init__(self, **kwargs):
+        super(ColorMixin, self).__init__(**kwargs)
         try:
             self._fillcolor = Color(kwargs['fill'])
         except KeyError:
@@ -200,13 +207,13 @@ class ColorMixin(object):
             self._strokecolor = INHERIT
 
     def _get_fill(self):
-        return self._fillcolor if self._fillcolor!=INHERIT else _ctx._fillcolor
+        return _ctx._fillcolor if self._fillcolor is INHERIT else self._fillcolor
     def _set_fill(self, *args):
         self._fillcolor = Color(*args)
     fill = property(_get_fill, _set_fill)
 
     def _get_stroke(self):
-        return self._strokecolor if self._strokecolor!=INHERIT else _ctx._strokecolor
+        return _ctx._strokecolor if self._strokecolor is INHERIT else self._strokecolor
     def _set_stroke(self, *args):
         self._strokecolor = Color(*args)
     stroke = property(_get_stroke, _set_stroke)
@@ -506,9 +513,6 @@ class Color(object):
             raise DeviceError(invalid)
         return r, g, b, a
 
-
-# color = Color # hmmmmm... is this here for good or ill?
-
 class InkContext(object):
     """Performs the setup/cleanup for a `with pen()/stroke()/fill()/color(mode,range)` block"""
     _statevars = dict(nib='_strokewidth', cap='_capstyle', join='_joinstyle', dash='_dashstyle',
@@ -543,12 +547,13 @@ class InkContext(object):
         spec = ", ".join('%s=%r'%(k,v) for k,v in self._spec.items())
         return 'InkContext(%s)'%spec
 
-class TransformMixin(object):
-
+class TransformMixin(Grob):
     """Mixin class for transformation support.
     Adds the _transform and _transformmode attributes to the class."""
+    stateAttributes = ('_transform', '_transformmode')
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super(TransformMixin, self).__init__(**kwargs)
         self._reset()
 
     def _reset(self):
@@ -732,9 +737,7 @@ class Transform(object):
         warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", DeprecationWarning, stacklevel=2)
         return self._nsAffineTransform
 
-class Image(Grob, TransformMixin):
-
-    stateAttributes = ('_transform', '_transformmode')
+class Image(TransformMixin):
     kwargs = ()
 
     def __init__(self, path=None, x=0, y=0, width=None, height=None, alpha=1.0, image=None, data=None):
@@ -751,7 +754,7 @@ class Image(Grob, TransformMixin):
          - image: optionally, an Image or NSImage object.
          - data: a stream of bytes of image data.
         """
-        TransformMixin.__init__(self)
+        super(Image, self).__init__()
         if data is not None:
             if not isinstance(data, NSData):
                 data = NSData.dataWithBytes_length_(data, len(data))

@@ -48,25 +48,27 @@ _CAPSTYLE=dict(
 NORMAL = "normal"
 FORTYFIVE = "fortyfive"
 
-class PenMixin(object):
+class PenMixin(Grob):
+    stateAttributes = ('_strokewidth', '_capstyle', '_joinstyle', '_dashstyle')
 
     """Mixin class for linestyle support.
     Adds the _capstyle, _joinstyle, _dashstyle, and _strokewidth attributes to the class."""
 
     def __init__(self, **kwargs):
+        super(PenMixin, self).__init__(**kwargs)
         self.strokewidth = kwargs.get('nib', kwargs.get('strokewidth', INHERIT))
         self.capstyle = kwargs.get('cap', kwargs.get('capstyle', INHERIT))
         self.joinstyle = kwargs.get('join', kwargs.get('joinstyle', INHERIT))
         self.dashstyle = kwargs.get('dash', kwargs.get('dashstyle', INHERIT))
 
     def _get_strokewidth(self):
-        return self._strokewidth if self._strokewidth!=INHERIT else _ctx._strokewidth
+        return _ctx._strokewidth if self._strokewidth is INHERIT else self._strokewidth
     def _set_strokewidth(self, strokewidth):
         self._strokewidth = max(strokewidth, 0.0001)
     nib = strokewidth = property(_get_strokewidth, _set_strokewidth)
 
     def _get_capstyle(self):
-        return self._capstyle if self._capstyle!=INHERIT else _ctx._capstyle
+        return _ctx._capstyle if self._capstyle is INHERIT else self._capstyle
     def _set_capstyle(self, style):
         from bezier import BUTT, ROUND, SQUARE
         if style not in (INHERIT, BUTT, ROUND, SQUARE):
@@ -76,7 +78,7 @@ class PenMixin(object):
     cap = capstyle = property(_get_capstyle, _set_capstyle)
 
     def _get_joinstyle(self):
-        return self._joinstyle if self._joinstyle!=INHERIT else _ctx._joinstyle
+        return _ctx._joinstyle if self._joinstyle is INHERIT else self._joinstyle
     def _set_joinstyle(self, style):
         from bezier import MITER, ROUND, BEVEL
         if style not in (INHERIT, MITER, ROUND, BEVEL):
@@ -86,7 +88,7 @@ class PenMixin(object):
     join = joinstyle = property(_get_joinstyle, _set_joinstyle)
 
     def _get_dashstyle(self):
-        return self._dashstyle if self._dashstyle!=INHERIT else _ctx._dashstyle
+        return _ctx._dashstyle if self._dashstyle is INHERIT else self._dashstyle
     def _set_dashstyle(self, *segments):
         if None in segments or INHERIT in segments:
             self._dashstyle = segments[0]
@@ -98,16 +100,12 @@ class PenMixin(object):
     dash = dashstyle = property(_get_dashstyle, _set_dashstyle)
 
 
-class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
+class Bezier(TransformMixin, ColorMixin, PenMixin, Grob):
     """A Bezier provides a wrapper around NSBezierPath."""
-
-    stateAttributes = ('_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_dashstyle', '_transform', '_transformmode')
     kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle', 'nib', 'cap', 'join')
 
     def __init__(self, path=None, immediate=False, **kwargs):
-        TransformMixin.__init__(self)
-        ColorMixin.__init__(self, **kwargs)
-        PenMixin.__init__(self, **kwargs)
+        super(Bezier, self).__init__(**kwargs)
         self._segment_cache = None
         self._finished = False
 

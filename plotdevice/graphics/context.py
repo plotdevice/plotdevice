@@ -149,7 +149,7 @@ class Context(object):
     ### Primitives ###
 
     def rect(self, x, y, width, height, radius=None, roundness=0.0, draw=True, **kwargs):
-        Bezier.checkKwargs(kwargs)
+        Bezier.validate(kwargs)
         if roundness > 0:
             # support the pre-10.5 roundrect behavior via the roundness arg
             curve = min(width*roundness, height*roundness)
@@ -173,7 +173,7 @@ class Context(object):
         return p
 
     def oval(self, x, y, width, height, draw=True, **kwargs):
-        Bezier.checkKwargs(kwargs)
+        Bezier.validate(kwargs)
         path = Bezier(**kwargs)
         path.oval(x, y, width, height)
 
@@ -185,7 +185,7 @@ class Context(object):
 
     def line(self, x1, y1, x2, y2, draw=True, **kwargs):
         if self._path is None:
-            Bezier.checkKwargs(kwargs)
+            Bezier.validate(kwargs)
             p = Bezier(**kwargs)
             p.line(x1, y1, x2, y2)
             if draw:
@@ -198,7 +198,7 @@ class Context(object):
         return p
 
     def star(self, startx, starty, points=20, outer=100, inner=50, draw=True, **kwargs):
-        Bezier.checkKwargs(kwargs)
+        Bezier.validate(kwargs)
         from math import sin, cos, pi
 
         p = Bezier(**kwargs)
@@ -229,7 +229,7 @@ class Context(object):
         There are two different types of arrows: NORMAL and trendy FORTYFIVE degrees arrows.
         When draw=False then the arrow's path is not ended, similar to endpath(draw=False)."""
 
-        Bezier.checkKwargs(kwargs)
+        Bezier.validate(kwargs)
         if type==NORMAL:
           return self._arrow(x, y, width, draw, **kwargs)
         elif type==FORTYFIVE:
@@ -337,7 +337,7 @@ class Context(object):
         return p
 
     def drawpath(self, path, **kwargs):
-        Bezier.checkKwargs(kwargs)
+        Bezier.validate(kwargs)
         if isinstance(path, (list, tuple)):
             path = Bezier(path, **kwargs)
         else: # Set the values in the current bezier path with the kwargs
@@ -363,7 +363,7 @@ class Context(object):
         self.endclip()
 
     def beginclip(self, path):
-        cp = ClippingPath(path)
+        cp = Mask(path)
         self.canvas.push(cp)
         return cp
 
@@ -714,7 +714,7 @@ class Context(object):
         if not isinstance(obj, Grob):
             notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
             raise DeviceError(notdrawable)
-        obj.__class__.checkKwargs(kwargs)
+        obj.__class__.validate(kwargs)
         grob = obj.copy() if copy else obj
         for arg_key, arg_val in kwargs.items():
             setattr(grob, arg_key, _copy_attr(arg_val))
@@ -789,6 +789,8 @@ class Canvas(Grob):
         return self._grobs[index]
 
     def push(self, containerGrob):
+        # when things like Masks are added, they become their own container that
+        # applies to all grobs drawn until the effect is popped off the stack
         self._grobstack.insert(0, containerGrob)
         self._container.append(containerGrob)
         self._container = containerGrob
