@@ -8,7 +8,7 @@ from AppKit import *
 from Foundation import *
 
 from plotdevice import DeviceError
-from ..util import _copy_attr, _copy_attrs, _flatten
+from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
 from ..lib import geometry
 
 _ctx = None
@@ -69,10 +69,6 @@ def _save():
 
 def _restore():
     NSGraphicsContext.currentContext().restoreGraphicsState()
-
-def trim_zeroes(func):
-    # a handy decorator for tidying up numbers in repr strings
-    return lambda slf: re.sub(r'\.?0+(?=[,\)])', '', func(slf))
 
 class Point(object):
 

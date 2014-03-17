@@ -5,9 +5,8 @@ from Foundation import *
 
 from plotdevice import DeviceError
 from .grobs import TransformMixin, ColorMixin, Color, Transform, Grob
-from .grobs import CENTER, INHERIT, Region, Size, Point
-from .grobs import trim_zeroes, _save, _restore
-from ..util import _copy_attr, _copy_attrs, _flatten
+from .grobs import CENTER, INHERIT, Region, Size, Point, _save, _restore
+from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten
 from ..lib import pathmatics
 
 _ctx = None

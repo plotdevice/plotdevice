@@ -145,6 +145,11 @@ def _copy_attrs(source, target, attrs):
 def _flatten(seq):
     return sum( ([x] if not isinstance(x, (list,tuple)) else list(x) for x in seq), [] )
 
+### repr decorator (tidies numbers) ###
+
+def trim_zeroes(func):
+    return lambda slf: re.sub(r'\.?0+(?=[,\)])', '', func(slf))
+
 ### give ordered- and default-dict a nicer repr ###
 
 class BetterRepr(object):
