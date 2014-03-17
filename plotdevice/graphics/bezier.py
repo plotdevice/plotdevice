@@ -4,8 +4,9 @@ from AppKit import *
 from Foundation import *
 
 from plotdevice import DeviceError
-from .grobs import TransformMixin, ColorMixin, Color, Region, Size, Transform, Grob
-from .grobs import _save, _restore, _STATE_NAMES, trim_zeroes, CENTER
+from .grobs import TransformMixin, ColorMixin, Color, Transform, Grob
+from .grobs import CENTER, INHERIT, Region, Size, Point
+from .grobs import trim_zeroes, _save, _restore
 from ..util import _copy_attr, _copy_attrs, _flatten
 from ..lib import pathmatics
 
@@ -53,42 +54,42 @@ class PenMixin(object):
     Adds the _capstyle, _joinstyle, _dashstyle, and _strokewidth attributes to the class."""
 
     def __init__(self, **kwargs):
-        self.strokewidth = kwargs.get('nib', kwargs.get('strokewidth', _ctx._strokewidth))
-        self.capstyle = kwargs.get('cap', kwargs.get('capstyle', _ctx._capstyle))
-        self.joinstyle = kwargs.get('join', kwargs.get('joinstyle', _ctx._joinstyle))
-        self.dashstyle = kwargs.get('dash', kwargs.get('dashstyle', _ctx._dashstyle))
+        self.strokewidth = kwargs.get('nib', kwargs.get('strokewidth', INHERIT))
+        self.capstyle = kwargs.get('cap', kwargs.get('capstyle', INHERIT))
+        self.joinstyle = kwargs.get('join', kwargs.get('joinstyle', INHERIT))
+        self.dashstyle = kwargs.get('dash', kwargs.get('dashstyle', INHERIT))
 
     def _get_strokewidth(self):
-        return self._strokewidth
+        return self._strokewidth if self._strokewidth!=INHERIT else _ctx._strokewidth
     def _set_strokewidth(self, strokewidth):
         self._strokewidth = max(strokewidth, 0.0001)
     nib = strokewidth = property(_get_strokewidth, _set_strokewidth)
 
     def _get_capstyle(self):
-        return self._capstyle
+        return self._capstyle if self._capstyle!=INHERIT else _ctx._capstyle
     def _set_capstyle(self, style):
         from bezier import BUTT, ROUND, SQUARE
-        if style not in (BUTT, ROUND, SQUARE):
+        if style not in (INHERIT, BUTT, ROUND, SQUARE):
             badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
             raise DeviceError(badstyle)
         self._capstyle = style
     cap = capstyle = property(_get_capstyle, _set_capstyle)
 
     def _get_joinstyle(self):
-        return self._joinstyle
+        return self._joinstyle if self._joinstyle!=INHERIT else _ctx._joinstyle
     def _set_joinstyle(self, style):
         from bezier import MITER, ROUND, BEVEL
-        if style not in (MITER, ROUND, BEVEL):
+        if style not in (INHERIT, MITER, ROUND, BEVEL):
             badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
             raise DeviceError(badstyle)
         self._joinstyle = style
     join = joinstyle = property(_get_joinstyle, _set_joinstyle)
 
     def _get_dashstyle(self):
-        return self._dashstyle
+        return self._dashstyle if self._dashstyle!=INHERIT else _ctx._dashstyle
     def _set_dashstyle(self, *segments):
-        if None in segments:
-            self._dashstyle = None
+        if None in segments or INHERIT in segments:
+            self._dashstyle = segments[0]
         else:
             steps = map(int, _flatten(segments))
             if len(steps)%2:
@@ -100,7 +101,7 @@ class PenMixin(object):
 class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
     """A Bezier provides a wrapper around NSBezierPath."""
 
-    stateAttributes = ('_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_transform', '_transformmode')
+    stateAttributes = ('_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_dashstyle', '_transform', '_transformmode')
     kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle', 'nib', 'cap', 'join')
 
     def __init__(self, path=None, immediate=False, **kwargs):
@@ -128,6 +129,9 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
             raise DeviceError(badpath)
 
         # use any plotstyle settings in kwargs (the rest will be inherited)
+        for attr, val in kwargs.items():
+            if attr in Bezier.kwargs:
+                setattr(self, attr, _copy_attr(val))
         self._overrides = {k:_copy_attr(v) for k,v in kwargs.items() if k in Bezier.kwargs}
         self._autoclose = kwargs.get('close', _ctx._autoclosepath)
         self._autodraw = kwargs.get('draw', False)
@@ -135,7 +139,7 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
         # finish the path (and potentially draw it) immediately if flagged to do so.
         # in practice, `immediate` is only passed when invoked by the `bezier()` command
         # with a preexisting point-set or bezier `path` argument.
-        if immediate:
+        if immediate and kwargs.get('draw',True):
             self._autofinish()
 
     def __enter__(self):
@@ -158,9 +162,6 @@ class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
         if self._autoclose:
             self.closepath()
         if self._autodraw:
-            self.inheritFromContext(self._overrides.keys())
-            for attr, val in self._overrides.items():
-                setattr(self, attr, val)
             self.draw()
         self._finished = True
 

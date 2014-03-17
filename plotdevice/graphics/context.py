@@ -167,7 +167,6 @@ class Context(object):
             # otherwise let the nsbezier use its built-in support for rect radii
             p = Bezier(**kwargs)
             p.rect(x, y, width, height, radius=radius)
-        p.inheritFromContext(kwargs.keys())
 
         if draw:
             p.draw()
@@ -177,7 +176,6 @@ class Context(object):
         Bezier.checkKwargs(kwargs)
         path = Bezier(**kwargs)
         path.oval(x, y, width, height)
-        path.inheritFromContext(kwargs.keys())
 
         if draw:
           path.draw()
@@ -190,7 +188,6 @@ class Context(object):
             Bezier.checkKwargs(kwargs)
             p = Bezier(**kwargs)
             p.line(x1, y1, x2, y2)
-            p.inheritFromContext(kwargs.keys())
             if draw:
               p.draw()
         else:
@@ -220,7 +217,6 @@ class Context(object):
           p.lineto(x,y)
 
         p.closepath()
-        p.inheritFromContext(kwargs.keys())
         if draw:
           p.draw()
         return p
@@ -256,7 +252,6 @@ class Context(object):
         p.lineto(x-head, y-head)
         p.lineto(x, y)
         p.closepath()
-        p.inheritFromContext(kwargs.keys())
         if draw:
           p.draw()
         return p
@@ -277,7 +272,6 @@ class Context(object):
         p.lineto(x-width, y+width*head)
         p.lineto(x-width*(1-head), y)
         p.lineto(x, y)
-        p.inheritFromContext(kwargs.keys())
         if draw:
           p.draw()
         return p
@@ -336,7 +330,6 @@ class Context(object):
         if self._autoclosepath:
             self.closepath()
         p = self._path
-        p.inheritFromContext()
         if draw:
             p.draw()
         self._path = None
@@ -350,7 +343,6 @@ class Context(object):
         else: # Set the values in the current bezier path with the kwargs
             for arg_key, arg_val in kwargs.items():
                 setattr(path, arg_key, _copy_attr(arg_val))
-        path.inheritFromContext(kwargs.keys())
         path.draw()
 
     def autoclosepath(self, close=True):
@@ -359,8 +351,7 @@ class Context(object):
     def findpath(self, points, curvature=1.0):
         import bezier
         path = bezier.findpath(points, curvature=curvature)
-        path._ctx = self
-        path.inheritFromContext()
+        # path._ctx = self
         return path
 
     ### Clipping Commands ###
@@ -628,9 +619,9 @@ class Context(object):
 
     def text(self, txt, x, y, width=None, height=None, outline=False, draw=True, **kwargs):
         txt = Text(txt, x, y, width, height, **kwargs)
-        txt.inheritFromContext(kwargs.keys())
 
         if outline:
+            txt.inherit()
             path = txt.path
             _copy_attrs(txt, path, {'fill', 'stroke', 'strokewidth'}.intersection(kwargs))
             if draw:
@@ -643,12 +634,12 @@ class Context(object):
 
     def textpath(self, txt, x, y, width=None, height=None, **kwargs):
         txt = Text(txt, x, y, width, height, **kwargs)
-        txt.inheritFromContext(kwargs.keys())
+        txt.inherit()
         return txt.path
 
     def textmetrics(self, txt, width=None, height=None, **kwargs):
         txt = Text(txt, 0, 0, width, height, **kwargs)
-        txt.inheritFromContext(kwargs.keys())
+        txt.inherit()
         return txt.metrics
 
     def textwidth(self, txt, width=None, **kwargs):
@@ -663,7 +654,6 @@ class Context(object):
 
     def image(self, path, x, y, width=None, height=None, alpha=1.0, data=None, draw=True, **kwargs):
         img = Image(path, x, y, width, height, alpha, data=data, **kwargs)
-        img.inheritFromContext(kwargs.keys())
         if draw:
             img.draw()
         return img
@@ -728,7 +718,6 @@ class Context(object):
         grob = obj.copy() if copy else obj
         for arg_key, arg_val in kwargs.items():
             setattr(grob, arg_key, _copy_attr(arg_val))
-        grob.inheritFromContext(kwargs.keys())
         grob.draw()
 
     def measure(self, obj, width=None, height=None, **kwargs):

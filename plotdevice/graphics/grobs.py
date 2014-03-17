@@ -23,6 +23,7 @@ __all__ = [
         ]
 
 DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
+INHERIT = "inherit"
 
 # scale factors
 inch = 72
@@ -60,22 +61,6 @@ KEY_RIGHT = 124
 KEY_BACKSPACE = 51
 KEY_TAB = 48
 KEY_ESC = 53
-
-_STATE_NAMES = {
-    '_outputmode':    'outputmode',
-    '_colorrange':    'colorrange',
-    '_fillcolor':     'fill',
-    '_strokecolor':   'stroke',
-    '_strokewidth':   'strokewidth',
-    '_capstyle':      'capstyle',
-    '_joinstyle':     'joinstyle',
-    '_transform':     'transform',
-    '_transformmode': 'transformmode',
-    '_fontname':      'font',
-    '_fontsize':      'fontsize',
-    '_align':         'align',
-    '_lineheight':    'lineheight',
-}
 
 _CSS_COLORS = json.load(file('%s/colors.json'%os.path.dirname(__file__)))
 
@@ -176,18 +161,20 @@ class Region(tuple):
 class Grob(object):
     """A GRaphic OBject is the base class for all DrawingPrimitives."""
 
-    def draw(self):
+    def draw(self, copy=True):
         """Appends the grob to the canvas.
            This will result in a _draw later on, when the scene graph is rendered."""
-        _ctx.canvas.append(self)
+        grob = self.copy() if copy else self
+        grob.inherit()
+        _ctx.canvas.append(grob)
 
     def copy(self):
         """Returns a deep copy of this grob."""
         raise NotImplementedError, "Copy is not implemented on this Grob class."
 
-    def inheritFromContext(self, ignore=()):
-        attrs_to_skip = [k for k, v in _STATE_NAMES.items() if v in ignore]
-        attrs_to_copy = set(self.__class__.stateAttributes).difference(attrs_to_skip)
+    def inherit(self):
+        all_attrs = self.__class__.stateAttributes
+        attrs_to_copy = [a for a in all_attrs if getattr(self, a, INHERIT)==INHERIT]
         _copy_attrs(_ctx, self, attrs_to_copy)
 
     def checkKwargs(self, kwargs):
@@ -206,20 +193,20 @@ class ColorMixin(object):
         try:
             self._fillcolor = Color(kwargs['fill'])
         except KeyError:
-            self._fillcolor = Color()
+            self._fillcolor = INHERIT
         try:
             self._strokecolor = Color(kwargs['stroke'])
         except KeyError:
-            self._strokecolor = None
+            self._strokecolor = INHERIT
 
     def _get_fill(self):
-        return self._fillcolor
+        return self._fillcolor if self._fillcolor!=INHERIT else _ctx._fillcolor
     def _set_fill(self, *args):
         self._fillcolor = Color(*args)
     fill = property(_get_fill, _set_fill)
 
     def _get_stroke(self):
-        return self._strokecolor
+        return self._strokecolor if self._strokecolor!=INHERIT else _ctx._strokecolor
     def _set_stroke(self, *args):
         self._strokecolor = Color(*args)
     stroke = property(_get_stroke, _set_stroke)
@@ -565,17 +552,17 @@ class TransformMixin(object):
         self._reset()
 
     def _reset(self):
-        self._transform = Transform()
-        self._transformmode = CENTER
+        self._transform = INHERIT
+        self._transformmode = INHERIT
 
     def _get_transform(self):
-        return self._transform
+        return self._transform if self._transform!=INHERIT else _ctx._transform
     def _set_transform(self, transform):
         self._transform = Transform(transform)
     transform = property(_get_transform, _set_transform)
 
     def _get_transformmode(self):
-        return self._transformmode
+        return self._transformmode if self._transformmode!=INHERIT else _ctx._transformmode
     def _set_transformmode(self, mode):
         self._transformmode = mode
     transformmode = property(_get_transformmode, _set_transformmode)
@@ -728,6 +715,7 @@ class Transform(object):
         return Point(self._nsAffineTransform.transformPoint_((point.x,point.y)))
 
     def transformBezier(self, path):
+        from .bezier import Bezier
         if isinstance(path, Bezier):
             path = Bezier(path)
         else:

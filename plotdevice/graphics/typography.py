@@ -8,8 +8,8 @@ from Foundation import *
 from pprint import pprint
 
 from plotdevice import DeviceError
-from .grobs import TransformMixin, ColorMixin, Color, Region, Size
-from .grobs import _save, _restore, _STATE_NAMES, Transform, Grob
+from .grobs import TransformMixin, ColorMixin, Color, Transform, Grob
+from .grobs import INHERIT, Region, Size, _save, _restore
 from .bezier import Bezier
 from ..util.foundry import *
 from ..util import _copy_attrs
@@ -58,7 +58,7 @@ class Typesetter(object):
 
     def render(cls, text_obj):
         w,h = [d or 1000000 for d in text_obj.width,text_obj.height]
-        sheet = text_obj._stylesheet
+        sheet = text_obj.stylesheet
         style = DEFAULT if text_obj._style is None else text_obj._style
         words = text_obj.text
 
@@ -118,7 +118,7 @@ class Typesetter(object):
 
 class Text(Grob, TransformMixin, ColorMixin):
 
-    stateAttributes = ('_transform', '_transformmode', '_stylesheet')
+    stateAttributes = ('_transform', '_transformmode', '_stylesheet', '_fillcolor', '_strokecolor')
     kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
 
     __dummy_color = NSColor.blackColor()
@@ -143,7 +143,7 @@ class Text(Grob, TransformMixin, ColorMixin):
         self.y = y
         self.width = width
         self.height = height
-        self._stylesheet = None
+        self._stylesheet = INHERIT
         self._style = kwargs.pop('style', True)
         self._spec = Stylesheet._spec(**kwargs)
         self._align = kwargs.get('align', LEFT)
@@ -155,9 +155,15 @@ class Text(Grob, TransformMixin, ColorMixin):
             '_align', '_stylesheet', '_style', '_spec'))
         return new
 
-    def inheritFromContext(self, ignore=[]):
-        super(Text, self).inheritFromContext(ignore)
-        self._stylesheet._inherit(self._spec)
+    def inherit(self, ignore=[]):
+        super(Text, self).inherit()
+        self.stylesheet._inherit(self._spec)
+
+    @property
+    def stylesheet(self):
+        if self._stylesheet==INHERIT:
+           return _ctx._stylesheet
+        return self._stylesheet
 
     @property
     def font(self):
@@ -177,16 +183,16 @@ class Text(Grob, TransformMixin, ColorMixin):
 
         _save()
         # Center-mode transforms: translate to image center
-        if self._transformmode == CENTER:
+        if self.transformmode == CENTER:
             deltaX = w / 2
             deltaY = h / 2
             t = Transform()
             t.translate(x+deltaX, y-printer.offset+deltaY)
             t.concat()
-            self._transform.concat()
+            self.transform.concat()
             printer.draw_glyphs(-deltaX-dx, -deltaY-dy)
         else:
-            self._transform.concat()
+            self.transform.concat()
             printer.draw_glyphs(x-dx, y-dy-printer.offset)
         _restore()
         return (w, h)
@@ -230,7 +236,7 @@ class Text(Grob, TransformMixin, ColorMixin):
         trans.translate(x,y-printer.offset)
         trans.scale(1.0,-1.0)
         path = trans.transformBezierPath(path)
-        path.inheritFromContext()
+        path.inherit()
         return path
 
 class XMLParser(object):
@@ -385,7 +391,7 @@ class Stylesheet(Grob):
 
     def _inherit(self, spec):
         """Merge overrides from the text() invocation with the context's state"""
-        self.inheritFromContext()
+        self.inherit()
         self._override = spec
 
     def _cascade(self, *styles):
