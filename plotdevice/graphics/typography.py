@@ -8,10 +8,11 @@ from Foundation import *
 from pprint import pprint
 
 from plotdevice import DeviceError
-from plotdevice.graphics.grobs import TransformMixin, ColorMixin, Color, Region, Size
-from plotdevice.graphics.grobs import _save, _restore, _STATE_NAMES, Transform, Grob, Bezier
-from plotdevice.util.foundry import *
-from plotdevice.util import _copy_attrs
+from .grobs import TransformMixin, ColorMixin, Color, Region, Size
+from .grobs import _save, _restore, _STATE_NAMES, Transform, Grob
+from .bezier import Bezier
+from ..util.foundry import *
+from ..util import _copy_attrs
 
 _ctx = None
 __all__ = ("Text", "Family", "Font", "Stylesheet",

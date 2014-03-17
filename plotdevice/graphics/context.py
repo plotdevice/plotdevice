@@ -1,12 +1,15 @@
 import types
 from AppKit import *
 from contextlib import contextmanager, nested
-from plotdevice.graphics.typography import *
-from plotdevice.graphics.grobs import *
-from plotdevice.util.foundry import *
-from plotdevice.graphics import grobs, typography
-from plotdevice.util import _copy_attr, _copy_attrs, _flatten, foundry
-from plotdevice.lib import geometry
+
+from .typography import *
+from .bezier import *
+from .grobs import *
+from . import grobs, typography, bezier
+
+from ..util.foundry import sanitized, font_encoding, family_names, family_name, family_members
+from ..util import _copy_attr, _copy_attrs, _flatten, foundry
+from ..lib import geometry
 
 class Context(object):
     KEY_UP = grobs.KEY_UP
@@ -40,7 +43,7 @@ class Context(object):
         self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_') or a.endswith('_')))
 
     def _activate(self):
-        grobs._ctx = typography._ctx = self
+        grobs._ctx = typography._ctx = bezier._ctx = self
 
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context.state_vars]
@@ -407,8 +410,8 @@ class Context(object):
             if hasattr(xf, '_rollback'):
                 rollback.update(xf._rollback)
             else:
-                # should probably apply any saved transforms i guess?
-                pass
+                # if the transform was created manually, it hasn't yet made its modification
+                self._transform.prepend(xf)
 
         if mode:
             self._transformmode = mode

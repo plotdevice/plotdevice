@@ -1,470 +1,477 @@
-# Bezier - last updated for PlotDevice 1.8.3
-# Author: Tom De Smedt <tomdesmedt@trapdoor.be>
-# Manual: http://nodebox.net/code/index.php/Bezier
-# Copyright (c) 2007 by Tom De Smedt.
-# Refer to the "Use" section on http://nodebox.net/code
-# Thanks to Dr. Florimond De Smedt at the Free University of Brussels for the math routines.
+# encoding: utf-8
+import warnings
+from AppKit import *
+from Foundation import *
 
 from plotdevice import DeviceError
-from plotdevice.graphics import Bezier, Curve, Point, MOVETO, LINETO, CURVETO, CLOSE
-from plotdevice.lib.pathmatics import linepoint, linelength, curvepoint, curvelength
-
-def segment_lengths(path, relative=False, n=20):
-    """Returns a list with the lengths of each segment in the path.
-
-    >>> path = Bezier(None)
-    >>> segment_lengths(path)
-    []
-    >>> path.moveto(0, 0)
-    >>> segment_lengths(path)
-    []
-    >>> path.lineto(100, 0)
-    >>> segment_lengths(path)
-    [100.0]
-    >>> path.lineto(100, 300)
-    >>> segment_lengths(path)
-    [100.0, 300.0]
-    >>> segment_lengths(path, relative=True)
-    [0.25, 0.75]
-    >>> path = Bezier(None)
-    >>> path.moveto(1, 2)
-    >>> path.curveto(3, 4, 5, 6, 7, 8)
-    >>> segment_lengths(path)
-    [8.4852813742385695]
-    """
-
-    lengths = []
-    first = True
-
-    for el in path:
-        if first == True:
-            close_x, close_y = el.x, el.y
-            first = False
-        elif el.cmd == MOVETO:
-            close_x, close_y = el.x, el.y
-            lengths.append(0.0)
-        elif el.cmd == CLOSE:
-            lengths.append(linelength(x0, y0, close_x, close_y))
-        elif el.cmd == LINETO:
-            lengths.append(linelength(x0, y0, el.x, el.y))
-        elif el.cmd == CURVETO:
-            x3, y3, x1, y1, x2, y2 = el.x, el.y, el.ctrl1.x, el.ctrl1.y, el.ctrl2.x, el.ctrl2.y
-            lengths.append(curvelength(x0, y0, x1, y1, x2, y2, x3, y3, n))
-
-        if el.cmd != CLOSE:
-            x0 = el.x
-            y0 = el.y
-
-    if relative:
-        length = sum(lengths)
-        try:
-            return map(lambda l: l / length, lengths)
-        except ZeroDivisionError: # If the length is zero, just return zero for all segments
-            return [0.0] * len(lengths)
-    else:
-        return lengths
-
-def length(path, segmented=False, n=20):
-
-    """Returns the length of the path.
-
-    Calculates the length of each spline in the path,
-    using n as a number of points to measure.
-
-    When segmented is True, returns a list
-    containing the individual length of each spline
-    as values between 0.0 and 1.0,
-    defining the relative length of each spline
-    in relation to the total path length.
-
-    The length of an empty path is zero:
-    >>> path = Bezier(None)
-    >>> length(path)
-    0.0
-
-    >>> path.moveto(0, 0)
-    >>> path.lineto(100, 0)
-    >>> length(path)
-    100.0
-
-    >>> path.lineto(100, 100)
-    >>> length(path)
-    200.0
-
-    # Segmented returns a list of each segment
-    >>> length(path, segmented=True)
-    [0.5, 0.5]
-    """
-
-    if not segmented:
-        return sum(segment_lengths(path, n=n), 0.0)
-    else:
-        return segment_lengths(path, relative=True, n=n)
-
-def _locate(path, t, segments=None):
-
-    """Locates t on a specific segment in the path.
-
-    Returns (index, t, Curve)
-
-    A path is a combination of lines and curves (segments).
-    The returned index indicates the start of the segment
-    that contains point t.
-
-    The returned t is the absolute time on that segment,
-    in contrast to the relative t on the whole of the path.
-    The returned point is the last MOVETO,
-    any subsequent CLOSETO after i closes to that point.
-
-    When you supply the list of segment lengths yourself,
-    as returned from length(path, segmented=True),
-    point() works about thirty times faster in a for-loop,
-    since it doesn't need to recalculate the length
-    during each iteration. Note that this has been deprecated:
-    the Bezier now caches the segment lengths the moment you use
-    them.
-
-    >>> path = Bezier(None)
-    >>> _locate(path, 0.0)
-    Traceback (most recent call last):
-        ...
-    DeviceError: The given path is empty
-    >>> path.moveto(0,0)
-    >>> _locate(path, 0.0)
-    Traceback (most recent call last):
-        ...
-    DeviceError: The given path is empty
-    >>> path.lineto(100, 100)
-    >>> _locate(path, 0.0)
-    (0, 0.0, Point(x=0.0, y=0.0))
-    >>> _locate(path, 1.0)
-    (0, 1.0, Point(x=0.0, y=0.0))
-    """
-
-    if segments == None:
-        segments = path.segmentlengths(relative=True)
-
-    if len(segments) == 0:
-        raise DeviceError, "The given path is empty"
-
-    for i, el in enumerate(path):
-        if i == 0 or el.cmd == MOVETO:
-            closeto = Point(el.x, el.y)
-        if t <= segments[i] or i == len(segments)-1: break
-        else: t -= segments[i]
-
-    try: t /= segments[i]
-    except ZeroDivisionError: pass
-    if i == len(segments)-1 and segments[i] == 0: i -= 1
-
-    return (i, t, closeto)
-
-def point(path, t, segments=None):
-
-    """Returns coordinates for point at t on the path.
-
-    Gets the length of the path, based on the length
-    of each curve and line in the path.
-    Determines in what segment t falls.
-    Gets the point on that segment.
-
-    When you supply the list of segment lengths yourself,
-    as returned from length(path, segmented=True),
-    point() works about thirty times faster in a for-loop,
-    since it doesn't need to recalculate the length
-    during each iteration. Note that this has been deprecated:
-    the Bezier now caches the segment lengths the moment you use
-    them.
-
-    >>> path = Bezier(None)
-    >>> point(path, 0.0)
-    Traceback (most recent call last):
-        ...
-    DeviceError: The given path is empty
-    >>> path.moveto(0, 0)
-    >>> point(path, 0.0)
-    Traceback (most recent call last):
-        ...
-    DeviceError: The given path is empty
-    >>> path.lineto(100, 0)
-    >>> point(path, 0.0)
-    Curve(LINETO, ((0.0, 0.0),))
-    >>> point(path, 0.1)
-    Curve(LINETO, ((10.0, 0.0),))
-    """
-
-    if len(path) == 0:
-        raise DeviceError, "The given path is empty"
-
-    i, t, closeto = _locate(path, t, segments=segments)
-
-    x0, y0 = path[i].x, path[i].y
-    p1 = path[i+1]
-
-    if p1.cmd == CLOSE:
-        x, y = linepoint(t, x0, y0, closeto.x, closeto.y)
-        return Curve(LINETO, ((x, y),))
-    elif p1.cmd == LINETO:
-        x1, y1 = p1.x, p1.y
-        x, y = linepoint(t, x0, y0, x1, y1)
-        return Curve(LINETO, ((x, y),))
-    elif p1.cmd == CURVETO:
-        x3, y3, x1, y1, x2, y2 = p1.x, p1.y, p1.ctrl1.x, p1.ctrl1.y, p1.ctrl2.x, p1.ctrl2.y
-        x, y, c1x, c1y, c2x, c2y = curvepoint(t, x0, y0, x1, y1, x2, y2, x3, y3)
-        return Curve(CURVETO, ((c1x, c1y), (c2x, c2y), (x, y)))
-    else:
-        raise DeviceError, "Unknown cmd for p1 %s" % p1
-
-def points(path, amount=100):
-    """Returns an iterator with a list of calculated points for the path.
-    This method calls the point method <amount> times, increasing t,
-    distributing point spacing linearly.
-
-    >>> path = Bezier(None)
-    >>> list(points(path))
-    Traceback (most recent call last):
-        ...
-    DeviceError: The given path is empty
-    >>> path.moveto(0, 0)
-    >>> list(points(path))
-    Traceback (most recent call last):
-        ...
-    DeviceError: The given path is empty
-    >>> path.lineto(100, 0)
-    >>> list(points(path, amount=4))
-    [Curve(LINETO, ((0.0, 0.0),)), Curve(LINETO, ((25.0, 0.0),)), Curve(LINETO, ((50.0, 0.0),)), Curve(LINETO, ((75.0, 0.0),))]
-    """
-
-    if len(path) == 0:
-        raise DeviceError, "The given path is empty"
-
-    # The delta value is divided by amount - 1, because we also want the last point (t=1.0)
-    # If I wouldn't use amount - 1, I fall one point short of the end.
-    # E.g. if amount = 4, I want point at t 0.0, 0.33, 0.66 and 1.0,
-    # if amount = 2, I want point at t 0.0 and t 1.0
-    try:
-        delta = 1.0/(amount-1)
-    except ZeroDivisionError:
-        delta = 1.0
-
-    for i in xrange(amount):
-        yield point(path, delta*i)
-
-def contours(path):
-    """Returns a list of contours in the path.
-
-    A contour is a sequence of lines and curves
-    separated from the next contour by a MOVETO.
-
-    For example, the glyph "o" has two contours:
-    the inner circle and the outer circle.
-
-    >>> path = Bezier(None)
-    >>> path.moveto(0, 0)
-    >>> path.lineto(100, 100)
-    >>> len(contours(path))
-    1
-
-    A new contour is defined as something that starts with a moveto:
-    >>> path.moveto(50, 50)
-    >>> path.curveto(150, 150, 50, 250, 80, 95)
-    >>> len(contours(path))
-    2
-
-    Empty moveto's don't do anything:
-    >>> path.moveto(50, 50)
-    >>> path.moveto(50, 50)
-    >>> len(contours(path))
-    2
-
-    It doesn't matter if the path is closed or open:
-    >>> path.closepath()
-    >>> len(contours(path))
-    2
-    """
-    contours = []
-    current_contour = None
-    empty = True
-    for i, el in enumerate(path):
-        if el.cmd == MOVETO:
-            if not empty:
-                contours.append(current_contour)
-            current_contour = Bezier(path._ctx)
-            current_contour.moveto(el.x, el.y)
-            empty = True
-        elif el.cmd == LINETO:
-            empty = False
-            current_contour.lineto(el.x, el.y)
-        elif el.cmd == CURVETO:
-            empty = False
-            current_contour.curveto(el.ctrl1.x, el.ctrl1.y,
-                el.ctrl2.x, el.ctrl2.y, el.x, el.y)
-        elif el.cmd == CLOSE:
-            current_contour.closepath()
-    if not empty:
-        contours.append(current_contour)
-    return contours
-
-def findpath(points, curvature=1.0):
-
-    """Constructs a path between the given list of points.
-
-    Interpolates the list of points and determines
-    a smooth bezier path betweem them.
-
-    The curvature parameter offers some control on
-    how separate segments are stitched together:
-    from straight angles to smooth curves.
-    Curvature is only useful if the path has more than  three points.
-    """
-
-    # The list of points consists of Point objects,
-    # but it shouldn't crash on something straightforward
-    # as someone supplying a list of (x,y)-tuples.
-
-    from types import TupleType
-    for i, pt in enumerate(points):
-        if type(pt) == TupleType:
-            points[i] = Point(pt[0], pt[1])
-
-    if len(points) == 0: return None
-    if len(points) == 1:
-        path = Bezier(None)
-        path.moveto(points[0].x, points[0].y)
-        return path
-    if len(points) == 2:
-        path = Bezier(None)
-        path.moveto(points[0].x, points[0].y)
-        path.lineto(points[1].x, points[1].y)
-        return path
-
-    # Zero curvature means straight lines.
-
-    curvature = max(0, min(1, curvature))
-    if curvature == 0:
-        path = Bezier(None)
-        path.moveto(points[0].x, points[0].y)
-        for i in range(len(points)):
-            path.lineto(points[i].x, points[i].y)
-        return path
-
-    curvature = 4 + (1.0-curvature)*40
-
-    dx = {0: 0, len(points)-1: 0}
-    dy = {0: 0, len(points)-1: 0}
-    bi = {1: -0.25}
-    ax = {1: (points[2].x-points[0].x-dx[0]) / 4}
-    ay = {1: (points[2].y-points[0].y-dy[0]) / 4}
-
-    for i in range(2, len(points)-1):
-        bi[i] = -1 / (curvature + bi[i-1])
-        ax[i] = -(points[i+1].x-points[i-1].x-ax[i-1]) * bi[i]
-        ay[i] = -(points[i+1].y-points[i-1].y-ay[i-1]) * bi[i]
-
-    r = range(1, len(points)-1)
-    r.reverse()
-    for i in r:
-        dx[i] = ax[i] + dx[i+1] * bi[i]
-        dy[i] = ay[i] + dy[i+1] * bi[i]
-
-    path = Bezier(None)
-    path.moveto(points[0].x, points[0].y)
-    for i in range(len(points)-1):
-        path.curveto(points[i].x + dx[i],
-                     points[i].y + dy[i],
-                     points[i+1].x - dx[i+1],
-                     points[i+1].y - dy[i+1],
-                     points[i+1].x,
-                     points[i+1].y)
-
-    return path
-
-def insert_point(path, t):
-
-    """Returns a path copy with an extra point at t.
-    >>> path = Bezier(None)
-    >>> path.moveto(0, 0)
-    >>> insert_point(path, 0.1)
-    Traceback (most recent call last):
-        ...
-    DeviceError: The given path is empty
-    >>> path.moveto(0, 0)
-    >>> insert_point(path, 0.2)
-    Traceback (most recent call last):
-        ...
-    DeviceError: The given path is empty
-    >>> path.lineto(100, 50)
-    >>> len(path)
-    2
-    >>> path = insert_point(path, 0.5)
-    >>> len(path)
-    3
-    >>> path[1]
-    Curve(LINETO, ((50.0, 25.0),))
-    >>> path = Bezier(None)
-    >>> path.moveto(0, 100)
-    >>> path.curveto(0, 50, 100, 50, 100, 100)
-    >>> path = insert_point(path, 0.5)
-    >>> path[1]
-    Curve(LINETO, ((25.0, 62.5), (0.0, 75.0), (50.0, 62.5))
-    """
-
-    i, t, closeto = _locate(path, t)
-
-    x0 = path[i].x
-    y0 = path[i].y
-    p1 = path[i+1]
-    p1cmd, x3, y3, x1, y1, x2, y2 = p1.cmd, p1.x, p1.y, p1.ctrl1.x, p1.ctrl1.y, p1.ctrl2.x, p1.ctrl2.y
-
-    if p1cmd == CLOSE:
-        pt_cmd = LINETO
-        pt_x, pt_y = linepoint(t, x0, y0, closeto.x, closeto.y)
-    elif p1cmd == LINETO:
-        pt_cmd = LINETO
-        pt_x, pt_y = linepoint(t, x0, y0, x3, y3)
-    elif p1cmd == CURVETO:
-        pt_cmd = CURVETO
-        pt_x, pt_y, pt_c1x, pt_c1y, pt_c2x, pt_c2y, pt_h1x, pt_h1y, pt_h2x, pt_h2y = \
-            curvepoint(t, x0, y0, x1, y1, x2, y2, x3, y3, True)
-    else:
-        raise DeviceError, "Locate should not return a MOVETO"
-
-    new_path = Bezier(None)
-    new_path.moveto(path[0].x, path[0].y)
-    for j in range(1, len(path)):
-        if j == i+1:
-            if pt_cmd == CURVETO:
-                new_path.curveto(pt_h1x, pt_h1y,
-                             pt_c1x, pt_c1y,
-                             pt_x, pt_y)
-                new_path.curveto(pt_c2x, pt_c2y,
-                             pt_h2x, pt_h2y,
-                             path[j].x, path[j].y)
-            elif pt_cmd == LINETO:
-                new_path.lineto(pt_x, pt_y)
-                if path[j].cmd != CLOSE:
-                    new_path.lineto(path[j].x, path[j].y)
-                else:
-                    new_path.closepath()
-            else:
-                raise DeviceError, "Didn't expect pt_cmd %s here" % pt_cmd
-
+from .grobs import TransformMixin, ColorMixin, Color, Region, Size, Transform, Grob
+from .grobs import _save, _restore, _STATE_NAMES, trim_zeroes, CENTER
+from ..util import _copy_attr, _copy_attrs, _flatten
+from ..lib import pathmatics
+
+_ctx = None
+__all__ = ("Bezier", "Curve", "Mask",                   # new names
+           "BezierPath", "PathElement", "ClippingPath", # compat. aliases
+           "MOVETO", "LINETO", "CURVETO", "CLOSE",
+           "MITER", "ROUND", "BEVEL", "BUTT", "SQUARE",
+           "NORMAL","FORTYFIVE",
+)
+
+# path commands
+MOVETO = NSMoveToBezierPathElement
+LINETO = NSLineToBezierPathElement
+CURVETO = NSCurveToBezierPathElement
+CLOSE = NSClosePathBezierPathElement
+
+# linejoin styles and nstypes
+MITER = "miter"
+ROUND = "round"
+BEVEL = "bevel"
+_JOINSTYLE=dict(
+    miter = NSMiterLineJoinStyle,
+    round = NSRoundLineJoinStyle,
+    bevel = NSBevelLineJoinStyle,
+)
+
+# endcap styles and nstypes
+BUTT = "butt"
+ROUND = "round"
+SQUARE = "square"
+_CAPSTYLE=dict(
+    butt = NSButtLineCapStyle,
+    round = NSRoundLineCapStyle,
+    square = NSSquareLineCapStyle,
+)
+
+# arrow styles
+NORMAL = "normal"
+FORTYFIVE = "fortyfive"
+
+class PenMixin(object):
+
+    """Mixin class for linestyle support.
+    Adds the _capstyle, _joinstyle, _dashstyle, and _strokewidth attributes to the class."""
+
+    def __init__(self, **kwargs):
+        self.strokewidth = kwargs.get('nib', kwargs.get('strokewidth', _ctx._strokewidth))
+        self.capstyle = kwargs.get('cap', kwargs.get('capstyle', _ctx._capstyle))
+        self.joinstyle = kwargs.get('join', kwargs.get('joinstyle', _ctx._joinstyle))
+        self.dashstyle = kwargs.get('dash', kwargs.get('dashstyle', _ctx._dashstyle))
+
+    def _get_strokewidth(self):
+        return self._strokewidth
+    def _set_strokewidth(self, strokewidth):
+        self._strokewidth = max(strokewidth, 0.0001)
+    nib = strokewidth = property(_get_strokewidth, _set_strokewidth)
+
+    def _get_capstyle(self):
+        return self._capstyle
+    def _set_capstyle(self, style):
+        from bezier import BUTT, ROUND, SQUARE
+        if style not in (BUTT, ROUND, SQUARE):
+            badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
+            raise DeviceError(badstyle)
+        self._capstyle = style
+    cap = capstyle = property(_get_capstyle, _set_capstyle)
+
+    def _get_joinstyle(self):
+        return self._joinstyle
+    def _set_joinstyle(self, style):
+        from bezier import MITER, ROUND, BEVEL
+        if style not in (MITER, ROUND, BEVEL):
+            badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
+            raise DeviceError(badstyle)
+        self._joinstyle = style
+    join = joinstyle = property(_get_joinstyle, _set_joinstyle)
+
+    def _get_dashstyle(self):
+        return self._dashstyle
+    def _set_dashstyle(self, *segments):
+        if None in segments:
+            self._dashstyle = None
         else:
-            if path[j].cmd == MOVETO:
-                new_path.moveto(path[j].x, path[j].y)
-            if path[j].cmd == LINETO:
-                new_path.lineto(path[j].x, path[j].y)
-            if path[j].cmd == CURVETO:
-                new_path.curveto(path[j].ctrl1.x, path[j].ctrl1.y,
-                             path[j].ctrl2.x, path[j].ctrl2.y,
-                             path[j].x, path[j].y)
-            if path[j].cmd == CLOSE:
-                new_path.closepath()
-    return new_path
+            steps = map(int, _flatten(segments))
+            if len(steps)%2:
+                steps += steps[-1:] # assume even spacing for omitted skip sizes
+            self._dashstyle = steps
+    dash = dashstyle = property(_get_dashstyle, _set_dashstyle)
 
-def _test():
-    import doctest, bezier
-    return doctest.testmod(bezier)
 
-if __name__=='__main__':
-    _test()
+class Bezier(Grob, TransformMixin, ColorMixin, PenMixin):
+    """A Bezier provides a wrapper around NSBezierPath."""
+
+    stateAttributes = ('_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_transform', '_transformmode')
+    kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle', 'nib', 'cap', 'join')
+
+    def __init__(self, path=None, immediate=False, **kwargs):
+        TransformMixin.__init__(self)
+        ColorMixin.__init__(self, **kwargs)
+        PenMixin.__init__(self, **kwargs)
+        self._segment_cache = None
+        self._finished = False
+
+        # path arg might contain a list of point tuples, a bezier to copy, or a raw
+        # nsbezier reference to use as the backing store. otherwise start with a
+        # fresh path with no points
+        if path is None:
+            self._nsBezierPath = NSBezierPath.bezierPath()
+        elif isinstance(path, (list,tuple)):
+            self._nsBezierPath = NSBezierPath.bezierPath()
+            self.extend(path)
+        elif isinstance(path, Bezier):
+            self._nsBezierPath = path._nsBezierPath.copy()
+            _copy_attrs(path, self, self.stateAttributes)
+        elif isinstance(path, NSBezierPath):
+            self._nsBezierPath = path
+        else:
+            badpath = "Don't know what to do with %s." % path
+            raise DeviceError(badpath)
+
+        # use any plotstyle settings in kwargs (the rest will be inherited)
+        self._overrides = {k:_copy_attr(v) for k,v in kwargs.items() if k in Bezier.kwargs}
+        self._autoclose = kwargs.get('close', _ctx._autoclosepath)
+        self._autodraw = kwargs.get('draw', False)
+
+        # finish the path (and potentially draw it) immediately if flagged to do so.
+        # in practice, `immediate` is only passed when invoked by the `bezier()` command
+        # with a preexisting point-set or bezier `path` argument.
+        if immediate:
+            self._autofinish()
+
+    def __enter__(self):
+        if self._finished:
+            reentrant = "Bezier already complete. Only use `with bezier()` when defining a path using moveto, lineto, etc."
+            raise DeviceError(reentrant)
+        elif _ctx._path is not None:
+            recursive = "Already defining a bezier path. Don't nest `with bezier()` blocks"
+            raise DeviceError(recursive)
+        _ctx._saveContext()
+        _ctx._path = self
+        return self
+
+    def __exit__(self, type, value, tb):
+        self._autofinish()
+        _ctx._path = None
+        _ctx._restoreContext()
+
+    def _autofinish(self):
+        if self._autoclose:
+            self.closepath()
+        if self._autodraw:
+            self.inheritFromContext(self._overrides.keys())
+            for attr, val in self._overrides.items():
+                setattr(self, attr, val)
+            self.draw()
+        self._finished = True
+
+    @property
+    def path(self):
+        warnings.warn("The 'path' attribute is deprecated. Please use _nsBezierPath instead.", DeprecationWarning, stacklevel=2)
+        return self._nsBezierPath
+
+    def copy(self):
+        return self.__class__(self)
+
+    ### Path methods ###
+
+    def moveto(self, x, y):
+        self._segment_cache = None
+        self._nsBezierPath.moveToPoint_( (x, y) )
+
+    def lineto(self, x, y):
+        self._segment_cache = None
+        if self._nsBezierPath.elementCount()==0:
+            # use an implicit 0,0 origin if path doesn't have a prior moveto
+            self._nsBezierPath.moveToPoint_( (0, 0) )
+        self._nsBezierPath.lineToPoint_( (x, y) )
+
+    def curveto(self, x1, y1, x2, y2, x3, y3):
+        self._segment_cache = None
+        self._nsBezierPath.curveToPoint_controlPoint1_controlPoint2_( (x3, y3), (x1, y1), (x2, y2) )
+
+    def closepath(self):
+        self._segment_cache = None
+        self._nsBezierPath.closePath()
+
+    def _get_bounds(self):
+        try:
+            return Region(*self._nsBezierPath.bounds())
+        except:
+            # Path is empty -- no bounds
+            return Region()
+    bounds = property(_get_bounds)
+
+    def contains(self, x, y):
+        return self._nsBezierPath.containsPoint_((x,y))
+
+    ### Basic shapes ###
+
+    def rect(self, x, y, width, height, radius=None):
+        self._segment_cache = None
+        if radius is None:
+            self._nsBezierPath.appendBezierPathWithRect_( ((x, y), (width, height)) )
+        else:
+            if isinstance(radius, (int,float,long)):
+                radius = (radius, radius)
+            elif not isinstance(radius, (list, tuple)) or len(radius)!=2:
+                badradius = 'the radius for a rect must be either a number or an (x,y) tuple'
+                raise DeviceError(badradius)
+            self._nsBezierPath.appendBezierPathWithRoundedRect_xRadius_yRadius_( ((x,y), (width,height)), *radius)
+
+    def oval(self, x, y, width, height):
+        self._segment_cache = None
+        self._nsBezierPath.appendBezierPathWithOvalInRect_( ((x, y), (width, height)) )
+
+    ellipse = oval
+
+    def line(self, x1, y1, x2, y2):
+        self._segment_cache = None
+        self._nsBezierPath.moveToPoint_( (x1, y1) )
+        self._nsBezierPath.lineToPoint_( (x2, y2) )
+
+    ### List methods ###
+
+    def __getitem__(self, index):
+        cmd, el = self._nsBezierPath.elementAtIndex_associatedPoints_(index)
+        return Curve(cmd, el)
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield self[i]
+
+    def __len__(self):
+        return self._nsBezierPath.elementCount()
+
+    def extend(self, pathElements):
+        self._segment_cache = None
+        for el in pathElements:
+            if isinstance(el, (list, tuple)):
+                x, y = el
+                if len(self) == 0:
+                    cmd = MOVETO
+                else:
+                    cmd = LINETO
+                self.append(Curve(cmd, ((x, y),)))
+            elif isinstance(el, Curve):
+                self.append(el)
+            else:
+                wrongtype = "Don't know how to handle %s" % el
+                raise DeviceError(wrongtype)
+
+    def append(self, el):
+        self._segment_cache = None
+        if el.cmd == MOVETO:
+            self.moveto(el.x, el.y)
+        elif el.cmd == LINETO:
+            self.lineto(el.x, el.y)
+        elif el.cmd == CURVETO:
+            self.curveto(el.ctrl1.x, el.ctrl1.y, el.ctrl2.x, el.ctrl2.y, el.x, el.y)
+        elif el.cmd == CLOSE:
+            self.closepath()
+
+    @property
+    def contours(self):
+        return pathmatics.contours(self)
+
+    ### Drawing methods ###
+
+    @property
+    def transform(self):
+        trans = self._transform.copy()
+        if (self._transformmode == CENTER):
+            (x, y), (w, h) = self.bounds
+            deltax = x+w/2
+            deltay = y+h/2
+            t = Transform()
+            t.translate(-deltax,-deltay)
+            trans.prepend(t)
+            t = Transform()
+            t.translate(deltax,deltay)
+            trans.append(t)
+        return trans
+
+    def _draw(self):
+        _save()
+        self.transform.concat()
+        if (self._fillcolor):
+            self._fillcolor.set()
+            self._nsBezierPath.fill()
+        if (self._strokecolor):
+            self._strokecolor.set()
+            self._nsBezierPath.setLineWidth_(self._strokewidth)
+            self._nsBezierPath.setLineCapStyle_(_CAPSTYLE[self._capstyle])
+            self._nsBezierPath.setLineJoinStyle_(_JOINSTYLE[self._joinstyle])
+            if self._dashstyle:
+                self._nsBezierPath.setLineDash_count_phase_(self._dashstyle, len(self._dashstyle), 0)
+            self._nsBezierPath.stroke()
+        _restore()
+
+    ### Geometry ###
+
+    def fit(self, x=None, y=None, width=None, height=None, stretch=False):
+
+        """Fits this path to the specified bounds.
+
+        All parameters are optional; if no parameters are specified, nothing will happen.
+        Specifying a parameter will constrain its value:
+
+        - x: The path will be positioned at the specified x value
+        - y: The path will be positioned at the specified y value
+        - width: The path will be of the specified width
+        - height: The path will be of the specified height
+        - stretch: If both width and height are defined, either stretch the path or
+                   keep the aspect ratio.
+        """
+
+        (px, py), (pw, ph) = self.bounds
+        t = Transform()
+        if x is not None and y is None:
+            t.translate(x, py)
+        elif x is None and y is not None:
+            t.translate(px, y)
+        elif x is not None and y is not None:
+            t.translate(x, y)
+        else:
+            t.translate(px, py)
+        if width is not None and height is None:
+            t.scale(width / pw)
+        elif width is None and height is not None:
+            t.scale(height / ph)
+        elif width is not None and height is not None:
+            if stretch:
+                t.scale(width /pw, height / ph)
+            else:
+                t.scale(min(width /pw, height / ph))
+        t.translate(-px, -py)
+        self._nsBezierPath = t.transformBezierPath(self)._nsBezierPath
+
+    ### Mathematics ###
+
+    def segmentlengths(self, relative=False, n=10):
+        if relative: # Use the opportunity to store the segment cache.
+            if self._segment_cache is None:
+                self._segment_cache = pathmatics.segment_lengths(self, relative=True, n=n)
+            return self._segment_cache
+        else:
+            return pathmatics.segment_lengths(self, relative=False, n=n)
+
+    @property
+    def length(self, segmented=False, n=10):
+        return pathmatics.length(self, segmented=segmented, n=n)
+
+    def point(self, t):
+        return pathmatics.point(self, t)
+
+    def points(self, amount=100):
+        if len(self) == 0:
+            empty = "The given path is empty"
+            raise DeviceError(empty)
+
+        # The delta value is divided by amount - 1, because we also want the last point (t=1.0)
+        # If I wouldn't use amount - 1, I fall one point short of the end.
+        # E.g. if amount = 4, I want point at t 0.0, 0.33, 0.66 and 1.0,
+        # if amount = 2, I want point at t 0.0 and t 1.0
+        try:
+            delta = 1.0/(amount-1)
+        except ZeroDivisionError:
+            delta = 1.0
+
+        for i in xrange(amount):
+            yield pathmatics.point(delta*i)
+
+    def addpoint(self, t):
+        self._nsBezierPath = pathmatics.insert_point(self, t)._nsBezierPath
+        self._segment_cache = None
+
+    ### Clipping operations ###
+
+    def intersects(self, other):
+        return pathmatics.intersects(self._nsBezierPath, other._nsBezierPath)
+
+    def union(self, other, flatness=0.6):
+        return Bezier(pathmatics.union(self._nsBezierPath, other._nsBezierPath, flatness))
+
+    def intersect(self, other, flatness=0.6):
+        return Bezier(pathmatics.intersect(self._nsBezierPath, other._nsBezierPath, flatness))
+
+    def difference(self, other, flatness=0.6):
+        return Bezier(pathmatics.difference(self._nsBezierPath, other._nsBezierPath, flatness))
+
+    def xor(self, other, flatness=0.6):
+        return Bezier(pathmatics.xor(self._nsBezierPath, other._nsBezierPath, flatness))
+
+class BezierPath(Bezier):
+    pass # NodeBox compat...
+
+class Curve(object):
+
+    def __init__(self, cmd=None, pts=None):
+        self.cmd = cmd
+        if cmd == MOVETO:
+            assert len(pts) == 1
+            self.x, self.y = pts[0]
+            self.ctrl1 = Point(pts[0])
+            self.ctrl2 = Point(pts[0])
+        elif cmd == LINETO:
+            assert len(pts) == 1
+            self.x, self.y = pts[0]
+            self.ctrl1 = Point(pts[0])
+            self.ctrl2 = Point(pts[0])
+        elif cmd == CURVETO:
+            assert len(pts) == 3
+            self.ctrl1 = Point(pts[0])
+            self.ctrl2 = Point(pts[1])
+            self.x, self.y = pts[2]
+        elif cmd == CLOSE:
+            assert pts is None or len(pts) == 0
+            self.x = self.y = 0.0
+            self.ctrl1 = Point(0.0, 0.0)
+            self.ctrl2 = Point(0.0, 0.0)
+        else:
+            self.x = self.y = 0.0
+            self.ctrl1 = Point()
+            self.ctrl2 = Point()
+
+    @trim_zeroes
+    def __repr__(self):
+        if self.cmd == MOVETO:
+            return "Curve(MOVETO, ((%.3f, %.3f),))" % (self.x, self.y)
+        elif self.cmd == LINETO:
+            return "Curve(LINETO, ((%.3f, %.3f),))" % (self.x, self.y)
+        elif self.cmd == CURVETO:
+            return "Curve(CURVETO, ((%.3f, %.3f), (%.3f, %s), (%.3f, %.3f))" % \
+                (self.ctrl1.x, self.ctrl1.y, self.ctrl2.x, self.ctrl2.y, self.x, self.y)
+        elif self.cmd == CLOSE:
+            return "Curve(CLOSE)"
+
+    def __eq__(self, other):
+        if other is None: return False
+        if self.cmd != other.cmd: return False
+        return self.x == other.x and self.y == other.y \
+            and self.ctrl1 == other.ctrl1 and self.ctrl2 == other.ctrl2
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+class PathElement(Curve):
+    pass # NodeBox compat...
+
+class Mask(Grob):
+
+    def __init__(self, path):
+        self.path = path
+        self._grobs = []
+
+    def append(self, grob):
+        self._grobs.append(grob)
+
+    def _draw(self):
+        _save()
+        cp = self.path.transform.transformBezierPath(self.path)
+        cp._nsBezierPath.addClip()
+        for grob in self._grobs:
+            grob._draw()
+        _restore()
+
+class ClippingPath(Mask):
+    pass # NodeBox compat...
