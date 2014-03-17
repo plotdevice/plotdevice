@@ -40,7 +40,6 @@
 		2A32958B18C59D8000EEDD1C /* geometry.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957518C59D0A00EEDD1C /* geometry.py */; };
 		2A32958C18C59D8000EEDD1C /* io.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957718C59D0A00EEDD1C /* io.py */; };
 		2A32958D18C59D8000EEDD1C /* pathmatics.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957918C59D0A00EEDD1C /* pathmatics.py */; };
-		2A32958E18C59D8000EEDD1C /* polymagic.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957B18C59D0A00EEDD1C /* polymagic.py */; };
 		2A32959118C6879F00EEDD1C /* colors.json in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2A32958F18C6879500EEDD1C /* colors.json */; };
 		2A3BD55E189C653600748EA3 /* PlotDeviceFile-nb.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2A3BD55D189C653600748EA3 /* PlotDeviceFile-nb.icns */; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
@@ -229,7 +228,6 @@
 				2A32958B18C59D8000EEDD1C /* geometry.py in Copy plotdevice.lib */,
 				2A32958C18C59D8000EEDD1C /* io.py in Copy plotdevice.lib */,
 				2A32958D18C59D8000EEDD1C /* pathmatics.py in Copy plotdevice.lib */,
-				2A32958E18C59D8000EEDD1C /* polymagic.py in Copy plotdevice.lib */,
 			);
 			name = "Copy plotdevice.lib";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -257,7 +255,6 @@
 		2A32957518C59D0A00EEDD1C /* geometry.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = geometry.py; sourceTree = "<group>"; };
 		2A32957718C59D0A00EEDD1C /* io.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = io.py; sourceTree = "<group>"; };
 		2A32957918C59D0A00EEDD1C /* pathmatics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = pathmatics.py; sourceTree = "<group>"; };
-		2A32957B18C59D0A00EEDD1C /* polymagic.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = polymagic.py; sourceTree = "<group>"; };
 		2A32958F18C6879500EEDD1C /* colors.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = colors.json; sourceTree = "<group>"; };
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
@@ -390,7 +387,6 @@
 				2A32957518C59D0A00EEDD1C /* geometry.py */,
 				2A32957718C59D0A00EEDD1C /* io.py */,
 				2A32957918C59D0A00EEDD1C /* pathmatics.py */,
-				2A32957B18C59D0A00EEDD1C /* polymagic.py */,
 			);
 			path = lib;
 			sourceTree = "<group>";
