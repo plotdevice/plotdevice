@@ -5,50 +5,198 @@
 #include <stdio.h>
 #include "gpc.h"
 
+void _linepoint(double t, double x0, double y0, double x1, double y1,
+                double *out_x, double *out_y
+                )
+{
+    *out_x = x0 + t * (x1-x0);
+    *out_y = y0 + t * (y1-y0);
+}
 
-// dumps poly structure to log for testing/debug
 
-// static void
-// logPoly( gpc_polygon* poly )
-// {
+void _linelength(double x0, double y0, double x1, double y1,
+                double *out_length
+                )
+{
+    double a, b;
+    a = pow(fabs(x0 - x1), 2);
+    b = pow(fabs(y0 - y1), 2);
+    *out_length = sqrt(a + b);
+}
 
-//     printf("polygon <contours: %i>\n", poly->num_contours);
-    
-//     int cont;
-    
-//     for( cont = 0; cont < poly->num_contours; ++cont )
-//     {
-//         printf("contour #%i: %i vertices: \n", cont, poly->contour[cont].num_vertices);
-//         printf("drawpath([");
+void _curvepoint(double t, double x0, double y0, double x1, double y1,
+                 double x2, double y2, double x3, double y3,
+                 double *out_x, double *out_y,
+                 double *out_c1x, double *out_c1y, double *out_c2x, double *out_c2y
+                 )
+{
+    double mint, x01, y01, x12, y12, x23, y23;
 
-//         int vert;
-//         for( vert = 0; vert < poly->contour[cont].num_vertices; ++vert ) {
-//             printf("(%.3f, %.3f),", poly->contour[cont].vertex[vert].x, poly->contour[cont].vertex[vert].y);
-            
-//         }
-//         printf("])");
-//         printf("\n------ end of contour %i ------\n", cont);
-//     }
-//     printf("------ end of polygon ------\n");
-// }
+    mint  = 1 - t;
+    x01 = x0 * mint + x1 * t;
+    y01 = y0 * mint + y1 * t;
+    x12 = x1 * mint + x2 * t;
+    y12 = y1 * mint + y2 * t;
+    x23 = x2 * mint + x3 * t;
+    y23 = y2 * mint + y3 * t;
+
+    *out_c1x = x01 * mint + x12 * t;
+    *out_c1y = y01 * mint + y12 * t;
+    *out_c2x = x12 * mint + x23 * t;
+    *out_c2y = y12 * mint + y23 * t;
+    *out_x = *out_c1x * mint + *out_c2x * t;
+    *out_y = *out_c1y * mint + *out_c2y * t;
+}
+
+void _curvepoint_handles(double t, double x0, double y0, double x1, double y1,
+                 double x2, double y2, double x3, double y3,
+                 double *out_x, double *out_y,
+                 double *out_c1x, double *out_c1y, double *out_c2x, double *out_c2y,
+                 double *out_h1x, double *out_h1y, double *out_h2x, double *out_h2y
+                 )
+{
+    double mint, x01, y01, x12, y12, x23, y23;
+
+    mint  = 1 - t;
+    x01 = x0 * mint + x1 * t;
+    y01 = y0 * mint + y1 * t;
+    x12 = x1 * mint + x2 * t;
+    y12 = y1 * mint + y2 * t;
+    x23 = x2 * mint + x3 * t;
+    y23 = y2 * mint + y3 * t;
+
+    *out_c1x = x01 * mint + x12 * t;
+    *out_c1y = y01 * mint + y12 * t;
+    *out_c2x = x12 * mint + x23 * t;
+    *out_c2y = y12 * mint + y23 * t;
+    *out_x = *out_c1x * mint + *out_c2x * t;
+    *out_y = *out_c1y * mint + *out_c2y * t;
+    *out_h1x = x01;
+    *out_h1y = y01;
+    *out_h2x = x23;
+    *out_h2y = y23;
+}
+
+void _curvelength(double x0, double y0, double x1, double y1,
+                  double x2, double y2, double x3, double y3, int n,
+                  double *out_length
+                  )
+{
+    double xi, yi, t, c;
+    double pt_x, pt_y, pt_c1x, pt_c1y, pt_c2x, pt_c2y;
+    int i;
+    double length = 0;
+
+    xi = x0;
+    yi = y0;
+
+    for (i=0; i<n; i++) {
+        t = 1.0 * (i+1.0) / (float) n;
+
+        _curvepoint(t, x0, y0, x1, y1, x2, y2, x3, y3,
+                    &pt_x, &pt_y, &pt_c1x, &pt_c1y, &pt_c2x, &pt_c2y);
+        c = sqrt(pow(fabs(xi-pt_x), 2.0) + pow(fabs(yi-pt_y), 2.0));
+        length += c;
+        xi = pt_x;
+        yi = pt_y;
+    }
+    *out_length = length;
+}
+
+static PyObject *
+cPathmatics_linepoint(PyObject *self, PyObject *args)
+{
+    double t, x0, y0, x1, y1;
+    double out_x, out_y;
+
+    if (!PyArg_ParseTuple(args, "ddddd", &t, &x0, &y0, &x1, &y1))
+        return NULL;
+
+    _linepoint(t, x0, y0, x1, y1,
+               &out_x, &out_y);
+
+    return Py_BuildValue("dd", out_x, out_y);
+}
+
+static PyObject *
+cPathmatics_linelength(PyObject *self, PyObject *args)
+{
+    double x0, y0, x1, y1;
+    double out_length;
+
+    if (!PyArg_ParseTuple(args, "dddd", &x0, &y0, &x1, &y1))
+        return NULL;
+
+    _linelength(x0, y0, x1, y1,
+                &out_length);
+
+    return Py_BuildValue("d", out_length);
+}
+
+
+static PyObject *
+cPathmatics_curvepoint(PyObject *self, PyObject *args)
+{
+    double t, x0, y0, x1, y1, x2, y2, x3, y3, handles = 0;
+    double out_x, out_y, out_c1x, out_c1y, out_c2x, out_c2y, out_h1x, out_h1y, out_h2x, out_h2y;
+
+    if (!PyArg_ParseTuple(args, "ddddddddd|i", &t, &x0, &y0, &x1, &y1, &x2, &y2, &x3, &y3, &handles))
+        return NULL;
+
+    if (!handles) {
+        _curvepoint(t, x0, y0, x1, y1, x2, y2, x3, y3,
+            &out_x, &out_y, &out_c1x, &out_c1y, &out_c2x, &out_c2y);
+
+        return Py_BuildValue("dddddd", out_x, out_y, out_c1x, out_c1y, out_c2x, out_c2y);
+
+    } else {
+        _curvepoint_handles(t, x0, y0, x1, y1, x2, y2, x3, y3,
+            &out_x, &out_y, &out_c1x, &out_c1y, &out_c2x, &out_c2y,
+            &out_h1x, &out_h1y, &out_h2x, &out_h2y);
+
+        return Py_BuildValue("dddddddddd", out_x, out_y, out_c1x, out_c1y, out_c2x, out_c2y,
+            out_h1x, out_h1y, out_h2x, out_h2y);
+    }
+}
+
+static PyObject *
+cPathmatics_curvelength(PyObject *self, PyObject *args)
+{
+    double x0, y0, x1, y1, x2, y2, x3, y3;
+    int n = 20;
+    double out_length;
+
+    if (!PyArg_ParseTuple(args, "dddddddd|i", &x0, &y0, &x1, &y1, &x2, &y2, &x3, &y3, &n))
+        return NULL;
+
+    _curvelength(x0, y0, x1, y1, x2, y2, x3, y3, n,
+                 &out_length);
+
+    return Py_BuildValue("d", out_length);
+}
+
+static PyObject *PathmaticsError;
+
+
+// ploymagic
 
 static int
 contours_in_path(NSBezierPath *path)
 {
     NSBezierPathElement    et;
     int                    sp, i, ec = (int)[path elementCount];
-    
+
     sp = 0;
-    
+
     for( i = 0; i < ec; ++i )
     {
         et = [path elementAtIndex:i];
-        
+
         if ( et == NSMoveToBezierPathElement )
             ++sp;
     }
-    
-    return sp;    
+
+    return sp;
 }
 
 static int
@@ -56,19 +204,19 @@ contours_in_path_from_el(NSBezierPath *path, int se)
 {
     NSBezierPathElement    et;
     int                    sp, i, ec = (int)[path elementCount];
-    
+
     sp = 1;
-    
+
     for( i = se + 1; i < ec; ++i )
     {
         et = [path elementAtIndex:i];
-        
+
         if ( et == NSMoveToBezierPathElement )
             break;
-            
+
         ++sp;
     }
-    
+
     return sp;
 }
 
@@ -78,60 +226,60 @@ path_to_polygon(NSBezierPath *path, float flatness)
     [NSBezierPath setDefaultFlatness: flatness];
     [path setFlatness: flatness];
     //printf("setFlatness %.2f\n", flatness);
-    
+
     NSBezierPath*            flat = [path bezierPathByFlatteningPath];
     NSBezierPathElement      elem;
     NSPoint                  ap[3];
     int                      i, ec = (int)[flat elementCount];
     gpc_polygon*             poly;
-    
+
     [flat setWindingRule:[path windingRule]];
-    
+
     // allocate memory for the poly.
-    
+
     poly = malloc( sizeof( gpc_polygon ));
-    
+
     // how many contours do we need?
-    
+
     poly->num_contours = contours_in_path(flat);
     poly->contour = malloc( sizeof( gpc_vertex_list ) * poly->num_contours );
-    
+
     // how many elements in each contour?
-    
+
     int es = 0;
-    
+
     for( i = 0; i < poly->num_contours; ++i )
     {
         int spc = contours_in_path_from_el(flat, es);
         //printf("contours_in_path_from_el: %i\n", spc);
-    
+
         // allocate enough memory to hold this many points
-                
+
         poly->contour[i].num_vertices = spc;
         poly->contour[i].vertex = malloc( sizeof( gpc_vertex ) * spc );
-        
+
         es += spc;
     }
-    
+
     // es will now keep track of which contour we are adding to; k is the element index within it.
-    
+
     int k = 0;
     es = -1;
     NSPoint     spStart;
-    
+
     for( i = 0; i < ec; ++i )
     {
         elem = [flat elementAtIndex:i associatedPoints:ap];
-        
+
         switch( elem )
         {
             case NSMoveToBezierPathElement:
             // begins a new contour.
-            
+
             if ( es != -1 )
             {
                 // close the previous contour by adding a vertex with the subpath start
-                
+
                 poly->contour[es].vertex[k].x = spStart.x;
                 poly->contour[es].vertex[k].y = spStart.y;
             }
@@ -140,38 +288,38 @@ path_to_polygon(NSBezierPath *path, float flatness)
             k = 0;
             // keep a note of the start of the subpath so we can close it
             spStart = ap[0];
-            
+
             // sanity check es - must not exceed contour count - 1
-            
+
             if ( es >= poly->num_contours )
             {
                 printf("discrepancy in contour count versus number of subpaths encountered - bailing\n");
-                
+
                 gpc_free_polygon( poly );
                 return NULL;
             }
-            
+
             // fall through to record the vertex for the moveto
-            
+
             case NSLineToBezierPathElement:
             // add a vertex to the list
             poly->contour[es].vertex[k].x = ap[0].x;
             poly->contour[es].vertex[k].y = ap[0].y;
             ++k;
             break;
-            
+
             case NSCurveToBezierPathElement:
                 // should never happen - we have already converted the path to a flat version. Bail.
                 printf("Got a curveto unexpectedly - bailing.\n");
                 gpc_free_polygon( poly );
                 return NULL;
-                
+
             case NSClosePathBezierPathElement:
                 // ignore
             break;
         }
     }
-    
+
     return poly;
 }
 
@@ -180,34 +328,34 @@ polygon_to_path(gpc_polygon *poly)
 {
     // returns a new NSBezierPath object equivalent to the polygon passed to it. The caller is responsible for freeing
     // the polygon. The returned path is autoreleased as per usual cocoa rules.
-    
+
     NSBezierPath*    path = [NSBezierPath bezierPath];
     NSPoint            p;
     int                cont;
-    
+
     for( cont = 0; cont < poly->num_contours; ++cont )
     {
         p.x = poly->contour[cont].vertex[0].x;
         p.y = poly->contour[cont].vertex[0].y;
         [path moveToPoint:p];
-        
+
         int vert;
-        
+
         for( vert = 1; vert < poly->contour[cont].num_vertices; ++vert )
         {
             p.x = poly->contour[cont].vertex[vert].x;
             p.y = poly->contour[cont].vertex[vert].y;
             [path lineToPoint:p];
         }
-        
+
         [path closePath];
     }
-    
+
     // set the default winding rule to be the one most useful for shapes
     // with holes.
-    
+
     [path setWindingRule:NSEvenOddWindingRule];
-    
+
     return path;
 }
 
@@ -216,21 +364,21 @@ path_operation(NSBezierPath* p1, NSBezierPath* p2, gpc_op op, float flatness)
 {
     NSBezierPath*    resultPath;
     gpc_polygon        *poly1, *poly2, *resultPoly;
-    
+
     poly1 = path_to_polygon(p1, flatness);
     poly2 = path_to_polygon(p2, flatness);
-    
+
     resultPoly = malloc( sizeof( gpc_polygon ));
-    
+
     // this line does all the really hard work:
     gpc_polygon_clip( op, poly1, poly2, resultPoly );
 
     resultPath = polygon_to_path( resultPoly );
-    
+
     gpc_free_polygon( poly1 );
     gpc_free_polygon( poly2 );
     gpc_free_polygon( resultPoly );
-    
+
     return resultPath;
 }
 
@@ -271,7 +419,7 @@ parse_double_path_args(PyObject *self, PyObject *args, NSBezierPath **path1, NSB
         PyErr_SetString(PyExc_TypeError, "second argument is not a NSBezierPath");
         return false;
     }
-    
+
     *path1 = ((PyObjCObject *) pyObject1)->objc_object;
     *path2 = ((PyObjCObject *) pyObject2)->objc_object;
 
@@ -292,14 +440,14 @@ build_objc_instance(PyTypeObject *ob_type, id obj) {
 
 // Check if two NSBezierPaths intersect.
 static PyObject *
-cPolymagic_intersects(PyObject *self, PyObject *args)
+cPathmatics_intersects(PyObject *self, PyObject *args)
 {
     NSBezierPath *path1, *path2;
     PyObject *result;
 
     if (!parse_double_path_args(self, args, &path1, &path2))
         return NULL;
-    
+
     if (intersects_path(path1, path2)) {
         Py_INCREF(Py_True);
         result = Py_True;
@@ -328,17 +476,17 @@ check_path_types(PyObject *pyObject1, PyObject *pyObject2) {
 
 
 static PyObject*
-cPolymagic_operation(PyObject *self, PyObject *args, int op)
+cPathmatics_operation(PyObject *self, PyObject *args, int op)
 {
     PyObject *pyObject1, *pyObject2;
     NSBezierPath *path1, *path2, *pathResult;
     // PyObject *result;
     // PyTypeObject *cls_type;
     float flatness = 0.6;
-    
+
     if (!PyArg_ParseTuple(args, "OO|f", &pyObject1, &pyObject2, &flatness))
         return NULL;
-        
+
     if (flatness < 0.1) {
         flatness = 0.1;
     } else if (flatness > 5.0) {
@@ -353,10 +501,10 @@ cPolymagic_operation(PyObject *self, PyObject *args, int op)
 
     pathResult = path_operation(path1, path2, op, flatness);
     [pathResult retain];
-    
+
     // To get access to a NSBezierPath ObjC instance, we use an
     // existing reference (that from pyObject1) to build our new
-    // object out of. I'm not sure if we have to indicate that 
+    // object out of. I'm not sure if we have to indicate that
     // we borrow this reference. Currently, nothing of that sort
     // happens.
     return build_objc_instance(pyObject1->ob_type, pathResult);
@@ -364,70 +512,63 @@ cPolymagic_operation(PyObject *self, PyObject *args, int op)
 
 // Returns the union of two NSBezierPaths as a new NSBezierPath.
 static PyObject *
-cPolymagic_union(PyObject *self, PyObject *args)
+cPathmatics_union(PyObject *self, PyObject *args)
 {
-    return cPolymagic_operation(self, args, GPC_UNION);
+    return cPathmatics_operation(self, args, GPC_UNION);
 }
 
 // Returns the intersection of two NSBezierPaths as a new NSBezierPath.
 static PyObject *
-cPolymagic_intersect(PyObject *self, PyObject *args)
+cPathmatics_intersect(PyObject *self, PyObject *args)
 {
-    return cPolymagic_operation(self, args, GPC_INT);
+    return cPathmatics_operation(self, args, GPC_INT);
 }
 
 // Returns the difference of two NSBezierPaths as a new NSBezierPath.
 static PyObject *
-cPolymagic_difference(PyObject *self, PyObject *args)
+cPathmatics_difference(PyObject *self, PyObject *args)
 {
-    return cPolymagic_operation(self, args, GPC_DIFF);
+    return cPathmatics_operation(self, args, GPC_DIFF);
 }
 
 // Returns the exclusive or of two NSBezierPaths as a new NSBezierPath.
 static PyObject *
-cPolymagic_xor(PyObject *self, PyObject *args)
+cPathmatics_xor(PyObject *self, PyObject *args)
 {
-    return cPolymagic_operation(self, args, GPC_XOR);
+    return cPathmatics_operation(self, args, GPC_XOR);
 }
 
-static PyObject *PolymagicError;
 
-static PyMethodDef PolymagicMethods[] = {
-    {"intersects",  cPolymagic_intersects, METH_VARARGS, "Check if two NSBezierPaths intersect."},
-    {"union",  cPolymagic_union, METH_VARARGS, "Calculates the union of two NSBezierPaths."},
-    {"intersect",  cPolymagic_intersect, METH_VARARGS, "Calculates the intersection of two NSBezierPaths."},
-    {"difference",  cPolymagic_difference, METH_VARARGS, "Calculates the difference of two NSBezierPaths."},
-    {"xor",  cPolymagic_xor, METH_VARARGS, "Calculates the exclusive or of two NSBezierPaths."},
-    {NULL, NULL, 0, NULL}        //  Sentinel
-};
 
-PyMODINIT_FUNC
-initcPolymagic(void)
-{
-    PyObject *m;
-    
-    m = Py_InitModule("cPolymagic", PolymagicMethods);
-    
-    PolymagicError = PyErr_NewException("cPolymagic.error", NULL, NULL);
-    Py_INCREF(PolymagicError);
-    PyModule_AddObject(m, "error", PolymagicError);
-}
-
-int
-main(int argc, char *argv[])
-{
-    // Pass argv[0] to the Python interpreter
-    Py_SetProgramName(argv[0]);
-
-    // Initialize the Python interpreter.  Required.
-    Py_Initialize();
-
-    // Add a static module
-    initcPolymagic();
-    
-    return 0;
-}
 /*
+// dumps poly structure to log for testing/debug
+static void
+logPoly( gpc_polygon* poly )
+{
+
+    printf("polygon <contours: %i>\n", poly->num_contours);
+
+    int cont;
+
+    for( cont = 0; cont < poly->num_contours; ++cont )
+    {
+        printf("contour #%i: %i vertices: \n", cont, poly->contour[cont].num_vertices);
+        printf("drawpath([");
+
+        int vert;
+        for( vert = 0; vert < poly->contour[cont].num_vertices; ++vert ) {
+            printf("(%.3f, %.3f),", poly->contour[cont].vertex[vert].x, poly->contour[cont].vertex[vert].y);
+
+        }
+        printf("])");
+        printf("\n------ end of contour %i ------\n", cont);
+    }
+    printf("------ end of polygon ------\n");
+}
+*/
+
+/*
+// intersection test
 int xmain(int argc, char *argv[])
 {
     [[NSAutoreleasePool alloc] init];
@@ -444,7 +585,7 @@ int xmain(int argc, char *argv[])
     p2 = [NSBezierPath bezierPath];
     [p2 moveToPoint:NSMakePoint(70, 100)];
     [p2 appendBezierPathWithGlyph:68 inFont:helveticaFont];
-    
+
     printf("p1: %i\n", (int)[p1 elementCount]);
     if (intersects_path(p1, p2)) {
         printf("INTERSECTS\n");
@@ -457,3 +598,46 @@ int xmain(int argc, char *argv[])
 }
 
 */
+
+
+static PyMethodDef PathmaticsMethods[] = {
+    // pathmatics
+    {"linepoint",  cPathmatics_linepoint, METH_VARARGS, "Calculate linepoint."},
+    {"linelength",  cPathmatics_linelength, METH_VARARGS, "Calculate linelength."},
+    {"curvepoint",  cPathmatics_curvepoint, METH_VARARGS, "Calculate curvepoint."},
+    {"curvelength",  cPathmatics_curvelength, METH_VARARGS, "Calculate curvelength."},
+    // polymagic
+    {"intersects",  cPathmatics_intersects, METH_VARARGS, "Check if two NSBezierPaths intersect."},
+    {"union",  cPathmatics_union, METH_VARARGS, "Calculates the union of two NSBezierPaths."},
+    {"intersect",  cPathmatics_intersect, METH_VARARGS, "Calculates the intersection of two NSBezierPaths."},
+    {"difference",  cPathmatics_difference, METH_VARARGS, "Calculates the difference of two NSBezierPaths."},
+    {"xor",  cPathmatics_xor, METH_VARARGS, "Calculates the exclusive or of two NSBezierPaths."},
+    {NULL, NULL, 0, NULL}        /* Sentinel */
+};
+
+PyMODINIT_FUNC
+initcPathmatics(void)
+{
+    PyObject *m;
+
+    m = Py_InitModule("cPathmatics", PathmaticsMethods);
+
+    PathmaticsError = PyErr_NewException("cPathmatics.error", NULL, NULL);
+    Py_INCREF(PathmaticsError);
+    PyModule_AddObject(m, "error", PathmaticsError);
+}
+
+int
+main(int argc, char *argv[])
+{
+    /* Pass argv[0] to the Python interpreter */
+    Py_SetProgramName(argv[0]);
+
+    /* Initialize the Python interpreter.  Required. */
+    Py_Initialize();
+
+    /* Add a static module */
+    initcPathmatics();
+
+    return 0;
+}

@@ -10,7 +10,7 @@ if inplace:
     sys.path.append(join(lib_root, '../../build/ext'))
 
 try:
-    import geometry, io, pathmatics, polymagic
+    import geometry, io, pathmatics
 except ImportError:
     print "failed with path", sys.path
     suggest = ' (try running `python setup.py build` before using the module from within the repository)'

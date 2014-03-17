@@ -1,11 +1,13 @@
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 
-quiet = {"extra_compile_args":['-Qunused-arguments']}
-cPathmatics = Extension("cPathmatics", sources = ["pathmatics.c"], **quiet)
+cPathmatics = Extension("cPathmatics",
+                        sources = ["pathmatics.m", "gpc.c",],
+                        extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation'],
+                        extra_compile_args=['-Qunused-arguments'])
 
 setup (name = "pathmatics",
        version = "1.0",
-       author = "Tom De Smedt and Frederik De Bleser",
-       description = "Inner looping functions for calculating bezier operations.",
+       author = "Written for NodeBox by Tom De Smedt and Frederik De Bleser",
+       description = "Fast bezier math routines.",
        ext_modules = [cPathmatics])
