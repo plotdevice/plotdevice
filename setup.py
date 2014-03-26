@@ -86,11 +86,31 @@ plist={
     'CFBundleDocumentTypes': [{
         'CFBundleTypeExtensions': [ 'py' ],
         'CFBundleTypeIconFile': 'PlotDeviceFile.icns',
-        'CFBundleTypeName': "Python File",
+        'CFBundleTypeName': "Python Script",
         'CFBundleTypeRole': 'Editor',
         'LSItemContentTypes':['public.python-script'],
+        'LSHandlerRank':'Alternate',
+        'NSDocumentClass': 'PythonScriptDocument',
+        },
+        {
+        'CFBundleTypeExtensions': [ 'nb' ],
+        'CFBundleTypeIconFile': 'PlotDeviceFile.icns',
+        'CFBundleTypeName': "PlotDevice Document",
+        'CFBundleTypeRole': 'Editor',
+        'LSItemContentTypes':['io.plotdevice.document'],
         'LSHandlerRank':'Owner',
         'NSDocumentClass': 'PlotDeviceDocument',
+    }],
+    'UTExportedTypeDeclarations':[{
+        'UTTypeConformsTo': ['public.data'],
+        'UTTypeDescription': 'PlotDevice Document',
+        'UTTypeIconFile':'PlotDeviceFile-nb.icns',
+        'UTTypeIdentifier':'io.plotdevice.document',
+        'UTTypeTagSpecification':{
+            'com.apple.ostype':['TEXT'],
+            'public.filename-extension':['nb'],
+            'public.mime-type':['text/plain'],
+        },
     }],
     "CFBundleIdentifier": BUNDLE_ID,
     "CFBundleName": NAME,
@@ -109,7 +129,6 @@ rsrc = [
     "Resources/English.lproj/MainMenu.xib",
     "Resources/English.lproj/PlotDeviceDocument.xib",
     "Resources/English.lproj/PlotDevicePreferences.xib",
-    "Resources/colors.json",
     "Resources/ui",
     "Resources/PlotDevice.icns",
     "Resources/PlotDeviceFile.icns",
@@ -171,7 +190,7 @@ class BuildCommand(build_py):
         self.spawn(['/usr/bin/ibtool','--compile', '%s/PlotDeviceScript.nib'%rsrc_dir, "Resources/English.lproj/PlotDeviceScript.xib"])
         self.copy_file("Resources/PlotDeviceFile.icns", '%s/icon.icns'%rsrc_dir)
         self.spawn(['/usr/bin/ditto', 'build/ext', '%s/plotdevice/lib'%self.build_lib])
-        self.copy_file("Resources/colors.json", '%s/colors.json'%rsrc_dir)
+        # self.copy_file("Resources/colors.json", '%s/colors.json'%rsrc_dir)
 
 
 if BUILD_APP:
@@ -280,7 +299,7 @@ if __name__=='__main__':
         classifiers = CLASSIFIERS,
         # ext_modules = ext_modules,
         packages = find_packages(),
-        package_data = {'plotdevice.graphics':['colors.json']},
+        package_data = {'plotdevice.graphics':['css.json']},
         scripts = ["etc/plotdevice"],
         zip_safe=False,
         cmdclass={
