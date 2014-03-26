@@ -60,8 +60,8 @@ class Grob(object):
     """A GRaphic OBject is the base class for all drawing primitives."""
 
     def __init__(self, **kwargs):
-        attr_tuples = [getattr(cls,'stateAttributes',tuple()) for cls in self.__class__.__mro__]
-        self.stateAttributes = sum(attr_tuples, tuple())
+        attr_tuples = [getattr(cls,'stateAttrs',tuple()) for cls in self.__class__.__mro__]
+        self.stateAttrs = sum(attr_tuples, tuple())
 
     def draw(self):
         """Appends a copy of the grob to the canvas.
@@ -78,8 +78,7 @@ class Grob(object):
 
     def inherit(self):
         """Fills in unspecified attributes with the graphics context's state"""
-        all_attrs = self.stateAttributes
-        attrs_to_copy = [a for a in all_attrs if getattr(self, a, INHERIT) is INHERIT]
+        attrs_to_copy = [a for a in self.stateAttrs if getattr(self, a, INHERIT) is INHERIT]
         _copy_attrs(_ctx, self, attrs_to_copy)
 
     @classmethod
@@ -93,7 +92,7 @@ class Grob(object):
 class EffectsMixin(Grob):
     """Mixin class for transparency layer support.
     Adds the alpha, blend, and shadow attributes to the class."""
-    stateAttributes = ('_effects',)
+    stateAttrs = ('_effects',)
 
     def __init__(self, **kwargs):
         super(EffectsMixin, self).__init__(**kwargs)
@@ -131,7 +130,7 @@ class EffectsMixin(Grob):
 class ColorMixin(Grob):
     """Mixin class for color support.
     Adds the _fillcolor and _strokecolor attributes to the class."""
-    stateAttributes = ('_fillcolor', '_strokecolor')
+    stateAttrs = ('_fillcolor', '_strokecolor')
 
     def __init__(self, **kwargs):
         super(ColorMixin, self).__init__(**kwargs)
@@ -159,7 +158,7 @@ class ColorMixin(Grob):
 class TransformMixin(Grob):
     """Mixin class for transformation support.
     Adds the _transform and _transformmode attributes to the class."""
-    stateAttributes = ('_transform', '_transformmode')
+    stateAttrs = ('_transform', '_transformmode')
 
     def __init__(self, **kwargs):
         super(TransformMixin, self).__init__(**kwargs)
@@ -200,7 +199,7 @@ class TransformMixin(Grob):
         self._transform.skew(x,y)
 
 class PenMixin(Grob):
-    stateAttributes = ('_strokewidth', '_capstyle', '_joinstyle', '_dashstyle')
+    stateAttrs = ('_strokewidth', '_capstyle', '_joinstyle', '_dashstyle')
 
     """Mixin class for linestyle support.
     Adds the _capstyle, _joinstyle, _dashstyle, and _strokewidth attributes to the class."""

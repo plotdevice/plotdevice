@@ -119,7 +119,7 @@ class Typesetter(object):
         return h
 
 class Text(TransformMixin, ColorMixin, Grob):
-    stateAttributes = ('_stylesheet',)
+    stateAttrs = ('_stylesheet',)
     kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
 
     __dummy_color = NSColor.blackColor()
@@ -329,7 +329,7 @@ class XMLParser(object):
         self.log(u'"%s"'%(data))
 
 class Stylesheet(Grob):
-    stateAttributes = ('_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight')
+    stateAttrs = ('_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight')
     kwargs = ('family','size','leading','weight','width','variant','italic','heavier','lighter','color','fill','face','fontname','fontsize','lineheight')
 
     def __init__(self, styles=None):

@@ -60,7 +60,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             self.extend(path)
         elif isinstance(path, Bezier):
             self._nsBezierPath = path._nsBezierPath.copy()
-            _copy_attrs(path, self, self.stateAttributes)
+            _copy_attrs(path, self, self.stateAttrs)
         elif isinstance(path, NSBezierPath):
             self._nsBezierPath = path
         else:

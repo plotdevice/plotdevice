@@ -17,7 +17,7 @@ from ..lib import geometry
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 
 class Context(object):
-    state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_path', '_autoclosepath', '_transform', '_transformmode', '_rotationmode', '_transformstack', '_fontname', '_fontsize', '_lineheight', '_align', '_noImagesHint', '_oldvars', '_vars'
+    state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_strokewidth', '_effects', '_capstyle', '_joinstyle', '_dashstyle', '_path', '_autoclosepath', '_transform', '_transformmode', '_rotationmode', '_transformstack', '_fontname', '_fontsize', '_lineheight', '_align', '_noImagesHint', '_oldvars', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
