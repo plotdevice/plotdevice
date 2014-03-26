@@ -138,7 +138,11 @@ def _copy_attr(v):
 
 def _copy_attrs(source, target, attrs):
     for attr in attrs:
-        setattr(target, attr, _copy_attr(getattr(source, attr)))
+        try:
+            setattr(target, attr, _copy_attr(getattr(source, attr)))
+        except AttributeError, e:
+            print "missing attr: %r"% attr, hasattr(source, attr), hasattr(target, attr)
+            raise e
 
 ### tuple/list de-nester ###
 

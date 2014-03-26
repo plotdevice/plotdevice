@@ -5,22 +5,18 @@ from contextlib import contextmanager, nested
 from .typography import *
 from .bezier import *
 from .grobs import *
-from .grobs import PlotContext
-from . import grobs, typography, bezier
+from .colors import *
+from .transform import *
+from .effects import Effect, Shadow
+from . import grobs
 
 from ..util.foundry import sanitized, font_encoding, family_names, family_name, family_members
-from ..util import _copy_attr, _copy_attrs, _flatten, foundry
+from ..util import _copy_attr, _copy_attrs, _flatten
 from ..lib import geometry
 
+### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 
 class Context(object):
-    KEY_UP = grobs.KEY_UP
-    KEY_DOWN = grobs.KEY_DOWN
-    KEY_LEFT = grobs.KEY_LEFT
-    KEY_RIGHT = grobs.KEY_RIGHT
-    KEY_BACKSPACE = grobs.KEY_BACKSPACE
-    KEY_TAB = grobs.KEY_TAB
-    KEY_ESC = grobs.KEY_ESC
     state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_strokewidth', '_capstyle', '_joinstyle', '_path', '_autoclosepath', '_transform', '_transformmode', '_rotationmode', '_transformstack', '_fontname', '_fontsize', '_lineheight', '_align', '_noImagesHint', '_oldvars', '_vars'
 
     def __init__(self, canvas=None, ns=None):
@@ -45,7 +41,9 @@ class Context(object):
         self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_') or a.endswith('_')))
 
     def _activate(self):
-        grobs._ctx = typography._ctx = bezier._ctx = self
+        from . import activate
+        # grobs._ctx = effects._ctx = colors._ctx = typography._ctx = bezier._ctx = self
+        activate(self)
 
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context.state_vars]
@@ -65,15 +63,14 @@ class Context(object):
         self._activate()
 
         # color state
-        self._outputmode = RGB
-        self._colormode = RGB
+        self._colormode = self._outputmode = RGB
         self._colorrange = 1.0
-        self._fillcolor = Color()
+        self._fillcolor = Color() # can also be a Gradient or Pattern
         self._strokecolor = None
         self.canvas.background = Color(1.0)
 
         # line style
-        self._plotstyle = COPY
+        self._plotstyle = LIVE
         self._capstyle = BUTT
         self._joinstyle = MITER
         self._dashstyle = None
@@ -84,6 +81,9 @@ class Context(object):
         self._transform = Transform()
         self._transformmode = CENTER
         self._rotationmode = DEGREES
+
+        # blend, alpha, and shadow effects
+        self._effects = Effect()
 
         # type styles
         self._stylesheet = Stylesheet()
@@ -141,23 +141,23 @@ class Context(object):
 
     ### Variables ###
 
-    def var(self, name, type, default=None, min=0, max=100, value=None):
-        v = Variable(name, type, default, min, max, value)
-        v = self.addvar(v)
+    # def var(self, name, type, default=None, min=0, max=100, value=None):
+    #     v = Variable(name, type, default, min, max, value)
+    #     v = self.addvar(v)
 
-    def addvar(self, v):
-        oldvar = self.findvar(v.name)
-        if oldvar is not None:
-            if oldvar.compliesTo(v):
-                v.value = oldvar.value
-        self._vars.append(v)
-        self._ns[v.name] = v.value
+    # def addvar(self, v):
+    #     oldvar = self.findvar(v.name)
+    #     if oldvar is not None:
+    #         if oldvar.compliesTo(v):
+    #             v.value = oldvar.value
+    #     self._vars.append(v)
+    #     self._ns[v.name] = v.value
 
-    def findvar(self, name):
-        for v in self._oldvars:
-            if v.name == name:
-                return v
-        return None
+    # def findvar(self, name):
+    #     for v in self._oldvars:
+    #         if v.name == name:
+    #             return v
+    #     return None
 
     ### Primitives ###
 
@@ -196,7 +196,7 @@ class Context(object):
 
     ellipse = oval
 
-    def line(self, x1, y1, x2, y2, draw=True, **kwargs):
+    def line(self, x1, y1, x2, y2, curve=0, draw=True, **kwargs):
         if self._path is None:
             Bezier.validate(kwargs)
             p = Bezier(**kwargs)
@@ -320,14 +320,21 @@ class Context(object):
             raise DeviceError, "No current path. Use bezier() or beginpath() first."
         self._path.moveto(x,y)
 
-    def lineto(self, x, y):
+    def lineto(self, x, y, close=False):
         if self._path is None:
             raise DeviceError, "No current path. Use bezier() or beginpath() first."
         self._path.lineto(x, y)
 
-    def curveto(self, x1, y1, x2, y2, x3, y3):
+    def curveto(self, x1, y1, x2, y2, x3, y3, close=False):
         if self._path is None:
             raise DeviceError, "No current path. Use bezier() or beginpath() first."
+        self._path.curveto(x1, y1, x2, y2, x3, y3)
+
+    def arcto(self, x1, y1, x2, y2, peak=1, mid=.5, close=False):
+        if self._path is None:
+            raise DeviceError, "No current path. Use bezier() or beginpath() first."
+
+        # i bet there's room in pathmatics for a connecting-arc calculator...
         self._path.curveto(x1, y1, x2, y2, x3, y3)
 
     def closepath(self):
@@ -366,22 +373,6 @@ class Context(object):
         path = bezier.findpath(points, curvature=curvature)
         # path._ctx = self
         return path
-
-    ### Clipping Commands ###
-
-    @contextmanager
-    def clip(self, path):
-        cp = self.beginclip(path)
-        yield cp
-        self.endclip()
-
-    def beginclip(self, path):
-        cp = Mask(path)
-        self.canvas.push(cp)
-        return cp
-
-    def endclip(self):
-        self.canvas.pop()
 
     ### Transformation Commands ###
 
@@ -474,7 +465,7 @@ class Context(object):
     def pen(self, nib=None, **spec): # spec: caps, joins, dash
         if nib is not None:
             spec.setdefault('nib', nib)
-        return PlotContext(**spec)
+        return PlotContext(self, **spec)
 
     def color(self, *args, **kwargs):
         # flatten any tuples in the arguments list
@@ -489,7 +480,7 @@ class Context(object):
             # if called without any component values update the global mode/range,
             # and return a context manager for `with color(mode=...)` usage
             if {'range', 'mode'}.intersection(kwargs):
-                return PlotContext(**kwargs)
+                return PlotContext(self, **kwargs)
 
         # if we got at least one numerical/string arg, parse it
         return Color(*args, **kwargs)
@@ -509,8 +500,15 @@ class Context(object):
     def nofill(self):
         return self.fill(None)
 
-    def fill(self, *args):
-        if len(args) > 0:
+    def fill(self, *args, **kwargs):
+        if args and isinstance(args[0], Image):
+            p = Pattern(args[0])
+            self._fillcolor = p
+        elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
+            g = Gradient(*args, **kwargs)
+            setattr(g, '_rollback', dict(fill=self._fillcolor))
+            self._fillcolor = g
+        elif len(args) > 0:
             annotated = Color(*args)
             setattr(annotated, '_rollback', dict(fill=self._fillcolor))
             self._fillcolor = annotated
@@ -545,6 +543,65 @@ class Context(object):
             self._joinstyle = style
         return self._joinstyle
 
+    ### Compositing Effects ###
+
+    @contextmanager
+    def layer(self, *fx):
+        # fx is a list of alpha(), blend(), or shadow() calls
+        for eff in fx:
+            if hasattr(eff, '_rollback'):
+                rollback = eff._rollback
+                break
+        else:
+            nop = "`with layer(...)` accepts alpha(), blend(), or shadow() calls as arguments"
+        context_mgrs = [mgr for mgr in fx if hasattr(mgr, '__enter__')]
+
+        self.canvas.push(Effect(self._effects))
+        self._effects = Effect()
+        yield
+        self.canvas.pop()
+        self._effects = rollback
+
+    def alpha(self, a=-1):
+        if a is not -1:
+            if a==1.0:
+                a = None
+            self._effects = Effect(self._effects, alpha=a)
+            return self._effects
+        return self._effects.alpha or 1.0
+
+    def blend(self, mode=-1):
+        if mode is not -1:
+            if mode=='normal':
+                mode = None
+            self._effects = Effect(self._effects, blend=mode)
+            return self._effects
+        return self._effects.blend or 'normal'
+
+    def shadow(self, *args, **kwargs):
+        if args and None in args:
+            self._effects = Effect(self._effects, shadow=None)
+        elif args or kwargs:
+            s = Shadow(*args, **kwargs)
+            self._effects = Effect(self._effects, shadow=s)
+        else:
+            return self._effects.shadow
+        return self._effects
+
+    @contextmanager
+    def clip(self, path):
+        cp = self.beginclip(path)
+        yield cp
+        self.endclip()
+
+    def beginclip(self, path):
+        cp = Mask(path)
+        self.canvas.push(cp)
+        return cp
+
+    def endclip(self):
+        self.canvas.pop()
+
     ### Drawing grobs with the current pen/stroke/fill ###
 
     def plot(self, obj, copy=False, **kwargs):
@@ -561,7 +618,7 @@ class Context(object):
         modal = [m for m in ops if m in (COPY,LIVE,OFF)]
         mode = modal[0] if modal else self._plotstyle
         context_mgrs = [mgr for mgr in ops if hasattr(mgr, '__enter__')]
-        context_mgrs.append(PlotContext(restore=all, style=mode))
+        context_mgrs.append(PlotContext(self, restore=all, style=mode))
         return nested(*context_mgrs)
 
     ### Font Commands ###
@@ -753,6 +810,44 @@ class Context(object):
             badtype = "measure() can only handle Text, Images, Beziers, and file() objects (got %s)"%type(obj)
             raise DeviceError(badtype)
 
+class PlotContext(object):
+    """Performs the setup/cleanup for a `with pen()/stroke()/fill()/color(mode,range)` block"""
+    _statevars = dict(nib='_strokewidth', cap='_capstyle', join='_joinstyle', dash='_dashstyle',
+                      mode='_colormode', range='_colorrange', stroke='_strokecolor', fill='_fillcolor',
+                      style='_plotstyle')
+
+    def __init__(self, ctx, restore=None, **spec):
+        # start with the current context state as a baseline
+        prior = {k:getattr(ctx, v) for k,v in self._statevars.items() if k in spec or restore==all}
+        snapshots = {k:v._rollback for k,v in spec.items() if hasattr(v, '_rollback')}
+        prior.update(snapshots)
+
+        for param, val in spec.items():
+            # make sure fill & stroke are Color objects (or None)
+            if param in ('stroke','fill'):
+                if val is None: continue
+                val = Color(val)
+                spec[param] = val
+            setattr(ctx, self._statevars[param], val)
+
+        # keep the dictionary of prior state around for restoration at the end of the block
+        self._rollback = prior
+        self._spec = spec
+        self._ctx = ctx
+
+    def __enter__(self):
+        return dict(self._spec)
+
+    def __exit__(self, type, value, tb):
+        for param, val in self._rollback.items():
+            setattr(self._ctx, self._statevars[param], val)
+
+    def __repr__(self):
+        spec = ", ".join('%s=%r'%(k,v) for k,v in self._spec.items())
+        return 'PlotContext(%s)'%spec
+
+
+### containers ###
 
 class _PDFRenderView(NSView):
 

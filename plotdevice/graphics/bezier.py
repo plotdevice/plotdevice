@@ -2,16 +2,18 @@
 import warnings
 from AppKit import *
 from Foundation import *
+from Quartz import *
 
 from plotdevice import DeviceError
-from .grobs import TransformMixin, ColorMixin, Color, Transform, Grob
-from .grobs import CENTER, INHERIT, Region, Size, Point, _save, _restore
+from .effects import _cg_context
+from .colors import Color, Gradient, Pattern
+from .grobs import INHERIT, PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
+from .transform import CENTER, Transform, Region, Size, Point
 from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten
 from ..lib import pathmatics
 
 _ctx = None
-__all__ = ("Bezier", "Curve", "Mask",                   # new names
-           "BezierPath", "PathElement", "ClippingPath", # compat. aliases
+__all__ = ("Bezier", "Curve", "BezierPath", "PathElement",
            "MOVETO", "LINETO", "CURVETO", "CLOSE",
            "MITER", "ROUND", "BEVEL", "BUTT", "SQUARE",
            "NORMAL","FORTYFIVE",
@@ -27,81 +29,21 @@ CLOSE = NSClosePathBezierPathElement
 MITER = "miter"
 ROUND = "round"
 BEVEL = "bevel"
-_JOINSTYLE=dict(
-    miter = NSMiterLineJoinStyle,
-    round = NSRoundLineJoinStyle,
-    bevel = NSBevelLineJoinStyle,
-)
+_JOINSTYLE={MITER:kCGLineJoinMiter, ROUND:kCGLineJoinRound, BEVEL:kCGLineJoinBevel}
 
 # endcap styles and nstypes
 BUTT = "butt"
 ROUND = "round"
 SQUARE = "square"
-_CAPSTYLE=dict(
-    butt = NSButtLineCapStyle,
-    round = NSRoundLineCapStyle,
-    square = NSSquareLineCapStyle,
-)
+_CAPSTYLE={BUTT:kCGLineCapButt, ROUND:kCGLineCapRound, SQUARE:kCGLineCapSquare}
 
 # arrow styles
 NORMAL = "normal"
 FORTYFIVE = "fortyfive"
 
-class PenMixin(Grob):
-    stateAttributes = ('_strokewidth', '_capstyle', '_joinstyle', '_dashstyle')
-
-    """Mixin class for linestyle support.
-    Adds the _capstyle, _joinstyle, _dashstyle, and _strokewidth attributes to the class."""
-
-    def __init__(self, **kwargs):
-        super(PenMixin, self).__init__(**kwargs)
-        self.strokewidth = kwargs.get('nib', kwargs.get('strokewidth', INHERIT))
-        self.capstyle = kwargs.get('cap', kwargs.get('capstyle', INHERIT))
-        self.joinstyle = kwargs.get('join', kwargs.get('joinstyle', INHERIT))
-        self.dashstyle = kwargs.get('dash', kwargs.get('dashstyle', INHERIT))
-
-    def _get_strokewidth(self):
-        return _ctx._strokewidth if self._strokewidth is INHERIT else self._strokewidth
-    def _set_strokewidth(self, strokewidth):
-        self._strokewidth = max(strokewidth, 0.0001)
-    nib = strokewidth = property(_get_strokewidth, _set_strokewidth)
-
-    def _get_capstyle(self):
-        return _ctx._capstyle if self._capstyle is INHERIT else self._capstyle
-    def _set_capstyle(self, style):
-        from bezier import BUTT, ROUND, SQUARE
-        if style not in (INHERIT, BUTT, ROUND, SQUARE):
-            badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
-            raise DeviceError(badstyle)
-        self._capstyle = style
-    cap = capstyle = property(_get_capstyle, _set_capstyle)
-
-    def _get_joinstyle(self):
-        return _ctx._joinstyle if self._joinstyle is INHERIT else self._joinstyle
-    def _set_joinstyle(self, style):
-        from bezier import MITER, ROUND, BEVEL
-        if style not in (INHERIT, MITER, ROUND, BEVEL):
-            badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
-            raise DeviceError(badstyle)
-        self._joinstyle = style
-    join = joinstyle = property(_get_joinstyle, _set_joinstyle)
-
-    def _get_dashstyle(self):
-        return _ctx._dashstyle if self._dashstyle is INHERIT else self._dashstyle
-    def _set_dashstyle(self, *segments):
-        if None in segments or INHERIT in segments:
-            self._dashstyle = segments[0]
-        else:
-            steps = map(int, _flatten(segments))
-            if len(steps)%2:
-                steps += steps[-1:] # assume even spacing for omitted skip sizes
-            self._dashstyle = steps
-    dash = dashstyle = property(_get_dashstyle, _set_dashstyle)
-
-
-class Bezier(TransformMixin, ColorMixin, PenMixin, Grob):
+class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     """A Bezier provides a wrapper around NSBezierPath."""
-    kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle', 'nib', 'cap', 'join')
+    kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle', 'nib', 'cap', 'join', 'dash', 'alpha', 'blend', 'shadow')
 
     def __init__(self, path=None, immediate=False, **kwargs):
         super(Bezier, self).__init__(**kwargs)
@@ -216,16 +158,24 @@ class Bezier(TransformMixin, ColorMixin, PenMixin, Grob):
                 raise DeviceError(badradius)
             self._nsBezierPath.appendBezierPathWithRoundedRect_xRadius_yRadius_( ((x,y), (width,height)), *radius)
 
-    def oval(self, x, y, width, height):
+    def oval(self, x, y, width, height, range=None):
+        # range = None:     draw a full ellipse
+        # range = (pi, 0):  draws a semicircle
         self._segment_cache = None
         self._nsBezierPath.appendBezierPathWithOvalInRect_( ((x, y), (width, height)) )
-
+        # self._nsBezierPath.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_()
     ellipse = oval
 
-    def line(self, x1, y1, x2, y2):
+    def line(self, x1, y1, x2, y2, arc=0, peak=0.5):
+        # arc =  0: straight line
+        # arc =  1: clockwise perfect-circle arc connetcting points
+        # arc = -1: counterclockwise perfect-circle arc
+        # abs(arc) > 1: increasingly parabolic cw/ccw arc connecting points
         self._segment_cache = None
         self._nsBezierPath.moveToPoint_( (x1, y1) )
         self._nsBezierPath.lineToPoint_( (x2, y2) )
+
+
 
     ### List methods ###
 
@@ -263,7 +213,8 @@ class Bezier(TransformMixin, ColorMixin, PenMixin, Grob):
         elif el.cmd == LINETO:
             self.lineto(el.x, el.y)
         elif el.cmd == CURVETO:
-            self.curveto(el.ctrl1.x, el.ctrl1.y, el.ctrl2.x, el.ctrl2.y, el.x, el.y)
+            c1, c2 = el.ctrl1, el.ctrl2
+            self.curveto(c1.x, c1.y, c2.x, c2.y, el.x, el.y)
         elif el.cmd == CLOSE:
             self.closepath()
 
@@ -290,21 +241,52 @@ class Bezier(TransformMixin, ColorMixin, PenMixin, Grob):
             trans.append(t)
         return trans
 
+    @property
+    def cgPath(self):
+        ns = self._nsBezierPath
+        cg = CGPathCreateMutable()
+        for cmd, points in (ns.elementAtIndex_associatedPoints_(i) for i in xrange(ns.elementCount())):
+            if cmd==NSMoveToBezierPathElement:
+                CGPathMoveToPoint(cg, None, points[0].x, points[0].y)
+            elif cmd==NSLineToBezierPathElement:
+                CGPathAddLineToPoint(cg, None, points[0].x, points[0].y)
+            elif cmd==NSCurveToBezierPathElement:
+                CGPathAddCurveToPoint(cg, None, points[0].x, points[0].y,
+                                                  points[1].x, points[1].y,
+                                                  points[2].x, points[2].y)
+            elif cmd==NSClosePathBezierPathElement:
+                CGPathCloseSubpath(cg)
+        return CGPathCreateCopy(cg)
+
     def _draw(self):
-        _save()
-        self.transform.concat() # super? or should it really use the adjusted xf from above?
-        if (self._fillcolor):
-            self._fillcolor.set()
-            self._nsBezierPath.fill()
-        if (self._strokecolor):
-            self._strokecolor.set()
-            self._nsBezierPath.setLineWidth_(self._strokewidth)
-            self._nsBezierPath.setLineCapStyle_(_CAPSTYLE[self._capstyle])
-            self._nsBezierPath.setLineJoinStyle_(_JOINSTYLE[self._joinstyle])
-            if self._dashstyle:
-                self._nsBezierPath.setLineDash_count_phase_(self._dashstyle, len(self._dashstyle), 0)
-            self._nsBezierPath.stroke()
-        _restore()
+        with _cg_context() as port:
+            # modify the bezier path to reflect our final resting place
+            self.transform.concat()
+
+            # apply blend/alpha/shadow (and any associated transparency layers)
+            with self.effects.applied():
+                # prepare to stroke, fill, or both
+                ink = None
+                if isinstance(self._fillcolor, Color):
+                    ink = kCGPathFill
+                    CGContextSetFillColorWithColor(port, self._fillcolor.cgColor)
+                if (self._strokecolor):
+                    ink = kCGPathStroke if ink is None else kCGPathFillStroke
+                    CGContextSetStrokeColorWithColor(port, self._strokecolor.cgColor)
+                    CGContextSetLineWidth(port, self._strokewidth)
+                    CGContextSetLineCap(port, _CAPSTYLE[self._capstyle])
+                    CGContextSetLineJoin(port, _JOINSTYLE[self._joinstyle])
+                    if self._dashstyle:
+                        CGContextSetLineDash(port, 0, self._dashstyle, len(self._dashstyle))
+
+                if isinstance(self._fillcolor, (Gradient, Pattern)):
+                    # use cocoa for patterns/gradients
+                    self._fillcolor.fill(self)
+                if ink:
+                    # use cg for stroke & fill
+                    CGContextBeginPath(port)
+                    CGContextAddPath(port, self.cgPath)
+                    CGContextDrawPath(port, ink)
 
     ### Geometry ###
 
@@ -456,22 +438,3 @@ class Curve(object):
 class PathElement(Curve):
     pass # NodeBox compat...
 
-class Mask(Grob):
-
-    def __init__(self, path):
-        self.path = path
-        self._grobs = []
-
-    def append(self, grob):
-        self._grobs.append(grob)
-
-    def _draw(self):
-        _save()
-        cp = self.path.transform.transformBezierPath(self.path)
-        cp._nsBezierPath.addClip()
-        for grob in self._grobs:
-            grob._draw()
-        _restore()
-
-class ClippingPath(Mask):
-    pass # NodeBox compat...

@@ -8,8 +8,10 @@ from Foundation import *
 from pprint import pprint
 
 from plotdevice import DeviceError
-from .grobs import TransformMixin, ColorMixin, Color, Transform, Grob
-from .grobs import INHERIT, Region, Size, _save, _restore
+from .grobs import TransformMixin, ColorMixin, Grob
+from .grobs import INHERIT, _save, _restore
+from .transform import Transform, Region, Size
+from .colors import Color
 from .bezier import Bezier
 from ..util.foundry import *
 from ..util import _copy_attrs

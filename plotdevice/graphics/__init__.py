@@ -1,8 +1,16 @@
-from .grobs import *
-from .typography import *
-from .bezier import *
+# encoding: utf-8
 from .context import Context, Canvas
-from ..util import _copy_attr, _copy_attrs
+from . import grobs, effects, colors, typography, bezier, transform
 
-from . import grobs, typography, bezier
-__all__ = list(grobs.__all__) + list(typography.__all__) + list(bezier.__all__) + ['Context']
+# pull every submodule's __all__ into our own
+modules = grobs, effects, colors, typography, bezier, transform
+ns = {"Context":Context}
+for module in modules:
+  ns.update( (a,getattr(module,a)) for a in module.__all__  )
+globals().update(ns)
+__all__ = ns.keys()
+
+# called by a Context to do the dependency injection™
+def activate(ctx):
+  for module in modules:
+    setattr(module, '_ctx', ctx)

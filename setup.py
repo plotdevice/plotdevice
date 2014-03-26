@@ -109,6 +109,7 @@ rsrc = [
     "Resources/English.lproj/MainMenu.xib",
     "Resources/English.lproj/PlotDeviceDocument.xib",
     "Resources/English.lproj/PlotDevicePreferences.xib",
+    "Resources/colors.json",
     "Resources/ui",
     "Resources/PlotDevice.icns",
     "Resources/PlotDeviceFile.icns",
@@ -170,6 +171,7 @@ class BuildCommand(build_py):
         self.spawn(['/usr/bin/ibtool','--compile', '%s/PlotDeviceScript.nib'%rsrc_dir, "Resources/English.lproj/PlotDeviceScript.xib"])
         self.copy_file("Resources/PlotDeviceFile.icns", '%s/icon.icns'%rsrc_dir)
         self.spawn(['/usr/bin/ditto', 'build/ext', '%s/plotdevice/lib'%self.build_lib])
+        self.copy_file("Resources/colors.json", '%s/colors.json'%rsrc_dir)
 
 
 if BUILD_APP:
