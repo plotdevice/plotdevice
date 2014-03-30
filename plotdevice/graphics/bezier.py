@@ -159,25 +159,31 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 raise DeviceError(badradius)
             self._nsBezierPath.appendBezierPathWithRoundedRect_xRadius_yRadius_( ((x,y), (width,height)), *radius)
 
-    def oval(self, x, y, width, height, range=None, ccw=False):
+    def oval(self, x, y, width, height, rng=None, ccw=False, close=False):
         # range = None:      draw a full ellipse
         # range = 180:       draws a semicircle
         # range = (90, 180): draws a quadrant in the lower left
         self._segment_cache = None
-        if range is None:
+        if rng is None:
             self._nsBezierPath.appendBezierPathWithOvalInRect_( ((x, y), (width, height)) )
         else:
+            if isinstance(rng, (int,float,long)):
+                start, end = 0, rng
+            else:
+                start, end = rng
+            if ccw:
+                start, end = -start, -end
+
             p = NSBezierPath.bezierPath()
-            if not isinstance(range, (tuple, list)):
-                range = [range]
-            if len(range) < 2:
-                range = [0] + list(range)
-            p.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise_((.5,.5), .5, range[0], range[1], not ccw)
+            p.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise_((.5,.5), .5, start, end, ccw)
             t = Transform()
             t.translate(x,y)
             t.scale(width, height)
             p.transformUsingAffineTransform_(t._nsAffineTransform)
             self._nsBezierPath.appendBezierPath_(p)
+            if close:
+                # optionally close the path with a chord
+                self._nsBezierPath.closePath()
 
     ellipse = oval
 
@@ -228,7 +234,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             self._nsBezierPath.lineToPoint_(pt)
         self._nsBezierPath.closePath()
 
-    def arc(self, x, y, r, rng=None, ccw=False):
+    def arc(self, x, y, r, rng=None, ccw=False, close=False):
         self._segment_cache = None
         if not rng:
             self.oval(x-r, y-r, 2*r, 2*r)
@@ -242,13 +248,15 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
             # note that we're negating the ccw arg because the path is being drawn in flipped coords
             self._nsBezierPath.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise_((x,y), r, start, end, ccw)
-
+        if close:
+            # optionally close the path pac-man-style
+            self._nsBezierPath.lineToPoint_( (x,y) )
+            self._nsBezierPath.closePath()
 
     def star(self, x, y, points=20, outer=100, inner=None):
         # if inner radius is unspecified, default to a regularized star
         if inner is None:
             inner = outer * cos(pi*2/points)/cos(pi/points)
-
 
         self._nsBezierPath.moveToPoint_( (x, y-outer) )
         for i in range(1, int(2 * points)):
@@ -257,7 +265,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
           pt = (x+radius*sin(angle), y-radius*cos(angle))
           self._nsBezierPath.lineToPoint_(pt)
         self.closepath()
-
 
     def arrow(self, x, y, width=100, type=NORMAL):
         if type not in (NORMAL, FORTYFIVE):

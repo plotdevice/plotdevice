@@ -185,10 +185,10 @@ class Context(object):
             p.draw()
         return p
 
-    def oval(self, x, y, width, height, range=None, ccw=False, draw=True, **kwargs):
+    def oval(self, x, y, width, height, range=None, ccw=False, close=False, draw=True, **kwargs):
         Bezier.validate(kwargs)
         path = Bezier(**kwargs)
-        path.oval(x, y, width, height, range=range, ccw=ccw)
+        path.oval(x, y, width, height, range, ccw=ccw, close=close)
 
         if draw:
           path.draw()
@@ -218,10 +218,10 @@ class Context(object):
           p.draw()
         return p
 
-    def arc(self, x, y, radius, range=None, ccw=False, draw=True, **kwargs):
+    def arc(self, x, y, radius, range=None, ccw=False, close=False, draw=True, **kwargs):
         Bezier.validate(kwargs)
         p = Bezier(**kwargs)
-        p.arc(x, y, radius, range, ccw)
+        p.arc(x, y, radius, range, ccw=ccw, close=close)
         if draw:
           p.draw()
         return p
@@ -331,7 +331,6 @@ class Context(object):
     def findpath(self, points, curvature=1.0):
         import bezier
         path = bezier.findpath(points, curvature=curvature)
-        # path._ctx = self
         return path
 
     ### Transformation Commands ###
