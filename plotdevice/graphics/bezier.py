@@ -3,6 +3,7 @@ import warnings
 from AppKit import *
 from Foundation import *
 from Quartz import *
+from math import pi, sin, cos
 
 from plotdevice import DeviceError
 from .effects import _cg_context
@@ -10,7 +11,7 @@ from .colors import Color, Gradient, Pattern
 from .grobs import INHERIT, PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .transform import CENTER, Transform, Region, Size, Point
 from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten
-from ..lib import pathmatics
+from ..lib import pathmatics, geometry
 
 _ctx = None
 __all__ = ("Bezier", "Curve", "BezierPath", "PathElement",
@@ -144,7 +145,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def contains(self, x, y):
         return self._nsBezierPath.containsPoint_((x,y))
 
-    ### Basic shapes ###
+    ### Basic shapes (origin + size) ###
 
     def rect(self, x, y, width, height, radius=None):
         self._segment_cache = None
@@ -158,23 +159,136 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 raise DeviceError(badradius)
             self._nsBezierPath.appendBezierPathWithRoundedRect_xRadius_yRadius_( ((x,y), (width,height)), *radius)
 
-    def oval(self, x, y, width, height, range=None):
-        # range = None:     draw a full ellipse
-        # range = (pi, 0):  draws a semicircle
+    def oval(self, x, y, width, height, range=None, ccw=False):
+        # range = None:      draw a full ellipse
+        # range = 180:       draws a semicircle
+        # range = (90, 180): draws a quadrant in the lower left
         self._segment_cache = None
-        self._nsBezierPath.appendBezierPathWithOvalInRect_( ((x, y), (width, height)) )
-        # self._nsBezierPath.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_()
+        if range is None:
+            self._nsBezierPath.appendBezierPathWithOvalInRect_( ((x, y), (width, height)) )
+        else:
+            p = NSBezierPath.bezierPath()
+            if not isinstance(range, (tuple, list)):
+                range = [range]
+            if len(range) < 2:
+                range = [0] + list(range)
+            p.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise_((.5,.5), .5, range[0], range[1], not ccw)
+            t = Transform()
+            t.translate(x,y)
+            t.scale(width, height)
+            p.transformUsingAffineTransform_(t._nsAffineTransform)
+            self._nsBezierPath.appendBezierPath_(p)
+
     ellipse = oval
 
-    def line(self, x1, y1, x2, y2, arc=0, peak=0.5):
+    def line(self, x1, y1, x2, y2, arc=0):
         # arc =  0: straight line
         # arc =  1: clockwise perfect-circle arc connetcting points
         # arc = -1: counterclockwise perfect-circle arc
         # abs(arc) > 1: increasingly parabolic cw/ccw arc connecting points
         self._segment_cache = None
-        self._nsBezierPath.moveToPoint_( (x1, y1) )
-        self._nsBezierPath.lineToPoint_( (x2, y2) )
+        if not arc:
+            self._nsBezierPath.moveToPoint_( (x1, y1) )
+            self._nsBezierPath.lineToPoint_( (x2, y2) )
+        else:
+            # create a unitary semicircle...
+            k = 0.5522847498 / 2.0
+            p = NSBezierPath.bezierPath()
+            p.moveToPoint_((0,0))
+            p.curveToPoint_controlPoint1_controlPoint2_((.5,-.5), (0,-k), (.5-k,-.5))
+            p.curveToPoint_controlPoint1_controlPoint2_((1,0), (.5+k,-.5), (1,-k))
 
+            # ...and transform it to match the endpoints
+            dist = geometry.distance(x1,y1,x2,y2)
+            theta = geometry.angle(x1,y1,x2,y2)
+            t = Transform()
+            t.translate(x1,y1)
+            t.rotate(theta)
+            t.scale(dist, dist*arc)
+            p.transformUsingAffineTransform_(t._nsAffineTransform)
+            self._nsBezierPath.appendBezierPath_(p)
+
+
+    ### Radial shapes (center + radius) ###
+
+    def poly(self, x, y, radius, sides=3):
+        self._segment_cache = None
+        if sides < 3:
+            badpoly = 'polygons must have at least 3 points'
+            raise DeviceError(badpoly)
+
+        # rotate the origin slightly so the polygon sits on an edge
+        theta = pi/2 + (0 if sides%2 else 1*pi/sides)
+        angles = [2*pi * i/sides - theta for i in xrange(sides)]
+
+        # walk around the circle adding points with proper scale/origin
+        points = [ [radius*cos(theta)+x, radius*sin(theta)+y] for theta in angles]
+        self._nsBezierPath.moveToPoint_(points[0])
+        for pt in points[1:]:
+            self._nsBezierPath.lineToPoint_(pt)
+        self._nsBezierPath.closePath()
+
+    def arc(self, x, y, r, rng=None, ccw=False):
+        self._segment_cache = None
+        if not rng:
+            self.oval(x-r, y-r, 2*r, 2*r)
+        else:
+            if isinstance(rng, (int,float,long)):
+                start, end = 0, rng
+            else:
+                start, end = rng
+            if ccw:
+                start, end = -start, -end
+
+            # note that we're negating the ccw arg because the path is being drawn in flipped coords
+            self._nsBezierPath.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise_((x,y), r, start, end, ccw)
+
+
+    def star(self, x, y, points=20, outer=100, inner=None):
+        # if inner radius is unspecified, default to a regularized star
+        if inner is None:
+            inner = outer * cos(pi*2/points)/cos(pi/points)
+
+
+        self._nsBezierPath.moveToPoint_( (x, y-outer) )
+        for i in range(1, int(2 * points)):
+          angle = i * pi / points
+          radius = inner if i % 2 else outer
+          pt = (x+radius*sin(angle), y-radius*cos(angle))
+          self._nsBezierPath.lineToPoint_(pt)
+        self.closepath()
+
+
+    def arrow(self, x, y, width=100, type=NORMAL):
+        if type not in (NORMAL, FORTYFIVE):
+            badtype = "available types for arrow() are NORMAL and FORTYFIVE"
+            raise DeviceError(badtype)
+
+        if type==NORMAL:
+            head = width * .4
+            tail = width * .2
+            self.moveto(x, y)
+            self.lineto(x-head, y+head)
+            self.lineto(x-head, y+tail)
+            self.lineto(x-width, y+tail)
+            self.lineto(x-width, y-tail)
+            self.lineto(x-head, y-tail)
+            self.lineto(x-head, y-head)
+            self.lineto(x, y)
+            self.closepath()
+        elif type==FORTYFIVE:
+            head = .3
+            tail = 1 + head
+            self.moveto(x, y)
+            self.lineto(x, y+width*(1-head))
+            self.lineto(x-width*head, y+width)
+            self.lineto(x-width*head, y+width*tail*.4)
+            self.lineto(x-width*tail*.6, y+width)
+            self.lineto(x-width, y+width*tail*.6)
+            self.lineto(x-width*tail*.4, y+width*head)
+            self.lineto(x-width, y+width*head)
+            self.lineto(x-width*(1-head), y)
+            self.lineto(x, y)
 
 
     ### List methods ###

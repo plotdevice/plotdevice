@@ -22,9 +22,10 @@ class Context(object):
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
 
-        Note that we have to give the namespace of the executing script,
-        which is a hack to keep the WIDTH and HEIGHT properties updated.
-        Python's getattr only looks up property values once: at assign time."""
+        Note that we have to pass the namespace of the executing script,
+        to keep the WIDTH and HEIGHT properties updated (and to allow for
+        ximport's _ctx-passing magic).
+        """
         if canvas is None:
             canvas = Canvas()
         if ns is None:
@@ -42,7 +43,6 @@ class Context(object):
 
     def _activate(self):
         from . import activate
-        # grobs._ctx = effects._ctx = colors._ctx = typography._ctx = bezier._ctx = self
         activate(self)
 
     def _saveContext(self):
@@ -185,10 +185,10 @@ class Context(object):
             p.draw()
         return p
 
-    def oval(self, x, y, width, height, draw=True, **kwargs):
+    def oval(self, x, y, width, height, range=None, ccw=False, draw=True, **kwargs):
         Bezier.validate(kwargs)
         path = Bezier(**kwargs)
-        path.oval(x, y, width, height)
+        path.oval(x, y, width, height, range=range, ccw=ccw)
 
         if draw:
           path.draw()
@@ -196,11 +196,11 @@ class Context(object):
 
     ellipse = oval
 
-    def line(self, x1, y1, x2, y2, curve=0, draw=True, **kwargs):
+    def line(self, x1, y1, x2, y2, arc=0, draw=True, **kwargs):
         if self._path is None:
             Bezier.validate(kwargs)
             p = Bezier(**kwargs)
-            p.line(x1, y1, x2, y2)
+            p.line(x1, y1, x2, y2, arc=arc)
             if draw:
               p.draw()
         else:
@@ -210,84 +210,44 @@ class Context(object):
             p.line(x1, y1, x2, y2)
         return p
 
-    def star(self, startx, starty, points=20, outer=100, inner=50, draw=True, **kwargs):
+    def poly(self, x, y, radius, sides=3, draw=True, **kwargs):
         Bezier.validate(kwargs)
-        from math import sin, cos, pi
-
         p = Bezier(**kwargs)
-        p.moveto(startx, starty + outer)
+        p.poly(x, y, radius, sides)
+        if draw:
+          p.draw()
+        return p
 
-        for i in range(1, int(2 * points)):
-          angle = i * pi / points
-          x = sin(angle)
-          y = cos(angle)
-          if i % 2:
-              radius = inner
-          else:
-              radius = outer
-          x = startx + radius * x
-          y = starty + radius * y
-          p.lineto(x,y)
+    def arc(self, x, y, radius, range=None, ccw=False, draw=True, **kwargs):
+        Bezier.validate(kwargs)
+        p = Bezier(**kwargs)
+        p.arc(x, y, radius, range, ccw)
+        if draw:
+          p.draw()
+        return p
 
-        p.closepath()
+    def star(self, startx, starty, points=20, outer=100, inner=None, draw=True, **kwargs):
+        Bezier.validate(kwargs)
+        p = Bezier(**kwargs)
+        p.star(startx, starty, points, outer, inner)
         if draw:
           p.draw()
         return p
 
     def arrow(self, x, y, width=100, type=NORMAL, draw=True, **kwargs):
-
         """Draws an arrow.
 
-        Draws an arrow at position x, y, with a default width of 100.
-        There are two different types of arrows: NORMAL and trendy FORTYFIVE degrees arrows.
-        When draw=False then the arrow's path is not ended, similar to endpath(draw=False)."""
+        Draws an arrow pointing at position (x,y), with a default width of 100.
+        There are two different types of arrows: NORMAL and (the early-oughts favorite) FORTYFIVE.
+        """
 
         Bezier.validate(kwargs)
-        if type==NORMAL:
-          return self._arrow(x, y, width, draw, **kwargs)
-        elif type==FORTYFIVE:
-          return self._arrow45(x, y, width, draw, **kwargs)
-        else:
-          raise DeviceError("arrow: available types for arrow() are NORMAL and FORTYFIVE\n")
-
-    def _arrow(self, x, y, width, draw, **kwargs):
-
-        head = width * .4
-        tail = width * .2
-
         p = Bezier(**kwargs)
-        p.moveto(x, y)
-        p.lineto(x-head, y+head)
-        p.lineto(x-head, y+tail)
-        p.lineto(x-width, y+tail)
-        p.lineto(x-width, y-tail)
-        p.lineto(x-head, y-tail)
-        p.lineto(x-head, y-head)
-        p.lineto(x, y)
-        p.closepath()
+        p.arrow(x, y, width, type)
         if draw:
           p.draw()
         return p
 
-    def _arrow45(self, x, y, width, draw, **kwargs):
-
-        head = .3
-        tail = 1 + head
-
-        p = Bezier(**kwargs)
-        p.moveto(x, y)
-        p.lineto(x, y+width*(1-head))
-        p.lineto(x-width*head, y+width)
-        p.lineto(x-width*head, y+width*tail*.4)
-        p.lineto(x-width*tail*.6, y+width)
-        p.lineto(x-width, y+width*tail*.6)
-        p.lineto(x-width*tail*.4, y+width*head)
-        p.lineto(x-width, y+width*head)
-        p.lineto(x-width*(1-head), y)
-        p.lineto(x, y)
-        if draw:
-          p.draw()
-        return p
 
     ### Path Commands ###
 
