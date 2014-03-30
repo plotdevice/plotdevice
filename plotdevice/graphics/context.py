@@ -269,12 +269,6 @@ class Context(object):
                 p.moveto(*origin)
             return p
 
-    def beginpath(self, x=None, y=None):
-        self._path = Bezier()
-        self._pathclosed = False
-        if x != None and y != None:
-            self._path.moveto(x,y)
-
     def moveto(self, x, y):
         if self._path is None:
             raise DeviceError, "No current path. Use bezier() or beginpath() first."
@@ -284,18 +278,28 @@ class Context(object):
         if self._path is None:
             raise DeviceError, "No current path. Use bezier() or beginpath() first."
         self._path.lineto(x, y)
+        if close:
+            self._path.closepath()
 
     def curveto(self, x1, y1, x2, y2, x3, y3, close=False):
         if self._path is None:
             raise DeviceError, "No current path. Use bezier() or beginpath() first."
         self._path.curveto(x1, y1, x2, y2, x3, y3)
+        if close:
+            self._path.closepath()
 
-    def arcto(self, x1, y1, x2, y2, peak=1, mid=.5, close=False):
+    def arcto(self, x, y, radius=1.0, close=False):
         if self._path is None:
             raise DeviceError, "No current path. Use bezier() or beginpath() first."
+        self._path.arcto(x, y, radius)
+        if close:
+            self._path.closepath()
 
-        # i bet there's room in pathmatics for a connecting-arc calculator...
-        self._path.curveto(x1, y1, x2, y2, x3, y3)
+    def beginpath(self, x=None, y=None):
+        self._path = Bezier()
+        self._pathclosed = False
+        if x != None and y != None:
+            self._path.moveto(x,y)
 
     def closepath(self):
         if self._path is None:

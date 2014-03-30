@@ -130,6 +130,27 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         self._segment_cache = None
         self._nsBezierPath.curveToPoint_controlPoint1_controlPoint2_( (x3, y3), (x1, y1), (x2, y2) )
 
+    def arcto(self, x, y, radius=1.0):
+        self._segment_cache = None
+
+        # create a unitary semicircle...
+        k = 0.5522847498 / 2.0
+        p = NSBezierPath.bezierPath()
+        p.moveToPoint_((0,0))
+        p.curveToPoint_controlPoint1_controlPoint2_((.5,-.5), (0,-k), (.5-k,-.5))
+        p.curveToPoint_controlPoint1_controlPoint2_((1,0), (.5+k,-.5), (1,-k))
+
+        # ...and transform it to match the endpoints
+        src = self._nsBezierPath.currentPoint()
+        theta = geometry.angle(src.x, src.y, x, y)
+        d = geometry.distance(src.x, src.y, x, y)
+        t = Transform()
+        t.translate(src.x,src.y)
+        t.rotate(theta)
+        t.scale(d, d*radius)
+        p.transformUsingAffineTransform_(t._nsAffineTransform)
+        self._nsBezierPath.appendBezierPath_(p)
+
     def closepath(self):
         self._segment_cache = None
         self._nsBezierPath.closePath()
@@ -184,36 +205,20 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             if close:
                 # optionally close the path with a chord
                 self._nsBezierPath.closePath()
-
     ellipse = oval
 
     def line(self, x1, y1, x2, y2, arc=0):
         # arc =  0: straight line
         # arc =  1: clockwise perfect-circle arc connetcting points
         # arc = -1: counterclockwise perfect-circle arc
-        # abs(arc) > 1: increasingly parabolic cw/ccw arc connecting points
+        # abs(arc) > 1: increasingly distended cw/ccw arc connecting points
         self._segment_cache = None
         if not arc:
             self._nsBezierPath.moveToPoint_( (x1, y1) )
             self._nsBezierPath.lineToPoint_( (x2, y2) )
         else:
-            # create a unitary semicircle...
-            k = 0.5522847498 / 2.0
-            p = NSBezierPath.bezierPath()
-            p.moveToPoint_((0,0))
-            p.curveToPoint_controlPoint1_controlPoint2_((.5,-.5), (0,-k), (.5-k,-.5))
-            p.curveToPoint_controlPoint1_controlPoint2_((1,0), (.5+k,-.5), (1,-k))
-
-            # ...and transform it to match the endpoints
-            dist = geometry.distance(x1,y1,x2,y2)
-            theta = geometry.angle(x1,y1,x2,y2)
-            t = Transform()
-            t.translate(x1,y1)
-            t.rotate(theta)
-            t.scale(dist, dist*arc)
-            p.transformUsingAffineTransform_(t._nsAffineTransform)
-            self._nsBezierPath.appendBezierPath_(p)
-
+            self.moveto(x1,y1)
+            self.arcto(x2,y2, arc)
 
     ### Radial shapes (center + radius) ###
 
