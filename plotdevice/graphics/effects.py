@@ -93,6 +93,10 @@ class Frob(object):
             for grob in self._grobs:
                 grob._draw()
 
+    @property
+    def contents(self):
+        return self._grobs or []
+
 class Effect(Frob):
     kwargs = ('blend','alpha','shadow')
 

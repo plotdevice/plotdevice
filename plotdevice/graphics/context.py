@@ -842,9 +842,18 @@ class Canvas(Grob):
         self.mousedown = False
         self.clear()
 
-    def clear(self):
-        self._grobs = self._container = []
-        self._grobstack = [self._grobs]
+    def clear(self, grob=None):
+        if grob:
+            self._drop(grob, self._grobs)
+        else:
+            self._grobs = self._container = []
+            self._grobstack = [self._grobs]
+
+    def _drop(self, grob, container):
+        if grob in container:
+            container.remove(grob)
+        for frob in [f for f in container if hasattr(f, 'contents')]:
+            self._drop(grob, frob.contents)
 
     def _get_size(self):
         return self.width, self.height
