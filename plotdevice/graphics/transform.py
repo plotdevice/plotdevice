@@ -242,6 +242,7 @@ class Transform(object):
         self._nsAffineTransform.prependTransform_(other)
 
     def apply(self, point_or_path):
+        from .bezier import Bezier
         if isinstance(point_or_path, Bezier):
             return self.transformBezier(point_or_path)
         elif isinstance(point_or_path, Point):
