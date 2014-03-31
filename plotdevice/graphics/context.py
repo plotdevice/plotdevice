@@ -7,7 +7,7 @@ from .bezier import *
 from .grobs import *
 from .colors import *
 from .transform import *
-from .effects import Effect, Shadow
+from .effects import Effect, Shadow, Mask
 from . import grobs
 
 from ..util.foundry import sanitized, font_encoding, family_names, family_name, family_members
@@ -552,13 +552,21 @@ class Context(object):
         return self._effects
 
     @contextmanager
-    def clip(self, path):
-        cp = self.beginclip(path)
+    def clip(self, path, mask=False):
+        """Sets the clipping region for a block of code.
+
+        All drawing operations within the block will be constrained by the clipping
+        path. By default, only content within the bounds of the path will be rendered.
+        If the `mask` argument is True, this relationship is inverted and only content
+        that lies *outside* of the clipping path will be drawn.
+        """
+        cp = self.beginclip(path, mask=mask)
+        self.canvas.clear(path)
         yield cp
         self.endclip()
 
-    def beginclip(self, path):
-        cp = Mask(path)
+    def beginclip(self, path, mask=False):
+        cp = Mask(path, bool(mask))
         self.canvas.push(cp)
         return cp
 

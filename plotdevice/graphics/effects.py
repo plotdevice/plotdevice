@@ -59,14 +59,22 @@ BLEND_MODES = """    normal, clear, copy, xor, multiply, screen,
 
 
 @contextmanager
-def _cg_context():
+def _ns_context():
     ctx = NSGraphicsContext.currentContext()
     ctx.saveGraphicsState()
-    yield ctx.graphicsPort()
+    yield ctx
     ctx.restoreGraphicsState()
 
 @contextmanager
+def _cg_context():
+    port = NSGraphicsContext.currentContext().graphicsPort()
+    CGContextSaveGState(port)
+    yield port
+    CGContextRestoreGState(port)
+
+@contextmanager
 def _cg_layer():
+    # CGContextBeginTransparencyLayerWithRect(_cg_port(), <bounds>, None)
     CGContextBeginTransparencyLayer(_cg_port(), None)
     yield
     CGContextEndTransparencyLayer(_cg_port())
@@ -277,12 +285,25 @@ class Shadow(object):
 
 
 class Mask(Frob):
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, path, invert=False):
+        from .bezier import Bezier
+        self.path = Bezier(path)
+        self.path.inherit()
+        self.evenodd = invert
 
     def set(self):
-        CGContextAddPath(_cg_port(), self.path.cgPath)
-        CGContextClip(_cg_port())
+        port = _cg_port()
+        cg_path = self.path.transform.apply(self.path).cgPath
+
+        CGContextBeginPath(port)
+        if self.evenodd:
+            CGContextAddRect(port, ((0,0),(_ctx.WIDTH, _ctx.HEIGHT)))
+            CGContextAddPath(port, cg_path)
+            CGContextEOClip(port)
+        else:
+            CGContextAddPath(port, cg_path)
+            CGContextClip(port)
+
 
     @contextmanager
     def applied(self):
