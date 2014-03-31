@@ -355,16 +355,15 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         # we're shadowing the mixin method that merges the context state
         # call super to get the inherited value
         trans = super(Bezier,self).transform.copy()
+
+        # if center-based, sandwich transform with a scoot out/in to the origin
         if (self.transformmode == CENTER):
-            (x, y), (w, h) = self.bounds
-            deltax = x+w/2
-            deltay = y+h/2
+            origin, size = self.bounds
+            delta = [-sum(xw_yh)/2 for xw_yh in zip(origin, size)]
             t = Transform()
-            t.translate(-deltax,-deltay)
+            t.translate(*delta)
             trans.prepend(t)
-            t = Transform()
-            t.translate(deltax,deltay)
-            trans.append(t)
+            trans.append(t.inverse)
         return trans
 
     @property
@@ -378,15 +377,15 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 CGPathAddLineToPoint(cg, None, points[0].x, points[0].y)
             elif cmd==NSCurveToBezierPathElement:
                 CGPathAddCurveToPoint(cg, None, points[0].x, points[0].y,
-                                                  points[1].x, points[1].y,
-                                                  points[2].x, points[2].y)
+                                                points[1].x, points[1].y,
+                                                points[2].x, points[2].y)
             elif cmd==NSClosePathBezierPathElement:
                 CGPathCloseSubpath(cg)
         return CGPathCreateCopy(cg)
 
     def _draw(self):
         with _cg_context() as port:
-            # modify the bezier path to reflect our final resting place
+            # modify the context's CTM to reflect our final resting place
             self.transform.concat()
 
             # apply blend/alpha/shadow (and any associated transparency layers)
