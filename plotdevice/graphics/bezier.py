@@ -405,11 +405,12 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                     if self._dashstyle:
                         CGContextSetLineDash(port, 0, self._dashstyle, len(self._dashstyle))
 
+                # use cocoa for patterns/gradients
                 if isinstance(self._fillcolor, (Gradient, Pattern)):
-                    # use cocoa for patterns/gradients
                     self._fillcolor.fill(self)
-                if ink:
-                    # use cg for stroke & fill
+
+                # use cg for stroke & fill
+                if ink is not None:
                     CGContextBeginPath(port)
                     CGContextAddPath(port, self.cgPath)
                     CGContextDrawPath(port, ink)
