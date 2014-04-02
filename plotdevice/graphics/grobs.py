@@ -14,6 +14,7 @@ from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
 from ..lib import geometry
 from .colors import Color
 from .effects import Effect
+from .transform import Region, Size, Point, Transform, CENTER
 
 _ctx = None
 __all__ = [
@@ -53,6 +54,13 @@ def _save():
 
 def _restore():
     NSGraphicsContext.currentContext().restoreGraphicsState()
+
+@contextmanager
+def _ns_context():
+    ctx = NSGraphicsContext.currentContext()
+    ctx.saveGraphicsState()
+    yield ctx
+    ctx.restoreGraphicsState()
 
 ### Grobs & mixins to inherit state from the context ###
 
@@ -311,7 +319,6 @@ class Image(TransformMixin):
         self.width = width
         self.height = height
         self.alpha = alpha
-        self.debugImage = False
 
     @property
     def image(self):
@@ -320,117 +327,92 @@ class Image(TransformMixin):
 
     def copy(self):
         new = self.__class__()
-        _copy_attrs(self, new, ('_nsImage', 'x', 'y', 'width', 'height', '_transform', '_transformmode', 'alpha', 'debugImage'))
+        _copy_attrs(self, new, ('_nsImage', 'x', 'y', 'width', 'height', '_transform', '_transformmode', 'alpha', ))
         return new
 
-    def getSize(self):
+    @property
+    def bounds(self):
+        #
+        # hrm, so this should probably reflect the scale factor, no?
+        #
+        origin = self.transform.apply(Point(self.x, self.y))
+        return Region(origin.x, origin.y, *self._nsImage.size())
+
+    @property
+    def size(self):
         return Size(*self._nsImage.size())
 
-    size = property(getSize)
+    @property
+    def _nsBitmap(self):
+        for bitmap in self._nsImage.representations():
+            if isinstance(bitmap, NSBitmapImageRep):
+                break
+        else:
+            bitmap = self._nsImage.TIFFRepresentation()
+        return bitmap
+
+    @property
+    def _ciImage(self):
+        # core-image needs to be told to compensate for our flipped coords
+        flip = NSAffineTransform.transform()
+        flip.translateXBy_yBy_(0, self.size.height)
+        flip.scaleXBy_yBy_(1,-1)
+
+        ciImage = CIImage.alloc().initWithBitmapImageRep_(self._nsBitmap)
+        transform = CIFilter.filterWithName_("CIAffineTransform")
+        transform.setValue_forKey_(ciImage, "inputImage")
+        transform.setValue_forKey_(flip, "inputTransform")
+        return transform.valueForKey_("outputImage")
+
+    @property
+    def _screen_transform(self):
+        """Returns the Transform object that will be used to draw the image.
+
+        The transform incorporates the global context state but also accounts for
+        centering and max width/height values set in the constructor."""
+
+        # set scale factor so entire image fits in the given rect or dimension
+        srcW, srcH = self.size
+        if not any([self.width, self.height]):
+            factor = 1.0
+        elif all([self.width, self.height]):
+            factor = min(self.width/srcW, self.height/srcH)
+        elif self.width:
+            factor = self.width/srcW
+        elif self.height:
+            factor = self.height/srcH
+
+        xf = Transform()
+        if self._transformmode == CENTER:
+            # Set the position first, before any of the scaling or transformations are done.
+            # Context transformations might change the translation, and we don't want that.
+            xf.translate(self.x, self.y)
+
+            # Compute the scaled size and centering offset
+            nudge = Transform()
+            nudge.translate(srcW*factor/2, srcH*factor/2)
+
+            xf.prepend(nudge)            # nudge the image to its center
+            xf.prepend(self._transform)  # add context's CTM.
+            xf.prepend(nudge.inverse)    # Move back to the real origin.
+        else:
+            xf.prepend(self._transform)  # add context's CTM.
+            xf.translate(self.x, self.y) # position the image
+
+        xf.scale(factor) # apply the appropriate magnification
+        return xf
 
     def _draw(self):
         """Draw an image on the given coordinates."""
 
-        srcW, srcH = self._nsImage.size()
-        srcRect = ((0, 0), (srcW, srcH))
+        with _ns_context():
+            # move the image into place via transforms
+            self._screen_transform.concat()
 
-        # Width or height given
-        if self.width is not None or self.height is not None:
-            if self.width is not None and self.height is not None:
-                factor = min(self.width / srcW, self.height / srcH)
-            elif self.width is not None:
-                factor = self.width / srcW
-            elif self.height is not None:
-                factor = self.height / srcH
-            _save()
-
-            # Center-mode transforms: translate to image center
-            if self._transformmode == CENTER:
-                # This is the hardest case: center-mode transformations with given width or height.
-                # Order is very important in this code.
-
-                # Set the position first, before any of the scaling or transformations are done.
-                # Context transformations might change the translation, and we don't want that.
-                t = Transform()
-                t.translate(self.x, self.y)
-                t.concat()
-
-                # Set new width and height factors. Note that no scaling is done yet: they're just here
-                # to set the new center of the image according to the scaling factors.
-                srcW = srcW * factor
-                srcH = srcH * factor
-
-                # Move image to newly calculated center.
-                dX = srcW / 2
-                dY = srcH / 2
-                t = Transform()
-                t.translate(dX, dY)
-                t.concat()
-
-                # Do current transformation.
-                self._transform.concat()
-
-                # Move back to the previous position.
-                t = Transform()
-                t.translate(-dX, -dY)
-                t.concat()
-
-                # Finally, scale the image according to the factors.
-                t = Transform()
-                t.scale(factor)
-                t.concat()
-            else:
-                # Do current transformation
-                self._transform.concat()
-                # Scale according to width or height factor
-                t = Transform()
-                t.translate(self.x, self.y) # Here we add the positioning of the image.
-                t.scale(factor)
-                t.concat()
-
-            # A debugImage draws a black rectangle instead of an image.
-            if self.debugImage:
-                Color().set()
-                pt = Bezier()
-                pt.rect(0, 0, srcW / factor, srcH / factor)
-                pt.fill()
-            else:
-                self._nsImage.drawAtPoint_fromRect_operation_fraction_((0, 0), srcRect, NSCompositeSourceOver, self.alpha)
-            _restore()
-        # No width or height given
-        else:
-            _save()
-            x,y = self.x, self.y
-            # Center-mode transforms: translate to image center
-            if self._transformmode == CENTER:
-                deltaX = srcW / 2
-                deltaY = srcH / 2
-                t = Transform()
-                t.translate(x+deltaX, y+deltaY)
-                t.concat()
-                x = -deltaX
-                y = -deltaY
-            # Do current transformation
-            self._transform.concat()
-            # A debugImage draws a black rectangle instead of an image.
-            if self.debugImage:
-                Color().set()
-                pt = Bezier()
-                pt.rect(x, y, srcW, srcH)
-                pt.fill()
-            else:
-                # The following code avoids a nasty bug in Cocoa/PyObjC.
-                # Apparently, EPS files are put on a different position when drawn with a certain position.
-                # However, this only happens when the alpha value is set to 1.0: set it to something lower
-                # and the positioning is the same as a bitmap file.
-                # I could of course make every EPS image have an alpha value of 0.9999, but this solution
-                # is better: always use zero coordinates for drawAtPoint and use a transform to set the
-                # final position.
-                t = Transform()
-                t.translate(x,y)
-                t.concat()
-                self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), srcRect, NSCompositeSourceOver, self.alpha)
-            _restore()
+            # draw the image at (0,0). NB: the nodebox source mentions running into quartz bugs
+            # when drawing EPSs to other origin points. no clue whether this still applies...
+            bounds = ((0,0), self.size)
+            self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
 
 
 class Variable(object):
