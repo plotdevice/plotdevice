@@ -14,7 +14,7 @@ from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
 from ..lib import geometry
 from .colors import Color
 from .effects import Effect
-from .transform import Region, Size, Point, Transform, CENTER
+from .transform import Region, Size, Point, Transform, CENTER, CORNER
 
 _ctx = None
 __all__ = [
@@ -377,29 +377,28 @@ class Image(TransformMixin):
             factor = 1.0
         elif all([self.width, self.height]):
             factor = min(self.width/srcW, self.height/srcH)
-        elif self.width:
-            factor = self.width/srcW
-        elif self.height:
-            factor = self.height/srcH
+        else:
+            dim, src_dim = max((self.width, srcW), (self.height, srcH))
+            factor = dim/src_dim
 
-        xf = Transform()
+        xf = Transform()    # the transform we're building up
+        nudge = Transform() # translation offset for centering (if any)
+
         if self._transformmode == CENTER:
-            # Set the position first, before any of the scaling or transformations are done.
-            # Context transformations might change the translation, and we don't want that.
+            # if center-based, set the position before applying transforms
             xf.translate(self.x, self.y)
-
-            # Compute the scaled size and centering offset
-            nudge = Transform()
             nudge.translate(srcW*factor/2, srcH*factor/2)
 
-            xf.prepend(nudge)            # nudge the image to its center
-            xf.prepend(self._transform)  # add context's CTM.
-            xf.prepend(nudge.inverse)    # Move back to the real origin.
-        else:
-            xf.prepend(self._transform)  # add context's CTM.
-            xf.translate(self.x, self.y) # position the image
+        # apply the context's CTM
+        xf.prepend(nudge)           # nudge the image to its center
+        xf.prepend(self._transform) # add context's CTM.
+        xf.prepend(nudge.inverse)   # Move back to the real origin.
 
-        xf.scale(factor) # apply the appropriate magnification
+        if self._transformmode == CORNER:
+            # if corner-based, set the position after applying the transform
+            xf.translate(self.x, self.y)
+
+        xf.scale(factor) # scale the image to fit size constraints (if any)
         return xf
 
     def _draw(self):
