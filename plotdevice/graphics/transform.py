@@ -164,8 +164,9 @@ class Transform(object):
             # restore the context's transform
             _ctx._transform.prepend(self.inverse)
 
+    @trim_zeroes
     def __repr__(self):
-        return "<%s [%.3f %.3f %.3f %.3f %.3f %.3f]>" % ((self.__class__.__name__,)
+        return "%s([%.3f, %.3f, %.3f, %.3f, %.3f, %.3f])" % ((self.__class__.__name__,)
                  + tuple(self))
 
     def __iter__(self):

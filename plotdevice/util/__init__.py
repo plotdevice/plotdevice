@@ -152,7 +152,7 @@ def _flatten(seq):
 ### repr decorator (tidies numbers) ###
 
 def trim_zeroes(func):
-    return lambda slf: re.sub(r'\.?0+(?=[,\)])', '', func(slf))
+    return lambda slf: re.sub(r'\.?0+(?=[,\)\]])', '', func(slf))
 
 ### give ordered- and default-dict a nicer repr ###
 
