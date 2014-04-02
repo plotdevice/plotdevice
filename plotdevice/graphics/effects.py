@@ -59,13 +59,6 @@ BLEND_MODES = """    normal, clear, copy, xor, multiply, screen,
 
 
 @contextmanager
-def _ns_context():
-    ctx = NSGraphicsContext.currentContext()
-    ctx.saveGraphicsState()
-    yield ctx
-    ctx.restoreGraphicsState()
-
-@contextmanager
 def _cg_context():
     port = NSGraphicsContext.currentContext().graphicsPort()
     CGContextSaveGState(port)
@@ -98,6 +91,8 @@ class Frob(object):
     def _draw(self):
         # apply state changes only to contained grobs
         with self.applied():
+            if not self._grobs:
+                return
             for grob in self._grobs:
                 grob._draw()
 
@@ -282,28 +277,97 @@ class Shadow(object):
         self._nsShadow.setShadowOffset_((x,-y))
     offset = property(_get_offset, _set_offset)
 
+def _channelFilter(channel, img):
+    """Generate a greyscale image by isolating a single r/g/b/a channel"""
 
+    rgb = ('red', 'green', 'blue')
+    if channel=='alpha':
+        transmat = [(0, 0, 0, 1)] * 3
+        transmat += [ (0,0,0,0), (0,0,0,1) ]
+    elif channel in rgb:
+        rgb_row = [0,0,0]
+        rgb_row.insert(rgb.index(channel), 1.0)
+        transmat = [tuple(rgb_row)] * 3
+        transmat += [ (0,0,0,0), (0,0,0,1) ]
+    elif channel in ('black', 'white'):
+        transmat = [(.333, .333, .333, 0)] * 3
+        transmat += [ (0,0,0,0), (0,0,0,1) ]
+    return _matrixFilter(transmat, img)
+
+def _inversionFilter(identity, img):
+    """Conditionally turn black to white and up to down"""
+
+    # set up a matrix that's either identity or an r/g/b inversion
+    polarity = -1.0 if not identity else 1.0
+    bias = 0 if polarity>0 else 1
+    transmat = [(polarity, 0, 0, 0), (0, polarity, 0, 0), (0, 0, polarity, 0),
+                (0, 0, 0, 0), (bias, bias, bias, 1)]
+    return _matrixFilter(transmat, img)
+
+def _matrixFilter(matrix, img):
+    """Apply a color transform to a CIImage and return the filtered result"""
+
+    vectors = ("inputRVector", "inputGVector", "inputBVector", "inputAVector", "inputBiasVector")
+    opts = {k:CIVector.vectorWithX_Y_Z_W_(*v) for k,v in zip(vectors, matrix)}
+    opts[kCIInputImageKey] = img
+    remap = CIFilter.filterWithName_("CIColorMatrix")
+    for k,v in opts.items():
+        remap.setValue_forKey_(v, k)
+    return remap.valueForKey_("outputImage")
 
 class Mask(Frob):
-    def __init__(self, path, invert=False):
+    def __init__(self, stencil, invert=False, channel=None):
         from .bezier import Bezier
-        self.path = Bezier(path)
-        self.path.inherit()
-        self.evenodd = invert
+        from .grobs import Image
+        if isinstance(stencil, Bezier):
+            self.path = Bezier(stencil)
+            self.path.inherit()
+            self.evenodd = invert
+        elif isinstance(stencil, Image):
+            # default to using alpha if available and darkness if not
+            if not channel:
+                channel = 'alpha' if stencil._nsBitmap.hasAlpha() else 'black'
+            if channel=='black':
+                invert = not invert
+            self.channel = channel
+            self.invert = invert
+            self.bmp = stencil
 
     def set(self):
         port = _cg_port()
-        cg_path = self.path.transform.apply(self.path).cgPath
 
-        CGContextBeginPath(port)
-        if self.evenodd:
-            CGContextAddRect(port, ((0,0),(_ctx.WIDTH, _ctx.HEIGHT)))
-            CGContextAddPath(port, cg_path)
-            CGContextEOClip(port)
-        else:
-            CGContextAddPath(port, cg_path)
-            CGContextClip(port)
+        if hasattr(self, 'path'):
+            cg_path = self.path.transform.apply(self.path).cgPath
+            CGContextBeginPath(port)
+            if self.evenodd:
+                # if inverted, knock the path out of a full-screen rect and clip with that
+                CGContextAddRect(port, ((0,0),(_ctx.WIDTH, _ctx.HEIGHT)))
+                CGContextAddPath(port, cg_path)
+                CGContextEOClip(port)
+            else:
+                # otherwise just color between the lines
+                CGContextAddPath(port, cg_path)
+                CGContextClip(port)
 
+        elif hasattr(self, 'bmp'):
+            # run the filter chain and render to a cg-image
+            greyscale = _inversionFilter(self.invert, _channelFilter(self.channel, self.bmp._ciImage))
+            ci_ctx = CIContext.contextWithOptions_(None)
+            maskRef = ci_ctx.createCGImage_fromRect_(greyscale, ((0,0), self.bmp.size))
+
+            # turn the image into an ‘imagemask’ cg-image
+            cg_mask = CGImageMaskCreate(CGImageGetWidth(maskRef),
+                                        CGImageGetHeight(maskRef),
+                                        CGImageGetBitsPerComponent(maskRef),
+                                        CGImageGetBitsPerPixel(maskRef),
+                                        CGImageGetBytesPerRow(maskRef),
+                                        CGImageGetDataProvider(maskRef), None, False);
+
+            # the mask is sitting at (0,0) until transformed to screen coords
+            xf = self.bmp._screen_transform
+            xf.concat() # apply transforms before clipping...
+            CGContextClipToMask(port, ((0,0), self.bmp.size), cg_mask)
+            xf.inverse.concat() # ...restore the previous state after
 
     @contextmanager
     def applied(self):

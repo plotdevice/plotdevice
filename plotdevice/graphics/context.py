@@ -552,7 +552,7 @@ class Context(object):
         return self._effects
 
     @contextmanager
-    def clip(self, path, mask=False):
+    def clip(self, path, mask=False, channel=None):
         """Sets the clipping region for a block of code.
 
         All drawing operations within the block will be constrained by the clipping
@@ -560,13 +560,13 @@ class Context(object):
         If the `mask` argument is True, this relationship is inverted and only content
         that lies *outside* of the clipping path will be drawn.
         """
-        cp = self.beginclip(path, mask=mask)
+        cp = self.beginclip(path, mask=mask, channel=channel)
         self.canvas.clear(path)
         yield cp
         self.endclip()
 
-    def beginclip(self, path, mask=False):
-        cp = Mask(path, bool(mask))
+    def beginclip(self, path, mask=False, channel=None):
+        cp = Mask(path, invert=bool(mask), channel=channel)
         self.canvas.push(cp)
         return cp
 
@@ -773,9 +773,7 @@ class Context(object):
             return Image(data=obj.read()).size
         elif isinstance(obj, Text):
             return obj.metrics()
-        elif isinstance(obj, Image):
-            return obj.getSize()
-        elif isinstance(obj, Bezier):
+        elif isinstance(obj, (Bezier, Image)):
             return obj.bounds.size
         else:
             badtype = "measure() can only handle Text, Images, Beziers, and file() objects (got %s)"%type(obj)
