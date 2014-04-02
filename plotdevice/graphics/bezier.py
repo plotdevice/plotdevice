@@ -351,13 +351,11 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     ### Drawing methods ###
 
     @property
-    def transform(self):
-        # we're shadowing the mixin method that merges the context state
-        # call super to get the inherited value
-        trans = super(Bezier,self).transform.copy()
-
-        # if center-based, sandwich transform with a scoot out/in to the origin
+    def _screen_transform(self):
+        """Returns the Transform object that will be used to draw the path."""
+        trans = self.transform.copy()
         if (self.transformmode == CENTER):
+            # if center-based, sandwich transform with a scoot out/in to the origin
             origin, size = self.bounds
             delta = [-sum(xw_yh)/2 for xw_yh in zip(origin, size)]
             t = Transform()
@@ -368,6 +366,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
     @property
     def cgPath(self):
+        # this really ought to live in pathmatics...
         ns = self._nsBezierPath
         cg = CGPathCreateMutable()
         for cmd, points in (ns.elementAtIndex_associatedPoints_(i) for i in xrange(ns.elementCount())):
@@ -386,7 +385,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def _draw(self):
         with _cg_context() as port:
             # modify the context's CTM to reflect our final resting place
-            self.transform.concat()
+            self._screen_transform.concat()
 
             # apply blend/alpha/shadow (and any associated transparency layers)
             with self.effects.applied():

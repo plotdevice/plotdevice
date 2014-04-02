@@ -337,7 +337,8 @@ class Mask(Frob):
         port = _cg_port()
 
         if hasattr(self, 'path'):
-            cg_path = self.path.transform.apply(self.path).cgPath
+            path_xf = self.path._screen_transform
+            cg_path = path_xf.apply(self.path).cgPath
             CGContextBeginPath(port)
             if self.evenodd:
                 # if inverted, knock the path out of a full-screen rect and clip with that
