@@ -14,7 +14,7 @@ def primitives(x, y):
     nostroke()
     rect(x, y, 50, 50)
     x += 60
-    rect(x, y, 50, 50, 0.6)
+    rect(x, y, 50, 50, 13)
     x += 60
     oval(x, y, 50, 50)
     x += 60
@@ -194,6 +194,18 @@ scale(0.5)
 primitives(140,140)
 pop()
 marker(140)
+
+# Scaling
+translate(0, 140)
+nostroke()
+text("Shadowed primitives", 20, 165)
+push()
+scale(0.5)
+with shadow('#aaa', 5, 7):
+    primitives(140,140)
+pop()
+marker(140)
+
 
 # Text
 translate(0, 140)
