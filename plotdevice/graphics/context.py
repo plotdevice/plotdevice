@@ -705,8 +705,8 @@ class Context(object):
 
     ### Image commands ###
 
-    def image(self, path, x, y, width=None, height=None, alpha=1.0, data=None, draw=True, **kwargs):
-        img = Image(path, x, y, width, height, alpha, data=data, **kwargs)
+    def image(self, path, x=0, y=0, width=None, height=None, data=None, draw=True, **kwargs):
+        img = Image(path, x, y, width, height, data=data, **kwargs)
         if draw:
             img.draw()
         return img
@@ -894,6 +894,8 @@ class Canvas(Grob):
         if self.background is not None:
             self.background.set()
             NSRectFillUsingOperation(((0,0), (self.width, self.height)), NSCompositeSourceOver)
+        # import cProfile
+        # cProfile.runctx('[grob._draw() for grob in self._grobs]', globals(), {"self":self}, sort='cumulative')
         for grob in self._grobs:
             grob._draw()
 

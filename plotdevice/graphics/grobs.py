@@ -267,10 +267,10 @@ class PenMixin(Grob):
 
 ### Images ###
 
-class Image(TransformMixin):
+class Image(EffectsMixin, TransformMixin, Grob):
     kwargs = ()
 
-    def __init__(self, path=None, x=0, y=0, width=None, height=None, alpha=1.0, image=None, data=None):
+    def __init__(self, path=None, x=0, y=0, width=None, height=None, image=None, data=None, **kwargs):
         """
         Parameters:
          - path: A path to a certain image on the local filesystem.
@@ -284,7 +284,7 @@ class Image(TransformMixin):
          - image: optionally, an Image or NSImage object.
          - data: a stream of bytes of image data.
         """
-        super(Image, self).__init__()
+        super(Image, self).__init__(**kwargs)
         if data is not None:
             if not isinstance(data, NSData):
                 data = NSData.dataWithBytes_length_(data, len(data))
@@ -321,11 +321,11 @@ class Image(TransformMixin):
                 image.setCacheMode_(NSImageCacheNever)
                 _ctx._imagecache[path] = (image, curtime)
             self._nsImage = image
+
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.alpha = alpha
 
     @property
     def image(self):
@@ -335,10 +335,15 @@ class Image(TransformMixin):
     @property
     def _nsBitmap(self):
         for bitmap in self._nsImage.representations():
+            # if we already have a bitmap representation, use that...
             if isinstance(bitmap, NSBitmapImageRep):
                 break
         else:
-            bitmap = self._nsImage.TIFFRepresentation()
+            # ...otherwise convert the vector image to a bitmap
+            # (note that this should use _screen_transform somehow but currently doesn't)
+            tiffdata = self._nsImage.TIFFRepresentation()
+            image = NSImage.alloc().initWithData_(tiffdata)
+            bitmap = image.representations()[0]
         return bitmap
 
     @property
@@ -356,7 +361,7 @@ class Image(TransformMixin):
 
     def copy(self):
         new = self.__class__()
-        _copy_attrs(self, new, ('_nsImage', 'x', 'y', 'width', 'height', '_transform', '_transformmode', 'alpha', ))
+        _copy_attrs(self, new, ('_nsImage', 'x', 'y', 'width', 'height', '_transform', '_transformmode', '_effects', ))
         return new
 
     @property
@@ -414,14 +419,12 @@ class Image(TransformMixin):
         """Draw an image on the given coordinates."""
 
         with _ns_context():
-            # move the image into place via transforms
-            self._screen_transform.concat()
-
-            # draw the image at (0,0). NB: the nodebox source mentions running into quartz bugs
-            # when drawing EPSs to other origin points. no clue whether this still applies...
-            bounds = ((0,0), self.size)
-            self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
-
+            self._screen_transform.concat() # move the image into place via transforms
+            with self.effects.applied():    # apply any blend/alpha/shadow effects
+                bounds = ((0,0), self.size) # draw the image at (0,0)
+                self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
+                # NB: the nodebox source warns about quartz bugs triggered by drawing
+                # EPSs to other origin points. no clue whether this still applies...
 
 class Variable(object):
     def __init__(self, name, type, default=None, min=0, max=100, value=None):
