@@ -207,10 +207,9 @@ class TransformMixin(Grob):
         self._transform.skew(x,y)
 
 class PenMixin(Grob):
-    stateAttrs = ('_strokewidth', '_capstyle', '_joinstyle', '_dashstyle')
-
     """Mixin class for linestyle support.
     Adds the _capstyle, _joinstyle, _dashstyle, and _strokewidth attributes to the class."""
+    stateAttrs = ('_strokewidth', '_capstyle', '_joinstyle', '_dashstyle')
 
     def __init__(self, **kwargs):
         super(PenMixin, self).__init__(**kwargs)
@@ -325,23 +324,6 @@ class Image(TransformMixin):
         warnings.warn("The 'image' attribute is deprecated. Please use _nsImage instead.", DeprecationWarning, stacklevel=2)
         return self._nsImage
 
-    def copy(self):
-        new = self.__class__()
-        _copy_attrs(self, new, ('_nsImage', 'x', 'y', 'width', 'height', '_transform', '_transformmode', 'alpha', ))
-        return new
-
-    @property
-    def bounds(self):
-        #
-        # hrm, so this should probably reflect the scale factor, no?
-        #
-        origin = self.transform.apply(Point(self.x, self.y))
-        return Region(origin.x, origin.y, *self._nsImage.size())
-
-    @property
-    def size(self):
-        return Size(*self._nsImage.size())
-
     @property
     def _nsBitmap(self):
         for bitmap in self._nsImage.representations():
@@ -364,6 +346,37 @@ class Image(TransformMixin):
         transform.setValue_forKey_(flip, "inputTransform")
         return transform.valueForKey_("outputImage")
 
+    def copy(self):
+        new = self.__class__()
+        _copy_attrs(self, new, ('_nsImage', 'x', 'y', 'width', 'height', '_transform', '_transformmode', 'alpha', ))
+        return new
+
+    @property
+    def bounds(self):
+        #
+        # hrm, so this should probably reflect the scale factor, no?
+        #
+        origin = self.transform.apply(Point(self.x, self.y))
+        return Region(origin.x, origin.y, *self._nsImage.size())
+
+    @property
+    def size(self):
+        return Size(*self._nsImage.size())
+
+    @property
+    def _scalefactor(self):
+        """Fits the image into any specified width & height constraints. If neither was
+        included in the call to image(), defaults to the image file's full size."""
+        src = self.size
+        if not any([self.width, self.height]):
+            factor = 1.0
+        elif all([self.width, self.height]):
+            factor = min(self.width/src.width, self.height/src.height)
+        else:
+            dim, src_dim = max((self.width, src.width), (self.height, src.height))
+            factor = dim/src_dim
+        return factor
+
     @property
     def _screen_transform(self):
         """Returns the Transform object that will be used to draw the image.
@@ -371,34 +384,22 @@ class Image(TransformMixin):
         The transform incorporates the global context state but also accounts for
         centering and max width/height values set in the constructor."""
 
+        # accumulate transformations in a fresh matrix
+        xf = Transform()
+
         # set scale factor so entire image fits in the given rect or dimension
-        srcW, srcH = self.size
-        if not any([self.width, self.height]):
-            factor = 1.0
-        elif all([self.width, self.height]):
-            factor = min(self.width/srcW, self.height/srcH)
-        else:
-            dim, src_dim = max((self.width, srcW), (self.height, srcH))
-            factor = dim/src_dim
+        factor = self._scalefactor
 
-        xf = Transform()    # the transform we're building up
-        nudge = Transform() # translation offset for centering (if any)
-
+        # calculate the translation offset for centering (if any)
+        nudge = Transform()
         if self._transformmode == CENTER:
-            # if center-based, set the position before applying transforms
-            xf.translate(self.x, self.y)
-            nudge.translate(srcW*factor/2, srcH*factor/2)
+            nudge.translate(self.size.width*factor/2, self.size.height*factor/2)
 
-        # apply the context's CTM
-        xf.prepend(nudge)           # nudge the image to its center
-        xf.prepend(self._transform) # add context's CTM.
-        xf.prepend(nudge.inverse)   # Move back to the real origin.
-
-        if self._transformmode == CORNER:
-            # if corner-based, set the position after applying the transform
-            xf.translate(self.x, self.y)
-
-        xf.scale(factor) # scale the image to fit size constraints (if any)
+        xf.translate(self.x, self.y) # set the position before applying transforms
+        xf.prepend(nudge)            # nudge the image to its center (or not)
+        xf.prepend(self._transform)  # add context's CTM.
+        xf.prepend(nudge.inverse)    # Move back to the real origin.
+        xf.scale(factor)             # scale to fit size constraints (if any)
         return xf
 
     def _draw(self):
