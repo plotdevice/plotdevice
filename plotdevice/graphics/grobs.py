@@ -177,7 +177,9 @@ class TransformMixin(Grob):
         self._transformmode = INHERIT
 
     def _get_transform(self):
-        return self._transform if self._transform!=INHERIT else _ctx._transform
+        if self._transform==INHERIT:
+            self._transform = Transform(_ctx._transform)
+        return self._transform
     def _set_transform(self, transform):
         self._transform = Transform(transform)
     transform = property(_get_transform, _set_transform)
@@ -189,22 +191,28 @@ class TransformMixin(Grob):
     transformmode = property(_get_transformmode, _set_transformmode)
 
     def translate(self, x, y):
-        self._transform.translate(x, y)
+        self.transform.translate(x, y)
+        return self
 
     def reset(self):
         self._transform = Transform()
+        return self
 
     def rotate(self, degrees=0, radians=0):
-        self._transform.rotate(-degrees,-radians)
+        self.transform.rotate(-degrees,-radians)
+        return self
 
     def translate(self, x=0, y=0):
-        self._transform.translate(x,y)
+        self.transform.translate(x,y)
+        return self
 
     def scale(self, x=1, y=None):
-        self._transform.scale(x,y)
+        self.transform.scale(x,y)
+        return self
 
     def skew(self, x=0, y=0):
-        self._transform.skew(x,y)
+        self.transform.skew(x,y)
+        return self
 
 class PenMixin(Grob):
     """Mixin class for linestyle support.
