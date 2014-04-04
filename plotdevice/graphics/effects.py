@@ -59,6 +59,8 @@ BLEND_MODES = """    normal, clear, copy, xor, multiply, screen,
     destination-over, destination-in, destination-out, destination-atop"""
 
 
+### graphics context mgmt ###
+
 @contextmanager
 def _cg_context():
     port = NSGraphicsContext.currentContext().graphicsPort()
@@ -75,6 +77,52 @@ def _cg_layer():
 
 def _cg_port():
     return NSGraphicsContext.currentContext().graphicsPort()
+
+### core-image filters for channel separation and inversion ###
+
+def ciFilter(opt, img):
+    _filt = _inversionFilter if isinstance(opt, bool) else _channelFilter
+    return _filt(opt, img)
+
+def _channelFilter(channel, img):
+    """Generate a greyscale image by isolating a single r/g/b/a channel"""
+
+    rgb = ('red', 'green', 'blue')
+    if channel=='alpha':
+        transmat = [(0, 0, 0, 1)] * 3
+        transmat += [ (0,0,0,0), (0,0,0,1) ]
+    elif channel in rgb:
+        rgb_row = [0,0,0]
+        rgb_row.insert(rgb.index(channel), 1.0)
+        transmat = [tuple(rgb_row)] * 3
+        transmat += [ (0,0,0,0), (0,0,0,1) ]
+    elif channel in ('black', 'white'):
+        transmat = [(.333, .333, .333, 0)] * 3
+        transmat += [ (0,0,0,0), (0,0,0,1) ]
+    return _matrixFilter(transmat, img)
+
+def _inversionFilter(identity, img):
+    """Conditionally turn black to white and up to down"""
+
+    # set up a matrix that's either identity or an r/g/b inversion
+    polarity = -1.0 if not identity else 1.0
+    bias = 0 if polarity>0 else 1
+    transmat = [(polarity, 0, 0, 0), (0, polarity, 0, 0), (0, 0, polarity, 0),
+                (0, 0, 0, 0), (bias, bias, bias, 1)]
+    return _matrixFilter(transmat, img)
+
+def _matrixFilter(matrix, img):
+    """Apply a color transform to a CIImage and return the filtered result"""
+
+    vectors = ("inputRVector", "inputGVector", "inputBVector", "inputAVector", "inputBiasVector")
+    opts = {k:CIVector.vectorWithX_Y_Z_W_(*v) for k,v in zip(vectors, matrix)}
+    opts[kCIInputImageKey] = img
+    remap = CIFilter.filterWithName_("CIColorMatrix")
+    for k,v in opts.items():
+        remap.setValue_forKey_(v, k)
+    return remap.valueForKey_("outputImage")
+
+### Effects objects ###
 
 class Frob(object):
     """A FoRmatting OBject encapsulates changes to the graphics context state.
@@ -278,44 +326,6 @@ class Shadow(object):
         self._nsShadow.setShadowOffset_((x,-y))
     offset = property(_get_offset, _set_offset)
 
-def _channelFilter(channel, img):
-    """Generate a greyscale image by isolating a single r/g/b/a channel"""
-
-    rgb = ('red', 'green', 'blue')
-    if channel=='alpha':
-        transmat = [(0, 0, 0, 1)] * 3
-        transmat += [ (0,0,0,0), (0,0,0,1) ]
-    elif channel in rgb:
-        rgb_row = [0,0,0]
-        rgb_row.insert(rgb.index(channel), 1.0)
-        transmat = [tuple(rgb_row)] * 3
-        transmat += [ (0,0,0,0), (0,0,0,1) ]
-    elif channel in ('black', 'white'):
-        transmat = [(.333, .333, .333, 0)] * 3
-        transmat += [ (0,0,0,0), (0,0,0,1) ]
-    return _matrixFilter(transmat, img)
-
-def _inversionFilter(identity, img):
-    """Conditionally turn black to white and up to down"""
-
-    # set up a matrix that's either identity or an r/g/b inversion
-    polarity = -1.0 if not identity else 1.0
-    bias = 0 if polarity>0 else 1
-    transmat = [(polarity, 0, 0, 0), (0, polarity, 0, 0), (0, 0, polarity, 0),
-                (0, 0, 0, 0), (bias, bias, bias, 1)]
-    return _matrixFilter(transmat, img)
-
-def _matrixFilter(matrix, img):
-    """Apply a color transform to a CIImage and return the filtered result"""
-
-    vectors = ("inputRVector", "inputGVector", "inputBVector", "inputAVector", "inputBiasVector")
-    opts = {k:CIVector.vectorWithX_Y_Z_W_(*v) for k,v in zip(vectors, matrix)}
-    opts[kCIInputImageKey] = img
-    remap = CIFilter.filterWithName_("CIColorMatrix")
-    for k,v in opts.items():
-        remap.setValue_forKey_(v, k)
-    return remap.valueForKey_("outputImage")
-
 class Mask(Frob):
     def __init__(self, stencil, invert=False, channel=None):
         from .bezier import Bezier
@@ -353,7 +363,8 @@ class Mask(Frob):
 
         elif hasattr(self, 'bmp'):
             # run the filter chain and render to a cg-image
-            greyscale = _inversionFilter(self.invert, _channelFilter(self.channel, self.bmp._ciImage))
+            singlechannel = ciFilter(self.channel, self.bmp._ciImage)
+            greyscale = ciFilter(self.invert, singlechannel)
             ci_ctx = CIContext.contextWithOptions_(None)
             maskRef = ci_ctx.createCGImage_fromRect_(greyscale, ((0,0), self.bmp.size))
 
