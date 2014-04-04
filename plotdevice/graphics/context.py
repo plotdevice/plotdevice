@@ -544,11 +544,9 @@ class Context(object):
     def shadow(self, *args, **kwargs):
         if args and None in args:
             self._effects = Effect(self._effects, shadow=None)
-        elif args or kwargs:
+        else:
             s = Shadow(*args, **kwargs)
             self._effects = Effect(self._effects, shadow=s)
-        else:
-            return self._effects.shadow
         return self._effects
 
     @contextmanager

@@ -9,6 +9,7 @@ from Quartz import *
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs
 from .colors import Color
+from .transform import Point
 
 _ctx = None
 __all__ = ("Effect", "Shadow", "Mask",)
@@ -232,7 +233,7 @@ class Shadow(object):
             for attr, val in zip(Shadow.kwargs, args):
                 kwargs.setdefault(attr, val)
 
-            self.color = Color(kwargs['color'])
+            self.color = Color(kwargs.get('color', ('#000', .75)))
             self.blur = kwargs.get('blur', 10 if self.color.a else 0)
             offset = kwargs.get('offset', self.blur)
             if isinstance(offset, (int,float,long)):
