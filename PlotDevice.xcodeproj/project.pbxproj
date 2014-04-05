@@ -55,7 +55,6 @@
 		2ABDB7741867D9970069EFC3 /* plotdevice in Copy plotdevice tool */ = {isa = PBXBuildFile; fileRef = 2ABDB7721867D9920069EFC3 /* plotdevice */; };
 		2ABDB7791867EB5B0069EFC3 /* app.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2ABDB7751867EB520069EFC3 /* app.py */; };
 		2ABDB77A1867EB5E0069EFC3 /* views.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2ABDB7761867EB520069EFC3 /* views.py */; };
-		2AC07C9F18E272E200B75879 /* css.json in Resources */ = {isa = PBXBuildFile; fileRef = 2AC07C9E18E272E200B75879 /* css.json */; };
 		2AC07CA618E2733900B75879 /* __init__.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 611CC4BE10BA8C1B00B55455 /* __init__.py */; };
 		2AC07CA718E2733900B75879 /* context.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2A29447C185E595000E9F650 /* context.py */; };
 		2AC07CA818E2733900B75879 /* grobs.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2A29447D185E595000E9F650 /* grobs.py */; };
@@ -64,7 +63,7 @@
 		2AC07CAB18E2733900B75879 /* transform.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2AC07CA218E272F500B75879 /* transform.py */; };
 		2AC07CAC18E2733900B75879 /* effects.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2AC07CA118E272F500B75879 /* effects.py */; };
 		2AC07CAD18E2733900B75879 /* colors.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2AC07CA018E272F500B75879 /* colors.py */; };
-		2AC07CAE18E2733900B75879 /* css.json in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2AC07C9E18E272E200B75879 /* css.json */; };
+		2AC07CB218EF840B00B75879 /* image.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2AC07CB018EF83FF00B75879 /* image.py */; };
 		2AC5188118636CAF007FB066 /* sandbox.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2AC5187F18636C9F007FB066 /* sandbox.py */; };
 		2AE5AD2B186236C400CCDD45 /* editor.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD291862366300CCDD45 /* editor.py */; };
 		2AE5AD2E1862387200CCDD45 /* widgets.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD2C1862386400CCDD45 /* widgets.py */; };
@@ -215,11 +214,11 @@
 				2AC07CA718E2733900B75879 /* context.py in Copy plotdevice.graphics */,
 				2AC07CA818E2733900B75879 /* grobs.py in Copy plotdevice.graphics */,
 				2AC07CA918E2733900B75879 /* bezier.py in Copy plotdevice.graphics */,
+				2AC07CB218EF840B00B75879 /* image.py in Copy plotdevice.graphics */,
 				2AC07CAA18E2733900B75879 /* typography.py in Copy plotdevice.graphics */,
 				2AC07CAB18E2733900B75879 /* transform.py in Copy plotdevice.graphics */,
 				2AC07CAC18E2733900B75879 /* effects.py in Copy plotdevice.graphics */,
 				2AC07CAD18E2733900B75879 /* colors.py in Copy plotdevice.graphics */,
-				2AC07CAE18E2733900B75879 /* css.json in Copy plotdevice.graphics */,
 			);
 			name = "Copy plotdevice.graphics";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -284,10 +283,10 @@
 		2ABDB7721867D9920069EFC3 /* plotdevice */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = plotdevice; path = etc/plotdevice; sourceTree = "<group>"; };
 		2ABDB7751867EB520069EFC3 /* app.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = app.py; sourceTree = "<group>"; };
 		2ABDB7761867EB520069EFC3 /* views.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = views.py; sourceTree = "<group>"; };
-		2AC07C9E18E272E200B75879 /* css.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = css.json; sourceTree = "<group>"; };
 		2AC07CA018E272F500B75879 /* colors.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = colors.py; sourceTree = "<group>"; };
 		2AC07CA118E272F500B75879 /* effects.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = effects.py; sourceTree = "<group>"; };
 		2AC07CA218E272F500B75879 /* transform.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = transform.py; sourceTree = "<group>"; };
+		2AC07CB018EF83FF00B75879 /* image.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = image.py; sourceTree = "<group>"; };
 		2AC5187F18636C9F007FB066 /* sandbox.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sandbox.py; sourceTree = "<group>"; };
 		2AD0A9B6186E552700D1F6DE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/PlotDeviceScript.xib; sourceTree = "<group>"; };
 		2AE5AD291862366300CCDD45 /* editor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = editor.py; sourceTree = "<group>"; };
@@ -505,11 +504,11 @@
 				2A29447C185E595000E9F650 /* context.py */,
 				2A29447D185E595000E9F650 /* grobs.py */,
 				611CC4C010BA8C1B00B55455 /* bezier.py */,
+				2AC07CB018EF83FF00B75879 /* image.py */,
 				2AEE846018B96C2000CF91D4 /* typography.py */,
 				2AC07CA218E272F500B75879 /* transform.py */,
 				2AC07CA118E272F500B75879 /* effects.py */,
 				2AC07CA018E272F500B75879 /* colors.py */,
-				2AC07C9E18E272E200B75879 /* css.json */,
 			);
 			path = graphics;
 			sourceTree = "<group>";
@@ -580,7 +579,8 @@
 			buildConfigurationList = C05733C708A9546B00998B17 /* Build configuration list for PBXNativeTarget "PlotDevice" */;
 			buildPhases = (
 				8D15AC2B0486D014006FF6A4 /* Resources */,
-				2A15C45318A45A7B006BDFF0 /* update web ui (rebuild ace) */,
+				2AC07CAF18EF821600B75879 /* Copy Module Resources */,
+				2A15C45318A45A7B006BDFF0 /* Update web ui (rebuild ace) */,
 				2A15C43718A20929006BDFF0 /* Copy web ui assets */,
 				2A66ECEA18A99303002903DE /* Copy web ui scripts */,
 				611CC53110BA8E0000B55455 /* Copy plotdevice root */,
@@ -647,7 +647,6 @@
 				611CC5A010BA908C00B55455 /* PlotDeviceDocument.xib in Resources */,
 				611CC5A810BA919A00B55455 /* PlotDevicePreferences.xib in Resources */,
 				611CC68010BAA08300B55455 /* MainMenu.xib in Resources */,
-				2AC07C9F18E272E200B75879 /* css.json in Resources */,
 				2A3BD55E189C653600748EA3 /* PlotDeviceFile-nb.icns in Resources */,
 				611CC68710BAA0A600B55455 /* AskString.xib in Resources */,
 				2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */,
@@ -660,19 +659,33 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		2A15C45318A45A7B006BDFF0 /* update web ui (rebuild ace) */ = {
+		2A15C45318A45A7B006BDFF0 /* Update web ui (rebuild ace) */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "update web ui (rebuild ace)";
+			name = "Update web ui (rebuild ace)";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "cd related/ace\n#make install";
+		};
+		2AC07CAF18EF821600B75879 /* Copy Module Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Module Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "RSRC_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/plotdevice/rsrc\"\nmkdir -p \"$RSRC_DIR\"\ncp -p Resources/colors.json \"$RSRC_DIR\"";
 		};
 		6156AAC410BC110E00C3CE99 /* Copy External Libraries */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -687,7 +700,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "EXT_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/plotdevice/lib\"\nmkdir -p $EXT_DIR\ncp -R -p build/ext/* $EXT_DIR\n";
+			shellScript = "EXT_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/plotdevice/lib\"\nmkdir -p $EXT_DIR\ncp -R -p build/ext/* $EXT_DIR\n\n";
 		};
 		61DB840F10BEABCF003F73B9 /* Make Dist */ = {
 			isa = PBXShellScriptBuildPhase;

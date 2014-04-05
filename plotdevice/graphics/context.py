@@ -7,6 +7,7 @@ from .bezier import *
 from .grobs import *
 from .colors import *
 from .transform import *
+from .image import Image
 from .effects import Effect, Shadow, Mask
 from . import grobs
 

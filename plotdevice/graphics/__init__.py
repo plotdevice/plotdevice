@@ -1,9 +1,9 @@
 # encoding: utf-8
 from .context import Context, Canvas
-from . import grobs, effects, colors, typography, bezier, transform
+from . import grobs, effects, colors, typography, bezier, image, transform
 
 # pull every submodule's __all__ into our own
-modules = grobs, effects, colors, typography, bezier, transform
+modules = grobs, effects, colors, typography, bezier, image, transform
 ns = {"Context":Context}
 for module in modules:
   ns.update( (a,getattr(module,a)) for a in module.__all__  )
