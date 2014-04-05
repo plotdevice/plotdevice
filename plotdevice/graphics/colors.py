@@ -8,8 +8,7 @@ from Foundation import *
 from Quartz import *
 
 from plotdevice import DeviceError
-from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
-
+from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path
 _ctx = None
 __all__ = ("RGB", "HSB", "CMYK", "GREY",
            "Color", "Pattern", "Gradient",)
@@ -20,7 +19,7 @@ HSB = "hsb"
 CMYK = "cmyk"
 GREY = "grey"
 
-_CSS_COLORS = json.load(file('%s/css.json'%os.path.dirname(__file__)))
+_CSS_COLORS = json.load(file(rsrc_path('colors.json')))
 
 class Color(object):
 

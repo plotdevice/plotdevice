@@ -5,6 +5,7 @@ import csv
 from codecs import open
 from collections import OrderedDict, defaultdict
 from AppKit import NSFontManager, NSFont, NSMacOSRomanStringEncoding, NSItalicFontMask
+from os.path import abspath, dirname, exists, join
 from random import choice, shuffle
 from plotdevice import DeviceError
 
@@ -279,3 +280,23 @@ def read(pth, format=None, encoding='utf-8', cols=None):
     else:
         with open(pth, 'Urb', encoding=encoding) as f:
             return f.read()
+
+### module data dir ###
+
+def rsrc_path(resource=None):
+    """Return absolute path of the rsrc directory (or a file within it)"""
+    module_root = abspath(dirname(dirname(__file__)))
+    rsrc_root = join(module_root, 'rsrc')
+
+    if not exists(rsrc_root):
+        # hack to run in-place in sdist
+        from glob import glob
+        for pth in glob(join(module_root, '../build/lib/plotdevice/rsrc')):
+            rsrc_root = abspath(pth)
+            break
+        else:
+            notfound = "Couldn't locate resources directory (try running `python setup.py build` before running from the source dist)."
+            raise RuntimeError(notfound)
+    if resource:
+        return join(rsrc_root, resource)
+    return rsrc_root
