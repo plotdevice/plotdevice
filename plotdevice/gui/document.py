@@ -16,7 +16,7 @@ from plotdevice.gui.widgets import DashboardController, ExportSheet
 from plotdevice.gui.views import FullscreenWindow, FullscreenView
 from plotdevice.gui import set_timeout
 from plotdevice.run import Sandbox
-from plotdevice import util, graphics
+from plotdevice import util
 
 NSEventGestureAxisVertical = 2
 

@@ -1,19 +1,18 @@
+# encoding: utf-8
+
 import types
 from AppKit import *
 from contextlib import contextmanager, nested
 
-from .typography import *
-from .bezier import *
 from .grobs import *
-from .colors import *
-from .transform import *
-from .image import Image
-from .effects import Effect, Shadow, Mask
 from . import grobs
 
-from ..util.foundry import sanitized, font_encoding, family_names, family_name, family_members
-from ..util import _copy_attr, _copy_attrs, _flatten
-from ..lib import geometry
+from .util.foundry import sanitized, font_encoding, family_names, family_name, family_members
+from .util import _copy_attr, _copy_attrs, _flatten
+from .lib import geometry
+
+# default size for Canvas and GraphicsView objects
+DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 
@@ -43,8 +42,7 @@ class Context(object):
         self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_') or a.endswith('_')))
 
     def _activate(self):
-        from . import activate
-        activate(self)
+        grobs.bind(self)
 
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context.state_vars]
@@ -943,3 +941,7 @@ class Canvas(Grob):
         data = self._getImageData(format)
         fname = NSString.stringByExpandingTildeInPath(fname)
         data.writeToFile_atomically_(fname, False)
+
+# import all of the grob globals into this namespace to make things easy for sandbox.py
+globals().update(grobs.ns)
+__all__ = ['Context'] + grobs.ns.keys()

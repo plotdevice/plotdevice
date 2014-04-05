@@ -11,6 +11,7 @@ from ..util import _copy_attr, _copy_attrs
 from .colors import Color
 from .transform import Point
 from .image import ciFilter
+from . import _cg_context, _cg_layer, _cg_port
 
 _ctx = None
 __all__ = ("Effect", "Shadow", "Mask",)
@@ -59,25 +60,6 @@ BLEND_MODES = """    normal, clear, copy, xor, multiply, screen,
     source-in, source-out, source-atop, plusdarker, pluslighter
     destination-over, destination-in, destination-out, destination-atop"""
 
-
-### graphics context mgmt ###
-
-@contextmanager
-def _cg_context():
-    port = NSGraphicsContext.currentContext().graphicsPort()
-    CGContextSaveGState(port)
-    yield port
-    CGContextRestoreGState(port)
-
-@contextmanager
-def _cg_layer():
-    # CGContextBeginTransparencyLayerWithRect(_cg_port(), <bounds>, None)
-    CGContextBeginTransparencyLayer(_cg_port(), None)
-    yield
-    CGContextEndTransparencyLayer(_cg_port())
-
-def _cg_port():
-    return NSGraphicsContext.currentContext().graphicsPort()
 
 ### Effects objects ###
 

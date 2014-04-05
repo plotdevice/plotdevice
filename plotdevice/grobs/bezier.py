@@ -6,9 +6,9 @@ from Quartz import *
 from math import pi, sin, cos
 
 from plotdevice import DeviceError
-from .effects import _cg_context
+from . import _cg_context
+from .atoms import INHERIT, PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .colors import Color, Gradient, Pattern
-from .grobs import INHERIT, PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .transform import CENTER, Transform, Region, Size, Point
 from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten
 from ..lib import pathmatics, geometry

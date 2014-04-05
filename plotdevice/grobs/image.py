@@ -12,17 +12,12 @@ from Quartz import *
 from plotdevice import DeviceError
 from ..util import _copy_attrs
 from .transform import Region, Size, Point, Transform, CENTER
-from .grobs import TransformMixin, EffectsMixin, Grob
+from .atoms import TransformMixin, EffectsMixin, Grob
+from . import _ns_context
 
 _ctx = None
 __all__ = ("Image",)
 
-@contextmanager
-def _ns_context():
-    ctx = NSGraphicsContext.currentContext()
-    ctx.saveGraphicsState()
-    yield ctx
-    ctx.restoreGraphicsState()
 
 ### The bitmap/vector image-container (a.k.a. NSImage proxy) ###
 

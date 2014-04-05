@@ -1,30 +1,22 @@
 # encoding: utf-8
-import os
-import re
-import json
-import warnings
-import math
-from contextlib import contextmanager
 from AppKit import *
 from Foundation import *
 from Quartz import *
 
 from plotdevice import DeviceError
-from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
-from ..lib import geometry
+from ..util import _copy_attrs, _flatten, trim_zeroes
 from .colors import Color
-from .transform import Region, Size, Point, Transform, CENTER, CORNER
+from .transform import Transform
 
 _ctx = None
 __all__ = [
-        "DEFAULT_WIDTH", "DEFAULT_HEIGHT",
         "KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT", "KEY_BACKSPACE", "KEY_TAB", "KEY_ESC",
         "COPY", "LIVE", "OFF",
         "Variable", "NUMBER", "TEXT", "BOOLEAN","BUTTON",
         "Grob",
         ]
 
-DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
+# an ‘undefined’ value for state vars
 INHERIT = "inherit"
 
 # plotstyle mode
@@ -48,13 +40,7 @@ KEY_TAB = 48
 KEY_ESC = 53
 
 
-def _save():
-    NSGraphicsContext.currentContext().saveGraphicsState()
-
-def _restore():
-    NSGraphicsContext.currentContext().restoreGraphicsState()
-
-### Grobs & mixins to inherit state from the context ###
+### Graphic object inheritence hierarchy w/ mixins to merge local and context state ###
 
 class Grob(object):
     """A GRaphic OBject is the base class for all drawing primitives."""
@@ -95,6 +81,7 @@ class EffectsMixin(Grob):
     stateAttrs = ('_effects',)
 
     def __init__(self, **kwargs):
+        from .effects import Effect
         super(EffectsMixin, self).__init__(**kwargs)
         self._effects = INHERIT # effects from the context
         self._solo_fx = {}      # effect overrides from inline kwargs
@@ -317,10 +304,3 @@ class Variable(object):
     def __repr__(self):
         return "Variable(name=%s, type=%s, default=%s, min=%s, max=%s, value=%s)" % (self.name, self.type, self.default, self.min, self.max, self.value)
 
-
-def _test():
-    import doctest, cocoa
-    return doctest.testmod(cocoa)
-
-if __name__=='__main__':
-    _test()

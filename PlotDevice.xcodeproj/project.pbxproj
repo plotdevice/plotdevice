@@ -55,15 +55,15 @@
 		2ABDB7741867D9970069EFC3 /* plotdevice in Copy plotdevice tool */ = {isa = PBXBuildFile; fileRef = 2ABDB7721867D9920069EFC3 /* plotdevice */; };
 		2ABDB7791867EB5B0069EFC3 /* app.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2ABDB7751867EB520069EFC3 /* app.py */; };
 		2ABDB77A1867EB5E0069EFC3 /* views.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2ABDB7761867EB520069EFC3 /* views.py */; };
-		2AC07CA618E2733900B75879 /* __init__.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 611CC4BE10BA8C1B00B55455 /* __init__.py */; };
-		2AC07CA718E2733900B75879 /* context.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2A29447C185E595000E9F650 /* context.py */; };
-		2AC07CA818E2733900B75879 /* grobs.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2A29447D185E595000E9F650 /* grobs.py */; };
-		2AC07CA918E2733900B75879 /* bezier.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 611CC4C010BA8C1B00B55455 /* bezier.py */; };
-		2AC07CAA18E2733900B75879 /* typography.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2AEE846018B96C2000CF91D4 /* typography.py */; };
-		2AC07CAB18E2733900B75879 /* transform.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2AC07CA218E272F500B75879 /* transform.py */; };
-		2AC07CAC18E2733900B75879 /* effects.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2AC07CA118E272F500B75879 /* effects.py */; };
-		2AC07CAD18E2733900B75879 /* colors.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2AC07CA018E272F500B75879 /* colors.py */; };
-		2AC07CB218EF840B00B75879 /* image.py in Copy plotdevice.graphics */ = {isa = PBXBuildFile; fileRef = 2AC07CB018EF83FF00B75879 /* image.py */; };
+		2AC07CDA18EF8ED500B75879 /* graphics.py in Copy plotdevice root */ = {isa = PBXBuildFile; fileRef = 2AC07CD818EF8EC500B75879 /* graphics.py */; };
+		2AC07CDB18EF8F4900B75879 /* __init__.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CB618EF8E7D00B75879 /* __init__.py */; };
+		2AC07CDC18EF8F4900B75879 /* bezier.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CB818EF8E7D00B75879 /* bezier.py */; };
+		2AC07CDD18EF8F4900B75879 /* colors.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CBA18EF8E7D00B75879 /* colors.py */; };
+		2AC07CDE18EF8F4900B75879 /* effects.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CBD18EF8E7D00B75879 /* effects.py */; };
+		2AC07CDF18EF8F4900B75879 /* image.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CC118EF8E7D00B75879 /* image.py */; };
+		2AC07CE018EF8F4900B75879 /* transform.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CC318EF8E7D00B75879 /* transform.py */; };
+		2AC07CE118EF8F4900B75879 /* typography.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CC518EF8E7D00B75879 /* typography.py */; };
+		2AC07CE418EF9B3400B75879 /* atoms.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CE218EF9B2400B75879 /* atoms.py */; };
 		2AC5188118636CAF007FB066 /* sandbox.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2AC5187F18636C9F007FB066 /* sandbox.py */; };
 		2AE5AD2B186236C400CCDD45 /* editor.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD291862366300CCDD45 /* editor.py */; };
 		2AE5AD2E1862387200CCDD45 /* widgets.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD2C1862386400CCDD45 /* widgets.py */; };
@@ -167,6 +167,7 @@
 			dstSubfolderSpec = 7;
 			files = (
 				611CC52F10BA8DDF00B55455 /* __init__.py in Copy plotdevice root */,
+				2AC07CDA18EF8ED500B75879 /* graphics.py in Copy plotdevice root */,
 			);
 			name = "Copy plotdevice root";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -204,23 +205,22 @@
 			name = "Copy plotdevice.util";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		611CC59710BA901100B55455 /* Copy plotdevice.graphics */ = {
+		611CC59710BA901100B55455 /* Copy plotdevice.grobs */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = python/plotdevice/graphics;
+			dstPath = python/plotdevice/grobs;
 			dstSubfolderSpec = 7;
 			files = (
-				2AC07CA618E2733900B75879 /* __init__.py in Copy plotdevice.graphics */,
-				2AC07CA718E2733900B75879 /* context.py in Copy plotdevice.graphics */,
-				2AC07CA818E2733900B75879 /* grobs.py in Copy plotdevice.graphics */,
-				2AC07CA918E2733900B75879 /* bezier.py in Copy plotdevice.graphics */,
-				2AC07CB218EF840B00B75879 /* image.py in Copy plotdevice.graphics */,
-				2AC07CAA18E2733900B75879 /* typography.py in Copy plotdevice.graphics */,
-				2AC07CAB18E2733900B75879 /* transform.py in Copy plotdevice.graphics */,
-				2AC07CAC18E2733900B75879 /* effects.py in Copy plotdevice.graphics */,
-				2AC07CAD18E2733900B75879 /* colors.py in Copy plotdevice.graphics */,
+				2AC07CDB18EF8F4900B75879 /* __init__.py in Copy plotdevice.grobs */,
+				2AC07CE418EF9B3400B75879 /* atoms.py in Copy plotdevice.grobs */,
+				2AC07CDC18EF8F4900B75879 /* bezier.py in Copy plotdevice.grobs */,
+				2AC07CDD18EF8F4900B75879 /* colors.py in Copy plotdevice.grobs */,
+				2AC07CDE18EF8F4900B75879 /* effects.py in Copy plotdevice.grobs */,
+				2AC07CDF18EF8F4900B75879 /* image.py in Copy plotdevice.grobs */,
+				2AC07CE018EF8F4900B75879 /* transform.py in Copy plotdevice.grobs */,
+				2AC07CE118EF8F4900B75879 /* typography.py in Copy plotdevice.grobs */,
 			);
-			name = "Copy plotdevice.graphics";
+			name = "Copy plotdevice.grobs";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		611CC59810BA901100B55455 /* Copy plotdevice.lib */ = {
@@ -254,8 +254,6 @@
 		2A294464185E575F00E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		2A294467185E575F00E9F650 /* document.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = document.py; sourceTree = "<group>"; };
 		2A294468185E575F00E9F650 /* preferences.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = preferences.py; sourceTree = "<group>"; };
-		2A29447C185E595000E9F650 /* context.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = context.py; sourceTree = "<group>"; };
-		2A29447D185E595000E9F650 /* grobs.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = grobs.py; sourceTree = "<group>"; };
 		2A32957218C59D0A00EEDD1C /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		2A32957418C59D0A00EEDD1C /* fsevents.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = fsevents.py; sourceTree = "<group>"; };
 		2A32957518C59D0A00EEDD1C /* geometry.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = geometry.py; sourceTree = "<group>"; };
@@ -283,10 +281,15 @@
 		2ABDB7721867D9920069EFC3 /* plotdevice */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = plotdevice; path = etc/plotdevice; sourceTree = "<group>"; };
 		2ABDB7751867EB520069EFC3 /* app.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = app.py; sourceTree = "<group>"; };
 		2ABDB7761867EB520069EFC3 /* views.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = views.py; sourceTree = "<group>"; };
-		2AC07CA018E272F500B75879 /* colors.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = colors.py; sourceTree = "<group>"; };
-		2AC07CA118E272F500B75879 /* effects.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = effects.py; sourceTree = "<group>"; };
-		2AC07CA218E272F500B75879 /* transform.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = transform.py; sourceTree = "<group>"; };
-		2AC07CB018EF83FF00B75879 /* image.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = image.py; sourceTree = "<group>"; };
+		2AC07CB618EF8E7D00B75879 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
+		2AC07CB818EF8E7D00B75879 /* bezier.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = bezier.py; sourceTree = "<group>"; };
+		2AC07CBA18EF8E7D00B75879 /* colors.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = colors.py; sourceTree = "<group>"; };
+		2AC07CBD18EF8E7D00B75879 /* effects.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = effects.py; sourceTree = "<group>"; };
+		2AC07CC118EF8E7D00B75879 /* image.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = image.py; sourceTree = "<group>"; };
+		2AC07CC318EF8E7D00B75879 /* transform.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = transform.py; sourceTree = "<group>"; };
+		2AC07CC518EF8E7D00B75879 /* typography.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = typography.py; sourceTree = "<group>"; };
+		2AC07CD818EF8EC500B75879 /* graphics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = graphics.py; sourceTree = "<group>"; };
+		2AC07CE218EF9B2400B75879 /* atoms.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = atoms.py; sourceTree = "<group>"; };
 		2AC5187F18636C9F007FB066 /* sandbox.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sandbox.py; sourceTree = "<group>"; };
 		2AD0A9B6186E552700D1F6DE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/PlotDeviceScript.xib; sourceTree = "<group>"; };
 		2AE5AD291862366300CCDD45 /* editor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = editor.py; sourceTree = "<group>"; };
@@ -294,7 +297,6 @@
 		2AE5AD7E186249E100CCDD45 /* listener.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = listener.py; sourceTree = "<group>"; };
 		2AEE843A18B3285600CF91D4 /* foundry.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = foundry.py; sourceTree = "<group>"; };
 		2AEE843D18B5603900CF91D4 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
-		2AEE846018B96C2000CF91D4 /* typography.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = typography.py; sourceTree = "<group>"; };
 		2AEE846318BEC25B00CF91D4 /* iglob.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iglob.py; sourceTree = "<group>"; };
 		611CC48210BA8B9E00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = English; path = English.lproj/Credits.rtf; sourceTree = "<group>"; };
 		611CC48A10BA8B9E00B55455 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -303,8 +305,6 @@
 		611CC4AF10BA8C1B00B55455 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		611CC4BB10BA8C1B00B55455 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		611CC4BC10BA8C1B00B55455 /* pathmatics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = pathmatics.py; sourceTree = "<group>"; };
-		611CC4BE10BA8C1B00B55455 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		611CC4C010BA8C1B00B55455 /* bezier.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = bezier.py; sourceTree = "<group>"; };
 		611CC4D710BA8C1B00B55455 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		611CC4D910BA8C1B00B55455 /* kgp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = kgp.py; sourceTree = "<group>"; };
 		611CC4DA10BA8C1B00B55455 /* ottobot.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ottobot.py; sourceTree = "<group>"; };
@@ -474,13 +474,29 @@
 			name = js;
 			sourceTree = "<group>";
 		};
+		2AC07CB518EF8E7D00B75879 /* grobs */ = {
+			isa = PBXGroup;
+			children = (
+				2AC07CB618EF8E7D00B75879 /* __init__.py */,
+				2AC07CE218EF9B2400B75879 /* atoms.py */,
+				2AC07CB818EF8E7D00B75879 /* bezier.py */,
+				2AC07CBA18EF8E7D00B75879 /* colors.py */,
+				2AC07CBD18EF8E7D00B75879 /* effects.py */,
+				2AC07CC118EF8E7D00B75879 /* image.py */,
+				2AC07CC318EF8E7D00B75879 /* transform.py */,
+				2AC07CC518EF8E7D00B75879 /* typography.py */,
+			);
+			path = grobs;
+			sourceTree = "<group>";
+		};
 		611CC4AE10BA8C1B00B55455 /* plotdevice */ = {
 			isa = PBXGroup;
 			children = (
 				611CC4AF10BA8C1B00B55455 /* __init__.py */,
+				2AC07CD818EF8EC500B75879 /* graphics.py */,
+				2AC07CB518EF8E7D00B75879 /* grobs */,
 				2A32957118C59D0A00EEDD1C /* lib */,
 				611CC4BA10BA8C1B00B55455 /* geo */,
-				611CC4BD10BA8C1B00B55455 /* graphics */,
 				611CC4C410BA8C1B00B55455 /* gui */,
 				2A294457185E539400E9F650 /* run */,
 				611CC4D610BA8C1B00B55455 /* util */,
@@ -495,22 +511,6 @@
 				611CC4BC10BA8C1B00B55455 /* pathmatics.py */,
 			);
 			path = geo;
-			sourceTree = "<group>";
-		};
-		611CC4BD10BA8C1B00B55455 /* graphics */ = {
-			isa = PBXGroup;
-			children = (
-				611CC4BE10BA8C1B00B55455 /* __init__.py */,
-				2A29447C185E595000E9F650 /* context.py */,
-				2A29447D185E595000E9F650 /* grobs.py */,
-				611CC4C010BA8C1B00B55455 /* bezier.py */,
-				2AC07CB018EF83FF00B75879 /* image.py */,
-				2AEE846018B96C2000CF91D4 /* typography.py */,
-				2AC07CA218E272F500B75879 /* transform.py */,
-				2AC07CA118E272F500B75879 /* effects.py */,
-				2AC07CA018E272F500B75879 /* colors.py */,
-			);
-			path = graphics;
 			sourceTree = "<group>";
 		};
 		611CC4C410BA8C1B00B55455 /* gui */ = {
@@ -588,7 +588,7 @@
 				611CC55010BA8E4900B55455 /* Copy plotdevice.gui */,
 				611CC59610BA901100B55455 /* Copy plotdevice.util */,
 				2A29445E185E54C200E9F650 /* Copy plotdevice.run */,
-				611CC59710BA901100B55455 /* Copy plotdevice.graphics */,
+				611CC59710BA901100B55455 /* Copy plotdevice.grobs */,
 				8D15AC300486D014006FF6A4 /* Sources */,
 				8D15AC330486D014006FF6A4 /* Frameworks */,
 				6156AAC410BC110E00C3CE99 /* Copy External Libraries */,

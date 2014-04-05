@@ -186,10 +186,7 @@ class Sandbox(object):
         # Clear the canvas
         self.canvas.clear()
 
-        # Reset the context, but only if this is the beginning of a run. Otherwise
-        # settings should persist to allow unchanging settings to be placed in setup()
-        # if method is None:
-        self.context._activate()
+        # Reset the context (and bind the Grob objects as a side-effect)
         self.context._resetContext()
 
         # Initalize the magicvar
