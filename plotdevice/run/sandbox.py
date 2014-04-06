@@ -7,7 +7,7 @@ from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
 from plotdevice.run import MovieExportSession, ImageExportSession, stacktrace, coredump
-from plotdevice import util, graphics, DeviceError, __MAGIC as MAGICVAR
+from plotdevice import util, graphics, grobs, DeviceError, __MAGIC as MAGICVAR
 
 __all__ = ['Sandbox']
 
@@ -60,8 +60,9 @@ class Sandbox(object):
         self.delegate = delegate or Delegate()
 
         # create a clean env to use as a template during runs
-        for module in graphics, util, self.context:
+        for module in util, self.context:
             self._env.update( (a,getattr(module,a)) for a in module.__all__  )
+        self._env.update(grobs.ns)
         self._env["_ctx"] = self.context
         self._meta = Metadata(args=[], virtualenv=None, first=1, next=1, last=None, running=False, console=None, loop=False)
 

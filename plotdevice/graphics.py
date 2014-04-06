@@ -1,15 +1,15 @@
 # encoding: utf-8
-
 import types
 from AppKit import *
 from contextlib import contextmanager, nested
 
-from .grobs import *
-from . import grobs
-
 from .util.foundry import sanitized, font_encoding, family_names, family_name, family_members
 from .util import _copy_attr, _copy_attrs, _flatten
 from .lib import geometry
+from .grobs import *
+from . import grobs
+
+__all__ = ('Context', 'Canvas', 'DEFAULT_WIDTH', 'DEFAULT_HEIGHT')
 
 # default size for Canvas and GraphicsView objects
 DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
@@ -942,6 +942,3 @@ class Canvas(Grob):
         fname = NSString.stringByExpandingTildeInPath(fname)
         data.writeToFile_atomically_(fname, False)
 
-# import all of the grob globals into this namespace to make things easy for sandbox.py
-globals().update(grobs.ns)
-__all__ = ['Context'] + grobs.ns.keys()

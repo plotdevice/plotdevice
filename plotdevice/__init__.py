@@ -37,14 +37,15 @@ else:
     # if imported from an external module, set up a drawing environment in __all__.
     # (note that since this happens at the module level, the canvas will be shared
     # among all the files in a given process that `import *`).
-    from plotdevice import graphics, util
+    from . import graphics, grobs, util
 
     # create a global canvas and graphics context for the draw functions to operate on
     context = graphics.Context()
     ns = context._ns
 
     # set up the standard plotdevice global namespace, all tied to the module-level context/canvas
-    for module in graphics, util, context:
+    for module in util, context:
         ns.update( (a,getattr(module,a)) for a in module.__all__  )
+    ns.update(grobs.ns)
     globals().update(ns)
     __all__ = ns.keys()
