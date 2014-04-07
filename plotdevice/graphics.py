@@ -515,7 +515,10 @@ class Context(object):
                 rollback = eff._rollback
                 break
         else:
-            nop = "`with layer(...)` accepts alpha(), blend(), or shadow() calls as arguments"
+            if fx:
+              nop = "`with layer(...)` accepts alpha(), blend(), or shadow() calls as arguments"
+              raise DeviceError(nop)
+            rollback = Effect(self._effects)
         context_mgrs = [mgr for mgr in fx if hasattr(mgr, '__enter__')]
 
         self.canvas.push(Effect(self._effects))
