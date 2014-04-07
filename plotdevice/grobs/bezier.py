@@ -354,15 +354,17 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def _screen_transform(self):
         """Returns the Transform object that will be used to draw the path."""
 
-        trans = self._transform.copy()
         if (self.transformmode == CENTER):
             # if center-based, sandwich transform with a scoot out/in to the origin
             dx, dy = self.center
             nudge = Transform()
             nudge.translate(-dx, -dy)
-            trans.prepend(nudge)
-            trans.append(nudge.inverse)
-        return trans
+            xf = self.transform.copy()
+            xf.prepend(nudge)
+            xf.append(nudge.inverse)
+            return xf
+        else:
+            return self.transform
 
     @property
     def cgPath(self):

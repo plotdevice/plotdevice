@@ -164,7 +164,7 @@ class Image(EffectsMixin, TransformMixin, Grob):
 
         xf.translate(self.x, self.y) # set the position before applying transforms
         xf.prepend(nudge)            # nudge the image to its center (or not)
-        xf.prepend(self._transform)  # add context's CTM.
+        xf.prepend(self.transform)   # add context's CTM.
         xf.prepend(nudge.inverse)    # Move back to the real origin.
         xf.scale(factor)             # scale to fit size constraints (if any)
         return xf
