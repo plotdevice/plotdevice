@@ -48,7 +48,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
     def __init__(self, path=None, immediate=False, **kwargs):
         super(Bezier, self).__init__(**kwargs)
-        self._segment_cache = None
+        self._segment_cache = {}
         self._finished = False
         self._fulcrum = None
 
@@ -117,22 +117,18 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     ### Path methods ###
 
     def moveto(self, x, y):
-        self._segment_cache = None
         self._nsBezierPath.moveToPoint_( (x, y) )
 
     def lineto(self, x, y):
-        self._segment_cache = None
         if self._nsBezierPath.elementCount()==0:
             # use an implicit 0,0 origin if path doesn't have a prior moveto
             self._nsBezierPath.moveToPoint_( (0, 0) )
         self._nsBezierPath.lineToPoint_( (x, y) )
 
     def curveto(self, x1, y1, x2, y2, x3, y3):
-        self._segment_cache = None
         self._nsBezierPath.curveToPoint_controlPoint1_controlPoint2_( (x3, y3), (x1, y1), (x2, y2) )
 
     def arcto(self, x, y, radius=1.0):
-        self._segment_cache = None
 
         # create a unitary semicircle...
         k = 0.5522847498 / 2.0
@@ -153,7 +149,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         self._nsBezierPath.appendBezierPath_(p)
 
     def closepath(self):
-        self._segment_cache = None
         self._nsBezierPath.closePath()
 
     @property
@@ -178,7 +173,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     ### Basic shapes (origin + size) ###
 
     def rect(self, x, y, width, height, radius=None):
-        self._segment_cache = None
         if radius is None:
             self._nsBezierPath.appendBezierPathWithRect_( ((x, y), (width, height)) )
         else:
@@ -193,7 +187,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         # range = None:      draw a full ellipse
         # range = 180:       draws a semicircle
         # range = (90, 180): draws a quadrant in the lower left
-        self._segment_cache = None
         if rng is None:
             self._nsBezierPath.appendBezierPathWithOvalInRect_( ((x, y), (width, height)) )
         else:
@@ -222,7 +215,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         # arc =  1: clockwise perfect-circle arc connetcting points
         # arc = -1: counterclockwise perfect-circle arc
         # abs(arc) > 1: increasingly distended cw/ccw arc connecting points
-        self._segment_cache = None
         if not arc:
             self._nsBezierPath.moveToPoint_( (x1, y1) )
             self._nsBezierPath.lineToPoint_( (x2, y2) )
@@ -233,7 +225,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     ### Radial shapes (center + radius) ###
 
     def poly(self, x, y, radius, sides=3):
-        self._segment_cache = None
         if sides < 3:
             badpoly = 'polygons must have at least 3 points'
             raise DeviceError(badpoly)
@@ -251,7 +242,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         self._fulcrum = Point(x,y)
 
     def arc(self, x, y, r, rng=None, ccw=False, close=False):
-        self._segment_cache = None
         if not rng:
             self.oval(x-r, y-r, 2*r, 2*r)
         else:
@@ -313,7 +303,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             self.lineto(x-width, y+width*head)
             self.lineto(x-width*(1-head), y)
             self.lineto(x, y)
-
+        self._fulcrum = Point(x,y)
 
     ### List methods ###
 
@@ -329,7 +319,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         return self._nsBezierPath.elementCount()
 
     def extend(self, pathElements):
-        self._segment_cache = None
         for el in pathElements:
             if isinstance(el, (list, tuple)):
                 x, y = el
@@ -345,7 +334,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 raise DeviceError(wrongtype)
 
     def append(self, el):
-        self._segment_cache = None
         if el.cmd == MOVETO:
             self.moveto(el.x, el.y)
         elif el.cmd == LINETO:
@@ -471,9 +459,10 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
     def segmentlengths(self, relative=False, n=10):
         if relative: # Use the opportunity to store the segment cache.
-            if self._segment_cache is None:
-                self._segment_cache = pathmatics.segment_lengths(self, relative=True, n=n)
-            return self._segment_cache
+            key = (len(self), self.bounds)
+            if key not in self._segment_cache:
+                self._segment_cache = {key:pathmatics.segment_lengths(self, relative=True, n=n)}
+            return self._segment_cache[key]
         else:
             return pathmatics.segment_lengths(self, relative=False, n=n)
 
@@ -503,7 +492,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
     def addpoint(self, t):
         self._nsBezierPath = pathmatics.insert_point(self, t)._nsBezierPath
-        self._segment_cache = None
 
     ### Clipping operations ###
 
