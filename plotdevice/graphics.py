@@ -160,7 +160,8 @@ class Context(object):
 
     ### Primitives ###
 
-    def rect(self, x, y, width, height, radius=None, roundness=0.0, draw=True, **kwargs):
+    def rect(self, x, y, width, height, radius=None, roundness=0.0, plot=True, **kwargs):
+        draw = kwargs.pop('draw', plot)
         Bezier.validate(kwargs)
         if roundness > 0:
             # support the pre-10.5 roundrect behavior via the roundness arg
@@ -184,7 +185,8 @@ class Context(object):
             p.draw()
         return p
 
-    def oval(self, x, y, width, height, range=None, ccw=False, close=False, draw=True, **kwargs):
+    def oval(self, x, y, width, height, range=None, ccw=False, close=False, plot=True, **kwargs):
+        draw = kwargs.pop('draw', plot)
         Bezier.validate(kwargs)
         path = Bezier(**kwargs)
         path.oval(x, y, width, height, range, ccw=ccw, close=close)
@@ -195,7 +197,8 @@ class Context(object):
 
     ellipse = oval
 
-    def line(self, x1, y1, x2, y2, arc=0, draw=True, **kwargs):
+    def line(self, x1, y1, x2, y2, arc=0, plot=True, **kwargs):
+        draw = kwargs.pop('draw', plot)
         if self._path is None:
             Bezier.validate(kwargs)
             p = Bezier(**kwargs)
@@ -209,7 +212,8 @@ class Context(object):
             p.line(x1, y1, x2, y2)
         return p
 
-    def poly(self, x, y, radius, sides=3, draw=True, **kwargs):
+    def poly(self, x, y, radius, sides=3, plot=True, **kwargs):
+        draw = kwargs.pop('draw', plot)
         Bezier.validate(kwargs)
         p = Bezier(**kwargs)
         p.poly(x, y, radius, sides)
@@ -217,7 +221,8 @@ class Context(object):
           p.draw()
         return p
 
-    def arc(self, x, y, radius, range=None, ccw=False, close=False, draw=True, **kwargs):
+    def arc(self, x, y, radius, range=None, ccw=False, close=False, plot=True, **kwargs):
+        draw = kwargs.pop('draw', plot)
         Bezier.validate(kwargs)
         p = Bezier(**kwargs)
         p.arc(x, y, radius, range, ccw=ccw, close=close)
@@ -225,7 +230,8 @@ class Context(object):
           p.draw()
         return p
 
-    def star(self, startx, starty, points=20, outer=100, inner=None, draw=True, **kwargs):
+    def star(self, startx, starty, points=20, outer=100, inner=None, plot=True, **kwargs):
+        draw = kwargs.pop('draw', plot)
         Bezier.validate(kwargs)
         p = Bezier(**kwargs)
         p.star(startx, starty, points, outer, inner)
@@ -233,13 +239,14 @@ class Context(object):
           p.draw()
         return p
 
-    def arrow(self, x, y, width=100, type=NORMAL, draw=True, **kwargs):
+    def arrow(self, x, y, width=100, type=NORMAL, plot=True, **kwargs):
         """Draws an arrow.
 
         Draws an arrow pointing at position (x,y), with a default width of 100.
         There are two different types of arrows: NORMAL and (the early-oughts favorite) FORTYFIVE.
         """
 
+        draw = kwargs.pop('draw', plot)
         Bezier.validate(kwargs)
         p = Bezier(**kwargs)
         p.arrow(x, y, width, type)
@@ -307,13 +314,14 @@ class Context(object):
             self._path.closepath()
             self._pathclosed = True
 
-    def endpath(self, draw=True):
+    def endpath(self, plot=True, **kwargs):
         if self._path is None:
             raise DeviceError, "No current path. Use bezier() or beginpath() first."
         if self._autoclosepath:
             self.closepath()
+
         p = self._path
-        if draw:
+        if kwargs.pop('draw', plot):
             p.draw()
         self._path = None
         self._pathclosed = False
@@ -672,7 +680,8 @@ class Context(object):
             self._align = align
         return self._align
 
-    def text(self, txt, x, y, width=None, height=None, outline=False, draw=True, **kwargs):
+    def text(self, txt, x, y, width=None, height=None, outline=False, plot=True, **kwargs):
+        draw = kwargs.pop('draw', plot)
         txt = Text(txt, x, y, width, height, **kwargs)
 
         if outline:
@@ -707,7 +716,8 @@ class Context(object):
 
     ### Image commands ###
 
-    def image(self, path, x=0, y=0, width=None, height=None, data=None, draw=True, **kwargs):
+    def image(self, path, x=0, y=0, width=None, height=None, data=None, plot=True, **kwargs):
+        draw = kwargs.pop('draw', plot)
         img = Image(path, x, y, width, height, data=data, **kwargs)
         if draw:
             img.draw()
