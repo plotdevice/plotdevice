@@ -50,6 +50,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         super(Bezier, self).__init__(**kwargs)
         self._segment_cache = None
         self._finished = False
+        self._fulcrum = None
 
         # path arg might contain a list of point tuples, a bezier to copy, or a raw
         # nsbezier reference to use as the backing store. otherwise start with a
@@ -155,13 +156,21 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         self._segment_cache = None
         self._nsBezierPath.closePath()
 
-    def _get_bounds(self):
+    @property
+    def bounds(self):
         try:
             return Region(*self._nsBezierPath.bounds())
         except:
             # Path is empty -- no bounds
             return Region()
-    bounds = property(_get_bounds)
+
+    @property
+    def center(self):
+        if self._fulcrum:
+            return Point(self._fulcrum)
+        else:
+            (x, y), (w, h) = self.bounds
+            return Point(x+w/2, y+h/2)
 
     def contains(self, x, y):
         return self._nsBezierPath.containsPoint_((x,y))
@@ -205,6 +214,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             if close:
                 # optionally close the path with a chord
                 self._nsBezierPath.closePath()
+            self._fulcrum = Point(x+width/2, y+width/2)
     ellipse = oval
 
     def line(self, x1, y1, x2, y2, arc=0):
@@ -238,6 +248,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         for pt in points[1:]:
             self._nsBezierPath.lineToPoint_(pt)
         self._nsBezierPath.closePath()
+        self._fulcrum = Point(x,y)
 
     def arc(self, x, y, r, rng=None, ccw=False, close=False):
         self._segment_cache = None
@@ -257,6 +268,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             # optionally close the path pac-man-style
             self._nsBezierPath.lineToPoint_( (x,y) )
             self._nsBezierPath.closePath()
+        self._fulcrum = Point(x,y)
 
     def star(self, x, y, points=20, outer=100, inner=None):
         # if inner radius is unspecified, default to a regularized star
@@ -357,8 +369,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         trans = self._transform.copy()
         if (self.transformmode == CENTER):
             # if center-based, sandwich transform with a scoot out/in to the origin
-            (x, y), (w, h) = self.bounds
-            dx, dy = x+w/2, y+h/2
+            dx, dy = self.center
             nudge = Transform()
             nudge.translate(-dx, -dy)
             trans.prepend(nudge)
@@ -451,7 +462,10 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             else:
                 t.scale(min(width /pw, height / ph))
         t.translate(-px, -py)
-        self._nsBezierPath = t.transformBezierPath(self)._nsBezierPath
+        self._nsBezierPath = t.apply(self)._nsBezierPath
+        self._fulcrum = t.apply(self._fulcrum)
+        self._segment_cache = {}
+
 
     ### Mathematics ###
 
