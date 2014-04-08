@@ -166,6 +166,7 @@ class Context(object):
     ### Bezier Path Commands ###
 
     def bezier(self, x=None, y=None, **kwargs):
+        """Create and plot a new bezier path."""
         origin = (x,y) if all(isinstance(c, (int,float)) for c in (x,y)) else None
         draw = kwargs.pop('draw', self._autoplot)
         draw = kwargs.pop('plot', draw)
@@ -201,31 +202,54 @@ class Context(object):
             # ignore kwargs since the parent bezier's styles apply to all lines drawn
             self._path.extend(p)
         elif draw:
+            # if this is a one-off primitive, draw it depending on the kwargs & state
             p.draw()
 
     def moveto(self, x, y):
+        """Update the current point in the active path without drawing a line to it"""
         if self._path is None:
-            raise DeviceError, "No current path. Use bezier() or beginpath() first."
+            raise DeviceError, "No active path. Use bezier() or beginpath() first."
         self._path.moveto(x,y)
 
     def lineto(self, x, y, close=False):
+        """Add a line from the current point in the active path to a destination point
+        (and optionally close the subpath)"""
         if self._path is None:
-            raise DeviceError, "No current path. Use bezier() or beginpath() first."
+            raise DeviceError, "No active path. Use bezier() or beginpath() first."
         self._path.lineto(x, y)
         if close:
             self._path.closepath()
 
     def curveto(self, x1, y1, x2, y2, x3, y3, close=False):
+        """Draw a cubic bezier curve from the active path's current point to a destination
+        point (x3,y3). The handles for the current and destination points will be set by
+        (x1,y1) and (x2,y2) respectively.
+
+        Calling with close=True will close the subpath after adding the curve.
+        """
         if self._path is None:
-            raise DeviceError, "No current path. Use bezier() or beginpath() first."
+            raise DeviceError, "No active path. Use bezier() or beginpath() first."
         self._path.curveto(x1, y1, x2, y2, x3, y3)
         if close:
             self._path.closepath()
 
-    def arcto(self, x, y, cx, cy=None, radius=None, close=False):
+    def arcto(self, x, y, cx=None, cy=None, radius=None, ccw=False, close=False):
+        """Draw a circular arc from the current point in the active path to a destination point
+
+        To draw a semicircle to the destination point use one of:
+            arcto(x,y)
+            arcto(x,y, ccw=True)
+
+        To draw a parabolic arc in the triangle between the current point, an
+        intermediate control point, and the destination; choose a radius small enough
+        to fit in that angle and call:
+            arcto(dest_x, dest_y, cp_x, cp_y, radius)
+
+        Calling with close=True will close the subpath after adding the arc.
+        """
         if self._path is None:
-            raise DeviceError, "No current path. Use bezier() or beginpath() first."
-        self._path.arcto(x, y, cx, cy, radius)
+            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+        self._path.arcto(x, y, cx, cy, radius, ccw)
         if close:
             self._path.closepath()
 
@@ -284,14 +308,14 @@ class Context(object):
 
     def closepath(self):
         if self._path is None:
-            raise DeviceError, "No current path. Use bezier() or beginpath() first."
+            raise DeviceError, "No active path. Use bezier() or beginpath() first."
         if not self._pathclosed:
             self._path.closepath()
             self._pathclosed = True
 
     def endpath(self, **kwargs):
         if self._path is None:
-            raise DeviceError, "No current path. Use bezier() or beginpath() first."
+            raise DeviceError, "No active path. Use bezier() or beginpath() first."
         if self._autoclosepath:
             self.closepath()
         p = self._path

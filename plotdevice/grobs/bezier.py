@@ -128,11 +128,8 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def curveto(self, x1, y1, x2, y2, x3, y3):
         self._nsBezierPath.curveToPoint_controlPoint1_controlPoint2_( (x3, y3), (x1, y1), (x2, y2) )
 
-    def arcto(self, x, y, cx, cy=None, radius=None):
-        if cy is radius is None:
-            radius = cx
-
-        if cy is not None:
+    def arcto(self, x, y, cx=None, cy=None, radius=None, ccw=False):
+        if cx is not None and cy is not None:
             # arc toward the control point then turn to the x,y dest point. round off the triangle
             # created between the current point, the control point, and the dest point with an arc
             # of the given radius.
@@ -153,11 +150,12 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             # ...and transform it to match the endpoints
             src = self._nsBezierPath.currentPoint()
             theta = geometry.angle(src.x, src.y, x, y)
-            d = geometry.distance(src.x, src.y, x, y)
+            dw = geometry.distance(src.x, src.y, x, y)
+            dh = dw*(-1.0 if ccw else 1.0)
             t = Transform()
             t.translate(src.x,src.y)
             t.rotate(theta)
-            t.scale(d, d*radius)
+            t.scale(dw, dh)
             p.transformUsingAffineTransform_(t._nsAffineTransform)
             self.extend(Bezier(p)[1:]) # omit the initial moveto in the semicircle
 
