@@ -112,7 +112,7 @@ class PlotDeviceGraphicsView(NSView):
             x_pct = NSMidX(visible) / NSWidth(oldframe)
             y_pct = NSMidY(visible) / NSHeight(oldframe)
 
-            w, h = [s*self._zoom for s in self.canvas.size]
+            w, h = [s*self._zoom for s in self.canvas.pagesize]
             self.setFrameSize_([w, h])
 
             half_w = NSWidth(visible) / 2.0
@@ -203,7 +203,7 @@ class PlotDeviceGraphicsView(NSView):
 
     @objc.IBAction
     def zoomToFit_(self, sender):
-        w, h = self.canvas.size
+        w, h = self.canvas.pagesize
         fw, fh = self.superview().frame()[1]
         factor = min(fw / w, fh / h)
         self.zoom = factor
@@ -233,7 +233,7 @@ class PlotDeviceGraphicsView(NSView):
                     t = NSAffineTransform.transform()
                     t.scaleBy_(self.zoom)
                     t.concat()
-                    clip = NSBezierPath.bezierPathWithRect_( ((0, 0), (self.canvas.width, self.canvas.height)) )
+                    clip = NSBezierPath.bezierPathWithRect_( ((0, 0), self.canvas.pagesize) )
                     clip.addClip()
                 self.canvas.draw()
             except:
@@ -383,7 +383,7 @@ class FullscreenView(NSView):
         self.setNeedsDisplay_(True)
         if not hasattr(self, "screenRect"):
             self.screenRect = NSScreen.mainScreen().frame()
-            cw, ch = self.canvas.size
+            cw, ch = self.canvas.pagesize
             sw, sh = self.screenRect[1]
             self.scalingFactor = calc_scaling_factor(cw, ch, sw, sh)
             nw, nh = cw * self.scalingFactor, ch * self.scalingFactor
@@ -400,7 +400,7 @@ class FullscreenView(NSView):
             t.translateXBy_yBy_(self.dx, self.dy)
             t.scaleBy_(self.scalingFactor)
             t.concat()
-            clip = NSBezierPath.bezierPathWithRect_( ((0, 0), (self.canvas.width, self.canvas.height)) )
+            clip = NSBezierPath.bezierPathWithRect_( ((0, 0), self.canvas.pagesize) )
             clip.addClip()
             self.canvas.draw()
         NSGraphicsContext.currentContext().restoreGraphicsState()

@@ -4,9 +4,10 @@ from AppKit import *
 from contextlib import contextmanager, nested
 
 from .util.foundry import sanitized, font_encoding, family_names, family_name, family_members
-from .util import _copy_attr, _copy_attrs, _flatten
-from .lib import geometry
+from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
+from .grobs.transform import Dimension
 from .grobs import *
+from .lib import geometry
 from . import grobs
 
 __all__ = ('Context', 'Canvas', 'DEFAULT_WIDTH', 'DEFAULT_HEIGHT')
@@ -22,9 +23,8 @@ class Context(object):
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
 
-        Note that we have to pass the namespace of the executing script,
-        to keep the WIDTH and HEIGHT properties updated (and to allow for
-        ximport's _ctx-passing magic).
+        Note that we have to pass the namespace of the executing script to allow for
+        ximport's _ctx-passing magic.
         """
         if canvas is None:
             canvas = Canvas()
@@ -39,7 +39,7 @@ class Context(object):
         self.canvas._ctx = self
 
         # cache a list of all of the exportable attr names (for use when making namespaces)
-        self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_') or a.endswith('_')))
+        self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_')))
 
     def _activate(self):
         grobs.bind(self)
@@ -106,21 +106,21 @@ class Context(object):
 
     ### Setup methods ###
 
-    def size(self, width, height):
-        self.canvas.width = width
-        self.canvas.height = height
-        self._ns["WIDTH"] = width
-        self._ns["HEIGHT"] = height
+    def size(self, width=None, height=None, unit=None):
+        if not (width is None or height is None):
+            self.canvas.width = width
+            self.canvas.height = height
+        if unit is not None:
+            self.canvas.unit = unit
+        return self.canvas.size
 
-    def _get_width(self):
-        return self.canvas.width
+    @property
+    def WIDTH(self):
+        return Dimension('width')
 
-    WIDTH = property(_get_width)
-
-    def _get_height(self):
-        return self.canvas.height
-
-    HEIGHT = property(_get_height)
+    @property
+    def HEIGHT(self):
+        return Dimension('height')
 
     def speed(self, speed):
         self.canvas.speed = speed
@@ -843,7 +843,7 @@ class _PDFRenderView(NSView):
     # the PDF data.
 
     def initWithCanvas_(self, canvas):
-        super(_PDFRenderView, self).initWithFrame_( ((0, 0), (canvas.width, canvas.height)) )
+        super(_PDFRenderView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
         self.canvas = canvas
         return self
 
@@ -858,12 +858,17 @@ class _PDFRenderView(NSView):
 
 class Canvas(Grob):
 
-    def __init__(self, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
+    def __init__(self, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, unit=px):
+        self.unit = unit
         self.width = width
         self.height = height
         self.speed = None
         self.mousedown = False
         self.clear()
+
+    @trim_zeroes
+    def __repr__(self):
+        return 'Canvas(%0.3f, %0.3f, %s)'%(self.width, self.height, self.unit.name)
 
     def clear(self, grob=None):
         if grob:
@@ -878,12 +883,25 @@ class Canvas(Grob):
         for frob in [f for f in container if hasattr(f, 'contents')]:
             self._drop(grob, frob.contents)
 
-    def _get_size(self):
-        return self.width, self.height
-    size = property(_get_size)
+    @property
+    def size(self):
+        """The canvas's size in terms of its default unit"""
+        return Size(self.width, self.height)
 
-    def append(self, el):
-        self._container.append(el)
+    @property
+    def pagesize(self):
+        """The canvas's size in Postscript points"""
+        dpx = self.unit.basis
+        return Size(self.width*dpx, self.height*dpx)
+
+    def _get_unit(self):
+        return self._unit
+    def _set_unit(self, u):
+        if u not in (px, inch, pica, cm, mm):
+            nonstandard = 'Canvas units must be one of: px, inch, pica, cm, or mm (not %r)'%u
+            raise DeviceError(nonstandard)
+        self._unit = u
+    unit = property(_get_unit, _set_unit)
 
     def __iter__(self):
         for grob in self._grobs:
@@ -894,6 +912,11 @@ class Canvas(Grob):
 
     def __getitem__(self, index):
         return self._grobs[index]
+
+    def append(self, el):
+        # when beziers, images, and text are added, they're placed in the current
+        # tail of the container stack (see push/pop)
+        self._container.append(el)
 
     def push(self, containerGrob):
         # when things like Masks are added, they become their own container that
@@ -912,15 +935,20 @@ class Canvas(Grob):
     def draw(self):
         if self.background is not None:
             self.background.set()
-            NSRectFillUsingOperation(((0,0), (self.width, self.height)), NSCompositeSourceOver)
-        # import cProfile
-        # cProfile.runctx('[grob._draw() for grob in self._grobs]', globals(), {"self":self}, sort='cumulative')
+            NSRectFillUsingOperation(((0,0), self.pagesize), NSCompositeSourceOver)
+        if self.unit.basis != 1.0:
+            # it might be wiser to have this factor into ctx.transform so it doesn't end up
+            # scaling stroke widths...
+            t = Transform()
+            t.scale(self.unit.basis)
+            t.concat()
         for grob in self._grobs:
             grob._draw()
 
     def rasterize(self, zoom=1.0):
         """Return an NSImage with the canvas dimensions scaled to the specified zoom level"""
-        img = NSImage.alloc().initWithSize_((self.width*zoom, self.height*zoom))
+        w,h = self.pagesize
+        img = NSImage.alloc().initWithSize_((w*zoom, h*zoom))
         img.setFlipped_(True)
         img.lockFocus()
         trans = NSAffineTransform.transform()

@@ -15,17 +15,10 @@ from ..lib import geometry
 _ctx = None
 __all__ = [
         "DEGREES", "RADIANS", "PERCENT",
-        "inch", "cm", "mm", "pi", "tau",
+        "px", "inch", "pica", "cm", "mm", "pi", "tau",
         "Point", "Size", "Region",
         "Transform", "CENTER", "CORNER",
         ]
-
-# scale factors
-inch = 72
-cm = 28.3465
-mm = 2.8346
-pi = math.pi
-tau = 2*pi
 
 # transform modes
 CENTER = "center"
@@ -35,6 +28,10 @@ CORNER = "corner"
 DEGREES = "degrees"
 RADIANS = "radians"
 PERCENT = "percent"
+
+# maths
+pi = math.pi
+tau = 2*pi
 
 ### tuple-like objects for grid dimensions ###
 
@@ -272,4 +269,76 @@ class Transform(object):
     def transform(self):
         warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", DeprecationWarning, stacklevel=2)
         return self._nsAffineTransform
+
+### canvas scale-factors ###
+
+class MagicNumber(object):
+    # be a well-behaved pseudo-number (based on the float in self.value)
+    def __float__(self):
+        return self.value
+    def __int__(self):
+        return int(self.value)
+    def __long__(self):
+        return long(self.value)
+    def __neg__(self):
+        return -self.value
+    def __add__(self, other):
+        return self.value + other
+    def __sub__(self, other):
+        return self.value - other
+    def __mul__(self, other):
+        return self.value * other
+    def __div__(self, other):
+        return self.value/other
+    def __floordiv__(self, other):
+        return self.value//other
+    def __radd__(self, other):
+        return other + self.value
+    def __rsub__(self, other):
+        return other - self.value
+    def __rmul__(self, other):
+        return other * self.value
+    def __rdiv__(self, other):
+        return other/self.value
+    def __rfloordiv__(self, other):
+        return other//self.value
+    def __cmp__(self, other):
+        return cmp(self.value, other)
+
+class Dimension(MagicNumber):
+    """A persistent reference to the current canvas's size"""
+    def __init__(self, dim):
+        self._dim = dim # "width" or "height"
+
+    def __repr__(self):
+        return repr(self.value)
+
+    @property
+    def value(self):
+        return float(getattr(_ctx.canvas, self._dim))
+
+class Unit(MagicNumber):
+    """A standard unit of measurement."""
+    _dpx = {"px":1.0, "inch":72.0, "pica":12.0, "cm":28.3465, "mm":2.8346}
+
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        if self==_ctx.canvas.unit:
+            return '<one %s>' % self.name
+        return '<one %s (%0.3f canvas units)>'%(self.name, self.value)
+
+    @property
+    def value(self):
+        """Size of this unit in terms of the current canvas unit"""
+        return self.basis/_ctx.canvas.unit.basis
+
+    @property
+    def basis(self):
+        """Size of this unit of measure in Postscript points"""
+        return Unit._dpx[self.name]
+
+# create a module-level variable for each of the standard units
+globals().update({u:Unit(u) for u in Unit._dpx})
 
