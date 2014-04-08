@@ -128,25 +128,38 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def curveto(self, x1, y1, x2, y2, x3, y3):
         self._nsBezierPath.curveToPoint_controlPoint1_controlPoint2_( (x3, y3), (x1, y1), (x2, y2) )
 
-    def arcto(self, x, y, radius=1.0):
+    def arcto(self, x, y, cx, cy=None, radius=None):
+        if cy is radius is None:
+            radius = cx
 
-        # create a unitary semicircle...
-        k = 0.5522847498 / 2.0
-        p = NSBezierPath.bezierPath()
-        p.moveToPoint_((0,0))
-        p.curveToPoint_controlPoint1_controlPoint2_((.5,-.5), (0,-k), (.5-k,-.5))
-        p.curveToPoint_controlPoint1_controlPoint2_((1,0), (.5+k,-.5), (1,-k))
+        if cy is not None:
+            # arc toward the control point then turn to the x,y dest point. round off the triangle
+            # created between the current point, the control point, and the dest point with an arc
+            # of the given radius.
+            #
+            # Take a look at the Adding Arcs section of apple's docs for some important edge cases:
+            # https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaDrawingGuide/Paths/Paths.html
+            radius = 1.0 if radius is None else radius
+            self._nsBezierPath.appendBezierPathWithArcFromPoint_toPoint_radius_( (cx,cy), (x,y), radius)
+            self._nsBezierPath.lineToPoint_( (x,y) )
+        else:
+            # create a unitary semicircle...
+            k = 0.5522847498 / 2.0
+            p = NSBezierPath.bezierPath()
+            p.moveToPoint_((0,0))
+            p.curveToPoint_controlPoint1_controlPoint2_((.5,-.5), (0,-k), (.5-k,-.5))
+            p.curveToPoint_controlPoint1_controlPoint2_((1,0), (.5+k,-.5), (1,-k))
 
-        # ...and transform it to match the endpoints
-        src = self._nsBezierPath.currentPoint()
-        theta = geometry.angle(src.x, src.y, x, y)
-        d = geometry.distance(src.x, src.y, x, y)
-        t = Transform()
-        t.translate(src.x,src.y)
-        t.rotate(theta)
-        t.scale(d, d*radius)
-        p.transformUsingAffineTransform_(t._nsAffineTransform)
-        self._nsBezierPath.appendBezierPath_(p)
+            # ...and transform it to match the endpoints
+            src = self._nsBezierPath.currentPoint()
+            theta = geometry.angle(src.x, src.y, x, y)
+            d = geometry.distance(src.x, src.y, x, y)
+            t = Transform()
+            t.translate(src.x,src.y)
+            t.rotate(theta)
+            t.scale(d, d*radius)
+            p.transformUsingAffineTransform_(t._nsAffineTransform)
+            self.extend(Bezier(p)[1:]) # omit the initial moveto in the semicircle
 
     def closepath(self):
         self._nsBezierPath.closePath()
@@ -308,8 +321,14 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     ### List methods ###
 
     def __getitem__(self, index):
-        cmd, el = self._nsBezierPath.elementAtIndex_associatedPoints_(index)
-        return Curve(cmd, el)
+        if isinstance(index, slice):
+            # slice-based access
+            pts = [self._nsBezierPath.elementAtIndex_associatedPoints_(i) for i in xrange(*index.indices(len(self)))]
+            return [Curve(cmd, el) for cmd,el in pts]
+        else:
+            # index-based access
+            cmd, el = self._nsBezierPath.elementAtIndex_associatedPoints_(index)
+            return Curve(cmd, el)
 
     def __iter__(self):
         for i in range(len(self)):
@@ -343,6 +362,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             self.curveto(c1.x, c1.y, c2.x, c2.y, el.x, el.y)
         elif el.cmd == CLOSE:
             self.closepath()
+        self._fulcrum = None
 
     @property
     def contours(self):
@@ -480,17 +500,11 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             empty = "The given path is empty"
             raise DeviceError(empty)
 
-        # The delta value is divided by amount - 1, because we also want the last point (t=1.0)
-        # If I wouldn't use amount - 1, I fall one point short of the end.
-        # E.g. if amount = 4, I want point at t 0.0, 0.33, 0.66 and 1.0,
-        # if amount = 2, I want point at t 0.0 and t 1.0
-        try:
-            delta = 1.0/(amount-1)
-        except ZeroDivisionError:
-            delta = 1.0
+        # The delta value is divided by amount-1, to ensure the last point is at t=1.0
+        delta = 1.0/max(1, amount-1)
 
         for i in xrange(amount):
-            yield pathmatics.point(delta*i)
+            yield pathmatics.point(self, delta*i)
 
     def addpoint(self, t):
         self._nsBezierPath = pathmatics.insert_point(self, t)._nsBezierPath

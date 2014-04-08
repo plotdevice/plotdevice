@@ -11,18 +11,12 @@ from .transform import Transform
 _ctx = None
 __all__ = [
         "KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT", "KEY_BACKSPACE", "KEY_TAB", "KEY_ESC",
-        "COPY", "LIVE", "OFF",
         "Variable", "NUMBER", "TEXT", "BOOLEAN","BUTTON",
         "Grob",
         ]
 
 # an ‘undefined’ value for state vars
 INHERIT = "inherit"
-
-# plotstyle mode
-COPY = "copy"
-LIVE = "live"
-OFF = "off"
 
 # var datatypes
 NUMBER = 1
@@ -50,13 +44,12 @@ class Grob(object):
         self.stateAttrs = sum(attr_tuples, tuple())
 
     def draw(self):
-        """Appends a copy of the grob to the canvas.
-           This will result in a _draw later on, when the scene graph is rendered."""
-        if _ctx.plotstyle is OFF:
-            return
-        grob = self.copy() if _ctx._plotstyle is COPY else self
-        grob.inherit()
-        _ctx.canvas.append(grob)
+        """Adds the grob to the canvas. This will result in a _draw later on, when the
+        scene graph is rendered. References to the grob are still ‘live’ meaning additional
+        modifications of its transform, color, penstyle, etc. can be applied before the
+        canvas renders."""
+        self.inherit()
+        _ctx.canvas.append(self)
 
     def copy(self):
         """Returns a deep copy of this grob."""

@@ -69,12 +69,12 @@ class Context(object):
         self.canvas.background = Color(1.0)
 
         # line style
-        self._plotstyle = LIVE
         self._capstyle = BUTT
         self._joinstyle = MITER
         self._dashstyle = None
         self._strokewidth = 1.0
         self._autoclosepath = True
+        self._autoplot = True
 
         # transformation state
         self._transform = Transform()
@@ -138,128 +138,38 @@ class Context(object):
             self._outputmode = mode
         return self._outputmode
 
-    ### Variables ###
+    ### Drawing grobs with the current pen/stroke/fill/transform/effects ###
 
-    # def var(self, name, type, default=None, min=0, max=100, value=None):
-    #     v = Variable(name, type, default, min, max, value)
-    #     v = self.addvar(v)
+    def plot(self, obj=None, live=False, **kwargs):
+        if obj is None:
+            return self._autoplot
+        elif obj in (True,False):
+            return PlotContext(self, auto=obj)
+        elif not isinstance(obj, Grob):
+            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
+            raise DeviceError(notdrawable)
 
-    # def addvar(self, v):
-    #     oldvar = self.findvar(v.name)
-    #     if oldvar is not None:
-    #         if oldvar.compliesTo(v):
-    #             v.value = oldvar.value
-    #     self._vars.append(v)
-    #     self._ns[v.name] = v.value
+        obj.__class__.validate(kwargs)
+        grob = obj if live else obj.copy()
+        for arg_key, arg_val in kwargs.items():
+            setattr(grob, arg_key, _copy_attr(arg_val))
+        grob.draw()
+        return grob
 
-    # def findvar(self, name):
-    #     for v in self._oldvars:
-    #         if v.name == name:
-    #             return v
-    #     return None
+    # def plotstyle(self, *ops):
+    #     modal = [m for m in ops if m in (ON,OFF)]
+    #     mode = modal[0] if modal else self._plotstyle
+    #     context_mgrs = [mgr for mgr in ops if hasattr(mgr, '__enter__')]
+    #     context_mgrs.append(PlotContext(self, restore=all, style=mode))
+    #     return nested(*context_mgrs)
 
-    ### Primitives ###
-
-    def rect(self, x, y, width, height, radius=None, roundness=0.0, plot=True, **kwargs):
-        draw = kwargs.pop('draw', plot)
-        Bezier.validate(kwargs)
-        if roundness > 0:
-            # support the pre-10.5 roundrect behavior via the roundness arg
-            curve = min(width*roundness, height*roundness)
-            p = Bezier(**kwargs)
-            p.moveto(x, y+curve)
-            p.curveto(x, y, x, y, x+curve, y)
-            p.lineto(x+width-curve, y)
-            p.curveto(x+width, y, x+width, y, x+width, y+curve)
-            p.lineto(x+width, y+height-curve)
-            p.curveto(x+width, y+height, x+width, y+height, x+width-curve, y+height)
-            p.lineto(x+curve, y+height)
-            p.curveto(x, y+height, x, y+height, x, y+height-curve)
-            p.closepath()
-        else:
-            # otherwise let the nsbezier use its built-in support for rect radii
-            p = Bezier(**kwargs)
-            p.rect(x, y, width, height, radius=radius)
-
-        if draw:
-            p.draw()
-        return p
-
-    def oval(self, x, y, width, height, range=None, ccw=False, close=False, plot=True, **kwargs):
-        draw = kwargs.pop('draw', plot)
-        Bezier.validate(kwargs)
-        path = Bezier(**kwargs)
-        path.oval(x, y, width, height, range, ccw=ccw, close=close)
-
-        if draw:
-          path.draw()
-        return path
-
-    ellipse = oval
-
-    def line(self, x1, y1, x2, y2, arc=0, plot=True, **kwargs):
-        draw = kwargs.pop('draw', plot)
-        if self._path is None:
-            Bezier.validate(kwargs)
-            p = Bezier(**kwargs)
-            p.line(x1, y1, x2, y2, arc=arc)
-            if draw:
-              p.draw()
-        else:
-            # if a bezier is being built in a `with` block, add line segments to it, but
-            # ignore kwargs since the bezier object's styles apply to all lines drawn
-            p = self._path
-            p.line(x1, y1, x2, y2)
-        return p
-
-    def poly(self, x, y, radius, sides=3, plot=True, **kwargs):
-        draw = kwargs.pop('draw', plot)
-        Bezier.validate(kwargs)
-        p = Bezier(**kwargs)
-        p.poly(x, y, radius, sides)
-        if draw:
-          p.draw()
-        return p
-
-    def arc(self, x, y, radius, range=None, ccw=False, close=False, plot=True, **kwargs):
-        draw = kwargs.pop('draw', plot)
-        Bezier.validate(kwargs)
-        p = Bezier(**kwargs)
-        p.arc(x, y, radius, range, ccw=ccw, close=close)
-        if draw:
-          p.draw()
-        return p
-
-    def star(self, startx, starty, points=20, outer=100, inner=None, plot=True, **kwargs):
-        draw = kwargs.pop('draw', plot)
-        Bezier.validate(kwargs)
-        p = Bezier(**kwargs)
-        p.star(startx, starty, points, outer, inner)
-        if draw:
-          p.draw()
-        return p
-
-    def arrow(self, x, y, width=100, type=NORMAL, plot=True, **kwargs):
-        """Draws an arrow.
-
-        Draws an arrow pointing at position (x,y), with a default width of 100.
-        There are two different types of arrows: NORMAL and (the early-oughts favorite) FORTYFIVE.
-        """
-
-        draw = kwargs.pop('draw', plot)
-        Bezier.validate(kwargs)
-        p = Bezier(**kwargs)
-        p.arrow(x, y, width, type)
-        if draw:
-          p.draw()
-        return p
-
-
-    ### Path Commands ###
+    ### Bezier Path Commands ###
 
     def bezier(self, x=None, y=None, **kwargs):
         origin = (x,y) if all(isinstance(c, (int,float)) for c in (x,y)) else None
-        kwargs.setdefault('draw', True)
+        draw = kwargs.pop('draw', self._autoplot)
+        draw = kwargs.pop('plot', draw)
+        kwargs['draw'] = draw
         if isinstance(x, (Bezier, list, tuple)):
             # if a list of point tuples or a Bezier is the first arg, there's
             # no need to open a context (since the path is already defined). Instead
@@ -269,11 +179,29 @@ class Context(object):
         else:
             # otherwise start a new path with the presumption that it will be populated
             # in a `with` block or by adding points manually. begins with a moveto
-            # element if an x,y coord was provided
+            # element if an x,y coord was provided and relies on Bezier's __enter__
+            # method to update self._path if appropriate
             p = Bezier(**kwargs)
             if origin:
                 p.moveto(*origin)
             return p
+
+    @contextmanager
+    def _active_path(self, kwargs):
+        """Provides a target Bezier object for drawing commands within the block.
+        If a bezier is currently being constructed, drawing will be appended to it.
+        Otherwise a new Bezier will be created and autoplot'ed as appropriate."""
+        draw = kwargs.pop('draw', self._autoplot)
+        draw = kwargs.pop('plot', draw)
+        Bezier.validate(kwargs)
+        p=Bezier(**kwargs)
+        yield p
+        if self._path is not None:
+            # if a bezier is being built in a `with` block, add curves to it, but
+            # ignore kwargs since the parent bezier's styles apply to all lines drawn
+            self._path.extend(p)
+        elif draw:
+            p.draw()
 
     def moveto(self, x, y):
         if self._path is None:
@@ -294,12 +222,59 @@ class Context(object):
         if close:
             self._path.closepath()
 
-    def arcto(self, x, y, radius=1.0, close=False):
+    def arcto(self, x, y, cx, cy=None, radius=None, close=False):
         if self._path is None:
             raise DeviceError, "No current path. Use bezier() or beginpath() first."
-        self._path.arcto(x, y, radius)
+        self._path.arcto(x, y, cx, cy, radius)
         if close:
             self._path.closepath()
+
+    ### Bezier Primitives ###
+
+    def rect(self, x, y, width, height, roundness=0.0, radius=None, **kwargs):
+        if roundness > 0:
+            radius = min(width,height)/2.0 * min(roundness, 1.0)
+        with self._active_path(kwargs) as p:
+            p.rect(x, y, width, height, radius=radius)
+        return p
+
+    def oval(self, x, y, width, height, range=None, ccw=False, close=False, **kwargs):
+        with self._active_path(kwargs) as p:
+            p.oval(x, y, width, height, range, ccw=ccw, close=close)
+        return p
+    ellipse = oval
+
+    def line(self, x1, y1, x2, y2, arc=0, **kwargs):
+        with self._active_path(kwargs) as p:
+            p.line(x1, y1, x2, y2, arc=arc)
+        return p
+
+    def poly(self, x, y, radius, sides=3, **kwargs):
+        with self._active_path(kwargs) as p:
+            p.poly(x, y, radius, sides)
+        return p
+
+    def arc(self, x, y, radius, range=None, ccw=False, close=False, **kwargs):
+        with self._active_path(kwargs) as p:
+            p.arc(x, y, radius, range, ccw=ccw, close=close)
+        return p
+
+    def star(self, startx, starty, points=20, outer=100, inner=None, **kwargs):
+        with self._active_path(kwargs) as p:
+            p.star(startx, starty, points, outer, inner)
+        return p
+
+    def arrow(self, x, y, width=100, type=NORMAL, **kwargs):
+        """Draws an arrow.
+
+        Draws an arrow pointing at position (x,y), with a default width of 100.
+        There are two different types of arrows: NORMAL and (the early-oughts favorite) FORTYFIVE.
+        """
+        with self._active_path(kwargs) as p:
+            p.arrow(x, y, width, type)
+        return p
+
+    ### ‘Classic’ Bezier API ###
 
     def beginpath(self, x=None, y=None):
         self._path = Bezier()
@@ -314,14 +289,16 @@ class Context(object):
             self._path.closepath()
             self._pathclosed = True
 
-    def endpath(self, plot=True, **kwargs):
+    def endpath(self, **kwargs):
         if self._path is None:
             raise DeviceError, "No current path. Use bezier() or beginpath() first."
         if self._autoclosepath:
             self.closepath()
-
         p = self._path
-        if kwargs.pop('draw', plot):
+
+        draw = kwargs.pop('draw', self._autoplot)
+        draw = kwargs.pop('plot', draw)
+        if draw:
             p.draw()
         self._path = None
         self._pathclosed = False
@@ -581,26 +558,7 @@ class Context(object):
     def endclip(self):
         self.canvas.pop()
 
-    ### Drawing grobs with the current pen/stroke/fill ###
-
-    def plot(self, obj, copy=False, **kwargs):
-        if not isinstance(obj, Grob):
-            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
-            raise DeviceError(notdrawable)
-        obj.__class__.validate(kwargs)
-        grob = obj.copy() if copy else obj
-        for arg_key, arg_val in kwargs.items():
-            setattr(grob, arg_key, _copy_attr(arg_val))
-        grob.draw()
-
-    def plotstyle(self, *ops):
-        modal = [m for m in ops if m in (COPY,LIVE,OFF)]
-        mode = modal[0] if modal else self._plotstyle
-        context_mgrs = [mgr for mgr in ops if hasattr(mgr, '__enter__')]
-        context_mgrs.append(PlotContext(self, restore=all, style=mode))
-        return nested(*context_mgrs)
-
-    ### Font Commands ###
+    ### Typography ###
 
     def font(self, *args, **kwargs):
         """Set the current font to be used in subsequent calls to text()"""
@@ -680,8 +638,10 @@ class Context(object):
             self._align = align
         return self._align
 
-    def text(self, txt, x, y, width=None, height=None, outline=False, plot=True, **kwargs):
-        draw = kwargs.pop('draw', plot)
+    def text(self, txt, x, y, width=None, height=None, outline=False, **kwargs):
+        draw = kwargs.pop('draw', self._autoplot)
+        draw = kwargs.pop('plot', draw)
+
         txt = Text(txt, x, y, width, height, **kwargs)
 
         if outline:
@@ -716,8 +676,10 @@ class Context(object):
 
     ### Image commands ###
 
-    def image(self, path, x=0, y=0, width=None, height=None, data=None, plot=True, **kwargs):
-        draw = kwargs.pop('draw', plot)
+    def image(self, path, x=0, y=0, width=None, height=None, data=None, **kwargs):
+        draw = kwargs.pop('draw', self._autoplot)
+        draw = kwargs.pop('plot', draw)
+
         img = Image(path, x, y, width, height, data=data, **kwargs)
         if draw:
             img.draw()
@@ -789,11 +751,32 @@ class Context(object):
             badtype = "measure() can only handle Text, Images, Beziers, and file() objects (got %s)"%type(obj)
             raise DeviceError(badtype)
 
+    ### Variables ###
+
+    # def var(self, name, type, default=None, min=0, max=100, value=None):
+    #     v = Variable(name, type, default, min, max, value)
+    #     v = self.addvar(v)
+
+    # def addvar(self, v):
+    #     oldvar = self.findvar(v.name)
+    #     if oldvar is not None:
+    #         if oldvar.compliesTo(v):
+    #             v.value = oldvar.value
+    #     self._vars.append(v)
+    #     self._ns[v.name] = v.value
+
+    # def findvar(self, name):
+    #     for v in self._oldvars:
+    #         if v.name == name:
+    #             return v
+    #     return None
+
+
 class PlotContext(object):
     """Performs the setup/cleanup for a `with pen()/stroke()/fill()/color(mode,range)` block"""
     _statevars = dict(nib='_strokewidth', cap='_capstyle', join='_joinstyle', dash='_dashstyle',
                       mode='_colormode', range='_colorrange', stroke='_strokecolor', fill='_fillcolor',
-                      style='_plotstyle')
+                      auto='_autoplot')
 
     def __init__(self, ctx, restore=None, **spec):
         # start with the current context state as a baseline
