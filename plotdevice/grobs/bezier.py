@@ -221,17 +221,13 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             self._fulcrum = Point(x+width/2, y+width/2)
     ellipse = oval
 
-    def line(self, x1, y1, x2, y2, arc=0):
-        # arc =  0: straight line
-        # arc =  1: clockwise perfect-circle arc connetcting points
-        # arc = -1: counterclockwise perfect-circle arc
-        # abs(arc) > 1: increasingly distended cw/ccw arc connecting points
-        if not arc:
+    def line(self, x1, y1, x2, y2, ccw=None):
+        if ccw in (True, False):
+            self.moveto(x1,y1)
+            self.arcto(x2,y2, ccw=ccw)
+        else:
             self._nsBezierPath.moveToPoint_( (x1, y1) )
             self._nsBezierPath.lineToPoint_( (x2, y2) )
-        else:
-            self.moveto(x1,y1)
-            self.arcto(x2,y2, arc)
 
     ### Radial shapes (center + radius) ###
 
