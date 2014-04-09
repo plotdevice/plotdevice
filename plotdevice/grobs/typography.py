@@ -5,8 +5,6 @@ from plotdevice.util import odict, ddict
 from AppKit import *
 from Foundation import *
 
-from pprint import pprint
-
 from plotdevice import DeviceError
 from .atoms import TransformMixin, ColorMixin, Grob, INHERIT
 from . import _save, _restore
@@ -17,7 +15,7 @@ from ..util.foundry import *
 from ..util import _copy_attrs
 
 _ctx = None
-__all__ = ("Text", "Family", "Font", "Stylesheet",
+__all__ = ("Text", "Family", "Font", "Stylesheet", "fonts",
            "LEFT", "RIGHT", "CENTER", "JUSTIFY", "DEFAULT")
 
 # text alignments
@@ -34,6 +32,26 @@ _TEXT=dict(
 
 # hopefully non-conflicting style name for the stylesheet defaults
 from plotdevice import __MAGIC as DEFAULT
+
+# utility method for filtering through the font library
+def fonts(like=None, western=True):
+    """Returns a list of all fonts installed on the system (with filtering capabilities)
+
+    If `like` is a string, only fonts whose names contain those characters will be returned.
+
+    If `western` is True (the default), fonts with non-western character sets will be omitted.
+    If False, only non-western fonts will be returned.
+    """
+    all_fams = family_names()
+    if like:
+        all_fams = [name for name in all_fams if sanitized(like) in sanitized(name)]
+
+    representatives = {fam:family_members(fam, names=True)[0] for fam in all_fams}
+    in_region = {fam:font_encoding(fnt)=="MacOSRoman" for fam,fnt in representatives.items()}
+    if not western:
+        in_region = {fam:not macroman for fam,macroman in in_region.items()}
+
+    return [Family(fam) for fam in all_fams if in_region[fam]]
 
 class Singleton(type):
   def __init__(cls, name, bases, dict):
