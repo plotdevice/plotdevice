@@ -255,6 +255,16 @@ class Context(object):
     ### Bezier Primitives ###
 
     def rect(self, x, y, width, height, roundness=0.0, radius=None, **kwargs):
+        """Draw a rectangle with a corner of (x,y) and size of (width, height)
+
+        The `roundness` arg lets you control corner radii in a size-independent way.
+        It can range from 0 (sharp corners) to 1.0 (maximally round) and will ensure
+        rounded corners are circular.
+
+        The `radius` arg provides less abstract control over corner-rounding. It can be
+        either a single float (specifying the corner radius in canvas units) or a
+        2-tuple with the radii for the x- and y-axis respectively.
+        """
         if roundness > 0:
             radius = min(width,height)/2.0 * min(roundness, 1.0)
         with self._active_path(kwargs) as p:
@@ -262,29 +272,60 @@ class Context(object):
         return p
 
     def oval(self, x, y, width, height, range=None, ccw=False, close=False, **kwargs):
+        """Draw an ellipse within the rectangle specified by (x,y) & (width,height)
+
+        The `range` arg can be either a number of degrees (from 0°) or a 2-tuple
+        with a start- and stop-angle. Only that subsection of the oval will be drawn.
+        The `ccw` arg flags whether to interpret ranges in a counter-clockwise direction.
+        If `close` is True, a chord will be drawn between the unconnected endpoints.
+        """
         with self._active_path(kwargs) as p:
             p.oval(x, y, width, height, range, ccw=ccw, close=close)
         return p
     ellipse = oval
 
-    def line(self, x1, y1, x2, y2, arc=0, **kwargs):
+    def line(self, x1, y1, x2, y2, ccw=None, **kwargs):
+        """Draw an unconnected line segment from (x1,y1) to (x2,y2)
+
+        Ordinarily this will be a straight line (a simple MOVETO & LINETO), but if
+        the `ccw` arg is set to True or False, a semicircular arc will be drawn
+        between the points in the specified direction.
+        """
         with self._active_path(kwargs) as p:
-            p.line(x1, y1, x2, y2, arc=arc)
+            p.line(x1, y1, x2, y2, ccw=ccw)
         return p
 
     def poly(self, x, y, radius, sides=3, **kwargs):
+        """Draw a regular polygon centered at (x,y)
+
+        The `sides` arg sets the type of polygon to draw. Regardless of the number,
+        it will be oriented such that its base is horizontal.
+        """
         with self._active_path(kwargs) as p:
             p.poly(x, y, radius, sides)
         return p
 
     def arc(self, x, y, radius, range=None, ccw=False, close=False, **kwargs):
+        """Draw a full circle or partial arc centered at (x,y)
+
+        The `range` arg can be either a number of degrees (from 0°) or a 2-tuple
+        with a start- and stop-angle.
+        The `ccw` arg flags whether to interpret ranges in a counter-clockwise direction.
+        If `close` is true, a pie-slice will be drawn to the origin from the ends.
+        """
         with self._active_path(kwargs) as p:
             p.arc(x, y, radius, range, ccw=ccw, close=close)
         return p
 
-    def star(self, startx, starty, points=20, outer=100, inner=None, **kwargs):
+    def star(self, x, y, points=20, outer=100, inner=None, **kwargs):
+        """Draw a star-shaped path centered at (x,y)
+
+        The `outer` radius sets the distance of the star's points from the origin,
+        while `inner` sets the radius of the notches between points. If `inner` is
+        omitted, the star will be drawn with regularized angles.
+        """
         with self._active_path(kwargs) as p:
-            p.star(startx, starty, points, outer, inner)
+            p.star(x, y, points, outer, inner)
         return p
 
     def arrow(self, x, y, width=100, type=NORMAL, **kwargs):
@@ -357,6 +398,41 @@ class Context(object):
             raise DeviceError, "pop: too many pops!"
 
     def transform(self, *args):
+        """Change the transform mode or begin a `with`-statement-scoped set of transformations
+
+        Transformation Modes
+
+        PlotDevice determines graphic objects' screen positions using two factors:
+          - the (x,y)/(w,h) point passed to rect(), text(), etc. at creation time
+          - the ‘current transform’ which has accumulated as a result of prior calls
+            to commands like scale() or rotate()
+
+        By default these transformations are applied relative to the centermost point of the
+        object. This is convenient since it prevents scaling and rotation from changing the
+        location of the object.
+
+        If you prefer to apply transformations relative to objects' upper-left corner, use:
+            transform(CORNER)
+        You can then switch back to the default scheme with:
+            transform(CENTER)
+        Note that changing the mode does *not* affect the transformation matrix itself, just
+        the origin-point that subsequently drawn objects will use when applying it.
+
+        Transformation Context Manager
+
+        When used as part of a `with` statement, the transform() command will ensure the
+        mode and accumulated transformations are reverted to their previous state once the
+        block completes.
+
+        As positional args, it can accept a sequence of transformation operations. It will
+        apply these at the beginning of the block, then revert them on exit (as well as any
+        additional transformations made within the block). For instance,
+            with transform(translate(100, 100), rotate(45)):
+                skew(45)           # (this will also be reset after the block exits)
+                rect(0, 0, 50, 50) # drawn as a repositioned parallelogram
+            rect(0, 0, 50, 50)     # drawn as a square in the top-left corner
+        """
+
         mode = args[0] if args and args[0] in (CENTER, CORNER) else None
         if mode is not None and mode not in (CORNER, CENTER):
             raise DeviceError, "transform: mode must be CORNER or CENTER"
@@ -386,6 +462,7 @@ class Context(object):
         return gworld
 
     def reset(self):
+        """Discard any accumulated transformations from prior calls to translate, scale, rotate, or skew"""
         xf = self._transform.inverse
         xf._rollback = {'_transform':self._transform.copy(), '_rotationmode':self._rotationmode}
         self._transform = Transform()
@@ -393,15 +470,30 @@ class Context(object):
         return xf
 
     def translate(self, x=0, y=0):
+        """Shift subsequent drawing operations by (x,y)"""
         return self._transform.translate(x,y, rollback=True)
 
     def scale(self, x=1, y=None):
+        """Scale subsequent drawing operations by x- and y-factors
+
+        When called with one argument, the factor will be applied to the x & y axes evenly.
+        """
         return self._transform.scale(x,y, rollback=True)
 
     def skew(self, x=0, y=0):
+        """Applies a 1- or 2-axis skew distortion to subsequent drawing operations"""
         return self._transform.skew(x,y, rollback=True)
 
     def rotate(self, arg=None, **kwargs):
+        """Rotate subsequent drawing operations
+
+        The angle should be specified through a keyword argument defining its range.
+        For example, all of the following will rotate the canvas counterclockwise to
+        its upside-down position:
+            rotate(degrees=180)
+            rotate(radians=pi)
+            rotate(percent=0.5)
+        """
         # with no args, return the current mode
         if arg is None and not kwargs:
             return self._rotationmode
@@ -433,11 +525,87 @@ class Context(object):
     ### Color Commands ###
 
     def pen(self, nib=None, **spec): # spec: caps, joins, dash
+        """Set the width or line-style used for stroking paths
+
+        Positional arg:
+          `nib` sets the stroke width (in points)
+
+        Keyword args:
+          `caps` sets the endcap style (BUTT, ROUND, or SQUARE).
+          `joins` sets the linejoin style (MITER, ROUND, or BEVEL)
+          `dash` is either a single number or a list of them specifying
+          on-off intervals for drawing a dashed line
+
+        Returns:
+          a context manager allowing pen changes to be constrained to the
+          block of code following a `with` statement.
+        """
         if nib is not None:
             spec.setdefault('nib', nib)
         return PlotContext(self, **spec)
 
     def color(self, *args, **kwargs):
+        """Set the default mode/range for interpreting color values (or create a color object)
+
+        Color State
+
+        A number of plotdevice commands can take lists of numeric arguments to specify a
+        color (see stroke(), fill(), background(), etc.). When called with keyword arguments
+        alone, The color() command allows you to control how these numbers should be
+        interpreted in subsequent color-modification commands.
+
+        By default, color commands interpret groups of 3 or more numbers as r/g/b triplets
+        (with an optional, final alpha arg). If the `mode` keyword arg is set to RGB, HSB,
+        or CMYK, subsequent color commands will interpret numerical arguments according to
+        that colorspace instead.
+
+        The `range` keyword arg sets the maximum value for color channels. By default this is
+        1.0, but 255 and 100 are also sensible choices.
+
+        For instance here are three equivalent ways of setting the fill color to ‘blue’:
+            color(mode=HSB)
+            fill(.666, 1.0, .76)
+            color(mode=RGB, range=255)
+            fill(0, 0, .75)
+            color(mode=CMYK, range=100)
+            fill(95, 89, 0, 0)
+
+        Color mode & range changes can be constrained to a block of code using the `with`
+        statement. e.g.,
+            background(.5, .5, .6) # interpteted as r/g/b (the default)
+            with color(mode=CMYK): # temporarily change the mode:
+                stroke(1, 0, 0, 0) # - interpteted as c/m/y/k
+            fill(1, 0, 0)          # outside the block, the mode is restored to r/g/b
+
+        Making Colors
+
+        When called with a sequence of color-channel values, color() will return a reusable
+        Color object. These can be passed to color-related commands in lieu of numeric args.
+        For example:
+            red = color(1, 0, 0)                   # r/g/b
+            glossy_black = color(15, 15, 15, 0.25) # r/g/b/a
+            background(red)
+            fill(glossy_black)
+
+        You can also prefix the numeric args with a color mode as a convenience for setting
+        one-off colors in a mode different from the current colorspace:
+            color(mode=HSB)
+            hsb_color = color(.7, 1, .8)           # uses current mode (h/s/b)
+            cmyk_color = color(CMYK, 0, .7, .9, 0) # interpreted as c/m/y/k
+            still_hsb = color(1, .5, .25)          # uses current mode (h/s/b)
+
+        Greyscale colors can be created regardless of the current mode by passing only
+        one or two values (for the brightness and alpha respectively):
+            fill(1, .75) # translucent white
+            stroke(0)    # opaque black
+
+        If you pass a string to a color command, it must either be a hex-string (beginning
+        with a `#`) or a valid CSS color-name. The string can be followed by an optional
+        alpha argument:
+            background('#f00')   # blindingly red
+            fill('#74e9ff', 0.4) # translucent pale blue
+            stroke('chartreuse') # electric bile
+        """
         # flatten any tuples in the arguments list
         args = _flatten(args)
 
@@ -468,9 +636,22 @@ class Context(object):
         return self._colorrange
 
     def nofill(self):
+        """Set the fill color to None"""
         return self.fill(None)
 
     def fill(self, *args, **kwargs):
+        """Set the fill color
+
+        Arguments will be interpeted according to the current color-mode and range. For details:
+            help(color)
+
+        Returns:
+            the current fill color as a Color object.
+
+        Context Manager:
+            fill() can be used as part of a `with` statement in which case the fill will
+            be reset to its previous value once the block completes
+        """
         if args and isinstance(args[0], Image):
             p = Pattern(args[0])
             self._fillcolor = p
@@ -485,9 +666,22 @@ class Context(object):
         return self._fillcolor
 
     def nostroke(self):
+        """Set the stroke color to None"""
         return self.stroke(None)
 
     def stroke(self, *args):
+        """Set the stroke color
+
+        Arguments will be interpeted according to the current color-mode and range. For details:
+            help(color)
+
+        Returns:
+            the current stroke color as a Color object.
+
+        Context Manager:
+            stroke() can be used as part of a `with` statement in which case the stroke will
+            be reset to its previous value once the block completes
+        """
         if len(args) > 0:
             annotated = Color(*args)
             setattr(annotated, '_rollback', dict(stroke=self._strokecolor))
@@ -495,11 +689,13 @@ class Context(object):
         return self._strokecolor
 
     def strokewidth(self, width=None):
+        """Legacy command. Equivalent to: pen(nib=width)"""
         if width is not None:
             self._strokewidth = max(width, 0.0001)
         return self._strokewidth
 
     def capstyle(self, style=None):
+        """Legacy command. Equivalent to: pen(caps=style)"""
         if style is not None:
             if style not in (BUTT, ROUND, SQUARE):
                 raise DeviceError, 'Line cap style should be BUTT, ROUND or SQUARE.'
@@ -507,6 +703,7 @@ class Context(object):
         return self._capstyle
 
     def joinstyle(self, style=None):
+        """Legacy command. Equivalent to: pen(joins=style)"""
         if style is not None:
             if style not in (MITER, ROUND, BEVEL):
                 raise DeviceError, 'Line join style should be MITER, ROUND or BEVEL.'

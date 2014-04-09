@@ -305,6 +305,7 @@ class MagicNumber(object):
     def __cmp__(self, other):
         return cmp(self.value, other)
 
+# the WIDTH and HEIGHT globals are Dimension objects
 class Dimension(MagicNumber):
     """A persistent reference to the current canvas's size"""
     def __init__(self, dim):
@@ -317,6 +318,7 @@ class Dimension(MagicNumber):
     def value(self):
         return float(getattr(_ctx.canvas, self._dim))
 
+# the px, inch, pica, cm, & mm globals are Unit objects
 class Unit(MagicNumber):
     """A standard unit of measurement."""
     _dpx = {"px":1.0, "inch":72.0, "pica":12.0, "cm":28.3465, "mm":2.8346}
