@@ -187,10 +187,10 @@ class BuildCommand(build_py):
         if BUILD_APP: return # the app bundle doesn't need the PlotDeviceScript nib
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
         self.mkpath(rsrc_dir)
+        self.copy_file("Resources/colors.json", '%s/colors.json'%rsrc_dir)
         self.spawn(['/usr/bin/ibtool','--compile', '%s/PlotDeviceScript.nib'%rsrc_dir, "Resources/English.lproj/PlotDeviceScript.xib"])
         self.copy_file("Resources/PlotDeviceFile.icns", '%s/icon.icns'%rsrc_dir)
         self.spawn(['/usr/bin/ditto', 'build/ext', '%s/plotdevice/lib'%self.build_lib])
-        self.copy_file("Resources/colors.json", '%s/colors.json'%rsrc_dir)
 
 
 if BUILD_APP:
@@ -218,7 +218,7 @@ if BUILD_APP:
             BIN="%s/dist/PlotDevice.app/Contents/SharedSupport"%self.cwd
             self.mkpath(BIN)
             self.mkpath("%s/python"%RSRC)
-            self.mkpath("%s/English.lproj"%RSRC)
+            # self.mkpath("%s/English.lproj"%RSRC)
             remove_tree("%s/../Frameworks"%RSRC, dry_run=self.dry_run)
 
             # place the command line tool in SharedSupport
@@ -230,6 +230,12 @@ if BUILD_APP:
             # self.copy_tree('%s/lib/python2.7/lib-dynload'%RSRC, '%s/python/plotdevice/ext'%RSRC)
             self.spawn(['/usr/bin/ditto', '%s/build/ext'%TOP, '%s/python/plotdevice/lib'%RSRC])
             self.spawn(['/usr/bin/ditto', '%s/build/ext'%TOP, '%s/lib/python2.7/lib-dynload'%RSRC])
+
+            # sigh, copy the one file that matters
+            data_dir = '%s/python/plotdevice/rsrc'%RSRC
+            self.mkpath(data_dir)
+            self.copy_file("%s/Resources/colors.json"%TOP, '%s/colors.json'%data_dir)
+
 
             # find $TOP/plotdevice -name \*pyc -exec rm {} \;
 

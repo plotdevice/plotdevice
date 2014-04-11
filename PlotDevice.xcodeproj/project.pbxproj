@@ -671,7 +671,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd related/ace\n#make install";
+			shellScript = "echo \"Skipping ace.js build...\"\n#cd related/ace\n#make install";
 		};
 		2AC07CAF18EF821600B75879 /* Copy Module Resources */ = {
 			isa = PBXShellScriptBuildPhase;
