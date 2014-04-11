@@ -566,7 +566,7 @@ class Context(object):
             color(mode=HSB)
             fill(.666, 1.0, .76)
             color(mode=RGB, range=255)
-            fill(0, 0, .75)
+            fill(0, 0, 190)
             color(mode=CMYK, range=100)
             fill(95, 89, 0, 0)
 

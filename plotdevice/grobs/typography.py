@@ -173,8 +173,8 @@ class Text(TransformMixin, ColorMixin, Grob):
         return new
 
     def inherit(self, ignore=[]):
-        super(Text, self).inherit()
-        self.stylesheet._inherit(self._spec)
+        super(Text, self).inherit() # do the typical inheritence from the context
+        self.stylesheet._inherit(self._spec) # but also merge inline styles with the sheet
 
     @property
     def stylesheet(self):
