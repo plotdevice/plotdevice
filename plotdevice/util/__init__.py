@@ -128,10 +128,12 @@ def _copy_attr(v):
         return None
     elif hasattr(v, "copy"):
         return v.copy()
+    elif isinstance(v, tuple):
+        if hasattr(v, '_fields'):
+            return v._replace() # don't demote namedtuples to tuples
+        return tuple(v)
     elif isinstance(v, list):
         return list(v)
-    elif isinstance(v, tuple):
-        return tuple(v)
     elif isinstance(v, (int, str, unicode, float, bool, long)):
         return v
     else:
