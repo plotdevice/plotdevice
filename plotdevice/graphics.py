@@ -770,21 +770,48 @@ class Context(object):
         return self._effects
 
     @contextmanager
-    def clip(self, path, mask=False, channel=None):
-        """Sets the clipping region for a block of code.
+    def mask(self, stencil, channel=None):
+        """Sets an inverted clipping region for a block of drawing commands.
 
-        All drawing operations within the block will be constrained by the clipping
-        path. By default, only content within the bounds of the path will be rendered.
-        If the `mask` argument is True, this relationship is inverted and only content
-        that lies *outside* of the clipping path will be drawn.
+        All drawing operations within the block will be constrained by the inverted
+        Bezier or Image stencil. If masking to a bezier, only drawing operations
+        *outside* of the path will be visible.
+
+        With an image mask, drawing operations will have high opacity in places where
+        the mask value is *low*. The `channel` arg specifies which component of the mask
+        image should be used for this calculation. If omitted it defaults to alpha
+        (if available) or black level (if the image is opaque).
+
+        See also: clip()
         """
-        cp = self.beginclip(path, mask=mask, channel=channel)
-        self.canvas.clear(path)
+        cp = self.beginclip(stencil, mask=True, channel=channel)
+        self.canvas.clear(stencil)
         yield cp
         self.endclip()
 
-    def beginclip(self, path, mask=False, channel=None):
-        cp = Mask(path, invert=bool(mask), channel=channel)
+
+    @contextmanager
+    def clip(self, stencil, channel=None):
+        """Sets the clipping region for a block of drawing commands.
+
+        All drawing operations within the block will be constrained by the Bezier or
+        Image stencil. If clipping to a bezier, only content *within* the bounds of
+        the path will be rendered.
+
+        With an image mask, drawing operations will have high opacity in places where
+        the mask value is also high. The `channel` arg specifies which component of
+        the mask image should be used for this calculation. If omitted it defaults
+        to alpha (if available) or black level (if the image is opaque).
+
+        See also: mask()
+        """
+        cp = self.beginclip(stencil, mask=False, channel=channel)
+        self.canvas.clear(stencil)
+        yield cp
+        self.endclip()
+
+    def beginclip(self, stencil, mask=False, channel=None):
+        cp = Mask(stencil, invert=bool(mask), channel=channel)
         self.canvas.push(cp)
         return cp
 
@@ -992,9 +1019,8 @@ class Context(object):
 
 class PlotContext(object):
     """Performs the setup/cleanup for a `with pen()/stroke()/fill()/color(mode,range)` block"""
-    _statevars = dict(pen='_penstyle',
-                      mode='_colormode', range='_colorrange', stroke='_strokecolor', fill='_fillcolor',
-                      auto='_autoplot')
+    _statevars = dict(pen='_penstyle', stroke='_strokecolor', fill='_fillcolor',
+                      mode='_colormode', range='_colorrange', auto='_autoplot')
 
     def __init__(self, ctx, restore=None, **spec):
         # start with the current context state as a baseline
