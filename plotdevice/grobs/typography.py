@@ -80,12 +80,12 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
         new = self.__class__(self.text)
         _copy_attrs(self, new,
             ('x', 'y', 'width', 'height', '_transform', '_transformmode',
-            '_stylesheet', '_typespec', '_style', ))
+            '_stylesheet', '_typestyle', '_style', ))
         return new
 
     @property
     def font(self):
-        return NSFont.fontWithName_size_(_ctx._typespec.face, _ctx._typespec.size)
+        return NSFont.fontWithName_size_(_ctx._typestyle.face, _ctx._typestyle.size)
 
     def _draw(self):
         x,y = self.x, self.y
@@ -94,9 +94,9 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
         preferredWidth, preferredHeight = printer.colsize
 
         if self.width is not None:
-            if self._typespec.align == RIGHT:
+            if self._typestyle.align == RIGHT:
                 x += preferredWidth - w
-            elif self._typespec.align == CENTER:
+            elif self._typestyle.align == CENTER:
                 x += (preferredWidth-w)/2
 
         with _ns_context(): # save and restore the gstate
@@ -127,9 +127,9 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
         preferredWidth, preferredHeight = printer.colsize
 
         if self.width is not None:
-           if self._typespec.align == RIGHT:
+           if self._typestyle.align == RIGHT:
                x += preferredWidth - w
-           elif self._typespec.align == CENTER:
+           elif self._typestyle.align == CENTER:
                x += preferredWidth/2 - w/2
         length = printer.layout.numberOfGlyphs()
         path = NSBezierPath.bezierPath()
@@ -519,7 +519,7 @@ class Font(object):
             self._face = spec['face']
 
         # BUG: probably don't want to inherit this immediately...
-        self._size = float(spec.get('size', _ctx._typespec.size))
+        self._size = float(spec.get('size', _ctx._typestyle.size))
 
     def __enter__(self):
         if hasattr(self, '_prior'):
@@ -546,15 +546,15 @@ class Font(object):
         return Font(self, *args, **kwargs)
 
     def _get_ctx(self):
-        return _ctx._typespec[:2]
+        return _ctx._typestyle[:2]
 
     def _update_ctx(self, face=None, size=None):
         face, size = (face or self.face), (size or self.size)
-        _ctx._typespec = _ctx._typespec._replace(face=face, size=size)
+        _ctx._typestyle = _ctx._typestyle._replace(face=face, size=size)
 
     def _update_face(self, **spec):
         # use the basis kwarg (or this _face if omitted) as a starting point
-        basis = spec.get('face', getattr(self,'_face', _ctx._typespec.face))
+        basis = spec.get('face', getattr(self,'_face', _ctx._typestyle.face))
         if isinstance(basis, basestring):
             basis = font_face(basis)
 
@@ -753,7 +753,7 @@ class Family(object):
         return odict( (k,Font(v)) for k,v in self._faces.items())
 
     def select(self, spec):
-        current = spec.get('face', _ctx._typespec.face)
+        current = spec.get('face', _ctx._typestyle.face)
         if isinstance(current, basestring):
             current = font_face(current)
 

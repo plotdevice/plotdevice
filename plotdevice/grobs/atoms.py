@@ -193,63 +193,88 @@ class TransformMixin(Grob):
 class PenMixin(Grob):
     """Mixin class for linestyle support.
     Adds the _capstyle, _joinstyle, _dashstyle, and _strokewidth attributes to the class."""
-    stateAttrs = ('_strokewidth', '_capstyle', '_joinstyle', '_dashstyle')
+    stateAttrs = ('_penstyle', )
 
     def __init__(self, **kwargs):
         super(PenMixin, self).__init__(**kwargs)
-        self.strokewidth = kwargs.get('nib', kwargs.get('strokewidth', INHERIT))
-        self.capstyle = kwargs.get('cap', kwargs.get('capstyle', INHERIT))
-        self.joinstyle = kwargs.get('join', kwargs.get('joinstyle', INHERIT))
-        self.dashstyle = kwargs.get('dash', kwargs.get('dashstyle', INHERIT))
+        self._penstyle = INHERIT
+        self._override = {}
+
+        aliases = dict(nib='strokewidth', cap='capstyle', join='joinstyle', dash='dashstyle')
+        for attr, alias in aliases.items():
+            setattr(self, attr, kwargs.get(attr, kwargs.get(alias, INHERIT)))
+
+        # self.nib = kwargs.get('nib', kwargs.get('strokewidth', INHERIT))
+        # self.cap = kwargs.get('cap', kwargs.get('capstyle', INHERIT))
+        # self.join = kwargs.get('join', kwargs.get('joinstyle', INHERIT))
+        # self.dash = kwargs.get('dash', kwargs.get('dashstyle', INHERIT))
 
     def _get_strokewidth(self):
-        return _ctx._strokewidth if self._strokewidth is INHERIT else self._strokewidth
+        baseline = _ctx if self._penstyle is INHERIT else self
+        return self._override.get('nib', baseline._penstyle.nib)
     def _set_strokewidth(self, strokewidth):
-        self._strokewidth = max(strokewidth, 0.0001)
+        if strokewidth is INHERIT:
+            self._override.pop('nib', None)
+        else:
+            self._override['nib'] = max(strokewidth, 0.0001)
     nib = strokewidth = property(_get_strokewidth, _set_strokewidth)
 
     def _get_capstyle(self):
-        return _ctx._capstyle if self._capstyle is INHERIT else self._capstyle
+        baseline = _ctx if self._penstyle is INHERIT else self
+        return self._override.get('cap', baseline._penstyle.cap)
     def _set_capstyle(self, style):
         from bezier import BUTT, ROUND, SQUARE
-        if style not in (INHERIT, BUTT, ROUND, SQUARE):
+        if style is INHERIT:
+            self._override.pop('cap', None)
+        elif style not in (BUTT, ROUND, SQUARE):
             badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
             raise DeviceError(badstyle)
-        self._capstyle = style
+        else:
+            self._override['cap'] = style
     cap = capstyle = property(_get_capstyle, _set_capstyle)
 
     def _get_joinstyle(self):
-        return _ctx._joinstyle if self._joinstyle is INHERIT else self._joinstyle
+        baseline = _ctx if self._penstyle is INHERIT else self
+        return self._override.get('join', baseline._penstyle.join)
     def _set_joinstyle(self, style):
         from bezier import MITER, ROUND, BEVEL
-        if style not in (INHERIT, MITER, ROUND, BEVEL):
+        if style is INHERIT:
+            self._override.pop('join', None)
+        elif style not in (MITER, ROUND, BEVEL):
             badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
             raise DeviceError(badstyle)
-        self._joinstyle = style
+        else:
+            self._override['join'] = style
     join = joinstyle = property(_get_joinstyle, _set_joinstyle)
 
     def _get_dashstyle(self):
-        return _ctx._dashstyle if self._dashstyle is INHERIT else self._dashstyle
+        baseline = _ctx if self._penstyle is INHERIT else self
+        return self._override.get('dash', baseline._penstyle.dash)
     def _set_dashstyle(self, *segments):
-        if None in segments or INHERIT in segments:
-            self._dashstyle = segments[0]
+        if INHERIT in segments:
+            self._override.pop('dash', None)
+        elif None in segments:
+            self._override['dash'] = None
         else:
             steps = map(int, _flatten(segments))
             if len(steps)%2:
                 steps += steps[-1:] # assume even spacing for omitted skip sizes
-            self._dashstyle = steps
+            self._override['dash'] = steps
     dash = dashstyle = property(_get_dashstyle, _set_dashstyle)
 
 class StyleMixin(Grob):
     """Mixin class for transparency layer support.
     Adds the alpha, blend, and shadow attributes to the class."""
-    stateAttrs = ('_stylesheet', '_typespec', '_fillcolor',)
+    stateAttrs = ('_stylesheet', '_typestyle', '_fillcolor',)
 
     def __init__(self, **kwargs):
         from .typography import Stylesheet
         super(StyleMixin, self).__init__(**kwargs)
-        self._stylesheet = INHERIT # inherited global stylesheet
-        self._typespec = INHERIT   # inherited font settings
+        self._stylesheet = INHERIT # global stylesheet
+        self._typestyle = INHERIT  # ctx font style
+        self._fillcolor = INHERIT  # ctx fill color
+        if 'fill' in kwargs:
+            self._fillcolor = Color(kwargs['fill']) # override color
         self._override = Stylesheet._spec(**kwargs) # inline style params
 
     @property
@@ -259,10 +284,16 @@ class StyleMixin(Grob):
             merged = _ctx._stylesheet.copy()
         else:
             merged = self._stylesheet.copy()
-        merged._baseline = self._typespec._asdict()
-        merged._baseline['color'] = self._fillcolor
+        merged._baseline = self._typestyle._asdict()
+        merged._baseline['color'] = self.fill
         merged._override = self._override
         return merged
+
+    def _get_fill(self):
+        return _ctx._fillcolor if self._fillcolor is INHERIT else self._fillcolor
+    def _set_fill(self, *args):
+        self._fillcolor = Color(*args)
+    fill = property(_get_fill, _set_fill)
 
 class Variable(object):
     def __init__(self, name, type, default=None, min=0, max=100, value=None):

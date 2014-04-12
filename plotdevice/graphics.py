@@ -15,12 +15,13 @@ __all__ = ('Context', 'Canvas', 'DEFAULT_WIDTH', 'DEFAULT_HEIGHT')
 # default size for Canvas and GraphicsView objects
 DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
+# named tuples for grouping state attrs
+PenStyle = namedtuple('PenStyle', ['nib', 'cap', 'join', 'dash'])
+TypeStyle = namedtuple('TypeStyle', ['face', 'size', 'leading', 'align'])
+
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
-
-TypeSpec = namedtuple('TypeSpec', ['face', 'size', 'leading', 'align'])
-
 class Context(object):
-    state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_strokewidth', '_effects', '_capstyle', '_joinstyle', '_dashstyle', '_path', '_autoclosepath', '_transform', '_transformmode', '_rotationmode', '_transformstack', '_typespec', '_stylesheet', '_noImagesHint', '_oldvars', '_vars'
+    state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_rotationmode', '_transformstack', '_typestyle', '_stylesheet', '_noImagesHint', '_oldvars', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -71,10 +72,7 @@ class Context(object):
         self.canvas.background = Color(1.0)
 
         # line style
-        self._capstyle = BUTT
-        self._joinstyle = MITER
-        self._dashstyle = None
-        self._strokewidth = 1.0
+        self._penstyle = PenStyle(1.0, cap=BUTT, join=MITER, dash=None)
 
         # bezier construction
         self._path = None
@@ -91,7 +89,7 @@ class Context(object):
 
         # type styles
         self._stylesheet = Stylesheet()
-        self._typespec = TypeSpec("Helvetica", size=24, leading=1.2, align=LEFT)
+        self._typestyle = TypeStyle("Helvetica", size=24, leading=1.2, align=LEFT)
 
         # legacy internals
         self._transformstack = [] # only used by push/pop
@@ -496,16 +494,16 @@ class Context(object):
             rotate(radians=pi)
             rotate(percent=0.5)
         """
-        # with no args, return the current mode
-        if arg is None and not kwargs:
-            return self._rotationmode
+        # # with no args, return the current mode
+        # if arg is None and not kwargs:
+        #     return self._rotationmode
 
-        # when setting the mode, update the context then return the prior mode
-        if arg in (DEGREES, RADIANS, PERCENT):
-            xf = Transform()
-            xf._rollback = {'_rotationmode':self._rotationmode}
-            self._rotationmode = arg
-            return xf
+        # # when setting the mode, update the context then return the prior mode
+        # if arg in (DEGREES, RADIANS, PERCENT):
+        #     xf = Transform()
+        #     xf._rollback = {'_rotationmode':self._rotationmode}
+        #     self._rotationmode = arg
+        #     return xf
 
         # check the kwargs for unit-specific settings
         units = {k:v for k,v in kwargs.items() if k in ['degrees', 'radians', 'percent']}
@@ -524,27 +522,7 @@ class Context(object):
             degrees, radians = 0, tau*units['percent']
         return self._transform.rotate(-degrees,-radians, rollback=True)
 
-    ### Color Commands ###
-
-    def pen(self, nib=None, **spec): # spec: caps, joins, dash
-        """Set the width or line-style used for stroking paths
-
-        Positional arg:
-          `nib` sets the stroke width (in points)
-
-        Keyword args:
-          `caps` sets the endcap style (BUTT, ROUND, or SQUARE).
-          `joins` sets the linejoin style (MITER, ROUND, or BEVEL)
-          `dash` is either a single number or a list of them specifying
-          on-off intervals for drawing a dashed line
-
-        Returns:
-          a context manager allowing pen changes to be constrained to the
-          block of code following a `with` statement.
-        """
-        if nib is not None:
-            spec.setdefault('nib', nib)
-        return PlotContext(self, **spec)
+    ### Ink Commands ###
 
     def color(self, *args, **kwargs):
         """Set the default mode/range for interpreting color values (or create a color object)
@@ -690,27 +668,60 @@ class Context(object):
             self._strokecolor = annotated
         return self._strokecolor
 
+    ### Pen Commands ###
+
+    def pen(self, nib=None, **spec):
+        """Set the width or line-style used for stroking paths
+
+        Positional arg:
+          `nib` sets the stroke width (in points)
+
+        Keyword args:
+          `cap` sets the endcap style (BUTT, ROUND, or SQUARE).
+          `join` sets the linejoin style (MITER, ROUND, or BEVEL)
+          `dash` is either a single number or a list of them specifying
+                 on-off intervals for drawing a dashed line
+
+        Returns:
+          a context manager allowing pen changes to be constrained to the
+          block of code following a `with` statement.
+        """
+        # stroke width can be positional or keyword
+        if nib is not None:
+            spec.setdefault('nib', nib)
+
+        # validate the line-dash stepsize (if any)
+        if isinstance(spec.get('dash',None), (int,float,long)):
+            spec['dash'] = [spec['dash']]
+        if len(spec.get('dash',[])) % 2:
+            spec['dash'] += spec['dash'][-1:] # assume even spacing for omitted skip sizes
+
+        # pull relevant kwargs into a PenStyle tuple (but pass other args as-is)
+        newstyle = {k:spec.pop(k) for k in PenStyle._fields if k in spec}
+        spec['pen'] = self._penstyle._replace(**newstyle)
+        return PlotContext(self, **spec)
+
     def strokewidth(self, width=None):
         """Legacy command. Equivalent to: pen(nib=width)"""
         if width is not None:
-            self._strokewidth = max(width, 0.0001)
-        return self._strokewidth
+            self._penstyle = self._penstyle._replace(nib=max(width, 0.0001))
+        return self._penstyle.nib
 
     def capstyle(self, style=None):
         """Legacy command. Equivalent to: pen(caps=style)"""
         if style is not None:
             if style not in (BUTT, ROUND, SQUARE):
                 raise DeviceError, 'Line cap style should be BUTT, ROUND or SQUARE.'
-            self._capstyle = style
-        return self._capstyle
+            self._penstyle = self._penstyle._replace(cap=style)
+        return self._penstyle.cap
 
     def joinstyle(self, style=None):
         """Legacy command. Equivalent to: pen(joins=style)"""
         if style is not None:
             if style not in (MITER, ROUND, BEVEL):
                 raise DeviceError, 'Line join style should be MITER, ROUND or BEVEL.'
-            self._joinstyle = style
-        return self._joinstyle
+            self._penstyle = self._penstyle._replace(join=style)
+        return self._penstyle.join
 
     ### Compositing Effects ###
 
@@ -788,18 +799,18 @@ class Context(object):
 
     def fontsize(self, fontsize=None):
         if fontsize is not None:
-            self._typespec = self._typespec._replace(size=fontsize)
-        return self._typespec.size
+            self._typestyle = self._typestyle._replace(size=fontsize)
+        return self._typestyle.size
 
     def lineheight(self, lineheight=None):
         if lineheight is not None:
-            self._typespec = self._typespec._replace(leading=lineheight)
-        return self._typespec.leading
+            self._typestyle = self._typestyle._replace(leading=lineheight)
+        return self._typestyle.leading
 
     def align(self, align=None):
         if align is not None:
-            self._typespec = self._typespec._replace(align=align)
-        return self._typespec.align
+            self._typestyle = self._typestyle._replace(align=align)
+        return self._typestyle.align
 
     def stylesheet(self, name=None, *args, **kwargs):
         """Access the context's Stylesheet (used by the text() command to format marked-up strings)
@@ -936,6 +947,10 @@ class Context(object):
 
     ### Geometry
 
+    def geometry(self):
+        """Set the mode used for angles (DEGREES, RADIANS, or PERCENT)"""
+        pass
+
     @property
     def geo(self):
         return geometry
@@ -977,7 +992,7 @@ class Context(object):
 
 class PlotContext(object):
     """Performs the setup/cleanup for a `with pen()/stroke()/fill()/color(mode,range)` block"""
-    _statevars = dict(nib='_strokewidth', cap='_capstyle', join='_joinstyle', dash='_dashstyle',
+    _statevars = dict(pen='_penstyle',
                       mode='_colormode', range='_colorrange', stroke='_strokecolor', fill='_fillcolor',
                       auto='_autoplot')
 

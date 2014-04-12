@@ -413,11 +413,11 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 if (self._strokecolor):
                     ink = kCGPathStroke if ink is None else kCGPathFillStroke
                     CGContextSetStrokeColorWithColor(port, self._strokecolor.cgColor)
-                    CGContextSetLineWidth(port, self._strokewidth)
-                    CGContextSetLineCap(port, _CAPSTYLE[self._capstyle])
-                    CGContextSetLineJoin(port, _JOINSTYLE[self._joinstyle])
-                    if self._dashstyle:
-                        CGContextSetLineDash(port, 0, self._dashstyle, len(self._dashstyle))
+                    CGContextSetLineWidth(port, self.nib)
+                    CGContextSetLineCap(port, _CAPSTYLE[self.cap])
+                    CGContextSetLineJoin(port, _JOINSTYLE[self.join])
+                    if self.dash:
+                        CGContextSetLineDash(port, 0, self.dash, len(self.dash))
 
                 # use cocoa for patterns/gradients
                 if isinstance(self._fillcolor, (Gradient, Pattern)):
