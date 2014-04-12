@@ -6,7 +6,7 @@ from AppKit import *
 from Foundation import *
 
 from plotdevice import DeviceError
-from .atoms import TransformMixin, ColorMixin, Grob, INHERIT
+from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, Grob, INHERIT
 from . import _save, _restore
 from .transform import Transform, Region, Size
 from .colors import Color
@@ -17,6 +17,9 @@ from ..util import _copy_attrs
 _ctx = None
 __all__ = ("Text", "Family", "Font", "Stylesheet", "fonts",
            "LEFT", "RIGHT", "CENTER", "JUSTIFY", "DEFAULT")
+
+# hopefully non-conflicting style name for the stylesheet defaults
+from plotdevice import __MAGIC as DEFAULT
 
 # text alignments
 LEFT = "left"
@@ -29,9 +32,6 @@ _TEXT=dict(
     center = NSCenterTextAlignment,
     justify = NSJustifiedTextAlignment
 )
-
-# hopefully non-conflicting style name for the stylesheet defaults
-from plotdevice import __MAGIC as DEFAULT
 
 # utility method for filtering through the font library
 def fonts(like=None, western=True):
@@ -52,6 +52,280 @@ def fonts(like=None, western=True):
         in_region = {fam:not macroman for fam,macroman in in_region.items()}
 
     return [Family(fam) for fam in all_fams if in_region[fam]]
+
+class Text(TransformMixin, ColorMixin, StyleMixin, Grob):
+    kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
+
+    def __init__(self, text, x=0, y=0, width=None, height=None, **kwargs):
+        super(Text, self).__init__(**kwargs)
+
+        badargs = None
+        if not isinstance(text, basestring):
+            badargs = "text() must be called with a string as its first argument"
+        elif not all(isinstance(c, (int,float)) for c in (x,y)):
+            badargs = "text() requires x & y coordinates as its second and third arguments"
+        if badargs:
+            raise DeviceError(badargs)
+        if 'stroke' in kwargs:
+            del kwargs['stroke']
+
+        self.text = unicode(text)
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self._style = kwargs.pop('style', True)
+
+    def copy(self):
+        new = self.__class__(self.text)
+        _copy_attrs(self, new,
+            ('x', 'y', 'width', 'height', '_transform', '_transformmode',
+            '_stylesheet', '_typespec', '_style', ))
+        return new
+
+    @property
+    def font(self):
+        return NSFont.fontWithName_size_(_ctx._typespec.face, _ctx._typespec.size)
+
+    def _draw(self):
+        x,y = self.x, self.y
+        printer = Typesetter(self)
+        (dx, dy), (w, h) = printer.typeblock
+        preferredWidth, preferredHeight = printer.colsize
+
+        if self.width is not None:
+            if self._typespec.align == RIGHT:
+                x += preferredWidth - w
+            elif self._typespec.align == CENTER:
+                x += (preferredWidth-w)/2
+
+        with _ns_context(): # save and restore the gstate
+            with self.effects.applied(): # apply any blend/alpha/shadow effects
+                if self.transformmode == CENTER:
+                    # Center-mode transforms: translate to image center
+                    deltaX, deltaY = w/2.0, h/2.0
+                    t = Transform()
+                    t.translate(x+deltaX, y-printer.offset+deltaY)
+                    t.concat()
+                    self.transform.concat()
+                    printer.draw_glyphs(-deltaX-dx, -deltaY-dy)
+                else:
+                    self.transform.concat()
+                    printer.draw_glyphs(x-dx, y-dy-printer.offset)
+                return (w, h)
+
+    @property
+    def metrics(self):
+        printer = Typesetter(self)
+        return printer.typeblock.size
+
+    @property
+    def path(self):
+        x,y = self.x, self.y
+        printer = Typesetter(self)
+        (dx, dy), (w, h) = printer.typeblock
+        preferredWidth, preferredHeight = printer.colsize
+
+        if self.width is not None:
+           if self._typespec.align == RIGHT:
+               x += preferredWidth - w
+           elif self._typespec.align == CENTER:
+               x += preferredWidth/2 - w/2
+        length = printer.layout.numberOfGlyphs()
+        path = NSBezierPath.bezierPath()
+        for glyphIndex in range(length):
+            txtIndex = printer.layout.characterIndexForGlyphAtIndex_(glyphIndex)
+            txtFont, txtRng = printer.store.attribute_atIndex_effectiveRange_("NSFont", txtIndex, None)
+            lineFragmentRect, _ = printer.layout.lineFragmentRectForGlyphAtIndex_effectiveRange_(glyphIndex, None)
+
+            # Here layoutLocation is the location (in container coordinates) where the glyph was laid out.
+            layoutPoint = printer.layout.locationForGlyphAtIndex_(glyphIndex)
+            finalPoint = [lineFragmentRect[0][0],lineFragmentRect[0][1]]
+            finalPoint[0] += layoutPoint[0] - dx
+            finalPoint[1] += layoutPoint[1] - dy
+            g = printer.layout.glyphAtIndex_(glyphIndex)
+            if g == 0: continue
+            path.moveToPoint_((finalPoint[0], -finalPoint[1]))
+            path.appendBezierPathWithGlyph_inFont_(g, txtFont)
+            path.closePath()
+        path = Bezier(path)
+        trans = Transform()
+        trans.translate(x,y-printer.offset)
+        trans.scale(1.0,-1.0)
+        path = trans.transformBezierPath(path)
+        path.inherit()
+        return path
+
+
+class Stylesheet(object):
+    # stateAttrs = ('_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight')
+    kwargs = ('family','size','leading','weight','width','variant','italic','heavier','lighter','color','fill','face','fontname','fontsize','lineheight')
+
+    def __init__(self, styles=None):
+        super(Stylesheet, self).__init__()
+        self._styles = dict(styles or {})
+
+    def __repr__(self):
+        styles = repr({k.replace(DEFAULT,'DEFAULT'):v for k,v in self._styles.items() if k is not DEFAULT})
+        if DEFAULT in self._styles:
+            styles = '{DEFAULT: %r, '%self._styles[DEFAULT] + styles[1:]
+        return "Stylesheet(%s)"%(styles)
+
+    def __iter__(self):
+        return iter(self._styles.keys())
+
+    def __len__(self):
+        return len(self._styles)
+
+    def __getitem__(self, key):
+        item = self._styles.get(key)
+        return dict(item) if item else None
+
+    def __setitem__(self, key, val):
+        if val is None:
+            del self[key]
+        elif hasattr(val, 'items'):
+            self.style(key, **val)
+        else:
+            badtype = 'Stylesheet: when directly assigning styles, pass them as dictionaries (not %s)'%type(val)
+            raise DeviceError(badtype)
+
+    def __delitem__(self, key):
+        if key in self._styles:
+            del self._styles[key]
+
+    def copy(self):
+        new = self.__class__(self._styles)
+        return new
+
+    @property
+    def styles(self):
+        return dict(self._styles)
+
+    def style(self, name, *args, **kwargs):
+        if not kwargs and any(a in (None,'inherit') for a in args[:1]):
+            del self[name]
+        elif args or kwargs:
+            spec = Stylesheet._spec(*args, **kwargs)
+            color = kwargs.get('color')
+            if color and not isinstance(color, Color):
+                if isinstance(color, basestring):
+                    color = (color,)
+                color = Color(*color)
+            if color:
+                spec['color'] = color
+            self._styles[name] = spec
+        return self[name]
+
+    def _cascade(self, *styles):
+        """Apply the listed styles in order and return nsattibutedstring attrs"""
+
+        # use the inherited context settings as a baseline spec
+        spec = dict(self._baseline)
+
+        # layer the styles to generate a final font and color
+        for tag in styles:
+            spec.update(self._styles.get(tag,{}))
+
+        # let any spec-ish args passed in the text() call get final say
+        spec.update(self._override)
+
+        # assign a font and color based on the coalesced spec
+        color = Color(spec.pop('color')).nsColor
+        font = Font(**{k:v for k,v in spec.items() if k in Stylesheet.kwargs} )
+
+        # factor the relevant attrs into a paragraph style
+        graf = NSMutableParagraphStyle.alloc().init()
+        graf.setLineBreakMode_(NSLineBreakByWordWrapping)
+        graf.setAlignment_(_TEXT[spec['align']])
+        graf.setLineHeightMultiple_(spec['leading'])
+        # graf.setLineSpacing_(extra_px_of_lead)
+        # graf.setParagraphSpacing_(1em?)
+        # graf.setMinimumLineHeight_(self._lineheight)
+
+        # build the dict of features for this combination of styles
+        return {"NSFont":font._nsFont, "NSColor":color, NSParagraphStyleAttributeName:graf}
+
+    @classmethod
+    def _spec(cls, *args, **kwargs):
+        badargs = [k for k in kwargs if k not in Stylesheet.kwargs]
+        if badargs:
+            eg = '"'+'", "'.join(badargs)+'"'
+            badarg = 'unknown keyword argument%s for font style: %s'%('' if len(badargs)==1 else 's', eg)
+            raise DeviceError(badarg)
+
+        # start with kwarg values as the canonical settings
+        _canon = ('family','size','weight','italic','width','variant','leading','color')
+        spec = {k:v for k,v in kwargs.items() if k in _canon}
+
+        # be backward compatible with the old arg names
+        if 'fontsize' in kwargs:
+            spec.setdefault('size', kwargs['fontsize'])
+        if 'fill' in kwargs:
+            spec.setdefault('color', kwargs['fill'])
+        if 'lineheight' in kwargs:
+            spec.setdefault('leading', kwargs['lineheight'])
+
+        # look for a postscript name passed as `face` or `fontname` and validate it
+        basis = kwargs.get('face', kwargs.get('fontname'))
+        if basis and not font_exists(basis):
+            notfound = 'Font: no matches for Postscript name "%s"'%basis
+            raise DeviceError(notfound)
+        elif basis:
+            spec['face'] = basis
+            # hrm...
+            #
+            # for cascading purposes this might be better expanded to its
+            # fam/wgt/wid/var values. otherwise a rule that sets a face over a
+            # previously imposed family ends up getting overruled from below.
+            # unclear whether it's better to handle this in _inherit to avoid
+            # messing with the way Font uses _spec...
+
+        # allow for negative values in the weight step params, but
+        # normalize them in the spec
+        mod = int(kwargs.get('heavier', -kwargs.get('lighter', 0)))
+        if mod:
+            direction = 'lighter' if mod < 0 else 'heavier'
+            spec[direction] = abs(mod)
+
+        # search the positional args for either name/size or a Font object
+        # we want the kwargs to have higher priority, so setdefault everywhere...
+        for item in args:
+            if isinstance(item, Face):
+                spec.setdefault('face', item)
+            if isinstance(item, Font):
+                spec.setdefault('face', item._face)
+                spec.setdefault('size', item._size)
+            elif isinstance(item, basestring):
+                if facey(item):
+                    spec.setdefault('face', item)
+                elif widthy(item):
+                    spec.setdefault('width', item)
+                elif weighty(item):
+                    spec.setdefault('weight', item)
+                elif fammy(item):
+                    spec.setdefault('family', family_name(item))
+                else:
+                    print 'No clue what to make of "%s"'%item
+            elif isinstance(item, (int, float, long)):
+                spec.setdefault('size', item)
+        return spec
+
+
+
+    def test(self, txt):
+        print Typesetter(txt, self).astr
+
+# UIFontDescriptor* desc =
+#     [UIFontDescriptor fontDescriptorWithName:@"Didot" size:18];
+#     NSArray* arr =
+#     @[@{UIFontFeatureTypeIdentifierKey:@(kLetterCaseType),
+#         UIFontFeatureSelectorIdentifierKey:@(kSmallCapsSelector)}];
+#     desc =
+#     [desc fontDescriptorByAddingAttributes:
+#      @{UIFontDescriptorFeatureSettingsAttribute:arr}];
+#     UIFont* f = [UIFont fontWithDescriptor:desc size:0];
+
 
 class Singleton(type):
   def __init__(cls, name, bases, dict):
@@ -135,126 +409,6 @@ class Typesetter(object):
         txtFont, _ = cls.store.attribute_atIndex_effectiveRange_("NSFont", 0, None)
         h = cls.layout.defaultLineHeightForFont_(txtFont)
         return h
-
-class Text(TransformMixin, ColorMixin, Grob):
-    stateAttrs = ('_stylesheet',)
-    kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
-
-    __dummy_color = NSColor.blackColor()
-
-    def __init__(self, text, x=0, y=0, width=None, height=None, **kwargs):
-        super(Text, self).__init__(**kwargs)
-
-        badargs = None
-        if not isinstance(text, basestring):
-            badargs = "text() must be called with a string as its first argument"
-        elif not all(isinstance(c, (int,float)) for c in (x,y)):
-            badargs = "text() requires x & y coordinates as its second and third arguments"
-        if badargs:
-            raise DeviceError(badargs)
-        if 'stroke' in kwargs:
-            del kwargs['stroke']
-
-        self.text = unicode(text)
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self._stylesheet = INHERIT
-        self._style = kwargs.pop('style', True)
-        self._spec = Stylesheet._spec(**kwargs)
-        self._align = kwargs.get('align', LEFT)
-
-    def copy(self):
-        new = self.__class__(self.text)
-        _copy_attrs(self, new,
-            ('x', 'y', 'width', 'height', '_transform', '_transformmode',
-            '_align', '_stylesheet', '_style', '_spec'))
-        return new
-
-    def inherit(self, ignore=[]):
-        super(Text, self).inherit() # do the typical inheritence from the context
-        self.stylesheet._inherit(self._spec) # but also merge inline styles with the sheet
-
-    @property
-    def stylesheet(self):
-        if self._stylesheet==INHERIT:
-           return _ctx._stylesheet
-        return self._stylesheet
-
-    @property
-    def font(self):
-        return NSFont.fontWithName_size_(_ctx._fontname, _ctx._fontsize)
-
-    def _draw(self):
-        x,y = self.x, self.y
-        printer = Typesetter(self)
-        (dx, dy), (w, h) = printer.typeblock
-        preferredWidth, preferredHeight = printer.colsize
-
-        if self.width is not None:
-            if self._align == RIGHT:
-                x += preferredWidth - w
-            elif self._align == CENTER:
-                x += (preferredWidth-w)/2
-
-        _save()
-        # Center-mode transforms: translate to image center
-        if self.transformmode == CENTER:
-            deltaX = w / 2
-            deltaY = h / 2
-            t = Transform()
-            t.translate(x+deltaX, y-printer.offset+deltaY)
-            t.concat()
-            self.transform.concat()
-            printer.draw_glyphs(-deltaX-dx, -deltaY-dy)
-        else:
-            self.transform.concat()
-            printer.draw_glyphs(x-dx, y-dy-printer.offset)
-        _restore()
-        return (w, h)
-
-    @property
-    def metrics(self):
-        printer = Typesetter(self)
-        return printer.typeblock.size
-
-    @property
-    def path(self):
-        x,y = self.x, self.y
-        printer = Typesetter(self)
-        (dx, dy), (w, h) = printer.typeblock
-        preferredWidth, preferredHeight = printer.colsize
-
-        if self.width is not None:
-           if self._align == RIGHT:
-               x += preferredWidth - w
-           elif self._align == CENTER:
-               x += preferredWidth/2 - w/2
-        length = printer.layout.numberOfGlyphs()
-        path = NSBezierPath.bezierPath()
-        for glyphIndex in range(length):
-            txtIndex = printer.layout.characterIndexForGlyphAtIndex_(glyphIndex)
-            txtFont, txtRng = printer.store.attribute_atIndex_effectiveRange_("NSFont", txtIndex, None)
-            lineFragmentRect, _ = printer.layout.lineFragmentRectForGlyphAtIndex_effectiveRange_(glyphIndex, None)
-
-            # Here layoutLocation is the location (in container coordinates) where the glyph was laid out.
-            layoutPoint = printer.layout.locationForGlyphAtIndex_(glyphIndex)
-            finalPoint = [lineFragmentRect[0][0],lineFragmentRect[0][1]]
-            finalPoint[0] += layoutPoint[0] - dx
-            finalPoint[1] += layoutPoint[1] - dy
-            g = printer.layout.glyphAtIndex_(glyphIndex)
-            if g == 0: continue
-            path.moveToPoint_((finalPoint[0], -finalPoint[1]))
-            path.appendBezierPathWithGlyph_inFont_(g, txtFont)
-            path.closePath()
-        path = Bezier(path)
-        trans = Transform()
-        trans.translate(x,y-printer.offset)
-        trans.scale(1.0,-1.0)
-        path = trans.transformBezierPath(path)
-        path.inherit()
-        return path
 
 class XMLParser(object):
     _log = 0
@@ -346,182 +500,6 @@ class XMLParser(object):
         self.body.append(data)
         self.log(u'"%s"'%(data))
 
-class Stylesheet(Grob):
-    stateAttrs = ('_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight')
-    kwargs = ('family','size','leading','weight','width','variant','italic','heavier','lighter','color','fill','face','fontname','fontsize','lineheight')
-
-    def __init__(self, styles=None):
-        super(Stylesheet, self).__init__()
-        self._styles = dict(styles or {})
-
-    def __repr__(self):
-        styles = repr({k.replace(DEFAULT,'DEFAULT'):v for k,v in self._styles.items() if k is not DEFAULT})
-        if DEFAULT in self._styles:
-            styles = '{DEFAULT: %r, '%self._styles[DEFAULT] + styles[1:]
-        return "Stylesheet(%s)"%(styles)
-
-    def __iter__(self):
-        return iter(self._styles.keys())
-
-    def __len__(self):
-        return len(self._styles)
-
-    def __getitem__(self, key):
-        item = self._styles.get(key)
-        return dict(item) if item else None
-
-    def __setitem__(self, key, val):
-        if val is None:
-            del self[key]
-        elif hasattr(val, 'items'):
-            self.style(key, **val)
-        else:
-            badtype = 'Stylesheet: when directly assigning styles, pass them as dictionaries (not %s)'%type(val)
-            raise DeviceError(badtype)
-
-    def __delitem__(self, key):
-        if key in self._styles:
-            del self._styles[key]
-
-    def copy(self):
-        new = self.__class__(self._styles)
-        return new
-
-    @property
-    def styles(self):
-        return dict(self._styles)
-
-    def style(self, name, *args, **kwargs):
-        if not kwargs and any(a in (None,'inherit') for a in args[:1]):
-            del self[name]
-        elif args or kwargs:
-            spec = Stylesheet._spec(*args, **kwargs)
-            color = kwargs.get('color')
-            if color and not isinstance(color, Color):
-                if isinstance(color, basestring):
-                    color = (color,)
-                color = Color(*color)
-            if color:
-                spec['color'] = color
-            self._styles[name] = spec
-        return self[name]
-
-    def _inherit(self, spec):
-        """Merge overrides from the text() invocation with the context's state"""
-        self.inherit()
-        self._override = spec
-
-    def _cascade(self, *styles):
-        """Apply the listed styles in order and return nsattibutedstring attrs"""
-
-        # use the inherited context settings as a baseline spec
-        rewrites = dict(face="_fontname", size="_fontsize", color="_fillcolor",
-                        align="_align", leading="_lineheight")
-        spec = {style:getattr(self, attr) for style,attr in rewrites.items()}
-
-        # layer the styles to generate a final font and color
-        for tag in styles:
-            spec.update(self._styles.get(tag,{}))
-
-        # let any spec-ish args passed in the text() call get final say
-        spec.update(self._override)
-
-        # assign a font and color based on the coalesced spec
-        color = Color(spec.pop('color')).nsColor
-        font = Font(**{k:v for k,v in spec.items() if k in Stylesheet.kwargs} )
-
-        # factor the relevant attrs into a paragraph style
-        graf = NSMutableParagraphStyle.alloc().init()
-        graf.setLineBreakMode_(NSLineBreakByWordWrapping)
-        graf.setAlignment_(_TEXT[spec['align']])
-        graf.setLineHeightMultiple_(spec['leading'])
-        # graf.setLineSpacing_(extra_px_of_lead)
-        # graf.setParagraphSpacing_(1em?)
-        # graf.setMinimumLineHeight_(self._lineheight)
-
-        # build the dict of features for this combination of styles
-        return {"NSFont":font._nsFont, "NSColor":color, NSParagraphStyleAttributeName:graf}
-
-    @classmethod
-    def _spec(cls, *args, **kwargs):
-        badargs = [k for k in kwargs if k not in Stylesheet.kwargs]
-        if badargs:
-            eg = '"'+'", "'.join(badargs)+'"'
-            badarg = 'unknown keyword argument%s for font style: %s'%('' if len(badargs)==1 else 's', eg)
-            raise DeviceError(badarg)
-
-        # start with kwarg values as the canonical settings
-        _canon = ('family','size','weight','italic','width','variant','leading','color')
-        spec = {k:v for k,v in kwargs.items() if k in _canon}
-
-        # be backward compatible with the old arg names
-        if 'fontsize' in kwargs:
-            spec.setdefault('size', kwargs['fontsize'])
-        if 'fill' in kwargs:
-            spec.setdefault('color', kwargs['fill'])
-        if 'lineheight' in kwargs:
-            spec.setdefault('leading', kwargs['lineheight'])
-
-        # look for a postscript name passed as `face` or `fontname` and validate it
-        basis = kwargs.get('face', kwargs.get('fontname'))
-        if basis and not font_exists(basis):
-            notfound = 'Font: no matches for Postscript name "%s"'%basis
-            raise DeviceError(badarg)
-        elif basis:
-            spec['face'] = basis
-            # hrm...
-            #
-            # for cascading purposes this might be better expanded to its
-            # fam/wgt/wid/var values. otherwise a rule that sets a face over a
-            # previously imposed family ends up getting overruled from below.
-            # unclear whether it's better to handle this in _inherit to avoid
-            # messing with the way Font uses _spec...
-
-        # allow for negative values in the weight step params, but
-        # normalize them in the spec
-        mod = int(kwargs.get('heavier', -kwargs.get('lighter', 0)))
-        if mod:
-            direction = 'lighter' if mod < 0 else 'heavier'
-            spec[direction] = abs(mod)
-
-        # search the positional args for either name/size or a Font object
-        # we want the kwargs to have higher priority, so setdefault everywhere...
-        for item in args:
-            if isinstance(item, Face):
-                spec.setdefault('face', item)
-            if isinstance(item, Font):
-                spec.setdefault('face', item._face)
-                spec.setdefault('size', item._size)
-            elif isinstance(item, basestring):
-                if facey(item):
-                    spec.setdefault('face', item)
-                elif widthy(item):
-                    spec.setdefault('width', item)
-                elif weighty(item):
-                    spec.setdefault('weight', item)
-                elif fammy(item):
-                    spec.setdefault('family', family_name(item))
-                else:
-                    print 'No clue what to make of "%s"'%item
-            elif isinstance(item, (int, float, long)):
-                spec.setdefault('size', item)
-        return spec
-
-
-
-    def test(self, txt):
-        print Typesetter(txt, self).astr
-
-# UIFontDescriptor* desc =
-#     [UIFontDescriptor fontDescriptorWithName:@"Didot" size:18];
-#     NSArray* arr =
-#     @[@{UIFontFeatureTypeIdentifierKey:@(kLetterCaseType),
-#         UIFontFeatureSelectorIdentifierKey:@(kSmallCapsSelector)}];
-#     desc =
-#     [desc fontDescriptorByAddingAttributes:
-#      @{UIFontDescriptorFeatureSettingsAttribute:arr}];
-#     UIFont* f = [UIFont fontWithDescriptor:desc size:0];
-
 
 class Font(object):
 
@@ -541,7 +519,7 @@ class Font(object):
             self._face = spec['face']
 
         # BUG: probably don't want to inherit this immediately...
-        self._size = float(spec.get('size', _ctx._fontsize))
+        self._size = float(spec.get('size', _ctx._typespec.size))
 
     def __enter__(self):
         if hasattr(self, '_prior'):
@@ -568,15 +546,15 @@ class Font(object):
         return Font(self, *args, **kwargs)
 
     def _get_ctx(self):
-        return (_ctx._fontname, _ctx._fontsize)
+        return _ctx._typespec[:2]
 
     def _update_ctx(self, face=None, size=None):
         face, size = (face or self.face), (size or self.size)
-        _ctx._fontname, _ctx._fontsize = face, size
+        _ctx._typespec = _ctx._typespec._replace(face=face, size=size)
 
     def _update_face(self, **spec):
         # use the basis kwarg (or this _face if omitted) as a starting point
-        basis = spec.get('face', getattr(self,'_face', _ctx._fontname))
+        basis = spec.get('face', getattr(self,'_face', _ctx._typespec.face))
         if isinstance(basis, basestring):
             basis = font_face(basis)
 
@@ -775,7 +753,7 @@ class Family(object):
         return odict( (k,Font(v)) for k,v in self._faces.items())
 
     def select(self, spec):
-        current = spec.get('face', _ctx._fontname)
+        current = spec.get('face', _ctx._typespec.face)
         if isinstance(current, basestring):
             current = font_face(current)
 

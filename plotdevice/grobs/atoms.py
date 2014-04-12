@@ -237,6 +237,30 @@ class PenMixin(Grob):
             self._dashstyle = steps
     dash = dashstyle = property(_get_dashstyle, _set_dashstyle)
 
+class StyleMixin(Grob):
+    """Mixin class for transparency layer support.
+    Adds the alpha, blend, and shadow attributes to the class."""
+    stateAttrs = ('_stylesheet', '_typespec', '_fillcolor',)
+
+    def __init__(self, **kwargs):
+        from .typography import Stylesheet
+        super(StyleMixin, self).__init__(**kwargs)
+        self._stylesheet = INHERIT # inherited global stylesheet
+        self._typespec = INHERIT   # inherited font settings
+        self._override = Stylesheet._spec(**kwargs) # inline style params
+
+    @property
+    def stylesheet(self):
+        """An Effect object merging inherited alpha/blend/shadow with local overrides"""
+        if self._stylesheet==INHERIT:
+            merged = _ctx._stylesheet.copy()
+        else:
+            merged = self._stylesheet.copy()
+        merged._baseline = self._typespec._asdict()
+        merged._baseline['color'] = self._fillcolor
+        merged._override = self._override
+        return merged
+
 class Variable(object):
     def __init__(self, name, type, default=None, min=0, max=100, value=None):
         self.name = name

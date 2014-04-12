@@ -2,6 +2,7 @@
 import types
 from AppKit import *
 from contextlib import contextmanager, nested
+from collections import namedtuple
 
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
 from .grobs.transform import Dimension
@@ -16,8 +17,10 @@ DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 
+TypeSpec = namedtuple('TypeSpec', ['face', 'size', 'leading', 'align'])
+
 class Context(object):
-    state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_strokewidth', '_effects', '_capstyle', '_joinstyle', '_dashstyle', '_path', '_autoclosepath', '_transform', '_transformmode', '_rotationmode', '_transformstack', '_fontname', '_fontsize', '_lineheight', '_align', '_noImagesHint', '_oldvars', '_vars'
+    state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_strokewidth', '_effects', '_capstyle', '_joinstyle', '_dashstyle', '_path', '_autoclosepath', '_transform', '_transformmode', '_rotationmode', '_transformstack', '_typespec', '_stylesheet', '_noImagesHint', '_oldvars', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -72,6 +75,9 @@ class Context(object):
         self._joinstyle = MITER
         self._dashstyle = None
         self._strokewidth = 1.0
+
+        # bezier construction
+        self._path = None
         self._autoclosepath = True
         self._autoplot = True
 
@@ -85,16 +91,12 @@ class Context(object):
 
         # type styles
         self._stylesheet = Stylesheet()
-        self._fontname = "Helvetica"
-        self._fontsize = 24
-        self._lineheight = 1.2
-        self._align = LEFT
+        self._typespec = TypeSpec("Helvetica", size=24, leading=1.2, align=LEFT)
 
         # legacy internals
         self._transformstack = [] # only used by push/pop
         self._oldvars = self._vars
         self._vars = []
-        self._path = None
         self._noImagesHint = False
 
     def ximport(self, libName):
@@ -786,8 +788,18 @@ class Context(object):
 
     def fontsize(self, fontsize=None):
         if fontsize is not None:
-            self._fontsize = fontsize
-        return self._fontsize
+            self._typespec = self._typespec._replace(size=fontsize)
+        return self._typespec.size
+
+    def lineheight(self, lineheight=None):
+        if lineheight is not None:
+            self._typespec = self._typespec._replace(leading=lineheight)
+        return self._typespec.leading
+
+    def align(self, align=None):
+        if align is not None:
+            self._typespec = self._typespec._replace(align=align)
+        return self._typespec.align
 
     def stylesheet(self, name=None, *args, **kwargs):
         """Access the context's Stylesheet (used by the text() command to format marked-up strings)
@@ -828,16 +840,6 @@ class Context(object):
             return self._stylesheet
         else:
             return self._stylesheet.style(name, *args, **kwargs)
-
-    def lineheight(self, lineheight=None):
-        if lineheight is not None:
-            self._lineheight = max(lineheight, 0.01)
-        return self._lineheight
-
-    def align(self, align=None):
-        if align is not None:
-            self._align = align
-        return self._align
 
     def text(self, txt, x, y, width=None, height=None, outline=False, **kwargs):
         draw = kwargs.pop('draw', self._autoplot)
