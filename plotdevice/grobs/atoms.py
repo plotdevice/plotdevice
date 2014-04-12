@@ -174,8 +174,8 @@ class TransformMixin(Grob):
         self._transform = Transform()
         return self
 
-    def rotate(self, degrees=0, radians=0):
-        self.transform.rotate(-degrees,-radians)
+    def rotate(self, arg=None, **opts):
+        self.transform.rotate(arg, **opts)
         return self
 
     def translate(self, x=0, y=0):

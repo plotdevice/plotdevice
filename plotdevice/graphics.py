@@ -4,6 +4,7 @@ from AppKit import *
 from contextlib import contextmanager, nested
 from collections import namedtuple
 
+from plotdevice import DeviceError
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
 from .grobs.transform import Dimension
 from .grobs import *
@@ -21,7 +22,7 @@ TypeStyle = namedtuple('TypeStyle', ['face', 'size', 'leading', 'align'])
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_rotationmode', '_transformstack', '_typestyle', '_stylesheet', '_noImagesHint', '_oldvars', '_vars'
+    state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_typestyle', '_stylesheet', '_oldvars', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -72,7 +73,7 @@ class Context(object):
         self.canvas.background = Color(1.0)
 
         # line style
-        self._penstyle = PenStyle(1.0, cap=BUTT, join=MITER, dash=None)
+        self._penstyle = PenStyle(nib=1.0, cap=BUTT, join=MITER, dash=None)
 
         # bezier construction
         self._path = None
@@ -82,20 +83,19 @@ class Context(object):
         # transformation state
         self._transform = Transform()
         self._transformmode = CENTER
-        self._rotationmode = DEGREES
+        self._thetamode = DEGREES
 
         # blend, alpha, and shadow effects
         self._effects = Effect()
 
         # type styles
         self._stylesheet = Stylesheet()
-        self._typestyle = TypeStyle("Helvetica", size=24, leading=1.2, align=LEFT)
+        self._typestyle = TypeStyle(face="Helvetica", size=24, leading=1.2, align=LEFT)
 
         # legacy internals
         self._transformstack = [] # only used by push/pop
         self._oldvars = self._vars
         self._vars = []
-        self._noImagesHint = False
 
     def ximport(self, libName):
         lib = __import__(libName)
@@ -388,9 +388,15 @@ class Context(object):
     ### Transformation Commands ###
 
     def push(self):
+        """Legacy command. Equivalent to: `with transform():`
+
+        Saves the transform state to be restored by a subsequent pop()"""
         self._transformstack.insert(0, self._transform.matrix)
 
     def pop(self):
+        """Legacy command. Equivalent to: `with transform():`
+
+        Restores the transform to the saved state from a prior push()"""
         try:
             self._transform = Transform(self._transformstack[0])
             del self._transformstack[0]
@@ -445,8 +451,7 @@ class Context(object):
             raise DeviceError(badarg)
 
         rollback = {"_transform":self._transform.copy(),
-                    "_transformmode":self._transformmode,
-                    "_rotationmode":self._rotationmode}
+                    "_transformmode":self._transformmode}
         for xf in reversed(xforms):
             if hasattr(xf, '_rollback'):
                 rollback.update(xf._rollback)
@@ -464,9 +469,8 @@ class Context(object):
     def reset(self):
         """Discard any accumulated transformations from prior calls to translate, scale, rotate, or skew"""
         xf = self._transform.inverse
-        xf._rollback = {'_transform':self._transform.copy(), '_rotationmode':self._rotationmode}
+        xf._rollback = {'_transform':self._transform.copy()}
         self._transform = Transform()
-        self._rotationmode = DEGREES
         return xf
 
     def translate(self, x=0, y=0):
@@ -481,46 +485,28 @@ class Context(object):
         return self._transform.scale(x,y, rollback=True)
 
     def skew(self, x=0, y=0):
-        """Applies a 1- or 2-axis skew distortion to subsequent drawing operations"""
+        """Applies a 1- or 2-axis skew distortion to subsequent drawing operations
+
+        The `x` and `y` args are angles in the canvas's current geometry() unit
+        that control the horizontal and vertical skew respectively.
+
+        When called with only one argument, the skew will be purely horizontal.
+        """
         return self._transform.skew(x,y, rollback=True)
 
-    def rotate(self, arg=None, **kwargs):
+    def rotate(self, theta=None, **kwargs):
         """Rotate subsequent drawing operations
 
-        The angle should be specified through a keyword argument defining its range.
-        For example, all of the following will rotate the canvas counterclockwise to
-        its upside-down position:
-            rotate(degrees=180)
-            rotate(radians=pi)
-            rotate(percent=0.5)
+        Positional arg:
+          `theta` is an angle in the canvas's current geometry() unit (degress by default)
+
+        Keyword args:
+          the angle can be specified units other than the geometry-default by using a
+          keyword argument of `degrees`, `radians`, or `percent`.
         """
-        # # with no args, return the current mode
-        # if arg is None and not kwargs:
-        #     return self._rotationmode
-
-        # # when setting the mode, update the context then return the prior mode
-        # if arg in (DEGREES, RADIANS, PERCENT):
-        #     xf = Transform()
-        #     xf._rollback = {'_rotationmode':self._rotationmode}
-        #     self._rotationmode = arg
-        #     return xf
-
-        # check the kwargs for unit-specific settings
-        units = {k:v for k,v in kwargs.items() if k in ['degrees', 'radians', 'percent']}
-        if len(units) > 1:
-            badunits = 'rotate: specify one rotation at a time (got %s)' % " & ".join(units.keys())
-            raise DeviceError(badunits)
-
-        # if nothing in the kwargs, use the current mode and take the quantity from the first arg
-        if not units:
-            units[self._rotationmode] = arg or 0
-
-        # add rotation to the graphics state
-        degrees = units.get('degrees', 0)
-        radians = units.get('radians', 0)
-        if 'percent' in units:
-            degrees, radians = 0, tau*units['percent']
-        return self._transform.rotate(-degrees,-radians, rollback=True)
+        if theta is not None:
+            kwargs[self._thetamode] = theta
+        return self._transform.rotate(rollback=True, **kwargs)
 
     ### Ink Commands ###
 
@@ -971,13 +957,22 @@ class Context(object):
 
     ### Geometry
 
-    def geometry(self):
-        """Set the mode used for angles (DEGREES, RADIANS, or PERCENT)"""
-        pass
+    def _angle(self, theta, dst_mode=RADIANS):
+        """Used internally to map the current theta unit into other scales"""
+        src_mode = self._thetamode
+        if dst_mode==src_mode:
+            return theta
+        basis={DEGREES:360.0, RADIANS:2*pi, PERCENT:1.0}
+        return (theta*basis[dst_mode])/basis[src_mode]
 
-    @property
-    def geo(self):
-        return geometry
+    def geometry(self, mode=None):
+        """Set the mode used for angles (DEGREES, RADIANS, or PERCENT)"""
+        if mode is not None:
+            if mode not in (DEGREES, RADIANS, PERCENT):
+                badunit = 'the geometry() mode must be DEGREES, RADIANS, or PERCENT'
+                raise DeviceError(badunit)
+            self._thetamode = mode
+        return self._thetamode
 
     def measure(self, obj, width=None, height=None, **kwargs):
         """Returns a Size tuple for graphics objects, text, or file objects pointing to images"""

@@ -112,6 +112,7 @@ except ImportError:
 # Copyright (c) 2007 by Tom De Smedt.
 # Refer to the "Use" section on http://nodebox.net/code
 # Thanks to Dr. Florimond De Smedt at the Free University of Brussels for the math routines.
+from plotdevice import DeviceError
 
 def segment_lengths(path, relative=False, n=20):
     """Returns a list with the lengths of each segment in the path.

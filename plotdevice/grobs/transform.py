@@ -150,15 +150,15 @@ class Transform(object):
     def __exit__(self, type, value, tb):
         # once we've been through a block the _rollback (if any) can be discarded
         if hasattr(self, '_rollback'):
-            # _rollback is a dict containing any of _transform, _transformmode,
-            # and _rotationmode. in these cases do a direct overwrite then bail
-            # out rather than applying the inverse transform
+            # _rollback is a dict containing _transform and/or _transformmode.
+            # in these cases do a direct overwrite then bail out rather than
+            # applying the inverse transform
             for attr, priorval in self._rollback.items():
                 setattr(_ctx, attr, priorval)
             del self._rollback
             return
         else:
-            # restore the context's transform
+            # invert our changes to restore the context's transform
             _ctx._transform.prepend(self.inverse)
 
     @trim_zeroes
@@ -185,12 +185,39 @@ class Transform(object):
         inv._nsAffineTransform.invert()
         return inv
 
-    def rotate(self, degrees=0, radians=0, **opt):
+    def rotate(self, arg=None, **opt):
+        """Prepend a rotation transform to the receiver
+
+        The angle should be specified through a keyword argument defining its range. e.g.,
+            t.rotate(degrees=180)
+            t.rotate(radians=pi)
+            t.rotate(percent=0.5)
+
+        If called with a positional arg, the angle will be interpreted as degrees unless a
+        prior call to geometry() changed the units.
+        """
+
+        # check the kwargs for unit-specific settings
+        units = {k:v for k,v in opt.items() if k in ['degrees', 'radians', 'percent']}
+        if len(units) > 1:
+            badunits = 'rotate: specify one rotation at a time (got %s)' % " & ".join(units.keys())
+            raise DeviceError(badunits)
+
+        # if nothing in the kwargs, use the current mode and take the quantity from the first arg
+        if not units:
+            units[_ctx._thetamode] = arg or 0
+
+        # add rotation to the graphics state
+        degrees = units.get('degrees', 0)
+        radians = units.get('radians', 0)
+        if 'percent' in units:
+            degrees, radians = 0, tau*units['percent']
+
         xf = Transform()
         if degrees:
-            xf._nsAffineTransform.rotateByDegrees_(degrees)
+            xf._nsAffineTransform.rotateByDegrees_(-degrees)
         else:
-            xf._nsAffineTransform.rotateByRadians_(radians)
+            xf._nsAffineTransform.rotateByRadians_(-radians)
         if opt.get('rollback'):
             xf._rollback = {"_transform":self.copy()}
         self.prepend(xf)
@@ -215,7 +242,7 @@ class Transform(object):
         return xf
 
     def skew(self, x=0, y=0, **opt):
-        x,y = map(lambda n: n*pi/180, [x,y])
+        x,y = map(_ctx._angle, [x,y]) # convert from canvas units to radians
         xf = Transform()
         xf.matrix = (1, math.tan(y), -math.tan(x), 1, 0, 0)
         if opt.get('rollback'):

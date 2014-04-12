@@ -9,7 +9,7 @@ from plotdevice import DeviceError
 from . import _cg_context
 from .atoms import INHERIT, PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .colors import Color, Gradient, Pattern
-from .transform import CENTER, Transform, Region, Size, Point
+from .transform import CENTER, Transform, Region, Size, Point, DEGREES
 from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten
 from ..lib import pathmatics, geometry
 
@@ -201,12 +201,14 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         if rng is None:
             self._nsBezierPath.appendBezierPathWithOvalInRect_( ((x, y), (width, height)) )
         else:
+            # convert angles from canvas units to degrees
             if isinstance(rng, (int,float,long)):
                 start, end = 0, rng
             else:
                 start, end = rng
             if ccw:
                 start, end = -start, -end
+            start, end = _ctx._angle(start, DEGREES), _ctx._angle(end, DEGREES)
 
             p = NSBezierPath.bezierPath()
             p.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise_((.5,.5), .5, start, end, ccw)
@@ -252,12 +254,14 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         if not rng:
             self.oval(x-r, y-r, 2*r, 2*r)
         else:
+            # convert angles from canvas units to degrees
             if isinstance(rng, (int,float,long)):
                 start, end = 0, rng
             else:
                 start, end = rng
             if ccw:
                 start, end = -start, -end
+            start, end = _ctx._angle(start, DEGREES), _ctx._angle(end, DEGREES)
 
             # note that we're negating the ccw arg because the path is being drawn in flipped coords
             self._nsBezierPath.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise_((x,y), r, start, end, ccw)
