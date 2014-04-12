@@ -879,23 +879,20 @@ class Context(object):
         else:
             return self._stylesheet.style(name, *args, **kwargs)
 
-    def text(self, txt, x, y, width=None, height=None, outline=False, **kwargs):
-        draw = kwargs.pop('draw', self._autoplot)
-        draw = kwargs.pop('plot', draw)
-
+    def text(self, txt, x=0, y=0, width=None, height=None, outline=False, **kwargs):
         txt = Text(txt, x, y, width, height, **kwargs)
-
-        if outline:
-            txt.inherit()
-            path = txt.path
-            _copy_attrs(txt, path, {'fill', 'stroke', 'strokewidth'}.intersection(kwargs))
-            if draw:
-                path.draw()
-            return path
+        if self._path is None and not outline:
+            # treat as Text
+            if kwargs.get('plot', kwargs.get('draw', self._autoplot)):
+              txt.draw()
+            return txt
         else:
-          if draw:
-            txt.draw()
-          return txt
+            # treat as Bezier
+            txt.inherit()
+            with self._active_path(kwargs) as p:
+                p.extend(txt.path)
+            _copy_attrs(txt, p, {'fill', 'stroke', 'strokewidth'}.intersection(kwargs))
+            return p
 
     def textpath(self, txt, x, y, width=None, height=None, **kwargs):
         txt = Text(txt, x, y, width, height, **kwargs)
