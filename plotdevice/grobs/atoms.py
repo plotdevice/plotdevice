@@ -93,18 +93,21 @@ class EffectsMixin(Grob):
     def _get_alpha(self):
         return self._solo_fx.get('alpha', _ctx._effects.alpha)
     def _set_alpha(self, a):
+        from .effects import Effect
         self._solo_fx['alpha'] = Effect._validate('alpha',a)
     alpha = property(_get_alpha, _set_alpha)
 
     def _get_blend(self):
         return self._solo_fx.get('blend', _ctx._effects.blend)
     def _set_blend(self, mode):
+        from .effects import Effect
         self._solo_fx['blend'] = Effect._validate('blend', mode)
     blend = property(_get_blend, _set_blend)
 
     def _get_shadow(self):
         return self._solo_fx.get('shadow', _ctx._effects.shadow)
     def _set_shadow(self, spec):
+        from .effects import Effect
         self._solo_fx['shadow'] = Effect._validate('shadow', spec)
     shadow = property(_get_shadow, _set_shadow)
 

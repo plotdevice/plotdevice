@@ -7,7 +7,7 @@ from Foundation import *
 
 from plotdevice import DeviceError
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, Grob, INHERIT
-from . import _save, _restore
+from . import _save, _restore, _ns_context
 from .transform import Transform, Region, Size
 from .colors import Color
 from .bezier import Bezier
@@ -53,7 +53,7 @@ def fonts(like=None, western=True):
 
     return [Family(fam) for fam in all_fams if in_region[fam]]
 
-class Text(TransformMixin, ColorMixin, StyleMixin, Grob):
+class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
     kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
 
     def __init__(self, text, x=0, y=0, width=None, height=None, **kwargs):
