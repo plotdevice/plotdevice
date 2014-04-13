@@ -8,7 +8,7 @@ from plotdevice import DeviceError
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
 from .grobs.transform import Dimension
 from .grobs import *
-from .lib import geometry
+from .lib import geometry, pathmatics
 from . import grobs
 
 __all__ = ('Context', 'Canvas', 'DEFAULT_WIDTH', 'DEFAULT_HEIGHT')
@@ -404,9 +404,7 @@ class Context(object):
         self._autoclosepath = close
 
     def findpath(self, points, curvature=1.0):
-        import bezier
-        path = bezier.findpath(points, curvature=curvature)
-        return path
+        return pathmatics.findpath(points, curvature=curvature)
 
     ### Transformation Commands ###
 

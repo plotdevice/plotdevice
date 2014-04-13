@@ -427,6 +427,8 @@ def findpath(points, curvature=1.0):
     # but it shouldn't crash on something straightforward
     # as someone supplying a list of (x,y)-tuples.
 
+    from plotdevice.grobs.transform import Point
+    from plotdevice.grobs.bezier import Bezier
     from types import TupleType
     for i, pt in enumerate(points):
         if type(pt) == TupleType:
@@ -566,10 +568,3 @@ def insert_point(path, t):
             if path[j].cmd == CLOSE:
                 new_path.closepath()
     return new_path
-
-def _test():
-    import doctest, bezier
-    return doctest.testmod(bezier)
-
-if __name__=='__main__':
-    _test()
