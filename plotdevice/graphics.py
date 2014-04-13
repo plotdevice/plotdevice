@@ -653,19 +653,16 @@ class Context(object):
             fill() can be used as part of a `with` statement in which case the fill will
             be reset to its previous value once the block completes
         """
-        if args and isinstance(args[0], Image):
-            p = Pattern(args[0])
-            setattr(g, '_rollback', dict(fill=self._fillcolor))
-            self._fillcolor = p
-            self.canvas.clear(args[0])
-        elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
-            g = Gradient(*args, **kwargs)
-            setattr(g, '_rollback', dict(fill=self._fillcolor))
-            self._fillcolor = g
-        elif len(args) > 0:
-            annotated = Color(*args)
-            setattr(annotated, '_rollback', dict(fill=self._fillcolor))
-            self._fillcolor = annotated
+        if args:
+            if isinstance(args[0], Image):
+                clr = Pattern(args[0])
+                self.canvas.clear(args[0])
+            elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
+                clr = Gradient(*args, **kwargs)
+            else:
+                clr = Color(*args)
+            setattr(clr, '_rollback', dict(fill=self._fillcolor))
+            self._fillcolor = clr
         return self._fillcolor
 
     def nostroke(self):
