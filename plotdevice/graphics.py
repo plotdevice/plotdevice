@@ -124,12 +124,35 @@ class Context(object):
     def speed(self, speed):
         self.canvas.speed = speed
 
-    def background(self, *args):
+    def background(self, *args, **kwargs):
+        """Set the canvas background color
+
+        Arguments will be interpeted according to the current color-mode and range. For details:
+            help(color)
+
+        For a transparent background, call with a single arg of None
+
+        If more than one color arg is included, a gradient will be drawn. Pass a list with the
+        `steps` keyword arg to set the relative location of each color in the gradient (0-1.0).
+        Setting an `angle` keyword will draw a linear gradient (otherwise it will be radial).
+        Radial gradients will draw from the canvas center by default, but a relative center can
+        be specified with the `center` keyword arg. If included, the center arg should be a
+        2-tuple with x,y values in the range -1 to +1.
+
+        In addition to colors, you can also call background() with an image() as its sole argument.
+        In this case the image will be tiled to fill the canvas.
+        """
         if len(args) > 0:
             if len(args) == 1 and args[0] is None:
-                self.canvas.background = None
+                bg = None
+            elif isinstance(args[0], Image):
+                bg = Pattern(args[0])
+                self.canvas.clear(args[0])
+            elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
+                bg = Gradient(*args, **kwargs)
             else:
-                self.canvas.background = Color(args)
+                bg = Color(args)
+            self.canvas.background = bg
         return self.canvas.background
 
     def outputmode(self, mode=None):
@@ -611,8 +634,22 @@ class Context(object):
         Arguments will be interpeted according to the current color-mode and range. For details:
             help(color)
 
+        If more than one color arg is included, a gradient will be drawn. Pass a list with the
+        `steps` keyword arg to set the relative location of each color in the gradient (0-1.0).
+        The relative locations are based on the bounding-box of the object being filled (not its
+        convex hull). So for highly rounded objects, you'll need to adjust the steps to account for
+        the dead-space in the corners of the bounding box.
+
+        Including an `angle` keyword arg will draw a linear gradient (otherwise it will be radial).
+        Radial gradients will draw from the object center by default, but a relative center can
+        be specified with the `center` keyword arg. If included, the center arg should be a
+        2-tuple with x,y values in the range -1 to +1.
+
+        In addition to colors, you can also call fill() with an image() as its sole argument.
+        In this case the image will be tiled to fit the object being filled.
+
         Returns:
-            the current fill color as a Color object.
+            the current fill color as a Color (or Gradient/Pattern) object.
 
         Context Manager:
             fill() can be used as part of a `with` statement in which case the fill will
@@ -620,7 +657,9 @@ class Context(object):
         """
         if args and isinstance(args[0], Image):
             p = Pattern(args[0])
+            setattr(g, '_rollback', dict(fill=self._fillcolor))
             self._fillcolor = p
+            self.canvas.clear(args[0])
         elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
             g = Gradient(*args, **kwargs)
             setattr(g, '_rollback', dict(fill=self._fillcolor))
@@ -1146,8 +1185,12 @@ class Canvas(Grob):
 
     def draw(self):
         if self.background is not None:
-            self.background.set()
-            NSRectFillUsingOperation(((0,0), self.pagesize), NSCompositeSourceOver)
+            rect = ((0,0), self.pagesize)
+            if isinstance(self.background, Gradient):
+                self.background.fill(rect)
+            else:
+                self.background.set()
+                NSRectFillUsingOperation(rect, NSCompositeSourceOver)
         if self.unit.basis != 1.0:
             # it might be wiser to have this factor into ctx.transform so it doesn't end up
             # scaling stroke widths...

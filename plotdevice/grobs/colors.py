@@ -350,6 +350,9 @@ class Pattern(object):
         else:
             self._nsColor = NSColor.colorWithPatternImage_(img._nsImage)
 
+    def set(self):
+        self._nsColor.set()
+
     def fill(self, path):
         _save()
         self._nsColor.set()
@@ -359,6 +362,11 @@ class Pattern(object):
     def copy(self):
         return Pattern(self)
 
+    @property
+    def brightness(self):
+        return self._nsColor.brightnessComponent()
+
+
 class Gradient(object):
     kwargs = ('steps', 'angle', 'center')
 
@@ -367,6 +375,7 @@ class Gradient(object):
             _copy_attrs(colors[0], self, ('_gradient', '_steps', '_colors', '_center', '_angle'))
             return
 
+        # parse colors and assemble an NSGradient
         colors = [Color(c) for c in colors]
         if len(colors) == 1:
             colors.append(Color(None))
@@ -386,7 +395,11 @@ class Gradient(object):
         self._steps = steps
         self._colors = colors
         self._center = center
-        self._angle = kwargs.get('angle') # this being None is a flag to use a radial gradient
+
+        # radial if None, otherwise convert angle from context units to degrees
+        self._angle = None
+        if 'angle' in kwargs:
+            self._angle = _ctx._angle(kwargs['angle'], 'degrees')
 
     def __enter__(self):
         return None
@@ -398,12 +411,21 @@ class Gradient(object):
     def __repr__(self):
         return 'Gradient(%s, steps=%r)'%(", ".join('%r'%c for c in self._colors), self._steps)
 
+    @property
+    def brightness(self):
+        return max(clr._rgb.brightnessComponent() for clr in self._colors)
+
     def copy(self):
         return self.__class__(self)
 
-    def fill(self, grob):
-        if grob.__class__.__name__ == 'Bezier':
-            pth = grob._nsBezierPath
+    def fill(self, obj):
+        if isinstance(obj, tuple):
+            if self._angle is not None:
+                self._gradient.drawInRect_angle_(obj, self._angle)
+            else:
+                self._gradient.drawInRect_relativeCenterPosition_(obj, self._center)
+        elif obj.__class__.__name__ == 'Bezier':
+            pth = obj._nsBezierPath
             if self._angle is not None:
                 self._gradient.drawInBezierPath_angle_(pth, self._angle)
             else:
