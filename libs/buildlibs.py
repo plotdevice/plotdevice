@@ -23,7 +23,10 @@ def build_libraries():
         print "Building %s..."% lib_name
         # run_setup gave some wonky errors, so we're defaulting to a simple os.system call.
         os.chdir(dirname(setup_script))
-        result = os.system('python2.7 setup.py -q build')
+        # temporary workaround for broken clang 5.1 error: `unknown argument: '-mno-fused-madd'`
+        cmd = ('set -x ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future '
+                '&& python2.7 setup.py -q build')
+        result = os.system(cmd)
         if result > 0:
             raise OSError("Could not build %s" % lib_name)
         os.chdir(libs_root)
