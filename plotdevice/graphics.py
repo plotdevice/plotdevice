@@ -106,6 +106,19 @@ class Context(object):
     ### Setup methods ###
 
     def size(self, width=None, height=None, unit=None):
+        """Set the dimensions of the canvas
+
+        The canvas defaults to 512x512 pixels, but this can be changed by calling
+        size() as the first drawing-related command in your script. In addition to
+        the `width` and `height` args, you can provide an optional `unit`. Use one
+        of the constants: px, pica, inch, cm, or mm.
+
+        Setting the canvas unit affects all subsequent drawing commands too. For
+        instance, the following will create a 1" x 1" square in the top-left corner
+        of a standard letter-sized page:
+            size(8.5, 11, inch)
+            rect(0,0,1,1)
+        """
         if not (width is None or height is None):
             self.canvas.width = width
             self.canvas.height = height
@@ -121,8 +134,15 @@ class Context(object):
     def HEIGHT(self):
         return Dimension('height')
 
-    def speed(self, speed):
-        self.canvas.speed = speed
+    def speed(self, fps):
+        """Set the target frame-rate for an animation
+
+        Calling speed() signals to PlotDevice that your script is an animation containing a
+        `draw()` method (and optionally, `setup()` and `stop()` methods to be called at the
+        beginning and end of the run respectively). Your draw method will be called repeatedly
+        until hitting command-period.
+        """
+        self.canvas.speed = fps
 
     def background(self, *args, **kwargs):
         """Set the canvas background color
