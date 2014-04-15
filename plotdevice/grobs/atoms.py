@@ -86,8 +86,7 @@ class EffectsMixin(Grob):
         """An Effect object merging inherited alpha/blend/shadow with local overrides"""
         from .effects import Effect
         merged = Effect() if self._effects==INHERIT else self._effects
-        if self._solo_fx:
-            merged = Effect(merged, **self._solo_fx)
+        merged._fx.update(self._solo_fx)
         return merged
 
     def _get_alpha(self):

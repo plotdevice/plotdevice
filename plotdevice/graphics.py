@@ -745,49 +745,100 @@ class Context(object):
 
     ### Compositing Effects ###
 
-    @contextmanager
-    def layer(self, *fx):
-        # fx is a list of alpha(), blend(), or shadow() calls
-        for eff in fx:
-            if hasattr(eff, '_rollback'):
-                rollback = eff._rollback
-                break
-        else:
-            if fx:
-              nop = "`with layer(...)` accepts alpha(), blend(), or shadow() calls as arguments"
-              raise DeviceError(nop)
-            rollback = Effect(self._effects)
-        context_mgrs = [mgr for mgr in fx if hasattr(mgr, '__enter__')]
+    def alpha(self, *arg):
+        """Set the global alpha
 
-        self.canvas.push(Effect(self._effects))
-        self._effects = Effect()
-        yield
-        self.canvas.pop()
-        self._effects = rollback
+        Argument:
+            a value between 0 and 1.0 that controls the opacity of any objects drawn
+            to the canvas.
 
-    def alpha(self, a=-1):
-        if a is not -1:
-            if a==1.0:
-                a = None
-            self._effects = Effect(self._effects, alpha=a)
-            return self._effects
-        return self._effects.alpha or 1.0
+        Returns:
+            When called with no arguments, returns the current global alpha.
+            When called with a value, returns a context manager.
 
-    def blend(self, mode=-1):
-        if mode is not -1:
-            if mode=='normal':
-                mode = None
-            self._effects = Effect(self._effects, blend=mode)
-            return self._effects
-        return self._effects.blend or 'normal'
+        Context Manager:
+            When called as part of a `with` statement, the new alpha value will apply
+            to all drawing within the block as a `layer' effect rather than affecting
+            each object individually. As a result, all objects within the block will
+            be drawn with an alpha of 1.0, then the opacity will set for the accumulated
+            graphics as if it were a single object.
+        """
+        if not arg:
+            return self._effects.alpha
+
+        a = arg[0]
+        eff = Effect(alpha=a, rollback=True)
+        if a==1.0:
+            a = None
+        self._effects.alpha = a
+        return eff
+
+    def blend(self, *arg):
+        """Set the blend-mode used for overlapping `ink'
+
+        Argument:
+            `mode`: a string with the name of a valid blend mode.
+
+        Valid Mode Names:
+            normal, clear, copy, xor, multiply, screen,
+            overlay, darken, lighten, difference, exclusion,
+            color-dodge, color-burn, soft-light, hard-light,
+            hue, saturation, color, luminosity,
+            source-in, source-out, source-atop, plusdarker, pluslighter
+            destination-over, destination-in, destination-out, destination-atop
+
+        Returns:
+            When called with no arguments, returns the current blend mode.
+            When called with a value, returns a context manager.
+
+        Context Manager:
+            When called as part of a `with` statement, the new blend mode will apply
+            to all drawing within the block as a `layer' effect rather than affecting
+            each object individually. This means all drawing within the block will be
+            composited using the 'normal' blend mode, then the accumulated graphics
+            will be blended to the canvas as a single group.
+        """
+        if not arg:
+            return self._effects.blend
+
+        mode = arg[0]
+        eff = Effect(blend=mode, rollback=True)
+        if mode=='normal':
+            mode = None
+        self._effects.blend = mode
+        return eff
+
+    def noshadow(self):
+        """Disable the global dropshadow"""
+        return self.shadow(None)
 
     def shadow(self, *args, **kwargs):
-        if args and None in args:
-            self._effects = Effect(self._effects, shadow=None)
-        else:
-            s = Shadow(*args, **kwargs)
-            self._effects = Effect(self._effects, shadow=s)
-        return self._effects
+        """Set a global dropshadow
+
+        Arguments:
+            `color`: a Color object, string, or tuple of component values
+            `blur`: a numeric value with the blur radius
+            `offset`: a single value specifying the number of units to nudge the
+                      shadow (down and to the left), or a 2-tuple with x & y offsets
+
+        To turn dropshadows off, pass None as the `color` argument or call noshadow()
+
+        Returns:
+            When called with no arguments, returns the current Shadow object (or None).
+            When called with a value, returns a context manager.
+
+        Context Manager:
+            When called as part of a `with` statement, the shadow will apply to all
+            drawing within the block as a `layer' effect rather than affecting
+            each object individually.
+        """
+        if not (args or kwargs):
+            return self._effects.shadow
+
+        s = None if None in args else Shadow(*args, **kwargs)
+        eff = Effect(shadow=s, rollback=True)
+        self._effects.shadow = s
+        return eff
 
     @contextmanager
     def mask(self, stencil, channel=None):
@@ -799,8 +850,8 @@ class Context(object):
 
         With an image mask, drawing operations will have high opacity in places where
         the mask value is *low*. The `channel` arg specifies which component of the mask
-        image should be used for this calculation. If omitted it defaults to alpha
-        (if available) or black level (if the image is opaque).
+        image should be used for this calculation. If omitted it defaults to 'alpha'
+        (if available) or 'black' level (if the image is opaque).
 
         See also: clip()
         """
@@ -821,7 +872,7 @@ class Context(object):
         With an image mask, drawing operations will have high opacity in places where
         the mask value is also high. The `channel` arg specifies which component of
         the mask image should be used for this calculation. If omitted it defaults
-        to alpha (if available) or black level (if the image is opaque).
+        to 'alpha' (if available) or 'black' level (if the image is opaque).
 
         See also: mask()
         """

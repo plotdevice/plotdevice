@@ -78,7 +78,7 @@ class Frob(object):
 
     def _draw(self):
         # apply state changes only to contained grobs
-        with self.applied():
+        with _cg_context(), self.applied():
             if not self._grobs:
                 return
             for grob in self._grobs:
@@ -94,32 +94,37 @@ class Effect(Frob):
     def __init__(self, *args, **kwargs):
         self._fx = {}
 
-        if args and isinstance(args[0], Effect):
-            self._rollback = args[0]
-            for eff, val in args[0]._fx.items():
-                self._fx[eff] = val
-            for eff, val in kwargs.items():
-                setattr(self, eff, val)
-        else:
-            for eff in Effect.kwargs:
-                setattr(self, eff, kwargs.get(eff))
+        if kwargs.pop('rollback', False):
+            self._rollback = {eff:getattr(_ctx._effects, eff) for eff in kwargs}
 
-        # just omit effects being set to their default values
-        defaults = {"alpha":1.0, "blend":"normal", "shadow":None}
-        for attr, default in defaults.items():
-            if self._fx.get(attr) == default:
-                self._fx.pop(attr, None)
+        for eff, val in kwargs.items():
+            self._fx[eff] = Effect._validate(eff, val)
 
     def __repr__(self):
         return 'Effect(%r)'%self._fx
 
     def __enter__(self):
+        # if this isn't the first pass through the context manager, snapshot the current
+        # state for all the effects we're changing so they can be restored in __exit__
         if not hasattr(self, '_rollback'):
-            self._rollback = Effect(_ctx._effects)
-        return None
+            self._rollback = {eff:val for eff,val in _ctx._effects._fx.items() if eff in self._fx}
+
+        # concat ourseves as a new canvas container
+        _ctx.canvas.push(self)
+
+        # reset the global per-object effects state within the block (since the effects
+        # will be applied to a transparency layer encapsulating all drawing)
+        for eff in self._fx:
+            _ctx._effects._fx.pop(eff, None)
+        return
 
     def __exit__(self, type, value, tb):
-        _ctx._effects = self._rollback
+        # step back out to the pre-effects canvas container
+        _ctx.canvas.pop()
+
+        # restore the per-object effects state to what it was before the `with` block
+        for eff, val in self._rollback.items():
+            setattr(_ctx._effects, eff, val)
         del self._rollback
 
     def set(self, *effs):
@@ -135,20 +140,27 @@ class Effect(Frob):
         if 'blend' in fx:
             CGContextSetBlendMode(_cg_port(), _BLEND[fx['blend']])
         if 'shadow' in fx:
-            fx['shadow']._nsShadow.set() # don't mess with cg for shadows
-            return True
+            shadow = Shadow(None) if fx['shadow'] is None else fx['shadow']
+            shadow._nsShadow.set() # don't mess with cg for shadows
+
+        return bool(fx) # return whether any state was just changed
 
     @contextmanager
     def applied(self):
         """Apply compositing effects (if any) to any drawing inside the `with` block"""
         if self._fx:
-            self.set('blend', 'alpha')
-            with _cg_layer():
-                if not self.set('shadow'):
-                    yield # if there's no shadow, we don't need a second layer
-                else:
-                    with _cg_layer():
-                        yield # if there is, we do
+            if self.set('blend', 'alpha'):
+                with _cg_layer():
+                    if not self.set('shadow'):
+                        yield # if there's no shadow, we don't need a second layer
+                    else:
+                        with _cg_layer():
+                            yield # if there is, we do
+            else:
+                # no blend or alpha changes, but since _fx exists there must be a shadow
+                self.set('shadow')
+                with _cg_layer():
+                    yield
         else:
             # nothing to be done
             yield
@@ -323,9 +335,8 @@ class Mask(Frob):
 
     @contextmanager
     def applied(self):
-        with _cg_context():
-            self.set()
-            yield
+        self.set()
+        yield
 
 class ClippingPath(Mask):
     pass # NodeBox compat...
