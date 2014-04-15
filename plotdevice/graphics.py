@@ -624,7 +624,7 @@ class Context(object):
 
     def nofill(self):
         """Set the fill color to None"""
-        return self.fill(None)
+        self._fillcolor = None
 
     def fill(self, *args, **kwargs):
         """Set the fill color
@@ -654,6 +654,9 @@ class Context(object):
             be reset to its previous value once the block completes
         """
         if args:
+            if args[0] is None:
+                return self.nofill()
+
             if isinstance(args[0], Image):
                 clr = Pattern(args[0])
                 self.canvas.clear(args[0])
@@ -667,7 +670,7 @@ class Context(object):
 
     def nostroke(self):
         """Set the stroke color to None"""
-        return self.stroke(None)
+        self._strokecolor = None
 
     def stroke(self, *args):
         """Set the stroke color
@@ -683,6 +686,9 @@ class Context(object):
             be reset to its previous value once the block completes
         """
         if len(args) > 0:
+            if args[0] is None:
+                return self.nostroke()
+
             annotated = Color(*args)
             setattr(annotated, '_rollback', dict(stroke=self._strokecolor))
             self._strokecolor = annotated

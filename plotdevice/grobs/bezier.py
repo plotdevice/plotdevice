@@ -73,7 +73,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         for attr, val in kwargs.items():
             if attr in Bezier.kwargs:
                 setattr(self, attr, _copy_attr(val))
-        self._overrides = {k:_copy_attr(v) for k,v in kwargs.items() if k in Bezier.kwargs}
         self._autoclose = kwargs.get('close', _ctx._autoclosepath)
         self._autodraw = kwargs.get('draw', False)
 
@@ -412,12 +411,9 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 # prepare to stroke, fill, or both
                 ink = None
                 if isinstance(self._fillcolor, Color):
-                    # hrm, is this really the proper test? or will it always be
-                    # a color object and the real check is whether alpha>0?
                     ink = kCGPathFill
                     CGContextSetFillColorWithColor(port, self._fillcolor.cgColor)
                 if (self._strokecolor):
-                    # ibid.
                     ink = kCGPathStroke if ink is None else kCGPathFillStroke
                     CGContextSetStrokeColorWithColor(port, self._strokecolor.cgColor)
                     CGContextSetLineWidth(port, self.nib)

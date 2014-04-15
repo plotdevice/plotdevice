@@ -129,13 +129,13 @@ class ColorMixin(Grob):
     def _get_fill(self):
         return _ctx._fillcolor if self._fillcolor is INHERIT else self._fillcolor
     def _set_fill(self, *args):
-        self._fillcolor = Color(*args)
+        self._fillcolor = None if args[0] is None else Color(*args)
     fill = property(_get_fill, _set_fill)
 
     def _get_stroke(self):
         return _ctx._strokecolor if self._strokecolor is INHERIT else self._strokecolor
     def _set_stroke(self, *args):
-        self._strokecolor = Color(*args)
+        self._strokecolor = None if args[0] is None else Color(*args)
     stroke = property(_get_stroke, _set_stroke)
 
 class TransformMixin(Grob):
