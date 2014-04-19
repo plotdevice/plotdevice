@@ -908,11 +908,13 @@ class Context(object):
         self.endclip()
 
     def beginclip(self, stencil, mask=False, channel=None):
+        """Legacy command. Equivalent to: `with clip():`"""
         cp = Mask(stencil, invert=bool(mask), channel=channel)
         self.canvas.push(cp)
         return cp
 
     def endclip(self):
+        """Legacy command. Equivalent to: `with clip():`"""
         self.canvas.pop()
 
     ### Typography ###
@@ -921,17 +923,32 @@ class Context(object):
         """Set the current font to be used in subsequent calls to text()"""
         return Font(*args, **kwargs)._use()
 
+    def fonts(self, like=None, western=True):
+        """Returns a list of all fonts installed on the system (with filtering capabilities)
+
+        If `like` is a string, only fonts whose names contain those characters will be returned.
+
+        If `western` is True (the default), fonts with non-western character sets will be omitted.
+        If False, only non-western fonts will be returned.
+        """
+        return grobs.typography.families(like, western)
+
     def fontsize(self, fontsize=None):
+        """Legacy command. Equivalent to: font(size=fontsize)"""
         if fontsize is not None:
             self._typestyle = self._typestyle._replace(size=fontsize)
         return self._typestyle.size
 
     def lineheight(self, lineheight=None):
+        """Legacy command. Equivalent to: font(leading=lineheight)"""
         if lineheight is not None:
             self._typestyle = self._typestyle._replace(leading=lineheight)
         return self._typestyle.leading
 
     def align(self, align=None):
+        """Set the text alignment (to LEFT, RIGHT, or CENTER)
+
+        Alignment only applies to text() calls that include a column `width` parameter"""
         if align is not None:
             self._typestyle = self._typestyle._replace(align=align)
         return self._typestyle.align
@@ -977,6 +994,7 @@ class Context(object):
             return self._stylesheet.style(name, *args, **kwargs)
 
     def text(self, txt, x=0, y=0, width=None, height=None, outline=False, **kwargs):
+        """Draw a single line (or a block) of text using the current font() and stylesheet()"""
         txt = Text(txt, x, y, width, height, **kwargs)
         if self._path is None and not outline:
             # treat as Text
@@ -992,6 +1010,7 @@ class Context(object):
             return p
 
     def textpath(self, txt, x, y, width=None, height=None, **kwargs):
+        """Legacy command. Equivalent to: text(txt, outline=True, plot=False)"""
         txt = Text(txt, x, y, width, height, **kwargs)
         txt.inherit()
         return txt.path
@@ -1012,6 +1031,19 @@ class Context(object):
     ### Image commands ###
 
     def image(self, path, x=0, y=0, width=None, height=None, data=None, **kwargs):
+        """Draw a bitmap or vector image
+
+        Arguments:
+          - `path` is the path to an image file (relative to the script's directory)
+          - `x` & `y` position the image on the canvas
+          - `width` and `height` are optional and define maximum sizes for the image.
+            If provided, the image will be scaled to fit the bounds while preserving
+            its aspect ratio.
+
+        Keyword Args:
+          - `blend`, `alpha`, and `shadow` will be inherited from the context but can
+            be overridden via the corresponding keyword arguments.
+        """
         draw = kwargs.pop('draw', self._autoplot)
         draw = kwargs.pop('plot', draw)
 
@@ -1026,8 +1058,28 @@ class Context(object):
 
     ### Canvas proxy ###
 
-    def save(self, fname, format=None):
-        self.canvas.save(fname, format)
+    # def save(self, fname, format=None):
+    #     self.canvas.save(fname, format)
+
+    def clear(self, *grobs):
+        """Erase the canvas (or remove specific objects already added to it)
+
+        - with no arguments, `clear()` will remove all objects from the canvas
+        - calling `clear(all)` will erase the canvas and also reset the drawing
+          state (colors, transform, compositing effects, etc.) to default values
+        - passing references to a previously-drawn object will remove just those
+          objects. For instance the following will result in only the triangle
+          being drawn:
+              r = rect(0,0,1,1) # add a rectangle
+              t = poly(0,0,1,3) # add a triangle
+              c = oval(0,0,2,2) # add a circle
+              clear(r, c)       # remove the rectangle & circle
+        """
+        if all in grobs:
+            self.canvas.clear()
+            self._resetContext()
+        else:
+            eslf.canvas.clear(*grobs)
 
     def export(self, fname, fps=None, loop=None, bitrate=1.0):
         """Context manager for image/animation batch exports.
@@ -1056,11 +1108,6 @@ class Context(object):
 
         Note that the `loop` argument only applies to animated gifs and `bitrate` is used in the H.264
         encoding of `mov` files.
-
-        For implementational details, inspect the format-specific exporters in the repl:
-            help(export.PDF)
-            help(export.Movie)
-            help(export.ImageSequence)
         """
         from plotdevice.run.export import export
         return export(self, fname, fps=fps, loop=loop, bitrate=bitrate)
@@ -1179,7 +1226,7 @@ class _PDFRenderView(NSView):
     def isFlipped(self):
         return True
 
-class Canvas(Grob):
+class Canvas(object):
 
     def __init__(self, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, unit=px):
         self.unit = unit
@@ -1187,18 +1234,20 @@ class Canvas(Grob):
         self.height = height
         self.speed = None
         self.mousedown = False
-        self.clear()
+        self.clear() # set up the container & stack
 
     @trim_zeroes
     def __repr__(self):
         return 'Canvas(%0.3f, %0.3f, %s)'%(self.width, self.height, self.unit.name)
 
-    def clear(self, grob=None):
-        if grob:
-            self._drop(grob, self._grobs)
-        else:
+    def clear(self, *grobs):
+        """Erase the canvas entirely (or remove specified grobs)"""
+        if not grobs:
             self._grobs = self._container = []
-            self._grobstack = [self._grobs]
+            self._stack = [self._container]
+        else:
+            for grob in grobs:
+                self._drop(grob, self._grobs)
 
     def _drop(self, grob, container):
         if grob in container:
@@ -1241,17 +1290,17 @@ class Canvas(Grob):
         # tail of the container stack (see push/pop)
         self._container.append(el)
 
-    def push(self, containerGrob):
-        # when things like Masks are added, they become their own container that
-        # applies to all grobs drawn until the effect is popped off the stack
-        self._grobstack.insert(0, containerGrob)
-        self._container.append(containerGrob)
-        self._container = containerGrob
+    def push(self, containerFrob):
+        # when Frobs like Masks or Effects are added, they become their own container
+        # that applies to all grobs drawn until the frob is popped off the stack
+        self._stack.insert(0, containerFrob)
+        self._container.append(containerFrob)
+        self._container = containerFrob
 
     def pop(self):
         try:
-            del self._grobstack[0]
-            self._container = self._grobstack[0]
+            del self._stack[0]
+            self._container = self._stack[0]
         except IndexError, e:
             raise DeviceError, "pop: too many canvas pops!"
 

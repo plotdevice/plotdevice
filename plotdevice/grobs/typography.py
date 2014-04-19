@@ -15,7 +15,7 @@ from ..util.foundry import *
 from ..util import _copy_attrs
 
 _ctx = None
-__all__ = ("Text", "Family", "Font", "Stylesheet", "fonts",
+__all__ = ("Text", "Family", "Font", "Stylesheet",
            "LEFT", "RIGHT", "CENTER", "JUSTIFY", "DEFAULT")
 
 # hopefully non-conflicting style name for the stylesheet defaults
@@ -34,14 +34,7 @@ _TEXT=dict(
 )
 
 # utility method for filtering through the font library
-def fonts(like=None, western=True):
-    """Returns a list of all fonts installed on the system (with filtering capabilities)
-
-    If `like` is a string, only fonts whose names contain those characters will be returned.
-
-    If `western` is True (the default), fonts with non-western character sets will be omitted.
-    If False, only non-western fonts will be returned.
-    """
+def families(like=None, western=True):
     all_fams = family_names()
     if like:
         all_fams = [name for name in all_fams if sanitized(like) in sanitized(name)]
