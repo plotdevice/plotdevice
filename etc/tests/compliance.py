@@ -18,9 +18,8 @@ def primitives(x, y):
     x += 60
     oval(x, y, 50, 50)
     x += 60
-    with layer():
-        oval(x, y, 50, 50, range=180)
-        arc(x+25, y+25, 25, range=(180,0), fill=.5)
+    oval(x, y, 50, 50, range=180)
+    arc(x+25, y+25, 25, range=(180,0), fill=.5)
     x += 60
     star(x+25, y+25, 20, outer=25, inner=15)
     x += 60
