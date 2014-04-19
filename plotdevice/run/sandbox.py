@@ -151,7 +151,6 @@ class Sandbox(object):
                 self._code = compile("%s\n\n"%self._source, scriptname.encode('ascii', 'ignore'), "exec")
             result = self.call(compileScript)
             if not result.ok:
-                self.crashed = coredump() # why isn't this redundant?
                 return result
 
         # Reset the frame / animation status

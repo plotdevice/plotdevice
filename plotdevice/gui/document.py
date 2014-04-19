@@ -418,6 +418,7 @@ class PlotDeviceDocument(NSDocument):
         compilation = self.vm.compile(self.source)
         self.echo(compilation.output)
         if not compilation.ok:
+            self.stopScript()
             return False
 
         # Run the actual script

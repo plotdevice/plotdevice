@@ -10,7 +10,6 @@ def stacktrace(script=None, src=None):
     stack = []
     basedir = dirname(script) if script else None
     err_msg, frames = coredump(script, src)
-    # print "raw", format_list(frames)
     for frame in frames:
         # rewrite file paths relative to the script's path (but only if it's shorter)
         if basedir:
@@ -31,6 +30,12 @@ def coredump(script=None, src=None):
     etype, value, tb = exc_info()
     script = script or '<Untitled>' if src else None
     frames = extract_tb(tb, script, src)
+
+    # BUG
+    # this means we don't catch errors in autosaved `draft' docs...
+    if etype is SyntaxError and value.filename==script:
+        frames.append((script, value.lineno, '', ''))
+
     return [format_exception_only(etype, value), frames]
 
 def extract_tb(tb, script=None, src=None, debug=True):
