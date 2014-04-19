@@ -310,7 +310,7 @@ class Sandbox(object):
         if not compilation.ok:
             return
 
-        firstpass = self.call() # evaluate the script once
+        firstpass = self.render() # evaluate the script once
         self.delegate.exportStatus(firstpass)
         if not firstpass.ok:
             return
