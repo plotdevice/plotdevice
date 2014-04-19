@@ -151,7 +151,13 @@ def export(ctx, fname, fps=None, loop=None, bitrate=1.0):
         fps = fps or 30 # set a default for .mov exports
         loop = {True:-1, False:0, None:0}.get(loop, loop) # convert bool args to int
         return Movie(ctx, fname, format, fps=fps, bitrate=bitrate, loop=loop)
-    elif format=='pdf':
+    else:
+        # if the output is a static image, first write the current canvas contents
+        # to fname (meaning export can be called on its own, not just as part of
+        # a `with` statement)
+        ctx.canvas.save(fname, format=format)
+
+    if format=='pdf':
         return PDF(ctx, fname)
     elif format in ('eps','png','jpg','gif','tiff'):
         return ImageSequence(ctx, fname, format)

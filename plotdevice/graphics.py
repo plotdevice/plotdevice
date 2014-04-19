@@ -1082,7 +1082,10 @@ class Context(object):
             eslf.canvas.clear(*grobs)
 
     def export(self, fname, fps=None, loop=None, bitrate=1.0):
-        """Context manager for image/animation batch exports.
+        """Write single images or manage batch exports for animations.
+
+        To write the canvas's current contents to a file, simply call export("~/somefile.png")
+        after your drawing commands have executed.
 
         When writing multiple images or frames of animation, the export manager keeps track of when
         the canvas needs to be cleared, when to write the graphics to file, and preventing the python
