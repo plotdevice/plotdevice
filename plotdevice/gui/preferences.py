@@ -28,9 +28,9 @@ def defaultDefaults():
         "plotdevice:font-size":11,
     }
 NSUserDefaults.standardUserDefaults().registerDefaults_(defaultDefaults())
-THEMES = json.load(file(bundle_path(rsrc='ui/themes.json')))
 ERR_COL = NSColor.colorWithRed_green_blue_alpha_(167/255.0, 41/255.0, 34/255.0, 1.0)
 OK_COL = NSColor.colorWithRed_green_blue_alpha_(60/255.0, 60/255.0, 60/255.0, 1.0)
+THEMES = None # to be filled in as needed
 
 def _hex_to_nscolor(hexclr):
     hexclr = hexclr.lstrip('#')
@@ -40,6 +40,9 @@ def _hex_to_nscolor(hexclr):
 _editor_info = {}
 def editor_info(name=None):
     if not _editor_info:
+        global THEMES
+        if THEMES is None:
+            THEMES = json.load(file(bundle_path(rsrc='ui/themes.json')))
         info = dict(family=get_default('font-name'), px=get_default('font-size'))
         info.update(THEMES.get(get_default('theme')))
         info['colors'] = {k:_hex_to_nscolor(v) for k,v in info['colors'].items()}

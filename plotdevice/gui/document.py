@@ -139,12 +139,14 @@ class PlotDeviceDocument(NSDocument):
         self.awaken()
 
     def windowDidResignKey_(self, note):
-        self.editorView.blur()
-        self.editorView.window().makeFirstResponder_(None)
+        if self.editorView:
+            self.editorView.blur()
+            self.editorView.window().makeFirstResponder_(None)
 
     def windowDidBecomeKey_(self, note):
-        self.editorView.window().makeFirstResponder_(self.editorView)
-        set_timeout(self.editorView, 'focus', 0.1)
+        if self.editorView:
+            self.editorView.window().makeFirstResponder_(self.editorView)
+            set_timeout(self.editorView, 'focus', 0.1)
 
     def windowWillUseStandardFrame_defaultFrame_(self, win, rect):
         container = self.graphicsView.superview().superview().superview().superview() # nssplitview or nsview
@@ -561,8 +563,9 @@ class PlotDeviceDocument(NSDocument):
         if self.vm.session:
             self.vm.session.cancel()
 
-        self.editorView.report(self.vm.crashed, self.path)
-        self.outputView.report(self.vm.crashed, self.vm.namespace.get('FRAME') if self.vm.animated else None)
+        if self.editorView:
+            self.editorView.report(self.vm.crashed, self.path)
+            self.outputView.report(self.vm.crashed, self.vm.namespace.get('FRAME') if self.vm.animated else None)
 
     def crash(self):
         # called by the graphicsview when a grob blows up with unexpected input

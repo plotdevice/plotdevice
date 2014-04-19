@@ -27,11 +27,9 @@ class ExportSession(object):
         super(ExportSession, self).__init__()
 
     def begin(self, frames=None, pages=None, console=False):
+        from plotdevice.gui import set_timeout
         self.total = frames if frames is not None else pages
-        if plotdevice.app:
-            # only rely on a runloop if one exists. let plotdevice.script invocations handle their own timers
-            self.poll = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-                                    0.1,self,"update:",None,True)
+        self.poll = set_timeout(self, "update:", 0.1, repeat=True)
 
     def count(self):
         self.written = self.writer.framesWritten()

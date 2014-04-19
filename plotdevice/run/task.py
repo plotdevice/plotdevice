@@ -42,7 +42,7 @@ class ScriptApp(NSApplication):
         if mode=='headless':
             app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         elif mode=='windowed':
-            icon = NSImage.alloc().initWithContentsOfFile_(plotdevice.resource_path('icon.icns'))
+            icon = NSImage.alloc().initWithContentsOfFile_(resource_path('icon.icns'))
             app.setApplicationIconImage_(icon)
         return app
 
@@ -66,7 +66,7 @@ class ScriptAppDelegate(NSObject):
             self.script = PlotDeviceScript.alloc().initWithOpts_forMode_(self.opts, self.mode)
             self.script.export()
         elif self.mode=='windowed':
-            nib = NSData.dataWithContentsOfFile_(plotdevice.resource_path('PlotDeviceScript.nib'))
+            nib = NSData.dataWithContentsOfFile_(resource_path('PlotDeviceScript.nib'))
             ui = NSNib.alloc().initWithNibData_bundle_(nib, None)
             ok, objs = ui.instantiateNibWithOwner_topLevelObjects_(self, None)
             self.script.initWithOpts_forMode_(self.opts, self.mode)
@@ -110,13 +110,15 @@ class PlotDeviceScriptReloader(PlotDeviceDocumentController):
     def documents(self):
         return [self._script]
 
+from plotdevice.gui.document import PlotDeviceDocument
 class PlotDeviceScript(PlotDeviceDocument):
     def initWithOpts_forMode_(self, opts, mode):
         self.opts = opts
         self.windowed = mode=='windowed'
         self.vm = Sandbox(self)
         self.vm.path = opts['file']
-        self.vm.source = self.source()
+        self.vm.source = self.source
+        self.fullScreen = False
         return self
 
     def awakeFromNib(self):
@@ -134,6 +136,7 @@ class PlotDeviceScript(PlotDeviceDocument):
     def fileName(self):
         return self.vm.path
 
+    @property
     def source(self):
         return open(self.opts['file'], encoding='utf-8').read()
 
@@ -142,17 +145,20 @@ class PlotDeviceScript(PlotDeviceDocument):
             self.runScript()
 
     def runScript(self):
-        self.vm.source = self.source()
+        self.vm.source = self.source
         self.vm.metadata = self.opts
         super(PlotDeviceScript, self).runScript()
 
+        # hrm, the existence of w/h no longer proves anything. need to find another predicate
+        # for autosizing the window...
+
         # resize the window to fit
-        first_run = not(hasattr(self.vm.namespace,'WIDTH') or hasattr(self.vm.namespace,'HEIGHT'))
-        if first_run:
-            win = self.graphicsView.window()
-            cw,ch = self.vm.namespace['WIDTH'], self.vm.namespace['HEIGHT']
-            ch += 22 if self._showFooter else 0
-            self.graphicsView.window().setContentSize_( (cw, ch) )
+        # first_run = not(hasattr(self.vm.namespace,'WIDTH') or hasattr(self.vm.namespace,'HEIGHT'))
+        # if first_run and self.graphicsView:
+        #     win = self.graphicsView.window()
+        #     cw,ch = self.vm.namespace['WIDTH'], self.vm.namespace['HEIGHT']
+        #     ch += 22 if self._showFooter else 0
+        #     self.graphicsView.window().setContentSize_( (cw, ch) )
 
     def echo(self, output):
         STDERR.write(ERASER)
@@ -165,6 +171,7 @@ class PlotDeviceScript(PlotDeviceDocument):
         opts = dict(self.opts)
         fname = opts['export']
         opts['format'] = fname.rsplit('.',1)[1]
+        opts.setdefault('last', opts.get('first', 1))
         self.vm.metadata = opts
 
         # pick the right kind of output (single movie vs multiple docs)
@@ -180,6 +187,7 @@ class PlotDeviceScript(PlotDeviceDocument):
         self.export()
 
     def exportStatus(self, status, canvas=None):
+        # print "stat", status
         if status.ok:
             self.echo(status.output)
         else:
@@ -189,6 +197,7 @@ class PlotDeviceScript(PlotDeviceDocument):
             NSApp().delegate().done()
 
     def exportProgress(self, written, total, cancelled):
+        # print "progress", written, total, cancelled
         if cancelled:
             msg = u'Cancelling export…'
         else:

@@ -7,7 +7,7 @@ import os
 import sys
 import threading
 
-from plotdevice.lib.cEvents import (
+from cEvents import (
     loop,
     stop,
     schedule,

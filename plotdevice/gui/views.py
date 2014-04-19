@@ -222,7 +222,7 @@ class PlotDeviceGraphicsView(NSView):
             # if the script isn't currently running (and we'll be redrawing the same grobs for a while),
             # use a cached, zoom-specific nsimage for redraws
             self._raster.drawInRect_fromRect_operation_fraction_respectFlipped_hints_(
-                rect, rect, NSCompositeCopy, 1.0, True, None
+                rect, rect, NSCompositeSourceOver, 1.0, True, None
             )
         elif self.canvas is not None:
             # if the cached image doesn't exist (most likely to keep the frame rate up in an ongoing animation),
