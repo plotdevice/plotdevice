@@ -40,13 +40,15 @@ class PlotDeviceBackdrop(NSView):
         self = super(PlotDeviceBackdrop, self).setFrame_(frame)
 
     def didAddSubview_(self, subview):
-        nc = NSNotificationCenter.defaultCenter()
-        nc.addObserver_selector_name_object_(self, "viewFrameDidChange:", NSViewFrameDidChangeNotification, subview)
-        self.gfxView = subview
+        if isinstance(subview, PlotDeviceGraphicsView):
+            nc = NSNotificationCenter.defaultCenter()
+            nc.addObserver_selector_name_object_(self, "viewFrameDidChange:", NSViewFrameDidChangeNotification, subview)
+            self.gfxView = subview
 
     def willRemoveSubview_(self, subview):
-        nc = NSNotificationCenter.defaultCenter()
-        nc.removeObserver_name_object_(self, NSViewFrameDidChangeNotification, subview)
+        if isinstance(subview, PlotDeviceGraphicsView):
+            nc = NSNotificationCenter.defaultCenter()
+            nc.removeObserver_name_object_(self, NSViewFrameDidChangeNotification, subview)
 
     def drawRect_(self, rect):
         DARK_GREY.setFill()
@@ -67,13 +69,13 @@ class PlotDeviceBackdrop(NSView):
             gfxframe.origin.y = 0
         self.gfxView.setFrame_(gfxframe)
 
-
 # class defined in PlotDeviceGraphicsView.xib
 class PlotDeviceGraphicsView(NSView):
     document = objc.IBOutlet()
     zoomLevel = objc.IBOutlet()
     zoomField = objc.IBOutlet()
     zoomSlider = objc.IBOutlet()
+    placeholder = NSImage.imageNamed_('placeholder.pdf')
 
     # The zoom levels are 10%, 25%, 50%, 75%, 100%, 200% and so on up to 2000%.
     zoomLevels = [0.1, 0.25, 0.5, 0.75]
@@ -93,7 +95,7 @@ class PlotDeviceGraphicsView(NSView):
         # self.wheeldelta = 0.0
         self._zoom = 1.0
         self._volatile = False
-        self.setFrameSize_( (graphics.DEFAULT_WIDTH, graphics.DEFAULT_HEIGHT) )
+        self.setFrameSize_( self.placeholder.size() )
         self.setFocusRingType_(NSFocusRingTypeExterior)
         clipview = self.superview().superview()
         if clipview is not None:
@@ -241,7 +243,12 @@ class PlotDeviceGraphicsView(NSView):
                 # (this is where invalid args passed to grobs will throw exceptions)
                 self.document.crash()
             NSGraphicsContext.currentContext().restoreGraphicsState()
-
+        else:
+            # until the script runs (and generates a meaningful canvas) display the placeholder
+            frame = ((0,0), self.placeholder.size())
+            self.placeholder.drawInRect_fromRect_operation_fraction_respectFlipped_hints_(
+                frame, frame, NSCompositeSourceOver, 1.0, True, None
+            )
 
     # pasteboard delegate method
     def pasteboard_provideDataForType_(self, pboard, type):
