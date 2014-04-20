@@ -125,7 +125,7 @@ class PlotDeviceDocument(NSDocument):
             if is_example:
                 self.source = file(self.stationery).read().decode("utf-8")
                 self.vm.stationery = self.stationery
-                self.setDisplayName_(os.path.basename(self.stationery).replace('.nb',''))
+                self.setDisplayName_(os.path.basename(self.stationery).replace('.pv',''))
                 self.windowControllers()[0].synchronizeWindowTitleWithDocumentName()
             elif is_untitled:
                 from plotdevice.util.ottobot import genTemplate
@@ -305,8 +305,8 @@ class PlotDeviceDocument(NSDocument):
         self.source = text
 
     def prepareSavePanel_(self, panel):
-        # saving modifications to .py files is fine, but if a Save As operation happens, restrict it to .nb files
-        panel.setRequiredFileType_("nb")
+        # saving modifications to .py files is fine, but if a Save As operation happens, restrict it to .pv files
+        panel.setRequiredFileType_("pv")
         panel.setAccessoryView_(None)
         return True
 

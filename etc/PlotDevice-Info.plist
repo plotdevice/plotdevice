@@ -9,7 +9,7 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
-				<string>nb</string>
+				<string>pv</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>PlotDeviceFile</string>
@@ -96,7 +96,7 @@
 				</array>
 				<key>public.filename-extension</key>
 				<array>
-					<string>nb</string>
+					<string>pv</string>
 				</array>
 				<key>public.mime-type</key>
 				<array>
