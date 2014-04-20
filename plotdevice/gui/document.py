@@ -296,7 +296,7 @@ class PlotDeviceDocument(NSDocument):
         if path is None: return
         if os.path.exists(path):
             text = file(path).read().decode("utf-8")
-            self.vm.path = path
+            self.vm.path = path # BUG: this might be an autosave tempfile...
         elif path.startswith('TMPL:'):
             from plotdevice.util.ottobot import genTemplate
             tmpl = path.split(':',1)[1]
