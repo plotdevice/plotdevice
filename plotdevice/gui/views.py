@@ -41,9 +41,9 @@ class PlotDeviceBackdrop(NSView):
 
     def didAddSubview_(self, subview):
         if isinstance(subview, PlotDeviceGraphicsView):
+            self.gfxView = subview
             nc = NSNotificationCenter.defaultCenter()
             nc.addObserver_selector_name_object_(self, "viewFrameDidChange:", NSViewFrameDidChangeNotification, subview)
-            self.gfxView = subview
 
     def willRemoveSubview_(self, subview):
         if isinstance(subview, PlotDeviceGraphicsView):
@@ -103,6 +103,8 @@ class PlotDeviceGraphicsView(NSView):
             clipview.setBackgroundColor_(DARK_GREY)
 
     def setCanvas(self, canvas, rasterize=False):
+        first_run = self.canvas is None
+
         self.canvas = canvas
         if canvas is not None:
             is_dark = bool(canvas.background and canvas.background.brightness <= .5)
@@ -114,12 +116,17 @@ class PlotDeviceGraphicsView(NSView):
             x_pct = NSMidX(visible) / NSWidth(oldframe)
             y_pct = NSMidY(visible) / NSHeight(oldframe)
 
+            # resize
             w, h = [s*self._zoom for s in self.canvas.pagesize]
             self.setFrameSize_([w, h])
 
-            half_w = NSWidth(visible) / 2.0
-            half_h = NSHeight(visible) / 2.0
-            self.scrollPoint_( (x_pct*w-half_w, y_pct*h-half_h) )
+            # preserve the prior scrollpoint (if it exists)
+            if not first_run:
+                half_w = NSWidth(visible) / 2.0
+                half_h = NSHeight(visible) / 2.0
+                self.scrollPoint_( (x_pct*w-half_w, y_pct*h-half_h) )
+
+            # cache the canvas image (if requested)
             self._raster = self.canvas.rasterize(zoom=self.zoom) if rasterize else None
             self.setNeedsDisplay_(True)
 
