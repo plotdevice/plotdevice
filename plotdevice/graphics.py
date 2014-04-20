@@ -44,6 +44,7 @@ class Context(object):
 
         # cache a list of all of the exportable attr names (for use when making namespaces)
         self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_')))
+        self.__all__.remove('state_vars')
 
     def _activate(self):
         grobs.bind(self)
