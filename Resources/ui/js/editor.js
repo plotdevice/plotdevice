@@ -19,7 +19,7 @@ var UndoMgr = function() { this.reset(); };
 
         // The user has made a change after undoing past the last clean state.
         // We can never get back to a clean state now until markClean() is called.
-        if (this.changeCount < 0) this.changeCount = NaN; 
+        if (this.changeCount < 0) this.changeCount = NaN;
 
         this.changeCount++;
         app.edits(this.changeCount)
@@ -82,15 +82,15 @@ var Editor = function(elt){
     var undo = new UndoMgr()
     var sess = null
     var _menu_cmds = { // commands whose keyboard shortcuts are caught by ace rather than NSView
-        "Edit":['selectline', 'splitIntoLines', 'addCursorAboveSkipCurrent', 'addCursorBelowSkipCurrent', 'centerselection', 
-                'blockindent', 'blockoutdent', 'togglecomment','gotoline', 
-                'expandSnippet', 'startAutocomplete'], 
+        "Edit":['selectline', 'splitIntoLines', 'addCursorAboveSkipCurrent', 'addCursorBelowSkipCurrent', 'centerselection',
+                'blockindent', 'blockoutdent', 'togglecomment','gotoline',
+                'expandSnippet', 'startAutocomplete'],
         "Python":[]
     }
     var _htimer = null, _vtimer = null, _hmin=0, _vmin=0;
     var that = {
         init:function(){
-            
+
             // configure the editor
             ed.setShowPrintMargin(false);
             ed.setFadeFoldWidgets(true);
@@ -117,7 +117,7 @@ var Editor = function(elt){
             return that
         },
         _commandStream:function(e){
-            // listen for commands that have key equivalents in the main menu and notify the 
+            // listen for commands that have key equivalents in the main menu and notify the
             // objc side of things when one of them is entered
             var cmd = e.command.name
             _.each(_menu_cmds, function(cmds, menu){
@@ -132,7 +132,7 @@ var Editor = function(elt){
                 dom.addClass('scrolling-h')
             }
             _htimer = setTimeout(function(){
-                dom.removeClass('scrolling-h'); 
+                dom.removeClass('scrolling-h');
                 _htimer=null
             }, Math.max(_hmin-now, 180))
         },
@@ -144,7 +144,7 @@ var Editor = function(elt){
                 dom.addClass('scrolling-v')
             }
             _vtimer = setTimeout(function(){
-                dom.removeClass('scrolling-v'); 
+                dom.removeClass('scrolling-v');
                 _vtimer=null
             }, Math.max(_vmin-now, 180))
         },
@@ -203,14 +203,14 @@ var Editor = function(elt){
                 return sess.getUseWrapMode();
             }else{
                 sess.setUseWrapMode(mode);
-            }        
+            }
         },
         invisibles:function(mode){
             if (mode===undefined){
                 return sess.getShowInvisibles();
             }else{
                 ed.setShowInvisibles(mode);
-            }        
+            }
         },
         undo:function(){
             undo.undo()
@@ -233,11 +233,11 @@ var Editor = function(elt){
                     if (i==0) _.extend(ann, {type:"error", text:err})
                     return ann
                 })
-                sess.setAnnotations(anns)                
+                sess.setAnnotations(anns)
             }
 
         }
     }
-  
+
     return (dom.length==0) ? {} : that.init()
 }
