@@ -12,7 +12,7 @@
 				<string>nb</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
-			<string>PlotDeviceFile-nb.icns</string>
+			<string>PlotDeviceFile</string>
 			<key>CFBundleTypeName</key>
 			<string>PlotDevice Document</string>
 			<key>CFBundleTypeRole</key>
@@ -85,7 +85,7 @@
 			<key>UTTypeDescription</key>
 			<string>PlotDevice Document</string>
 			<key>UTTypeIconFile</key>
-			<string>PlotDeviceFile-nb</string>
+			<string>PlotDeviceFile</string>
 			<key>UTTypeIdentifier</key>
 			<string>io.plotdevice.document</string>
 			<key>UTTypeTagSpecification</key>
