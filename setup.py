@@ -21,13 +21,13 @@ from setuptools import setup, find_packages
 from setuptools.extension import Extension
 
 NAME = 'PlotDevice'
-VERSION = '1.0'
+VERSION = '0.9'
 CREATOR = 'Plod'
 BUNDLE_ID = "io.plotdevice.PlotDevice"
 
-AUTHOR = "Frederik De Bleser",
-AUTHOR_EMAIL = "frederik@pandora.be",
-URL = "http://nodebox.net/",
+AUTHOR = "Christian Swinehart",
+AUTHOR_EMAIL = "drafting@samizdat.cc",
+URL = "http://plotdevice.io/",
 CLASSIFIERS = (
     "Development Status :: 5 - Production/Stable",
     "Environment :: MacOS X :: Cocoa",
