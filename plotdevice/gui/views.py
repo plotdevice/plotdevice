@@ -95,7 +95,8 @@ class PlotDeviceGraphicsView(NSView):
         # self.wheeldelta = 0.0
         self._zoom = 1.0
         self._volatile = False
-        self.setFrameSize_( self.placeholder.size() )
+        if self.placeholder:
+            self.setFrameSize_( self.placeholder.size() )
         self.setFocusRingType_(NSFocusRingTypeExterior)
         clipview = self.superview().superview()
         if clipview is not None:
@@ -250,7 +251,7 @@ class PlotDeviceGraphicsView(NSView):
                 # (this is where invalid args passed to grobs will throw exceptions)
                 self.document.crash()
             NSGraphicsContext.currentContext().restoreGraphicsState()
-        else:
+        elif self.placeholder:
             # until the script runs (and generates a meaningful canvas) display the placeholder
             frame = ((0,0), self.placeholder.size())
             self.placeholder.drawInRect_fromRect_operation_fraction_respectFlipped_hints_(
@@ -453,3 +454,47 @@ class FullscreenView(NSView):
 
 def calc_scaling_factor(width, height, maxwidth, maxheight):
     return min(float(maxwidth) / width, float(maxheight) / height)
+
+
+class PlotDeviceIconView(NSView):
+    def isFlipped(self):
+        return True
+
+    def drawRect_(self, rect):
+        # BUG
+        # this should *not* be assuming a 128x128 bounds the way it currently is. at the
+        # very least, have an affine transform scale appropriately before drawing...
+
+        blue = NSColor.colorWithDeviceRed_green_blue_alpha_(0/255.0, 126/255.0, 159/255.0, 1)
+        red = NSColor.colorWithDeviceRed_green_blue_alpha_(221/255.0, 94/255.0, 38/255.0, 1)
+        grey = NSColor.colorWithDeviceWhite_alpha_(1, 215/255.0)
+
+        # draw the parallelograms
+        grey.setFill()
+        grams = NSBezierPath.bezierPath()
+        grams.moveToPoint_( (30,56.75) )
+        grams.lineToPoint_( (51,77.8) )
+        grams.lineToPoint_( (51,118.25) )
+        grams.lineToPoint_( (30,97.201) )
+        grams.closePath()
+
+        grams.moveToPoint_( (77,8.5) )
+        grams.lineToPoint_( (98,29.549) )
+        grams.lineToPoint_( (98,70) )
+        grams.lineToPoint_( (77,48.9) )
+        grams.closePath()
+
+        grams.moveToPoint_( (33.125, 53) )
+        grams.lineToPoint_( (73.578, 53) )
+        grams.lineToPoint_( (94.625, 74) )
+        grams.lineToPoint_( (54.174, 74) )
+        grams.closePath()
+        grams.fill()
+
+        # draw the squares
+        blue.set()
+        NSRectFillUsingOperation(( (30,6),(42,42) ), NSCompositeCopy)
+        red.set()
+        NSRectFillUsingOperation(( (56,79),(42,42) ), NSCompositeCopy)
+        super(PlotDeviceIconView, self).drawRect_(rect)
+

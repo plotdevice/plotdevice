@@ -11,6 +11,7 @@ from plotdevice.gui.preferences import get_default
 from plotdevice.run import CommandListener
 from plotdevice.gui import bundle_path, set_timeout
 from plotdevice import util
+from .views import PlotDeviceIconView
 
 LIB_DIR_README = """"You can put PlotDevice libraries In this directory to make them available to your scripts.
 """
@@ -50,6 +51,10 @@ class PlotDeviceAppDelegate(NSObject):
             flicker.setEnabled_(True)
             flicker.setHidden_(True)
             menu.submenu().insertItem_atIndex_(flicker,0)
+
+        icon = PlotDeviceIconView.alloc().initWithFrame_( ((0,0), (128,128)) )
+        NSApp().dockTile().setContentView_(icon)
+        NSApp().dockTile().display()
 
     def applicationWillBecomeActive_(self, note):
         # rescan the examples dir every time?

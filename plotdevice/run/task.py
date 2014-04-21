@@ -30,6 +30,7 @@ from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
 from plotdevice.run import Sandbox, resource_path
+from plotdevice.gui.views import PlotDeviceIconView
 # from plotdevice.gui import *
 STDOUT = sys.stdout
 STDERR = sys.stderr
@@ -42,8 +43,9 @@ class ScriptApp(NSApplication):
         if mode=='headless':
             app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         elif mode=='windowed':
-            icon = NSImage.alloc().initWithContentsOfFile_(resource_path('icon.icns'))
-            app.setApplicationIconImage_(icon)
+            icon = PlotDeviceIconView.alloc().initWithFrame_( ((0,0), (128,128)) )
+            NSApp().dockTile().setContentView_(icon)
+            NSApp().dockTile().display()
         return app
 
 class ScriptAppDelegate(NSObject):
