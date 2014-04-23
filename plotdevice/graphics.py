@@ -1152,23 +1152,23 @@ class Context(object):
 
     ### Variables ###
 
-    # def var(self, name, type, default=None, min=0, max=100, value=None):
-    #     v = Variable(name, type, default, min, max, value)
-    #     v = self.addvar(v)
+    def var(self, name, type, default=None, min=0, max=100, value=None):
+        v = Variable(name, type, default, min, max, value)
+        v = self.addvar(v)
 
-    # def addvar(self, v):
-    #     oldvar = self.findvar(v.name)
-    #     if oldvar is not None:
-    #         if oldvar.compliesTo(v):
-    #             v.value = oldvar.value
-    #     self._vars.append(v)
-    #     self._ns[v.name] = v.value
+    def addvar(self, v):
+        oldvar = self.findvar(v.name)
+        if oldvar is not None:
+            if oldvar.compliesTo(v):
+                v.value = oldvar.value
+        self._vars.append(v)
+        self._ns[v.name] = v.value
 
-    # def findvar(self, name):
-    #     for v in self._oldvars:
-    #         if v.name == name:
-    #             return v
-    #     return None
+    def findvar(self, name):
+        for v in self._oldvars:
+            if v.name == name:
+                return v
+        return None
 
 
 class PlotContext(object):
