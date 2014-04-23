@@ -493,8 +493,8 @@ class PlotDeviceIconView(NSView):
 
         # draw the squares
         blue.set()
-        NSRectFillUsingOperation(( (30,6),(42,42) ), NSCompositeCopy)
+        NSRectFillUsingOperation(( (30,6),(42,41) ), NSCompositeCopy)
         red.set()
-        NSRectFillUsingOperation(( (56,79),(42,42) ), NSCompositeCopy)
+        NSRectFillUsingOperation(( (56,80),(42,41) ), NSCompositeCopy)
         super(PlotDeviceIconView, self).drawRect_(rect)
 
