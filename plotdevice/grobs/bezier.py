@@ -73,7 +73,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         for attr, val in kwargs.items():
             if attr in Bezier.kwargs:
                 setattr(self, attr, _copy_attr(val))
-        self._autoclose = kwargs.get('close', _ctx._autoclosepath)
+        self._autoclose = kwargs.get('close', False)
         self._autodraw = kwargs.get('draw', False)
 
         # finish the path (and potentially draw it) immediately if flagged to do so.
