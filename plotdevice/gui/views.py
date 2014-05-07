@@ -467,10 +467,12 @@ class PlotDeviceIconView(NSView):
 
         blue = NSColor.colorWithDeviceRed_green_blue_alpha_(0/255.0, 126/255.0, 159/255.0, 1)
         red = NSColor.colorWithDeviceRed_green_blue_alpha_(221/255.0, 94/255.0, 38/255.0, 1)
-        grey = NSColor.colorWithDeviceWhite_alpha_(1, 215/255.0)
+        # grey = NSColor.colorWithDeviceWhite_alpha_(120/255.0, .7)
+        grey = NSColor.colorWithDeviceRed_green_blue_alpha_(227/255.0, 227/255.0, 211/255.0, 1)
 
         # draw the parallelograms
         grey.setFill()
+
         grams = NSBezierPath.bezierPath()
         grams.moveToPoint_( (30,56.75) )
         grams.lineToPoint_( (51,77.8) )
@@ -492,9 +494,9 @@ class PlotDeviceIconView(NSView):
         grams.fill()
 
         # draw the squares
-        blue.set()
+        blue.setFill()
         NSRectFillUsingOperation(( (30,6),(42,41) ), NSCompositeCopy)
-        red.set()
+        red.setFill()
         NSRectFillUsingOperation(( (56,80),(42,41) ), NSCompositeCopy)
         super(PlotDeviceIconView, self).drawRect_(rect)
 
