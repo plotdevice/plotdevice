@@ -425,7 +425,7 @@ def findpath(points, curvature=1.0):
 
     # The list of points consists of Point objects,
     # but it shouldn't crash on something straightforward
-    # as someone supplying a list of (x,y)-tuples.
+    # such as someone supplying a list of (x,y)-tuples.
 
     from plotdevice.grobs.transform import Point
     from plotdevice.grobs.bezier import Bezier
@@ -456,15 +456,14 @@ def findpath(points, curvature=1.0):
         return path
 
     curvature = 4 + (1.0-curvature)*40
-
     dx = {0: 0, len(points)-1: 0}
     dy = {0: 0, len(points)-1: 0}
     bi = {1: -0.25}
-    ax = {1: (points[2].x-points[0].x-dx[0]) / 4}
-    ay = {1: (points[2].y-points[0].y-dy[0]) / 4}
+    ax = {1: (points[2].x-points[0].x-dx[0]) / 4.0}
+    ay = {1: (points[2].y-points[0].y-dy[0]) / 4.0}
 
     for i in range(2, len(points)-1):
-        bi[i] = -1 / (curvature + bi[i-1])
+        bi[i] = -1.0 / (curvature + bi[i-1])
         ax[i] = -(points[i+1].x-points[i-1].x-ax[i-1]) * bi[i]
         ay[i] = -(points[i+1].y-points[i-1].y-ay[i-1]) * bi[i]
 

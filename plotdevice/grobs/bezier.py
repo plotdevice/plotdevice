@@ -50,7 +50,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         super(Bezier, self).__init__(**kwargs)
         self._segment_cache = {}
         self._finished = False
-        self._fulcrum = None
+        self._fulcrum = None # centerpoint (set only for primitives)
 
         # path arg might contain a list of point tuples, a bezier to copy, or a raw
         # nsbezier reference to use as the backing store. otherwise start with a
@@ -58,8 +58,8 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         if path is None:
             self._nsBezierPath = NSBezierPath.bezierPath()
         elif isinstance(path, (list,tuple)):
-            self._nsBezierPath = NSBezierPath.bezierPath()
-            self.extend(path)
+            p = pathmatics.findpath(path, 1.0 if kwargs.get('smooth') else 0.0)
+            self._nsBezierPath = p._nsBezierPath
         elif isinstance(path, Bezier):
             self._nsBezierPath = path._nsBezierPath.copy()
             _copy_attrs(path, self, self.stateAttrs)
