@@ -14,7 +14,7 @@ from .image import ciFilter
 from . import _cg_context, _cg_layer, _cg_port
 
 _ctx = None
-__all__ = ("Effect", "Shadow", "Mask",)
+__all__ = ("Effect", "Shadow", "Stencil",)
 
 # blend modes
 _BLEND=dict(
@@ -143,7 +143,10 @@ class Effect(Frob):
             shadow = Shadow(None) if fx['shadow'] is None else fx['shadow']
             shadow._nsShadow.set() # don't mess with cg for shadows
 
-        return bool(fx) # return whether any state was just changed
+        # i *think* it's better to skip the transparency layer when only blending,
+        # but am bracing for the discovery that it's not...
+        return bool(fx) and fx.keys() != ('blend',)
+        # return bool(fx) # return whether any state was just changed
 
     @contextmanager
     def applied(self):
@@ -277,10 +280,15 @@ class Shadow(object):
         self._nsShadow.setShadowOffset_((x,-y))
     offset = property(_get_offset, _set_offset)
 
-class Mask(Frob):
+class Stencil(Frob):
     def __init__(self, stencil, invert=False, channel=None):
+        from .typography import Text
         from .bezier import Bezier
         from .image import Image
+        if isinstance(stencil, Text):
+            self.path = stencil.path
+            self.path.inherit()
+            self.evenodd = invert
         if isinstance(stencil, Bezier):
             self.path = Bezier(stencil)
             self.path.inherit()
@@ -338,5 +346,5 @@ class Mask(Frob):
         self.set()
         yield
 
-class ClippingPath(Mask):
+class ClippingPath(Stencil):
     pass # NodeBox compat...

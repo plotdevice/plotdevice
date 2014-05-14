@@ -846,7 +846,7 @@ class Context(object):
             `color`: a Color object, string, or tuple of component values
             `blur`: a numeric value with the blur radius
             `offset`: a single value specifying the number of units to nudge the
-                      shadow (down and to the left), or a 2-tuple with x & y offsets
+                      shadow (down and to the right), or a 2-tuple with x & y offsets
 
         To turn dropshadows off, pass None as the `color` argument or call noshadow()
 
@@ -910,7 +910,7 @@ class Context(object):
 
     def beginclip(self, stencil, mask=False, channel=None):
         """Legacy command. Equivalent to: `with clip():`"""
-        cp = Mask(stencil, invert=bool(mask), channel=channel)
+        cp = Stencil(stencil, invert=bool(mask), channel=channel)
         self.canvas.push(cp)
         return cp
 
@@ -1295,7 +1295,7 @@ class Canvas(object):
         self._container.append(el)
 
     def push(self, containerFrob):
-        # when Frobs like Masks or Effects are added, they become their own container
+        # when Frobs like Stencils or Effects are added, they become their own container
         # that applies to all grobs drawn until the frob is popped off the stack
         self._stack.insert(0, containerFrob)
         self._container.append(containerFrob)
