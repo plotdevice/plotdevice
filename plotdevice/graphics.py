@@ -645,7 +645,10 @@ class Context(object):
 
     def nofill(self):
         """Set the fill color to None"""
+        clr = Color(None)
+        setattr(clr, '_rollback', dict(fill=self._fillcolor))
         self._fillcolor = None
+        return clr
 
     def fill(self, *args, **kwargs):
         """Set the fill color
@@ -691,7 +694,10 @@ class Context(object):
 
     def nostroke(self):
         """Set the stroke color to None"""
+        clr = Color(None)
+        setattr(clr, '_rollback', dict(fill=self._strokecolor))
         self._strokecolor = None
+        return clr
 
     def stroke(self, *args):
         """Set the stroke color
@@ -1137,7 +1143,14 @@ class Context(object):
         return self._thetamode
 
     def measure(self, obj, width=None, height=None, **kwargs):
-        """Returns a Size tuple for graphics objects, text, or file objects pointing to images"""
+        """Returns a Size tuple for graphics objects, strings, or file objects
+
+        When called with a string, the size will reflect the current font() settings
+        and will layout the text using the optional `width` and `height` arguments.
+
+        If `obj` if a file() object, PlotDevice will treat it as an image file and
+        return its pixel dimensions.
+        """
         if isinstance(obj, basestring):
             return Text(obj, 0, 0, width, height, **kwargs).metrics
         elif isinstance(obj, file):
