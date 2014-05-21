@@ -13,16 +13,12 @@ float _fast_inverse_sqrt(float x) {
 }
 
 // we're not running doom on a 32 bit cpu anymore...
-double _correct_inverse_sqrt(double x){
-    return 1.0/sqrt(x);
-}
-
 static PyObject *
 fast_inverse_sqrt(PyObject *self, PyObject *args) {
     double x;
     if (!PyArg_ParseTuple(args, "d", &x))
         return NULL;
-    x = _correct_inverse_sqrt(x);
+    x = 1.0/sqrt(x);
     return Py_BuildValue("d", x);
 }
 
@@ -41,7 +37,7 @@ angle(PyObject *self, PyObject *args) {
 
 // DISTANCE
 void _distance(double x0, double y0, double x1, double y1, double *d) {
-    *d = 1.0 / _correct_inverse_sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0));
+    *d = sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0));
 }
 static PyObject *
 distance(PyObject *self, PyObject *args) {
