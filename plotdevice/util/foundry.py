@@ -115,6 +115,12 @@ def family_name(word):
 
 def family_members(famname, names=False):
     """Returns a sorted list of Face tuples for the fonts in a family"""
+
+    # use cached data if possible...
+    if famname in _FAMILIES:
+        return _FAMILIES[famname]
+
+    # ...otherwise build the list of faces
     all_members = _fm.availableMembersOfFontFamily_(famname)
     if names:
         return [f[0] for f in all_members]
@@ -200,7 +206,9 @@ def family_members(famname, names=False):
                         # or give up utterly
                         fam[i] = f._replace(weight='Regular')
 
-    return sorted(fam, key=attrgetter('italic','wid','wgt'))
+    # save the collection to the cache before returning it
+    _FAMILIES[famname] = sorted(fam, key=attrgetter('italic','wid','wgt'))
+    return _FAMILIES[famname]
 
 # sausage gets made below:
 
@@ -368,3 +376,24 @@ def parse_display_name(dname):
 
     return weight, wgt_val, width, wid_val, variant
 
+class FontLibrary(object):
+    """Caches any families assembled by familiy_members. Watches NSFontManager for invalidation."""
+    def __init__(self):
+        self._lib = {}
+        self._hash = _fm.availableFonts()
+
+    def __contains__(self, key):
+        self.refresh()
+        return key in self._lib
+
+    def __getitem__(self, key):
+        self.refresh()
+        return self._lib[key]
+
+    def __setitem__(self, key, val):
+        self._lib[key] = val
+
+    def refresh(self):
+        if self._hash != _fm.availableFonts():
+            self.__init__()
+_FAMILIES = FontLibrary()
