@@ -44,7 +44,8 @@ def families(like=None, western=True):
     if not western:
         in_region = {fam:not macroman for fam,macroman in in_region.items()}
 
-    return [Family(fam) for fam in all_fams if in_region[fam]]
+    # return [Family(fam) for fam in all_fams if in_region[fam]]
+    return [fam for fam in all_fams if in_region[fam]]
 
 class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
     kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
