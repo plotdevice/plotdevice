@@ -13,7 +13,7 @@ __all__ = ('grid', 'random', 'shuffled', 'choice', 'ordered', 'order', 'files', 
 
 ### Utilities ###
 
-def grid(cols, rows, colSize=1, rowSize=1, shuffled = False):
+def grid(cols, rows, colSize=1, rowSize=1, shuffled=False):
     """Returns an iterator that contains coordinate tuples.
 
     The grid can be used to quickly create grid-like structures. A common way to use them is:
@@ -108,6 +108,16 @@ def order(seq, *names, **kwargs):
     return [it[1] for it in reordered]
 
 def ordered(seq, *names, **kwargs):
+    """Return a sorted copy of a list or tuple, optionally using a common item or
+    attr name of the elements within the sequence.
+
+    If included, *names should be one or more strings indicating which `fields` of
+    the sequence elements should be used in comparing their equality. If more than
+    one name is specified, the second field will be used to break `ties' based on
+    the first.
+
+    The return value will be ordered in an ascending fashion, but can be flipped
+    using the reverse=True keyword argument."""
     lst = _as_sequence(seq)
     if kwargs.get('perm') and lst:
         return _as_before(seq, [lst[idx] for idx in kwargs['perm']])
@@ -117,6 +127,7 @@ def ordered(seq, *names, **kwargs):
     return _as_before(seq, sorted(lst, key=_getter(lst, names), **kwargs))
 
 def shuffled(seq):
+    """Returns a random permutation of a list or tuple (without modifying the original)"""
     lst = _as_sequence(seq)
     shuffle(lst)
     return _as_before(seq, lst)
@@ -211,7 +222,12 @@ class ddict(BetterRepr,defaultdict):
 ### the not very pythonic but often convenient dot-notation dict ###
 
 class adict(BetterRepr, dict):
-    """A dictionary object whose items may also be accessed with dot notation."""
+    """A dictionary object whose items may also be accessed with dot notation.
+
+    Items can be assigned using dot notation even if a dictionary method of the
+    same name exists. Subsequently, dot notation will still reference the method,
+    but the assigned value can be read out using traditional `d["name"]` syntax.
+    """
     def __init__(self, *args, **kw):
         super(adict, self).__init__(*args, **kw)
         self.__initialised = True
@@ -269,6 +285,23 @@ def utf_8_encoder(unicode_csv_data):
         yield line.encode('utf-8')
 
 def read(pth, format=None, encoding='utf-8', cols=None):
+    """Returns the contents of a file into a string or format-dependent data
+    type (with special handling for json and csv files).
+
+    The format will either be inferred from the file extension or can be set
+    explicitly using the `format` arg. Text will be read using the specified
+    `encoding` or default to UTF-8.
+
+    JSON files will be parsed and an appropriate python type will be selected
+    based on the top-level object defined in the file. To preserve the ordering
+    of keys, {}'s in the file will be represented as odict objects.
+
+    CSV files will return a list of rows. By default each row will be an ordered
+    list of column values. If the first line of the file defines column names,
+    you can call read() with cols=True in which case each row will be a dictionary
+    using those names as keys. If the file doesn't define its own column names,
+    you can pass a list of strings as the `cols` parameter.
+    """
     pth = re.sub(r'^~(?=/|$)',os.getenv('HOME'),pth)
     format = format.lstrip('.') if format else pth.rsplit('.',1)[-1]
 
