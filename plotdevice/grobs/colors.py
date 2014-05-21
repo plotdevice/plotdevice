@@ -45,8 +45,8 @@ class Color(object):
         if params == 1 and args[0] is None:                # None -> transparent
             clr = Color._nscolor(GREY, 0, 0)
         elif params == 1 and isinstance(args[0], Color):   # Color object
-            is_rgb = _ctx._outputmode == RGB
-            clr = args[0]._rgb if is_rgb else args[0]._cmyk
+            _copy_attrs(args[0], self, ['_rgb','_cmyk'])
+            return
         elif params == 1 and isinstance(args[0], NSColor): # NSColor object
             clr = args[0]
         elif params>=1 and isinstance(args[0], basestring):
@@ -98,10 +98,7 @@ class Color(object):
 
     @property
     def nsColor(self):
-        if _ctx._outputmode == RGB:
-            return self._rgb
-        else:
-            return self._cmyk
+        return self._rgb if _ctx._outputmode==RGB else self._cmyk
 
     @property
     def cgColor(self):
@@ -379,37 +376,46 @@ class Gradient(object):
         colors = [Color(c) for c in colors]
         if len(colors) == 1:
             colors.append(Color(None))
-        nc = len(colors)
-        steps = kwargs.get('steps', [i/(nc-1.0) for i in range(nc)])
-        ns = len(steps)
-        if ns!=nc or not all(isinstance(n, (int,float,long)) and 0<=n<=1 for n in steps):
+        num_c = len(colors)
+        steps = kwargs.get('steps', [i/(num_c-1.0) for i in range(num_c)])
+        num_s = len(steps)
+        if num_s!=num_c or not all(isinstance(n, (int,float,long)) and 0<=n<=1 for n in steps):
             wrongstep = 'Gradient steps must equal in length to the number of colors (and lie in the range 0-1)'
             raise DeviceError(wrongstep)
         center = kwargs.get('center', [0,0])
         if len(center)!=2 or not all(isinstance(n, (int,float,long)) and -1<=n<=1 for n in center):
             offsides = 'Gradient center must be a 2-tuple or Point using relative values ranging from -1 to 1'
             raise DeviceError(offsides)
-        c_space = {RGB:NSColorSpace.deviceRGBColorSpace, CMYK:NSColorSpace.deviceCMYKColorSpace}[_ctx._outputmode]()
-        ns_clrs = [c.nsColor for c in colors]
-        self._gradient = NSGradient.alloc().initWithColors_atLocations_colorSpace_(ns_clrs, steps, c_space)
         self._steps = steps
         self._colors = colors
         self._center = center
+        self._outputmode = None
+        self._gradient = None
 
         # radial if None, otherwise convert angle from context units to degrees
         self._angle = None
         if 'angle' in kwargs:
             self._angle = _ctx._angle(kwargs['angle'], 'degrees')
 
-    def __enter__(self):
-        return None
+    # def __enter__(self):
+    #     return None
 
-    def __exit__(self, type, value, tb):
-        # setattr(_ctx, '_gradient', None)
-        pass
+    # def __exit__(self, type, value, tb):
+    #     pass
 
     def __repr__(self):
         return 'Gradient(%s, steps=%r)'%(", ".join('%r'%c for c in self._colors), self._steps)
+
+
+    @property
+    def nsGradient(self):
+        c_mode = _ctx._outputmode
+        if not self._gradient or self._outputmode!=c_mode:
+            c_space = getattr(NSColorSpace, 'deviceRGBColorSpace' if c_mode==RGB else 'deviceCMYKColorSpace')
+            ns_clrs = [c.nsColor for c in self._colors]
+            ns_gradient = NSGradient.alloc().initWithColors_atLocations_colorSpace_(ns_clrs, self._steps, c_space())
+            self._gradient, self._outputmode = ns_gradient, c_mode
+        return self._gradient
 
     @property
     def brightness(self):
@@ -421,12 +427,12 @@ class Gradient(object):
     def fill(self, obj):
         if isinstance(obj, tuple):
             if self._angle is not None:
-                self._gradient.drawInRect_angle_(obj, self._angle)
+                self.nsGradient.drawInRect_angle_(obj, self._angle)
             else:
-                self._gradient.drawInRect_relativeCenterPosition_(obj, self._center)
+                self.nsGradient.drawInRect_relativeCenterPosition_(obj, self._center)
         elif obj.__class__.__name__ == 'Bezier':
             pth = obj._nsBezierPath
             if self._angle is not None:
-                self._gradient.drawInBezierPath_angle_(pth, self._angle)
+                self.nsGradient.drawInBezierPath_angle_(pth, self._angle)
             else:
-                self._gradient.drawInBezierPath_relativeCenterPosition_(pth, self._center)
+                self.nsGradient.drawInBezierPath_relativeCenterPosition_(pth, self._center)

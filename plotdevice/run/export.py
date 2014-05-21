@@ -144,9 +144,12 @@ from contextlib import contextmanager
 from Quartz.PDFKit import *
 
 # create the appropriate context manager and return it
-def export(ctx, fname, fps=None, loop=None, bitrate=1.0):
+def export(ctx, fname, fps=None, loop=None, bitrate=1.0, mode=None):
     format = fname.rsplit('.',1)[1]
     fname = re.sub(r'^~(?=/|$)',os.getenv('HOME'),fname)
+    if mode is None:
+        mode = ctx._outputmode
+
     if format=='mov' or (format=='gif' and fps or loop is not None):
         fps = fps or 30 # set a default for .mov exports
         loop = {True:-1, False:0, None:0}.get(loop, loop) # convert bool args to int
@@ -155,12 +158,15 @@ def export(ctx, fname, fps=None, loop=None, bitrate=1.0):
         # if the output is a static image, first write the current canvas contents
         # to fname (meaning export can be called on its own, not just as part of
         # a `with` statement)
+        oldmode = ctx._outputmode
+        ctx._outputmode = mode
         ctx.canvas.save(fname, format=format)
+        ctx._outputmode = oldmode
 
     if format=='pdf':
-        return PDF(ctx, fname)
+        return PDF(ctx, fname, mode)
     elif format in ('eps','png','jpg','gif','tiff'):
-        return ImageSequence(ctx, fname, format)
+        return ImageSequence(ctx, fname, format, mode)
     else:
         unknown = 'Unknown export format "%s"'%format
         raise RuntimeError(unknown)
@@ -266,8 +272,9 @@ class ImageSequence(object):
                     ... # draw the next image in the sequence
 
     """
-    def __init__(self, ctx, fname, format):
+    def __init__(self, ctx, fname, format, mode):
         self._ctx = ctx
+        self._outputmode = mode
         self.fname = fname
         self.format = format
         self.idx = None
@@ -277,9 +284,11 @@ class ImageSequence(object):
             self.tmpl = "".join([head,counter,tail.replace('#','')])
         else:
             self.tmpl = re.sub(r'^(.*)(\.[a-z]{3,4})$', r'\1-%04i\2', fname)
+
     def __enter__(self):
         self._ctx._saveContext()
         self._ctx.canvas.clear()
+        self._ctx._outputmode = self._outputmode
         return self
     def __exit__(self, type, value, tb):
         if self.idx is None:
@@ -329,13 +338,15 @@ class PDF(object):
         with export('singlepage.pdf') as pdf:
             ... # draw the one and only page
     """
-    def __init__(self, ctx, fname):
+    def __init__(self, ctx, fname, mode):
         self._ctx = ctx
+        self._outputmode = mode
         self.fname = fname
         self.doc = None
     def __enter__(self):
         self._ctx._saveContext()
         self._ctx.canvas.clear()
+        self._ctx._outputmode = self._outputmode
         return self
     def __exit__(self, type, value, tb):
         self.finish() or self._ctx.canvas.save(self.fname, 'pdf')
