@@ -202,7 +202,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         else:
             # convert angles from canvas units to degrees
             if isinstance(rng, (int,float,long)):
-                start, end = 0, rng
+                start, end = sorted([0, rng])
             else:
                 start, end = rng
             if ccw:
@@ -255,7 +255,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         else:
             # convert angles from canvas units to degrees
             if isinstance(rng, (int,float,long)):
-                start, end = 0, rng
+                start, end = sorted([0, rng])
             else:
                 start, end = rng
             if ccw:
