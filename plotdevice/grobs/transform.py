@@ -67,21 +67,32 @@ class Point(object):
     def angle(self, x=0, y=0):
         if isinstance(x, Point):
             x, y = x.__iter__()
-        return geometry.angle(self.x, self.y, x, y)
+        theta = geometry.angle(self.x, self.y, x, y)
+        basis={DEGREES:360.0, RADIANS:2*pi, PERCENT:1.0}
+        return (theta*basis[_ctx._thetamode])/basis[DEGREES]
+
 
     def distance(self, x=0, y=0):
         if isinstance(x, Point):
             x, y = x.__iter__()
         return geometry.distance(self.x, self.y, x, y)
 
-    def reflect(self, x=0, y=0, d=1.0, a=180):
-        if isinstance(x, Point):
-            d, a = y, d
-            x, y = x.__iter__()
-        return geometry.reflect(self.x, self.y, x, y, d, a)
+    def reflect(self, *args, **kwargs):
+        d = kwargs.get('d', 1.0)
+        a = kwargs.get('a', 180)
+        if isinstance(args[0], Point):
+            (x,y), opts = args[0], args[1:]
+        else:
+            (x,y), opts = args[:2], args[2:]
+        if opts:
+            d=opts[0]
+        if opts[1:]:
+            a=opts[1]
+        return Point(geometry.reflect(self.x, self.y, x, y, d, a))
 
     def coordinates(self, distance, angle):
-        return geometry.coordinates(self.x, self.y, distance, angle)
+        angle = _ctx._angle(angle, DEGREES)
+        return Point(geometry.coordinates(self.x, self.y, distance, angle))
 
 class Size(tuple):
     def __new__(cls, width, height):
