@@ -1152,11 +1152,13 @@ class Context(object):
         return its pixel dimensions.
         """
         if isinstance(obj, basestring):
-            return Text(obj, 0, 0, width, height, **kwargs).metrics
+            txt = Text(obj, 0, 0, width, height, **kwargs)
+            txt.inherit()
+            return txt.metrics
+        elif isinstance(obj, Text):
+            return obj.metrics
         elif isinstance(obj, file):
             return Image(data=obj.read()).size
-        elif isinstance(obj, Text):
-            return obj.metrics()
         elif isinstance(obj, (Bezier, Image)):
             return obj.bounds.size
         else:
