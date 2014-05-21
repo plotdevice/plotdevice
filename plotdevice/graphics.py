@@ -1373,7 +1373,8 @@ class Canvas(object):
             if format != 'tiff':
                 imgType = imgTypes[format]
                 rep = NSBitmapImageRep.imageRepWithData_(data)
-                return rep.representationUsingType_properties_(imgType, None)
+                props = {NSImageCompressionFactor:1.0} if format in ('jpg','jpeg') else None
+                return rep.representationUsingType_properties_(imgType, props)
             else:
                 return data
 
