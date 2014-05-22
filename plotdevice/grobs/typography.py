@@ -81,74 +81,76 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
     def font(self):
         return NSFont.fontWithName_size_(_ctx._typestyle.face, _ctx._typestyle.size)
 
-    def _draw(self):
-        x,y = self.x, self.y
-        printer = Typesetter(self)
-        (dx, dy), (w, h) = printer.typeblock
-        preferredWidth, preferredHeight = printer.colsize
-
-        if self.width is not None:
-            if self._typestyle.align == RIGHT:
-                x += preferredWidth - w
-            elif self._typestyle.align == CENTER:
-                x += (preferredWidth-w)/2
-
-        with _ns_context(): # save and restore the gstate
-            with self.effects.applied(): # apply any blend/alpha/shadow effects
-                if self.transformmode == CENTER:
-                    # Center-mode transforms: translate to image center
-                    deltaX, deltaY = w/2.0, h/2.0
-                    t = Transform()
-                    t.translate(x+deltaX, y-printer.offset+deltaY)
-                    t.concat()
-                    self.transform.concat()
-                    printer.draw_glyphs(-deltaX-dx, -deltaY-dy)
-                else:
-                    self.transform.concat()
-                    printer.draw_glyphs(x-dx, y-dy-printer.offset)
-                return (w, h)
-
     @property
-    def metrics(self):
-        printer = Typesetter(self)
-        return printer.typeblock.size
-
-    @property
-    def path(self):
-        x,y = self.x, self.y
-        printer = Typesetter(self)
-        (dx, dy), (w, h) = printer.typeblock
+    def _screen_position(self):
+        printer = self._spool
         preferredWidth, preferredHeight = printer.colsize
-
+        (dx, dy), (w, h) = printer.typeblock
+        x,y = self.x, self.y
         if self.width is not None:
            if self._typestyle.align == RIGHT:
                x += preferredWidth - w
            elif self._typestyle.align == CENTER:
-               x += preferredWidth/2 - w/2
-        length = printer.layout.numberOfGlyphs()
-        path = NSBezierPath.bezierPath()
-        for glyphIndex in range(length):
-            txtIndex = printer.layout.characterIndexForGlyphAtIndex_(glyphIndex)
-            txtFont, txtRng = printer.store.attribute_atIndex_effectiveRange_("NSFont", txtIndex, None)
-            lineFragmentRect, _ = printer.layout.lineFragmentRectForGlyphAtIndex_effectiveRange_(glyphIndex, None)
+               x += (preferredWidth-w)/2
+        return (x,y)
 
-            # Here layoutLocation is the location (in container coordinates) where the glyph was laid out.
-            layoutPoint = printer.layout.locationForGlyphAtIndex_(glyphIndex)
-            finalPoint = [lineFragmentRect[0][0],lineFragmentRect[0][1]]
-            finalPoint[0] += layoutPoint[0] - dx
-            finalPoint[1] += layoutPoint[1] - dy
-            g = printer.layout.glyphAtIndex_(glyphIndex)
-            if g == 0: continue
-            path.moveToPoint_((finalPoint[0], -finalPoint[1]))
-            path.appendBezierPathWithGlyph_inFont_(g, txtFont)
-            path.closePath()
-        path = Bezier(path)
+    @property
+    def _screen_transform(self):
+        """Returns the Transform object that will be used to draw the text block."""
+
+        printer = self._spool
+        (dx, dy), (w, h) = printer.typeblock
+        x,y = self._screen_position
+
+        if self.transformmode == CENTER:
+            # Center-mode transforms: translate to typeblock center
+            centerX, centerY = w/2.0, h/2.0
+            nudge = Transform() # shift to the block's center
+            nudge.translate(-centerX-dx, -centerY-dy)
+            denudge = Transform() # unshift to the typehead's origin pt
+            denudge.translate(x+centerX, y-printer.offset+centerY)
+
+            xf = self.transform.copy()
+            xf.prepend(nudge)
+            xf.append(denudge)
+            return xf
+        else:
+            nudge = Transform()
+            nudge.translate(x-dx, y-dy-printer.offset)
+            xf = self.transform.copy()
+            xf.prepend(nudge)
+            return xf
+
+    @property
+    def path(self):
+        # calculate the proper transform for alignment and flippedness
+        printer = self._spool
+        x,y = self._screen_position
         trans = Transform()
-        trans.translate(x,y-printer.offset)
+        trans.translate(x, y-printer.offset)
         trans.scale(1.0,-1.0)
-        path = trans.transformBezierPath(path)
-        path.inherit()
+
+        # generate an unflipped bezier with all the glyphs
+        path = trans.apply(Bezier(printer.nsBezierPath))
+        path.inherit() # BUG: this actually seems undesirable. remove & test regressions
         return path
+
+    @property
+    def _spool(self):
+        if not hasattr(self, '_typesetter'):
+            attrib_str = self.stylesheet._apply(self.text, self._style)
+            self._typesetter = Typesetter(attrib_str, self.width, self.height)
+        return self._typesetter
+
+    def _draw(self):
+        with _ns_context():                  # save and restore the gstate
+            self._screen_transform.concat()  # transform so text can be drawn at the origin
+            with self.effects.applied():     # apply any blend/alpha/shadow effects
+                self._spool.draw_glyphs(0,0) # and let 'er rip
+
+    @property
+    def metrics(self):
+        return self._spool.typeblock.size
 
 
 class Stylesheet(object):
@@ -210,6 +212,36 @@ class Stylesheet(object):
                 spec['color'] = color
             self._styles[name] = spec
         return self[name]
+
+    def _apply(self, words, style=None):
+        """Convert a string to an attributed string, either based on inline tags or the `style` arg"""
+        style = DEFAULT if style is None else style
+
+        if style in self._styles:
+            # user specified a style name
+            attrs = self._cascade(DEFAULT, style)
+            astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
+        elif not style:
+            # user disabled the stylesheet
+            attrs = self._cascade(DEFAULT)
+            astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
+        else:
+            # find any tagged regions that need styling
+            parser = XMLParser(words)
+
+            # generate a Font for each unique cascade of style tags
+            attrs = {seq:self._cascade(*seq) for seq in sorted(parser.regions)}
+
+            # convert the Fonts into attr dicts then apply them to the runs found in the parse
+            astr = NSMutableAttributedString.alloc().initWithString_(parser.text)
+            for cascade, runs in parser.regions.items():
+                style = attrs[cascade]
+                for rng in runs:
+                    astr.setAttributes_range_(style, rng)
+
+            # print '[[%s]]' % parser.text
+
+        return astr
 
     def _cascade(self, *styles):
         """Apply the listed styles in order and return nsattibutedstring attrs"""
@@ -307,9 +339,6 @@ class Stylesheet(object):
 
 
 
-    def test(self, txt):
-        print Typesetter(txt, self).astr
-
 # UIFontDescriptor* desc =
 #     [UIFontDescriptor fontDescriptorWithName:@"Didot" size:18];
 #     NSArray* arr =
@@ -321,88 +350,71 @@ class Stylesheet(object):
 #     UIFont* f = [UIFont fontWithDescriptor:desc size:0];
 
 
-class Singleton(type):
-  def __init__(cls, name, bases, dict):
-      super(Singleton, cls).__init__(name, bases, dict)
-      cls.instance = None
-
-  def __call__(cls,*args,**kw):
-      if cls.instance is None:
-          cls.instance = super(Singleton, cls).__call__()
-      cls.instance.render(*args, **kw)
-      return cls.instance
-
 class Typesetter(object):
-    __metaclass__ = Singleton
-    # collect nstext system objects
-    store = NSTextStorage.alloc().init()
-    layout = NSLayoutManager.alloc().init()
-    column = NSTextContainer.alloc().init()
 
-    # assemble nsmachinery
-    layout.addTextContainer_(column)
-    store.addLayoutManager_(layout)
-    column.setLineFragmentPadding_(0)
+    def __init__(self, attrib_str, width, height):
+        # collect nstext system objects
+        store = NSTextStorage.alloc().init()
+        layout = NSLayoutManager.alloc().init()
+        column = NSTextContainer.alloc().init()
 
-    def render(cls, text_obj):
-        w,h = [d or 1000000 for d in text_obj.width,text_obj.height]
-        sheet = text_obj.stylesheet
-        style = DEFAULT if text_obj._style is None else text_obj._style
-        words = text_obj.text
+        # assemble nsmachinery
+        layout.addTextContainer_(column)
+        store.addLayoutManager_(layout)
+        column.setLineFragmentPadding_(0)
 
-        if style in sheet:
-            # user specified a style name
-            attrs = sheet._cascade(DEFAULT, style)
-            astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
-        elif not style:
-            # user disabled the stylesheet
-            attrs = sheet._cascade(DEFAULT)
-            astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
-        else:
-            # find any tagged regions that need styling
-            parser = XMLParser(words)
+        # pour in the styled text
+        store.setAttributedString_(attrib_str)
+        column.setContainerSize_([d or 1000000 for d in (width,height)])
 
-            # generate a Font for each unique cascade of style tags
-            attrs = {seq:sheet._cascade(*seq) for seq in sorted(parser.regions)}
+        # save the nsmachinery for later
+        self.store, self.layout, self.column = store, layout, column
 
-            # convert the Fonts into attr dicts then apply them to the runs found in the parse
-            astr = NSMutableAttributedString.alloc().initWithString_(parser.text)
-            for cascade, runs in parser.regions.items():
-                style = attrs[cascade]
-                for rng in runs:
-                    astr.setAttributes_range_(style, rng)
-
-            # print '[[%s]]' % parser.text
-            # print "colsize", cls.colsize
-            # print "visible chars", cls.visible
-            # print "typeblock", cls.typeblock
-
-        cls.store.beginEditing()
-        cls.store.setAttributedString_(astr)
-        cls.store.endEditing()
-        cls.column.setContainerSize_((w,h))
-        cls.astr = astr
-
-    def draw_glyphs(cls, x, y):
-        cls.layout.drawGlyphsForGlyphRange_atPoint_(cls.visible, (x,y))
+    def draw_glyphs(self, x, y):
+        self.layout.drawGlyphsForGlyphRange_atPoint_(self.visible, (x,y))
 
     @property
-    def typeblock(cls):
-        return Region(*cls.layout.boundingRectForGlyphRange_inTextContainer_(cls.visible, cls.column))
+    def typeblock(self):
+        return Region(*self.layout.boundingRectForGlyphRange_inTextContainer_(self.visible, self.column))
 
     @property
-    def visible(cls):
-        return cls.layout.glyphRangeForTextContainer_(cls.column)
+    def visible(self):
+        return self.layout.glyphRangeForTextContainer_(self.column)
 
     @property
-    def colsize(cls):
-        return Size(*cls.column.containerSize())
+    def colsize(self):
+        return Size(*self.column.containerSize())
 
     @property
-    def offset(cls):
-        txtFont, _ = cls.store.attribute_atIndex_effectiveRange_("NSFont", 0, None)
-        h = cls.layout.defaultLineHeightForFont_(txtFont)
+    def offset(self):
+        txtFont, _ = self.store.attribute_atIndex_effectiveRange_("NSFont", 0, None)
+        h = self.layout.defaultLineHeightForFont_(txtFont)
         return h
+
+    @property
+    def nsBezierPath(self):
+        (dx, dy), (w, h) = self.typeblock
+        preferredWidth, preferredHeight = self.colsize
+
+        length = self.layout.numberOfGlyphs()
+        path = NSBezierPath.bezierPath()
+        for glyphIndex in range(length):
+            txtIndex = self.layout.characterIndexForGlyphAtIndex_(glyphIndex)
+            txtFont, txtRng = self.store.attribute_atIndex_effectiveRange_("NSFont", txtIndex, None)
+            lineFragmentRect, _ = self.layout.lineFragmentRectForGlyphAtIndex_effectiveRange_(glyphIndex, None)
+
+            # convert glyph location from container coords to canvas coords
+            layoutPoint = self.layout.locationForGlyphAtIndex_(glyphIndex)
+            finalPoint = [lineFragmentRect[0][0],lineFragmentRect[0][1]]
+            finalPoint[0] += layoutPoint[0] - dx
+            finalPoint[1] += layoutPoint[1] - dy
+            g = self.layout.glyphAtIndex_(glyphIndex)
+
+            if g == 0: continue # when does glyphAtIndex return nil in practice?
+            path.moveToPoint_((finalPoint[0], -finalPoint[1]))
+            path.appendBezierPathWithGlyph_inFont_(g, txtFont)
+            path.closePath()
+        return path
 
 class XMLParser(object):
     _log = 0
@@ -810,7 +822,3 @@ class Family(object):
         if wval in w_vals:
             wname = w_names[w_vals.index(wval)]
         return wname, wval
-
-if __name__=='__main__':
-    test()
-
