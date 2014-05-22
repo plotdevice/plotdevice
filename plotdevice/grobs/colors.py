@@ -42,34 +42,38 @@ class Color(object):
         rng = kwargs.get('range')
 
         params = len(args)
-        if params == 1 and args[0] is None:                # None -> transparent
+        if params == 1 and args[0] is None:                 # None -> transparent
             clr = Color._nscolor(GREY, 0, 0)
-        elif params == 1 and isinstance(args[0], Color):   # Color object
+        elif params == 1 and isinstance(args[0], Color):    # Color object
             _copy_attrs(args[0], self, ['_rgb','_cmyk'])
             return
-        elif params == 1 and isinstance(args[0], NSColor): # NSColor object
+        elif params == 1 and isinstance(args[0], Gradient): # Gradient (use first shade)
+            first_clr = args[0]._colors[0]
+            _copy_attrs(first_clr, self, ['_rgb','_cmyk'])
+            return
+        elif params == 1 and isinstance(args[0], NSColor):  # NSColor object
             clr = args[0]
         elif params>=1 and isinstance(args[0], basestring):
-            r, g, b, a = Color._parse(args[0])             # Hex string or named color
+            r, g, b, a = Color._parse(args[0])              # Hex string or named color
             if args[1:]:
                 a = args[1]
             clr = Color._nscolor(RGB, r, g, b, a)
-        elif 1<=params<=2:                                 # Greyscale (+ alpha)
+        elif 1<=params<=2:                                  # Greyscale (+ alpha)
             gscale = self._normalizeList(args, rng)
             if params<2:
                 gscale += (1,)
             clr = Color._nscolor(GREY, *gscale)
-        elif 3<=params<=4 and mode in (RGB, HSB):          # RGB(a) & HSB(a)
+        elif 3<=params<=4 and mode in (RGB, HSB):           # RGB(a) & HSB(a)
             rgba_hsba = self._normalizeList(args, rng)
             if params<4:
                 rgba_hsba += (1,)
             clr = Color._nscolor(mode, *rgba_hsba)
-        elif 4<=params<=5 and mode==CMYK:                  # CMYK(a)
+        elif 4<=params<=5 and mode==CMYK:                   # CMYK(a)
             cmyka = self._normalizeList(args, rng)
             if params<5:
                 cmyka += (1,)
             clr = Color._nscolor(CMYK, *cmyka)
-        else:                                              # default is the new black
+        else:                                               # default is the new black
             clr = Color._nscolor(GREY, 0, 1)
 
         self._cmyk = clr.colorUsingColorSpaceName_(NSDeviceCMYKColorSpace)
