@@ -60,31 +60,31 @@ def textblock(x, y):
     align(LEFT)
     stroke(0)
     nofill()
-    rect(x, y-12, 50, 50)
+    rect(x, y-15, 50, 50)
     fill(0)
     text("Lorem ipsum dolor sit amet, consectetuer adipiscing elit.", x, y, width=50, height=50)
 
-    x += 60
+    x += 80
     align(CENTER)
     stroke(0)
     nofill()
-    rect(x, y-12, 50, 50)
+    rect(x, y-15, 50, 50)
     fill(0)
     text("Lorem ipsum dolor sit amet, consectetuer adipiscing elit.", x, y, width=50, height=50)
 
-    x += 60
+    x += 80
     align(RIGHT)
     stroke(0)
     nofill()
-    rect(x, y-12, 50, 50)
+    rect(x, y-15, 50, 50)
     fill(0)
     text("Lorem ipsum dolor sit amet, consectetuer adipiscing elit.", x, y, width=50, height=50)
 
-    x += 60
+    x += 80
     align(JUSTIFY)
     stroke(0)
     nofill()
-    rect(x, y-12, 50, 50)
+    rect(x, y-15, 50, 50)
     fill(0)
     text("Lorem ipsum dolor sit amet, consectetuer adipiscing elit.", x, y, width=50, height=50)
 
@@ -254,7 +254,8 @@ fontsize(48)
 fill(0.5, 0.5)
 text("hamburgefonstiv", 140, 165)
 nofill()
-stroke(0.2)
+stroke(.5)
+fill('indigo','cyan')
 text("hamburgefonstiv", 140, 165, outline=True)
 fontsize(fsize)
 fill(0)
