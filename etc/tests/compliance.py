@@ -14,7 +14,7 @@ def primitives(x, y):
     nostroke()
     rect(x, y, 50, 50)
     x += 60
-    rect(x, y, 50, 50, 13)
+    rect(x, y, 50, 50, .25)
     x += 60
     oval(x, y, 50, 50)
     x += 60
