@@ -401,15 +401,21 @@ class Gradient(object):
         if 'angle' in kwargs:
             self._angle = _ctx._angle(kwargs['angle'], 'degrees')
 
-    # def __enter__(self):
-    #     return None
+    # fill() caches the previous canvas state by creating a _rollback attr.
+    # act as a context manager if there's a fill to revert to at the end of the block.
+    def __enter__(self):
+        if not hasattr(self, '_rollback'):
+            badcontext = 'the with-statement can only be used with fill() and stroke(), not arbitrary colors'
+            raise DeviceError(badcontext)
+        return self
 
-    # def __exit__(self, type, value, tb):
-    #     pass
+    def __exit__(self, type, value, tb):
+        for param, val in self._rollback.items():
+            statevar = {"fill":"_fillcolor", "stroke":"_strokecolor"}[param]
+            setattr(_ctx, statevar, val)
 
     def __repr__(self):
         return 'Gradient(%s, steps=%r)'%(", ".join('%r'%c for c in self._colors), self._steps)
-
 
     @property
     def nsGradient(self):
