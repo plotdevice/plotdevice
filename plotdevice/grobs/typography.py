@@ -83,43 +83,53 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
 
     @property
     def _screen_position(self):
-        printer = self._spool
-        preferredWidth, preferredHeight = printer.colsize
-        (dx, dy), (w, h) = printer.typeblock
         x,y = self.x, self.y
         if self.width is not None:
-           if self._typestyle.align == RIGHT:
-               x += preferredWidth - w
-           elif self._typestyle.align == CENTER:
-               x += (preferredWidth-w)/2
+            printer = self._spool
+            col_w, col_h = printer.colsize
+            (dx, dy), (w, h) = printer.typeblock
+            if self._typestyle.align == RIGHT:
+                x += col_w - w
+            elif self._typestyle.align == CENTER:
+                x += (col_w-w)/2
         return (x,y)
 
     @property
     def _screen_transform(self):
-        """Returns the Transform object that will be used to draw the text block."""
+        """Returns the Transform object that will be used to draw the text block.
 
+        The transform incorporates the global context state but also accounts for
+        text alignment and column-width/height constraints set in the constructor."""
+
+        # accumulate transformations in a fresh matrix
+        xf = Transform()
+
+        # gather the relevant text metrics
         printer = self._spool
         (dx, dy), (w, h) = printer.typeblock
-        x,y = self._screen_position
+        col_w, col_h = printer.colsize
+        offset = printer.offset
 
-        if self.transformmode == CENTER:
-            # Center-mode transforms: translate to typeblock center
-            centerX, centerY = w/2.0, h/2.0
-            nudge = Transform() # shift to the block's center
-            nudge.translate(-centerX-dx, -centerY-dy)
-            denudge = Transform() # unshift to the typehead's origin pt
-            denudge.translate(x+centerX, y-printer.offset+centerY)
+        # adjust the positioning for alignment on single-line runs
+        x, y = self.x, self.y
+        if self.width is None:
+            if self._typestyle.align == RIGHT:
+                x -= w
+            elif self._typestyle.align == CENTER:
+                x -= w/2.0
 
-            xf = self.transform.copy()
-            xf.prepend(nudge)
-            xf.append(denudge)
-            return xf
-        else:
-            nudge = Transform()
-            nudge.translate(x-dx, y-dy-printer.offset)
-            xf = self.transform.copy()
-            xf.prepend(nudge)
-            return xf
+        # calculate the translation offset for centering (if any)
+        nudge = Transform()
+        if self._transformmode == CENTER:
+            width = w if self.width is None else self.width
+            height = h if self.height is None else self.height
+            nudge.translate(width/2, height/2)
+
+        xf.translate(x, y-offset) # set the position before applying transforms
+        xf.prepend(nudge)                   # nudge the block to its center (or not)
+        xf.prepend(self.transform)          # add context's CTM.
+        xf.prepend(nudge.inverse)           # Move back to the real origin.
+        return xf
 
     @property
     def path(self):
@@ -138,7 +148,11 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
     @property
     def _spool(self):
         if not hasattr(self, '_typesetter'):
-            attrib_str = self.stylesheet._apply(self.text, self._style)
+            sheet = self.stylesheet
+            if self.width is None: # handle alignment in the transform for non-broken lines
+                sheet._baseline['align'] = LEFT
+
+            attrib_str = sheet._apply(self.text, self._style)
             self._typesetter = Typesetter(attrib_str, self.width, self.height)
         return self._typesetter
 
@@ -221,8 +235,8 @@ class Stylesheet(object):
             # user specified a style name
             attrs = self._cascade(DEFAULT, style)
             astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
-        elif not style:
-            # user disabled the stylesheet
+        elif not style or not self._styles:
+            # user disabled the stylesheet (or hasn't defined any styles)
             attrs = self._cascade(DEFAULT)
             astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
         else:
@@ -405,7 +419,7 @@ class Typesetter(object):
 
             # convert glyph location from container coords to canvas coords
             layoutPoint = self.layout.locationForGlyphAtIndex_(glyphIndex)
-            finalPoint = [lineFragmentRect[0][0],lineFragmentRect[0][1]]
+            finalPoint = list(lineFragmentRect[0])
             finalPoint[0] += layoutPoint[0] - dx
             finalPoint[1] += layoutPoint[1] - dy
             g = self.layout.glyphAtIndex_(glyphIndex)
