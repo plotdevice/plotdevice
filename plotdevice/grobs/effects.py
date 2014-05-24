@@ -237,7 +237,7 @@ class Shadow(object):
 
             self.color = Color(kwargs.get('color', ('#000', .75)))
             self.blur = kwargs.get('blur', 10 if self.color.a else 0)
-            offset = kwargs.get('offset', self.blur)
+            offset = kwargs.get('offset', self.blur/2.0)
             if isinstance(offset, (int,float,long)):
                 offset = [offset]
             if len(offset)==1:
