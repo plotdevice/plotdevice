@@ -1,4 +1,4 @@
-size(800,2600)
+size(900,2600)
 
 def header():
     font("Helvetica Neue", 18)
@@ -7,7 +7,7 @@ def header():
     line(0,60,WIDTH,60)
     fontsize(12)
     nostroke()
-    text("This functional suite tests all the available PlotDevice functions, to see if they comply to their contract." , 20, 80, width=300)
+    text("This functional suite tests all the available PlotDevice functions." , 20, 80, width=275)
     fontsize(10)
     
 def primitives(x, y):
@@ -30,68 +30,40 @@ def primitives(x, y):
 def basictext(x, y):
     text("Hello", x, y)
 
-    x += 60
+    for alignment in (LEFT, CENTER, RIGHT):
+        x += 60
+        align(alignment)
+        stroke(0.5)
+        nofill()
+        rect(x, y-12,50,15, dash=3)
+        fill(0)
+        text("Hello", x, y, width=50)
     align(LEFT)
-    stroke(0)
-    nofill()    
-    rect(x, y-12,50,20)
-    fill(0)
-    text("Hello", x, y, width=50)
 
-    x += 60
-    align(CENTER)
-    stroke(0)
-    nofill()    
-    rect(x, y-12,50,20)
-    fill(0)
-    text("Hello", x, y, width=50)
-
-    x += 60
-    align(RIGHT)
-    stroke(0)
-    nofill()    
-    rect(x, y-12,50,20)
-    fill(0)
-    text("Hello", x, y, width=50)    
-
+def alignedtext(x, y):
+    for alignment in (LEFT, CENTER, RIGHT):
+        align(alignment)
+        stroke('magenta')
+        line(x,y-12, x,y+12)
+        fill(0)
+        text("Hello", x, y)
+        x += 120
     align(LEFT)
 
 def textblock(x, y):
-    align(LEFT)
-    stroke(0)
-    nofill()
-    rect(x, y-15, 50, 50)
-    fill(0)
-    text("Lorem ipsum dolor sit amet, consectetuer adipiscing elit.", x, y, width=50, height=50)
-
-    x += 80
-    align(CENTER)
-    stroke(0)
-    nofill()
-    rect(x, y-15, 50, 50)
-    fill(0)
-    text("Lorem ipsum dolor sit amet, consectetuer adipiscing elit.", x, y, width=50, height=50)
-
-    x += 80
-    align(RIGHT)
-    stroke(0)
-    nofill()
-    rect(x, y-15, 50, 50)
-    fill(0)
-    text("Lorem ipsum dolor sit amet, consectetuer adipiscing elit.", x, y, width=50, height=50)
-
-    x += 80
-    align(JUSTIFY)
-    stroke(0)
-    nofill()
-    rect(x, y-15, 50, 50)
-    fill(0)
-    text("Lorem ipsum dolor sit amet, consectetuer adipiscing elit.", x, y, width=50, height=50)
+    for alignment in (LEFT, CENTER, RIGHT, JUSTIFY):
+        align(alignment)
+        stroke(.5)
+        nofill()
+        rect(x, y-12, 50, 50, dash=3)
+        fill(0)
+        text("Lorem ipsum dolor sit amet, consectetuer adipiscing elit.", x, y, width=50, height=50)
+        x += 80
 
     align(LEFT)
     
-def grays(x, y):
-    nostroke()
+def greyscale(x, y):
+    stroke(.9)
     colormode(RGB)
     align(CENTER)
     for i in range(11):
@@ -100,9 +72,10 @@ def grays(x, y):
         fill(0)
         text(str(i), x, y+62, 50)
         x += 60
+    align(LEFT)
 
 def alphas(x, y):
-    nostroke()
+    stroke(.9)
     colormode(RGB)
     align(CENTER)
     for i in range(11):
@@ -111,17 +84,19 @@ def alphas(x, y):
         fill(0)
         text(str(i), x, y+62, 50)
         x += 60
+    align(LEFT)
     
 def _clr(x, y, *args):
     fill(args)
     rect(x, y, 50, 50)
     fill(0)
     align(CENTER)
-    text(str(args), x, y+62, 50)
+    text(str(args), x-5, y+62, 60)
+    align(LEFT)
     return x + 60
 
 def rgbColors(x, y):
-    nostroke()
+    stroke(.9)
     colormode(RGB)
     x = _clr(x, y, 0,0,0)
     x = _clr(x, y, 0,0,1)
@@ -133,7 +108,7 @@ def rgbColors(x, y):
     x = _clr(x, y, 1,1,1)
     
 def cmykColors(x, y):
-    nostroke()
+    stroke(.9)
     colormode(CMYK)
     x = _clr(x, y, 0,0,0,1)
     x = _clr(x, y, 0,0,1,0)
@@ -146,17 +121,24 @@ def cmykColors(x, y):
     x = _clr(x, y, 0,0,0,0)
 
 def hsbColors(x, y):
-    nostroke()
+    stroke(.9)
     colormode(HSB)
-    x = _clr(x, y, 0,0,0)
-    x = _clr(x, y, 0,0,1)
-    x = _clr(x, y, 0,1,0)
-    x = _clr(x, y, 0,1,1)
-    x = _clr(x, y, 1,0,0)
-    x = _clr(x, y, 1,0,1)
-    x = _clr(x, y, 1,1,0)
-    x = _clr(x, y, 1,1,1)    
+    x = _clr(x, y, 0,0,0) # black
+
+    x = _clr(x, y, 0,1,1)  # bright
+    x = _clr(x, y, .3,1,1)
+    x = _clr(x, y, .5,1,1)
+
+    x = _clr(x, y, 0,1,.5) # darker
+    x = _clr(x, y, .3,1,.5)
+    x = _clr(x, y, .5,1,.5)
+
+    x = _clr(x, y, 0,.2,1) # pastel
+    x = _clr(x, y, .3,.2,1)
+    x = _clr(x, y, .5,.2,1)
     
+    x = _clr(x, y, 0,0,1) # white
+
 def marker(y,h=25):
     colormode(CMYK)
     stroke(1, 0.1, 0.1, 0.1)
@@ -166,40 +148,41 @@ def marker(y,h=25):
 header()
 
 # Draw the primitives at their first position
+marker(140)
 nostroke()
 text("Basic primitives", 20, 165)
 primitives(140,140)
-marker(140)
 
 # Simple translation
 translate(0, 140)
+marker(140)
 nostroke()
 text("Translated primitives", 20, 165)
 primitives(140,140)
-marker(140)
 
 # Translation and rotation
 translate(0, 140)
+marker(140)
 nostroke()
 text("Rotated primitives", 20, 165)
 push()
 rotate(45)
 primitives(140,140)
 pop()
-marker(140)
 
 # Scaling
 translate(0, 140)
+marker(140)
 nostroke()
 text("Scaled primitives", 20, 165)
 push()
 scale(0.5)
 primitives(140,140)
 pop()
-marker(140)
 
 # Scaling
 translate(0, 140)
+marker(140)
 nostroke()
 text("Shadowed primitives", 20, 165)
 push()
@@ -207,115 +190,104 @@ scale(0.5)
 with shadow('#aaa', 5, 7):
     primitives(140,140)
 pop()
+
+# Greyscale
+translate(0, 140)
 marker(140)
+nostroke()
+text("Greyscale", 20, 165)
+greyscale(140, 140)
+
+# Alphas
+translate(0, 140)
+marker(140)
+nostroke()
+text("Alphas", 20, 165)
+alphas(140, 140)
+
+
+# RGB Colors
+translate(0, 140)
+marker(140)
+nostroke()
+text("RGB Colors", 20, 165)
+rgbColors(140, 140)
+
+# HSB Colors
+translate(0, 140)
+marker(140)
+nostroke()
+text("HSB Colors", 20, 165)
+hsbColors(140, 140)
+
+# CMYK Colors
+translate(0, 140)
+marker(140)
+nostroke()
+text("CMYK Colors", 20, 165)
+cmykColors(140, 140)
 
 
 # Text
 translate(0, 140)
+marker(140)
 nostroke()
 text("Basic text", 20, 165)
 basictext(140, 165)     
+
+# Aligned Text
+translate(0, 140)
 marker(140)
+text("Aligned text", 20, 165)
+alignedtext(140, 165)
 
 # Rotated Text
 translate(0, 140)
+marker(140)
 nostroke()
 text("Rotated text", 20, 165)
 push()
 rotate(45)
 basictext(140, 165)
 pop()
-marker(140)
 
 # Text blocks
 translate(0, 140)
+marker(140)
 nostroke()
 text("Text blocks", 20, 165)
 textblock(140, 165)
-marker(140)
 
 # Text blocks
 translate(0, 140)
+marker(140)
 nostroke()
 text("Rotated text blocks", 20, 165)
-push()
-rotate(45)
-textblock(140, 165)
-pop()
-marker(140)
+with rotate(45):
+    textblock(140, 165)
 
 
 # Outlined text
 translate(0, 140)
-nostroke()
+marker(140)
 text("Outlined text", 20, 165)
-fsize = fontsize()
-fontsize(48)
-fill(0.5, 0.5)
-text("hamburgefonstiv", 140, 165)
-nofill()
-stroke(.5)
-fill('indigo','cyan')
-text("hamburgefonstiv", 140, 165, outline=True)
-fontsize(fsize)
-fill(0)
-marker(140)
-
-# Grays
-translate(0, 140)
-nostroke()
-text("Grays", 20, 165)
-grays(140, 140)
-marker(140)
-
-# Grays
-translate(0, 140)
-nostroke()
-text("Alphas", 20, 165)
-alphas(140, 140)
-marker(140)
-
-# RGB Colors
-translate(0, 140)
-nostroke()
-text("RGB Colors", 20, 165)
-rgbColors(140, 140)
-marker(140)
-
-# HSB Colors
-translate(0, 140)
-nostroke()
-text("HSB Colors", 20, 165)
-hsbColors(140, 140)
-marker(140)
-
-# CMYK Colors
-translate(0, 140)
-nostroke()
-text("CMYK Colors", 20, 165)
-cmykColors(140, 140)
-marker(140)
+with font(48), stroke(.5), fill('indigo','cyan'):
+    text("hamburgefonstiv", 140, 165, outline=True)
 
 # Images
 translate(0, 140)
-nostroke()
-text("Images", 20, 165)
-_ctx.noImagesHint = False
-#image("icon.tif", 140,140,width=50)
-push()
-translate(60,0)
-rotate(90)
-#image("icon.tif", 140,140,width=50)
-pop()
-push()
-translate(140,0)
-scale(2.0)
-#image("icon.tif", 140,140,width=50)
-pop()
 marker(140)
+text("Images", 20, 165)
+image("icon.png", 140,165-32,width=64)
+with translate(100,0), rotate(90):
+    image("icon.png", 140,165-32,width=64)
+with translate(200,0), rotate(180), scale(2.0):
+    image("icon.png", 140,165-32,width=64)
+
 
 # classic Paths api
 translate(0, 140)
+marker(140)
 stroke(.75)
 text("Paths", 20, 165)
 beginpath(165, 140)
@@ -353,4 +325,3 @@ with transform():
     bezier(p, strokewidth=2, stroke='#a00')
     
 strokewidth(sw)
-marker(140)
