@@ -1,4 +1,5 @@
 # encoding: utf-8
+import re
 from xml.parsers import expat
 from operator import itemgetter, attrgetter
 from plotdevice.util import odict, ddict
@@ -151,6 +152,8 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
             sheet = self.stylesheet
             if self.width is None: # handle alignment in the transform for non-broken lines
                 sheet._baseline['align'] = LEFT
+                # should also iterate through styles and overwrite any alignment defs
+                # ...
 
             attrib_str = sheet._apply(self.text, self._style)
             self._typesetter = Typesetter(attrib_str, self.width, self.height)
@@ -229,17 +232,11 @@ class Stylesheet(object):
 
     def _apply(self, words, style=None):
         """Convert a string to an attributed string, either based on inline tags or the `style` arg"""
-        style = DEFAULT if style is None else style
 
-        if style in self._styles:
-            # user specified a style name
-            attrs = self._cascade(DEFAULT, style)
-            astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
-        elif not style or not self._styles:
-            # user disabled the stylesheet (or hasn't defined any styles)
-            attrs = self._cascade(DEFAULT)
-            astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
-        else:
+        # if the string begins and ends with a root element, treat it as xml...
+        is_xml = bool(re.match(r'<([^>]*)>.*</\1>$', words, re.S))
+
+        if is_xml and style is not False: # ...unless called w/ text('...', style=False)
             # find any tagged regions that need styling
             parser = XMLParser(words)
 
@@ -252,8 +249,14 @@ class Stylesheet(object):
                 style = attrs[cascade]
                 for rng in runs:
                     astr.setAttributes_range_(style, rng)
-
-            # print '[[%s]]' % parser.text
+        elif style in self._styles:
+            # user specified a style name
+            attrs = self._cascade(DEFAULT, style)
+            astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
+        else:
+            # don't parse as xml, just apply the current font(), align(), and fill()
+            attrs = self._cascade(DEFAULT)
+            astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
 
         return astr
 
