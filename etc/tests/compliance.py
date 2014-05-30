@@ -1,4 +1,4 @@
-size(900,2600)
+size(900,2700)
 
 def header():
     font("Helvetica Neue", 18)
@@ -13,18 +13,20 @@ def header():
 def primitives(x, y):
     nostroke()
     rect(x, y, 50, 50)
-    x += 60
+    x += 75
     rect(x, y, 50, 50, .25)
-    x += 60
+    x += 75
     oval(x, y, 50, 50)
-    x += 60
-    oval(x, y, 50, 50, range=180)
-    arc(x+25, y+25, 25, range=(180,0), fill=.5)
-    x += 60
+    x += 75
+    poly(x+25, y+25, 25, sides=6)
+    x += 75
+    oval(x, y, 50, 50, range=180) # chocolate
+    arc(x+25, y+25, 25, range=(180,0), fill=.5) # peanutbutter
+    x += 75
     star(x+25, y+25, 20, outer=25, inner=15)
-    x += 60
+    x += 75
     arrow(x+50, y+25, 50)
-    x += 60
+    x += 75
     arrow(x+60, y+25, 50, type=FORTYFIVE).rotate(-45)
     
 def basictext(x, y):
@@ -43,11 +45,11 @@ def basictext(x, y):
 def alignedtext(x, y):
     for alignment in (LEFT, CENTER, RIGHT):
         align(alignment)
-        stroke('magenta')
-        line(x,y-12, x,y+12)
+        stroke(.5)
+        line(x,y-12, x,y+12, dash=3)
         fill(0)
         text("Hello", x, y)
-        x += 120
+        x += 115
     align(LEFT)
 
 def textblock(x, y):
@@ -93,6 +95,7 @@ def _clr(x, y, *args):
     align(CENTER)
     text(str(args), x-5, y+62, 60)
     align(LEFT)
+    stroke(.5)
     return x + 60
 
 def rgbColors(x, y):
@@ -139,6 +142,19 @@ def hsbColors(x, y):
     
     x = _clr(x, y, 0,0,1) # white
 
+def images(x, y):
+    zoom = 0.5
+    w, h = measure(file("icon.png"))
+    y -= h/2.0*zoom
+    bmp = image("icon.png", x,y, width=w/2, plot=False) # half size
+    plot(bmp)
+    with translate(125,0), rotate(90):                  # half size, rotated
+        plot(bmp) 
+    with translate(259,0), rotate(180), scale(2.0):     # doubled (back to full size), flipped
+        plot(bmp) 
+    with translate(375,0), scale(2.0), shadow(.8, blur=10): # doubled (back to full size), dropshadowed
+        plot(bmp) 
+    
 def marker(y,h=25):
     colormode(CMYK)
     stroke(1, 0.1, 0.1, 0.1)
@@ -246,10 +262,8 @@ translate(0, 140)
 marker(140)
 nostroke()
 text("Rotated text", 20, 165)
-push()
-rotate(45)
-basictext(140, 165)
-pop()
+with rotate(45):
+    basictext(140, 165)
 
 # Text blocks
 translate(0, 140)
@@ -271,18 +285,14 @@ with rotate(45):
 translate(0, 140)
 marker(140)
 text("Outlined text", 20, 165)
-with font(48), stroke(.5), fill('indigo','cyan'):
+with font(48), stroke(.5), fill('orange','cyan'):
     text("hamburgefonstiv", 140, 165, outline=True)
 
 # Images
 translate(0, 140)
 marker(140)
 text("Images", 20, 165)
-image("icon.png", 140,165-32,width=64)
-with translate(100,0), rotate(90):
-    image("icon.png", 140,165-32,width=64)
-with translate(200,0), rotate(180), scale(2.0):
-    image("icon.png", 140,165-32,width=64)
+images(140,165)
 
 
 # classic Paths api
