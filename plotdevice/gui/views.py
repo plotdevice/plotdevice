@@ -470,6 +470,19 @@ class PlotDeviceIconView(NSView):
         # grey = NSColor.colorWithDeviceWhite_alpha_(120/255.0, .7)
         grey = NSColor.colorWithDeviceRed_green_blue_alpha_(227/255.0, 227/255.0, 211/255.0, 1)
 
+        # use a narrow drop shadow to deal with the dock's frustrating edge-lightening artifact
+        s = NSShadow.alloc().init()
+        s.setShadowOffset_((0,0))
+        s.setShadowBlurRadius_(12)
+        s.setShadowColor_(NSColor.colorWithDeviceWhite_alpha_(0, 0.5))
+        s.set()
+
+        # draw the squares
+        blue.setFill()
+        NSRectFillUsingOperation(( (30,6),(42,41) ), NSCompositeCopy)
+        red.setFill()
+        NSRectFillUsingOperation(( (56,80),(42,41) ), NSCompositeCopy)
+
         # draw the parallelograms
         grey.setFill()
 
@@ -493,10 +506,5 @@ class PlotDeviceIconView(NSView):
         grams.closePath()
         grams.fill()
 
-        # draw the squares
-        blue.setFill()
-        NSRectFillUsingOperation(( (30,6),(42,41) ), NSCompositeCopy)
-        red.setFill()
-        NSRectFillUsingOperation(( (56,80),(42,41) ), NSCompositeCopy)
         super(PlotDeviceIconView, self).drawRect_(rect)
 
