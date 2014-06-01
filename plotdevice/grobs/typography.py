@@ -51,7 +51,7 @@ def families(like=None, western=True):
 class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
     kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
 
-    def __init__(self, text, x=0, y=0, width=None, height=None, **kwargs):
+    def __init__(self, text, x=0, y=0, width=None, height=None, style=None, **kwargs):
         super(Text, self).__init__(**kwargs)
 
         badargs = None
@@ -69,7 +69,7 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
         self.y = y
         self.width = width
         self.height = height
-        self._style = kwargs.pop('style', True)
+        self._style = style
 
     def copy(self):
         new = self.__class__(self.text)

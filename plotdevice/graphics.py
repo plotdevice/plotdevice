@@ -11,7 +11,7 @@ from .grobs import *
 from .lib import geometry, pathmatics
 from . import grobs
 
-__all__ = ('Context', 'Canvas', 'DEFAULT_WIDTH', 'DEFAULT_HEIGHT')
+__all__ = ('Context', 'Canvas')
 
 # default size for Canvas and GraphicsView objects
 DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
@@ -1000,9 +1000,9 @@ class Context(object):
         else:
             return self._stylesheet.style(name, *args, **kwargs)
 
-    def text(self, txt, x=0, y=0, width=None, height=None, outline=False, **kwargs):
+    def text(self, txt, x=0, y=0, width=None, height=None, outline=False, style=None, **kwargs):
         """Draw a single line (or a block) of text using the current font() and stylesheet()"""
-        txt = Text(txt, x, y, width, height, **kwargs)
+        txt = Text(txt, x, y, width, height, style, **kwargs)
         if self._path is None and not outline:
             # treat as Text
             if kwargs.get('plot', kwargs.get('draw', self._autoplot)):
@@ -1016,14 +1016,14 @@ class Context(object):
             _copy_attrs(txt, p, {'fill', 'stroke', 'strokewidth'}.intersection(kwargs))
             return p
 
-    def textpath(self, txt, x, y, width=None, height=None, **kwargs):
+    def textpath(self, txt, x, y, width=None, height=None, style=None, **kwargs):
         """Legacy command. Equivalent to: text(txt, outline=True, plot=False)"""
-        txt = Text(txt, x, y, width, height, **kwargs)
+        txt = Text(txt, x, y, width, height, style, **kwargs)
         txt.inherit()
         return txt.path
 
-    def textmetrics(self, txt, width=None, height=None, **kwargs):
-        txt = Text(txt, 0, 0, width, height, **kwargs)
+    def textmetrics(self, txt, width=None, height=None, style=None, **kwargs):
+        txt = Text(txt, 0, 0, width, height, style, **kwargs)
         txt.inherit()
         return txt.metrics
 
