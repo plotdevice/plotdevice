@@ -239,6 +239,7 @@ class PlotDeviceGraphicsView(NSView):
             # zoom the context appropriately and have the grobs draw themselves to the view itself
             NSGraphicsContext.currentContext().saveGraphicsState()
             try:
+                NSBezierPath.bezierPathWithRect_(rect).addClip()
                 if self.zoom != 1.0:
                     t = NSAffineTransform.transform()
                     t.scaleBy_(self.zoom)
