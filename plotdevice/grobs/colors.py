@@ -10,12 +10,12 @@ from Quartz import *
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path
 _ctx = None
-__all__ = ("RGB", "HSB", "CMYK", "GREY",
+__all__ = ("RGB", "HSV", "HSB", "CMYK", "GREY",
            "Color", "Pattern", "Gradient",)
 
 # color/output modes
 RGB = "rgb"
-HSB = "hsb"
+HSV = HSB = "hsv"
 CMYK = "cmyk"
 GREY = "grey"
 
@@ -29,12 +29,12 @@ class Color(object):
         args = _flatten(args)
 
         # if the first arg is a color mode, use that to interpret the args
-        if args and args[0] in (RGB, HSB, CMYK, GREY):
+        if args and args[0] in (RGB, HSV, CMYK, GREY):
             mode, args = args[0], args[1:]
         else:
             mode=kwargs.get('mode')
 
-        if mode not in (RGB, HSB, CMYK, GREY):
+        if mode not in (RGB, HSV, CMYK, GREY):
             # if no mode was specified, interpret the components in the context's current mode
             mode = _ctx._colormode
 
@@ -63,7 +63,7 @@ class Color(object):
             if params<2:
                 gscale += (1,)
             clr = Color._nscolor(GREY, *gscale)
-        elif 3<=params<=4 and mode in (RGB, HSB):           # RGB(a) & HSB(a)
+        elif 3<=params<=4 and mode in (RGB, HSV):           # RGB(a) & HSV(a)
             rgba_hsba = self._normalizeList(args, rng)
             if params<4:
                 rgba_hsba += (1,)
@@ -115,7 +115,7 @@ class Color(object):
         outargs = [None] * 4
         if mode is RGB:
             return self._rgb.getRed_green_blue_alpha_(*outargs)
-        elif mode is HSB:
+        elif mode is HSV:
             return self._rgb.getHue_saturation_brightness_alpha_(*outargs)
         elif mode is CMYK:
             return (self._cmyk.cyanComponent(), self._cmyk.magentaComponent(),
@@ -138,8 +138,8 @@ class Color(object):
         return self._rgb.hueComponent()
     def _set_hue(self, val):
         val = self._normalize(val)
-        h, s, b, a = self._values(HSB)
-        self._rgb = Color._nscolor(HSB, val, s, b, a)
+        h, s, b, a = self._values(HSV)
+        self._rgb = Color._nscolor(HSV, val, s, b, a)
         self._updateCmyk()
     h = hue = property(_get_hue, _set_hue, doc="the hue of the color")
 
@@ -147,8 +147,8 @@ class Color(object):
         return self._rgb.saturationComponent()
     def _set_saturation(self, val):
         val = self._normalize(val)
-        h, s, b, a = self._values(HSB)
-        self._rgb = Color._nscolor(HSB, h, val, b, a)
+        h, s, b, a = self._values(HSV)
+        self._rgb = Color._nscolor(HSV, h, val, b, a)
         self._updateCmyk()
     s = saturation = property(_get_saturation, _set_saturation, doc="the saturation of the color")
 
@@ -156,16 +156,16 @@ class Color(object):
         return self._rgb.brightnessComponent()
     def _set_brightness(self, val):
         val = self._normalize(val)
-        h, s, b, a = self._values(HSB)
-        self._rgb = Color._nscolor(HSB, h, s, val, a)
+        h, s, b, a = self._values(HSV)
+        self._rgb = Color._nscolor(HSV, h, s, val, a)
         self._updateCmyk()
-    v = brightness = property(_get_brightness, _set_brightness, doc="the brightness of the color")
+    v = value = brightness = property(_get_brightness, _set_brightness, doc="the brightness of the color")
 
     def _get_hsba(self):
-        return self._values(HSB)
+        return self._values(HSV)
     def _set_hsba(self, values):
         h, s, b, a = self._normalizeList(values)
-        self._rgb = Color._nscolor(HSB, h, s, b, a)
+        self._rgb = Color._nscolor(HSV, h, s, b, a)
         self._updateCmyk()
     hsba = property(_get_hsba, _set_hsba, doc="the hue, saturation, brightness and alpha of the color")
 
@@ -302,7 +302,7 @@ class Color(object):
         valid_str = lambda s: isinstance(s, basestring) and (s.strip() in _CSS_COLORS or \
                                                              re.match(r'#?[a-z0-9]{3,8}$', s.strip()) )
         if isinstance(blob, (tuple, list)):
-            demoded = [b for b in blob if b not in (RGB,HSB,CMYK,GREY)]
+            demoded = [b for b in blob if b not in (RGB,HSV,CMYK,GREY)]
             if all(isinstance(n, (int,long,float)) and len(demoded)<=5 for n in blob):
                 return True
 
@@ -317,7 +317,7 @@ class Color(object):
     @classmethod
     def _nscolor(cls, scheme, *components):
         factory = {RGB: NSColor.colorWithDeviceRed_green_blue_alpha_,
-                   HSB: NSColor.colorWithDeviceHue_saturation_brightness_alpha_,
+                   HSV: NSColor.colorWithDeviceHue_saturation_brightness_alpha_,
                    CMYK: NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_,
                    GREY: NSColor.colorWithDeviceWhite_alpha_}
         return factory[scheme](*components)

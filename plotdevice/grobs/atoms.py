@@ -284,7 +284,7 @@ class StyleMixin(Grob):
         else:
             merged = self._stylesheet.copy()
         merged._baseline = self._typestyle._asdict()
-        merged._baseline['color'] = self.fill
+        merged._baseline['fill'] = self.fill
         merged._override = self._override
         return merged
 

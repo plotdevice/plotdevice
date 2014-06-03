@@ -163,6 +163,12 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
         with _ns_context():                  # save and restore the gstate
             self._screen_transform.concat()  # transform so text can be drawn at the origin
             with self.effects.applied():     # apply any blend/alpha/shadow effects
+
+                # debug: draw a grey background for the text's bounds
+                # with _ns_context():
+                #     NSColor.colorWithDeviceWhite_alpha_(0,.2).set()
+                #     NSBezierPath.fillRect_(self._spool.typeblock)
+
                 self._spool.draw_glyphs(0,0) # and let 'er rip
 
     @property
@@ -172,7 +178,7 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
 
 class Stylesheet(object):
     # stateAttrs = ('_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight')
-    kwargs = ('family','size','leading','weight','width','variant','italic','heavier','lighter','color','fill','face','fontname','fontsize','lineheight')
+    kwargs = ('family','size','leading','weight','width','variant','italic','heavier','lighter','fill','face','fontname','fontsize','lineheight')
 
     def __init__(self, styles=None):
         super(Stylesheet, self).__init__()
@@ -220,13 +226,13 @@ class Stylesheet(object):
             del self[name]
         elif args or kwargs:
             spec = Stylesheet._spec(*args, **kwargs)
-            color = kwargs.get('color')
+            color = kwargs.get('fill')
             if color and not isinstance(color, Color):
                 if isinstance(color, basestring):
                     color = (color,)
                 color = Color(*color)
             if color:
-                spec['color'] = color
+                spec['fill'] = color
             self._styles[name] = spec
         return self[name]
 
@@ -274,7 +280,7 @@ class Stylesheet(object):
         spec.update(self._override)
 
         # assign a font and color based on the coalesced spec
-        color = Color(spec.pop('color')).nsColor
+        color = Color(spec.pop('fill')).nsColor
         font = Font(**{k:v for k,v in spec.items() if k in Stylesheet.kwargs} )
 
         # factor the relevant attrs into a paragraph style
@@ -298,14 +304,12 @@ class Stylesheet(object):
             raise DeviceError(badarg)
 
         # start with kwarg values as the canonical settings
-        _canon = ('family','size','weight','italic','width','variant','leading','color')
+        _canon = ('family','size','weight','italic','width','variant','leading','fill')
         spec = {k:v for k,v in kwargs.items() if k in _canon}
 
         # be backward compatible with the old arg names
         if 'fontsize' in kwargs:
             spec.setdefault('size', kwargs['fontsize'])
-        if 'fill' in kwargs:
-            spec.setdefault('color', kwargs['fill'])
         if 'lineheight' in kwargs:
             spec.setdefault('leading', kwargs['lineheight'])
 

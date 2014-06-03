@@ -563,7 +563,7 @@ class Context(object):
         interpreted in subsequent color-modification commands.
 
         By default, color commands interpret groups of 3 or more numbers as r/g/b triplets
-        (with an optional, final alpha arg). If the `mode` keyword arg is set to RGB, HSB,
+        (with an optional, final alpha arg). If the `mode` keyword arg is set to RGB, HSV,
         or CMYK, subsequent color commands will interpret numerical arguments according to
         that colorspace instead.
 
@@ -571,7 +571,7 @@ class Context(object):
         1.0, but 255 and 100 are also sensible choices.
 
         For instance here are three equivalent ways of setting the fill color to ‘blue’:
-            color(mode=HSB)
+            color(mode=HSV)
             fill(.666, 1.0, .76)
             color(mode=RGB, range=255)
             fill(0, 0, 190)
@@ -597,7 +597,7 @@ class Context(object):
 
         You can also prefix the numeric args with a color mode as a convenience for setting
         one-off colors in a mode different from the current colorspace:
-            color(mode=HSB)
+            color(mode=HSV)
             hsb_color = color(.7, 1, .8)           # uses current mode (h/s/b)
             cmyk_color = color(CMYK, 0, .7, .9, 0) # interpreted as c/m/y/k
             still_hsb = color(1, .5, .25)          # uses current mode (h/s/b)
@@ -618,7 +618,7 @@ class Context(object):
         args = _flatten(args)
 
         # if the first arg is a color mode, use that to interpret the args
-        if args and args[0] in (RGB, HSB, CMYK, GREY):
+        if args and args[0] in (RGB, HSV, CMYK, GREY):
             mode, args = args[0], args[1:]
             kwargs.setdefault('mode', mode)
 
@@ -971,29 +971,25 @@ class Context(object):
             arguments to specify the font. The argument format is identical to the font() command, e.g.:
 
                 stylesheet('foo', family="Avenir", italic=True)
+                stylesheet('em', italic=False)
 
             now when you call the text command, you can use html-ish markup to use the style:
 
-            text("<foo>This is avenir oblique</foo> This is whatever the context's default font is", 0,0)
+                text("<foo>This is avenir oblique <em>and this is upright</em></foo>", 0,0)
 
-            Ordinarily any text not contained within style tags will inherit its font from the context's
-            state (whatever the most recent font() call set it to). This can be useful if you define your
-            styles as modifications of that basic state rather than complete overrides of the face.
-
-            If you'd prefer to use a fixed style for
+            Note that the string you pass to text() must be enclosed in a top-level 'root'
+            element in order for it to be treated as markup.
 
         stylesheet("stylename", None)
            To delete a style, pass None along with the style name
 
         stylesheet("stylename")
-            When called with a style name and no other arguments, returns a dictionary with the specification
-            for the style (or None if it doesn't exist). This dictionary is only a copy, to modify the style,
-            update
+            When called with a style name and no other arguments, returns a dictionary with the
+            specification for the style (or None if it doesn't exist).
 
         stylesheet()
             With no arguments, returns the context's Stylesheet object for you to monkey with directly.
             It acts as a dictionary with all currently defined styles as its keys.
-
         """
         if name is None:
             return self._stylesheet
@@ -1001,7 +997,28 @@ class Context(object):
             return self._stylesheet.style(name, *args, **kwargs)
 
     def text(self, txt, x=0, y=0, width=None, height=None, outline=False, style=None, **kwargs):
-        """Draw a single line (or a block) of text using the current font() and stylesheet()"""
+        """Draw a single line (or a block) of text
+
+        Arguments:
+          - `txt` is a unicode string. If it begins and ends with an xml tag, the string will
+            be parsed and styles from the stylesheet() applied to it. Otherwise the text will
+            be drawn using the current font() and fill().
+          - `x` & `y` set the position. Note that the `y` value corresponds to the the text's
+            baseline rather than the top of its bounding box.
+          - `width` optionally sets the column width. Text will be line-wrapped using the
+            current align() setting. If width is omitted, the text will be drawn as a single line.
+          - `height` optionally sets the maximum height of a text column. Only the parts of
+            the string that fit within the width & height will be drawn.
+
+        Keyword Args:
+          - `outline` converts the text to a set of Bezier paths before drawing. This allows
+            you to use the canvas's current stroke() and pen() settings as well as fill() color
+          - If `style` is a string corresponding to a rule defined in the stylesheet(), the text
+            will be drawn in that style. The argument can also be set to False to disable
+            XML parsing of the string.
+          - `plot` can be set to False to prevent the command from immediately drawing to the
+            canvas. You can pass the return value to the plot() command to draw it later on.
+        """
         txt = Text(txt, x, y, width, height, style, **kwargs)
         if self._path is None and not outline:
             # treat as Text
@@ -1017,12 +1034,17 @@ class Context(object):
             return p
 
     def textpath(self, txt, x, y, width=None, height=None, style=None, **kwargs):
-        """Legacy command. Equivalent to: text(txt, outline=True, plot=False)"""
+        """Format a string with the current font() settings and return it as a Bezier
+
+        textpath() accepts the same arguments as text() and is a shorthand for
+        text(txt, outline=True, plot=False).
+        """
         txt = Text(txt, x, y, width, height, style, **kwargs)
         txt.inherit()
         return txt.path
 
     def textmetrics(self, txt, width=None, height=None, style=None, **kwargs):
+        """Legacy command. Equivalent to: measure(txt, width, height)"""
         txt = Text(txt, 0, 0, width, height, style, **kwargs)
         txt.inherit()
         return txt.metrics
@@ -1060,13 +1082,11 @@ class Context(object):
         return img
 
     def imagesize(self, path, data=None):
+        """Legacy command. Equivalent to: measure(file(path))"""
         img = Image(path, data=data)
         return img.size
 
     ### Canvas proxy ###
-
-    # def save(self, fname, format=None):
-    #     self.canvas.save(fname, format)
 
     def clear(self, *grobs):
         """Erase the canvas (or remove specific objects already added to it)
