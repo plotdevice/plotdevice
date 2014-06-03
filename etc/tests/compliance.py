@@ -21,7 +21,7 @@ def primitives(x, y):
     poly(x+25, y+25, 25, sides=6)
     x += 75
     oval(x, y, 50, 50, range=180) # chocolate
-    arc(x+25, y+25, 25, range=(180,0), fill=.5) # peanutbutter
+    arc(x+25, y+25, 25, range=-180, fill=.5) # peanutbutter
     x += 75
     star(x+25, y+25, 20, outer=25, inner=15)
     x += 75
