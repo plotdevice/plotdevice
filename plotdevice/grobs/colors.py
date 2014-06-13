@@ -47,6 +47,9 @@ class Color(object):
         elif params == 1 and isinstance(args[0], Color):    # Color object
             _copy_attrs(args[0], self, ['_rgb','_cmyk'])
             return
+        elif params == 1 and isinstance(args[0], Pattern):  # Pattern object
+            self._cmyk = self._rgb = args[0]._nsColor
+            return
         elif params == 1 and isinstance(args[0], Gradient): # Gradient (use first shade)
             first_clr = args[0]._colors[0]
             _copy_attrs(first_clr, self, ['_rgb','_cmyk'])
@@ -351,14 +354,25 @@ class Pattern(object):
         else:
             self._nsColor = NSColor.colorWithPatternImage_(img._nsImage)
 
+    # fill() and stroke() both cache the previous canvas state by creating a _rollback attr.
+    # act as a context manager if there's a fill/stroke state to revert to at the end of the block.
+    def __enter__(self):
+        if not hasattr(self, '_rollback'):
+            badcontext = 'the with-statement can only be used with fill() and stroke(), not arbitrary colors'
+            raise DeviceError(badcontext)
+        return self
+
+    def __exit__(self, type, value, tb):
+        for param, val in self._rollback.items():
+            statevar = {"fill":"_fillcolor", "stroke":"_strokecolor"}[param]
+            setattr(_ctx, statevar, val)
+
     def set(self):
         self._nsColor.set()
 
     def fill(self, path):
-        _save()
         self._nsColor.set()
         path._nsBezierPath.fill()
-        _restore()
 
     def copy(self):
         return Pattern(self)
