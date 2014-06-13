@@ -25,12 +25,10 @@ class PlotDeviceDocument(NSDocument):
     graphicsView = objc.IBOutlet()
     outputView = objc.IBOutlet()
     editorView = objc.IBOutlet()
-    textView = objc.IBOutlet() # ye olde PyDETextView
+    statusView = objc.IBOutlet()
     window = objc.IBOutlet()
+
     dashboardController = objc.IBOutlet()
-    animationSpinner = objc.IBOutlet()
-    footer = objc.IBOutlet()
-    mainView = objc.IBOutlet()
     exportSheet = objc.IBOutlet()
 
     def windowNibName(self):
@@ -43,7 +41,6 @@ class PlotDeviceDocument(NSDocument):
         self.fullScreen = None
         self.currentView = None
         self.stationery = None
-        self._showFooter = True
         return self
 
     def awaken(self):
@@ -53,23 +50,13 @@ class PlotDeviceDocument(NSDocument):
         win.setRestorable_(True)
         win.setIdentifier_("plotdevice-doc")
 
-        # improve on the xor-ish clicked state for the zoom buttons
-        self.graphicsView.zoomLevel.cell().setHighlightsBy_(NSContentsCellMask)
-        self.graphicsView.zoomLevel.cell().setShowsStateBy_(NSContentsCellMask)
-
         # maintain reference to either the in-window view or a fullscreen view
         self.currentView = self.graphicsView
 
-        # move the spinning progress indicator out of the status bar
+        # place the statusView in the title bar
         frame = win.frame()
-        win.contentView().superview().addSubview_(self.animationSpinner)
-        self.animationSpinner.setFrame_( ((frame.size.width-18,frame.size.height-18), (15,15)) )
-        self.animationSpinner.setAutoresizingMask_(NSViewMinYMargin|NSViewMinXMargin)
-
-        # deal with the textured bottom-bar
-        win.setAutorecalculatesContentBorderThickness_forEdge_(True,NSMinYEdge)
-        win.setContentBorderThickness_forEdge_(22.0,NSMinYEdge)
-        self.toggleStatusBar_(self)
+        win.contentView().superview().addSubview_(self.statusView)
+        self.statusView.setFrame_( ((frame.size.width-24,frame.size.height-22), (22,22)) )
 
         # if this is a previously-saved doc, the readfromURL: call has already happened
         # and the vm has the source text. Now that the editor has woken up, populate it.
@@ -216,20 +203,6 @@ class PlotDeviceDocument(NSDocument):
             window_ctl.setShouldCascadeWindows_(False)
             window_ctl.setWindowFrameAutosaveName_(name)
 
-    @objc.IBAction
-    def toggleStatusBar_(self, sender):
-        win = self.graphicsView.window()
-        self._showFooter = not self._showFooter
-        thickness = 22 if self._showFooter else 0
-
-        content = win.contentView().frame()
-        content.size.height -= thickness
-        content.origin.y += thickness
-
-        self.mainView.setFrame_(content)
-        win.setContentBorderThickness_forEdge_(thickness, NSMinYEdge)
-        self.footer.setHidden_(not self._showFooter)
-
     def _ui_state(self):
         # Set the mouse position
         window = self.currentView.window()
@@ -357,6 +330,9 @@ class PlotDeviceDocument(NSDocument):
 
     @objc.IBAction
     def runScript_(self, sender):
+        if self.vm.session:
+            return NSBeep()
+
         self.runScript()
 
     def runScript(self):
@@ -393,7 +369,7 @@ class PlotDeviceDocument(NSDocument):
                 self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
 
                 # Start the spinner
-                self.animationSpinner.startAnimation_(None)
+                self.statusView.beginRun()
         else:
             # clean up after successful non-animated run
             self.stopScript()
@@ -411,7 +387,7 @@ class PlotDeviceDocument(NSDocument):
         flow is at the module level. For animated scripts, this is just a first pass to populate
         the namespace with the script's variables and particularly the setup/draw/stop functions.
         """
-        self.animationSpinner.startAnimation_(None)
+        self.statusView.beginRun()
         if (self.outputView):
             self.editorView.clearErrors()
             self.outputView.clear(timestamp=True)
@@ -425,7 +401,7 @@ class PlotDeviceDocument(NSDocument):
 
         # Run the actual script
         success = self.invoke(None)
-        self.animationSpinner.stopAnimation_(None)
+        self.statusView.endRun()
 
         if success and self.vm.vars:
             # Build the interface
@@ -479,17 +455,14 @@ class PlotDeviceDocument(NSDocument):
         self.vm.source = self.source
         if self.animationTimer is not None:
             self.stopScript()
-        if not self._showFooter:
-            self.toggleStatusBar_(self)
 
         if kind=='image' and opts['last'] == opts['first']:
             self.runScript()
             self.vm.canvas.save(fname, opts.get('format'))
         else:
-            msg = u"Generating %s %s…"%(opts['last']-opts['first']+1, 'pages' if kind=='image' else 'frames')
-            self.footer.setMode_('export')
-            self.footer.setMessage_(msg)
-
+            msg = u"Generating %s %s…\n"%(opts['last']-opts['first']+1, 'pages' if kind=='image' else 'frames')
+            self.outputView.append(msg, stream='info')
+            self.statusView.beginExport()
             self.vm.export(kind, fname, opts)
 
     def exportStatus(self, status, canvas=None):
@@ -506,21 +479,19 @@ class PlotDeviceDocument(NSDocument):
         else:
             # we're done, either because of an error or because the export is complete
             failed = status.ok is False # whereas None means successful
-            self.footer.setMode_('zoom')
+            self.statusView.endExport()
             self.stopScript()
+            self.outputView.append('export complete\n', stream='info')
 
     def exportProgress(self, written, total, cancelled):
         """Update the export progress bar (invoked by self.vm.session)"""
-        label = self.footer.progressPanel.message
         if cancelled:
-            self.footer.setMessage_(u'Cancelling export…')
-            self.footer.wait()
+            if self.statusView.finishExport():
+                self.outputView.append('finishing...\n', stream='info')
         else:
-            bar = self.footer.progressPanel.bar
-            bar.setMaxValue_(total)
-            bar.setDoubleValue_(written)
-            if (total==written):
-                self.footer.setMessage_(u'Finishing export…')
+            if total != written:
+                self.statusView.updateExport_total_(written, total)
+
 
     #
     # Interrupting the run
@@ -535,7 +506,7 @@ class PlotDeviceDocument(NSDocument):
         self.echo(result.output)
 
         # disable ui feedback and return from fullscreen (if applicable)
-        self.animationSpinner.stopAnimation_(None)
+        self.statusView.endRun()
         if self.animationTimer is not None:
             self.animationTimer.invalidate()
             self.animationTimer = None

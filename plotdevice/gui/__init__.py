@@ -15,5 +15,5 @@ def set_timeout(target, sel, delay, info=None, repeat=False):
 
 from plotdevice.gui.document import PlotDeviceDocument, PythonScriptDocument
 from plotdevice.gui.app import PlotDeviceAppDelegate
-from plotdevice.gui.views import ZoomPanel, PlotDeviceBackdrop, PlotDeviceGraphicsView, FullscreenView
+from plotdevice.gui.views import StatusView, PlotDeviceBackdrop, PlotDeviceGraphicsView, FullscreenView
 

@@ -1,3 +1,4 @@
+# encoding: utf-8
 import sys
 import os
 import traceback
@@ -72,9 +73,6 @@ class PlotDeviceBackdrop(NSView):
 # class defined in PlotDeviceGraphicsView.xib
 class PlotDeviceGraphicsView(NSView):
     document = objc.IBOutlet()
-    zoomLevel = objc.IBOutlet()
-    zoomField = objc.IBOutlet()
-    zoomSlider = objc.IBOutlet()
     placeholder = NSImage.imageNamed_('placeholder.pdf')
 
     # The zoom levels are 10%, 25%, 50%, 75%, 100%, 200% and so on up to 2000%.
@@ -149,8 +147,6 @@ class PlotDeviceGraphicsView(NSView):
         return self._zoom
     def _set_zoom(self, zoom):
         self._zoom = zoom
-        self.zoomLevel.setTitle_("%i%%" % (self._zoom * 100.0))
-        self.zoomSlider.setFloatValue_(self._zoom * 100.0)
         self.setCanvas(self.canvas, rasterize=True)
     zoom = property(_get_zoom, _set_zoom)
 
@@ -165,11 +161,6 @@ class PlotDeviceGraphicsView(NSView):
         else:
             self._raster = None
     volatile = property(_get_volatile, _set_volatile)
-
-    @objc.IBAction
-    def dragZoom_(self, sender):
-        self.zoom = self.zoomSlider.floatValue() / 100.0
-        self.setCanvas(self.canvas)
 
     def findNearestZoomIndex(self, zoom):
         """Returns the nearest zoom level, and whether we found a direct, exact
@@ -325,53 +316,64 @@ class PlotDeviceGraphicsView(NSView):
         return True
 
 
-class Footer(NSView):
-    zoomPanel = objc.IBOutlet()
-    progressPanel = objc.IBOutlet()
+class StatusView(NSView):
+    spinner = objc.IBOutlet()
+    cancel = objc.IBOutlet()
 
     def awakeFromNib(self):
-        self._mode = 'zoom'
-        if self.progressPanel:
-            self.progressPanel.setHidden_(True)
+        self.cancel.setHidden_(True)
+        self._state = 'idle'
+        self._finishing = False
 
-    def setMode_(self, mode):
-        if mode==self._mode:
-            return
-        incoming = self.progressPanel if mode=='export' else self.zoomPanel
-        outgoing = self.zoomPanel if mode=='export' else self.progressPanel
-        self.progressPanel.bar.setIndeterminate_(False)
+        opts = (NSTrackingMouseEnteredAndExited | NSTrackingActiveInActiveApp);
+        trackingArea = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(self.bounds(), opts, self, None)
+        self.addTrackingArea_(trackingArea)
 
-        incoming.setAlphaValue_(0)
-        incoming.setHidden_(False)
-        NSAnimationContext.beginGrouping()
-        dt = 0.666
-        ctx = NSAnimationContext.currentContext()
-        ctx.setDuration_(dt)
-        incoming.animator().setAlphaValue_(1)
-        outgoing.animator().setAlphaValue_(0)
-        NSAnimationContext.endGrouping()
-        self.performSelector_withObject_afterDelay_("endModeSwitch:", mode, dt)
-        self._mode = mode
+        self.cancel.cell().setHighlightsBy_(NSContentsCellMask)
+        self.cancel.cell().setShowsStateBy_(NSContentsCellMask)
 
-    def setMessage_(self, msg):
-        self.progressPanel.message.setStringValue_(msg)
+    def beginRun(self):
+        self._state = 'run'
+        self.spinner.setIndeterminate_(True)
+        self.spinner.startAnimation_(None)
 
-    def wait(self):
-        self.progressPanel.bar.setIndeterminate_(True)
+    def endRun(self):
+        self._state = 'idle'
+        self.spinner.stopAnimation_(None)
+        self.cancel.setHidden_(True)
 
-    def endModeSwitch_(self, mode):
-        incoming = self.progressPanel if mode=='export' else self.zoomPanel
-        outgoing = self.zoomPanel if mode=='export' else self.progressPanel
-        outgoing.setHidden_(True)
-        incoming.setHidden_(False)
+    def beginExport(self):
+        self._state = 'run'
+        self.spinner.setIndeterminate_(False)
+        self.spinner.startAnimation_(None)
 
-class ProgressPanel(NSView):
-    bar = objc.IBOutlet()
-    cancel = objc.IBOutlet()
-    message = objc.IBOutlet()
+    def updateExport_total_(self, written, total):
+        self.spinner.setMaxValue_(total)
+        self.spinner.setDoubleValue_(written)
+        self.spinner.setIndeterminate_(False)
 
-class ZoomPanel(NSView):
-    pass
+    def finishExport(self):
+        if self._state == 'run':
+            self.cancel.setHidden_(False)
+            self.spinner.stopAnimation_(None)
+            self.spinner.setIndeterminate_(True)
+            self.spinner.startAnimation_(None)
+            self._state = 'idle'
+            return True
+
+    def endExport(self):
+        self.spinner.setIndeterminate_(True)
+        self.spinner.stopAnimation_(None)
+        self.cancel.setHidden_(True)
+
+    def mouseEntered_(self, e):
+        if self._state == 'run':
+            self.cancel.setHidden_(False)
+            self.spinner.setHidden_(True)
+
+    def mouseExited_(self, e):
+        self.cancel.setHidden_(True)
+        self.spinner.setHidden_(False)
 
 class FullscreenWindow(NSWindow):
 
