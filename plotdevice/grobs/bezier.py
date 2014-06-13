@@ -58,8 +58,12 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         if path is None:
             self._nsBezierPath = NSBezierPath.bezierPath()
         elif isinstance(path, (list,tuple)):
-            p = pathmatics.findpath(path, 1.0 if kwargs.get('smooth') else 0.0)
-            self._nsBezierPath = p._nsBezierPath
+            if isinstance(path[0], Curve):
+                self._nsBezierPath = NSBezierPath.bezierPath()
+                self.extend(path)
+            else:
+                p = pathmatics.findpath(path, 1.0 if kwargs.get('smooth') else 0.0)
+                self._nsBezierPath = p._nsBezierPath
         elif isinstance(path, Bezier):
             self._nsBezierPath = path._nsBezierPath.copy()
             _copy_attrs(path, self, self.stateAttrs)
@@ -575,6 +579,19 @@ class Curve(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def angle(self, x=0, y=0):
+        return Point(self.x, self.y).angle(x, y)
+
+    def distance(self, x=0, y=0):
+        return Point(self.x, self.y).distance(x, y)
+
+    def reflect(self, *args, **kwargs):
+        return Point(self.x, self.y).reflect(*args, **kwargs)
+
+    def coordinates(self, distance, angle):
+        return Point(self.x, self.y).coordinates(distance, angle)
+
 
 class PathElement(Curve):
     pass # NodeBox compat...
