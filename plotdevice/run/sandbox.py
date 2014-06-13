@@ -359,10 +359,9 @@ class Sandbox(object):
                     return self._finishExport()
                 self.session.add(self.canvas, i)
 
-            # give the runloop a chance to collect events (rather than just beachballing)
-            # though note that this only happens between batches, not within
-            date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
-            NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
+                # give the runloop a chance to collect events (rather than just beachballing)
+                date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
+                NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
 
         if self.session.batches:
             # keep running _runExportBatch until we run out of batches
