@@ -1,4 +1,4 @@
-size(900,2700)
+size(900,2900)
 
 def header():
     font("Helvetica Neue", 18)
@@ -155,6 +155,15 @@ def images(x, y):
     with translate(375,0), scale(2.0), shadow(.8, blur=10): # doubled (back to full size), dropshadowed
         plot(bmp) 
     
+def blendModes(x, y):
+    modes = ['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'difference', 'exclusion', 'color-dodge', 'color-burn', 'soft-light', 'hard-light', 'hue', 'saturation', 'color', 'luminosity' ]
+    dim = 90
+    for mode, (dx,dy) in zip(modes, grid(8, 2, dim,dim)):
+        with clip(rect(x+dx, y+dy, dim,dim)):
+            image('blend-bg.png', x+dx,y+dy, dim,dim)
+            with blend(mode):
+                image('blend-fg.png', x+dx,y+dy, dim,dim)
+
 def marker(y,h=25):
     colormode(CMYK)
     stroke(1, 0.1, 0.1, 0.1)
@@ -294,29 +303,29 @@ marker(140)
 text("Images", 20, 165)
 images(140,165)
 
-
 # classic Paths api
 translate(0, 140)
 marker(140)
-stroke(.75)
-text("Paths", 20, 165)
-beginpath(165, 140)
-lineto(140, 200)
-curveto(160, 250, 160, 200, 190, 200)
-p = endpath().copy()
-
-stroke(0)
-nofill()
-sw = strokewidth()
-strokewidth(2)
-push()
-translate(60,0)
-for pt in p:
-    pt.x += 60
-    pt.ctrl1.x += 60
-    pt.ctrl2.x += 60
-drawpath(p)
-pop()
+with stroke(.75), fill(0):
+    text("Paths", 20, 165)
+    beginpath(165, 140)
+    lineto(140, 200)
+    curveto(160, 250, 160, 200, 190, 200)
+    p = endpath().copy()
+    
+    stroke(0)
+    nofill()
+    sw = strokewidth()
+    strokewidth(2)
+    push()
+    translate(60,0)
+    for pt in p:
+        pt.x += 60
+        pt.ctrl1.x += 60
+        pt.ctrl2.x += 60
+    drawpath(p)
+    pop()
+    strokewidth(sw)
 
 # new Paths api
 with transform():
@@ -334,4 +343,13 @@ with transform():
     bezier(p, stroke=None, fill='red')
     bezier(p, strokewidth=2, stroke='#a00')
     
-strokewidth(sw)
+
+
+# Blend modes
+translate(0, 140)
+marker(140)
+fill(0)
+text("Blend modes", 20, 165)
+blendModes(140,165)
+
+
