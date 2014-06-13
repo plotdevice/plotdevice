@@ -210,7 +210,6 @@ class Context(object):
 
     def bezier(self, x=None, y=None, **kwargs):
         """Create and plot a new bezier path."""
-        origin = (x,y) if all(isinstance(c, (int,float)) for c in (x,y)) else None
         draw = kwargs.pop('draw', self._autoplot)
         draw = kwargs.pop('plot', draw)
         kwargs['draw'] = draw
@@ -226,6 +225,7 @@ class Context(object):
             # element if an x,y coord was provided and relies on Bezier's __enter__
             # method to update self._path if appropriate
             p = Bezier(**kwargs)
+            origin = (x,y) if all(isinstance(c, (int,float)) for c in (x,y)) else None
             if origin:
                 p.moveto(*origin)
             return p
