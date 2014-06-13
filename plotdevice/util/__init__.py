@@ -262,7 +262,7 @@ def csv_reader(pth, encoding, dialect=csv.excel, **kwargs):
             # decode UTF-8 back to Unicode, cell by cell:
             yield [unicode(cell, 'utf-8') for cell in row]
 
-def csv_dictreader(pth, encoding, dialect=csv.excel, cols=None, **kwargs):
+def csv_dictreader(pth, encoding, dialect=csv.excel, cols=None, dict=dict, **kwargs):
     if not isinstance(cols, (list, tuple)):
         cols=None
     with open(pth, 'Urb', encoding) as unicode_csv_data:
@@ -274,7 +274,7 @@ def csv_dictreader(pth, encoding, dialect=csv.excel, cols=None, **kwargs):
               cols = [unicode(cell, 'utf-8') for cell in row]
               continue
             # decode UTF-8 back to Unicode, cell by cell:
-            yield odict( (col, unicode(cell, 'utf-8')) for (col,cell) in zip(cols,row) )
+            yield dict( (col, unicode(cell, 'utf-8')) for (col,cell) in zip(cols,row) )
 
 def csv_dialect(pth):
     with file(pth, 'Urb') as f:
@@ -284,7 +284,7 @@ def utf_8_encoder(unicode_csv_data):
     for line in unicode_csv_data:
         yield line.encode('utf-8')
 
-def read(pth, format=None, encoding='utf-8', cols=None):
+def read(pth, format=None, encoding='utf-8', cols=None, **kwargs):
     """Returns the contents of a file into a string or format-dependent data
     type (with special handling for json and csv files).
 
@@ -293,8 +293,9 @@ def read(pth, format=None, encoding='utf-8', cols=None):
     `encoding` or default to UTF-8.
 
     JSON files will be parsed and an appropriate python type will be selected
-    based on the top-level object defined in the file. To preserve the ordering
-    of keys, {}'s in the file will be represented as odict objects.
+    based on the top-level object defined in the file. The optional keyword
+    argument `dict` can be set to `adict` or `odict` if you'd prefer not to use
+    the standard python dictionary for decoded objects.
 
     CSV files will return a list of rows. By default each row will be an ordered
     list of column values. If the first line of the file defines column names,
@@ -304,13 +305,14 @@ def read(pth, format=None, encoding='utf-8', cols=None):
     """
     pth = re.sub(r'^~(?=/|$)',os.getenv('HOME'),pth)
     format = format.lstrip('.') if format else pth.rsplit('.',1)[-1]
+    dict_type = kwargs.get('dict', dict)
 
     if format=='json':
-        return json.load(file(pth), object_hook=odict, encoding=encoding)
+        return json.load(file(pth), object_pairs_hook=dict_type, encoding=encoding)
     elif format=='csv':
         dialect = csv_dialect(pth)
         if cols:
-            return list(csv_dictreader(pth, encoding, dialect=dialect, cols=cols))
+            return list(csv_dictreader(pth, encoding, dialect=dialect, cols=cols, dict=dict_type))
         return list(csv_reader(pth, encoding, dialect=dialect))
     else:
         with open(pth, 'Urb', encoding=encoding) as f:
