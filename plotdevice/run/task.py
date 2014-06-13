@@ -43,9 +43,8 @@ class ScriptApp(NSApplication):
         if mode=='headless':
             app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         elif mode=='windowed':
-            icon = PlotDeviceIconView.alloc().initWithFrame_( ((0,0), (128,128)) )
-            NSApp().dockTile().setContentView_(icon)
-            NSApp().dockTile().display()
+            icon = NSImage.alloc().initWithContentsOfFile_(resource_path('icon.icns'))
+            app.setApplicationIconImage_(icon)
         return app
 
 class ScriptAppDelegate(NSObject):
@@ -120,7 +119,7 @@ class PlotDeviceScript(PlotDeviceDocument):
         self.vm = Sandbox(self)
         self.vm.path = opts['file']
         self.vm.source = self.source
-        self.fullScreen = False
+        # self.fullScreen = False
         return self
 
     def awakeFromNib(self):
