@@ -102,9 +102,6 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
         The transform incorporates the global context state but also accounts for
         text alignment and column-width/height constraints set in the constructor."""
 
-        # accumulate transformations in a fresh matrix
-        xf = Transform()
-
         # gather the relevant text metrics
         printer = self._spool
         (dx, dy), (w, h) = printer.typeblock
@@ -119,6 +116,9 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
             elif self._typestyle.align == CENTER:
                 x -= w/2.0
 
+        # accumulate transformations in a fresh matrix
+        xf = Transform()
+
         # calculate the translation offset for centering (if any)
         nudge = Transform()
         if self._transformmode == CENTER:
@@ -126,10 +126,13 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
             height = h if self.height is None else self.height
             nudge.translate(width/2, height/2)
 
-        xf.translate(x, y-offset) # set the position before applying transforms
-        xf.prepend(nudge)                   # nudge the block to its center (or not)
-        xf.prepend(self.transform)          # add context's CTM.
-        xf.prepend(nudge.inverse)           # Move back to the real origin.
+            xf.translate(x, y-offset)  # set the position before applying transforms
+            xf.prepend(nudge)          # nudge the block to its center (or not)
+            xf.prepend(self.transform) # add context's CTM.
+            xf.prepend(nudge.inverse)   # Move back to the real origin.
+        else:
+            xf.prepend(self.transform) # in CORNER mode simply apply the CTM
+            xf.translate(x, y-offset)  # then move to the baseline origin point
         return xf
 
     @property
@@ -177,7 +180,6 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
 
 
 class Stylesheet(object):
-    # stateAttrs = ('_fillcolor', '_fontname', '_fontsize', '_align', '_lineheight')
     kwargs = ('family','size','leading','weight','width','variant','italic','heavier','lighter','fill','face','fontname','fontsize','lineheight')
 
     def __init__(self, styles=None):
