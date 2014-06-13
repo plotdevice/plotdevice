@@ -558,7 +558,7 @@ class ExportSheet(NSObject):
         panel = sender.window()
         format = self.formats['movie'][sender.indexOfSelectedItem()]
         panel.setRequiredFileType_(format)
-        is_gif = format==gif
+        is_gif = format=='gif'
         self.movieLoop.setState_(NSOnState if is_gif else NSOffState)
         self.movieLoop.setEnabled_(is_gif)
         self.movieBitrate.setEnabled_(not is_gif)
