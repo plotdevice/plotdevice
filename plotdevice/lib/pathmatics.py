@@ -113,6 +113,8 @@ except ImportError:
 # Refer to the "Use" section on http://nodebox.net/code
 # Thanks to Dr. Florimond De Smedt at the Free University of Brussels for the math routines.
 from plotdevice import DeviceError
+from Quartz import NSMoveToBezierPathElement as MOVETO, NSLineToBezierPathElement as LINETO
+from Quartz import NSCurveToBezierPathElement as CURVETO, NSClosePathBezierPathElement as CLOSE
 
 def segment_lengths(path, relative=False, n=20):
     """Returns a list with the lengths of each segment in the path.
@@ -245,6 +247,7 @@ def _locate(path, t, segments=None):
     >>> _locate(path, 1.0)
     (0, 1.0, Point(x=0.0, y=0.0))
     """
+    from plotdevice.grobs.transform import Point
 
     if segments == None:
         segments = path.segmentlengths(relative=True)
@@ -297,6 +300,7 @@ def point(path, t, segments=None):
     >>> point(path, 0.1)
     Curve(LINETO, ((10.0, 0.0),))
     """
+    from plotdevice.grobs.bezier import Curve
 
     if len(path) == 0:
         raise DeviceError, "The given path is empty"
@@ -387,6 +391,8 @@ def contours(path):
     >>> len(contours(path))
     2
     """
+    from plotdevice.grobs.bezier import Bezier
+
     contours = []
     current_contour = None
     empty = True
@@ -394,7 +400,7 @@ def contours(path):
         if el.cmd == MOVETO:
             if not empty:
                 contours.append(current_contour)
-            current_contour = Bezier(path._ctx)
+            current_contour = Bezier()
             current_contour.moveto(el.x, el.y)
             empty = True
         elif el.cmd == LINETO:
@@ -420,7 +426,7 @@ def findpath(points, curvature=1.0):
     The curvature parameter offers some control on
     how separate segments are stitched together:
     from straight angles to smooth curves.
-    Curvature is only useful if the path has more than  three points.
+    Curvature is only useful if the path has more than three points.
     """
 
     # The list of points consists of Point objects,
@@ -429,20 +435,22 @@ def findpath(points, curvature=1.0):
 
     from plotdevice.grobs.transform import Point
     from plotdevice.grobs.bezier import Bezier
-    from types import TupleType
+    from types import TupleType, ListType
     for i, pt in enumerate(points):
-        if type(pt) == TupleType:
+        if type(pt) in (TupleType, ListType):
             points[i] = Point(pt[0], pt[1])
 
     if len(points) == 0: return None
     if len(points) == 1:
         path = Bezier(None)
-        path.moveto(points[0].x, points[0].y)
+        pt = points[0]
+        path.moveto(pt.x, pt.y)
         return path
     if len(points) == 2:
         path = Bezier(None)
-        path.moveto(points[0].x, points[0].y)
-        path.lineto(points[1].x, points[1].y)
+        pt1, pt2 = points[:2]
+        path.moveto(pt1.x, pt1.y)
+        path.lineto(pt2.x, pt2.y)
         return path
 
     # Zero curvature means straight lines.
