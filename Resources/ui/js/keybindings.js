@@ -47,6 +47,44 @@ NODEBOX_KEYBINDINGS=[
         // bindKey: "Command-J",
         exec: function(editor) {},
         readOnly: true
+
+    },{
+        name: "gotostart",
+        bindKey: "Home|Command-Up",
+        exec: function(editor) { editor.navigateFileStart(); },
+        multiSelectAction: "forEach",
+        readOnly: true,
+        scrollIntoView: "animate",
+        aceCommandGroup: "fileJump"
+    }, {
+        name: "selecttostart",
+        bindKey: "Shift-Home|Command-Shift-Up",
+        exec: function(editor) { editor.getSelection().selectFileStart(); },
+        multiSelectAction: "forEach",
+        readOnly: true,
+        scrollIntoView: "animate",
+        aceCommandGroup: "fileJump"
+    }, {
+        name: "gotoend",
+        bindKey: "End|Command-Down",
+        exec: function(editor) { editor.navigateFileEnd(); },
+        multiSelectAction: "forEach",
+        readOnly: true,
+        scrollIntoView: "animate",
+        aceCommandGroup: "fileJump"
+    }, {
+        name: "selecttoend",
+        bindKey: "Shift-End|Command-Shift-Down",
+        exec: function(editor) { editor.getSelection().selectFileEnd(); },
+        multiSelectAction: "forEach",
+        readOnly: true,
+        scrollIntoView: "animate",
+        aceCommandGroup: "fileJump"
+    }, {
+        name: "selectOrFindNext", // knock out the binding for the javascript-dialog version
+        // bindKey: "Command-J",
+        exec: function(editor) {},
+        readOnly: true
     },{
         name: "selectline",
         bindKey: "Command-L",
@@ -77,7 +115,7 @@ NODEBOX_KEYBINDINGS=[
         }
     },{
         name: "startAutocomplete",
-        bindKey: "Ctrl-Space|Ctrl-Shift-Space|Alt-Space", 
+        bindKey: "Ctrl-Space|Ctrl-Shift-Space|Alt-Space",
         exec: function(editor) {
             if (!editor.completer)
                 editor.completer = new Autocomplete();
