@@ -6,12 +6,10 @@ from glob import glob
 import plotdevice
 from Foundation import *
 from AppKit import *
-from plotdevice.lib.fsevents import Observer, Stream
 from plotdevice.gui.preferences import get_default
 from plotdevice.run import CommandListener
 from plotdevice.gui import bundle_path, set_timeout
 from plotdevice import util
-from .views import PlotDeviceIconView
 
 LIB_DIR_README = """"You can put PlotDevice libraries In this directory to make them available to your scripts.
 """
@@ -21,7 +19,7 @@ class PlotDeviceAppDelegate(NSObject):
 
     def awakeFromNib(self):
         self._prefsController = None
-        self._docsController = PlotDeviceDocumentController.sharedDocumentController()
+        self._docsController = NSDocumentController.sharedDocumentController()
         self._listener = CommandListener(port=get_default('remote-port'))
         libDir = os.path.join(os.getenv("HOME"), "Library", "Application Support", "PlotDevice")
         try:
@@ -51,10 +49,6 @@ class PlotDeviceAppDelegate(NSObject):
             flicker.setEnabled_(True)
             flicker.setHidden_(True)
             menu.submenu().insertItem_atIndex_(flicker,0)
-
-        icon = PlotDeviceIconView.alloc().initWithFrame_( ((0,0), (128,128)) )
-        NSApp().dockTile().setContentView_(icon)
-        NSApp().dockTile().display()
 
     def applicationWillBecomeActive_(self, note):
         # rescan the examples dir every time?
@@ -128,83 +122,3 @@ class PlotDeviceAppDelegate(NSObject):
         self._listener.join()
         import atexit
         atexit._run_exitfuncs()
-
-
-class PlotDeviceDocumentController(NSDocumentController):
-    _observer = None # fsevents thread
-    _stream = None   # current fsevents session
-    _resume = None   # timer (to update the observer's path list)
-    _update = None   # timer (to stat the files in checklist)
-    watching = {}    # keys are dirs, vals are lists of file paths within the dir
-    checklist = set()# files within dirs that had change notifications
-
-    def init(self):
-        nc = NSNotificationCenter.defaultCenter()
-        nc.addObserver_selector_name_object_(self, 'updateWatchList:', 'watch', None)
-        self._observer = Observer()
-        self._observer.start()
-        return super(PlotDeviceDocumentController, self).init()
-
-    def addDocument_(self, doc):
-        # print "add", doc
-        super(PlotDeviceDocumentController, self).addDocument_(doc)
-        self.updateWatchList_(None)
-
-    def removeDocument_(self, doc):
-        super(PlotDeviceDocumentController, self).removeDocument_(doc)
-        self.updateWatchList_(None)
-
-    def updateWatchList_(self, note):
-        return False # bail
-
-
-        if self._resume:
-            self._resume.invalidate()
-        self._resume = set_timeout(self, "keepWatching:", 0.2)
-
-    def keepWatching_(self, timer):
-        self._resume = None
-        if self._stream:
-            self._observer.unschedule(self._stream)
-            self._stream = None
-
-        urls = [doc.fileURL() for doc in self.documents()]
-        paths = [u.fileSystemRepresentation() for u in urls if u]
-        self.watching = {}
-        for p in paths:
-            dirname = os.path.dirname(p)
-            files = self.watching.get(dirname, [])
-            self.watching[dirname] = files + [p]
-        # print "watching", self.watching.values()
-        if self.watching:
-            self._stream = Stream(self.fileEvent, *set(self.watching.keys()))
-            self._observer.schedule(self._stream)
-
-    def fileEvent(self, path, event):
-        path = path.rstrip('/')
-        if path in self.watching:
-            changed = self.watching[path]
-            if not all(p in self.checklist for p in changed):
-                self.checklist.update(changed)
-                if self._update:
-                    self._update.invalidate()
-                self._update = set_timeout(self, "checkFiles:", 0.25)
-
-    def checkFiles_(self, timer):
-        self.performSelectorOnMainThread_withObject_waitUntilDone_("updateCheckList", None, True)
-        self._update = None
-
-    def updateCheckList(self):
-        for doc in self.documents():
-            url = doc.fileURL()
-            if not url: continue
-
-            pth = url.fileSystemRepresentation()
-            if pth in self.checklist:
-
-                # note that the file might have disappeared and pth is dangling...
-                mtime = os.path.getmtime(pth)
-                if mtime != doc.mtime:
-                    doc.refresh()
-        self.checklist = set()
-

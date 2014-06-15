@@ -38,7 +38,6 @@
 		2A32958B18C59D8000EEDD1C /* geometry.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957518C59D0A00EEDD1C /* geometry.py */; };
 		2A32958C18C59D8000EEDD1C /* io.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957718C59D0A00EEDD1C /* io.py */; };
 		2A32958D18C59D8000EEDD1C /* pathmatics.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957918C59D0A00EEDD1C /* pathmatics.py */; };
-		2A3BD55E189C653600748EA3 /* PlotDeviceFile-nb.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2A3BD55D189C653600748EA3 /* PlotDeviceFile-nb.icns */; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
 		2A66ECEB18A99328002903DE /* ace.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDE18A992BD002903DE /* ace.js */; };
 		2A66ECEC18A99328002903DE /* editor.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDF18A992BD002903DE /* editor.js */; };
@@ -262,7 +261,6 @@
 		2A32957918C59D0A00EEDD1C /* pathmatics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = pathmatics.py; sourceTree = "<group>"; };
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		2A3BD55D189C653600748EA3 /* PlotDeviceFile-nb.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "PlotDeviceFile-nb.icns"; path = "Resources/PlotDeviceFile-nb.icns"; sourceTree = "<group>"; };
 		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		2A66ECDE18A992BD002903DE /* ace.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = ace.js; path = Resources/ui/js/ace.js; sourceTree = "<group>"; };
 		2A66ECDF18A992BD002903DE /* editor.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = editor.js; path = Resources/ui/js/editor.js; sourceTree = "<group>"; };
@@ -442,7 +440,6 @@
 				611CC48910BA8B9E00B55455 /* InfoPlist.strings */,
 				611CC49310BA8B9E00B55455 /* PlotDevice.icns */,
 				611CC49410BA8B9E00B55455 /* PlotDeviceFile.icns */,
-				2A3BD55D189C653600748EA3 /* PlotDeviceFile-nb.icns */,
 				2A93AE731903326E00C6144D /* placeholder.pdf */,
 				2ABDB76C1867D8210069EFC3 /* PlotDevice-Info.plist */,
 			);
@@ -651,7 +648,6 @@
 				611CC5A010BA908C00B55455 /* PlotDeviceDocument.xib in Resources */,
 				611CC5A810BA919A00B55455 /* PlotDevicePreferences.xib in Resources */,
 				611CC68010BAA08300B55455 /* MainMenu.xib in Resources */,
-				2A3BD55E189C653600748EA3 /* PlotDeviceFile-nb.icns in Resources */,
 				611CC68710BAA0A600B55455 /* AskString.xib in Resources */,
 				2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */,
 				2A26314B188E1A3A000B792A /* doc in Resources */,

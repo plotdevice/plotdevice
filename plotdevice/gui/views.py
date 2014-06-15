@@ -46,6 +46,10 @@ class PlotDeviceBackdrop(NSView):
             nc = NSNotificationCenter.defaultCenter()
             nc.addObserver_selector_name_object_(self, "viewFrameDidChange:", NSViewFrameDidChangeNotification, subview)
 
+    def __del__(self):
+        nc = NSNotificationCenter.defaultCenter()
+        nc.removeObserver_(self)
+
     def willRemoveSubview_(self, subview):
         if isinstance(subview, PlotDeviceGraphicsView):
             nc = NSNotificationCenter.defaultCenter()
@@ -457,57 +461,4 @@ class FullscreenView(NSView):
 
 def calc_scaling_factor(width, height, maxwidth, maxheight):
     return min(float(maxwidth) / width, float(maxheight) / height)
-
-
-class PlotDeviceIconView(NSView):
-    def isFlipped(self):
-        return True
-
-    def drawRect_(self, rect):
-        # BUG
-        # this should *not* be assuming a 128x128 bounds the way it currently is. at the
-        # very least, have an affine transform scale appropriately before drawing...
-
-        blue = NSColor.colorWithDeviceRed_green_blue_alpha_(0/255.0, 126/255.0, 159/255.0, 1)
-        red = NSColor.colorWithDeviceRed_green_blue_alpha_(221/255.0, 94/255.0, 38/255.0, 1)
-        # grey = NSColor.colorWithDeviceWhite_alpha_(120/255.0, .7)
-        grey = NSColor.colorWithDeviceRed_green_blue_alpha_(227/255.0, 227/255.0, 211/255.0, 1)
-
-        # use a narrow drop shadow to deal with the dock's frustrating edge-lightening artifact
-        s = NSShadow.alloc().init()
-        s.setShadowOffset_((0,0))
-        s.setShadowBlurRadius_(12)
-        s.setShadowColor_(NSColor.colorWithDeviceWhite_alpha_(0, 0.5))
-        s.set()
-
-        # draw the squares
-        blue.setFill()
-        NSRectFillUsingOperation(( (30,6),(42,41) ), NSCompositeCopy)
-        red.setFill()
-        NSRectFillUsingOperation(( (56,80),(42,41) ), NSCompositeCopy)
-
-        # draw the parallelograms
-        grey.setFill()
-
-        grams = NSBezierPath.bezierPath()
-        grams.moveToPoint_( (30,56.75) )
-        grams.lineToPoint_( (51,77.8) )
-        grams.lineToPoint_( (51,118.25) )
-        grams.lineToPoint_( (30,97.201) )
-        grams.closePath()
-
-        grams.moveToPoint_( (77,8.5) )
-        grams.lineToPoint_( (98,29.549) )
-        grams.lineToPoint_( (98,70) )
-        grams.lineToPoint_( (77,48.9) )
-        grams.closePath()
-
-        grams.moveToPoint_( (33.125, 53) )
-        grams.lineToPoint_( (73.578, 53) )
-        grams.lineToPoint_( (94.625, 74) )
-        grams.lineToPoint_( (54.174, 74) )
-        grams.closePath()
-        grams.fill()
-
-        super(PlotDeviceIconView, self).drawRect_(rect)
 

@@ -30,8 +30,7 @@ from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
 from plotdevice.run import Sandbox, resource_path
-from plotdevice.gui.views import PlotDeviceIconView
-# from plotdevice.gui import *
+
 STDOUT = sys.stdout
 STDERR = sys.stderr
 ERASER = '\r%s\r'%(' '*80)

@@ -20,75 +20,60 @@ from plotdevice import util
 
 NSEventGestureAxisVertical = 2
 
-# class defined in PlotDeviceDocument.xib
 class PlotDeviceDocument(NSDocument):
-    graphicsView = objc.IBOutlet()
-    outputView = objc.IBOutlet()
-    editorView = objc.IBOutlet()
-    statusView = objc.IBOutlet()
-    window = objc.IBOutlet()
-
-    dashboardController = objc.IBOutlet()
-    exportSheet = objc.IBOutlet()
-
-    def windowNibName(self):
-        return "PlotDeviceDocument"
-
     def init(self):
-        self = super(PlotDeviceDocument, self).init()
-        self.vm = Sandbox(self)
-        self.animationTimer = None
-        self.fullScreen = None
-        self.currentView = None
-        self.stationery = None
-        return self
+        self.stationery = "TMPL:sketch" # untitled/example docs flag
+        self.source = None # string read in from file
+        self.script = None # window controller
+        return super(PlotDeviceDocument,self).init()
 
-    def awaken(self):
-        # sign up for restoration
-        win = self.editorView.window()
-        win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
-        win.setRestorable_(True)
-        win.setIdentifier_("plotdevice-doc")
+    def makeWindowControllers(self):
+        # print "controller(%s)" % getattr(self, "stationery", self.path)
+        self.script = ScriptController.alloc().init()
+        if self.stationery:
+            self.script.setStationery_(self.stationery)
+            if os.path.exists(self.stationery) and not self.stationery.startswith('TMPL:'):
+                self.setDisplayName_(os.path.basename(self.stationery).replace('.pv',''))
+                self.script.synchronizeWindowTitleWithDocumentName()
 
-        # maintain reference to either the in-window view or a fullscreen view
-        self.currentView = self.graphicsView
-
-        # place the statusView in the title bar
-        frame = win.frame()
-        win.contentView().superview().addSubview_(self.statusView)
-        self.statusView.setFrame_( ((frame.size.width-24,frame.size.height-22), (22,22)) )
-
-        # if this is a previously-saved doc, the readfromURL: call has already happened
-        # and the vm has the source text. Now that the editor has woken up, populate it.
-        if self.vm.source and self.editorView.source != self.vm.source:
-            self.editorView.source = self.vm.source
-
-        # when a new document is created via cmd-n, the doc controller communicates the
-        # starter template through the stationery attr. conditionally set the editor
-        # text based on the path/tmpl-name (but only if this is an untitled doc or a script
-        # from the examples folder)
-        self.restoreFromStationery()
-
-    ## Properties
+        elif self.source is not None:
+            self.script.setPath_source_(self.path, self.source)
+        self.addWindowController_(self.script)
 
     @property
     def path(self):
         url = self.fileURL()
         return url.path() if url else None
 
-    @property
-    def mtime(self):
-        moddate = self.fileModificationDate()
-        return moddate.timeIntervalSince1970() if moddate else None
+    #
+    # Reading & writing the script file (and keeping track of its path)
+    #
+    def setFileURL_(self, url):
+        # print "set url:", url
+        self.stationery = None
+        super(PlotDeviceDocument, self).setFileURL_(url)
 
-    # .source
-    def _get_source(self):
-        return self.editorView.source if self.editorView else self.vm.source
-    def _set_source(self, src):
-        self.vm.source = src
-        if self.editorView:
-            self.editorView.source = src
-    source = property(_get_source, _set_source)
+    def writeToURL_ofType_error_(self, url, tp, err):
+        # print "write url:", url
+        path = url.fileSystemRepresentation()
+        text = self.script._get_source().encode("utf8")
+        with file(path, 'w', 0) as f:
+            f.write(text)
+        return True, err
+
+    def readFromURL_ofType_error_(self, url, tp, err):
+        # print "read url:", url
+        path = url.fileSystemRepresentation()
+        self.source = file(path).read().decode("utf-8")
+        if self.script:
+            self.script.setPath_source_(self.path, self.source)
+        return True, err
+
+    # for debugging the editor:
+    def updateChangeCount_(self, chg):
+        # changes = {0:"NSChangeDone", 1:"NSChangeUndone", 2:"NSChangeCleared", 3:"NSChangeReadOtherContents", 4:"NSChangeAutosaved", 5:"NSChangeRedone", 256:"NSChangeDiscardable", }
+        # print changes[chg]
+        super(PlotDeviceDocument, self).updateChangeCount_(chg)
 
     ## Autosave & restoration on re-launch
 
@@ -101,29 +86,153 @@ class PlotDeviceDocument(NSDocument):
             coder.encodeObject_forKey_(self.stationery, "plotdevice:stationery")
 
     def restoreStateWithCoder_(self, coder):
+        # print "restore"
         super(PlotDeviceDocument, self).restoreStateWithCoder_(coder)
         self.stationery = coder.decodeObjectForKey_("plotdevice:stationery")
-        self.restoreFromStationery()
-
-    def restoreFromStationery(self):
         if self.stationery:
-            is_untitled = self.stationery.startswith('TMPL:')
-            is_example = os.path.exists(self.stationery) and not is_untitled
-            if is_example:
-                self.source = file(self.stationery).read().decode("utf-8")
-                self.vm.stationery = self.stationery
-                self.setDisplayName_(os.path.basename(self.stationery).replace('.pv',''))
-                self.windowControllers()[0].synchronizeWindowTitleWithDocumentName()
-            elif is_untitled:
-                from plotdevice.util.ottobot import genTemplate
-                self.source = genTemplate(self.stationery.split(':',1)[1])
+            self.script.setStationery_(self.stationery)
 
+    ## Explicit saves
+
+    def prepareSavePanel_(self, panel):
+        # saving modifications to .py files is fine, but if a Save As operation
+        # happens, restrict it to .pv files
+        panel.setRequiredFileType_("pv")
+        panel.setAccessoryView_(None)
+        return True
+
+    def presentedItemDidChange(self):
+        # reload the doc if an external editor modified the file
+        self.performSelectorOnMainThread_withObject_waitUntilDone_("_refresh", None, True)
+
+    def _refresh(self):
+        self.revertToContentsOfURL_ofType_error_(self.fileURL(), self.fileType(), None)
+
+
+# `file's owner' in PlotDeviceDocument.xib
+class ScriptController(NSWindowController):
+    # main document window
+    graphicsView = objc.IBOutlet()
+    outputView = objc.IBOutlet()
+    editorView = objc.IBOutlet()
+    statusView = objc.IBOutlet()
+
+    # auxiliary windows
+    dashboardController = objc.IBOutlet()
+    exportSheet = objc.IBOutlet()
+
+    def init(self):
+        self = super(ScriptController, self).initWithWindowNibName_("PlotDeviceDocument")
+        self.vm = Sandbox(self)
+        self.animationTimer = None
+        self.fullScreen = None
+        self.currentView = None
+        self.stationery = None
+        return self
+
+    def setPath_source_(self, path, source):
+        # print "- set path/src", path, '%r'%source[:20] if source else None
+        # self.source = source
+        self.vm.path = path
+        self.vm.source = source
+        if self.editorView:
+            self.editorView.source = source
+
+    def setStationery_(self, tmpl):
+        # print "- set stationery", tmpl
+        is_untitled = tmpl.startswith('TMPL:')
+        is_example = os.path.exists(tmpl) and not is_untitled
+        if is_example:
+            self.vm.stationery = tmpl
+            self.source = file(tmpl).read().decode("utf-8")
+            if self.editorView:
+                self.editorView.source = self.source
+            if self.document():
+                # when an example script is opened, setStatioenry is called before the
+                # ScriptController gets a reference to the document and the doc handles
+                # setting the title.
+                #
+                # when restored at launch, the stationery value doesn't get unpacked until
+                # after an untitled doc gets created. thus we have a self.document reference
+                # and should set the title to the example's name (rather than "Untitled")
+                self.document().setDisplayName_(os.path.basename(tmpl).replace('.pv',''))
+                self.synchronizeWindowTitleWithDocumentName()
+        elif is_untitled:
+            from plotdevice.util.ottobot import genTemplate
+            self.source = genTemplate(tmpl.split(':',1)[1])
+
+    def windowDidLoad(self):
+        # print "- win didload"
+
+        # sign up for restoration
+        win = self.window()
+        win.setRestorable_(True)
+        win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
+
+        # maintain reference to either the in-window view or a fullscreen view
+        self.currentView = self.graphicsView
+
+        # place the statusView in the title bar
+        frame = win.frame()
+        win.contentView().superview().addSubview_(self.statusView)
+        self.statusView.setFrame_( ((frame.size.width-24,frame.size.height-22), (22,22)) )
+
+        # pass the editor a reference to the undomanager so it can sync up with the
+        # menus and the file's dirty-state
+        self.editorView._undo_mgr = self.document().undoManager()
+
+        # if the document was loaded from disk (rather than stationery/untitled), the
+        # setPath_Source_ call came before the editorview was loaded from the nib.
+        # now that the editor has woken up, we can populate it.
+        if self.vm.source:
+            self.editorView.source = self.vm.source
+
+    def encodeRestorableStateWithCoder_(self, coder):
+        # walk through superviews to set the autosave id for the splitters
+        split_frames = []
+        it = self.editorView
+        while it.superview():
+            if type(it) is NSSplitView:
+                sub_frames = [NSStringFromRect(sub.frame()) for sub in it.subviews()]
+                split_frames.append(sub_frames)
+                if len(split_frames) == 2:
+                    break
+            it = it.superview()
+        coder.encodeObject_forKey_(split_frames, "plotdevice:split_rects")
+        super(ScriptController, self).encodeRestorableStateWithCoder_(coder)
+
+
+    def restoreStateWithCoder_(self, coder):
+        split_frames = coder.decodeObjectForKey_("plotdevice:split_rects")
+        if split_frames:
+            it = self.editorView
+            while it.superview():
+                if type(it) is NSSplitView:
+                    first, second = [NSRectFromString(s) for s in split_frames.pop(0)]
+                    for sub, rect in zip(it.subviews(), [first,second]):
+                        sub.setFrame_(rect)
+                    if not split_frames:
+                        break
+                it = it.superview()
+        super(ScriptController, self).restoreStateWithCoder_(coder)
+
+    ## Properties
+
+    @property
+    def path(self):
+        url = self.document().fileURL()
+        return url.path() if url else None
+
+    # .source
+    def _get_source(self):
+        return self.editorView.source if self.editorView else self.vm.source
+    def _set_source(self, src):
+        self.vm.source = src
+        if self.editorView:
+            self.editorView.source = src
+    source = property(_get_source, _set_source)
 
     ## Window behavior
-
-    def windowControllerDidLoadNib_(self, controller):
-        super(PlotDeviceDocument, self).windowControllerDidLoadNib_(controller)
-        self.awaken()
 
     def windowDidResignKey_(self, note):
         if self.editorView:
@@ -164,142 +273,23 @@ class PlotDeviceDocument(NSDocument):
         # catch the occasions where we don't modify the size and cancel the zoom
         return win.frame().size != rect.size
 
-    def updateChangeCount_(self, chg):
-        # print "change",chg
-        # NSChangeDone              = 0
-        # NSChangeUndone            = 1
-        # NSChangeCleared           = 2
-        # NSChangeReadOtherContents = 3
-        # NSChangeAutosaved         = 4
-        # NSChangeRedone            = 5
-        # NSChangeDiscardable       = 256
-        super(PlotDeviceDocument, self).updateChangeCount_(chg)
-
-    def close(self):
-        self.graphicsView = None
+    def windowWillClose_(self, note):
+        # print "- close", self.vm.path
         self.stopScript()
-        super(PlotDeviceDocument, self).close()
+
+        # break some retain cycles on our way out
+        self.vm._cleanup()
+        self.editorView._cleanup()
+        self.outputView._cleanup()
+        self.graphicsView = self.outputView = self.editorView = self.statusView = None
+        self.dashboardController = self.exportSheet = self.vm = None
+
+    def shouldCloseDocument(self):
+        return True
 
     def cancelOperation_(self, sender):
         # for the various times that some other control caught a cmd-period
         self.stopScript()
-
-    def _updateWindowAutosave(self):
-        if self.path and self.editorView: # don't try to access views until fully loaded
-            name = 'plotdevice:%s'%self.path
-
-            # walk through superviews to set the autosave id for the splitters
-            splits = {"lower":None, "upper":None}
-            it = self.editorView
-            while it.superview():
-                if type(it) is NSSplitView:
-                    side = 'lower' if not splits['lower'] else 'upper'
-                    splits[side] = it
-                    it.setAutosaveName_(' - '.join([name,side]))
-                    if splits['upper']: break
-                it = it.superview()
-
-            window_ctl = self.windowControllers()[0]
-            window_ctl.setShouldCascadeWindows_(False)
-            window_ctl.setWindowFrameAutosaveName_(name)
-
-    def _ui_state(self):
-        # Set the mouse position
-        window = self.currentView.window()
-        pt = window.mouseLocationOutsideOfEventStream()
-        mx, my = window.contentView().convertPoint_toView_(pt, self.currentView)
-        # Hack: mouse coordinates are flipped vertically in FullscreenView.
-        # This flips them back.
-        if isinstance(self.currentView, FullscreenView):
-            my = self.currentView.bounds()[1][1] - my
-        if self.fullScreen is None:
-            mx /= self.currentView.zoom
-            my /= self.currentView.zoom
-
-        return dict(
-            # UI events
-            MOUSEX=mx, MOUSEY=my,
-            mousedown=self.currentView.mousedown,
-            keydown=self.currentView.keydown,
-            key=self.currentView.key,
-            keycode=self.currentView.keycode,
-            # scrollwheel=self.currentView.scrollwheel,
-            # wheeldelta=self.currentView.wheeldelta,
-        )
-
-    def refresh(self):
-        """Reload source from file if it has been modified while the app was inactive"""
-        print "refresh", self.path
-        if self.path and self.mtime:
-            current = os.path.getmtime(self.path)
-            if current != self.mtime:
-                self.revertToContentsOfURL_ofType_error_(self.fileURL(), self.fileType(), None)
-
-    def __del__(self):
-        # remove the circular references in our helper objects
-        self.vm._cleanup()
-
-    #
-    # Reading & writing the script file (and keeping track of its path)
-    #
-    def setFileURL_(self, url):
-        oldpath = self.path
-        super(PlotDeviceDocument, self).setFileURL_(url)
-
-        if self.path != oldpath:
-            nc = NSNotificationCenter.defaultCenter()
-            nc.postNotificationName_object_("watch", None)
-        self._updateWindowAutosave()
-        if self.vm:
-            self.vm.path = self.path
-
-    def writeToURL_ofType_error_(self, url, tp, err):
-        path = url.fileSystemRepresentation()
-        text = self.source.encode("utf8")
-        with file(path, 'w', 0) as f:
-            f.write(text)
-        return True, err
-
-    def readFromURL_ofType_error_(self, url, tp, err):
-        path = url.fileSystemRepresentation()
-        self.readFromUTF8(path)
-        return True, err
-
-    def readFromUTF8(self, path):
-        if path is None: return
-        if os.path.exists(path):
-            text = file(path).read().decode("utf-8")
-            self.vm.path = path # BUG: this might be an autosave tempfile...
-        elif path.startswith('TMPL:'):
-            from plotdevice.util.ottobot import genTemplate
-            tmpl = path.split(':',1)[1]
-            text = genTemplate(tmpl)
-        self._updateWindowAutosave()
-        self.source = text
-
-    def prepareSavePanel_(self, panel):
-        # saving modifications to .py files is fine, but if a Save As operation happens, restrict it to .pv files
-        panel.setRequiredFileType_("pv")
-        panel.setAccessoryView_(None)
-        return True
-
-    # def fileAttributesToWriteToURL_ofType_forSaveOperation_originalContentsURL_error_(self, url, typ, op, orig, err):
-    #     attrs, err = super(PlotDeviceDocument, self).fileAttributesToWriteToURL_ofType_forSaveOperation_originalContentsURL_error_(url, typ, op, orig, err)
-    #     attrs = dict(attrs)
-    #     attrs.update({NSFilePosixPermissions:int('755',8)})
-    #     # print attrs
-    #     return attrs, err
-
-    # def writeSafelyToURL_ofType_forSaveOperation_error_(self, url, tp, op, err):
-    #     path = url.fileSystemRepresentation()
-    #     print "swrite",tp,op,path, err
-    #     text = self.source.encode("utf8")
-    #     attrs, err = super(PlotDeviceDocument, self).fileAttributesToWriteToURL_ofType_forSaveOperation_originalContentsURL_error_(url, tp, op, self.fileURL(), err)
-    #     print attrs
-    #     with file(path, 'w', 0) as f:
-    #         f.write(text)
-    #     return True, err
-
 
     #
     # Running the script in the main window
@@ -439,6 +429,31 @@ class PlotDeviceDocument(NSDocument):
         for isErr, data in output:
             self.outputView.append(data, stream='err' if isErr else 'message')
 
+    def _ui_state(self):
+        """Collect mouse & keyboard events to be spliced into the script's namespace"""
+        # Set the mouse position
+        window = self.currentView.window()
+        pt = window.mouseLocationOutsideOfEventStream()
+        mx, my = window.contentView().convertPoint_toView_(pt, self.currentView)
+        # Hack: mouse coordinates are flipped vertically in FullscreenView.
+        # This flips them back.
+        if isinstance(self.currentView, FullscreenView):
+            my = self.currentView.bounds()[1][1] - my
+        if self.fullScreen is None:
+            mx /= self.currentView.zoom
+            my /= self.currentView.zoom
+
+        return dict(
+            # UI events
+            MOUSEX=mx, MOUSEY=my,
+            mousedown=self.currentView.mousedown,
+            keydown=self.currentView.keydown,
+            key=self.currentView.key,
+            keycode=self.currentView.keycode,
+            # scrollwheel=self.currentView.scrollwheel,
+            # wheeldelta=self.currentView.wheeldelta,
+        )
+
     #
     # Exporting to file(s)
     #
@@ -448,6 +463,7 @@ class PlotDeviceDocument(NSDocument):
 
     @objc.IBAction
     def exportAsMovie_(self, sender):
+        # print "sheet", self.exportSheet
         self.exportSheet.beginExport('movie')
 
     def exportConfig(self, kind, fname, opts):
@@ -535,7 +551,7 @@ class PlotDeviceDocument(NSDocument):
             self.vm.session.cancel()
 
         if self.editorView:
-            self.editorView.report(self.vm.crashed, self.path)
+            self.editorView.report(self.vm.crashed, self.document().path)
             self.outputView.report(self.vm.crashed, self.vm.namespace.get('FRAME') if self.vm.animated else None)
 
     def crash(self):
@@ -543,6 +559,8 @@ class PlotDeviceDocument(NSDocument):
         errtxt = self.vm.crash()
         self.echo([(True, errtxt)])
         self.stopScript()
+
+
     #
     # Pasteboards
     #
@@ -565,6 +583,7 @@ class PlotDeviceDocument(NSDocument):
             self.setPrintInfo_(op.printInfo())
     printOperationDidRun_success_contextInfo_ = objc.selector(printOperationDidRun_success_contextInfo_,
             signature="v@:@ci")
+
 
     #
     # Zoom commands, forwarding to the graphics view.
@@ -592,18 +611,6 @@ class PlotDeviceDocument(NSDocument):
 # separate document class for public.python-source files
 class PythonScriptDocument(PlotDeviceDocument):
     pass
-
-def make_bookmark(path):
-    bkmk, err = path.bookmarkDataWithOptions_includingResourceValuesForKeys_relativeToURL_error_(
-        NSURLBookmarkCreationSuitableForBookmarkFile, None, None, None
-    )
-    return bkmk
-
-def read_bookmark(bkmk):
-    path, stale, err = NSURL.URLByResolvingBookmarkData_options_relativeToURL_bookmarkDataIsStale_error_(
-        bkmk, NSURLBookmarkResolutionWithoutUI, None, None, None
-    )
-    return path
 
 def errorAlert(msgText, infoText):
     # Force NSApp initialisation.

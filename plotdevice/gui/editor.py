@@ -11,7 +11,6 @@ from Foundation import *
 from AppKit import *
 from WebKit import * # (defaults write io.plotdevice.PlotDevice WebKitDeveloperExtras -bool true)
 from plotdevice.gui.preferences import get_default, editor_info
-from plotdevice.gui.widgets import ValueLadder
 from plotdevice.gui import bundle_path, set_timeout
 
 __all__ = ['EditorView', 'OutputTextView']
@@ -20,6 +19,9 @@ def args(*jsargs):
     return ', '.join([json.dumps(v, ensure_ascii=False) for v in jsargs])
 
 class DraggyWebView(WebView):
+    def initWithFrame_(self, rect):
+        return self.initWithFrame_frameName_groupName_(rect, None, None)
+
     def draggingEntered_(self, sender):
         pb = sender.draggingPasteboard()
         options = { NSPasteboardURLReadingFileURLsOnlyKey:True,
@@ -41,19 +43,23 @@ class DraggyWebView(WebView):
             return True
         return False
 
+    def shouldCloseWithWindow(self):
+        return True
+
 class EditorView(NSView):
-    document = objc.IBOutlet()
+    # document = objc.IBOutlet()
     jumpPanel = objc.IBOutlet()
     jumpLine = objc.IBOutlet()
 
     # WebKit mgmt
 
     def awakeFromNib(self):
-        self.webview = DraggyWebView.alloc().init()
+        self.webview = DraggyWebView.alloc().initWithFrame_(self.bounds())
         self.webview.setAllowsUndo_(False)
         self.webview.setFrameLoadDelegate_(self)
         self.webview.setUIDelegate_(self)
         self.addSubview_(self.webview)
+
         html = bundle_path(rsrc='ui/editor.html')
         ui = file(html).read().decode('utf-8')
         baseurl = NSURL.fileURLWithPath_(os.path.dirname(html))
@@ -75,7 +81,7 @@ class EditorView(NSView):
         nc.addObserver_selector_name_object_(self, "fontChanged", "FontChanged", None)
         nc.addObserver_selector_name_object_(self, "bindingsChanged", "BindingsChanged", None)
         nc.addObserver_selector_name_object_(self, "insertDroppedFiles:", "DropOperation", self.webview)
-        self._wakeup = set_timeout(self, '_jostle', 0.05, repeat=True)
+        self._wakeup = set_timeout(self, '_jostle', .05, repeat=True)
         self._queue = []
         self._edits = 0
         self.themeChanged()
@@ -84,6 +90,13 @@ class EditorView(NSView):
 
         mm=NSApp().mainMenu()
         self._doers = mm.itemWithTitle_('Edit').submenu().itemArray()[1:3]
+        self._undo_mgr = None
+
+    def _cleanup(self):
+        nc = NSNotificationCenter.defaultCenter()
+        nc.removeObserver_(self)
+        self._doers = self._undo_mgr = self.jumpPanel = self.jumpLine = None
+
 
     # def webView_didFinishLoadForFrame_(self, sender, frame):
     def webView_didClearWindowObject_forFrame_(self, sender, win, frame):
@@ -97,8 +110,8 @@ class EditorView(NSView):
             NSMenuItem.separatorItem(),
         ]
 
-        # once a doc viewer exists, add a lookup-ref menu item pointing to it
-        word = self.js('editor.selected')
+        # once a doc viewer exists, add a lookup-ref menu item pointing to it:
+        # word = self.js('editor.selected')
         # _ns = ['curveto', 'TEXT', 'BezierPath', ...]
         # def ref_url(proc):
         #     if proc in _ns:
@@ -129,9 +142,9 @@ class EditorView(NSView):
     def validateMenuItem_(self, item):
         # we're the delegate for the Edit menu
         if item.title=='Undo':
-            return self.document.undoManager().canUndo()
+            return self._undo_mgr.canUndo()
         elif item.title=='Redo':
-            return self.document.undoManager().canRedo()
+            return self._undo_mgr.canRedo()
         return True
 
     def js(self, cmd, args=''):
@@ -253,7 +266,7 @@ class EditorView(NSView):
 
     def edits(self, count):
         # inform the undo manager of the changes
-        um = self.document.undoManager()
+        um = self._undo_mgr
         c = int(count)
         while self._edits < c:
             um.prepareWithInvocationTarget_(self).syncUndoState_(self._edits)
@@ -285,7 +298,7 @@ class EditorView(NSView):
         menu.submenu().performActionForItemAtIndex_(0)
 
 class OutputTextView(NSTextView):
-    editor = objc.IBOutlet()
+    # editor = objc.IBOutlet()
     endl = False
     scroll_lock = True
 
@@ -307,6 +320,10 @@ class OutputTextView(NSTextView):
         nc = NSNotificationCenter.defaultCenter()
         nc.addObserver_selector_name_object_(self, "themeChanged", "ThemeChanged", None)
         nc.addObserver_selector_name_object_(self, "fontChanged", "FontChanged", None)
+
+    def _cleanup(self):
+        nc = NSNotificationCenter.defaultCenter()
+        nc.removeObserver_(self)
 
     def fontChanged(self, note=None):
         self.setFont_(editor_info('font'))

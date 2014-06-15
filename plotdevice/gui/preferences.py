@@ -106,6 +106,7 @@ class PlotDevicePreferencesController(NSWindowController):
         return self
 
     def awakeFromNib(self):
+        self.window().setRestorable_(True)
         self.toolPortStepper.setIntValue_(get_default('remote-port'))
         self.toolPort.setStringValue_(str(get_default('remote-port')))
         self.toolPort.setTextColor_(ERR_COL if not NSApp().delegate()._listener.active else OK_COL)

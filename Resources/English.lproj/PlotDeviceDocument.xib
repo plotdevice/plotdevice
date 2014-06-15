@@ -5,7 +5,7 @@
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
     </dependencies>
     <objects>
-        <customObject id="-2" userLabel="File's Owner" customClass="PlotDeviceDocument">
+        <customObject id="-2" userLabel="File's Owner" customClass="ScriptController">
             <connections>
                 <outlet property="dashboardController" destination="170" id="171"/>
                 <outlet property="editorView" destination="M8a-Fy-5V5" id="S5m-9Q-p7s"/>
@@ -13,7 +13,7 @@
                 <outlet property="graphicsView" destination="15o-mm-Ppr" id="oax-n6-MB2"/>
                 <outlet property="outputView" destination="31" id="37"/>
                 <outlet property="statusView" destination="NAS-Uo-kIt" id="OWZ-kH-bik"/>
-                <outlet property="window" destination="5" id="299"/>
+                <outlet property="window" destination="5" id="dxm-Qo-rrG"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
@@ -59,7 +59,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="Gog-0j-9A9">
-                                    <rect key="frame" x="321" y="0.0" width="16" height="485"/>
+                                    <rect key="frame" x="322" y="0.0" width="15" height="485"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
