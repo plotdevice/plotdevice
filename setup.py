@@ -24,6 +24,7 @@ NAME = 'PlotDevice'
 VERSION = '0.9'
 CREATOR = 'Plod'
 BUNDLE_ID = "io.plotdevice.PlotDevice"
+COPYRIGHT = u"© 2014 Samizdat Drafting Co."
 
 AUTHOR = "Christian Swinehart",
 AUTHOR_EMAIL = "drafting@samizdat.cc",
@@ -82,41 +83,67 @@ Requires:
 #     Extension('cEvents', ['libs/macfsevents/_fsevents.c', 'libs/macfsevents/compat.c'], extra_link_args = ["-framework","CoreFoundation", "-framework","CoreServices"], **quiet),
 # ]
 
+
+
 plist={
-    'CFBundleDocumentTypes': [{
-        'CFBundleTypeExtensions': [ 'py' ],
-        'CFBundleTypeIconFile': 'PlotDeviceFile.icns',
-        'CFBundleTypeName': "Python Script",
-        'CFBundleTypeRole': 'Editor',
-        'LSItemContentTypes':['public.python-script'],
-        'LSHandlerRank':'Alternate',
-        'NSDocumentClass': 'PythonScriptDocument',
-        },
-        {
-        'CFBundleTypeExtensions': [ 'nb' ],
-        'CFBundleTypeIconFile': 'PlotDeviceFile.icns',
-        'CFBundleTypeName': "PlotDevice Document",
-        'CFBundleTypeRole': 'Editor',
-        'LSItemContentTypes':['io.plotdevice.document'],
-        'LSHandlerRank':'Owner',
-        'NSDocumentClass': 'PlotDeviceDocument',
-    }],
-    'UTExportedTypeDeclarations':[{
-        'UTTypeConformsTo': ['public.data'],
-        'UTTypeDescription': 'PlotDevice Document',
-        'UTTypeIconFile':'PlotDeviceFile-nb.icns',
-        'UTTypeIdentifier':'io.plotdevice.document',
-        'UTTypeTagSpecification':{
-            'com.apple.ostype':['TEXT'],
-            'public.filename-extension':['nb'],
-            'public.mime-type':['text/plain'],
-        },
-    }],
+   "UTExportedTypeDeclarations":[
+      {
+         "UTTypeConformsTo":[
+            "public.data"
+         ],
+         "UTTypeIconFile":"PlotDeviceFile",
+         "UTTypeIdentifier":"io.plotdevice.document",
+         "UTTypeDescription":"PlotDevice Document",
+         "UTTypeTagSpecification":{
+            "com.apple.ostype":[
+               "TEXT"
+            ],
+            "public.mime-type":[
+               "text\/plain"
+            ],
+            "public.filename-extension":[
+               "pv"
+            ]
+         }
+      }
+   ],
+   "CFBundleDocumentTypes":[
+      {
+        "CFBundleTypeExtensions":[
+          "pv"
+        ],
+        "LSTypeIsPackage":0,
+        "NSDocumentClass":"PlotDeviceDocument",
+        "CFBundleTypeName":"PlotDevice Document",
+        "CFBundleTypeIconFile":"PlotDeviceFile",
+        "LSItemContentTypes":[
+          "io.plotdevice.document"
+        ],
+        "CFBundleTypeRole":"Editor",
+        "LSHandlerRank":"Owner"
+      },
+      {
+        "CFBundleTypeExtensions":[
+          "py"
+        ],
+        "LSTypeIsPackage":0,
+        "NSDocumentClass":"PythonScriptDocument",
+        "CFBundleTypeName":"Python Script",
+        "CFBundleTypeIconFile":"PlotDeviceFile.icns",
+        "LSItemContentTypes":[
+          "public.python-script"
+        ],
+        "CFBundleTypeRole":"Editor",
+        "LSHandlerRank":"Alternate"
+      }
+    ],
     "CFBundleIdentifier": BUNDLE_ID,
     "CFBundleName": NAME,
     "CFBundleSignature": CREATOR,
     "CFBundleShortVersionString": VERSION,
     "CFBundleGetInfoString": DESCRIPTION,
+    "NSHumanReadableCopyright":COPYRIGHT,
+
     "LSMinimumSystemVersion":"10.9",
     "NSMainNibFile":"MainMenu",
     "NSPrincipalClass": 'NSApplication',
