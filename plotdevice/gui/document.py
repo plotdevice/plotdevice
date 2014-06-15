@@ -106,7 +106,10 @@ class PlotDeviceDocument(NSDocument):
         self.performSelectorOnMainThread_withObject_waitUntilDone_("_refresh", None, True)
 
     def _refresh(self):
-        self.revertToContentsOfURL_ofType_error_(self.fileURL(), self.fileType(), None)
+        doc_mtime = self.fileModificationDate().timeIntervalSince1970()
+        file_mtime = os.path.getmtime(self.fileURL().fileSystemRepresentation())
+        if file_mtime > doc_mtime:
+            self.revertToContentsOfURL_ofType_error_(self.fileURL(), self.fileType(), None)
 
 
 # `file's owner' in PlotDeviceDocument.xib
