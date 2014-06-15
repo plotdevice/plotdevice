@@ -34,7 +34,6 @@
 		2A294477185E578300E9F650 /* document.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2A294467185E575F00E9F650 /* document.py */; };
 		2A294478185E578300E9F650 /* preferences.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2A294468185E575F00E9F650 /* preferences.py */; };
 		2A32958918C59D8000EEDD1C /* __init__.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957218C59D0A00EEDD1C /* __init__.py */; };
-		2A32958A18C59D8000EEDD1C /* fsevents.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957418C59D0A00EEDD1C /* fsevents.py */; };
 		2A32958B18C59D8000EEDD1C /* geometry.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957518C59D0A00EEDD1C /* geometry.py */; };
 		2A32958C18C59D8000EEDD1C /* io.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957718C59D0A00EEDD1C /* io.py */; };
 		2A32958D18C59D8000EEDD1C /* pathmatics.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957918C59D0A00EEDD1C /* pathmatics.py */; };
@@ -230,7 +229,6 @@
 			dstSubfolderSpec = 7;
 			files = (
 				2A32958918C59D8000EEDD1C /* __init__.py in Copy plotdevice.lib */,
-				2A32958A18C59D8000EEDD1C /* fsevents.py in Copy plotdevice.lib */,
 				2A32958B18C59D8000EEDD1C /* geometry.py in Copy plotdevice.lib */,
 				2A32958C18C59D8000EEDD1C /* io.py in Copy plotdevice.lib */,
 				2A32958D18C59D8000EEDD1C /* pathmatics.py in Copy plotdevice.lib */,
