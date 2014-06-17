@@ -186,7 +186,6 @@
         </customObject>
         <customObject id="2ZA-Wl-gCw" customClass="ExportSheet">
             <connections>
-                <outlet property="document" destination="-2" id="42G-ea-gT4"/>
                 <outlet property="imageAccessory" destination="1ay-3f-Xpc" id="5gb-qo-l0J"/>
                 <outlet property="imageFormat" destination="E8Q-mV-qkm" id="wrd-2l-ozw"/>
                 <outlet property="imagePageCount" destination="k3J-Rh-V0T" id="AKJ-99-7vN"/>
@@ -196,6 +195,7 @@
                 <outlet property="movieFps" destination="AYe-BP-5t0" id="5qF-3k-efL"/>
                 <outlet property="movieFrames" destination="JK9-fm-k19" id="31T-Nv-2OY"/>
                 <outlet property="movieLoop" destination="oNP-4s-YX1" id="aMw-ZM-9Tu"/>
+                <outlet property="script" destination="-2" id="9HI-3F-cIz"/>
             </connections>
         </customObject>
         <customView id="1ay-3f-Xpc" userLabel="View">

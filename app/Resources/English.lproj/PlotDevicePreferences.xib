@@ -15,9 +15,6 @@
                 <outlet property="toolInstallMenu" destination="mnx-Hy-Lba" id="q5K-JP-zXt"/>
                 <outlet property="toolInstallSheet" destination="zey-1s-azI" id="meb-9R-5X7"/>
                 <outlet property="toolPath" destination="UxM-tv-d5u" id="52z-Rc-kyc"/>
-                <outlet property="toolPort" destination="Drw-cb-BpR" id="k6m-fn-bdU"/>
-                <outlet property="toolPortLabel" destination="Ik1-1j-9fo" id="AGc-mN-wYO"/>
-                <outlet property="toolPortStepper" destination="def-ab-25f" id="Cd6-3T-YVU"/>
                 <outlet property="toolRepair" destination="bar-jt-drT" id="hqs-o9-D3F"/>
                 <outlet property="window" destination="5" id="197"/>
             </connections>
@@ -148,7 +145,7 @@
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textField verticalHuggingPriority="750" id="UxM-tv-d5u">
-                                    <rect key="frame" x="10" y="7" width="194" height="22"/>
+                                    <rect key="frame" x="10" y="7" width="231" height="22"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" lineBreakMode="truncatingMiddle" selectable="YES" sendsActionOnEndEditing="YES" state="on" title="/usr/local/bin/plotdevice" id="Psj-xs-GZG">
                                         <font key="font" size="11" name="Menlo-Regular"/>
@@ -157,7 +154,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <button verticalHuggingPriority="750" id="bar-jt-drT">
-                                    <rect key="frame" x="246" y="8" width="67" height="19"/>
+                                    <rect key="frame" x="247" y="8" width="67" height="19"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="roundRect" title="Reinstall" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="WY6-mn-T7K">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -178,39 +175,6 @@
                                         <action selector="installTool:" target="-2" id="YAe-CP-b4Q"/>
                                     </connections>
                                 </button>
-                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="Ik1-1j-9fo">
-                                    <rect key="frame" x="229" y="9" width="34" height="17"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Port:" id="a96-zg-CP7">
-                                        <font key="font" metaFont="smallSystem"/>
-                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                    </textFieldCell>
-                                </textField>
-                                <textField verticalHuggingPriority="750" id="Drw-cb-BpR">
-                                    <rect key="frame" x="248" y="7" width="50" height="22"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" alignment="right" title="65000" id="iRr-Dm-BN1">
-                                        <numberFormatter key="formatter" formatterBehavior="default10_4" positiveFormat="#" negativeFormat="#" localizesFormat="NO" usesGroupingSeparator="NO" paddingCharacter="*" groupingSize="0" minimumIntegerDigits="0" maximumIntegerDigits="42" decimalSeparator="." groupingSeparator="," currencyDecimalSeparator="." plusSign="+" minusSign="-" notANumberSymbol="NaN" perMillSymbol="‰" percentSymbol="%" exponentSymbol="E" positivePrefix="" positiveSuffix="" negativePrefix="-" negativeSuffix="" id="SWH-0I-E7U">
-                                            <real key="minimum" value="1025"/>
-                                            <real key="maximum" value="65535"/>
-                                        </numberFormatter>
-                                        <font key="font" size="11" name="Menlo-Regular"/>
-                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                    </textFieldCell>
-                                    <connections>
-                                        <outlet property="delegate" destination="-2" id="BAL-FD-a8D"/>
-                                    </connections>
-                                </textField>
-                                <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" id="def-ab-25f">
-                                    <rect key="frame" x="297" y="5" width="19" height="27"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <stepperCell key="cell" continuous="YES" alignment="left" minValue="1025" maxValue="65535" doubleValue="9000" id="XUs-ZW-Wv8"/>
-                                    <connections>
-                                        <action selector="modifyPort:" target="-2" id="As8-Oy-xaj"/>
-                                    </connections>
-                                </stepper>
                             </subviews>
                         </view>
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>

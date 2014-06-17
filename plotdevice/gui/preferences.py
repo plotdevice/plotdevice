@@ -21,7 +21,6 @@ def set_default(label, value):
 def defaultDefaults():
     return {
         "WebKitDeveloperExtras":True,
-        "plotdevice:remote-port": 9001,
         "plotdevice:theme":"Blackboard",
         "plotdevice:bindings":"mac",
         "plotdevice:font-name":"Menlo",
@@ -94,22 +93,14 @@ class PlotDevicePreferencesController(NSWindowController):
     toolRepair = objc.IBOutlet()
     toolInstallSheet = objc.IBOutlet()
     toolInstallMenu = objc.IBOutlet()
-    toolPort = objc.IBOutlet()
-    toolPortLabel = objc.IBOutlet()
-    toolPortStepper = objc.IBOutlet()
-    toolPortTimer = None
 
     def init(self):
         self = self.initWithWindowNibName_("PlotDevicePreferences")
         self.setWindowFrameAutosaveName_("PlotDevicePreferencesPanel")
-        self.timer = None
         return self
 
     def awakeFromNib(self):
         self.window().setRestorable_(True)
-        self.toolPortStepper.setIntValue_(get_default('remote-port'))
-        self.toolPort.setStringValue_(str(get_default('remote-port')))
-        self.toolPort.setTextColor_(ERR_COL if not NSApp().delegate()._listener.active else OK_COL)
         self.checkTool()
         self.checkThemes()
         self.checkFonts()
@@ -220,26 +211,6 @@ class PlotDevicePreferencesController(NSWindowController):
         self.toolPath.setStringValue_(found if found else '')
         self.toolPath.setTextColor_(ERR_COL if not valid else OK_COL)
         self.toolRepair.setHidden_(not (found and not valid) )
-        self.toolPort.setHidden_(not valid)
-        self.toolPortLabel.setHidden_(not valid)
-        self.toolPortStepper.setHidden_(not valid)
-        if valid: set_default('remote-port', get_default('remote-port'))
-
-    @objc.IBAction
-    def modifyPort_(self, sender):
-        newport = sender.intValue()
-        self.toolPort.setStringValue_(str(newport))
-        if self.toolPortTimer:
-            self.toolPortTimer.invalidate()
-        self.toolPortTimer = set_timeout(self, "switchPort:", 0.4)
-
-    def switchPort_(self, timer):
-        newport = self.toolPortStepper.intValue()
-        set_default('remote-port', newport)
-        app = NSApp().delegate()
-        app.listenOnPort_(newport)
-        self.toolPort.setTextColor_(ERR_COL if not app._listener.active else NSColor.blackColor())
-        self.toolPortTimer = None
 
     @objc.IBAction
     def installTool_(self, sender):
