@@ -82,7 +82,7 @@ class ScriptAppDelegate(NSObject):
             if opts['activate']:
                 NSApp().activateIgnoringOtherApps_(True)
             self.script.showWindow_(self)
-            AppHelper.callAfter(self.script.runScript)
+            AppHelper.callAfter(self.script.scriptedRun)
         elif self.mode=='headless':
             # create a window-less WindowController
             self.script = ConsoleScript.alloc().init()
@@ -135,9 +135,10 @@ class ScriptWatcher(NSObject):
         return self._queue
 
     def presentedItemDidChange(self):
-        # reload the doc if an external editor modified the file
-        if self.stale():
-            self.script.performSelectorOnMainThread_withObject_waitUntilDone_("_refresh", None, True)
+        if not self.stale():
+            return
+        # call the script's _refresh handler if the change-event wasn't spurious
+        self.script.performSelectorOnMainThread_withObject_waitUntilDone_("_refresh", None, True)
 
     def stale(self):
         file_mtime = os.path.getmtime(self.script.path)
@@ -158,15 +159,29 @@ class ConsoleScript(ScriptController):
         self.vm.metadata = self.opts = opts
         self.watcher = ScriptWatcher.alloc().initWithScript_(self)
 
+    def scriptedRun(self):
+        # this is the first run that gets triggered at invocation
+        # afterward any menu commands will go to runScript and runFullscreen
+        if self.opts['fullscreen']:
+            self.runFullscreen_(None)
+        else:
+            self.runScript()
+
     def _refresh(self):
+        # file changed: reread the script (and potentially run it)
         self.vm.source = file(self.path).read()
         if self.opts['live']:
-            self.runScript()
+            self.scriptedRun()
 
     def runScript(self):
         if self.watcher.stale():
             self.vm.source = file(self.path).read()
         super(ConsoleScript, self).runScript()
+
+    def runFullscreen_(self, sender):
+        if self.watcher.stale():
+            self.vm.source = file(self.path).read()
+        super(ConsoleScript, self).runFullscreen_(sender)
 
     def windowWillClose_(self, note):
         NSApp().terminate_(self)
