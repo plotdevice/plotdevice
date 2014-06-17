@@ -7,10 +7,10 @@ def get_version():
 class DeviceError(Exception):
     pass
 
-# note whether the module is being used within the .app, via task.py, or from the repl
+# note whether the module is being used within the .app, via console.py, or from the repl
 import sys, re
 called_from = getattr(sys.modules['__main__'], '__file__', '<interactive>')
-is_windowed = bool(re.search(r'plotdevice(-app|/run/task)\.py$', called_from))
+is_windowed = bool(re.search(r'plotdevice(-app|/run/console)\.py$', called_from))
 app = bool(called_from=='plotdevice-app.py') if is_windowed else None
 
 # add the Extras directory to sys.path since every module depends on PyObjC and friends

@@ -28,7 +28,7 @@
 		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy web ui assets */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
 		2A26314B188E1A3A000B792A /* doc in Resources */ = {isa = PBXBuildFile; fileRef = 2A26314A188E1A3A000B792A /* doc */; };
 		2A294461185E54F600E9F650 /* export.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2A294459185E539400E9F650 /* export.py */; };
-		2A294462185E54F900E9F650 /* task.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2A29445A185E539400E9F650 /* task.py */; };
+		2A294462185E54F900E9F650 /* console.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2A29445A185E539400E9F650 /* console.py */; };
 		2A294463185E550400E9F650 /* __init__.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2A294458185E539400E9F650 /* __init__.py */; };
 		2A294474185E578300E9F650 /* __init__.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2A294464185E575F00E9F650 /* __init__.py */; };
 		2A294477185E578300E9F650 /* document.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2A294467185E575F00E9F650 /* document.py */; };
@@ -125,7 +125,7 @@
 			files = (
 				2A294463185E550400E9F650 /* __init__.py in Copy plotdevice.run */,
 				2AC5188118636CAF007FB066 /* sandbox.py in Copy plotdevice.run */,
-				2A294462185E54F900E9F650 /* task.py in Copy plotdevice.run */,
+				2A294462185E54F900E9F650 /* console.py in Copy plotdevice.run */,
 				2A294461185E54F600E9F650 /* export.py in Copy plotdevice.run */,
 			);
 			name = "Copy plotdevice.run";
@@ -246,7 +246,7 @@
 		2A26314A188E1A3A000B792A /* doc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = doc; sourceTree = "<group>"; };
 		2A294458185E539400E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		2A294459185E539400E9F650 /* export.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = export.py; sourceTree = "<group>"; };
-		2A29445A185E539400E9F650 /* task.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = task.py; sourceTree = "<group>"; };
+		2A29445A185E539400E9F650 /* console.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = console.py; sourceTree = "<group>"; };
 		2A294464185E575F00E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		2A294467185E575F00E9F650 /* document.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = document.py; sourceTree = "<group>"; };
 		2A294468185E575F00E9F650 /* preferences.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = preferences.py; sourceTree = "<group>"; };
@@ -290,7 +290,6 @@
 		2AD0A9B6186E552700D1F6DE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/PlotDeviceScript.xib; sourceTree = "<group>"; };
 		2AE5AD291862366300CCDD45 /* editor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = editor.py; sourceTree = "<group>"; };
 		2AE5AD2C1862386400CCDD45 /* widgets.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = widgets.py; sourceTree = "<group>"; };
-		2AE5AD7E186249E100CCDD45 /* listener.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = listener.py; sourceTree = "<group>"; };
 		2AEE843A18B3285600CF91D4 /* foundry.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = foundry.py; sourceTree = "<group>"; };
 		2AEE843D18B5603900CF91D4 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		2AEE846318BEC25B00CF91D4 /* iglob.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iglob.py; sourceTree = "<group>"; };
@@ -378,8 +377,7 @@
 				2A294458185E539400E9F650 /* __init__.py */,
 				2AC5187F18636C9F007FB066 /* sandbox.py */,
 				2A294459185E539400E9F650 /* export.py */,
-				2A29445A185E539400E9F650 /* task.py */,
-				2AE5AD7E186249E100CCDD45 /* listener.py */,
+				2A29445A185E539400E9F650 /* console.py */,
 			);
 			path = run;
 			sourceTree = "<group>";

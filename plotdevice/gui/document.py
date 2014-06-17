@@ -186,7 +186,7 @@ class ScriptController(NSWindowController):
         win.contentView().superview().addSubview_(self.statusView)
         self.statusView.setFrame_( ((frame.size.width-24,frame.size.height-22), (22,22)) )
 
-        # sign up for autoresume on quit-and-relaunch (but only if this isn't task.py)
+        # sign up for autoresume on quit-and-relaunch (but only if this isn't console.py)
         if self.editorView:
             win.setRestorable_(True)
 
@@ -196,7 +196,7 @@ class ScriptController(NSWindowController):
     ## WindowController duties
 
     def windowDidLoad(self):
-        # the editor might not exist if we're being opened in task.py
+        # the editor might not exist if we're being opened in console.py
         if self.editorView:
             # pass the editor a reference to the undomanager so it can sync up with the
             # menus and the file's dirty-state
@@ -507,7 +507,7 @@ class ScriptController(NSWindowController):
         """Update the progress meter in the StatusView (invoked by self.vm.session)"""
 
         # everything in this method talks to gui objects.
-        # if we're running in task.py, there's nothing to do
+        # if we're running in console.py, there's nothing to do
         if not self.window():
             return
 

@@ -144,25 +144,25 @@ def module_path():
   raise ImportError
 
 def invocation():
-  """Find the path of task.py within the plotdevice module and update PYTHONPATH if needed"""
+  """Find the path of console.py within the plotdevice module and update PYTHONPATH if needed"""
   script_path = None
   py_path = filter(None, os.getenv('PYTHONPATH','').split(':')) # BUG: should it be unfiltered?
 
   try:
     # running from a virtualenv
     module = module_path()
-    script_path = join(module, 'run/task.py')
+    script_path = join(module, 'run/console.py')
     py_path.append(dirname(module)) # append the site-packages dir
   except ImportError:
     if app_path():
       # running from the app bundle
       dist_path = join(app_path(), 'Contents/Resources/python')
-      script_path = join(dist_path, 'plotdevice/run/task.py')
+      script_path = join(dist_path, 'plotdevice/run/console.py')
       py_path.append(dist_path) # append the site-packages dir
     else:
       # running from the source dist
       dist_path = abspath('%s/..'%dirname(__file__))
-      script_path = "%s/plotdevice/run/task.py"%dist_path
+      script_path = "%s/plotdevice/run/console.py"%dist_path
       py_path.append(dist_path) # add the plotdevice dir to the path
       py_path.append('%s/build/lib.macosx-10.9-intel-2.7'%dist_path) # add the .so files
 

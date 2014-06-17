@@ -252,7 +252,7 @@ if BUILD_APP:
             self.copy_file("%s/etc/plotdevice"%TOP, BIN)
 
             # put the module and .so files in a known location (primarily so the
-            # tool can find task.py)
+            # tool can find console.py)
             self.copy_tree('%s/plotdevice'%TOP, '%s/python/plotdevice'%RSRC)
             # self.copy_tree('%s/lib/python2.7/lib-dynload'%RSRC, '%s/python/plotdevice/ext'%RSRC)
             self.spawn(['/usr/bin/ditto', '%s/build/ext'%TOP, '%s/python/plotdevice/lib'%RSRC])

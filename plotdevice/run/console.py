@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-task.py
+console.py
 
-Simple renderer for command line scripts when run from the module rather than an app bundle.
+Simple renderer for `.pv' scripts when run from the console rather than in-app.
 
 This is the back-end of the `plotdevice` command line script in the 'etc' subdir of the source
 distribution (or the bin directory of your virtualenv once installed). It expects the parsed args
