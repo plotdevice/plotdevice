@@ -215,8 +215,8 @@ class BuildCommand(build_py):
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
         self.mkpath(rsrc_dir)
         self.copy_file("Resources/colors.json", '%s/colors.json'%rsrc_dir)
-        self.spawn(['/usr/bin/ibtool','--compile', '%s/PlotDeviceScript.nib'%rsrc_dir, "Resources/English.lproj/PlotDeviceScript.xib"])
-        self.copy_file("Resources/PlotDeviceFile.icns", '%s/icon.icns'%rsrc_dir)
+        self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "Resources/English.lproj/PlotDeviceScript.xib"])
+        self.copy_file("Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
         self.spawn(['/usr/bin/ditto', 'build/ext', '%s/plotdevice/lib'%self.build_lib])
 
 
