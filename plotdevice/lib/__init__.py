@@ -5,7 +5,7 @@ from os.path import join, abspath, dirname, exists
 # if the libraries build dir exists, add it to the path so we can pick up the .so files,
 # otherwise leave the path as it is and bomb on failure to find the libraries.
 lib_root = abspath(dirname(__file__))
-inplace = exists(join(lib_root, '../../etc/main.m'))
+inplace = exists(join(lib_root, '../../app/main.m'))
 if inplace:
     sys.path.append(join(lib_root, '../../build/ext'))
 
