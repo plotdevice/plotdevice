@@ -320,65 +320,6 @@ class PlotDeviceGraphicsView(NSView):
         return True
 
 
-class StatusView(NSView):
-    spinner = objc.IBOutlet()
-    cancel = objc.IBOutlet()
-
-    def awakeFromNib(self):
-        self.cancel.setHidden_(True)
-        self._state = 'idle'
-        self._finishing = False
-
-        opts = (NSTrackingMouseEnteredAndExited | NSTrackingActiveInActiveApp);
-        trackingArea = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(self.bounds(), opts, self, None)
-        self.addTrackingArea_(trackingArea)
-
-        self.cancel.cell().setHighlightsBy_(NSContentsCellMask)
-        self.cancel.cell().setShowsStateBy_(NSContentsCellMask)
-
-    def beginRun(self):
-        self._state = 'run'
-        self.spinner.setIndeterminate_(True)
-        self.spinner.startAnimation_(None)
-
-    def endRun(self):
-        self._state = 'idle'
-        self.spinner.stopAnimation_(None)
-        self.cancel.setHidden_(True)
-
-    def beginExport(self):
-        self._state = 'run'
-        self.spinner.setIndeterminate_(False)
-        self.spinner.startAnimation_(None)
-
-    def updateExport_total_(self, written, total):
-        self.spinner.setMaxValue_(total)
-        self.spinner.setDoubleValue_(written)
-        self.spinner.setIndeterminate_(False)
-
-    def finishExport(self):
-        if self._state == 'run':
-            self.cancel.setHidden_(False)
-            self.spinner.stopAnimation_(None)
-            self.spinner.setIndeterminate_(True)
-            self.spinner.startAnimation_(None)
-            self._state = 'idle'
-            return True
-
-    def endExport(self):
-        self.spinner.setIndeterminate_(True)
-        self.spinner.stopAnimation_(None)
-        self.cancel.setHidden_(True)
-
-    def mouseEntered_(self, e):
-        if self._state == 'run':
-            self.cancel.setHidden_(False)
-            self.spinner.setHidden_(True)
-
-    def mouseExited_(self, e):
-        self.cancel.setHidden_(True)
-        self.spinner.setHidden_(False)
-
 class FullscreenWindow(NSWindow):
 
     def initWithRect_(self, fullRect):
