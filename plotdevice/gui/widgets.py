@@ -70,8 +70,7 @@ from plotdevice.graphics import NUMBER, TEXT, BOOLEAN, BUTTON
 SMALL_FONT = NSFont.systemFontOfSize_(NSFont.smallSystemFontSize())
 MINI_FONT = NSFont.systemFontOfSize_(NSFont.systemFontSizeForControlSize_(NSMiniControlSize))
 class DashboardController(NSObject):
-    document = objc.IBOutlet()
-    documentWindow = objc.IBOutlet()
+    script = objc.IBOutlet()
     panel = objc.IBOutlet()
 
     def clearInterface(self):
@@ -79,28 +78,28 @@ class DashboardController(NSObject):
             s.removeFromSuperview()
 
     def numberChanged_(self, sender):
-        var = self.document.vm.vars[sender.tag()]
+        var = self.script.vm.vars[sender.tag()]
         var.value = sender.floatValue()
-        self.document.runScript()
+        self.script.runScript()
 
     def textChanged_(self, sender):
-        var = self.document.vm.vars[sender.tag()]
+        var = self.script.vm.vars[sender.tag()]
         var.value = sender.stringValue()
-        self.document.runScript()
+        self.script.runScript()
 
     def booleanChanged_(self, sender):
-        var = self.document.vm.vars[sender.tag()]
+        var = self.script.vm.vars[sender.tag()]
         if sender.state() == NSOnState:
             var.value = True
         else:
             var.value = False
-        self.document.runScript()
+        self.script.runScript()
 
     def buttonClicked_(self, sender):
         print "out of service"
-        # var = self.document.vm.vars[sender.tag()]
-        # self.document.vm.call(var.name)
-        # self.document.runScript()
+        # var = self.script.vm.vars[sender.tag()]
+        # self.script.vm.call(var.name)
+        # self.script.runScript()
 
     def buildInterface(self, vars):
         self.vars = vars
@@ -112,7 +111,8 @@ class DashboardController(NSObject):
             return
 
         # Set the title of the parameter panel to the title of the window
-        self.panel.setTitle_(self.documentWindow.title())
+        print "title()", '%r'%self.script.window().title()
+        self.panel.setTitle_(self.script.window().title())
 
         (px,py),(pw,ph) = self.panel.frame()
         # Height of the window. Each element has a height of 21.
@@ -212,8 +212,8 @@ class DashboardController(NSObject):
 
 
 class ExportSheet(NSObject):
-    # the document whose doExportAsImage and doExportAsMovie methods will be called
-    document = objc.IBOutlet()
+    # the script whose doExportAsImage and doExportAsMovie methods will be called
+    script = objc.IBOutlet()
 
     # Image export settings
     imageAccessory = objc.IBOutlet()
@@ -257,8 +257,8 @@ class ExportSheet(NSObject):
             self.movieBitrate.selectItemWithTag_(self.movie['bitrate'])
 
         # set the default filename and save dir
-        # path = self.document.fileName()
-        path = self.document.path
+        # path = self.script.fileName()
+        path = self.script.path
         if path:
             dirName, fileName = os.path.split(path)
             fileName, ext = os.path.splitext(fileName)
@@ -310,7 +310,7 @@ class ExportSheet(NSObject):
         setattr(self, kind, dict(opts))
         panel.close()
         panel.setAccessoryView_(None)
-        self.document.exportConfig(kind, fname, opts)
+        self.script.exportConfig(kind, fname, opts)
 
     @objc.IBAction
     def imageFormatChanged_(self, sender):

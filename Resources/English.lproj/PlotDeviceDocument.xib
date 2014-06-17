@@ -180,9 +180,8 @@
         </window>
         <customObject id="170" userLabel="DashboardController" customClass="DashboardController">
             <connections>
-                <outlet property="document" destination="-2" id="172"/>
-                <outlet property="documentWindow" destination="5" id="203"/>
                 <outlet property="panel" destination="169" id="173"/>
+                <outlet property="script" destination="-2" id="b0H-ph-cWF"/>
             </connections>
         </customObject>
         <customObject id="2ZA-Wl-gCw" customClass="ExportSheet">

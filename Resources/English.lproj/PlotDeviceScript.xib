@@ -118,9 +118,8 @@
         </window>
         <customObject id="170" userLabel="DashboardController" customClass="DashboardController">
             <connections>
-                <outlet property="document" destination="Krd-r8-qxe" id="vrN-PJ-2aY"/>
-                <outlet property="documentWindow" destination="5" id="203"/>
                 <outlet property="panel" destination="169" id="173"/>
+                <outlet property="script" destination="Krd-r8-qxe" id="RFf-7n-Z15"/>
             </connections>
         </customObject>
         <customObject id="Krd-r8-qxe" userLabel="Console Script" customClass="ConsoleScript">
@@ -134,7 +133,6 @@
         </customObject>
         <customObject id="NPn-1j-FnS" customClass="ExportSheet">
             <connections>
-                <outlet property="document" destination="Krd-r8-qxe" id="h8W-6D-ZdU"/>
                 <outlet property="imageAccessory" destination="ckS-Aa-wAj" id="gvi-5c-l5H"/>
                 <outlet property="imageFormat" destination="Rxm-8h-6V0" id="jjI-sg-8gF"/>
                 <outlet property="imagePageCount" destination="y0A-AX-PVp" id="T4J-5l-fye"/>
@@ -144,6 +142,7 @@
                 <outlet property="movieFps" destination="EX8-Fl-mwA" id="SbA-XD-JZL"/>
                 <outlet property="movieFrames" destination="pT3-sv-aga" id="WIv-WH-qBE"/>
                 <outlet property="movieLoop" destination="vLg-9c-1MM" id="dw5-Vd-gna"/>
+                <outlet property="script" destination="Krd-r8-qxe" id="OtB-ll-yhb"/>
             </connections>
         </customObject>
         <menu title="PlotDevice" systemMenu="main" id="4QP-HE-THp" userLabel="MainMenu">
