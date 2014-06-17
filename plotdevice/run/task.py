@@ -28,12 +28,13 @@ import objc # ...otherwise this would fail
 from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
-from plotdevice.run import resource_path
 from plotdevice.gui import ScriptController
+from plotdevice.util import rsrc_path
 
 STDOUT = sys.stdout
 STDERR = sys.stderr
 ERASER = '\r%s\r'%(' '*80)
+
 
 class ScriptApp(NSApplication):
     @classmethod
@@ -42,7 +43,7 @@ class ScriptApp(NSApplication):
         if mode=='headless':
             app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         elif mode=='windowed':
-            icon = NSImage.alloc().initWithContentsOfFile_(resource_path('viewer.icns'))
+            icon = NSImage.alloc().initWithContentsOfFile_(rsrc_path('viewer.icns'))
             app.setApplicationIconImage_(icon)
         return app
 
@@ -67,7 +68,7 @@ class ScriptAppDelegate(NSObject):
 
         if self.mode=='windowed':
             # load the viewer ui from the nib in plotdevice/rsrc
-            nib = NSData.dataWithContentsOfFile_(resource_path('viewer.nib'))
+            nib = NSData.dataWithContentsOfFile_(rsrc_path('viewer.nib'))
             ui = NSNib.alloc().initWithNibData_bundle_(nib, None)
             ok, objs = ui.instantiateNibWithOwner_topLevelObjects_(self, None)
             NSApp().setMainMenu_(self.menu)
@@ -197,6 +198,7 @@ def progress(written, total, width=20):
     pct = int(ceil(width*written/float(total)))
     dots = "".join(['#'*pct]+['.']*(width-pct))
     return '[%s]' % dots
+
 
 if __name__ == '__main__':
     try:

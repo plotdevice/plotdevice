@@ -64,25 +64,6 @@ def extract_tb(tb, script=None, src=None, debug=True):
         return [frame for frame in list if moduledir not in frame[0]]
     return list
 
-def resource_path(resource=None):
-    """Return absolute path of the rsrc directory (used by task.py)"""
-    from os.path import abspath, dirname, exists, join
-    module_root = abspath(dirname(__file__))
-    rsrc_root = join(module_root, 'rsrc')
-
-    if not exists(rsrc_root):
-        # hack to run in-place in sdist
-        from glob import glob
-        for pth in glob(join(module_root, '../../build/lib/plotdevice/rsrc')):
-            rsrc_root = abspath(pth)
-            break
-        else:
-            notfound = "Couldn't locate resources directory (try running `python setup.py build` before running from the source dist)."
-            raise RuntimeError(notfound)
-    if resource:
-        return join(rsrc_root, resource)
-    return rsrc_root
-
 # make the main classes from the submodules accessible
 from plotdevice.run.export import MovieExportSession, ImageExportSession
 from plotdevice.run.listener import CommandListener
