@@ -577,7 +577,7 @@
 			buildConfigurationList = C05733C708A9546B00998B17 /* Build configuration list for PBXNativeTarget "PlotDevice" */;
 			buildPhases = (
 				8D15AC2B0486D014006FF6A4 /* Resources */,
-				2AC07CAF18EF821600B75879 /* Copy Module Resources */,
+				2AC07CAF18EF821600B75879 /* Copy Module Resources (plotdevice/rsrc/*) */,
 				2A15C45318A45A7B006BDFF0 /* Update web ui (rebuild ace) */,
 				2A15C43718A20929006BDFF0 /* Copy web ui assets */,
 				2A66ECEA18A99303002903DE /* Copy web ui scripts */,
@@ -671,19 +671,19 @@
 			shellPath = /bin/sh;
 			shellScript = "echo \"Skipping ace.js build...\"\n#cd related/ace\n#make install";
 		};
-		2AC07CAF18EF821600B75879 /* Copy Module Resources */ = {
+		2AC07CAF18EF821600B75879 /* Copy Module Resources (plotdevice/rsrc/*) */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Copy Module Resources";
+			name = "Copy Module Resources (plotdevice/rsrc/*)";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "RSRC_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/plotdevice/rsrc\"\nmkdir -p \"$RSRC_DIR\"\ncp -p Resources/colors.json \"$RSRC_DIR\"";
+			shellScript = "RSRC_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/plotdevice/rsrc\"\nmkdir -p \"$RSRC_DIR\"\ncp -p Resources/colors.json \"$RSRC_DIR\"\ncp -p Resources/PlotDeviceFile.icns \"$RSRC_DIR\"/viewer.icns\nibtool --compile \"$RSRC_DIR/viewer.nib\" Resources/English.lproj/PlotDeviceScript.xib\n";
 		};
 		6156AAC410BC110E00C3CE99 /* Copy External Libraries */ = {
 			isa = PBXShellScriptBuildPhase;
