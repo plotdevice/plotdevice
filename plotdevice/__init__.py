@@ -11,7 +11,6 @@ class DeviceError(Exception):
 import sys, re
 called_from = getattr(sys.modules['__main__'], '__file__', '<interactive>')
 is_windowed = bool(re.search(r'plotdevice(-app|/run/console)\.py$', called_from))
-app = bool(called_from=='plotdevice-app.py') if is_windowed else None
 
 # add the Extras directory to sys.path since every module depends on PyObjC and friends
 try:
@@ -30,22 +29,23 @@ from os.path import join
 sys.path.append(join(getenv('HOME'), 'Library', 'Application Support', 'PlotDevice'))
 
 if is_windowed:
-    # if imported from within the app/tool, all we need is the path-manipulation side
-    # effects and a flag to our gui/headless status in the `app` variable
-    __all__ = ('app',)
+    # if a script imports * from within the app/tool, nothing should be (re-)added to the
+    # global namespace. we'll let the Sandbox handle populating the namespace instead.
+    __all__ = []
 else:
     # if imported from an external module, set up a drawing environment in __all__.
     # (note that since this happens at the module level, the canvas will be shared
     # among all the files in a given process that `import *`).
-    from . import context, gfx, util
 
     # create a global canvas and graphics context for the draw functions to operate on
-    context = context.Context()
-    ns = context._ns
+    from .context import Context
+    ctx = Context()
 
     # set up the standard plotdevice global namespace, all tied to the module-level context/canvas
-    for module in util, context:
-        ns.update( (a,getattr(module,a)) for a in module.__all__  )
+    from . import gfx, util
+    ns = ctx._ns
     ns.update(gfx.ns)
+    for module in util, ctx:
+        ns.update( (a,getattr(module,a)) for a in module.__all__  )
     globals().update(ns)
     __all__ = ns.keys()
