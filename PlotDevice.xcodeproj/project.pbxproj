@@ -27,7 +27,6 @@
 		2A15C45218A329BD006BDFF0 /* themes.json in Copy web ui assets */ = {isa = PBXBuildFile; fileRef = 2A15C44618A329AE006BDFF0 /* themes.json */; };
 		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy web ui assets */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
 		2A26314B188E1A3A000B792A /* doc in Resources */ = {isa = PBXBuildFile; fileRef = 2A26314A188E1A3A000B792A /* doc */; };
-		2A294461185E54F600E9F650 /* export.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2A294459185E539400E9F650 /* export.py */; };
 		2A294462185E54F900E9F650 /* console.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2A29445A185E539400E9F650 /* console.py */; };
 		2A294463185E550400E9F650 /* __init__.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2A294458185E539400E9F650 /* __init__.py */; };
 		2A294474185E578300E9F650 /* __init__.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2A294464185E575F00E9F650 /* __init__.py */; };
@@ -126,7 +125,6 @@
 				2A294463185E550400E9F650 /* __init__.py in Copy plotdevice.run */,
 				2AC5188118636CAF007FB066 /* sandbox.py in Copy plotdevice.run */,
 				2A294462185E54F900E9F650 /* console.py in Copy plotdevice.run */,
-				2A294461185E54F600E9F650 /* export.py in Copy plotdevice.run */,
 			);
 			name = "Copy plotdevice.run";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -245,7 +243,6 @@
 		2A15C45418A48765006BDFF0 /* autocomplete.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; name = autocomplete.css; path = Resources/ui/autocomplete.css; sourceTree = "<group>"; };
 		2A26314A188E1A3A000B792A /* doc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = doc; sourceTree = "<group>"; };
 		2A294458185E539400E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		2A294459185E539400E9F650 /* export.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = export.py; sourceTree = "<group>"; };
 		2A29445A185E539400E9F650 /* console.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = console.py; sourceTree = "<group>"; };
 		2A294464185E575F00E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		2A294467185E575F00E9F650 /* document.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = document.py; sourceTree = "<group>"; };
@@ -376,7 +373,6 @@
 			children = (
 				2A294458185E539400E9F650 /* __init__.py */,
 				2AC5187F18636C9F007FB066 /* sandbox.py */,
-				2A294459185E539400E9F650 /* export.py */,
 				2A29445A185E539400E9F650 /* console.py */,
 			);
 			path = run;

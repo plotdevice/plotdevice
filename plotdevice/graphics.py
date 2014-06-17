@@ -1,5 +1,5 @@
 # encoding: utf-8
-import types
+import os, re, types
 from AppKit import *
 from contextlib import contextmanager, nested
 from collections import namedtuple
@@ -1140,8 +1140,33 @@ class Context(object):
         Note that the `loop` argument only applies to animated gifs and `bitrate` is used in the H.264
         encoding of `mov` files.
         """
-        from plotdevice.run.export import export
-        return export(self, fname, fps=fps, loop=loop, bitrate=bitrate, mode=mode)
+        # from plotdevice.run.export import PDF, Movie, ImageSequence
+
+        format = fname.rsplit('.',1)[1]
+        fname = re.sub(r'^~(?=/|$)',os.getenv('HOME'),fname)
+        if mode is None:
+            mode = self._outputmode
+
+        if format=='mov' or (format=='gif' and fps or loop is not None):
+            fps = fps or 30 # set a default for .mov exports
+            loop = {True:-1, False:0, None:0}.get(loop, loop) # convert bool args to int
+            return Movie(fname, format, fps=fps, bitrate=bitrate, loop=loop)
+        else:
+            # if the output is a static image, first write the current canvas contents
+            # to fname (meaning export can be called on its own, not just as part of
+            # a `with` statement)
+            oldmode = self._outputmode
+            self._outputmode = mode
+            self.canvas.save(fname, format=format)
+            self._outputmode = oldmode
+
+        if format=='pdf':
+            return PDF(fname, mode)
+        elif format in ('eps','png','jpg','gif','tiff'):
+            return ImageSequence(fname, format, mode)
+        else:
+            unknown = 'Unknown export format "%s"'%format
+            raise RuntimeError(unknown)
 
 
     ### Geometry

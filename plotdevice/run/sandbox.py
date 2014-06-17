@@ -6,7 +6,8 @@ from collections import namedtuple
 from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
-from plotdevice.run import MovieExportSession, ImageExportSession, stacktrace, coredump
+from ..run import stacktrace, coredump
+from ..lib.io import MovieExportSession, ImageExportSession
 from plotdevice import util, graphics, grobs, DeviceError, __MAGIC as MAGICVAR
 
 __all__ = ['Sandbox']

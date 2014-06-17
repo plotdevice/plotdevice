@@ -8,15 +8,17 @@ from contextlib import contextmanager
 from AppKit import *
 from Foundation import *
 from Quartz import *
+from Quartz.PDFKit import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attrs
+from ..lib.io import MovieExportSession, ImageExportSession
 from .transform import Region, Size, Point, Transform, CENTER
 from .atoms import TransformMixin, EffectsMixin, Grob
 from . import _ns_context
 
 _ctx = None
-__all__ = ("Image",)
+__all__ = ("Image", 'ImageSequence', 'Movie', 'PDF', )
 
 
 ### The bitmap/vector image-container (a.k.a. NSImage proxy) ###
@@ -223,4 +225,228 @@ def _matrixFilter(matrix, img):
     for k,v in opts.items():
         remap.setValue_forKey_(v, k)
     return remap.valueForKey_("outputImage")
+
+
+### context managers for calls to `with export(...)` ###
+
+class Movie(object):
+    """Represents a movie in the process of being assembled one frame at a time.
+
+    The class can be used procedurally, but you need to be careful to call its methods
+    in the correct order or a corrupt file may result:
+
+        movie = export('anim.mov')
+        for i in xrange(100):
+            canvas.clear() # erase the previous frame
+            ...            # (do some drawing)
+            movie.add()    # add the canvas to the movie
+        movie.finish()     # wait for i/o to complete
+
+    It can be used more simply as a context manager:
+
+        with export('anim.mov') as movie:
+            for i in xrange(100):
+                with movie.frame:
+                    ... # draw the next frame
+    """
+    def __init__(self, *args, **opts):
+        self.session = MovieExportSession(*args, **opts)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.finish()
+
+    @property
+    @contextmanager
+    def frame(self):
+        """Clears the canvas, runs the code in the `with` block, then adds the canvas to the movie.
+
+        For example, to create a quicktime movie and write a single frame to it you could write:
+
+            with export("anim.mov") as movie:
+                canvas.clear()
+                ... # draw the frame
+                movie.add()
+
+        With the `frame` context manager, this simplifies to:
+
+            with export("anim.mov") as movie:
+                with movie.frame:
+                    ... # draw the frame
+        """
+        _ctx._saveContext()
+        _ctx.canvas.clear()
+        yield
+        self.add()
+        _ctx._restoreContext()
+
+    def add(self):
+        """Add a new frame to the movie with the current contents of the canvas."""
+        self.session.add(canvas)
+        self._progress()
+
+    def _progress(self):
+        sys.stderr.write("\rExporting frame %i/%i"%self.session.count())
+
+    def finish(self):
+        """Finish writing the movie file.
+
+        Signal that there are no more frames to be added and print progress messages until
+        the background thread has finished encoding the movie.
+        """
+        self.session.done()
+        while True:
+            self._progress()
+            if self.session.writer.doneWriting():
+                break
+            time.sleep(0.1)
+        sys.stderr.write('\r%s\r'%(' '*80))
+        sys.stderr.flush()
+
+class ImageSequence(object):
+    """Write a single image, or a numbered sequence of them.
+
+    To save a single image:
+
+        with export('output.png') as image:
+            ... # draw something
+
+    To draw a sequence of images, you can either handle the naming yourself:
+
+        for i in xrange(100):
+            with export('output-%03i.pdf'%i) as image:
+                ... # draw the next image in the sequence
+
+    Or you can let the `sequence` context manager number them for you:
+
+        with export('output.jpg') as image:
+            for i in xrange(100):
+                with image.sequence:
+                    ... # draw the next image in the sequence
+
+    """
+    def __init__(self, fname, format, mode):
+        self._outputmode = mode
+        self.fname = fname
+        self.format = format
+        self.idx = None
+        if '#' in fname:
+            head, tail = re.split(r'#+', fname, maxsplit=1)
+            counter = '%%0%ii' % (len(fname) - len(head) - len(tail))
+            self.tmpl = "".join([head,counter,tail.replace('#','')])
+        else:
+            self.tmpl = re.sub(r'^(.*)(\.[a-z]{3,4})$', r'\1-%04i\2', fname)
+
+    def __enter__(self):
+        _ctx._saveContext()
+        _ctx.canvas.clear()
+        _ctx._outputmode = self._outputmode
+        return self
+    def __exit__(self, type, value, tb):
+        if self.idx is None:
+            _ctx.canvas.save(self.fname, self.format)
+        _ctx._restoreContext()
+
+    @property
+    @contextmanager
+    def sequence(self):
+        """Clears the canvas, runs the code in the `with` block, then saves a numbered output file.
+
+        For example, to a sequence of 10 images:
+            with export('output.png') as image:
+                for i in xrange(100):
+                    with image.sequence:
+                        ... # draw the next image in the sequence
+        """
+        _ctx._saveContext()
+        _ctx.canvas.clear()
+        yield
+        if self.idx is None:
+            self.idx = 1
+        _ctx.canvas.save(self.tmpl%self.idx, self.format)
+        self.idx += 1
+        _ctx._restoreContext()
+
+class PDF(object):
+    """Represents a PDF document in the process of being assembled one page at a time.
+
+    The class can be used procedurally to add frames and finish writing the output file:
+
+        pdf = export('multipage.pdf')
+        for i in xrange(5):
+            canvas.clear() # erase the previous page's graphics from the canvas
+            ...            # (do some drawing)
+            pdf.add()      # add the canvas to the pdf as a new page
+        pdf.finish()       # write the pdf document to disk
+
+    It can be used more simply as a context manager:
+
+        with export('multipage.pdf') as pdf:
+            for i in xrange(5):
+                with pdf.page:
+                    ... # draw the next page
+
+        with export('singlepage.pdf') as pdf:
+            ... # draw the one and only page
+    """
+    def __init__(self, fname, mode):
+        self._outputmode = mode
+        self.fname = fname
+        self.doc = None
+    def __enter__(self):
+        _ctx._saveContext()
+        _ctx.canvas.clear()
+        _ctx._outputmode = self._outputmode
+        return self
+    def __exit__(self, type, value, tb):
+        self.finish() or _ctx.canvas.save(self.fname, 'pdf')
+        _ctx._restoreContext()
+
+    @property
+    @contextmanager
+    def page(self):
+        """Clears the canvas, runs the code in the `with` block, then adds the canvas as a new pdf page.
+
+        For example, to create a pdf with two pages, you could write:
+
+            with export("multipage.pdf") as pdf:
+                canvas.clear()
+                ... # draw first page
+                pdf.add()
+                canvas.clear()
+                ... # draw the next page
+                pdf.add()
+
+        With the `page` context manager it simplifies to:
+
+            with export("multipage.pdf") as pdf:
+                with pdf.page:
+                    ... # draw first page
+                with pdf.page:
+                    ... # draw the next page
+        """
+        _ctx._saveContext()
+        _ctx.canvas.clear()
+        yield
+        self.add()
+        _ctx._restoreContext()
+
+    def add(self):
+        """Add a new page to the PDF with the current contents of the canvas."""
+        pagedoc = PDFDocument.alloc().initWithData_(_ctx.canvas._getImageData('pdf'))
+        if not self.doc:
+            self.doc = pagedoc
+        else:
+            self.doc.insertPage_atIndex_(pagedoc.pageAtIndex_(0), self.doc.pageCount())
+
+    def finish(self):
+        """Writes the fully-assembled PDF to disk"""
+        if self.doc:
+            self.doc.writeToFile_(self.fname)
+        return self.doc
+
+
+
 

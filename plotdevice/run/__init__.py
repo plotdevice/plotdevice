@@ -64,6 +64,5 @@ def extract_tb(tb, script=None, src=None, debug=True):
         return [frame for frame in list if moduledir not in frame[0]]
     return list
 
-# make the main classes from the submodules accessible
-from plotdevice.run.export import MovieExportSession, ImageExportSession
-from plotdevice.run.sandbox import Sandbox
+# expose the script-runner object
+from .sandbox import Sandbox
