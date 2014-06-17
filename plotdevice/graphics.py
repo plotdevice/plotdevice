@@ -6,10 +6,10 @@ from collections import namedtuple
 
 from plotdevice import DeviceError
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
-from .grobs.transform import Dimension
-from .grobs import *
+from .gfx.transform import Dimension
+from .gfx import *
 from .lib import geometry, pathmatics
-from . import grobs
+from . import gfx
 
 __all__ = ('Context', 'Canvas')
 
@@ -47,7 +47,7 @@ class Context(object):
         self.__all__.remove('state_vars')
 
     def _activate(self):
-        grobs.bind(self)
+        gfx.bind(self)
 
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context.state_vars]
@@ -938,7 +938,7 @@ class Context(object):
         If `western` is True (the default), fonts with non-western character sets will be omitted.
         If False, only non-western fonts will be returned.
         """
-        return grobs.typography.families(like, western)
+        return gfx.typography.families(like, western)
 
     def fontsize(self, fontsize=None):
         """Legacy command. Equivalent to: font(size=fontsize)"""

@@ -247,7 +247,7 @@ def _locate(path, t, segments=None):
     >>> _locate(path, 1.0)
     (0, 1.0, Point(x=0.0, y=0.0))
     """
-    from plotdevice.grobs.transform import Point
+    from ..gfx.transform import Point
 
     if segments == None:
         segments = path.segmentlengths(relative=True)
@@ -300,7 +300,7 @@ def point(path, t, segments=None):
     >>> point(path, 0.1)
     Curve(LINETO, ((10.0, 0.0),))
     """
-    from plotdevice.grobs.bezier import Curve
+    from ..gfx.bezier import Curve
 
     if len(path) == 0:
         raise DeviceError, "The given path is empty"
@@ -391,7 +391,7 @@ def contours(path):
     >>> len(contours(path))
     2
     """
-    from plotdevice.grobs.bezier import Bezier
+    from ..gfx.bezier import Bezier
 
     contours = []
     current_contour = None
@@ -432,9 +432,8 @@ def findpath(points, curvature=1.0):
     # The list of points consists of Point objects,
     # but it shouldn't crash on something straightforward
     # such as someone supplying a list of (x,y)-tuples.
-
-    from plotdevice.grobs.transform import Point
-    from plotdevice.grobs.bezier import Bezier
+    from ..gfx.transform import Point
+    from ..gfx.bezier import Bezier
     from types import TupleType, ListType
     for i, pt in enumerate(points):
         if type(pt) in (TupleType, ListType):

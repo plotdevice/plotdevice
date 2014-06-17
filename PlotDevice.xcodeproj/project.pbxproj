@@ -54,14 +54,14 @@
 		2ABDB7791867EB5B0069EFC3 /* app.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2ABDB7751867EB520069EFC3 /* app.py */; };
 		2ABDB77A1867EB5E0069EFC3 /* views.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2ABDB7761867EB520069EFC3 /* views.py */; };
 		2AC07CDA18EF8ED500B75879 /* graphics.py in Copy plotdevice root */ = {isa = PBXBuildFile; fileRef = 2AC07CD818EF8EC500B75879 /* graphics.py */; };
-		2AC07CDB18EF8F4900B75879 /* __init__.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CB618EF8E7D00B75879 /* __init__.py */; };
-		2AC07CDC18EF8F4900B75879 /* bezier.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CB818EF8E7D00B75879 /* bezier.py */; };
-		2AC07CDD18EF8F4900B75879 /* colors.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CBA18EF8E7D00B75879 /* colors.py */; };
-		2AC07CDE18EF8F4900B75879 /* effects.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CBD18EF8E7D00B75879 /* effects.py */; };
-		2AC07CDF18EF8F4900B75879 /* image.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CC118EF8E7D00B75879 /* image.py */; };
-		2AC07CE018EF8F4900B75879 /* transform.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CC318EF8E7D00B75879 /* transform.py */; };
-		2AC07CE118EF8F4900B75879 /* typography.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CC518EF8E7D00B75879 /* typography.py */; };
-		2AC07CE418EF9B3400B75879 /* atoms.py in Copy plotdevice.grobs */ = {isa = PBXBuildFile; fileRef = 2AC07CE218EF9B2400B75879 /* atoms.py */; };
+		2AC07CDB18EF8F4900B75879 /* __init__.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CB618EF8E7D00B75879 /* __init__.py */; };
+		2AC07CDC18EF8F4900B75879 /* bezier.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CB818EF8E7D00B75879 /* bezier.py */; };
+		2AC07CDD18EF8F4900B75879 /* colors.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CBA18EF8E7D00B75879 /* colors.py */; };
+		2AC07CDE18EF8F4900B75879 /* effects.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CBD18EF8E7D00B75879 /* effects.py */; };
+		2AC07CDF18EF8F4900B75879 /* image.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CC118EF8E7D00B75879 /* image.py */; };
+		2AC07CE018EF8F4900B75879 /* transform.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CC318EF8E7D00B75879 /* transform.py */; };
+		2AC07CE118EF8F4900B75879 /* typography.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CC518EF8E7D00B75879 /* typography.py */; };
+		2AC07CE418EF9B3400B75879 /* atoms.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CE218EF9B2400B75879 /* atoms.py */; };
 		2AC5188118636CAF007FB066 /* sandbox.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2AC5187F18636C9F007FB066 /* sandbox.py */; };
 		2AE5AD2B186236C400CCDD45 /* editor.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD291862366300CCDD45 /* editor.py */; };
 		2AE5AD2E1862387200CCDD45 /* widgets.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD2C1862386400CCDD45 /* widgets.py */; };
@@ -200,22 +200,22 @@
 			name = "Copy plotdevice.util";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		611CC59710BA901100B55455 /* Copy plotdevice.grobs */ = {
+		611CC59710BA901100B55455 /* Copy plotdevice.gfx */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = python/plotdevice/grobs;
+			dstPath = python/plotdevice/gfx;
 			dstSubfolderSpec = 7;
 			files = (
-				2AC07CDB18EF8F4900B75879 /* __init__.py in Copy plotdevice.grobs */,
-				2AC07CE418EF9B3400B75879 /* atoms.py in Copy plotdevice.grobs */,
-				2AC07CDC18EF8F4900B75879 /* bezier.py in Copy plotdevice.grobs */,
-				2AC07CDD18EF8F4900B75879 /* colors.py in Copy plotdevice.grobs */,
-				2AC07CDE18EF8F4900B75879 /* effects.py in Copy plotdevice.grobs */,
-				2AC07CDF18EF8F4900B75879 /* image.py in Copy plotdevice.grobs */,
-				2AC07CE018EF8F4900B75879 /* transform.py in Copy plotdevice.grobs */,
-				2AC07CE118EF8F4900B75879 /* typography.py in Copy plotdevice.grobs */,
+				2AC07CDB18EF8F4900B75879 /* __init__.py in Copy plotdevice.gfx */,
+				2AC07CE418EF9B3400B75879 /* atoms.py in Copy plotdevice.gfx */,
+				2AC07CDC18EF8F4900B75879 /* bezier.py in Copy plotdevice.gfx */,
+				2AC07CDD18EF8F4900B75879 /* colors.py in Copy plotdevice.gfx */,
+				2AC07CDE18EF8F4900B75879 /* effects.py in Copy plotdevice.gfx */,
+				2AC07CDF18EF8F4900B75879 /* image.py in Copy plotdevice.gfx */,
+				2AC07CE018EF8F4900B75879 /* transform.py in Copy plotdevice.gfx */,
+				2AC07CE118EF8F4900B75879 /* typography.py in Copy plotdevice.gfx */,
 			);
-			name = "Copy plotdevice.grobs";
+			name = "Copy plotdevice.gfx";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		611CC59810BA901100B55455 /* Copy plotdevice.lib */ = {
@@ -465,7 +465,7 @@
 			name = js;
 			sourceTree = "<group>";
 		};
-		2AC07CB518EF8E7D00B75879 /* grobs */ = {
+		2AC07CB518EF8E7D00B75879 /* gfx */ = {
 			isa = PBXGroup;
 			children = (
 				2AC07CB618EF8E7D00B75879 /* __init__.py */,
@@ -477,7 +477,7 @@
 				2AC07CC318EF8E7D00B75879 /* transform.py */,
 				2AC07CC518EF8E7D00B75879 /* typography.py */,
 			);
-			path = grobs;
+			path = gfx;
 			sourceTree = "<group>";
 		};
 		611CC4AE10BA8C1B00B55455 /* plotdevice */ = {
@@ -485,7 +485,7 @@
 			children = (
 				611CC4AF10BA8C1B00B55455 /* __init__.py */,
 				2AC07CD818EF8EC500B75879 /* graphics.py */,
-				2AC07CB518EF8E7D00B75879 /* grobs */,
+				2AC07CB518EF8E7D00B75879 /* gfx */,
 				2A32957118C59D0A00EEDD1C /* lib */,
 				611CC4BA10BA8C1B00B55455 /* geo */,
 				611CC4C410BA8C1B00B55455 /* gui */,
@@ -579,7 +579,7 @@
 				611CC55010BA8E4900B55455 /* Copy plotdevice.gui */,
 				611CC59610BA901100B55455 /* Copy plotdevice.util */,
 				2A29445E185E54C200E9F650 /* Copy plotdevice.run */,
-				611CC59710BA901100B55455 /* Copy plotdevice.grobs */,
+				611CC59710BA901100B55455 /* Copy plotdevice.gfx */,
 				8D15AC300486D014006FF6A4 /* Sources */,
 				8D15AC330486D014006FF6A4 /* Frameworks */,
 				6156AAC410BC110E00C3CE99 /* Copy External Libraries */,

@@ -50,7 +50,7 @@ __all__ = ns.keys()
 # called by a Context to do the dependency injection™
 def bind(ctx):
   for module in modules:
-    # all of the grobs.* submodules refer to a global called _ctx to access the
+    # all of the gfx.* submodules refer to a global called _ctx to access the
     # parent context. before a user script is interpreted, the sandbox resets the
     # context which calls this method as a side-effect.
     setattr(module, '_ctx', ctx)
