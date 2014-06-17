@@ -320,28 +320,19 @@ class ScriptController(NSWindowController):
     #
     # Running the script in the main window
     #
-    def scriptedRun(self, opts):
-        self.vm.metadata = opts
-        self.refresh()
-
-        if opts['fullscreen']:
-            self.runFullscreen_(None)
-        else:
-            self.runScript()
-
     @objc.IBAction
     def runFullscreen_(self, sender):
-        if self.fullScreen is not None: return
-        self.stopScript()
-        self.currentView = FullscreenView.alloc().init()
-        self.currentView.canvas = None
-        fullRect = NSScreen.mainScreen().frame()
-        self.fullScreen = FullscreenWindow.alloc().initWithRect_(fullRect)
-        self.fullScreen.setContentView_(self.currentView)
-        self.fullScreen.makeKeyAndOrderFront_(self)
-        self.fullScreen.makeFirstResponder_(self.currentView)
-        NSMenu.setMenuBarVisible_(False)
-        NSCursor.hide()
+        if not self.fullScreen:
+            self.stopScript()
+            self.currentView = FullscreenView.alloc().init()
+            self.currentView.canvas = None
+            fullRect = NSScreen.mainScreen().frame()
+            self.fullScreen = FullscreenWindow.alloc().initWithRect_(fullRect)
+            self.fullScreen.setContentView_(self.currentView)
+            self.fullScreen.makeKeyAndOrderFront_(self)
+            self.fullScreen.makeFirstResponder_(self.currentView)
+            NSMenu.setMenuBarVisible_(False)
+            NSCursor.hide()
         self._runScript()
 
     @objc.IBAction
@@ -352,8 +343,8 @@ class ScriptController(NSWindowController):
         self.runScript()
 
     def runScript(self):
-        if self.fullScreen is not None: return
-        self.currentView = self.graphicsView
+        if not self.currentView:
+            self.currentView = self.graphicsView
         self._runScript()
 
     def _runScript(self):
@@ -387,8 +378,10 @@ class ScriptController(NSWindowController):
                 # Start the spinner
                 self.statusView.beginRun()
         else:
-            # clean up after successful non-animated run
-            self.stopScript()
+            # clean up after successful non-animated run (but let it keep going in fullscreen
+            # mode until the user hits escape to end the run)
+            if not self.fullScreen:
+                self.stopScript()
 
     def step(self):
         """Keep calling the script's draw method until an error occurs or the animation complete."""
@@ -567,8 +560,9 @@ class ScriptController(NSWindowController):
             self.animationTimer = None
         if self.fullScreen is not None:
             self.currentView = self.graphicsView
-            self.fullScreen = None
+            self.fullScreen.performClose_(self)
             NSMenu.setMenuBarVisible_(True)
+            self.fullScreen = None
         NSCursor.unhide()
 
         # try to send the cursor to the editor
