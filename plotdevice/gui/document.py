@@ -28,9 +28,6 @@ class PlotDeviceDocument(NSDocument):
         return super(PlotDeviceDocument,self).init()
 
     def makeWindowControllers(self):
-        # print "controller(%s)" % getattr(self, "stationery", self.path)
-        # self.script = ScriptController.alloc().init()
-
         self.script = ScriptController.alloc().initWithWindowNibName_("PlotDeviceDocument")
 
         if self.stationery:
@@ -52,12 +49,10 @@ class PlotDeviceDocument(NSDocument):
     # Reading & writing the script file (and keeping track of its path)
     #
     def setFileURL_(self, url):
-        # print "set url:", url
         self.stationery = None
         super(PlotDeviceDocument, self).setFileURL_(url)
 
     def writeToURL_ofType_error_(self, url, tp, err):
-        # print "write url:", url
         path = url.fileSystemRepresentation()
         text = self.script._get_source().encode("utf8")
         with file(path, 'w', 0) as f:
@@ -65,7 +60,6 @@ class PlotDeviceDocument(NSDocument):
         return True, err
 
     def readFromURL_ofType_error_(self, url, tp, err):
-        # print "read url:", url
         path = url.fileSystemRepresentation()
         self.source = file(path).read().decode("utf-8")
         if self.script:
@@ -89,7 +83,6 @@ class PlotDeviceDocument(NSDocument):
             coder.encodeObject_forKey_(self.stationery, "plotdevice:stationery")
 
     def restoreStateWithCoder_(self, coder):
-        # print "restore"
         super(PlotDeviceDocument, self).restoreStateWithCoder_(coder)
         self.stationery = coder.decodeObjectForKey_("plotdevice:stationery")
         if self.stationery:
@@ -131,9 +124,8 @@ class ScriptController(NSWindowController):
 
     @property
     def path(self):
+        # the export widgets really want this...
         return self.vm.path
-        # url = self.document().fileURL()
-        # return url.path() if url else None
 
     # .source
     def _get_source(self):
@@ -147,7 +139,6 @@ class ScriptController(NSWindowController):
     ## Initializers
 
     def initWithWindowNibName_(self, nib):
-        print "- init w/"
         self._init_state()
         return super(ScriptController, self).initWithWindowNibName_(nib)
 
@@ -159,16 +150,12 @@ class ScriptController(NSWindowController):
         self.stationery = None
 
     def setPath_source_(self, path, source):
-        print "- set path"
-        # print "- set path/src", path, '%r'%source[:20] if source else None
-        # self.source = source
         self.vm.path = path
         self.vm.source = source
         if self.editorView:
             self.editorView.source = source
 
     def setStationery_(self, tmpl):
-        # print "- set stationery", tmpl
         is_untitled = tmpl.startswith('TMPL:')
         is_example = os.path.exists(tmpl) and not is_untitled
         if is_example:
@@ -191,7 +178,6 @@ class ScriptController(NSWindowController):
             self.source = genTemplate(tmpl.split(':',1)[1])
 
     def awakeFromNib(self):
-        print "- awoke"
         win = self.window()
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
 
@@ -204,15 +190,12 @@ class ScriptController(NSWindowController):
         if self.editorView:
             win.setRestorable_(True)
 
+        # always a reference to either the in-window view or a fullscreen view
+        self.currentView = self.graphicsView
+
     ## WindowController duties
 
     def windowDidLoad(self):
-        print "- did load"
-
-        # maintain reference to either the in-window view or a fullscreen view
-        self.currentView = self.graphicsView
-
-
         # the editor might not exist if we're being opened in task.py
         if self.editorView:
             # pass the editor a reference to the undomanager so it can sync up with the
@@ -299,7 +282,6 @@ class ScriptController(NSWindowController):
         return win.frame().size != rect.size
 
     def windowWillClose_(self, note):
-        # print "- close", self.vm.path
         self.stopScript()
 
         # break some retain cycles on our way out
@@ -320,9 +302,19 @@ class ScriptController(NSWindowController):
     #
     # Running the script in the main window
     #
+
+    @objc.IBAction
+    def runScript_(self, sender):
+        # listens for cmd-r
+        if self.vm.session:
+            return NSBeep()
+        self.runScript()
+
     @objc.IBAction
     def runFullscreen_(self, sender):
+        # listens for cmd-shift-r
         if not self.fullScreen:
+            # create a full-screen window to draw in
             self.stopScript()
             self.currentView = FullscreenView.alloc().init()
             self.currentView.canvas = None
@@ -333,24 +325,12 @@ class ScriptController(NSWindowController):
             self.fullScreen.makeFirstResponder_(self.currentView)
             NSMenu.setMenuBarVisible_(False)
             NSCursor.hide()
-        self._runScript()
-
-    @objc.IBAction
-    def runScript_(self, sender):
-        if self.vm.session:
-            return NSBeep()
-
         self.runScript()
 
     def runScript(self):
-        if not self.currentView:
-            self.currentView = self.graphicsView
-        self._runScript()
-
-    def _runScript(self):
-        # Check if animationTimer is already running
-        if self.animationTimer is not None:
-            self.stopScript()
+        # halt any animation that was already running
+        if self.animationTimer:
+            self.haltRun()
 
         # disable double buffering during the run (stopScript reënables it)
         self.graphicsView.volatile = True
@@ -547,23 +527,46 @@ class ScriptController(NSWindowController):
     def stopScript_(self, sender=None):
         self.stopScript()
 
-    def stopScript(self):
-        # run stop() method if the script defines one
-        result = self.vm.stop()
-        self.echo(result.output)
-
-        # disable ui feedback and return from fullscreen (if applicable)
-        if self.statusView:
-            self.statusView.endRun()
+    def haltRun(self):
         if self.animationTimer is not None:
+            # stop looping
             self.animationTimer.invalidate()
             self.animationTimer = None
+
+            # run stop() method if the script defines one
+            result = self.vm.stop()
+            self.echo(result.output)
+
+        # end any ongoing export cleanly
+        if self.vm.session:
+            self.vm.session.cancel()
+
+    def stopScript(self):
+        # shut down the draw/export loop
+        self.haltRun()
+
+        # disable progress spinner
+        if self.statusView:
+            self.statusView.endRun()
+
+        # relay any errors to the text panes (if we're in the app)
+        if self.editorView:
+            self.editorView.report(self.vm.crashed, self.document().path)
+            self.outputView.report(self.vm.crashed, self.vm.namespace.get('FRAME') if self.vm.animated else None)
+
+        # return from fullscreen (if applicable)
         if self.fullScreen is not None:
+            # copy the final frame back to the window's view
+            self.graphicsView.setCanvas(self.vm.canvas)
+            self.graphicsView._volatile = False
+            self.graphicsView.cache()
             self.currentView = self.graphicsView
-            self.fullScreen.performClose_(self)
+
+            # close the fullscreen window
             NSMenu.setMenuBarVisible_(True)
+            self.fullScreen.performClose_(self)
             self.fullScreen = None
-        NSCursor.unhide()
+            NSCursor.unhide()
 
         # try to send the cursor to the editor
         if self.editorView:
@@ -577,15 +580,7 @@ class ScriptController(NSWindowController):
             # otherwise the makeKey will cause a double-flicker before the window disappears
             focus = self.editorView or self.graphicsView
             focus.window().makeKeyAndOrderFront_(self)
-            self.graphicsView.volatile = False
 
-        # end any ongoing export cleanly
-        if self.vm.session:
-            self.vm.session.cancel()
-
-        if self.editorView:
-            self.editorView.report(self.vm.crashed, self.document().path)
-            self.outputView.report(self.vm.crashed, self.vm.namespace.get('FRAME') if self.vm.animated else None)
 
     def crash(self):
         # called by the graphicsview when a grob blows up with unexpected input
