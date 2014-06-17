@@ -29,7 +29,10 @@ class PlotDeviceDocument(NSDocument):
 
     def makeWindowControllers(self):
         # print "controller(%s)" % getattr(self, "stationery", self.path)
-        self.script = ScriptController.alloc().init()
+        # self.script = ScriptController.alloc().init()
+
+        self.script = ScriptController.alloc().initWithWindowNibName_("PlotDeviceDocument")
+
         if self.stationery:
             self.script.setStationery_(self.stationery)
             if os.path.exists(self.stationery) and not self.stationery.startswith('TMPL:'):
@@ -124,16 +127,39 @@ class ScriptController(NSWindowController):
     dashboardController = objc.IBOutlet()
     exportSheet = objc.IBOutlet()
 
-    def init(self):
-        self = super(ScriptController, self).initWithWindowNibName_("PlotDeviceDocument")
+    ## Properties
+
+    @property
+    def path(self):
+        return self.vm.path
+        # url = self.document().fileURL()
+        # return url.path() if url else None
+
+    # .source
+    def _get_source(self):
+        return self.editorView.source if self.editorView else self.vm.source
+    def _set_source(self, src):
+        self.vm.source = src
+        if self.editorView:
+            self.editorView.source = src
+    source = property(_get_source, _set_source)
+
+    ## Initializers
+
+    def initWithWindowNibName_(self, nib):
+        print "- init w/"
+        self._init_state()
+        return super(ScriptController, self).initWithWindowNibName_(nib)
+
+    def _init_state(self):
         self.vm = Sandbox(self)
         self.animationTimer = None
         self.fullScreen = None
         self.currentView = None
         self.stationery = None
-        return self
 
     def setPath_source_(self, path, source):
+        print "- set path"
         # print "- set path/src", path, '%r'%source[:20] if source else None
         # self.source = source
         self.vm.path = path
@@ -164,48 +190,60 @@ class ScriptController(NSWindowController):
             from plotdevice.util.ottobot import genTemplate
             self.source = genTemplate(tmpl.split(':',1)[1])
 
-    def windowDidLoad(self):
-        # print "- win didload"
-
-        # sign up for restoration
+    def awakeFromNib(self):
+        print "- awoke"
         win = self.window()
-        win.setRestorable_(True)
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
-
-        # maintain reference to either the in-window view or a fullscreen view
-        self.currentView = self.graphicsView
 
         # place the statusView in the title bar
         frame = win.frame()
         win.contentView().superview().addSubview_(self.statusView)
         self.statusView.setFrame_( ((frame.size.width-24,frame.size.height-22), (22,22)) )
 
-        # pass the editor a reference to the undomanager so it can sync up with the
-        # menus and the file's dirty-state
-        self.editorView._undo_mgr = self.document().undoManager()
+        # sign up for autoresume on quit-and-relaunch (but only if this isn't task.py)
+        if self.editorView:
+            win.setRestorable_(True)
 
-        # if the document was loaded from disk (rather than stationery/untitled), the
-        # setPath_Source_ call came before the editorview was loaded from the nib.
-        # now that the editor has woken up, we can populate it.
-        if self.vm.source:
-            self.editorView.source = self.vm.source
+    ## WindowController duties
+
+    def windowDidLoad(self):
+        print "- did load"
+
+        # maintain reference to either the in-window view or a fullscreen view
+        self.currentView = self.graphicsView
+
+
+        # the editor might not exist if we're being opened in task.py
+        if self.editorView:
+            # pass the editor a reference to the undomanager so it can sync up with the
+            # menus and the file's dirty-state
+            self.editorView._undo_mgr = self.document().undoManager()
+
+            # if the document was loaded from disk (rather than stationery/untitled), the
+            # setPath_Source_ call came before the editorview was loaded from the nib.
+            # now that the editor has woken up, we can populate it.
+            if self.vm.source:
+                self.editorView.source = self.vm.source
+
 
     def encodeRestorableStateWithCoder_(self, coder):
-        # walk through superviews to set the autosave id for the splitters
-        split_frames = []
-        it = self.editorView
-        while it.superview():
-            if type(it) is NSSplitView:
-                sub_frames = [NSStringFromRect(sub.frame()) for sub in it.subviews()]
-                split_frames.append(sub_frames)
-                if len(split_frames) == 2:
-                    break
-            it = it.superview()
-        coder.encodeObject_forKey_(split_frames, "plotdevice:split_rects")
+        # walk through editor's superviews to autosave the splitview positions
+        if self.editorView:
+            split_frames = []
+            it = self.editorView
+            while it.superview():
+                if type(it) is NSSplitView:
+                    sub_frames = [NSStringFromRect(sub.frame()) for sub in it.subviews()]
+                    split_frames.append(sub_frames)
+                    if len(split_frames) == 2:
+                        break
+                it = it.superview()
+            coder.encodeObject_forKey_(split_frames, "plotdevice:split_rects")
         super(ScriptController, self).encodeRestorableStateWithCoder_(coder)
 
 
     def restoreStateWithCoder_(self, coder):
+        # restore the splitview positions (if rects were autosaved)
         split_frames = coder.decodeObjectForKey_("plotdevice:split_rects")
         if split_frames:
             it = self.editorView
@@ -218,22 +256,6 @@ class ScriptController(NSWindowController):
                         break
                 it = it.superview()
         super(ScriptController, self).restoreStateWithCoder_(coder)
-
-    ## Properties
-
-    @property
-    def path(self):
-        url = self.document().fileURL()
-        return url.path() if url else None
-
-    # .source
-    def _get_source(self):
-        return self.editorView.source if self.editorView else self.vm.source
-    def _set_source(self, src):
-        self.vm.source = src
-        if self.editorView:
-            self.editorView.source = src
-    source = property(_get_source, _set_source)
 
     ## Window behavior
 
@@ -282,8 +304,9 @@ class ScriptController(NSWindowController):
 
         # break some retain cycles on our way out
         self.vm._cleanup()
-        self.editorView._cleanup()
-        self.outputView._cleanup()
+        if self.editorView:
+            self.editorView._cleanup()
+            self.outputView._cleanup()
         self.graphicsView = self.outputView = self.editorView = self.statusView = None
         self.dashboardController = self.exportSheet = self.vm = None
 
@@ -479,9 +502,11 @@ class ScriptController(NSWindowController):
             self.runScript()
             self.vm.canvas.save(fname, opts.get('format'))
         else:
-            msg = u"Generating %s %s…\n"%(opts['last']-opts['first']+1, 'pages' if kind=='image' else 'frames')
-            self.outputView.append(msg, stream='info')
-            self.statusView.beginExport()
+            if self.outputView:
+                msg = u"Generating %s %s…\n"%(opts['last']-opts['first']+1, 'pages' if kind=='image' else 'frames')
+                self.outputView.append(msg, stream='info')
+            if self.statusView:
+                self.statusView.beginExport()
             self.vm.export(kind, fname, opts)
 
     def exportStatus(self, status, canvas=None):
@@ -493,20 +518,30 @@ class ScriptController(NSWindowController):
             self.echo(status.output)
 
         if status.ok:
-            # display the canvas
-            self.currentView.setCanvas(canvas)
+            # display the canvas (presuming there's a window to draw to)
+            if self.window():
+                self.currentView.setCanvas(canvas)
         else:
             # we're done, either because of an error or because the export is complete
             failed = status.ok is False # whereas None means successful
-            self.statusView.endExport()
             self.stopScript()
-            self.outputView.append('export complete\n', stream='info')
+            if self.outputView:
+                self.outputView.append('export complete\n', stream='info')
+            if self.statusView:
+                self.statusView.endExport()
 
     def exportProgress(self, written, total, cancelled):
-        """Update the export progress bar (invoked by self.vm.session)"""
+        """Update the progress meter in the StatusView (invoked by self.vm.session)"""
+
+        # everything in this method talks to gui objects.
+        # if we're running in task.py, there's nothing to do
+        if not self.window():
+            return
+
         if cancelled:
             if self.statusView.finishExport():
-                self.outputView.append('finishing...\n', stream='info')
+                if self.outputView:
+                    self.outputView.append('finishing...\n', stream='info')
         else:
             if total != written:
                 self.statusView.updateExport_total_(written, total)
@@ -525,7 +560,8 @@ class ScriptController(NSWindowController):
         self.echo(result.output)
 
         # disable ui feedback and return from fullscreen (if applicable)
-        self.statusView.endRun()
+        if self.statusView:
+            self.statusView.endRun()
         if self.animationTimer is not None:
             self.animationTimer.invalidate()
             self.animationTimer = None

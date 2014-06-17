@@ -5,9 +5,9 @@ task.py
 
 Simple renderer for command line scripts when run from the module rather than an app bundle.
 
-This is the back-end of the `plotdevice` command line script in the boot subdir of the distribution
-(or the bin directory once installed). It expects the parsed args from the front-end to be passed
-as a json blob piped to stdin.
+This is the back-end of the `plotdevice` command line script in the 'etc' subdir of the source
+distribution (or the bin directory of your virtualenv once installed). It expects the parsed args
+from the front-end to be passed as a json blob piped to stdin.
 
 If an export option was specified, the output file(s) will be generated and the script will terminate
 once disk i/o completes. Otherwise a window will open to display the script's output and will remain
@@ -19,17 +19,17 @@ import os
 import json
 import select
 import signal
-from math import floor
+from math import floor, ceil
 from os.path import dirname, abspath, exists, join
 from codecs import open
 
-import plotdevice
-# plotdevice.initialize('gui') # adds pyobjc to sys.path as a side effect...
+import plotdevice # adds pyobjc to sys.path as a side effect...
 import objc # ...otherwise this would fail
 from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
-from plotdevice.run import Sandbox, resource_path
+from plotdevice.run import resource_path
+from plotdevice.gui import ScriptController
 
 STDOUT = sys.stdout
 STDERR = sys.stderr
@@ -42,7 +42,7 @@ class ScriptApp(NSApplication):
         if mode=='headless':
             app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         elif mode=='windowed':
-            icon = NSImage.alloc().initWithContentsOfFile_(resource_path('icon.icns'))
+            icon = NSImage.alloc().initWithContentsOfFile_(resource_path('viewer.icns'))
             app.setApplicationIconImage_(icon)
         return app
 
@@ -62,27 +62,42 @@ class ScriptAppDelegate(NSObject):
         return self
 
     def applicationDidFinishLaunching_(self, note):
-        if self.mode=='headless':
-            self.script = PlotDeviceScript.alloc().initWithOpts_forMode_(self.opts, self.mode)
-            self.script.export()
-        elif self.mode=='windowed':
-            nib = NSData.dataWithContentsOfFile_(resource_path('PlotDeviceScript.nib'))
+        pth = self.opts['file']
+        src = file(pth).read()
+
+        if self.mode=='windowed':
+            # load the viewer ui from the nib in plotdevice/rsrc
+            nib = NSData.dataWithContentsOfFile_(resource_path('viewer.nib'))
             ui = NSNib.alloc().initWithNibData_bundle_(nib, None)
             ok, objs = ui.instantiateNibWithOwner_topLevelObjects_(self, None)
-            self.script.initWithOpts_forMode_(self.opts, self.mode)
-            self.window.setTitleWithRepresentedFilename_(self.opts['file'])
             NSApp().setMainMenu_(self.menu)
 
-            self._wc = NSWindowController.alloc().initWithWindow_(self.window)
-            self._wc.setShouldCascadeWindows_(False)
-            self._wc.setWindowFrameAutosaveName_('plotdevice:%s'%self.opts['file'])
-            self._wc.showWindow_(self)
+            # configure the window script-controller, and update-watcher
+            self.script.setPath_source_options_(pth, src, self.opts)
+            self.window.setTitleWithRepresentedFilename_(pth)
+            # self.script.setWindowFrameAutosaveName_('plotdevice:%s'%self.opts['file'])
 
-            self._watch = PlotDeviceScriptReloader.alloc().initWithScript_(self.script)
-
+            # foreground the window (if -b wasn't passed) and run the script
             if opts['activate']:
                 NSApp().activateIgnoringOtherApps_(True)
+            self.script.showWindow_(self)
             AppHelper.callAfter(self.script.runScript)
+        elif self.mode=='headless':
+            # create a window-less WindowController
+            self.script = ConsoleScript.alloc().init()
+            self.script.setPath_source_options_(pth, src, self.opts)
+
+            # BUG? FEATURE? (it's a mystery!)
+            # not sure why this is necessary. does this not get validated by the
+            # front end? should it be happening with every export session? maybe
+            # interacts with the sandbox's zeroing out the --frames arg after
+            # the first run?
+            opts.setdefault('last', opts.get('first', 1))
+
+            # kick off an export session
+            format = self.opts['export'].rsplit('.',1)[1]
+            kind = 'movie' if format in ('mov','gif') else 'image'
+            self.script.exportConfig(kind, self.opts['export'], self.opts)
 
     def catchInterrupts_(self, sender):
         read, write, timeout = select.select([sys.stdin.fileno()], [], [], 0)
@@ -90,75 +105,70 @@ class ScriptAppDelegate(NSObject):
             if fd == sys.stdin.fileno():
                 line = sys.stdin.readline().strip()
                 if 'CANCEL' in line:
-                    self.script.cancel()
+                    script = self.script
+                    if script.vm.session:
+                        script.vm.session.cancel()
+
+                    if getattr(script,'animationTimer',None) is not None:
+                        script.stopScript()
+                    elif self.mode == 'windowed':
+                        NSApp().delegate().done(quit=True)
         self.poll.waitForDataInBackgroundAndNotify()
 
     def done(self, quit=False):
         if self.mode=='headless' or quit:
             NSApp().terminate_(None)
 
-# from plotdevice.lib.fsevents import Observer
-from plotdevice.gui.app import PlotDeviceDocumentController
-class PlotDeviceScriptReloader(PlotDeviceDocumentController):
-    def initWithScript_(self, doc):
-        self._script = doc
-        # self._observer = Observer()
-        # self._observer.start()
-        self.updateWatchList_(None)
+class ScriptWatcher(NSObject):
+    def initWithScript_(self, script):
+        self.script = script
+        self.mtime = os.path.getmtime(script.path)
+        self._queue = NSOperationQueue.mainQueue()
+        NSFileCoordinator.addFilePresenter_(self)
         return self
 
-    def documents(self):
-        return [self._script]
+    def presentedItemURL(self):
+        return NSURL.fileURLWithPath_(self.script.path)
 
-from plotdevice.gui.document import PlotDeviceDocument
-class PlotDeviceScript(PlotDeviceDocument):
-    def initWithOpts_forMode_(self, opts, mode):
-        self.opts = opts
-        self.windowed = mode=='windowed'
-        self.vm = Sandbox(self)
-        self.vm.path = opts['file']
-        self.vm.source = self.source
-        # self.fullScreen = False
-        return self
+    def presentedItemOperationQueue(self):
+        return self._queue
 
-    def awakeFromNib(self):
-        self._showFooter = True
-        self.currentView = self.graphicsView
-        win = self.graphicsView.window()
-        win.setAutorecalculatesContentBorderThickness_forEdge_(True,NSMinYEdge)
-        win.setContentBorderThickness_forEdge_(22.0,NSMinYEdge)
-        self.toggleStatusBar_(self) # hide status bar by default
-        win.makeFirstResponder_(self.graphicsView)
+    def presentedItemDidChange(self):
+        # reload the doc if an external editor modified the file
+        if self.stale():
+            self.script.performSelectorOnMainThread_withObject_waitUntilDone_("_refresh", None, True)
 
-    def windowWillClose_(self, note):
-        NSApp().terminate_(self)
+    def stale(self):
+        file_mtime = os.path.getmtime(self.script.path)
+        if file_mtime > self.mtime:
+            self.mtime = file_mtime
+            return True
 
-    def fileName(self):
-        return self.vm.path
+class ConsoleScript(ScriptController):
 
-    @property
-    def source(self):
-        return open(self.opts['file'], encoding='utf-8').read()
+    def init(self):
+        print "- init"
+        self._init_state()
+        return super(ScriptController, self).init()
 
-    def refresh(self):
-        if self.opts.get('live'):
+    def setPath_source_options_(self, path, source, opts):
+        self.vm.path = path
+        self.vm.source = source
+        self.vm.metadata = self.opts = opts
+        self.watcher = ScriptWatcher.alloc().initWithScript_(self)
+
+    def _refresh(self):
+        self.vm.source = file(self.path).read()
+        if self.opts['live']:
             self.runScript()
 
     def runScript(self):
-        self.vm.source = self.source
-        self.vm.metadata = self.opts
-        super(PlotDeviceScript, self).runScript()
+        if self.watcher.stale():
+            self.vm.source = file(self.path).read()
+        super(ConsoleScript, self).runScript()
 
-        # hrm, the existence of w/h no longer proves anything. need to find another predicate
-        # for autosizing the window...
-
-        # resize the window to fit
-        # first_run = not(hasattr(self.vm.namespace,'WIDTH') or hasattr(self.vm.namespace,'HEIGHT'))
-        # if first_run and self.graphicsView:
-        #     win = self.graphicsView.window()
-        #     cw,ch = self.vm.namespace['WIDTH'], self.vm.namespace['HEIGHT']
-        #     ch += 22 if self._showFooter else 0
-        #     self.graphicsView.window().setContentSize_( (cw, ch) )
+    def windowWillClose_(self, note):
+        NSApp().terminate_(self)
 
     def echo(self, output):
         STDERR.write(ERASER)
@@ -167,58 +177,26 @@ class PlotDeviceScript(PlotDeviceDocument):
             stream.write(data)
             stream.flush()
 
-    def export(self):
-        opts = dict(self.opts)
-        fname = opts['export']
-        opts['format'] = fname.rsplit('.',1)[1]
-        opts.setdefault('last', opts.get('first', 1))
-        self.vm.metadata = opts
-
-        # pick the right kind of output (single movie vs multiple docs)
-        kind = 'movie' if opts['format'] in ('mov','gif') else 'image'
-        self.vm.export(kind, fname, opts)
-
-    def exportConfig(self, kind, fname, opts):
-        """Override PlotDeviceDocument's behavior for windowed mode"""
-        if self.animationTimer is not None:
-            self.stopScript()
-        self.opts.update(opts)
-        self.opts['export'] = fname
-        self.export()
-
     def exportStatus(self, status, canvas=None):
-        # print "stat", status
-        if status.ok:
-            self.echo(status.output)
-        else:
-            STDERR.write('\r')
-            STDERR.flush()
-            self.echo(status.output)
+        super(ConsoleScript, self).exportStatus(status, canvas)
+        if not status.ok:
             NSApp().delegate().done()
 
     def exportProgress(self, written, total, cancelled):
-        # print "progress", written, total, cancelled
+        super(ConsoleScript, self).exportProgress(written, total, cancelled)
         if cancelled:
             msg = u'Cancelling export…'
+        elif total==written:
+            msg = u'Finishing export…'
         else:
-            width = 20
-            pct = int(floor(width*written/total))
-            dots = "".join(['#'*pct]+['.']*(width-pct))
-            msg = "\rGenerating %i frames [%s]"%(total, dots)
-
-            if (total==written):
-                msg = u'Finishing export…'
-        STDERR.write(ERASER+msg)
+            msg = "\rGenerating %i frames %s"%(total, progress(written, total))
+        STDERR.write(ERASER + msg)
         STDERR.flush()
 
-    def cancel(self):
-        if self.vm.session:
-            self.vm.session.cancel()
-
-        if getattr(self,'animationTimer',None) is not None:
-            self.stopScript()
-        elif self.windowed:
-            NSApp().delegate().done(quit=True)
+def progress(written, total, width=20):
+    pct = int(ceil(width*written/float(total)))
+    dots = "".join(['#'*pct]+['.']*(width-pct))
+    return '[%s]' % dots
 
 if __name__ == '__main__':
     try:
