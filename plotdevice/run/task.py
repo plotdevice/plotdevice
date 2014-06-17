@@ -149,7 +149,6 @@ class ScriptWatcher(NSObject):
 class ConsoleScript(ScriptController):
 
     def init(self):
-        print "- init"
         self._init_state()
         return super(ScriptController, self).init()
 
