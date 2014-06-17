@@ -66,7 +66,7 @@ class StatusView(NSView):
         self.spinner.setHidden_(False)
 
 
-from plotdevice.graphics import NUMBER, TEXT, BOOLEAN, BUTTON
+from plotdevice.context import NUMBER, TEXT, BOOLEAN, BUTTON
 SMALL_FONT = NSFont.systemFontOfSize_(NSFont.smallSystemFontSize())
 MINI_FONT = NSFont.systemFontOfSize_(NSFont.systemFontSizeForControlSize_(NSMiniControlSize))
 class DashboardController(NSObject):

@@ -8,7 +8,7 @@ from Foundation import *
 from AppKit import *
 from ..run import stacktrace, coredump
 from ..lib.io import MovieExportSession, ImageExportSession
-from plotdevice import util, graphics, gfx, DeviceError, __MAGIC as MAGICVAR
+from plotdevice import util, context, gfx, DeviceError, __MAGIC as MAGICVAR
 
 __all__ = ['Sandbox']
 
@@ -56,8 +56,8 @@ class Sandbox(object):
         self.magicvar = 0       # used for value ladders
 
         # set up the graphics plumbing
-        self.canvas = graphics.Canvas()
-        self.context = graphics.Context(self.canvas, self.namespace)
+        self.canvas = context.Canvas()
+        self.context = context.Context(self.canvas, self.namespace)
         self.delegate = delegate or Delegate()
 
         # create a clean env to use as a template during runs

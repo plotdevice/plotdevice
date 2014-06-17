@@ -6,10 +6,10 @@ import objc
 
 from Foundation import *
 from AppKit import *
-from Quartz import CGColorCreateGenericRGB
-from PyObjCTools import AppHelper
-from plotdevice import graphics
-from plotdevice.run import stacktrace
+# from Quartz import CGColorCreateGenericRGB
+# from PyObjCTools import AppHelper
+# from plotdevice import context
+# from plotdevice.run import stacktrace
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
 
