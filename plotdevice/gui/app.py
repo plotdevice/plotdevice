@@ -7,7 +7,6 @@ import plotdevice
 from Foundation import *
 from AppKit import *
 from plotdevice.gui.preferences import get_default
-from plotdevice.run import CommandListener
 from plotdevice.gui import bundle_path, set_timeout
 from plotdevice import util
 
@@ -20,7 +19,6 @@ class PlotDeviceAppDelegate(NSObject):
     def awakeFromNib(self):
         self._prefsController = None
         self._docsController = NSDocumentController.sharedDocumentController()
-        self._listener = CommandListener(port=get_default('remote-port'))
         libDir = os.path.join(os.getenv("HOME"), "Library", "Application Support", "PlotDevice")
         try:
             if not os.path.exists(libDir):
@@ -28,7 +26,6 @@ class PlotDeviceAppDelegate(NSObject):
                 f = open(os.path.join(libDir, "README.txt"), "w")
                 f.write(LIB_DIR_README)
                 f.close()
-            self._listener.start()
         except OSError: pass
         except IOError: pass
         self.examplesMenu = NSApp().mainMenu().itemWithTitle_('Examples')
@@ -108,17 +105,6 @@ class PlotDeviceAppDelegate(NSObject):
         url = NSURL.URLWithString_("http://nodebox.net/")
         NSWorkspace.sharedWorkspace().openURL_(url)
 
-    def listenOnPort_(self, port):
-        if self._listener and self._listener.port == port:
-            return
-        newlistener = CommandListener(port=port)
-        if self._listener:
-            self._listener.join()
-        self._listener = newlistener
-        newlistener.start()
-        return newlistener.active
-
     def applicationWillTerminate_(self, note):
-        self._listener.join()
         import atexit
         atexit._run_exitfuncs()

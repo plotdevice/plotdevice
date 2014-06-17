@@ -66,5 +66,4 @@ def extract_tb(tb, script=None, src=None, debug=True):
 
 # make the main classes from the submodules accessible
 from plotdevice.run.export import MovieExportSession, ImageExportSession
-from plotdevice.run.listener import CommandListener
 from plotdevice.run.sandbox import Sandbox

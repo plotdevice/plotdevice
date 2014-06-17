@@ -66,7 +66,6 @@
 		2AC5188118636CAF007FB066 /* sandbox.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2AC5187F18636C9F007FB066 /* sandbox.py */; };
 		2AE5AD2B186236C400CCDD45 /* editor.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD291862366300CCDD45 /* editor.py */; };
 		2AE5AD2E1862387200CCDD45 /* widgets.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD2C1862386400CCDD45 /* widgets.py */; };
-		2AE5AD80186249F300CCDD45 /* listener.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2AE5AD7E186249E100CCDD45 /* listener.py */; };
 		2AEE843C18B3285F00CF91D4 /* foundry.py in Copy plotdevice.util */ = {isa = PBXBuildFile; fileRef = 2AEE843A18B3285600CF91D4 /* foundry.py */; };
 		2AEE846518BEC26C00CF91D4 /* iglob.py in Copy plotdevice.util */ = {isa = PBXBuildFile; fileRef = 2AEE846318BEC25B00CF91D4 /* iglob.py */; };
 		611CC49810BA8B9E00B55455 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48110BA8B9E00B55455 /* Credits.rtf */; };
@@ -126,7 +125,6 @@
 			files = (
 				2A294463185E550400E9F650 /* __init__.py in Copy plotdevice.run */,
 				2AC5188118636CAF007FB066 /* sandbox.py in Copy plotdevice.run */,
-				2AE5AD80186249F300CCDD45 /* listener.py in Copy plotdevice.run */,
 				2A294462185E54F900E9F650 /* task.py in Copy plotdevice.run */,
 				2A294461185E54F600E9F650 /* export.py in Copy plotdevice.run */,
 			);
