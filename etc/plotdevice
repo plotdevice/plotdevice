@@ -62,46 +62,6 @@ from time import sleep
 from subprocess import Popen, PIPE
 from os.path import exists, islink, dirname, abspath, realpath, join
 
-def main():
-  """Run python scripts in a window/PlotDevice.app or export graphics to a document (pdf/eps), image (png/gif/jpg/tiff), or movie (mov/gif)."""
-  opts = parse_args()
-  if opts.export or not app_path():
-    exec_console(opts)
-  else:
-    exec_application(opts)
-
-def exec_console(opts):
-  """Run script from the console"""
-  def cancel(*args):
-    p.stdin.write("CANCEL\n")
-    p.stdin.flush()
-  signal.signal(signal.SIGINT, cancel)
-
-  env = dict(os.environ)
-  task, env['PYTHONPATH'] = task_path()
-  p = Popen(['/usr/bin/python', task], env=env, stdin=PIPE)
-  p.stdin.write(json.dumps(vars(opts))+"\n")
-  p.wait()
-
-def exec_application(opts):
-  """Launch PlotDevice.app if needed and run the script (while echoing output to the console)"""
-  sock = connect()
-  if not sock:
-    os.system('open -a "%s" "%s"'%(app_path() or 'PlotDevice.app', opts.file))
-    sock = connect(retry=12)
-  if not sock:
-    print "Couldn't connect to the PlotDevice application on port", default_port()
-    sys.exit(1)
-
-  try:
-    def stop(*args):
-      sock.sendall('STOP\n')
-    signal.signal(signal.SIGINT, stop)
-    sock.sendall(json.dumps(vars(opts)) + "\n")
-    read_and_echo(sock)
-  finally:
-    sock.close()
-
 def parse_args():
   parser = argparse.ArgumentParser(description=main.__doc__, add_help=False)
   o = parser.add_argument_group("Options", None)
@@ -167,19 +127,6 @@ def parse_args():
 
   return opts
 
-def connect(retry=0, delay=0):
-  port = default_port()
-  if delay:
-    sleep(delay)
-  sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  try:
-    sock.connect(("localhost", port))
-  except socket.error, e:
-    if not retry:
-      return None
-    return connect(retry-1, delay=.2)
-  return sock
-
 def app_path():
   parent = dirname(realpath(__file__)) if islink(__file__) else abspath(dirname(__file__))
   try:
@@ -196,10 +143,10 @@ def module_path():
       return abspath(module)
   raise ImportError
 
-def task_path():
+def invocation():
   """Find the path of task.py within the plotdevice module and update PYTHONPATH if needed"""
   script_path = None
-  py_path = os.getenv('PYTHONPATH','').split(':')
+  py_path = filter(None, os.getenv('PYTHONPATH','').split(':')) # BUG: should it be unfiltered?
 
   try:
     # running from a virtualenv
@@ -209,7 +156,9 @@ def task_path():
   except ImportError:
     if app_path():
       # running from the app bundle
-      script_path = "%s/%s" % (app_path(), 'Contents/Resources/python/plotdevice/run/task.py')
+      dist_path = join(app_path(), 'Contents/Resources/python')
+      script_path = join(dist_path, 'plotdevice/run/task.py')
+      py_path.append(dist_path) # append the site-packages dir
     else:
       # running from the source dist
       dist_path = abspath('%s/..'%dirname(__file__))
@@ -219,20 +168,21 @@ def task_path():
 
   return script_path, ":".join(py_path)
 
-def default_port():
-  from Foundation import NSUserDefaults
-  appdefaults = NSUserDefaults.standardUserDefaults().persistentDomainForName_('io.plotdevice.PlotDevice')
-  return appdefaults.objectForKey_('plotdevice:remote-port') or 9001
+def main():
+  """Run python scripts in a window/PlotDevice.app or export graphics to a
+     document (pdf/eps), image (png/gif/jpg/tiff), or movie (mov/gif)."""
+  opts = parse_args()
 
-def read_and_echo(sock):
-  response = sock.recv(80)
-  while response:
-    sys.stdout.write(response)
-    sys.stdout.flush()
-    try:
-      response = sock.recv(80)
-    except socket.error, e:
-      break # bail out on ctrl-c
+  def cancel(*args):
+    p.stdin.write("CANCEL\n")
+    p.stdin.flush()
+  signal.signal(signal.SIGINT, cancel)
+
+  env = dict(os.environ)
+  task, env['PYTHONPATH'] = invocation()
+  p = Popen(['/usr/bin/python', task], env=env, stdin=PIPE)
+  p.stdin.write(json.dumps(vars(opts))+"\n")
+  p.wait()
 
 if __name__ == "__main__":
   main()
