@@ -151,14 +151,14 @@ plist={
 
 
 rsrc = [
-    "Resources/English.lproj/AskString.xib",
-    "Resources/English.lproj/Credits.rtf",
-    "Resources/English.lproj/MainMenu.xib",
-    "Resources/English.lproj/PlotDeviceDocument.xib",
-    "Resources/English.lproj/PlotDevicePreferences.xib",
-    "Resources/ui",
-    "Resources/PlotDevice.icns",
-    "Resources/PlotDeviceFile.icns",
+    "app/Resources/English.lproj/AskString.xib",
+    "app/Resources/English.lproj/Credits.rtf",
+    "app/Resources/English.lproj/MainMenu.xib",
+    "app/Resources/English.lproj/PlotDeviceDocument.xib",
+    "app/Resources/English.lproj/PlotDevicePreferences.xib",
+    "app/Resources/ui",
+    "app/Resources/PlotDevice.icns",
+    "app/Resources/PlotDeviceFile.icns",
 ]
 
 BUILD_APP = any(v in ('py2app','dist') for v in sys.argv)
@@ -214,9 +214,9 @@ class BuildCommand(build_py):
         if BUILD_APP: return # the app bundle doesn't need the PlotDeviceScript nib
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
         self.mkpath(rsrc_dir)
-        self.copy_file("Resources/colors.json", '%s/colors.json'%rsrc_dir)
-        self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "Resources/English.lproj/PlotDeviceScript.xib"])
-        self.copy_file("Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
+        self.copy_file("app/Resources/colors.json", '%s/colors.json'%rsrc_dir)
+        self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "app/Resources/English.lproj/PlotDeviceScript.xib"])
+        self.copy_file("app/Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
         self.spawn(['/usr/bin/ditto', 'build/ext', '%s/plotdevice/lib'%self.build_lib])
 
 
@@ -261,14 +261,14 @@ if BUILD_APP:
             # populate the rsrc subdir
             data_dir = '%s/python/plotdevice/rsrc'%RSRC
             self.mkpath(data_dir)
-            self.copy_file("%s/Resources/colors.json"%TOP, '%s/colors.json'%data_dir)
-            self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%data_dir, "Resources/English.lproj/PlotDeviceScript.xib"])
-            self.copy_file("%s/Resources/PlotDeviceFile.icns"%TOP, '%s/viewer.icns'%data_dir)
+            self.copy_file("%s/app/Resources/colors.json"%TOP, '%s/colors.json'%data_dir)
+            self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%data_dir, "app/Resources/English.lproj/PlotDeviceScript.xib"])
+            self.copy_file("%s/app/Resources/PlotDeviceFile.icns"%TOP, '%s/viewer.icns'%data_dir)
 
             # find $TOP/plotdevice -name \*pyc -exec rm {} \;
 
             # install the documentation
-            self.copy_tree('%s/Resources/examples'%TOP, '%s/examples'%RSRC)
+            self.copy_tree('%s/app/Resources/examples'%TOP, '%s/examples'%RSRC)
 
             print "done building PlotDevice.app in ./dist"
 
@@ -299,7 +299,7 @@ if BUILD_APP:
             self.copy_file('README.md', '%s/Readme.txt'%DEST)
 
             # Copy examples
-            self.copy_tree('%s/Resources/examples'%TOP, '%s/Examples'%DEST)
+            self.copy_tree('%s/app/Resources/examples'%TOP, '%s/Examples'%DEST)
             # chmod 755 Examples/*/*.py
 
             # Make DMG
@@ -354,7 +354,7 @@ if __name__=='__main__':
             data_files = rsrc,
             options = {
                 "py2app": {
-                    "iconfile": "Resources/PlotDevice.icns",
+                    "iconfile": "app/Resources/PlotDevice.icns",
                     "semi_standalone":True,
                     "site_packages":True,
                     "strip":False,

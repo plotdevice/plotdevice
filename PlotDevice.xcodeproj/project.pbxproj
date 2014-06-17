@@ -273,7 +273,7 @@
 		2ABDB7671867D8160069EFC3 /* plotdevice-app.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "plotdevice-app.py"; path = "app/plotdevice-app.py"; sourceTree = "<group>"; };
 		2ABDB7681867D8160069EFC3 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = app/main.m; sourceTree = "<group>"; };
 		2ABDB7691867D8160069EFC3 /* PlotDevice_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PlotDevice_Prefix.pch; path = app/PlotDevice_Prefix.pch; sourceTree = "<group>"; };
-		2ABDB76C1867D8210069EFC3 /* PlotDevice-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "PlotDevice-Info.plist"; path = "app/PlotDevice-Info.plist"; sourceTree = "<group>"; };
+		2ABDB76C1867D8210069EFC3 /* PlotDevice-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "PlotDevice-Info.plist"; sourceTree = "<group>"; };
 		2ABDB7721867D9920069EFC3 /* plotdevice */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = plotdevice; path = app/plotdevice; sourceTree = "<group>"; };
 		2ABDB7751867EB520069EFC3 /* app.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = app.py; sourceTree = "<group>"; };
 		2ABDB7761867EB520069EFC3 /* views.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = views.py; sourceTree = "<group>"; };
@@ -438,6 +438,7 @@
 				2ABDB76C1867D8210069EFC3 /* PlotDevice-Info.plist */,
 			);
 			name = Resources;
+			path = app;
 			sourceTree = "<group>";
 		};
 		2A37F4C3FDCFA73011CA2CEA /* Frameworks */ = {
@@ -679,7 +680,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "RSRC_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/plotdevice/rsrc\"\nmkdir -p \"$RSRC_DIR\"\ncp -p Resources/colors.json \"$RSRC_DIR\"\ncp -p Resources/PlotDeviceFile.icns \"$RSRC_DIR\"/viewer.icns\nibtool --compile \"$RSRC_DIR/viewer.nib\" Resources/English.lproj/PlotDeviceScript.xib\n";
+			shellScript = "RSRC_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/plotdevice/rsrc\"\nmkdir -p \"$RSRC_DIR\"\ncp -p app/Resources/colors.json \"$RSRC_DIR\"\ncp -p app/Resources/PlotDeviceFile.icns \"$RSRC_DIR\"/viewer.icns\nibtool --compile \"$RSRC_DIR/viewer.nib\" app/Resources/English.lproj/PlotDeviceScript.xib\n";
 		};
 		6156AAC410BC110E00C3CE99 /* Copy External Libraries */ = {
 			isa = PBXShellScriptBuildPhase;
