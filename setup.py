@@ -249,7 +249,7 @@ if BUILD_APP:
             remove_tree("%s/../Frameworks"%RSRC, dry_run=self.dry_run)
 
             # place the command line tool in SharedSupport
-            self.copy_file("%s/etc/plotdevice"%TOP, BIN)
+            self.copy_file("%s/app/plotdevice"%TOP, BIN)
 
             # put the module and .so files in a known location (primarily so the
             # tool can find console.py)
@@ -258,11 +258,12 @@ if BUILD_APP:
             self.spawn(['/usr/bin/ditto', '%s/build/ext'%TOP, '%s/python/plotdevice/lib'%RSRC])
             self.spawn(['/usr/bin/ditto', '%s/build/ext'%TOP, '%s/lib/python2.7/lib-dynload'%RSRC])
 
-            # sigh, copy the one file that matters
+            # populate the rsrc subdir
             data_dir = '%s/python/plotdevice/rsrc'%RSRC
             self.mkpath(data_dir)
             self.copy_file("%s/Resources/colors.json"%TOP, '%s/colors.json'%data_dir)
-
+            self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%data_dir, "Resources/English.lproj/PlotDeviceScript.xib"])
+            self.copy_file("%s/Resources/PlotDeviceFile.icns"%TOP, '%s/viewer.icns'%data_dir)
 
             # find $TOP/plotdevice -name \*pyc -exec rm {} \;
 
@@ -333,7 +334,7 @@ if __name__=='__main__':
         # ext_modules = ext_modules,
         packages = find_packages(),
         package_data = {'plotdevice.graphics':['css.json']},
-        scripts = ["etc/plotdevice"],
+        scripts = ["app/plotdevice"],
         zip_safe=False,
         cmdclass={
             'clean': CleanCommand,
@@ -347,7 +348,7 @@ if __name__=='__main__':
     if BUILD_APP:
         config.update(dict(
             app = [{
-                'script': "etc/plotdevice-app.py",
+                'script': "app/plotdevice-app.py",
                 "plist":plist,
             }],
             data_files = rsrc,
