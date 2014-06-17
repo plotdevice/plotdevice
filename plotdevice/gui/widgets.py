@@ -111,7 +111,6 @@ class DashboardController(NSObject):
             return
 
         # Set the title of the parameter panel to the title of the window
-        print "title()", '%r'%self.script.window().title()
         self.panel.setTitle_(self.script.window().title())
 
         (px,py),(pw,ph) = self.panel.frame()
