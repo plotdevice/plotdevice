@@ -184,7 +184,11 @@ class Sandbox(object):
         # Clear the canvas
         self.canvas.clear()
 
-        # Reset the context (and bind the Grob objects as a side-effect)
+        # if this is the initial pass, reset the namespace and canvas state
+        if method is None:
+            self.context._resetEnvironment()
+
+        # Reset the context state (and bind the .gfx objects as a side-effect)
         self.context._resetContext()
 
         # Initalize the magicvar

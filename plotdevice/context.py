@@ -30,49 +30,32 @@ class Context(object):
         Note that we have to pass the namespace of the executing script to allow for
         ximport's _ctx-passing magic.
         """
-        if canvas is None:
-            canvas = Canvas()
-        if ns is None:
-            ns = {}
-        self.canvas = canvas
-        self._ns = ns
+        self.canvas = Canvas() if canvas is None else canvas
+        self._ns = {} if ns is None else ns
         self._imagecache = {}
-        self._vars = []
-        self._resetContext()
         self._statestack = []
-        self.canvas._ctx = self
+        self._vars = []
 
-        # cache a list of all of the exportable attr names (for use when making namespaces)
-        self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_')))
-        self._resetEnvironment()
+        self._resetContext()     # initialize default graphics state
+        self._resetEnvironment() # initialize namespace & canvas
 
     def _activate(self):
         gfx.bind(self)
 
-    def _saveContext(self):
-        cached = [_copy_attr(getattr(self, v)) for v in Context._state_vars]
-        self._statestack.insert(0, cached)
-
-    def _restoreContext(self):
-        try:
-            cached = self._statestack.pop(0)
-        except IndexError:
-            raise DeviceError, "Too many Context._restoreContext calls."
-
-        for attr, val in zip(Context._state_vars, cached):
-            setattr(self, attr, val)
-
     def _resetEnvironment(self):
+        """Set the namespace and canvas to factory defaults (preparing for a new run)"""
+
         # clean out the namespace. include just the plotdevice commands/types
         self._ns.clear()
-        for module in util, self:
-            self._ns.update( (a,getattr(module,a)) for a in module.__all__  )
-        self._ns.update(gfx.ns)
+        self._ns.update( (a,getattr(util,a)) for a in util.__all__  )
+        self._ns.update( (a,getattr(gfx,a)) for a in gfx.__all__  )
+        self._ns.update( (a,getattr(self,a)) for a in dir(self) if not a.startswith('_') )
         self._ns["_ctx"] = self
 
-        # reset the dims and clear the grobs
-        self.canvas.__init__()
+        # clear the canvas and reset the dims/background
+        self.canvas.reset()
         self.canvas.background = Color(1.0)
+        self.canvas._ctx = self
 
     def _resetContext(self):
         """Do a thorough reset of all the state variables"""
@@ -108,6 +91,19 @@ class Context(object):
         self._transformstack = [] # only used by push/pop
         self._oldvars = self._vars
         self._vars = []
+
+    def _saveContext(self):
+        cached = [_copy_attr(getattr(self, v)) for v in Context._state_vars]
+        self._statestack.insert(0, cached)
+
+    def _restoreContext(self):
+        try:
+            cached = self._statestack.pop(0)
+        except IndexError:
+            raise DeviceError, "Too many Context._restoreContext calls."
+
+        for attr, val in zip(Context._state_vars, cached):
+            setattr(self, attr, val)
 
     def ximport(self, libName):
         lib = __import__(libName)
@@ -1315,6 +1311,10 @@ class Canvas(object):
     @trim_zeroes
     def __repr__(self):
         return 'Canvas(%0.3f, %0.3f, %s)'%(self.width, self.height, self.unit.name)
+
+    def reset(self):
+        """Reset dimensions & animation state then clear"""
+        self.__init__()
 
     def clear(self, *grobs):
         """Erase the canvas entirely (or remove specified grobs)"""
