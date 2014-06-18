@@ -6,10 +6,10 @@ from collections import namedtuple
 
 from plotdevice import DeviceError
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
+from .lib import geometry, pathmatics
 from .gfx.transform import Dimension
 from .gfx import *
-from .lib import geometry, pathmatics
-from . import gfx
+from . import gfx, util
 
 __all__ = ('Context', 'Canvas')
 
@@ -22,7 +22,7 @@ TypeStyle = namedtuple('TypeStyle', ['face', 'size', 'leading', 'align'])
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_typestyle', '_stylesheet', '_oldvars', '_vars'
+    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_typestyle', '_stylesheet', '_oldvars', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -44,13 +44,13 @@ class Context(object):
 
         # cache a list of all of the exportable attr names (for use when making namespaces)
         self.__all__ = sorted(a for a in dir(self) if not (a.startswith('_')))
-        self.__all__.remove('state_vars')
+        self._resetEnvironment()
 
     def _activate(self):
         gfx.bind(self)
 
     def _saveContext(self):
-        cached = [_copy_attr(getattr(self, v)) for v in Context.state_vars]
+        cached = [_copy_attr(getattr(self, v)) for v in Context._state_vars]
         self._statestack.insert(0, cached)
 
     def _restoreContext(self):
@@ -59,8 +59,20 @@ class Context(object):
         except IndexError:
             raise DeviceError, "Too many Context._restoreContext calls."
 
-        for attr, val in zip(Context.state_vars, cached):
+        for attr, val in zip(Context._state_vars, cached):
             setattr(self, attr, val)
+
+    def _resetEnvironment(self):
+        # clean out the namespace. include just the plotdevice commands/types
+        self._ns.clear()
+        for module in util, self:
+            self._ns.update( (a,getattr(module,a)) for a in module.__all__  )
+        self._ns.update(gfx.ns)
+        self._ns["_ctx"] = self
+
+        # reset the dims and clear the grobs
+        self.canvas.__init__()
+        self.canvas.background = Color(1.0)
 
     def _resetContext(self):
         """Do a thorough reset of all the state variables"""
@@ -71,7 +83,6 @@ class Context(object):
         self._colorrange = 1.0
         self._fillcolor = Color() # can also be a Gradient or Pattern
         self._strokecolor = None
-        self.canvas.background = Color(1.0)
 
         # line style
         self._penstyle = PenStyle(nib=1.0, cap=BUTT, join=MITER, dash=None)

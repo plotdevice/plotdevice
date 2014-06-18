@@ -60,11 +60,8 @@ class Sandbox(object):
         self.context = context.Context(self.canvas, self.namespace)
         self.delegate = delegate or Delegate()
 
-        # create a clean env to use as a template during runs
-        for module in util, self.context:
-            self._env.update( (a,getattr(module,a)) for a in module.__all__  )
-        self._env.update(gfx.ns)
-        self._env["_ctx"] = self.context
+        # make a copy of the clean namespace env to use as a template during runs
+        self._env = dict(self.namespace)
         self._meta = Metadata(args=[], virtualenv=None, first=1, next=1, last=None, running=False, console=None, loop=False)
 
     # .script

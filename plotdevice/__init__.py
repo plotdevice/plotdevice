@@ -41,11 +41,7 @@ else:
     from .context import Context
     ctx = Context()
 
-    # set up the standard plotdevice global namespace, all tied to the module-level context/canvas
-    from . import gfx, util
-    ns = ctx._ns
-    ns.update(gfx.ns)
-    for module in util, ctx:
-        ns.update( (a,getattr(module,a)) for a in module.__all__  )
-    globals().update(ns)
-    __all__ = ns.keys()
+    # set up the standard plotdevice global namespace by exposing the module-level
+    # context/canvas's internal ns
+    globals().update(ctx._ns)
+    __all__ = ctx._ns.keys()
