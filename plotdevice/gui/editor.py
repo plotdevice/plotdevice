@@ -401,6 +401,7 @@ class OutputTextView(NSTextView):
 
         # print "ran for", (time() - self._begin), "then", ("crashed" if crashed else "exited cleanly")
         if crashed or (frames==None and val < 0.333):
+            del self._begin
             return
         hrs = val // 3600
         val = val - (hrs * 3600)

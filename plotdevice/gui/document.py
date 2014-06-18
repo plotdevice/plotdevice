@@ -358,8 +358,8 @@ class ScriptController(NSWindowController):
                 # Start the spinner
                 self.statusView.beginRun()
         else:
-            # clean up after successful non-animated run (but let it keep going in fullscreen
-            # mode until the user hits escape to end the run)
+            # clean up ui state after successful non-animated run (but don't mess with the gui
+            # if running in fullscreen until the user explicitly cancsle with esc or cmd-period)
             if not self.fullScreen:
                 self.stopScript()
 
