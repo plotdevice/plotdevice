@@ -9,7 +9,7 @@ from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
 from .lib import geometry, pathmatics
 from .gfx.transform import Dimension
 from .gfx import *
-from . import gfx, util
+from . import gfx, lib, util
 
 __all__ = ('Context', 'Canvas')
 
@@ -40,7 +40,10 @@ class Context(object):
         self._resetEnvironment() # initialize namespace & canvas
 
     def _activate(self):
+        """Pass a reference to this context to all the gfx objects and libs that have
+        registered themselves as needing _ctx access."""
         gfx.bind(self)
+        lib.bind(self)
 
     def _resetEnvironment(self):
         """Set the namespace and canvas to factory defaults (preparing for a new run)"""
