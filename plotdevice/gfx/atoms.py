@@ -297,7 +297,11 @@ class StyleMixin(Grob):
         super(StyleMixin, self).__init__(**kwargs)
         if 'fill' in kwargs:
             self.fill = kwargs['fill'] # override color
-        self._override = Stylesheet._spec(**kwargs) # inline style params
+
+        spec_args = {k:v for k,v in kwargs.items() if k in Stylesheet.kwargs}
+        if not isinstance(spec_args.get('width',''), basestring):
+            del spec_args['width']
+        self._override = Stylesheet._spec(**spec_args) # inline style params
 
     @property
     def stylesheet(self):
