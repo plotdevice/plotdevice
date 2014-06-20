@@ -57,6 +57,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
 
     def __init__(self, text, *args, **kwargs):
+        self._style = kwargs.pop('style', None)
         super(Text, self).__init__(**kwargs)
 
         if isinstance(text, Text):
@@ -69,7 +70,6 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             setattr(self, attr, val)
 
         self.text = unicode(text)
-        self._style = kwargs.get('style', None)
 
     @property
     def font(self):

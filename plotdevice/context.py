@@ -980,7 +980,7 @@ class Context(object):
         else:
             return self._stylesheet.style(name, *args, **kwargs)
 
-    def text(self, txt, x=0, y=0, width=None, height=None, outline=False, style=None, **kwargs):
+    def text(self, txt, *args, **kwargs):
         """Draw a single line (or a block) of text
 
         Arguments:
@@ -1002,11 +1002,17 @@ class Context(object):
             XML parsing of the string.
           - `plot` can be set to False to prevent the command from immediately drawing to the
             canvas. You can pass the return value to the plot() command to draw it later on.
+
+        Styling Args:
+          - you can pass any of the standard font() args as keyword commands:
+              family, size, leading, weight, variant, italic, heavier, lighter
+          - the `fill` argument can override the color inherited from the graphics state
         """
         draw = kwargs.pop('draw', self._autoplot)
         draw = kwargs.pop('plot', draw)
+        outline = kwargs.pop('outline', False)
 
-        txt = Text(txt, x, y, width, height, style, **kwargs)
+        txt = Text(txt, *args, **kwargs)
         if self._path is None and not outline:
             # treat as Text
             if draw:
@@ -1015,6 +1021,7 @@ class Context(object):
         else:
             # treat as Bezier
             kwargs['plot'] = draw
+            kwargs.pop('style',None)
             with self._active_path(kwargs) as p:
                 p.extend(txt.path)
             _copy_attrs(txt, p, {'fill', 'stroke', 'nib'}.intersection(kwargs))
