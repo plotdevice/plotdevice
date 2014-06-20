@@ -7,7 +7,7 @@ from AppKit import *
 from Foundation import *
 
 from plotdevice import DeviceError
-from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, Grob, INHERIT
+from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, Grob
 from . import _save, _restore, _ns_context
 from .transform import Transform, Region, Size
 from .colors import Color
@@ -49,6 +49,7 @@ def families(like=None, western=True):
     return [fam for fam in all_fams if in_region[fam]]
 
 class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
+    stateAttrs = ('x', 'y', 'width', 'height', '_style')
     kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
 
     def __init__(self, text, x=0, y=0, width=None, height=None, style=None, **kwargs):
@@ -73,9 +74,7 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
 
     def copy(self):
         new = self.__class__(self.text)
-        _copy_attrs(self, new,
-            ('x', 'y', 'width', 'height', '_transform', '_transformmode',
-            '_stylesheet', '_typestyle', '_style', ))
+        _copy_attrs(self, new, self._state)
         return new
 
     @property

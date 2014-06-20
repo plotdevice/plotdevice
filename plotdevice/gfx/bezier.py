@@ -7,7 +7,7 @@ from math import pi, sin, cos
 
 from plotdevice import DeviceError
 from . import _cg_context
-from .atoms import INHERIT, PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
+from .atoms import PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .colors import Color, Gradient, Pattern
 from .transform import CENTER, Transform, Region, Size, Point, DEGREES
 from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten
@@ -44,6 +44,7 @@ FORTYFIVE = "fortyfive"
 
 class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     """A Bezier provides a wrapper around NSBezierPath."""
+    stateAttrs = ('_nsBezierPath',)
     kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle', 'nib', 'cap', 'join', 'dash', 'alpha', 'blend', 'shadow')
 
     def __init__(self, path=None, immediate=False, **kwargs):
@@ -65,8 +66,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 p = pathmatics.findpath(path, 1.0 if kwargs.get('smooth') else 0.0)
                 self._nsBezierPath = p._nsBezierPath
         elif isinstance(path, Bezier):
-            self._nsBezierPath = path._nsBezierPath.copy()
-            _copy_attrs(path, self, self.stateAttrs)
+            _copy_attrs(path, self, self._state)
         elif isinstance(path, NSBezierPath):
             self._nsBezierPath = path
         else:

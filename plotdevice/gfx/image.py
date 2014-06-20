@@ -24,6 +24,7 @@ __all__ = ("Image", 'ImageSequence', 'Movie', 'PDF', )
 ### The bitmap/vector image-container (a.k.a. NSImage proxy) ###
 
 class Image(EffectsMixin, TransformMixin, Grob):
+    stateAttrs = ('_nsImage', 'x', 'y', 'width', 'height')
     kwargs = ()
 
     def __init__(self, path=None, x=0, y=0, width=None, height=None, image=None, data=None, **kwargs):
@@ -41,6 +42,7 @@ class Image(EffectsMixin, TransformMixin, Grob):
          - data: a stream of bytes of image data.
         """
         super(Image, self).__init__(**kwargs)
+
         if data is not None:
             if not isinstance(data, NSData):
                 data = NSData.dataWithBytes_length_(data, len(data))
@@ -117,7 +119,7 @@ class Image(EffectsMixin, TransformMixin, Grob):
 
     def copy(self):
         new = self.__class__()
-        _copy_attrs(self, new, ('_nsImage', 'x', 'y', 'width', 'height', '_transform', '_transformmode', '_effects', ))
+        _copy_attrs(self, new, self._state)
         return new
 
     @property

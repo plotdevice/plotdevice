@@ -4,12 +4,11 @@ from AppKit import *
 from contextlib import contextmanager, nested
 from collections import namedtuple
 
-from plotdevice import DeviceError
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
 from .lib import geometry, pathmatics
 from .gfx.transform import Dimension
 from .gfx import *
-from . import gfx, lib, util
+from . import gfx, lib, util, DeviceError
 
 __all__ = ('Context', 'Canvas')
 
@@ -73,22 +72,22 @@ class Context(object):
         # line style
         self._penstyle = PenStyle(nib=1.0, cap=BUTT, join=MITER, dash=None)
 
-        # bezier construction
-        self._path = None
-        self._autoclosepath = True
-        self._autoplot = True
-
         # transformation state
         self._transform = Transform()
         self._transformmode = CENTER
         self._thetamode = DEGREES
 
-        # blend, alpha, and shadow effects
+        # compositing effects (blend, alpha, and shadow)
         self._effects = Effect()
 
         # type styles
         self._stylesheet = Stylesheet()
         self._typestyle = TypeStyle(face="Helvetica", size=24, leading=1.2, align=LEFT)
+
+        # bezier construction internals
+        self._path = None
+        self._autoclosepath = True
+        self._autoplot = True
 
         # legacy internals
         self._transformstack = [] # only used by push/pop
@@ -193,7 +192,7 @@ class Context(object):
 
     ### Drawing grobs with the current pen/stroke/fill/transform/effects ###
 
-    def plot(self, obj=None, live=False, **kwargs):
+    def plot(self, obj=None, live=False, inherit=True, **kwargs):
         if obj is None:
             return self._autoplot
         elif obj in (True,False):
@@ -202,19 +201,18 @@ class Context(object):
             notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
             raise DeviceError(notdrawable)
 
-        obj.__class__.validate(kwargs)
+        # by default, plot a copy of the grob and return a reference to that new grob
+        # if live=True, the obj itself will be added to the canvas and the caller can
+        # make additional modifications on that instance
         grob = obj if live else obj.copy()
+
+        # for any valid kwargs, assign the value to the attr of the same name
+        grob.__class__.validate(kwargs)
         for arg_key, arg_val in kwargs.items():
             setattr(grob, arg_key, _copy_attr(arg_val))
-        grob.draw()
+        grob.inherit() # update the values for non-overridden state attrs
+        grob.draw() # add to canvas
         return grob
-
-    # def plotstyle(self, *ops):
-    #     modal = [m for m in ops if m in (ON,OFF)]
-    #     mode = modal[0] if modal else self._plotstyle
-    #     context_mgrs = [mgr for mgr in ops if hasattr(mgr, '__enter__')]
-    #     context_mgrs.append(PlotContext(self, restore=all, style=mode))
-    #     return nested(*context_mgrs)
 
     ### Bezier Path Commands ###
 
@@ -1029,15 +1027,18 @@ class Context(object):
           - `plot` can be set to False to prevent the command from immediately drawing to the
             canvas. You can pass the return value to the plot() command to draw it later on.
         """
+        draw = kwargs.pop('draw', self._autoplot)
+        draw = kwargs.pop('plot', draw)
+
         txt = Text(txt, x, y, width, height, style, **kwargs)
         if self._path is None and not outline:
             # treat as Text
-            if kwargs.get('plot', kwargs.get('draw', self._autoplot)):
+            if draw:
               txt.draw()
             return txt
         else:
             # treat as Bezier
-            txt.inherit()
+            # txt.inherit()
             with self._active_path(kwargs) as p:
                 p.extend(txt.path)
             _copy_attrs(txt, p, {'fill', 'stroke', 'strokewidth'}.intersection(kwargs))
@@ -1050,13 +1051,13 @@ class Context(object):
         text(txt, outline=True, plot=False).
         """
         txt = Text(txt, x, y, width, height, style, **kwargs)
-        txt.inherit()
+        # txt.inherit()
         return txt.path
 
     def textmetrics(self, txt, width=None, height=None, style=None, **kwargs):
         """Legacy command. Equivalent to: measure(txt, width, height)"""
         txt = Text(txt, 0, 0, width, height, style, **kwargs)
-        txt.inherit()
+        # txt.inherit()
         return txt.metrics
 
     def textwidth(self, txt, width=None, **kwargs):
