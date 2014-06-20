@@ -156,9 +156,6 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
         transform.setValue_forKey_(flip, "inputTransform")
         return transform.valueForKey_("outputImage")
 
-    def copy(self):
-        return self.__class__(self)
-
     @property
     def bounds(self):
         #

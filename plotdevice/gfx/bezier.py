@@ -114,9 +114,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         warnings.warn("The 'path' attribute is deprecated. Please use _nsBezierPath instead.", DeprecationWarning, stacklevel=2)
         return self._nsBezierPath
 
-    def copy(self):
-        return self.__class__(self)
-
     ### Path methods ###
 
     def moveto(self, x, y):

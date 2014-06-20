@@ -52,7 +52,7 @@ class Grob(object):
 
     def copy(self):
         """Returns a deep copy of this grob."""
-        raise NotImplementedError, "Copy is not implemented on this Grob class."
+        return self.__class__(self)
 
     def inherit(self, src=None):
         """Fills in unspecified attributes with the graphics context's state"""

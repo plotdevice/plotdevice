@@ -71,9 +71,6 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         self.text = unicode(text)
         self._style = kwargs.get('style', None)
 
-    def copy(self):
-        return Text(self)
-
     @property
     def font(self):
         return NSFont.fontWithName_size_(_ctx._typestyle.face, _ctx._typestyle.size)
