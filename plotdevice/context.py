@@ -190,30 +190,6 @@ class Context(object):
             self._outputmode = mode
         return self._outputmode
 
-    ### Drawing grobs with the current pen/stroke/fill/transform/effects ###
-
-    def plot(self, obj=None, live=False, inherit=True, **kwargs):
-        if obj is None:
-            return self._autoplot
-        elif obj in (True,False):
-            return PlotContext(self, auto=obj)
-        elif not isinstance(obj, Grob):
-            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
-            raise DeviceError(notdrawable)
-
-        # by default, plot a copy of the grob and return a reference to that new grob
-        # if live=True, the obj itself will be added to the canvas and the caller can
-        # make additional modifications on that instance
-        grob = obj if live else obj.copy()
-
-        # for any valid kwargs, assign the value to the attr of the same name
-        grob.__class__.validate(kwargs)
-        for arg_key, arg_val in kwargs.items():
-            setattr(grob, arg_key, _copy_attr(arg_val))
-        grob.inherit() # update the values for non-overridden state attrs
-        grob.draw() # add to canvas
-        return grob
-
     ### Bezier Path Commands ###
 
     def bezier(self, x=None, y=None, **kwargs):
@@ -1038,10 +1014,10 @@ class Context(object):
             return txt
         else:
             # treat as Bezier
-            # txt.inherit()
+            kwargs['plot'] = draw
             with self._active_path(kwargs) as p:
                 p.extend(txt.path)
-            _copy_attrs(txt, p, {'fill', 'stroke', 'strokewidth'}.intersection(kwargs))
+            _copy_attrs(txt, p, {'fill', 'stroke', 'nib'}.intersection(kwargs))
             return p
 
     def textpath(self, txt, x, y, width=None, height=None, style=None, **kwargs):
@@ -1097,7 +1073,34 @@ class Context(object):
         img = Image(path, data=data)
         return img.size
 
-    ### Canvas proxy ###
+    ### draw, erase, and save-to-file ###
+
+    def plot(self, obj=None, live=False, inherit=False, **kwargs):
+        if obj is None:
+            return self._autoplot
+        elif obj in (True,False):
+            return PlotContext(self, auto=obj)
+        elif not isinstance(obj, Grob):
+            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
+            raise DeviceError(notdrawable)
+
+        # by default, plot a copy of the grob and return a reference to that new copy.
+        # if live=True, the obj itself will be added to the canvas and the caller can
+        # make additional modifications on that instance
+        grob = obj if live else obj.copy()
+
+        # optionally reflect the *current* graphics state rather than the state
+        # that was inherited when the grob was originally created
+        if inherit:
+            grob.inherit()
+
+        # for any valid kwargs, assign the value to the attr of the same name
+        grob.__class__.validate(kwargs)
+        for arg_key, arg_val in kwargs.items():
+            setattr(grob, arg_key, _copy_attr(arg_val))
+
+        grob.draw() # add to canvas
+        return grob # return the newly-drawn copy (or `live` grob reference)
 
     def clear(self, *grobs):
         """Erase the canvas (or remove specific objects already added to it)
@@ -1210,12 +1213,11 @@ class Context(object):
         """
         if isinstance(obj, basestring):
             txt = Text(obj, 0, 0, width, height, **kwargs)
-            txt.inherit()
             return txt.metrics
         elif isinstance(obj, Text):
             return obj.metrics
         elif isinstance(obj, file):
-            return Image(data=obj.read()).size
+            return Image(obj.name).size
         elif isinstance(obj, (Bezier, Image)):
             return obj.bounds.size
         else:

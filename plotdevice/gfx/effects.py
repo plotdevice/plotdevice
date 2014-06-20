@@ -287,11 +287,9 @@ class Stencil(Frob):
         from .image import Image
         if isinstance(stencil, Text):
             self.path = stencil.path
-            self.path.inherit()
             self.evenodd = invert
         if isinstance(stencil, Bezier):
             self.path = Bezier(stencil)
-            self.path.inherit()
             self.evenodd = invert
         elif isinstance(stencil, Image):
             # default to using alpha if available and darkness if not

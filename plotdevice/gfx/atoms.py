@@ -2,6 +2,7 @@
 from AppKit import *
 from Foundation import *
 from Quartz import *
+from collections import namedtuple
 
 from plotdevice import DeviceError
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes
@@ -35,14 +36,11 @@ KEY_ESC = 53
 
 class Grob(object):
     """A GRaphic OBject is the base class for all drawing primitives."""
-    stateAttrs = ('_preserve',)
 
     def __init__(self, **kwargs):
         # _inherit:  tuple of attrs to copy from the _ctx
         # _state:    tuple of attrs to copy when cloning a grob
-        # _preserve: set of grob property names with overridden values
         self._inherit, self._state = _merge_state(self)
-        self._preserve = set()
         self.inherit()
 
     def draw(self):
@@ -56,12 +54,13 @@ class Grob(object):
         """Returns a deep copy of this grob."""
         raise NotImplementedError, "Copy is not implemented on this Grob class."
 
-    def inherit(self):
+    def inherit(self, src=None):
         """Fills in unspecified attributes with the graphics context's state"""
-        preserve = {attr:getattr(self, attr) for attr in self._preserve}
-        _copy_attrs(_ctx, self, self._inherit)
-        for attr, val in preserve.items():
-            setattr(self, attr, val)
+        if src is None:
+            src, attrs = _ctx, self._inherit
+        else:
+            attrs = set(src._state).intersection(self._state)
+        _copy_attrs(src, self, attrs)
 
     @classmethod
     def validate(self, kwargs):
@@ -87,7 +86,7 @@ def _merge_state(obj, types={}):
 
 class EffectsMixin(Grob):
     """Mixin class for transparency layer support.
-    Adds the alpha, blend, and shadow attributes to the class."""
+    Adds the alpha, blend, and shadow properties to the class."""
     ctxAttrs = ('_effects',)
 
     def __init__(self, **kwargs):
@@ -105,26 +104,72 @@ class EffectsMixin(Grob):
         return self._effects.alpha
     def _set_alpha(self, a):
         self._effects.alpha = a
-        self._preserve.add('alpha')
     alpha = property(_get_alpha, _set_alpha)
 
     def _get_blend(self):
         return self._effects.blend
     def _set_blend(self, mode):
         self._effects.blend = mode
-        self._preserve.add('blend')
     blend = property(_get_blend, _set_blend)
 
     def _get_shadow(self):
         return self._effects.shadow
     def _set_shadow(self, spec):
         self._effects.shadow = spec
-        self._preserve.add('shadow')
     shadow = property(_get_shadow, _set_shadow)
+
+
+BoundsRect = namedtuple('BoundsRect', ['x', 'y', 'w', 'h'])
+class BoundsMixin(Grob):
+    """Mixin class for dimensions.
+    Adds x, y, width, & height properties to the class."""
+    stateAttrs = ('_bounds',)
+
+    def __init__(self, **kwargs):
+        super(BoundsMixin, self).__init__(**kwargs)
+
+        x, y = kwargs.get('x',0), kwargs.get('y',0)
+        h = kwargs.get('h',kwargs.get('height',None))
+        w = kwargs.get('w',kwargs.get('width',None))
+        if isinstance(w, basestring):
+            w = None # ignore width if it's passing a font style
+        self._bounds = BoundsRect(x,y,w,h)
+
+    def _get_x(self):
+        return self._bounds.x
+    def _set_x(self, x):
+        if not isinstance(x, (int,float)):
+            raise DeviceError('x coordinate must be int or float (not %r)'%type(x))
+        self._bounds = self._bounds._replace(x=x)
+    x = property(_get_x, _set_x)
+
+    def _get_y(self):
+        return self._bounds.y
+    def _set_y(self, y):
+        if not isinstance(y, (int,float)):
+            raise DeviceError('y coordinate must be int or float (not %r)'%type(y))
+        self._bounds = self._bounds._replace(y=y)
+    y = property(_get_y, _set_y)
+
+    def _get_width(self):
+        return self._bounds.w
+    def _set_width(self, w):
+        if w and not isinstance(w, (int,float)):
+            raise DeviceError('width value must be a number or None (not %r)'%type(w))
+        self._bounds = self._bounds._replace(w=w)
+    w = width = property(_get_width, _set_width)
+
+    def _get_height(self):
+        return self._bounds.h
+    def _set_height(self, h):
+        if h and not isinstance(h, (int,float)):
+            raise DeviceError('height value must be a number or None (not %r)'%type(h))
+        self._bounds = self._bounds._replace(h=h)
+    h = height = property(_get_height, _set_height)
 
 class ColorMixin(Grob):
     """Mixin class for color support.
-    Adds the _fillcolor and _strokecolor attributes to the class."""
+    Adds the fill & stroke properties to the class."""
     ctxAttrs = ('_fillcolor', '_strokecolor')
 
     def __init__(self, **kwargs):
@@ -137,25 +182,21 @@ class ColorMixin(Grob):
         return self._fillcolor
     def _set_fill(self, *args):
         self._fillcolor = None if args[0] is None else Color(*args)
-        self._preserve.add('fill')
     fill = property(_get_fill, _set_fill)
 
     def _get_stroke(self):
         return self._strokecolor
     def _set_stroke(self, *args):
         self._strokecolor = None if args[0] is None else Color(*args)
-        self._preserve.add('stroke')
     stroke = property(_get_stroke, _set_stroke)
 
 class TransformMixin(Grob):
     """Mixin class for transformation support.
     Adds the _transform and _transformmode attributes to the class."""
     ctxAttrs = ('_transform', '_transformmode')
-    stateAttrs = ('_localTransform',)
 
     def __init__(self, **kwargs):
         super(TransformMixin, self).__init__(**kwargs)
-        self._localTransform = Transform()
 
     # CENTER or CORNER
     def _get_transformmode(self):
@@ -167,55 +208,30 @@ class TransformMixin(Grob):
         self._transformmode = mode
     transformmode = property(_get_transformmode, _set_transformmode)
 
-    # the inherited `canvas transform'
     def _get_transform(self):
-        # .transform returns a merger of the ctm and local transforms (if any)
-        xf = Transform(self._transform)
-        xf.prepend(self._localTransform)
-        return xf
+        return self._transform
     def _set_transform(self, transform):
-        # setting .transform assigns to the slot for the ctm and sets
-        # the local transform to identity
-        self._preserve.add('_transform') # flag that we've modified the ctm
         self._transform = Transform(transform)
-        self._localTransform = Transform()
     transform = property(_get_transform, _set_transform)
 
-    # object-specific transform matrix (set by obj.rotate(), obj.translate(), etc.).
-    # will always be applied *after* the inherited `canvas transform'
-    def _get_localTransformform(self):
-        self._preserve.add('localTransform') # flag that we've modified the local matrix
-        # (not that we have yet, but dereferencing is the first step in that...)
-        return self._localTransform
-    def _set_localTransformform(self, transform):
-        self._localTransform = Transform(transform)
-    localTransform = property(_get_localTransformform, _set_localTransformform)
-
-    def translate(self, x, y):
-        self.localTransform.translate(x, y)
+    def translate(self, x=0, y=0):
+        self._transform.translate(x,y)
         return self
 
     def rotate(self, arg=None, **opts):
-        self.localTransform.rotate(arg, **opts)
-        return self
-
-    def translate(self, x=0, y=0):
-        self.localTransform.translate(x,y)
+        self._transform.rotate(arg, **opts)
         return self
 
     def scale(self, x=1, y=None):
-        self.localTransform.scale(x,y)
+        self._transform.scale(x,y)
         return self
 
     def skew(self, x=0, y=0):
-        self.localTransform.skew(x,y)
+        self._transform.skew(x,y)
         return self
 
     def reset(self):
-        # clear out the inherited transform rather than our localTransform
-        # the property setter will set *both* matrices to Identity so it's a
-        # true reset (rather than wiping out *just* the local transformations).
-        self.transform = Transform()
+        self._transform = Transform()
         return self
 
 
@@ -237,7 +253,6 @@ class PenMixin(Grob):
         return self._penstyle.nib
     def _set_strokewidth(self, strokewidth):
         self._penstyle = self._penstyle._replace(nib=max(strokewidth, 0.0001))
-        self._preserve.add('nib')
     nib = strokewidth = property(_get_strokewidth, _set_strokewidth)
 
     def _get_capstyle(self):
@@ -248,7 +263,6 @@ class PenMixin(Grob):
             badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
             raise DeviceError(badstyle)
         self._penstyle = self._penstyle._replace(cap=style)
-        self._preserve.add('cap')
     cap = capstyle = property(_get_capstyle, _set_capstyle)
 
     def _get_joinstyle(self):
@@ -259,7 +273,6 @@ class PenMixin(Grob):
             badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
             raise DeviceError(badstyle)
         self._penstyle = self._penstyle._replace(join=style)
-        self._preserve.add('join')
     join = joinstyle = property(_get_joinstyle, _set_joinstyle)
 
     def _get_dashstyle(self):
@@ -272,12 +285,11 @@ class PenMixin(Grob):
             if len(steps)%2:
                 steps += steps[-1:] # assume even spacing for omitted skip sizes
         self._penstyle = self._penstyle._replace(dash=steps)
-        self._preserve.add('dash')
     dash = dashstyle = property(_get_dashstyle, _set_dashstyle)
 
 class StyleMixin(Grob):
-    """Mixin class for transparency layer support.
-    Adds the alpha, blend, and shadow attributes to the class."""
+    """Mixin class for text-styling support.
+    Adds the stylesheet and fill attributes to the class."""
     ctxAttrs = ('_stylesheet', '_typestyle', '_fillcolor',)
 
     def __init__(self, **kwargs):
@@ -300,7 +312,6 @@ class StyleMixin(Grob):
         return self._fillcolor
     def _set_fill(self, *args):
         self._fillcolor = Color(*args)
-        self._preserve.add('fill')
     fill = property(_get_fill, _set_fill)
 
 class Variable(object):

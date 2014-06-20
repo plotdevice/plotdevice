@@ -14,7 +14,7 @@ from plotdevice import DeviceError
 from ..util import _copy_attrs
 from ..lib.io import MovieExportSession, ImageExportSession
 from .transform import Region, Size, Point, Transform, CENTER
-from .atoms import TransformMixin, EffectsMixin, Grob
+from .atoms import TransformMixin, EffectsMixin, BoundsMixin, Grob
 from . import _ns_context
 
 _ctx = None
@@ -23,8 +23,8 @@ __all__ = ("Image", 'ImageSequence', 'Movie', 'PDF', )
 
 ### The bitmap/vector image-container (a.k.a. NSImage proxy) ###
 
-class Image(EffectsMixin, TransformMixin, Grob):
-    stateAttrs = ('_nsImage', 'x', 'y', 'width', 'height')
+class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
+    stateAttrs = ('_nsImage',)
     kwargs = ('data','width','height')
 
     # def __init__(self, path, x=0, y=0, width=None, height=None, **kwargs):
@@ -60,8 +60,8 @@ class Image(EffectsMixin, TransformMixin, Grob):
         if args and not (src or data):
             src = args.pop(0)
 
-        self.x, self.y = kwargs.get('x',0), kwargs.get('y',0)
-        self.width, self.height = kwargs.get('width',None), kwargs.get('height',None)
+        # self.x, self.y = kwargs.get('x',0), kwargs.get('y',0)
+        # self.width, self.height = kwargs.get('width',None), kwargs.get('height',None)
         for attr, val in zip(['x','y','width','height'], args):
             setattr(self, attr, val)
 
@@ -72,7 +72,7 @@ class Image(EffectsMixin, TransformMixin, Grob):
                 self._nsImage = image
                 self._nsImage.setFlipped_(True)
             elif isinstance(src, Image):
-                _copy_attrs(src, self, self._state)
+                self.inherit(src)
             elif isinstance(src, basestring):
                 self._nsImage = self._lazyload(path=src)
             else:

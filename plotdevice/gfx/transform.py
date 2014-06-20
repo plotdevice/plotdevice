@@ -36,16 +36,15 @@ tau = 2*pi
 ### tuple-like objects for grid dimensions ###
 
 class Point(object):
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         if len(args) == 2:
             self.x, self.y = args
-        elif len(args) == 1:
-            self.x, self.y = args[0]
-        elif len(args) == 0:
-            self.x = self.y = 0.0
         else:
-            badcoords = "Bad initial coordinates for Point object"
-            raise DeviceError(badcoords)
+            try:
+                self.x, self.y = args[0]
+            except:
+                self.x = kwargs.get('x', 0.0)
+                self.y = kwargs.get('y', 0.0)
 
     @trim_zeroes
     def __repr__(self):
@@ -293,7 +292,7 @@ class Transform(object):
     def transformBezier(self, path):
         from .bezier import Bezier
         if isinstance(path, Bezier):
-            path = Bezier(path)
+            path = path.copy()
         else:
             wrongtype = "Can only transform Beziers"
             raise DeviceError(wrongtype)

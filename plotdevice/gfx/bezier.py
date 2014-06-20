@@ -66,7 +66,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 p = pathmatics.findpath(path, 1.0 if kwargs.get('smooth') else 0.0)
                 self._nsBezierPath = p._nsBezierPath
         elif isinstance(path, Bezier):
-            _copy_attrs(path, self, self._state)
+            self.inherit(path)
         elif isinstance(path, NSBezierPath):
             self._nsBezierPath = path
         else:

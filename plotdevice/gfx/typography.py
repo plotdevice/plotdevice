@@ -7,7 +7,7 @@ from AppKit import *
 from Foundation import *
 
 from plotdevice import DeviceError
-from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, Grob
+from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, BoundsMixin, Grob
 from . import _save, _restore, _ns_context
 from .transform import Transform, Region, Size
 from .colors import Color
@@ -48,34 +48,31 @@ def families(like=None, western=True):
     # return [Family(fam) for fam in all_fams if in_region[fam]]
     return [fam for fam in all_fams if in_region[fam]]
 
-class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
-    stateAttrs = ('x', 'y', 'width', 'height', '_style')
+class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
+    # from TransformMixin: transform transformmode translate() rotate() scale() skew() reset()
+    # from EffectsMixin:   alpha blend shadow
+    # from BoundsMixin:    x y width height
+    # from StyleMixin:     stylesheet fill
+    stateAttrs = ('_style', 'text')
     kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
 
-    def __init__(self, text, x=0, y=0, width=None, height=None, style=None, **kwargs):
+    def __init__(self, text, *args, **kwargs):
         super(Text, self).__init__(**kwargs)
 
-        badargs = None
+        if isinstance(text, Text):
+            self.inherit(text)
+            return
+
         if not isinstance(text, basestring):
-            badargs = "text() must be called with a string as its first argument"
-        elif not all(isinstance(c, (int,float)) for c in (x,y)):
-            badargs = "text() requires x & y coordinates as its second and third arguments"
-        if badargs:
-            raise DeviceError(badargs)
-        if 'stroke' in kwargs:
-            del kwargs['stroke']
+            raise DeviceError("text() must be called with a string as its first argument")
+        for attr, val in zip(['x','y','width','height'], args):
+            setattr(self, attr, val)
 
         self.text = unicode(text)
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self._style = style
+        self._style = kwargs.get('style', None)
 
     def copy(self):
-        new = self.__class__(self.text)
-        _copy_attrs(self, new, self._state)
-        return new
+        return Text(self)
 
     @property
     def font(self):
@@ -144,9 +141,9 @@ class Text(TransformMixin, EffectsMixin, StyleMixin, Grob):
         trans.scale(1.0,-1.0)
 
         # generate an unflipped bezier with all the glyphs
-        path = trans.apply(Bezier(printer.nsBezierPath))
-        path.inherit() # BUG: this actually seems undesirable. remove & test regressions
-        return path
+        path = Bezier(printer.nsBezierPath)
+        path.inherit(self)
+        return trans.apply(path)
 
     @property
     def _spool(self):
