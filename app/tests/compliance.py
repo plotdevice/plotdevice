@@ -149,11 +149,11 @@ def images(x, y):
     bmp = image("icon.png", x,y, width=w/2, plot=False) # half size
     plot(bmp)
     with translate(125,0), rotate(90):                  # half size, rotated
-        plot(bmp)
+        plot(bmp, inherit=True)
     with translate(259,0), rotate(180), scale(2.0):     # doubled (back to full size), flipped
-        plot(bmp)
+        plot(bmp, inherit=True)
     with translate(375,0), scale(2.0), shadow(.8, blur=10): # doubled (back to full size), dropshadowed
-        plot(bmp)
+        plot(bmp, inherit=True)
 
 def classicpaths():
     beginpath(165, 140)
@@ -183,18 +183,18 @@ def bezierpaths():
     # new Paths api
     with transform():
         translate(120,0)
-        with bezier(165, 140, strokewidth=4, stroke=.8) as p:
+        # construct & draw a path manually (while saving a reference in `orig`)
+        with bezier(165, 140, nib=4, stroke=.5, close=True) as orig:
             lineto(140, 200)
             curveto(160, 250, 160, 200, 190, 200)
 
-        p = p.copy()
-        translate(60,0)
-        for pt in p:
-            pt.x += 60
-            pt.ctrl1.x += 60
-            pt.ctrl2.x += 60
-        bezier(p, stroke=None, fill='red')
-        bezier(p, strokewidth=2, stroke='#a00')
+        # draw a restyled copy of orig by passing it to bezier
+        path = bezier(orig, stroke=None, fill='red')
+
+        # do further restyling with plot & by modifying the returned grob
+        p = plot(path, strokewidth=2, stroke='#a00')
+        p.translate(60,0)
+        p.fill.alpha = .2
 
 def blendModes(x, y):
     modes = ['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'difference', 'exclusion', 'color-dodge', 'color-burn', 'soft-light', 'hard-light', 'hue', 'saturation', 'color', 'luminosity' ]
@@ -334,7 +334,7 @@ with rotate(45):
 translate(0, 140)
 marker(140)
 text("Outlined text", 20, 165)
-with font(48), stroke(.5), fill('orange','cyan'):
+with font(48), stroke(.5), fill('orange','cyan'), skew(12):
     text("hamburgefonstiv", 140, 165, outline=True)
 
 # Images
