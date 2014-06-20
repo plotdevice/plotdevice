@@ -1070,7 +1070,7 @@ class Context(object):
 
     ### Image commands ###
 
-    def image(self, path, x=0, y=0, width=None, height=None, data=None, **kwargs):
+    def image(self, *args, **kwargs):
         """Draw a bitmap or vector image
 
         Arguments:
@@ -1087,7 +1087,7 @@ class Context(object):
         draw = kwargs.pop('draw', self._autoplot)
         draw = kwargs.pop('plot', draw)
 
-        img = Image(path, x, y, width, height, data=data, **kwargs)
+        img = Image(*args, **kwargs)
         if draw:
             img.draw()
         return img

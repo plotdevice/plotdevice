@@ -25,65 +25,104 @@ __all__ = ("Image", 'ImageSequence', 'Movie', 'PDF', )
 
 class Image(EffectsMixin, TransformMixin, Grob):
     stateAttrs = ('_nsImage', 'x', 'y', 'width', 'height')
-    kwargs = ()
+    kwargs = ('data','width','height')
 
-    def __init__(self, path=None, x=0, y=0, width=None, height=None, image=None, data=None, **kwargs):
+    # def __init__(self, path, x=0, y=0, width=None, height=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Parameters:
-         - path: A path to a certain image on the local filesystem.
-         - x: Horizontal position.
-         - y: Vertical position.
-         - width: Maximum width. Images get scaled according to this factor.
-         - height: Maximum height. Images get scaled according to this factor.
-              If a width and height are both given, the smallest
-              of the two is chosen.
-         - alpha: transparency factor
-         - image: optionally, an Image or NSImage object.
-         - data: a stream of bytes of image data.
+        Positional parameters:
+          - path: the path to an image file, or an existing Image object
+          - x & y: position of top-left corner
+          - width & height: limit either or both dimensions to a maximum size
+              If a width and height are both given, the narrower dimension is used
+              If both are omitted default to full-size
+
+        Optional keyword parameters:
+          - data: a stream of bytes of image data. If the data begins with the
+                  characters "base64," the remainder of the stream will be
+                  decoded before loading
+          - alpha: the image opacity (0-1.0)
+          - blend: a blend mode name
+
+         Example usage:
+           x,y, w,h = 10,10, 200,200
+           Image("foo.png", x, y, w, h)
+           Image(<Image object>, x, y, height=h)
+           Image(x, y, data='<raw bytes from an image file>')
+           Image(x, y, data='base64,<b64-encoded bytes>')
         """
         super(Image, self).__init__(**kwargs)
 
-        if data is not None:
-            if not isinstance(data, NSData):
-                data = NSData.dataWithBytes_length_(data, len(data))
-            self._nsImage = NSImage.alloc().initWithData_(data)
-            if self._nsImage is None:
-                unreadable = "can't read image %r" % path
-                raise DeviceError(unreadable)
-            self._nsImage.setFlipped_(True)
-            self._nsImage.setCacheMode_(NSImageCacheNever)
-        elif image is not None:
-            if isinstance(image, NSImage):
+        # look for a path or Image as the first arg, or a `data` kwarg
+        args = list(args)
+        data = kwargs.get('data', None)
+        src = kwargs.get('path', None)
+        if args and not (src or data):
+            src = args.pop(0)
+
+        self.x, self.y = kwargs.get('x',0), kwargs.get('y',0)
+        self.width, self.height = kwargs.get('width',None), kwargs.get('height',None)
+        for attr, val in zip(['x','y','width','height'], args):
+            setattr(self, attr, val)
+
+        if data:
+            self._nsImage = self._lazyload(data=data)
+        elif src:
+            if isinstance(src, NSImage):
                 self._nsImage = image
                 self._nsImage.setFlipped_(True)
+            elif isinstance(src, Image):
+                _copy_attrs(src, self, self._state)
+            elif isinstance(src, basestring):
+                self._nsImage = self._lazyload(path=src)
             else:
-                wrongtype = "Don't know what to do with %s." % image
-                raise DeviceError(wrongtype)
+                invalid = "Not a valid image source: %r" % type(src)
+                raise DeviceError(invalid)
+
+    def _lazyload(self, path=None, data=None):
+        # loads either a `path` or `data` kwarg and returns an NSImage
+        # `path` should be the path of a valid image file
+        # `data` should be the bytestring contents of an image file, or base64-encoded
+        #        with the characters "base64," prepended to it
+        NSDataBase64DecodingIgnoreUnknownCharacters = 1
+        _cache = _ctx._imagecache
+
+        if data is not None:
+            # convert the str into an NSData (possibly decoding along the way)
+            if isinstance(data, str) and data.startswith('base64,'):
+                data = NSData.alloc().initWithBase64EncodedString_options_(data[7:], NSDataBase64DecodingIgnoreUnknownCharacters)
+            elif not isinstance(data, NSData):
+                data = NSData.dataWithBytes_length_(data, len(data))
+            key, mtime, err_info = data.hash(), None, type(data)
+
+            # return a cached image if possible...
+            if key in _cache:
+                return _cache[key][0]
+            # ...or load from the data
+            image = NSImage.alloc().initWithData_(data)
         elif path is not None:
-            if not os.path.exists(path):
+            # return a cached image if possible...
+            try:
+                path = NSString.stringByExpandingTildeInPath(path)
+                mtime = os.path.getmtime(path)
+                if path in _cache and _cache[path][1] >= mtime:
+                    return _cache[path][0]
+            except:
                 notfound = 'Image "%s" not found.' % path
                 raise DeviceError(notfound)
-            curtime = os.path.getmtime(path)
-            try:
-                image, lasttime = _ctx._imagecache[path]
-                if lasttime != curtime:
-                    image = None
-            except KeyError:
-                pass
-            if image is None:
-                image = NSImage.alloc().initWithContentsOfFile_(path)
-                if image is None:
-                    invalid = "Can't read image %r" % path
-                    raise DeviceError(invalid)
-                image.setFlipped_(True)
-                image.setCacheMode_(NSImageCacheNever)
-                _ctx._imagecache[path] = (image, curtime)
-            self._nsImage = image
+            key = err_info = path
+            # ...or load from the file
+            image = NSImage.alloc().initWithContentsOfFile_(path)
 
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
+        # if we wound up with a valid image, configure and cache the NSImage
+        # before returning it
+        if image is None:
+            invalid = "Doesn't look like image data in: %r" % err_info
+            raise DeviceError(invalid)
+        image.setFlipped_(True)
+        image.setCacheMode_(NSImageCacheNever)
+        _cache[key] = (image, mtime)
+        return _cache[key][0]
 
     @property
     def image(self):
@@ -118,9 +157,7 @@ class Image(EffectsMixin, TransformMixin, Grob):
         return transform.valueForKey_("outputImage")
 
     def copy(self):
-        new = self.__class__()
-        _copy_attrs(self, new, self._state)
-        return new
+        return self.__class__(self)
 
     @property
     def bounds(self):
@@ -176,9 +213,10 @@ class Image(EffectsMixin, TransformMixin, Grob):
     def _draw(self):
         """Draw an image on the given coordinates."""
 
-        with _ns_context():
+        with _ns_context() as ns_ctx:
             self._screen_transform.concat() # move the image into place via transforms
             with self.effects.applied():    # apply any blend/alpha/shadow effects
+                ns_ctx.setImageInterpolation_(NSImageInterpolationHigh)
                 bounds = ((0,0), self.size) # draw the image at (0,0)
                 self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
                 # NB: the nodebox source warns about quartz bugs triggered by drawing
