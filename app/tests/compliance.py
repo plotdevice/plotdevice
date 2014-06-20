@@ -9,7 +9,7 @@ def header():
     nostroke()
     text("This functional suite tests all the available PlotDevice functions." , 20, 80, width=275)
     fontsize(10)
-    
+
 def primitives(x, y):
     nostroke()
     rect(x, y, 50, 50)
@@ -28,7 +28,7 @@ def primitives(x, y):
     arrow(x+50, y+25, 50)
     x += 75
     arrow(x+60, y+25, 50, type=FORTYFIVE).rotate(-45)
-    
+
 def basictext(x, y):
     text("Hello", x, y)
 
@@ -63,7 +63,7 @@ def textblock(x, y):
         x += 80
 
     align(LEFT)
-    
+
 def greyscale(x, y):
     stroke(.9)
     colormode(RGB)
@@ -87,7 +87,7 @@ def alphas(x, y):
         text(str(i), x, y+62, 50)
         x += 60
     align(LEFT)
-    
+
 def _clr(x, y, *args):
     fill(args)
     rect(x, y, 50, 50)
@@ -109,7 +109,7 @@ def rgbColors(x, y):
     x = _clr(x, y, 1,0,1)
     x = _clr(x, y, 1,1,0)
     x = _clr(x, y, 1,1,1)
-    
+
 def cmykColors(x, y):
     stroke(.9)
     colormode(CMYK)
@@ -139,7 +139,7 @@ def hsbColors(x, y):
     x = _clr(x, y, 0,.2,1) # pastel
     x = _clr(x, y, .3,.2,1)
     x = _clr(x, y, .5,.2,1)
-    
+
     x = _clr(x, y, 0,0,1) # white
 
 def images(x, y):
@@ -149,12 +149,53 @@ def images(x, y):
     bmp = image("icon.png", x,y, width=w/2, plot=False) # half size
     plot(bmp)
     with translate(125,0), rotate(90):                  # half size, rotated
-        plot(bmp) 
+        plot(bmp)
     with translate(259,0), rotate(180), scale(2.0):     # doubled (back to full size), flipped
-        plot(bmp) 
+        plot(bmp)
     with translate(375,0), scale(2.0), shadow(.8, blur=10): # doubled (back to full size), dropshadowed
-        plot(bmp) 
-    
+        plot(bmp)
+
+def classicpaths():
+    beginpath(165, 140)
+    lineto(140, 200)
+    curveto(160, 250, 160, 200, 190, 200)
+    p = endpath().copy()
+
+    st = stroke()
+    fl = fill()
+    sw = strokewidth()
+    stroke(0)
+    nofill()
+    strokewidth(2)
+    push()
+    translate(60,0)
+    for pt in p:
+        pt.x += 60
+        pt.ctrl1.x += 60
+        pt.ctrl2.x += 60
+    drawpath(p)
+    pop()
+    fill(fl)
+    stroke(st)
+    strokewidth(sw)
+
+def bezierpaths():
+    # new Paths api
+    with transform():
+        translate(120,0)
+        with bezier(165, 140, strokewidth=4, stroke=.8) as p:
+            lineto(140, 200)
+            curveto(160, 250, 160, 200, 190, 200)
+
+        p = p.copy()
+        translate(60,0)
+        for pt in p:
+            pt.x += 60
+            pt.ctrl1.x += 60
+            pt.ctrl2.x += 60
+        bezier(p, stroke=None, fill='red')
+        bezier(p, strokewidth=2, stroke='#a00')
+
 def blendModes(x, y):
     modes = ['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'difference', 'exclusion', 'color-dodge', 'color-burn', 'soft-light', 'hard-light', 'hue', 'saturation', 'color', 'luminosity' ]
     dim = 90
@@ -258,7 +299,7 @@ translate(0, 140)
 marker(140)
 nostroke()
 text("Basic text", 20, 165)
-basictext(140, 165)     
+basictext(140, 165)
 
 # Aligned Text
 translate(0, 140)
@@ -289,7 +330,6 @@ text("Rotated text blocks", 20, 165)
 with rotate(45):
     textblock(140, 165)
 
-
 # Outlined text
 translate(0, 140)
 marker(140)
@@ -306,44 +346,10 @@ images(140,165)
 # classic Paths api
 translate(0, 140)
 marker(140)
+text("Paths", 20, 165)
 with stroke(.75), fill(0):
-    text("Paths", 20, 165)
-    beginpath(165, 140)
-    lineto(140, 200)
-    curveto(160, 250, 160, 200, 190, 200)
-    p = endpath().copy()
-    
-    stroke(0)
-    nofill()
-    sw = strokewidth()
-    strokewidth(2)
-    push()
-    translate(60,0)
-    for pt in p:
-        pt.x += 60
-        pt.ctrl1.x += 60
-        pt.ctrl2.x += 60
-    drawpath(p)
-    pop()
-    strokewidth(sw)
-
-# new Paths api
-with transform():
-    translate(120,0)
-    with bezier(165, 140, strokewidth=4, stroke=.8) as p:
-        lineto(140, 200)
-        curveto(160, 250, 160, 200, 190, 200)
-    
-    p = p.copy()
-    translate(60,0)
-    for pt in p:
-        pt.x += 60
-        pt.ctrl1.x += 60
-        pt.ctrl2.x += 60
-    bezier(p, stroke=None, fill='red')
-    bezier(p, strokewidth=2, stroke='#a00')
-    
-
+    classicpaths()
+    bezierpaths()
 
 # Blend modes
 translate(0, 140)
@@ -351,5 +357,3 @@ marker(140)
 fill(0)
 text("Blend modes", 20, 165)
 blendModes(140,165)
-
-
