@@ -302,19 +302,25 @@ CQ
                                                 <action selector="editorAction:" target="-1" id="onZ-bq-h6D"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Shift Upward" keyEquivalent="" id="ide-G8-bu2">
-                                            <modifierMask key="keyEquivalentModifierMask" option="YES"/>
+                                        <menuItem title="Shift Upward" tag="7" keyEquivalent="" id="ide-G8-bu2">
+                                            <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="7MQ-SS-maJ"/>
+                                            </connections>
                                         </menuItem>
-                                        <menuItem title="Shift Downward" keyEquivalent="" id="cVe-PP-big">
-                                            <modifierMask key="keyEquivalentModifierMask" option="YES"/>
+                                        <menuItem title="Shift Downward" tag="8" keyEquivalent="" id="cVe-PP-big">
+                                            <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="bQb-hH-de0"/>
+                                            </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="OSl-8q-kaa"/>
-                                        <menuItem title="Toggle Comment" tag="7" keyEquivalent="/" id="398">
+                                        <menuItem title="Toggle Comment" tag="9" keyEquivalent="/" id="398">
                                             <connections>
                                                 <action selector="editorAction:" target="-1" id="qTQ-Bb-wDW"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Goto to Line..." tag="8" keyEquivalent="g" id="389">
+                                        <menuItem title="Goto to Line..." keyEquivalent="g" id="389">
                                             <modifierMask key="keyEquivalentModifierMask" control="YES"/>
                                             <connections>
                                                 <action selector="jumpToLine:" target="-1" id="LeI-CV-GrA"/>

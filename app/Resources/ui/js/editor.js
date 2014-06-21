@@ -107,7 +107,10 @@ var Editor = function(elt){
             sess.setTabSize(4);
             sess.setUseSoftTabs(true);
             sess.setUndoManager(undo);
-            sess.setUndoSelect(false);
+
+            // it would be nice if this didn't *select* the undo segment, but did *scroll*
+            // the viewport to the cursor position. ace.js's default behavior is all or none
+            // sess.setUndoSelect(false);
 
             // being able to switch between light and dark scrollbars also means being
             // responsible for their hide/show behavior, sadly....

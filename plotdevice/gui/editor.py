@@ -206,8 +206,9 @@ class EditorView(NSView):
 
     @objc.IBAction
     def editorAction_(self, sender):
-        cmds = ['selectline', 'splitIntoLines', 'addCursorAboveSkipCurrent', 'addCursorBelowSkipCurrent', 'centerselection', # Edit menu
-                'blockindent', 'blockoutdent', 'togglecomment'] # Python menu
+        # map the tags in the nib's menu items to ace.js commandnames
+        cmds = ['selectline', 'splitIntoLines', 'addCursorAboveSkipCurrent', 'addCursorBelowSkipCurrent', 'centerselection',
+                'blockindent', 'blockoutdent', 'movelinesup', 'movelinesdown', 'togglecomment']
         self.js('editor.exec', args(cmds[sender.tag()]))
 
     @objc.IBAction

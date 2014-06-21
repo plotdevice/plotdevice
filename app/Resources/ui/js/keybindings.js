@@ -43,7 +43,17 @@ NODEBOX_KEYBINDINGS=[
             })
         }
     },{
-        name: "gotoline", // knock out the binding for the javascript-dialog version
+        name: "movelinesup",
+        bindKey: "Command-Option-Up",
+        exec: function(editor) { editor.moveLinesUp(); },
+        scrollIntoView: "cursor"
+    }, {
+        name: "movelinesdown",
+        bindKey: "Command-Option-Down",
+        exec: function(editor) { editor.moveLinesDown(); },
+        scrollIntoView: "cursor"
+    }, {
+       name: "gotoline", // knock out the binding for the javascript-dialog version
         // bindKey: "Command-J",
         exec: function(editor) {},
         readOnly: true
