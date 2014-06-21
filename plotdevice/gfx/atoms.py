@@ -287,36 +287,53 @@ class PenMixin(Grob):
         self._penstyle = self._penstyle._replace(dash=steps)
     dash = dashstyle = property(_get_dashstyle, _set_dashstyle)
 
+from plotdevice import __MAGIC as DEFAULT
 class StyleMixin(Grob):
     """Mixin class for text-styling support.
-    Adds the stylesheet and fill attributes to the class."""
+    Adds the stylesheet, fill, and style attributes to the class."""
     ctxAttrs = ('_stylesheet', '_typestyle', '_fillcolor',)
+    stateAttrs = ('_style',)
 
     def __init__(self, **kwargs):
-        from .typography import Stylesheet
+        from .typography import Stylesheet, LEFT
+
         super(StyleMixin, self).__init__(**kwargs)
         if 'fill' in kwargs:
             self.fill = kwargs['fill'] # override color
+        self.style = kwargs.get('style', True)
 
-        spec_args = {k:v for k,v in kwargs.items() if k in Stylesheet.kwargs}
-        if not isinstance(spec_args.get('width',''), basestring):
-            del spec_args['width']
-        self._override = Stylesheet._spec(**spec_args) # inline style params
+        # ignore `width` if it's a column-width rather than typeface width
+        if not isinstance(kwargs.get('width', ''), basestring):
+            del kwargs['width']
+
+        # combine ctx state and kwargs to create a DEFAULT style
+        baseline = {"fill":self._fillcolor}        # fill() setting
+        baseline.update(self._typestyle._asdict()) # font() settings
+        spec = {k:v for k,v in kwargs.items() if k in Stylesheet.kwargs}
+        baseline.update(Stylesheet._spec(**spec))  # inline style params
+        self._stylesheet._styles[DEFAULT] = baseline
+
 
     @property
     def stylesheet(self):
-        """An Effect object merging inherited alpha/blend/shadow with local overrides"""
-        merged = self._stylesheet.copy()
-        merged._baseline = self._typestyle._asdict()
-        merged._baseline['fill'] = self.fill
-        merged._override = self._override
-        return merged
+        return self._stylesheet
 
     def _get_fill(self):
         return self._fillcolor
     def _set_fill(self, *args):
         self._fillcolor = Color(*args)
+        self._stylesheet._styles[DEFAULT]['fill'] = self._fillcolor
     fill = property(_get_fill, _set_fill)
+
+    def _get_style(self):
+        return self._style
+    def _set_style(self, style):
+        if not (style in self.stylesheet or isinstance(style, bool)):
+            badstyle = "Stylesheet doesn't have a definition for style: %s", style
+            raise DeviceError(badstyle)
+        self._style = style
+    style = property(_get_style, _set_style)
+
 
 class Variable(object):
     def __init__(self, name, type, default=None, min=0, max=100, value=None):

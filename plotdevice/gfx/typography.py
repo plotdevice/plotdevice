@@ -57,7 +57,6 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
 
     def __init__(self, text, *args, **kwargs):
-        self._style = kwargs.pop('style', None)
         super(Text, self).__init__(**kwargs)
 
         if isinstance(text, Text):
@@ -68,6 +67,10 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             raise DeviceError("text() must be called with a string as its first argument")
         for attr, val in zip(['x','y','width','height'], args):
             setattr(self, attr, val)
+
+        # let _screen_transform handle alignment for single-line text
+        if self.width is None:
+            self.stylesheet._styles[DEFAULT]['align'] = LEFT
 
         self.text = unicode(text)
 
@@ -108,7 +111,6 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
                 x -= w
             elif self._typestyle.align == CENTER:
                 x -= w/2.0
-
         # accumulate transformations in a fresh matrix
         xf = Transform()
 
@@ -145,13 +147,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     @property
     def _spool(self):
         if not hasattr(self, '_typesetter'):
-            sheet = self.stylesheet
-            if self.width is None: # handle alignment in the transform for non-broken lines
-                sheet._baseline['align'] = LEFT
-                # should also iterate through styles and overwrite any alignment defs
-                # ...
-
-            attrib_str = sheet._apply(self.text, self._style)
+            attrib_str = self.stylesheet._apply(self.text, self.style)
             self._typesetter = Typesetter(attrib_str, self.width, self.height)
         return self._typesetter
 
@@ -171,9 +167,9 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     def metrics(self):
         return self._spool.typeblock.size
 
-
 class Stylesheet(object):
-    kwargs = ('family','size','leading','weight','width','variant','italic','heavier','lighter','fill','face','fontname','fontsize','lineheight')
+    kwargs = ('family','size','leading','weight','width','variant','italic','fill','face',
+              'fontname','fontsize','lineheight')
 
     def __init__(self, styles=None):
         super(Stylesheet, self).__init__()
@@ -231,29 +227,40 @@ class Stylesheet(object):
             self._styles[name] = spec
         return self[name]
 
-    def _apply(self, words, style=None):
+    def _apply(self, words, style):
         """Convert a string to an attributed string, either based on inline tags or the `style` arg"""
 
-        # if the string begins and ends with a root element, treat it as xml...
+        # if the string begins and ends with a root element, treat it as xml
+        # unless called w/ text(…, style=False)
         is_xml = bool(re.match(r'<([^>]*)>.*</\1>$', words, re.S))
 
-        if is_xml and style is not False: # ...unless called w/ text('...', style=False)
+        if style and is_xml:
             # find any tagged regions that need styling
             parser = XMLParser(words)
 
-            # generate a Font for each unique cascade of style tags
-            attrs = {seq:self._cascade(*seq) for seq in sorted(parser.regions)}
-
-            # convert the Fonts into attr dicts then apply them to the runs found in the parse
+            # start building the display-string (with all the tags now removed)
             astr = NSMutableAttributedString.alloc().initWithString_(parser.text)
-            for cascade, runs in parser.regions.items():
-                style = attrs[cascade]
-                for rng in runs:
-                    astr.setAttributes_range_(style, rng)
+
+            # apply formatting (either based on the style kwarg, or by mapping tags to styles)
+            if style in self._styles:
+                # use specified style for entire string
+                attrs = self._cascade(DEFAULT, style)
+                astr.setAttributes_range_(attrs, (0,astr.length()))
+            else:
+                # generate the proper `ns' font attrs for each unique cascade of xml tags
+                attrs = {seq:self._cascade(*seq) for seq in sorted(parser.regions)}
+
+                # apply the attributes to the runs found by the parser
+                for cascade, runs in parser.regions.items():
+                    style = attrs[cascade]
+                    for rng in runs:
+                        astr.setAttributes_range_(style, rng)
+
         elif style in self._styles:
-            # user specified a style name
+            # don't parse as xml, use specified style name
             attrs = self._cascade(DEFAULT, style)
             astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
+
         else:
             # don't parse as xml, just apply the current font(), align(), and fill()
             attrs = self._cascade(DEFAULT)
@@ -265,14 +272,11 @@ class Stylesheet(object):
         """Apply the listed styles in order and return nsattibutedstring attrs"""
 
         # use the inherited context settings as a baseline spec
-        spec = dict(self._baseline)
+        spec = dict(self._styles[DEFAULT])
 
         # layer the styles to generate a final font and color
         for tag in styles:
             spec.update(self._styles.get(tag,{}))
-
-        # let any spec-ish args passed in the text() call get final say
-        spec.update(self._override)
 
         # assign a font and color based on the coalesced spec
         color = Color(spec.pop('fill')).nsColor
@@ -436,33 +440,34 @@ class XMLParser(object):
     _log = 0
 
     def __init__(self, txt):
+        # configure the parsing machinery/callbacks
         p = expat.ParserCreate()
         p.StartElementHandler = self._enter
         p.EndElementHandler = self._leave
         p.CharacterDataHandler = self._chars
         self._expat = p
-        if isinstance(txt, unicode):
-            txt = txt.encode('utf-8')
-        wrap = "<%s>" % ">%s</".join([DEFAULT]*2)
-        self.xml = wrap % txt
-        self.text = None
+
+        # set up state attrs to record the parse results
+        self.stack = []
+        self.cursor = 0
+        self.regions = ddict(list)
+        self.body = []
+
+        try:
+            # parse the input xml string
+            if isinstance(txt, unicode):
+                txt = txt.encode('utf-8')
+            wrap = "<%s>" % ">%s</".join([DEFAULT]*2)
+            self._expat.Parse(wrap%txt, True)
+        except expat.ExpatError, e:
+            # go a little overboard providing context for syntax errors
+            line = self.xml.split('\n')[e.lineno-1]
+            self._expat_error(e, line)
 
     @property
-    def regions(self):
-        if self.text is None:
-            try:
-                self.stack = []
-                self.cursor = 0
-                self.runs = ddict(list)
-                self.body = []
-                self._expat.Parse(self.xml, True)
-            except expat.ExpatError, e:
-                # go a little overboard providing context for syntax errors
-                line = self.xml.split('\n')[e.lineno-1]
-                self._expat_error(e, line)
-            self.text = "".join(self.body)
-
-        return self.runs
+    def text(self):
+        # returns the processed string (with all markup removed)
+        return "".join(self.body)
 
     def _expat_error(self, e, line):
         measure = 80
@@ -517,7 +522,7 @@ class XMLParser(object):
         self.log(u'</%s>'%(name), indent=-1)
 
     def _chars(self, data):
-        self.runs[tuple(self.stack)].append(tuple([self.cursor, len(data)]))
+        self.regions[tuple(self.stack)].append(tuple([self.cursor, len(data)]))
         self.cursor += len(data)
         self.body.append(data)
         self.log(u'"%s"'%(data))

@@ -1008,24 +1008,19 @@ class Context(object):
               family, size, leading, weight, variant, italic, heavier, lighter
           - the `fill` argument can override the color inherited from the graphics state
         """
-        draw = kwargs.pop('draw', self._autoplot)
-        draw = kwargs.pop('plot', draw)
         outline = kwargs.pop('outline', False)
+        path_args = {k:v for k,v in kwargs.items() if k in Bezier.kwargs}
+        text_args = {k:v for k,v in kwargs.items() if k in Stylesheet.kwargs+Text.kwargs}
 
-        txt = Text(txt, *args, **kwargs)
-        if self._path is None and not outline:
-            # treat as Text
-            if draw:
+        txt = Text(txt, *args, **text_args)
+        if outline:
+            with self._active_path(path_args) as p:
+                p.extend(txt.path)
+            return p
+        else:
+            if kwargs.get('draw', kwargs.get('plot', self._autoplot)):
               txt.draw()
             return txt
-        else:
-            # treat as Bezier
-            kwargs['plot'] = draw
-            kwargs.pop('style',None)
-            with self._active_path(kwargs) as p:
-                p.extend(txt.path)
-            _copy_attrs(txt, p, {'fill', 'stroke', 'nib'}.intersection(kwargs))
-            return p
 
     def textpath(self, txt, x, y, width=None, height=None, style=None, **kwargs):
         """Format a string with the current font() settings and return it as a Bezier
