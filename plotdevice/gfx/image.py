@@ -25,7 +25,7 @@ __all__ = ("Image", 'ImageSequence', 'Movie', 'PDF', )
 
 class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
     stateAttrs = ('_nsImage',)
-    kwargs = ('data','width','height')
+    opts = ('data',)
 
     # def __init__(self, path, x=0, y=0, width=None, height=None, **kwargs):
     def __init__(self, *args, **kwargs):

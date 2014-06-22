@@ -1009,8 +1009,8 @@ class Context(object):
           - the `fill` argument can override the color inherited from the graphics state
         """
         outline = kwargs.pop('outline', False)
-        path_args = {k:v for k,v in kwargs.items() if k in Bezier.kwargs}
-        text_args = {k:v for k,v in kwargs.items() if k in Stylesheet.kwargs+Text.kwargs}
+        path_args = {k:v for k,v in kwargs.items() if k in Bezier._opts}
+        text_args = {k:v for k,v in kwargs.items() if k in Text._opts}
 
         txt = Text(txt, *args, **text_args)
         if outline:

@@ -54,7 +54,6 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     # from BoundsMixin:    x y width height
     # from StyleMixin:     stylesheet fill
     stateAttrs = ('_style', 'text')
-    kwargs = ('fill', 'font', 'fontsize', 'align', 'lineheight', 'style')
 
     def __init__(self, text, *args, **kwargs):
         super(Text, self).__init__(**kwargs)

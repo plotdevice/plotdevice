@@ -2,7 +2,7 @@
 from AppKit import *
 from Foundation import *
 from Quartz import *
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from plotdevice import DeviceError
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes
@@ -34,14 +34,35 @@ KEY_ESC = 53
 
 ### Graphic object inheritance hierarchy w/ mixins to merge local and context state ###
 
+class Bequest(type):
+    """Metaclass for grobs that walks through the inheritance hierarchy building up three tuples:
+
+        _inherit: attrs to copy from the _ctx when creating a new grob
+        _state:   attrs to copy from instance to instance when making a copy
+        _opts:    valid keyword arguments (for setting inline styles)
+
+    The tuples are added as class variables and can be accessed as attributes on any
+    instance of Bezier, Image, or Text.
+    """
+
+    def __init__(cls, name, bases, dct):
+        super(Bequest, cls).__init__(name, bases, dct)
+        if not (name=='Grob' or name.endswith('Mixin')):
+            info = defaultdict(set)
+            for typ in (cls,)+bases:
+                info['_inherit'].update(getattr(typ,'ctxAttrs',[]))
+                info['_state'].update(getattr(typ,'stateAttrs',[]))
+                info['_opts'].update(getattr(typ,'opts',[]))
+            info['_state'].update(info['_inherit'])
+            for attr, val in info.items():
+                setattr(cls, attr, val)
+
 class Grob(object):
     """A GRaphic OBject is the base class for all drawing primitives."""
+    __metaclass__ = Bequest
 
     def __init__(self, **kwargs):
-        # _inherit:  tuple of attrs to copy from the _ctx
-        # _state:    tuple of attrs to copy when cloning a grob
-        self._inherit, self._state = _merge_state(self)
-        self.inherit()
+        self.inherit() # copy over every _ctx attribute we're interested in
 
     def draw(self):
         """Adds the grob to the canvas. This will result in a _draw later on, when the
@@ -55,7 +76,7 @@ class Grob(object):
         return self.__class__(self)
 
     def inherit(self, src=None):
-        """Fills in unspecified attributes with the graphics context's state"""
+        """Fills in attributes drawn from the _ctx (at init time) or another grob (to make a copy)."""
         if src is None:
             src, attrs = _ctx, self._inherit
         else:
@@ -63,36 +84,23 @@ class Grob(object):
         _copy_attrs(src, self, attrs)
 
     @classmethod
-    def validate(self, kwargs):
+    def validate(cls, kwargs):
         """Sanity check a potential set of constructor kwargs"""
-        remaining = [arg for arg in kwargs.keys() if arg not in self.kwargs]
+        remaining = [arg for arg in kwargs.keys() if arg not in cls._opts]
         if remaining:
             unknown = "Unknown argument(s) '%s'" % ", ".join(remaining)
             raise DeviceError(unknown)
-
-# memoize walking the class hierarchy for inheritance information
-def _merge_state(obj, types={}):
-    """Returns a 2-tuple with inherited- and state-var names"""
-    t = type(obj)
-    if t not in types:
-        ctx, state = set(), set()
-        for cls in obj.__class__.__mro__:
-            ctx.update(getattr(cls,'ctxAttrs',[]))
-            state.update(getattr(cls,'stateAttrs',[]))
-        state.update(ctx)
-        types[t] = (tuple(sorted(ctx)), tuple(sorted(state)))
-    return types[t]
-
 
 class EffectsMixin(Grob):
     """Mixin class for transparency layer support.
     Adds the alpha, blend, and shadow properties to the class."""
     ctxAttrs = ('_effects',)
+    opts = ('alpha','blend','shadow')
 
     def __init__(self, **kwargs):
         from .effects import Effect
         super(EffectsMixin, self).__init__(**kwargs)
-        for eff in [k for k in kwargs.keys() if k in Effect.kwargs]:
+        for eff in [k for k in kwargs.keys() if k in EffectsMixin.opts]:
             setattr(self, eff, kwargs[eff])
 
     @property
@@ -124,6 +132,7 @@ class BoundsMixin(Grob):
     """Mixin class for dimensions.
     Adds x, y, width, & height properties to the class."""
     stateAttrs = ('_bounds',)
+    opts = ('x','y','w','h','width','height')
 
     def __init__(self, **kwargs):
         super(BoundsMixin, self).__init__(**kwargs)
@@ -171,6 +180,7 @@ class ColorMixin(Grob):
     """Mixin class for color support.
     Adds the fill & stroke properties to the class."""
     ctxAttrs = ('_fillcolor', '_strokecolor')
+    opts = ('fill','stroke',)
 
     def __init__(self, **kwargs):
         super(ColorMixin, self).__init__(**kwargs)
@@ -239,6 +249,7 @@ class PenMixin(Grob):
     """Mixin class for linestyle support.
     Adds the _capstyle, _joinstyle, _dashstyle, and _strokewidth attributes to the class."""
     ctxAttrs = ('_penstyle', )
+    opts = ('nib','cap','join','dash','strokewidth','capstyle','joinstyle','dashstyle',)
 
     def __init__(self, **kwargs):
         super(PenMixin, self).__init__(**kwargs)
@@ -290,26 +301,26 @@ class StyleMixin(Grob):
     Adds the stylesheet, fill, and style attributes to the class."""
     ctxAttrs = ('_stylesheet', '_typestyle', '_fillcolor',)
     stateAttrs = ('_style',)
+    opts = ('fill','family','size','leading','weight','width','variant','italic','fill','face',
+              'fontname','fontsize','lineheight')
 
     def __init__(self, **kwargs):
-        from .typography import Stylesheet, LEFT
-
         super(StyleMixin, self).__init__(**kwargs)
-        if 'fill' in kwargs:
-            self.fill = kwargs['fill'] # override color
-        self.style = kwargs.get('style', True)
 
         # ignore `width` if it's a column-width rather than typeface width
         if not isinstance(kwargs.get('width', ''), basestring):
             del kwargs['width']
 
         # combine ctx state and kwargs to create a DEFAULT style
-        baseline = {"fill":self._fillcolor}        # fill() setting
-        baseline.update(self._typestyle._asdict()) # font() settings
-        spec = {k:v for k,v in kwargs.items() if k in Stylesheet.kwargs}
+        from .typography import Stylesheet
+        spec = {k:v for k,v in kwargs.items() if k in StyleMixin.opts}
+        baseline = self._typestyle._asdict()       # font() settings
         baseline.update(Stylesheet._spec(**spec))  # inline style params
         self._stylesheet._styles[DEFAULT] = baseline
 
+        # color & style overrides
+        self.fill = kwargs.get('fill', self._fillcolor)
+        self.style = kwargs.get('style', True)
 
     @property
     def stylesheet(self):
