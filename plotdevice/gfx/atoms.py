@@ -100,8 +100,9 @@ class EffectsMixin(Grob):
     def __init__(self, **kwargs):
         from .effects import Effect
         super(EffectsMixin, self).__init__(**kwargs)
-        for eff in [k for k in kwargs.keys() if k in EffectsMixin.opts]:
-            setattr(self, eff, kwargs[eff])
+        for attr in EffectsMixin.opts:
+            if attr in kwargs:
+                setattr(self, attr, kwargs[attr])
 
     @property
     def effects(self):
@@ -184,9 +185,9 @@ class ColorMixin(Grob):
 
     def __init__(self, **kwargs):
         super(ColorMixin, self).__init__(**kwargs)
-        for ink in 'fill', 'stroke':
-            if ink in kwargs:
-                setattr(self, '_%scolor'%ink, Color(kwargs[ink]))
+        for attr in ColorMixin.opts:
+            if attr in kwargs:
+                setattr(self, attr, kwargs[attr])
 
     def _get_fill(self):
         return self._fillcolor
