@@ -45,12 +45,11 @@ FORTYFIVE = "fortyfive"
 class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     """A Bezier provides a wrapper around NSBezierPath."""
     stateAttrs = ('_nsBezierPath',)
-    kwargs = ('fill', 'stroke', 'strokewidth', 'capstyle', 'joinstyle', 'nib', 'cap', 'join', 'dash', 'alpha', 'blend', 'shadow')
 
     def __init__(self, path=None, immediate=False, **kwargs):
         super(Bezier, self).__init__(**kwargs)
-        self._segment_cache = {}
-        self._finished = False
+        self._segment_cache = {} # used by pathmatics
+        self._finished = False # flag to prevent reentrant `with bezier` situations
         self._fulcrum = None # centerpoint (set only for primitives)
 
         # path arg might contain a list of point tuples, a bezier to copy, or a raw
@@ -73,10 +72,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             badpath = "Don't know what to do with %s." % path
             raise DeviceError(badpath)
 
-        # use any plotstyle settings in kwargs (the rest will be inherited)
-        for attr, val in kwargs.items():
-            if attr in Bezier.kwargs:
-                setattr(self, attr, _copy_attr(val))
+        # decide what needs to be done at the end of the `with` context
         self._autoclose = kwargs.get('close', False)
         self._autodraw = kwargs.get('draw', False)
 
@@ -524,9 +520,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def xor(self, other, flatness=0.6):
         return Bezier(pathmatics.xor(self._nsBezierPath, other._nsBezierPath, flatness))
 
-class BezierPath(Bezier):
-    pass # NodeBox compat...
-
 class Curve(object):
 
     def __init__(self, cmd=None, pts=None):
@@ -589,7 +582,6 @@ class Curve(object):
     def coordinates(self, distance, angle):
         return Point(self.x, self.y).coordinates(distance, angle)
 
-
-class PathElement(Curve):
-    pass # NodeBox compat...
-
+# NodeBox compat...
+BezierPath = Bezier
+PathElement = Curve

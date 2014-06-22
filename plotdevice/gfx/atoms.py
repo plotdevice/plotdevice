@@ -242,12 +242,9 @@ class PenMixin(Grob):
 
     def __init__(self, **kwargs):
         super(PenMixin, self).__init__(**kwargs)
-        aliases = dict(nib='strokewidth', cap='capstyle', join='joinstyle', dash='dashstyle')
-        for attr, alias in aliases.items():
-            try:
-                setattr(self, attr, kwargs.get(attr, kwargs[alias]))
-            except KeyError:
-                pass
+        for attr, val in kwargs.items():
+            if attr in PenMixin.opts:
+                setattr(self, attr, val)
 
     def _get_strokewidth(self):
         return self._penstyle.nib
