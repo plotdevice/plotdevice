@@ -577,6 +577,10 @@ CQ
             </connections>
         </menu>
         <customObject id="277" userLabel="Font Manager" customClass="NSFontManager"/>
-        <customObject id="472" userLabel="PlotDeviceAppDelegate" customClass="PlotDeviceAppDelegate"/>
+        <customObject id="472" userLabel="PlotDeviceAppDelegate" customClass="PlotDeviceAppDelegate">
+            <connections>
+                <outlet property="examplesMenu" destination="z3k-AC-imp" id="u4g-4w-RfF"/>
+            </connections>
+        </customObject>
     </objects>
 </document>

@@ -14,7 +14,7 @@ LIB_DIR_README = """"You can put PlotDevice libraries In this directory to make 
 """
 
 class PlotDeviceAppDelegate(NSObject):
-    examplesMenu = None
+    examplesMenu = objc.IBOutlet()
 
     def awakeFromNib(self):
         self._prefsController = None
@@ -28,7 +28,6 @@ class PlotDeviceAppDelegate(NSObject):
                 f.close()
         except OSError: pass
         except IOError: pass
-        self.examplesMenu = NSApp().mainMenu().itemWithTitle_('Examples')
 
     def applicationDidFinishLaunching_(self, note):
         mm=NSApp().mainMenu()
