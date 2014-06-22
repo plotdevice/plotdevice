@@ -82,13 +82,15 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             self._autofinish()
 
     def __enter__(self):
-        self._rollback = _ctx._path
+        self._rollback = {attr:getattr(_ctx,attr) for attr in ['_path','_transform','_transformmode']}
         _ctx._path = self
+        _ctx._transform = Transform(_ctx._transform)
         return self
 
     def __exit__(self, type, value, tb):
         self._autofinish()
-        _ctx._path = self._rollback
+        for attr, val in self._rollback.items():
+            setattr(_ctx, attr, val)
 
     def _autofinish(self):
         if self._autoclose:

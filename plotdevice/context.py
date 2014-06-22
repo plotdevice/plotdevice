@@ -232,7 +232,8 @@ class Context(object):
         if self._path is not None:
             # if a bezier is being built in a `with` block, add curves to it, but
             # ignore kwargs since the parent bezier's styles apply to all lines drawn
-            self._path.extend(p)
+            xf = p._screen_transform
+            self._path.extend(xf.apply(p))
         elif draw:
             # if this is a one-off primitive, draw it depending on the kwargs & state
             p.draw()
