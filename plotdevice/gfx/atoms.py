@@ -83,6 +83,18 @@ class Grob(object):
             attrs = set(src._state).intersection(self._state)
         _copy_attrs(src, self, attrs)
 
+    def update(self, mapping=None, **kwargs):
+        """Assign new values to one or more properties
+
+        Either call with keyword arguments of the same name as the object properties you
+        wish to change, or with a dictionary of property names and values as the sole
+        positional argument.
+        """
+        if isinstance(mapping, dict):
+            kwargs = mapping
+        for attr, val in kwargs.items():
+            setattr(self, attr, val)
+
     @classmethod
     def validate(cls, kwargs):
         """Sanity check a potential set of constructor kwargs"""
