@@ -197,12 +197,17 @@ class Context(object):
         draw = kwargs.pop('draw', self._autoplot)
         draw = kwargs.pop('plot', draw)
         kwargs['draw'] = draw
-        if isinstance(x, (Bezier, list, tuple)):
-            # if a list of point tuples or a Bezier is the first arg, there's
-            # no need to open a context (since the path is already defined). Instead
-            # handle the path immediately (passing along styles and `draw` kwarg)
-            kwargs.setdefault('close', False)
+
+        if isinstance(x, (list, tuple)):
+            # if the first arg is an iterable of point tuples, there's no need to open a context
+            # since the path is already fully-specified. Instead handle the path immediately
+            # (passing along styles and `draw` kwarg)
             return Bezier(path=x, immediate=True, **kwargs)
+        elif isinstance(x, Bezier):
+            # when called with an existing Bezier object, only pass the underlying NSBezierPath.
+            # otherwise the constructor would make an identical copy of it rather than inheriting
+            # from the current graphics state.
+            return Bezier(path=x._nsBezierPath, immediate=True, **kwargs)
         else:
             # otherwise start a new path with the presumption that it will be populated
             # in a `with` block or by adding points manually. begins with a moveto

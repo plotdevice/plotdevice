@@ -49,7 +49,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def __init__(self, path=None, immediate=False, **kwargs):
         super(Bezier, self).__init__(**kwargs)
         self._segment_cache = {} # used by pathmatics
-        self._finished = False # flag to prevent reentrant `with bezier` situations
         self._fulcrum = None # centerpoint (set only for primitives)
 
         # path arg might contain a list of point tuples, a bezier to copy, or a raw
@@ -83,27 +82,19 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             self._autofinish()
 
     def __enter__(self):
-        if self._finished:
-            reentrant = "Bezier already complete. Only use `with bezier()` when defining a path using moveto, lineto, etc."
-            raise DeviceError(reentrant)
-        elif _ctx._path is not None:
-            recursive = "Already defining a bezier path. Don't nest `with bezier()` blocks"
-            raise DeviceError(recursive)
-        _ctx._saveContext()
+        self._rollback = _ctx._path
         _ctx._path = self
         return self
 
     def __exit__(self, type, value, tb):
         self._autofinish()
-        _ctx._path = None
-        _ctx._restoreContext()
+        _ctx._path = self._rollback
 
     def _autofinish(self):
         if self._autoclose:
             self.closepath()
         if self._autodraw:
             self.draw()
-        self._finished = True
 
     @property
     def path(self):
