@@ -3,7 +3,7 @@ import warnings
 from AppKit import *
 from Foundation import *
 from Quartz import *
-from math import pi, sin, cos
+from math import pi, sin, cos, sqrt
 
 from plotdevice import DeviceError
 from . import _cg_context
@@ -222,8 +222,23 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
     ### Radial shapes (center + radius) ###
 
-    def poly(self, x, y, radius, sides=3):
-        if sides < 3:
+    def poly(self, x, y, radius, sides=4, points=None):
+        # if `points` is defined, draw a regularized star, otherwise draw
+        # a regular polygon with the given number of `sides`.
+        if points>4:
+            inner = radius * cos(pi*2/points)/cos(pi/points)
+            return self.star(x, y, points, inner, radius)
+        elif points is not None:
+            # for 3-4 `points`, treat stars like a sided n-gon
+            sides = points
+
+        # special-case radius interpretation for squares
+        if sides == 4:
+            # draw with sides of 2*r (this seems less surprising than drawing a
+            # square *inside* a circle at the given radius and winding up with
+            # sides that are weird fractions of the radius)
+            radius *= sqrt(2.0)
+        elif sides < 3:
             badpoly = 'polygons must have at least 3 points'
             raise DeviceError(badpoly)
 
@@ -261,15 +276,15 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         self._fulcrum = Point(x,y)
 
     def star(self, x, y, points=20, outer=100, inner=None):
-        # if inner radius is unspecified, default to a regularized star
+        # if inner radius is unspecified, default to half-size
         if inner is None:
-            inner = outer * cos(pi*2/points)/cos(pi/points)
+            inner = outer * 0.5
 
-        self._nsBezierPath.moveToPoint_( (x, y-outer) )
+        self._nsBezierPath.moveToPoint_( (x, y+outer) )
         for i in range(1, int(2 * points)):
           angle = i * pi / points
           radius = inner if i % 2 else outer
-          pt = (x+radius*sin(angle), y-radius*cos(angle))
+          pt = (x+radius*sin(angle), y+radius*cos(angle))
           self._nsBezierPath.lineToPoint_(pt)
         self.closepath()
 

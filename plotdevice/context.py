@@ -329,14 +329,17 @@ class Context(object):
             p.line(x1, y1, x2, y2, ccw=ccw)
         return p
 
-    def poly(self, x, y, radius, sides=3, **kwargs):
+    def poly(self, x, y, radius, sides=4, points=None, **kwargs):
         """Draw a regular polygon centered at (x,y)
 
         The `sides` arg sets the type of polygon to draw. Regardless of the number,
         it will be oriented such that its base is horizontal.
+
+        If a `points` keyword argument is passed instead of a `sides` argument,
+        a regularized star polygon will be drawn at the given coordinates & radius,
         """
         with self._active_path(kwargs) as p:
-            p.poly(x, y, radius, sides)
+            p.poly(x, y, radius, sides, points)
         return p
 
     def arc(self, x, y, radius, range=None, ccw=False, close=False, **kwargs):
@@ -356,7 +359,7 @@ class Context(object):
 
         The `outer` radius sets the distance of the star's points from the origin,
         while `inner` sets the radius of the notches between points. If `inner` is
-        omitted, the star will be drawn with regularized angles.
+        omitted, it will be set to half the outer radius.
         """
         with self._active_path(kwargs) as p:
             p.star(x, y, points, outer, inner)
