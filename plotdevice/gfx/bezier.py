@@ -97,6 +97,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             self.closepath()
         if self._autodraw:
             self.draw()
+        self._autoclose = self._autodraw = False
 
     @property
     def path(self):
