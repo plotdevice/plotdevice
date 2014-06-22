@@ -205,8 +205,10 @@ class PlotDeviceGraphicsView(NSView):
 
     @objc.IBAction
     def zoomToFit_(self, sender):
+        if not self.canvas:
+            return
         w, h = self.canvas.pagesize
-        fw, fh = self.superview().frame()[1]
+        fw, fh = self.superview().superview().frame()[1]
         factor = min(fw / w, fh / h)
         self.zoom = factor
 
