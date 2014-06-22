@@ -84,7 +84,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def __enter__(self):
         self._rollback = {attr:getattr(_ctx,attr) for attr in ['_path','_transform','_transformmode']}
         _ctx._path = self
-        _ctx._transform = Transform(_ctx._transform)
+        _ctx._transform = Transform()
         return self
 
     def __exit__(self, type, value, tb):
