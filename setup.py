@@ -154,6 +154,8 @@ class DistCommand(Command):
         # set the bundle version to the current commit number
         info_pth = join(TOP, 'dist/PlotDevice.app/Contents/Info.plist')
         Popen(['plutil', '-replace', 'CFBundleVersion', '-string', BUILD.strip(), info_pth]).wait()
+        Popen(['plutil', '-replace', 'SUFeedURL', '-string', 'http://plotdevice.io/app.xml', info_pth]).wait()
+        Popen(['plutil', '-replace', 'SUEnableSystemProfiling', '-bool', 'YES', info_pth]).wait()
 
         # we don't need no stinking core dumps
         remove_tree(APP+'.dSYM')
