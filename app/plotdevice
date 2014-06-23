@@ -130,7 +130,7 @@ def module_root():
   # if running from a virtualenv or site-packages dir
   for root in sys.path:
     if exists(join(root, 'plotdevice/__init__.py')):
-      return abspath(module)
+      return root
 
   # if running from an app bundle
   appname = 'PlotDevice.app'
