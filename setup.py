@@ -129,20 +129,12 @@ plist={
     "CFBundleName": NAME,
     "CFBundleSignature": CREATOR,
     "CFBundleShortVersionString": VERSION,
-    "CFBundleGetInfoString": DESCRIPTION,
     "NSHumanReadableCopyright":COPYRIGHT,
 
     "LSMinimumSystemVersion":"10.9",
     "NSMainNibFile":"MainMenu",
     "NSPrincipalClass": 'NSApplication',
 }
-
-rsrc = [
-    "app/Resources/ui",
-    "app/Resources/English.lproj",
-    "app/Resources/PlotDevice.icns",
-    "app/Resources/PlotDeviceFile.icns",
-]
 
 BUILD_APP = any(v in ('py2app','dist') for v in sys.argv)
 
@@ -240,11 +232,8 @@ if BUILD_APP:
             ZIP = APP.replace('.app', '-%s.zip'%VERSION)
 
             # build the app
-            if not os.path.exists(APP):
-                self.run_command('py2app')
-                # or:
-                # self.spawn(['xcodebuild'])
-                # remove_tree(APP+'.dSYM')
+            self.spawn(['xcodebuild'])
+            remove_tree(APP+'.dSYM')
 
             # codesign using the most generic identity name possible
             self.spawn(['codesign', '-f', '-s', "Developer ID Application", APP])
@@ -284,7 +273,12 @@ if __name__=='__main__':
                 'script': "app/plotdevice-app.py",
                 "plist":plist,
             }],
-            data_files = rsrc,
+            data_files = [
+                "app/Resources/ui",
+                "app/Resources/English.lproj",
+                "app/Resources/PlotDevice.icns",
+                "app/Resources/PlotDeviceFile.icns",
+            ],
             options = {
                 "py2app": {
                     "iconfile": "app/Resources/PlotDevice.icns",
