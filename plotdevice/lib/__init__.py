@@ -7,13 +7,13 @@ from os.path import join, abspath, dirname, exists
 lib_root = abspath(dirname(__file__))
 inplace = exists(join(lib_root, '../../app/main.m'))
 if inplace:
-    sys.path.append(join(lib_root, '../../build/ext'))
+    sys.path.append(join(lib_root, '../../build/lib/plotdevice/lib'))
 
 # test the sys.path by attempting to load the c-extensions
 try:
     import geometry, io, pathmatics
 except ImportError:
-    print "failed with path", sys.path
+    # print "failed with path", sys.path
     suggest = ' (try running `python setup.py build` before using the module from within the repository)'
     notfound = "Couldn't locate C extensions%s." % (suggest if inplace else '')
     raise RuntimeError(notfound)

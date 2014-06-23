@@ -156,8 +156,9 @@ class BuildCommand(build_py):
     def run(self):
         # first let the real build_py routine do its thing
         build_py.run(self)
+
         # then build the extensions
-        self.spawn(['/usr/bin/python', 'app/deps/buildlibs.py'])
+        self.spawn(['/usr/bin/python', 'app/deps/build.py', os.path.abspath(self.build_lib)])
 
         # include some ui resources for running a script from the command line
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
@@ -165,7 +166,6 @@ class BuildCommand(build_py):
         self.copy_file("app/Resources/colors.json", '%s/colors.json'%rsrc_dir)
         self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "app/Resources/English.lproj/PlotDeviceScript.xib"])
         self.copy_file("app/Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
-        self.spawn(['/usr/bin/ditto', 'build/deps', '%s/plotdevice/lib'%self.build_lib])
 
 
 if BUILD_APP:
@@ -195,20 +195,17 @@ if BUILD_APP:
             RSRC = self.resdir
             BIN = join(dirname(RSRC), 'SharedSupport')
             MODULE = join(self.bdist_base, 'lib/plotdevice')
-            EGG = join(RSRC, 'lib/python2.7/site-packages.zip')
             PY = join(RSRC, 'python')
             for pth in BIN, PY:
                 self.mkpath(pth)
 
             # unpack the zipped up pyc files and merge with the module sources
-            self.spawn(['unzip', '-q', EGG, '-d', PY])
             self.spawn(['/usr/bin/ditto', MODULE, join(PY, 'plotdevice')])
 
             # discard the eggery-pokery
             remove_tree(join(RSRC,'lib'), dry_run=self.dry_run)
             os.unlink(join(RSRC,'include'))
             os.unlink(join(RSRC,'site.pyc'))
-            os.unlink(join(PY,'test.pyc'))
 
             # place the command line tool in SharedSupport
             self.copy_file("%s/app/plotdevice"%TOP, BIN)
