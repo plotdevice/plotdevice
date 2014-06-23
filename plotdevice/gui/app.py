@@ -101,7 +101,7 @@ class PlotDeviceAppDelegate(NSObject):
 
     @objc.IBAction
     def showSite_(self, sender):
-        url = NSURL.URLWithString_("http://nodebox.net/")
+        url = NSURL.URLWithString_("http://plotdevice.io/")
         NSWorkspace.sharedWorkspace().openURL_(url)
 
     def applicationWillTerminate_(self, note):
