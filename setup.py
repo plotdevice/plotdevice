@@ -3,17 +3,21 @@
 # This is your standard setup.py, so to install the module & command line tool, use:
 #     python setup.py install
 #
-# To build an application in the dist subdirectory, use:
-#     python setup.py py2app
+# In addition to the `install' command, there are a few other variants:
 #
-# To build a distribution-friendly dmg & zip, use:
-#     python setup.py dist
+#    app:    builds ./dist/PlotDevice.app using Xcode
+#    py2app: builds the application using py2app
+#    clean:  discard anything already built and start fresh
+#    build:  puts the module in a usable state. after building, you should be able
+#            to run the ./app/plotdevice command line tool within the source distribution.
+#            If you're having trouble building the app, this can be a good way to sanity
+#            check your setup
 #
 # We require some dependencies:
 # - Mac OS X 10.9+
 # - py2app or xcode or just pip
 # - PyObjC (should be in /System/Library/Frameworks/Python.framework/Versions/2.7/Extras)
-# - cPathMatics, cGeo, cIO, cEvent, & polymagic (included in the "libs" folder)
+# - cPathMatics, cGeo, cIO, cEvent, & polymagic (included in the "app/deps" folder)
 
 import sys,os
 from distutils.dir_util import remove_tree
@@ -136,8 +140,6 @@ plist={
     "NSPrincipalClass": 'NSApplication',
 }
 
-BUILD_APP = any(v in ('py2app','dist') for v in sys.argv)
-
 from distutils.core import Command
 class CleanCommand(Command):
     description = "wipe out the ./build ./dist and app/deps/.../build dirs"
@@ -167,14 +169,52 @@ class BuildCommand(build_py):
         self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "app/Resources/English.lproj/PlotDeviceScript.xib"])
         self.copy_file("app/Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
 
+class BuildAppCommand(Command):
+    description = "Build PlotDevice.app with xcode"
+    user_options = []
+    def initialize_options(self):
+        self.cwd = None
+    def finalize_options(self):
+        self.cwd = os.getcwd()
+    def run(self):
+        # build the app
+        self.spawn(['xcodebuild'])
+        remove_tree('%s/dist/PlotDevice.app.dSYM'%self.cwd)
+        print "done building PlotDevice.app in ./dist"
 
+class DistCommand(Command):
+    description = "Create distributable zip and dmg files containing the app + documentation"
+    user_options = []
+    def initialize_options(self):
+        self.cwd = None
+    def finalize_options(self):
+        self.cwd = os.getcwd()
+    def run(self):
+        TOP = self.cwd
+        APP = '%s/dist/PlotDevice.app'%TOP
+        ZIP = APP.replace('.app', '_%s.zip'%VERSION)
+
+        # build the app
+        self.spawn(['xcodebuild'])
+        remove_tree(APP+'.dSYM')
+
+        # codesign using the most generic identity name possible
+        self.spawn(['codesign', '-f', '-s', "Developer ID Application", APP])
+        self.spawn(['spctl', '--assess', '-v', 'dist/PlotDevice.app'])
+
+        # create a versioned zip file
+        self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
+
+        print "done building PlotDevice.app and %s in ./dist" % os.path.basename(ZIP)
+
+BUILD_APP = any(v in ('py2app','dist') for v in sys.argv)
 if BUILD_APP:
     # virtualenv doesn't include pyobjc, py2app, etc. in the sys.path for some reason, so make sure
-    # we only try to import them if an app (or dist) build was explicitly requested (implying we're using
+    # we only try to import them if a py2app build was explicitly requested (implying we're using
     # the system's python interpreter rather than pip+virtualenv)
     import py2app
     from py2app.build_app import py2app as build_app
-    class BuildAppCommand(build_app):
+    class BuildPy2AppCommand(build_app):
         description = """Build PlotDevice.app with py2app (then undo some of its questionable layout defaults)"""
         def initialize_options(self):
             self.cwd = None
@@ -216,29 +256,6 @@ if BUILD_APP:
 
             print "done building PlotDevice.app in ./dist"
 
-    class DistCommand(Command):
-        description = "Create distributable zip and dmg files containing the app + documentation"
-        user_options = []
-        def initialize_options(self):
-            self.cwd = None
-        def finalize_options(self):
-            self.cwd = os.getcwd()
-        def run(self):
-            TOP = self.cwd
-            APP = '%s/dist/PlotDevice.app'%TOP
-            ZIP = APP.replace('.app', '-%s.zip'%VERSION)
-
-            # build the app
-            self.spawn(['xcodebuild'])
-            remove_tree(APP+'.dSYM')
-
-            # codesign using the most generic identity name possible
-            self.spawn(['codesign', '-f', '-s', "Developer ID Application", APP])
-            self.spawn(['spctl', '--assess', '-v', 'dist/PlotDevice.app'])
-
-            # create a versioned zip file
-            self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
-
 
 if __name__=='__main__':
     config = {}
@@ -257,6 +274,7 @@ if __name__=='__main__':
         scripts = ["app/plotdevice"],
         zip_safe=False,
         cmdclass={
+            'app': BuildAppCommand,
             'clean': CleanCommand,
             'build_py': BuildCommand
         },
@@ -286,7 +304,7 @@ if __name__=='__main__':
             },
         ))
         config['cmdclass'].update({
-            'py2app': BuildAppCommand,
+            'py2app': BuildPy2AppCommand,
             'dist': DistCommand,
         })
     setup(**config)
