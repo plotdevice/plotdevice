@@ -246,6 +246,9 @@ if BUILD_APP:
                 # self.spawn(['xcodebuild'])
                 # remove_tree(APP+'.dSYM')
 
+            # codesign using the most generic identity name possible
+            self.spawn(['codesign', '-f', '-s', "Developer ID Application", APP])
+            self.spawn(['spctl', '--assess', '-v', 'dist/PlotDevice.app'])
 
             # create a versioned zip file
             self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
