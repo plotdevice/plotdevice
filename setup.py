@@ -138,20 +138,21 @@ class DistCommand(Command):
 
         # build the app
         self.spawn(['xcodebuild'])
-        remove_tree(APP+'.dSYM')
-        remove_tree(APP+'/Contents/Resources/doc')
 
-        # Download Sparkle and make sure it's decompressed in the ./related dir
-        ORIG = 'related/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
+        # we don't need no stinking core dumps
+        remove_tree(APP+'.dSYM')
+
+        # Download Sparkle (if necessary) and copy it into the bundle
+        ORIG = 'app/deps/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
         SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
         if not exists(ORIG):
             print "Downloading Sparkle.framework"
-            self.mkpath(join(TOP,'related'))
-            os.system('curl -L %s | bunzip2 -c | tar xf - -C related'%SPARKLE_URL)
+            self.mkpath(join(TOP,'app/deps'))
+            os.system('curl -L %s | bunzip2 -c | tar xf - -C app/deps'%SPARKLE_URL)
         self.mkpath(dirname(SPARKLE))
         self.spawn(['ditto', ORIG, SPARKLE])
 
-        # codesign using the most generic identity name possible
+        # code-sign the app and sparkle bundles, then verify
         self.spawn(['codesign', '-f', '-v', '-s', "Developer ID Application", SPARKLE])
         self.spawn(['codesign', '-f', '-v', '-s', "Developer ID Application", APP])
         self.spawn(['spctl', '--assess', '-v', 'dist/PlotDevice.app'])
@@ -243,11 +244,8 @@ if __name__=='__main__':
         },
     ))
 
-
     # py2app-specific config
     if BUILD_APP:
-
-
         config.update(dict(
             app = [{
                 'script': "app/plotdevice-app.py",

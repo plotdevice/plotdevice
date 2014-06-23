@@ -2,18 +2,13 @@
 *.pyc
 build/
 dist/
+app/deps/Sparkle*
 
 # cds garbage
-examples/*/*.pdf
-examples/*/*.png
-examples/*/*.jpg
-examples/*/*.gif
-examples/*/*.mov
-Resources/English.lproj/NodeBox\ Help/
 related/
 todo.txt
+test.py
 
 # Xcode user files
 project.xcworkspace
 xcuserdata
-test.py
