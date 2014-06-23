@@ -109,8 +109,8 @@ class PlotDeviceAppDelegate(NSObject):
 
     @objc.IBAction
     def showHelp_(self, sender):
-        url = NSURL.fileURLWithPath_(bundle_path(rsrc='doc/manual.html'))
-        opened = NSWorkspace.sharedWorkspace().openURL_(url)
+        url = NSURL.URLWithString_("http://plotdevice.io/doc")
+        NSWorkspace.sharedWorkspace().openURL_(url)
 
     @objc.IBAction
     def showSite_(self, sender):

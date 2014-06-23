@@ -19,7 +19,6 @@
 		2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */; };
 		2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = 2A7AF5C718D2AFAA00F8FFC2 /* examples */; };
 		2A93AE751903326E00C6144D /* placeholder.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A93AE731903326E00C6144D /* placeholder.pdf */; };
-		2A99554719589DF9005D70CA /* doc in Resources */ = {isa = PBXBuildFile; fileRef = 2A26314A188E1A3A000B792A /* doc */; };
 		2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */; };
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
 		2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FB18540246001C4E0A /* CoreVideo.framework */; };
@@ -89,7 +88,6 @@
 		2A15C44418A329AE006BDFF0 /* editor.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = editor.html; path = Resources/ui/editor.html; sourceTree = "<group>"; };
 		2A15C44618A329AE006BDFF0 /* themes.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = themes.json; path = Resources/ui/themes.json; sourceTree = "<group>"; };
 		2A15C45418A48765006BDFF0 /* autocomplete.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; name = autocomplete.css; path = Resources/ui/autocomplete.css; sourceTree = "<group>"; };
-		2A26314A188E1A3A000B792A /* doc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = doc; sourceTree = "<group>"; };
 		2A294458185E539400E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		2A29445A185E539400E9F650 /* console.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = console.py; sourceTree = "<group>"; };
 		2A294464185E575F00E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
@@ -246,7 +244,6 @@
 				2A37F4AFFDCFA73011CA2CEA /* Other Sources */,
 				2A37F4B8FDCFA73011CA2CEA /* Resources */,
 				612813B310BD2C9400B18218 /* deps */,
-				2A26314A188E1A3A000B792A /* doc */,
 				2A37F4C3FDCFA73011CA2CEA /* Frameworks */,
 				19C28FB0FE9D524F11CA2CBB /* Products */,
 			);
@@ -444,7 +441,6 @@
 				611CC68010BAA08300B55455 /* MainMenu.xib in Resources */,
 				611CC68710BAA0A600B55455 /* AskString.xib in Resources */,
 				2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */,
-				2A99554719589DF9005D70CA /* doc in Resources */,
 				6155D9F413E2B79E00675A92 /* CHANGES.md in Resources */,
 				6155D9F513E2B79E00675A92 /* README.md in Resources */,
 			);
