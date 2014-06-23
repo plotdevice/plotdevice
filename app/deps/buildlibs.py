@@ -31,14 +31,14 @@ def build_libraries():
         os.chdir(libs_root)
 
     # Make sure the destination folder exists.
-    mkdirs('../build/ext')
+    mkdirs('../../build/deps')
 
-    # Copy all build results to the ../build/ext folder.
+    # Copy all build results to the ../../build/deps folder.
     build_dirs = glob("%s/*/build/lib*"%libs_root)
     for build_dir in build_dirs:
         lib_name = dirname(dirname(build_dir))
         # print "Copying", lib_name
-        cmd = 'cp -R -p %s/* ../build/ext' % build_dir
+        cmd = 'cp -R -p %s/* ../../build/deps' % build_dir
         # print cmd
         result = os.system(cmd)
         if result > 0:

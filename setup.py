@@ -148,7 +148,7 @@ BUILD_APP = any(v in ('py2app','dist') for v in sys.argv)
 
 from distutils.core import Command
 class CleanCommand(Command):
-    description = "wipe out the ./build ./dist and libs/.../build dirs"
+    description = "wipe out the ./build ./dist and app/deps/.../build dirs"
     user_options = []
     def initialize_options(self):
         self.cwd = None
@@ -157,7 +157,7 @@ class CleanCommand(Command):
     def run(self):
         assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
         os.system('rm -rf ./build ./dist')
-        os.system('rm -rf ./libs/*/build')
+        os.system('rm -rf ./app/deps/*/build')
 
 from distutils.command.build_py import build_py
 class BuildCommand(build_py):
@@ -165,7 +165,7 @@ class BuildCommand(build_py):
         # first let the real build_py routine do its thing
         build_py.run(self)
         # then build the extensions
-        self.spawn(['/usr/bin/python', 'libs/buildlibs.py'])
+        self.spawn(['/usr/bin/python', 'app/deps/buildlibs.py'])
 
         # include some ui resources for running a script from the command line
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
@@ -173,7 +173,7 @@ class BuildCommand(build_py):
         self.copy_file("app/Resources/colors.json", '%s/colors.json'%rsrc_dir)
         self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "app/Resources/English.lproj/PlotDeviceScript.xib"])
         self.copy_file("app/Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
-        self.spawn(['/usr/bin/ditto', 'build/ext', '%s/plotdevice/lib'%self.build_lib])
+        self.spawn(['/usr/bin/ditto', 'build/deps', '%s/plotdevice/lib'%self.build_lib])
 
 
 if BUILD_APP:
