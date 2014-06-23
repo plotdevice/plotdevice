@@ -24,34 +24,34 @@
         <window title="PlotDevice Preferences" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="5" userLabel="PrefsPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="42" y="380" width="367" height="188"/>
+            <rect key="contentRect" x="42" y="380" width="367" height="242"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1280" height="832"/>
             <value key="minSize" type="size" width="300" height="150"/>
             <view key="contentView" id="6">
-                <rect key="frame" x="0.0" y="0.0" width="367" height="188"/>
+                <rect key="frame" x="0.0" y="0.0" width="367" height="242"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <box autoresizesSubviews="NO" title="Editor settings" borderType="line" id="BbW-Qn-TBC">
-                        <rect key="frame" x="17" y="70" width="333" height="110"/>
+                        <rect key="frame" x="17" y="124" width="333" height="110"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <view key="contentView">
                             <rect key="frame" x="1" y="1" width="331" height="94"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="YhI-yC-bMB">
-                                    <rect key="frame" x="12" y="67" width="64" height="17"/>
+                                    <rect key="frame" x="12" y="68" width="64" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Typeface:" id="OKj-2N-ZVL">
-                                        <font key="font" metaFont="system"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Typeface:" id="OKj-2N-ZVL">
+                                        <font key="font" metaFont="smallSystem"/>
                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
                                 </textField>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="BN2-f7-Mcx">
-                                    <rect key="frame" x="26" y="42" width="50" height="17"/>
+                                    <rect key="frame" x="26" y="42" width="50" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Syntax:" id="bOX-yZ-t90">
-                                        <font key="font" metaFont="system"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Syntax:" id="bOX-yZ-t90">
+                                        <font key="font" metaFont="smallSystem"/>
                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
@@ -105,10 +105,10 @@
                                     </connections>
                                 </popUpButton>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="RlH-9Y-Ubh">
-                                    <rect key="frame" x="14" y="15" width="62" height="17"/>
+                                    <rect key="frame" x="14" y="16" width="62" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Behavior:" id="9u0-yR-VAd">
-                                        <font key="font" metaFont="system"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Behavior:" id="9u0-yR-VAd">
+                                        <font key="font" metaFont="smallSystem"/>
                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
@@ -138,14 +138,14 @@
                         <font key="titleFont" metaFont="smallSystemBold"/>
                     </box>
                     <box autoresizesSubviews="NO" title="Command line tool" borderType="line" id="7Gk-ag-3K0">
-                        <rect key="frame" x="17" y="16" width="333" height="50"/>
+                        <rect key="frame" x="17" y="70" width="333" height="50"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <view key="contentView">
                             <rect key="frame" x="1" y="1" width="331" height="34"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textField verticalHuggingPriority="750" id="UxM-tv-d5u">
-                                    <rect key="frame" x="10" y="7" width="231" height="22"/>
+                                    <rect key="frame" x="16" y="7" width="231" height="22"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" lineBreakMode="truncatingMiddle" selectable="YES" sendsActionOnEndEditing="YES" state="on" title="/usr/local/bin/plotdevice" id="Psj-xs-GZG">
                                         <font key="font" size="11" name="Menlo-Regular"/>
@@ -154,26 +154,58 @@
                                     </textFieldCell>
                                 </textField>
                                 <button verticalHuggingPriority="750" id="bar-jt-drT">
-                                    <rect key="frame" x="247" y="8" width="67" height="19"/>
+                                    <rect key="frame" x="247" y="3" width="71" height="28"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <buttonCell key="cell" type="roundRect" title="Reinstall" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="WY6-mn-T7K">
+                                    <buttonCell key="cell" type="push" title="Reinstall" bezelStyle="rounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="WY6-mn-T7K">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                        <font key="font" metaFont="cellTitle"/>
+                                        <font key="font" metaFont="smallSystem"/>
                                     </buttonCell>
                                     <connections>
                                         <action selector="installTool:" target="-2" id="GUv-eK-w15"/>
                                     </connections>
                                 </button>
                                 <button verticalHuggingPriority="750" id="U4T-Iz-3Du">
-                                    <rect key="frame" x="11" y="8" width="67" height="19"/>
+                                    <rect key="frame" x="13" y="3" width="67" height="28"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <buttonCell key="cell" type="roundRect" title="Install" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="97t-ZD-fnC">
+                                    <buttonCell key="cell" type="push" title="Install" bezelStyle="rounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="97t-ZD-fnC">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                        <font key="font" metaFont="cellTitle"/>
+                                        <font key="font" metaFont="smallSystem"/>
                                     </buttonCell>
                                     <connections>
                                         <action selector="installTool:" target="-2" id="YAe-CP-b4Q"/>
                                     </connections>
+                                </button>
+                            </subviews>
+                        </view>
+                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
+                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                        <font key="titleFont" metaFont="smallSystemBold"/>
+                    </box>
+                    <box autoresizesSubviews="NO" title="Software updates" borderType="line" id="7eb-gg-ghY">
+                        <rect key="frame" x="17" y="16" width="333" height="50"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <view key="contentView">
+                            <rect key="frame" x="1" y="1" width="331" height="34"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <subviews>
+                                <button verticalHuggingPriority="750" id="gt2-UG-Qmd">
+                                    <rect key="frame" x="232" y="4" width="86" height="28"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="push" title="Check Now" bezelStyle="rounded" alignment="center" controlSize="small" enabled="NO" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Adv-rZ-vla">
+                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                        <font key="font" metaFont="smallSystem"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="installTool:" target="-2" id="qOm-Sv-MEL"/>
+                                    </connections>
+                                </button>
+                                <button id="LeO-L8-lya">
+                                    <rect key="frame" x="15" y="8" width="116" height="20"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="check" title="Check once a day" bezelStyle="regularSquare" imagePosition="left" controlSize="small" enabled="NO" state="on" inset="2" id="bwO-bu-Tq1">
+                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                        <font key="font" metaFont="smallSystem"/>
+                                    </buttonCell>
                                 </button>
                             </subviews>
                         </view>

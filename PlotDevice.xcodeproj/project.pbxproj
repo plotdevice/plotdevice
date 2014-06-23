@@ -11,7 +11,6 @@
 		2A15C45018A329BD006BDFF0 /* editor.html in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C44418A329AE006BDFF0 /* editor.html */; };
 		2A15C45218A329BD006BDFF0 /* themes.json in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C44618A329AE006BDFF0 /* themes.json */; };
 		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
-		2A26314B188E1A3A000B792A /* doc in Resources */ = {isa = PBXBuildFile; fileRef = 2A26314A188E1A3A000B792A /* doc */; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
 		2A66ECEB18A99328002903DE /* ace.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDE18A992BD002903DE /* ace.js */; };
 		2A66ECEC18A99328002903DE /* editor.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDF18A992BD002903DE /* editor.js */; };
@@ -20,6 +19,7 @@
 		2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */; };
 		2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = 2A7AF5C718D2AFAA00F8FFC2 /* examples */; };
 		2A93AE751903326E00C6144D /* placeholder.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A93AE731903326E00C6144D /* placeholder.pdf */; };
+		2A99554719589DF9005D70CA /* doc in Resources */ = {isa = PBXBuildFile; fileRef = 2A26314A188E1A3A000B792A /* doc */; };
 		2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */; };
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
 		2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FB18540246001C4E0A /* CoreVideo.framework */; };
@@ -444,7 +444,7 @@
 				611CC68010BAA08300B55455 /* MainMenu.xib in Resources */,
 				611CC68710BAA0A600B55455 /* AskString.xib in Resources */,
 				2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */,
-				2A26314B188E1A3A000B792A /* doc in Resources */,
+				2A99554719589DF9005D70CA /* doc in Resources */,
 				6155D9F413E2B79E00675A92 /* CHANGES.md in Resources */,
 				6155D9F513E2B79E00675A92 /* README.md in Resources */,
 			);

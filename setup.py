@@ -18,18 +18,19 @@
 # - py2app or xcode or just pip
 # - PyObjC (should be in /System/Library/Frameworks/Python.framework/Versions/2.7/Extras)
 # - cPathMatics, cGeo, cIO, cEvent, & polymagic (included in the "app/deps" folder)
+# - Sparkle.framework (auto-downloaded only for `dist` builds)
 
 import sys,os
 from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 
+# PyPI fields
 NAME = 'PlotDevice'
 VERSION = '0.9'
 CREATOR = 'Plod'
 BUNDLE_ID = "io.plotdevice.PlotDevice"
 COPYRIGHT = u"© 2014 Samizdat Drafting Co."
-
 AUTHOR = "Christian Swinehart",
 AUTHOR_EMAIL = "drafting@samizdat.cc",
 URL = "http://plotdevice.io/",
@@ -50,7 +51,6 @@ CLASSIFIERS = (
     "Topic :: Software Development :: User Interfaces",
     "Topic :: Text Editors :: Integrated Development Environments (IDE)",
 )
-
 DESCRIPTION = "Create 2-dimensional graphics and animation using Python code"
 LONG_DESCRIPTION = """PlotDevice is a Macintosh application used in graphic design research. It provides an
 interactive Python environment where you can create two-dimensional graphics
@@ -77,68 +77,9 @@ Requires:
 * Mac OS X 10.9+
 """
 
-plist={
-   "UTExportedTypeDeclarations":[
-      {
-         "UTTypeConformsTo":[
-            "public.data"
-         ],
-         "UTTypeIconFile":"PlotDeviceFile",
-         "UTTypeIdentifier":"io.plotdevice.document",
-         "UTTypeDescription":"PlotDevice Document",
-         "UTTypeTagSpecification":{
-            "com.apple.ostype":[
-               "TEXT"
-            ],
-            "public.mime-type":[
-               "text\/plain"
-            ],
-            "public.filename-extension":[
-               "pv"
-            ]
-         }
-      }
-   ],
-   "CFBundleDocumentTypes":[
-      {
-        "CFBundleTypeExtensions":[
-          "pv"
-        ],
-        "LSTypeIsPackage":0,
-        "NSDocumentClass":"PlotDeviceDocument",
-        "CFBundleTypeName":"PlotDevice Document",
-        "CFBundleTypeIconFile":"PlotDeviceFile.icns",
-        "LSItemContentTypes":[
-          "io.plotdevice.document"
-        ],
-        "CFBundleTypeRole":"Editor",
-        "LSHandlerRank":"Owner"
-      },
-      {
-        "CFBundleTypeExtensions":[
-          "py"
-        ],
-        "LSTypeIsPackage":0,
-        "NSDocumentClass":"PythonScriptDocument",
-        "CFBundleTypeName":"Python Script",
-        "CFBundleTypeIconFile":"PlotDeviceFile.icns",
-        "LSItemContentTypes":[
-          "public.python-script"
-        ],
-        "CFBundleTypeRole":"Editor",
-        "LSHandlerRank":"Alternate"
-      }
-    ],
-    "CFBundleIdentifier": BUNDLE_ID,
-    "CFBundleName": NAME,
-    "CFBundleSignature": CREATOR,
-    "CFBundleShortVersionString": VERSION,
-    "NSHumanReadableCopyright":COPYRIGHT,
-
-    "LSMinimumSystemVersion":"10.9",
-    "NSMainNibFile":"MainMenu",
-    "NSPrincipalClass": 'NSApplication',
-}
+# Choose the Sparkle framework version to use in `dist` builds
+SPARKLE_VERSION = '1.7.0'
+SPARKLE_URL = 'https://github.com/pornel/Sparkle/releases/download/%(v)s/Sparkle-%(v)s.tar.bz2'% {'v':SPARKLE_VERSION}
 
 from distutils.core import Command
 class CleanCommand(Command):
@@ -190,6 +131,7 @@ class DistCommand(Command):
     def finalize_options(self):
         self.cwd = os.getcwd()
     def run(self):
+        from os.path import join, exists, dirname, basename, abspath
         TOP = self.cwd
         APP = '%s/dist/PlotDevice.app'%TOP
         ZIP = APP.replace('.app', '_%s.zip'%VERSION)
@@ -197,15 +139,27 @@ class DistCommand(Command):
         # build the app
         self.spawn(['xcodebuild'])
         remove_tree(APP+'.dSYM')
+        remove_tree(APP+'/Contents/Resources/doc')
+
+        # Download Sparkle and make sure it's decompressed in the ./related dir
+        ORIG = 'related/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
+        SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
+        if not exists(ORIG):
+            print "Downloading Sparkle.framework"
+            self.mkpath(join(TOP,'related'))
+            os.system('curl -L %s | bunzip2 -c | tar xf - -C related'%SPARKLE_URL)
+        self.mkpath(dirname(SPARKLE))
+        self.spawn(['ditto', ORIG, SPARKLE])
 
         # codesign using the most generic identity name possible
-        self.spawn(['codesign', '-f', '-s', "Developer ID Application", APP])
+        self.spawn(['codesign', '-f', '-v', '-s', "Developer ID Application", SPARKLE])
+        self.spawn(['codesign', '-f', '-v', '-s', "Developer ID Application", APP])
         self.spawn(['spctl', '--assess', '-v', 'dist/PlotDevice.app'])
 
         # create a versioned zip file
         self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
 
-        print "done building PlotDevice.app and %s in ./dist" % os.path.basename(ZIP)
+        print "done building PlotDevice.app and %s in ./dist" % basename(ZIP)
 
 BUILD_APP = any(v in ('py2app','dist') for v in sys.argv)
 if BUILD_APP:
@@ -256,6 +210,15 @@ if BUILD_APP:
 
             print "done building PlotDevice.app in ./dist"
 
+    def info_plist():
+        # read in a json conversion of the main Info.plist
+        import json
+        from subprocess import Popen, PIPE
+        convert = ['plutil', '-convert', 'json', 'app/PlotDevice-Info.plist', '-o', '-']
+        plist, _ = Popen(convert, stdout=PIPE).communicate()
+        for placeholder in '${EXECUTABLE_NAME}', '${PRODUCT_NAME}':
+            plist = plist.replace(placeholder, NAME)
+        return json.loads(plist)
 
 if __name__=='__main__':
     config = {}
@@ -281,12 +244,14 @@ if __name__=='__main__':
     ))
 
 
-    # app-specific config
+    # py2app-specific config
     if BUILD_APP:
+
+
         config.update(dict(
             app = [{
                 'script': "app/plotdevice-app.py",
-                "plist":plist,
+                "plist":info_plist(),
             }],
             data_files = [
                 "app/Resources/ui",

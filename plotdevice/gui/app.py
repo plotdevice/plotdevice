@@ -15,6 +15,7 @@ LIB_DIR_README = """"You can put PlotDevice libraries In this directory to make 
 
 class PlotDeviceAppDelegate(NSObject):
     examplesMenu = objc.IBOutlet()
+    updatesMenu = objc.IBOutlet()
 
     def awakeFromNib(self):
         self._prefsController = None
@@ -45,6 +46,18 @@ class PlotDeviceAppDelegate(NSObject):
             flicker.setEnabled_(True)
             flicker.setHidden_(True)
             menu.submenu().insertItem_atIndex_(flicker,0)
+
+        # If the sparkle framework was installed in our bundle, init an updater
+        self.sparkle = None
+        sparkle_path = bundle_path(fmwk='Sparkle')
+        if os.path.exists(sparkle_path):
+            objc.loadBundle('Sparkle', globals(), bundle_path=sparkle_path)
+            self.sparkle = objc.lookUpClass('SUUpdater').sharedUpdater()
+            self.updatesMenu.setTarget_(self.sparkle)
+            self.updatesMenu.setAction_("checkForUpdates:")
+            self.updatesMenu.setHidden_(False)
+            print self.sparkle
+
 
     def applicationWillBecomeActive_(self, note):
         # rescan the examples dir every time?

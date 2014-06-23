@@ -23,6 +23,12 @@
                                     <action selector="orderFrontStandardAboutPanel:" target="-2" id="142"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Check for Updates…" hidden="YES" id="YYp-CZ-oB1">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="9Om-Gm-LSB">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
                             <menuItem title="Preferences..." keyEquivalent="," id="129">
                                 <connections>
                                     <action selector="showPreferencesPanel:" target="472" id="475"/>
@@ -580,6 +586,7 @@ CQ
         <customObject id="472" userLabel="PlotDeviceAppDelegate" customClass="PlotDeviceAppDelegate">
             <connections>
                 <outlet property="examplesMenu" destination="z3k-AC-imp" id="u4g-4w-RfF"/>
+                <outlet property="updatesMenu" destination="YYp-CZ-oB1" id="dB9-oO-Tqq"/>
             </connections>
         </customObject>
     </objects>
