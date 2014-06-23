@@ -205,10 +205,6 @@ if BUILD_APP:
             # place the command line tool in SharedSupport
             self.copy_file("%s/app/plotdevice"%TOP, BIN)
 
-            # install the documentation
-            self.spawn(['/usr/bin/ditto', join(TOP, 'doc'), join(RSRC, 'doc')])
-            self.spawn(['/usr/bin/ditto', join(TOP, 'app/Resources/examples'), join(RSRC, 'examples')])
-
             print "done building PlotDevice.app in ./dist"
 
     def info_plist():
@@ -256,6 +252,7 @@ if __name__=='__main__':
                 "app/Resources/English.lproj",
                 "app/Resources/PlotDevice.icns",
                 "app/Resources/PlotDeviceFile.icns",
+                "examples",
             ],
             options = {
                 "py2app": {
