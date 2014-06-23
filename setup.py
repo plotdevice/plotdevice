@@ -27,10 +27,6 @@ from setuptools.extension import Extension
 
 # PyPI fields
 NAME = 'PlotDevice'
-VERSION = '0.9'
-CREATOR = 'Plod'
-BUNDLE_ID = "io.plotdevice.PlotDevice"
-COPYRIGHT = u"© 2014 Samizdat Drafting Co."
 AUTHOR = "Christian Swinehart",
 AUTHOR_EMAIL = "drafting@samizdat.cc",
 URL = "http://plotdevice.io/",
@@ -80,6 +76,19 @@ Requires:
 # Choose the Sparkle framework version to use in `dist` builds
 SPARKLE_VERSION = '1.7.0'
 SPARKLE_URL = 'https://github.com/pornel/Sparkle/releases/download/%(v)s/Sparkle-%(v)s.tar.bz2'% {'v':SPARKLE_VERSION}
+
+# read in a json conversion of the main Info.plist
+def info_plist(key=None):
+    import json
+    from subprocess import Popen, PIPE
+    src='app/PlotDevice-Info.plist'
+    convert = ['plutil', '-convert', 'json', src, '-o', '-']
+    plist, _ = Popen(convert, stdout=PIPE).communicate()
+    for placeholder in '${EXECUTABLE_NAME}', '${PRODUCT_NAME}':
+        plist = plist.replace(placeholder, NAME)
+    if key is None:
+        return json.loads(plist)
+    return json.loads(plist)[key]
 
 from distutils.core import Command
 class CleanCommand(Command):
@@ -132,12 +141,19 @@ class DistCommand(Command):
         self.cwd = os.getcwd()
     def run(self):
         from os.path import join, exists, dirname, basename, abspath
+        from subprocess import Popen, PIPE
         TOP = self.cwd
         APP = '%s/dist/PlotDevice.app'%TOP
-        ZIP = APP.replace('.app', '_%s.zip'%VERSION)
+        VERSION = info_plist(key='CFBundleShortVersionString')
+        BUILD, _ = Popen('git log --oneline | wc -l', stdout=PIPE, shell=True).communicate()
+        ZIP = APP.replace('.app', '_app-%s.zip'%VERSION)
 
         # build the app
         self.spawn(['xcodebuild'])
+
+        # set the bundle version to the current commit number
+        info_pth = join(TOP, 'dist/PlotDevice.app/Contents/Info.plist')
+        Popen(['plutil', '-replace', 'CFBundleVersion', '-string', BUILD.strip(), info_pth]).wait()
 
         # we don't need no stinking core dumps
         remove_tree(APP+'.dSYM')
@@ -160,7 +176,10 @@ class DistCommand(Command):
         # create a versioned zip file
         self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
 
+        # print out a snippet for the app.xml feed
         print "done building PlotDevice.app and %s in ./dist" % basename(ZIP)
+        tmpl='<enclosure url="http://plotdevice.io/app/%s" sparkle:shortVersionString="%s" sparkle:version="%i" length="%i" type="application/octet-stream" />'
+        print tmpl % (basename(ZIP), VERSION, int(BUILD), os.path.getsize(ZIP))
 
 BUILD_APP = any(v in ('py2app','dist') for v in sys.argv)
 if BUILD_APP:
@@ -207,23 +226,13 @@ if BUILD_APP:
 
             print "done building PlotDevice.app in ./dist"
 
-    def info_plist():
-        # read in a json conversion of the main Info.plist
-        import json
-        from subprocess import Popen, PIPE
-        convert = ['plutil', '-convert', 'json', 'app/PlotDevice-Info.plist', '-o', '-']
-        plist, _ = Popen(convert, stdout=PIPE).communicate()
-        for placeholder in '${EXECUTABLE_NAME}', '${PRODUCT_NAME}':
-            plist = plist.replace(placeholder, NAME)
-        return json.loads(plist)
-
 if __name__=='__main__':
     config = {}
 
     # common config between module and app builds
     config.update(dict(
         name = NAME,
-        version = VERSION,
+        version = info_plist(key='CFBundleShortVersionString'),
         description = DESCRIPTION,
         long_description = LONG_DESCRIPTION,
         author = AUTHOR,
@@ -236,7 +245,8 @@ if __name__=='__main__':
         cmdclass={
             'app': BuildAppCommand,
             'clean': CleanCommand,
-            'build_py': BuildCommand
+            'build_py': BuildCommand,
+            'dist': DistCommand,
         },
     ))
 
@@ -265,6 +275,5 @@ if __name__=='__main__':
         ))
         config['cmdclass'].update({
             'py2app': BuildPy2AppCommand,
-            'dist': DistCommand,
         })
     setup(**config)
