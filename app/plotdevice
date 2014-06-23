@@ -54,11 +54,8 @@ PlotDevice Script File:
 
 import sys, os
 import argparse
-import socket
 import json
 import signal
-
-from time import sleep
 from subprocess import Popen, PIPE
 from os.path import exists, islink, dirname, abspath, realpath, join
 
@@ -127,60 +124,49 @@ def parse_args():
 
   return opts
 
-def app_path():
+def module_root():
   parent = dirname(realpath(__file__)) if islink(__file__) else abspath(dirname(__file__))
-  try:
-    # we're being called from within an app bundle
-    return parent[:parent.index('PlotDevice.app')+len('PlotDevice.app')]
-  except ValueError:
-    # no app bundle present, we're part of a module install instead
-    return None
 
-def module_path():
+  # if running from a virtualenv or site-packages dir
   for root in sys.path:
-    module = join(root, 'plotdevice')
-    if exists(join(module,'__init__.py')):
+    if exists(join(root, 'plotdevice/__init__.py')):
       return abspath(module)
-  raise ImportError
 
-def invocation():
-  """Find the path of console.py within the plotdevice module and update PYTHONPATH if needed"""
-  script_path = None
-  py_path = filter(None, os.getenv('PYTHONPATH','').split(':')) # BUG: should it be unfiltered?
+  # if running from an app bundle
+  appname = 'PlotDevice.app'
+  if appname in parent:
+    bundle = parent[:parent.index(appname)+len(appname)]
+    return join(bundle, 'Contents/Resources/python')
 
-  try:
-    # running from a virtualenv
-    module = module_path()
-    script_path = join(module, 'run/console.py')
-    py_path.append(dirname(module)) # append the site-packages dir
-  except ImportError:
-    if app_path():
-      # running from the app bundle
-      dist_path = join(app_path(), 'Contents/Resources/python')
-      script_path = join(dist_path, 'plotdevice/run/console.py')
-      py_path.append(dist_path) # append the site-packages dir
-    else:
-      # running from the source dist
-      dist_path = abspath('%s/..'%dirname(__file__))
-      script_path = "%s/plotdevice/run/console.py"%dist_path
-      py_path.append(dist_path) # add the plotdevice dir to the path
-      py_path.append('%s/build/lib.macosx-10.9-intel-2.7'%dist_path) # add the .so files
+  # if running from ./app/plotdevice in the source dist
+  if exists(join(parent, 'PlotDevice-Info.plist')):
+    return join(parent, '..')
 
-  return script_path, ":".join(py_path)
+  # ???
+  print "Couldn't find the plotdevice module"
+  sys.exit(1)
 
 def main():
   """Run python scripts in a window/PlotDevice.app or export graphics to a
      document (pdf/eps), image (png/gif/jpg/tiff), or movie (mov/gif)."""
-  opts = parse_args()
 
+  # determine parameter values and command path
+  opts = parse_args()
+  root = module_root()
+  env = dict(os.environ)
+
+  # install a signal handler to catch ^c
   def cancel(*args):
     p.stdin.write("CANCEL\n")
     p.stdin.flush()
   signal.signal(signal.SIGINT, cancel)
 
-  env = dict(os.environ)
-  task, env['PYTHONPATH'] = invocation()
-  p = Popen(['/usr/bin/python', task], env=env, stdin=PIPE)
+  # launch the back-end of the console-runner and pipe in our params
+  py_path = filter(None, env.get('PYTHONPATH','').split(':')) # BUG: should it be unfiltered?
+  py_path.append(root)
+  env['PYTHONPATH'] = ":".join(py_path)
+  script = join(root, 'plotdevice/run/console.py')
+  p = Popen(['/usr/bin/python', script], env=env, stdin=PIPE)
   p.stdin.write(json.dumps(vars(opts))+"\n")
   p.wait()
 
