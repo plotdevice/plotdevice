@@ -6,42 +6,18 @@
 	objectVersion = 46;
 	objects = {
 
-/* Begin PBXAggregateTarget section */
-		61DB841010BEABCF003F73B9 /* Build Distribution */ = {
-			isa = PBXAggregateTarget;
-			buildConfigurationList = 61DB842F10BEABDF003F73B9 /* Build configuration list for PBXAggregateTarget "Build Distribution" */;
-			buildPhases = (
-				61DB840F10BEABCF003F73B9 /* Make Dist */,
-			);
-			dependencies = (
-				61DB841410BEABD4003F73B9 /* PBXTargetDependency */,
-			);
-			name = "Build Distribution";
-			productName = "Build Distribution";
-		};
-/* End PBXAggregateTarget section */
-
 /* Begin PBXBuildFile section */
 		2A15C42D18A1FA14006BDFF0 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A15C42C18A1FA14006BDFF0 /* WebKit.framework */; };
-		2A15C45018A329BD006BDFF0 /* editor.html in Copy web ui assets */ = {isa = PBXBuildFile; fileRef = 2A15C44418A329AE006BDFF0 /* editor.html */; };
-		2A15C45218A329BD006BDFF0 /* themes.json in Copy web ui assets */ = {isa = PBXBuildFile; fileRef = 2A15C44618A329AE006BDFF0 /* themes.json */; };
-		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy web ui assets */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
+		2A15C45018A329BD006BDFF0 /* editor.html in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C44418A329AE006BDFF0 /* editor.html */; };
+		2A15C45218A329BD006BDFF0 /* themes.json in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C44618A329AE006BDFF0 /* themes.json */; };
+		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
 		2A26314B188E1A3A000B792A /* doc in Resources */ = {isa = PBXBuildFile; fileRef = 2A26314A188E1A3A000B792A /* doc */; };
-		2A294462185E54F900E9F650 /* console.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2A29445A185E539400E9F650 /* console.py */; };
-		2A294463185E550400E9F650 /* __init__.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2A294458185E539400E9F650 /* __init__.py */; };
-		2A294474185E578300E9F650 /* __init__.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2A294464185E575F00E9F650 /* __init__.py */; };
-		2A294477185E578300E9F650 /* document.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2A294467185E575F00E9F650 /* document.py */; };
-		2A294478185E578300E9F650 /* preferences.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2A294468185E575F00E9F650 /* preferences.py */; };
-		2A32958918C59D8000EEDD1C /* __init__.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957218C59D0A00EEDD1C /* __init__.py */; };
-		2A32958B18C59D8000EEDD1C /* geometry.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957518C59D0A00EEDD1C /* geometry.py */; };
-		2A32958C18C59D8000EEDD1C /* io.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957718C59D0A00EEDD1C /* io.py */; };
-		2A32958D18C59D8000EEDD1C /* pathmatics.py in Copy plotdevice.lib */ = {isa = PBXBuildFile; fileRef = 2A32957918C59D0A00EEDD1C /* pathmatics.py */; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
-		2A66ECEB18A99328002903DE /* ace.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDE18A992BD002903DE /* ace.js */; };
-		2A66ECEC18A99328002903DE /* editor.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDF18A992BD002903DE /* editor.js */; };
-		2A66ECED18A99328002903DE /* jquery-2.1.0.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE018A992BD002903DE /* jquery-2.1.0.js */; };
-		2A66ECEE18A99328002903DE /* keybindings.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE118A992BD002903DE /* keybindings.js */; };
-		2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy web ui scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */; };
+		2A66ECEB18A99328002903DE /* ace.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDE18A992BD002903DE /* ace.js */; };
+		2A66ECEC18A99328002903DE /* editor.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDF18A992BD002903DE /* editor.js */; };
+		2A66ECED18A99328002903DE /* jquery-2.1.0.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE018A992BD002903DE /* jquery-2.1.0.js */; };
+		2A66ECEE18A99328002903DE /* keybindings.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE118A992BD002903DE /* keybindings.js */; };
+		2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */; };
 		2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = 2A7AF5C718D2AFAA00F8FFC2 /* examples */; };
 		2A93AE751903326E00C6144D /* placeholder.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A93AE731903326E00C6144D /* placeholder.pdf */; };
 		2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */; };
@@ -50,31 +26,11 @@
 		2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */; };
 		2ABDB76B1867D8160069EFC3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2ABDB7681867D8160069EFC3 /* main.m */; };
 		2ABDB76E1867D8BB0069EFC3 /* plotdevice-app.py in Resources */ = {isa = PBXBuildFile; fileRef = 2ABDB7671867D8160069EFC3 /* plotdevice-app.py */; };
-		2ABDB7741867D9970069EFC3 /* plotdevice in Copy plotdevice tool */ = {isa = PBXBuildFile; fileRef = 2ABDB7721867D9920069EFC3 /* plotdevice */; };
-		2ABDB7791867EB5B0069EFC3 /* app.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2ABDB7751867EB520069EFC3 /* app.py */; };
-		2ABDB77A1867EB5E0069EFC3 /* views.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2ABDB7761867EB520069EFC3 /* views.py */; };
-		2AC07CDA18EF8ED500B75879 /* context.py in Copy plotdevice root */ = {isa = PBXBuildFile; fileRef = 2AC07CD818EF8EC500B75879 /* context.py */; };
-		2AC07CDB18EF8F4900B75879 /* __init__.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CB618EF8E7D00B75879 /* __init__.py */; };
-		2AC07CDC18EF8F4900B75879 /* bezier.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CB818EF8E7D00B75879 /* bezier.py */; };
-		2AC07CDD18EF8F4900B75879 /* colors.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CBA18EF8E7D00B75879 /* colors.py */; };
-		2AC07CDE18EF8F4900B75879 /* effects.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CBD18EF8E7D00B75879 /* effects.py */; };
-		2AC07CDF18EF8F4900B75879 /* image.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CC118EF8E7D00B75879 /* image.py */; };
-		2AC07CE018EF8F4900B75879 /* transform.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CC318EF8E7D00B75879 /* transform.py */; };
-		2AC07CE118EF8F4900B75879 /* typography.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CC518EF8E7D00B75879 /* typography.py */; };
-		2AC07CE418EF9B3400B75879 /* atoms.py in Copy plotdevice.gfx */ = {isa = PBXBuildFile; fileRef = 2AC07CE218EF9B2400B75879 /* atoms.py */; };
-		2AC5188118636CAF007FB066 /* sandbox.py in Copy plotdevice.run */ = {isa = PBXBuildFile; fileRef = 2AC5187F18636C9F007FB066 /* sandbox.py */; };
-		2AE5AD2B186236C400CCDD45 /* editor.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD291862366300CCDD45 /* editor.py */; };
-		2AE5AD2E1862387200CCDD45 /* widgets.py in Copy plotdevice.gui */ = {isa = PBXBuildFile; fileRef = 2AE5AD2C1862386400CCDD45 /* widgets.py */; };
-		2AEE843C18B3285F00CF91D4 /* foundry.py in Copy plotdevice.util */ = {isa = PBXBuildFile; fileRef = 2AEE843A18B3285600CF91D4 /* foundry.py */; };
-		2AEE846518BEC26C00CF91D4 /* iglob.py in Copy plotdevice.util */ = {isa = PBXBuildFile; fileRef = 2AEE846318BEC25B00CF91D4 /* iglob.py */; };
+		2ABDB7741867D9970069EFC3 /* plotdevice in Copy 'plotdevice' Tool */ = {isa = PBXBuildFile; fileRef = 2ABDB7721867D9920069EFC3 /* plotdevice */; };
 		611CC49810BA8B9E00B55455 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48110BA8B9E00B55455 /* Credits.rtf */; };
 		611CC49C10BA8B9E00B55455 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48910BA8B9E00B55455 /* InfoPlist.strings */; };
 		611CC4A110BA8B9E00B55455 /* PlotDevice.icns in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49310BA8B9E00B55455 /* PlotDevice.icns */; };
 		611CC4A210BA8B9E00B55455 /* PlotDeviceFile.icns in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49410BA8B9E00B55455 /* PlotDeviceFile.icns */; };
-		611CC52F10BA8DDF00B55455 /* __init__.py in Copy plotdevice root */ = {isa = PBXBuildFile; fileRef = 611CC4AF10BA8C1B00B55455 /* __init__.py */; };
-		611CC57910BA8FA800B55455 /* __init__.py in Copy plotdevice.util */ = {isa = PBXBuildFile; fileRef = 611CC4D710BA8C1B00B55455 /* __init__.py */; };
-		611CC57A10BA8FA800B55455 /* kgp.py in Copy plotdevice.util */ = {isa = PBXBuildFile; fileRef = 611CC4D910BA8C1B00B55455 /* kgp.py */; };
-		611CC57B10BA8FA800B55455 /* ottobot.py in Copy plotdevice.util */ = {isa = PBXBuildFile; fileRef = 611CC4DA10BA8C1B00B55455 /* ottobot.py */; };
 		611CC5A010BA908C00B55455 /* PlotDeviceDocument.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC59E10BA908C00B55455 /* PlotDeviceDocument.xib */; };
 		611CC5A810BA919A00B55455 /* PlotDevicePreferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC5A610BA919A00B55455 /* PlotDevicePreferences.xib */; };
 		611CC68010BAA08300B55455 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 611CC67E10BAA08300B55455 /* MainMenu.xib */; };
@@ -84,150 +40,44 @@
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		61DB841310BEABD4003F73B9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 2A37F4A9FDCFA73011CA2CEA /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 8D15AC270486D014006FF6A4;
-			remoteInfo = PlotDevice;
-		};
-		61EB1E3313E2C6E6002641C0 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 2A37F4A9FDCFA73011CA2CEA /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 61FFC03810BAD90D009AF371;
-			remoteInfo = "Build Extensions";
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXCopyFilesBuildPhase section */
-		2A15C43718A20929006BDFF0 /* Copy web ui assets */ = {
+		2A15C43718A20929006BDFF0 /* Copy Editor Assets */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = ui;
 			dstSubfolderSpec = 7;
 			files = (
-				2A15C45018A329BD006BDFF0 /* editor.html in Copy web ui assets */,
-				2A15C45618A48770006BDFF0 /* autocomplete.css in Copy web ui assets */,
-				2A15C45218A329BD006BDFF0 /* themes.json in Copy web ui assets */,
+				2A15C45018A329BD006BDFF0 /* editor.html in Copy Editor Assets */,
+				2A15C45618A48770006BDFF0 /* autocomplete.css in Copy Editor Assets */,
+				2A15C45218A329BD006BDFF0 /* themes.json in Copy Editor Assets */,
 			);
-			name = "Copy web ui assets";
+			name = "Copy Editor Assets";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2A29445E185E54C200E9F650 /* Copy plotdevice.run */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = python/plotdevice/run;
-			dstSubfolderSpec = 7;
-			files = (
-				2A294463185E550400E9F650 /* __init__.py in Copy plotdevice.run */,
-				2AC5188118636CAF007FB066 /* sandbox.py in Copy plotdevice.run */,
-				2A294462185E54F900E9F650 /* console.py in Copy plotdevice.run */,
-			);
-			name = "Copy plotdevice.run";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		2A66ECEA18A99303002903DE /* Copy web ui scripts */ = {
+		2A66ECEA18A99303002903DE /* Copy Editor Scripts */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = ui/js;
 			dstSubfolderSpec = 7;
 			files = (
-				2A66ECEB18A99328002903DE /* ace.js in Copy web ui scripts */,
-				2A66ECEC18A99328002903DE /* editor.js in Copy web ui scripts */,
-				2A66ECED18A99328002903DE /* jquery-2.1.0.js in Copy web ui scripts */,
-				2A66ECEE18A99328002903DE /* keybindings.js in Copy web ui scripts */,
-				2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy web ui scripts */,
+				2A66ECEB18A99328002903DE /* ace.js in Copy Editor Scripts */,
+				2A66ECEC18A99328002903DE /* editor.js in Copy Editor Scripts */,
+				2A66ECED18A99328002903DE /* jquery-2.1.0.js in Copy Editor Scripts */,
+				2A66ECEE18A99328002903DE /* keybindings.js in Copy Editor Scripts */,
+				2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy Editor Scripts */,
 			);
-			name = "Copy web ui scripts";
+			name = "Copy Editor Scripts";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2ABDB76F1867D9560069EFC3 /* Copy plotdevice tool */ = {
+		2ABDB76F1867D9560069EFC3 /* Copy 'plotdevice' Tool */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 12;
 			files = (
-				2ABDB7741867D9970069EFC3 /* plotdevice in Copy plotdevice tool */,
+				2ABDB7741867D9970069EFC3 /* plotdevice in Copy 'plotdevice' Tool */,
 			);
-			name = "Copy plotdevice tool";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		611CC53110BA8E0000B55455 /* Copy plotdevice root */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = python/plotdevice;
-			dstSubfolderSpec = 7;
-			files = (
-				611CC52F10BA8DDF00B55455 /* __init__.py in Copy plotdevice root */,
-				2AC07CDA18EF8ED500B75879 /* context.py in Copy plotdevice root */,
-			);
-			name = "Copy plotdevice root";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		611CC55010BA8E4900B55455 /* Copy plotdevice.gui */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = python/plotdevice/gui;
-			dstSubfolderSpec = 7;
-			files = (
-				2A294474185E578300E9F650 /* __init__.py in Copy plotdevice.gui */,
-				2ABDB7791867EB5B0069EFC3 /* app.py in Copy plotdevice.gui */,
-				2ABDB77A1867EB5E0069EFC3 /* views.py in Copy plotdevice.gui */,
-				2A294477185E578300E9F650 /* document.py in Copy plotdevice.gui */,
-				2AE5AD2B186236C400CCDD45 /* editor.py in Copy plotdevice.gui */,
-				2A294478185E578300E9F650 /* preferences.py in Copy plotdevice.gui */,
-				2AE5AD2E1862387200CCDD45 /* widgets.py in Copy plotdevice.gui */,
-			);
-			name = "Copy plotdevice.gui";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		611CC59610BA901100B55455 /* Copy plotdevice.util */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = python/plotdevice/util;
-			dstSubfolderSpec = 7;
-			files = (
-				611CC57910BA8FA800B55455 /* __init__.py in Copy plotdevice.util */,
-				2AEE846518BEC26C00CF91D4 /* iglob.py in Copy plotdevice.util */,
-				611CC57A10BA8FA800B55455 /* kgp.py in Copy plotdevice.util */,
-				611CC57B10BA8FA800B55455 /* ottobot.py in Copy plotdevice.util */,
-				2AEE843C18B3285F00CF91D4 /* foundry.py in Copy plotdevice.util */,
-			);
-			name = "Copy plotdevice.util";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		611CC59710BA901100B55455 /* Copy plotdevice.gfx */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = python/plotdevice/gfx;
-			dstSubfolderSpec = 7;
-			files = (
-				2AC07CDB18EF8F4900B75879 /* __init__.py in Copy plotdevice.gfx */,
-				2AC07CE418EF9B3400B75879 /* atoms.py in Copy plotdevice.gfx */,
-				2AC07CDC18EF8F4900B75879 /* bezier.py in Copy plotdevice.gfx */,
-				2AC07CDD18EF8F4900B75879 /* colors.py in Copy plotdevice.gfx */,
-				2AC07CDE18EF8F4900B75879 /* effects.py in Copy plotdevice.gfx */,
-				2AC07CDF18EF8F4900B75879 /* image.py in Copy plotdevice.gfx */,
-				2AC07CE018EF8F4900B75879 /* transform.py in Copy plotdevice.gfx */,
-				2AC07CE118EF8F4900B75879 /* typography.py in Copy plotdevice.gfx */,
-			);
-			name = "Copy plotdevice.gfx";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		611CC59810BA901100B55455 /* Copy plotdevice.lib */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = python/plotdevice/lib;
-			dstSubfolderSpec = 7;
-			files = (
-				2A32958918C59D8000EEDD1C /* __init__.py in Copy plotdevice.lib */,
-				2A32958B18C59D8000EEDD1C /* geometry.py in Copy plotdevice.lib */,
-				2A32958C18C59D8000EEDD1C /* io.py in Copy plotdevice.lib */,
-				2A32958D18C59D8000EEDD1C /* pathmatics.py in Copy plotdevice.lib */,
-			);
-			name = "Copy plotdevice.lib";
+			name = "Copy 'plotdevice' Tool";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -529,62 +379,22 @@
 		};
 /* End PBXGroup section */
 
-/* Begin PBXLegacyTarget section */
-		61EF506110BC26D1006DEF6C /* Clean Extensions */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "buildlibs.py clean";
-			buildConfigurationList = 61EF506410BC26F9006DEF6C /* Build configuration list for PBXLegacyTarget "Clean Extensions" */;
-			buildPhases = (
-			);
-			buildToolPath = python2.7;
-			buildWorkingDirectory = app/deps;
-			dependencies = (
-			);
-			name = "Clean Extensions";
-			passBuildSettingsInEnvironment = 1;
-			productName = "Clean Ext";
-		};
-		61FFC03810BAD90D009AF371 /* Build Extensions */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = buildlibs.py;
-			buildConfigurationList = 61FFC03B10BAD915009AF371 /* Build configuration list for PBXLegacyTarget "Build Extensions" */;
-			buildPhases = (
-			);
-			buildToolPath = python2.7;
-			buildWorkingDirectory = app/deps;
-			dependencies = (
-			);
-			name = "Build Extensions";
-			passBuildSettingsInEnvironment = 1;
-			productName = "Build Extensions";
-		};
-/* End PBXLegacyTarget section */
-
 /* Begin PBXNativeTarget section */
 		8D15AC270486D014006FF6A4 /* PlotDevice */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C05733C708A9546B00998B17 /* Build configuration list for PBXNativeTarget "PlotDevice" */;
 			buildPhases = (
 				8D15AC2B0486D014006FF6A4 /* Resources */,
-				2AC07CAF18EF821600B75879 /* Copy Module Resources (plotdevice/rsrc/*) */,
-				2A15C45318A45A7B006BDFF0 /* Update web ui (rebuild ace) */,
-				2A15C43718A20929006BDFF0 /* Copy web ui assets */,
-				2A66ECEA18A99303002903DE /* Copy web ui scripts */,
-				611CC53110BA8E0000B55455 /* Copy plotdevice root */,
-				611CC59810BA901100B55455 /* Copy plotdevice.lib */,
-				611CC55010BA8E4900B55455 /* Copy plotdevice.gui */,
-				611CC59610BA901100B55455 /* Copy plotdevice.util */,
-				2A29445E185E54C200E9F650 /* Copy plotdevice.run */,
-				611CC59710BA901100B55455 /* Copy plotdevice.gfx */,
+				2A15C43718A20929006BDFF0 /* Copy Editor Assets */,
+				2A66ECEA18A99303002903DE /* Copy Editor Scripts */,
+				2A758E411957B7CE003ECF9D /* Copy PlotDevice Module */,
+				2ABDB76F1867D9560069EFC3 /* Copy 'plotdevice' Tool */,
 				8D15AC300486D014006FF6A4 /* Sources */,
 				8D15AC330486D014006FF6A4 /* Frameworks */,
-				6156AAC410BC110E00C3CE99 /* Copy External Libraries */,
-				2ABDB76F1867D9560069EFC3 /* Copy plotdevice tool */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				61EB1E3413E2C6E6002641C0 /* PBXTargetDependency */,
 			);
 			name = PlotDevice;
 			productInstallPath = "$(HOME)/Applications";
@@ -614,9 +424,6 @@
 			projectRoot = "";
 			targets = (
 				8D15AC270486D014006FF6A4 /* PlotDevice */,
-				61FFC03810BAD90D009AF371 /* Build Extensions */,
-				61EF506110BC26D1006DEF6C /* Clean Extensions */,
-				61DB841010BEABCF003F73B9 /* Build Distribution */,
 			);
 		};
 /* End PBXProject section */
@@ -646,62 +453,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		2A15C45318A45A7B006BDFF0 /* Update web ui (rebuild ace) */ = {
+		2A758E411957B7CE003ECF9D /* Copy PlotDevice Module */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Update web ui (rebuild ace)";
+			name = "Copy PlotDevice Module";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "echo \"Skipping ace.js build...\"\n#cd related/ace\n#make install";
-		};
-		2AC07CAF18EF821600B75879 /* Copy Module Resources (plotdevice/rsrc/*) */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy Module Resources (plotdevice/rsrc/*)";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "RSRC_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/plotdevice/rsrc\"\nmkdir -p \"$RSRC_DIR\"\ncp -p app/Resources/colors.json \"$RSRC_DIR\"\ncp -p app/Resources/PlotDeviceFile.icns \"$RSRC_DIR\"/viewer.icns\nibtool --compile \"$RSRC_DIR/viewer.nib\" app/Resources/English.lproj/PlotDeviceScript.xib\n";
-		};
-		6156AAC410BC110E00C3CE99 /* Copy External Libraries */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			comments = "Copy all libraries built with the \"Build Extensions\" target to the PlotDevice resources folder.";
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy External Libraries";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "EXT_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/plotdevice/lib\"\nmkdir -p $EXT_DIR\ncp -R -p build/deps/* $EXT_DIR\n\n";
-		};
-		61DB840F10BEABCF003F73B9 /* Make Dist */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Make Dist";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Remove the distribution folder\nfind dist -name \\*.py -exec chflags nouchg '{}' \\;\nrm -rf dist\n# Make a new one\nmkdir -p dist/PlotDevice/PlotDevice\ncd dist/PlotDevice/PlotDevice\n# Copy the current PlotDevice application.\ncp -R -p $TARGET_BUILD_DIR/PlotDevice.app .\n# Copy changes and readme\ncp ../../../CHANGES.md Changes.txt\ncp ../../../README.md Readme.txt\n# Copy examples\ncp -R ../../../examples Examples\nchmod 644 Examples/*/*\nchflags uchg Examples/*/*.py\n# Remove all .svn cruft\nrm -rf `find . -type d -name .svn`\n# Make DMG\ncd ../..\nhdiutil create PlotDevice.dmg -srcfolder PlotDevice\nhdiutil internet-enable PlotDevice.dmg";
+			shellScript = "# let the setup script handle updating\n/usr/bin/python setup.py build\n\n# copy the up-to-date module contents into the app bundle\nEXT_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/\"\nmkdir -p $EXT_DIR\nditto build/lib/plotdevice \"$EXT_DIR/plotdevice\"\n\n# make sure everything has a .pyc (so code-signing doesn't break on first run)\n/usr/bin/python -m compileall \"$EXT_DIR/plotdevice\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -715,19 +479,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		61DB841410BEABD4003F73B9 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 8D15AC270486D014006FF6A4 /* PlotDevice */;
-			targetProxy = 61DB841310BEABD4003F73B9 /* PBXContainerItemProxy */;
-		};
-		61EB1E3413E2C6E6002641C0 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 61FFC03810BAD90D009AF371 /* Build Extensions */;
-			targetProxy = 61EB1E3313E2C6E6002641C0 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		2A93AE731903326E00C6144D /* placeholder.pdf */ = {
@@ -799,59 +550,6 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		61DB841110BEABCF003F73B9 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_NAME = "Build Distribution";
-				SDKROOT = macosx;
-			};
-			name = Debug;
-		};
-		61DB841210BEABCF003F73B9 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				PRODUCT_NAME = "Build Distribution";
-				SDKROOT = macosx;
-			};
-			name = Release;
-		};
-		61EF506210BC26D1006DEF6C /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_NAME = "PlotDevice Clean";
-			};
-			name = Debug;
-		};
-		61EF506310BC26D1006DEF6C /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				PRODUCT_NAME = "PlotDevice Clean";
-			};
-			name = Release;
-		};
-		61FFC03910BAD90D009AF371 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_NAME = "PlotDevice Build";
-			};
-			name = Debug;
-		};
-		61FFC03A10BAD90D009AF371 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				PRODUCT_NAME = "PlotDevice Build";
-			};
-			name = Release;
-		};
 		C05733C808A9546B00998B17 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -924,33 +622,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		61DB842F10BEABDF003F73B9 /* Build configuration list for PBXAggregateTarget "Build Distribution" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				61DB841110BEABCF003F73B9 /* Debug */,
-				61DB841210BEABCF003F73B9 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		61EF506410BC26F9006DEF6C /* Build configuration list for PBXLegacyTarget "Clean Extensions" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				61EF506210BC26D1006DEF6C /* Debug */,
-				61EF506310BC26D1006DEF6C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		61FFC03B10BAD915009AF371 /* Build configuration list for PBXLegacyTarget "Build Extensions" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				61FFC03910BAD90D009AF371 /* Debug */,
-				61FFC03A10BAD90D009AF371 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		C05733C708A9546B00998B17 /* Build configuration list for PBXNativeTarget "PlotDevice" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
