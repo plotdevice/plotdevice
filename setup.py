@@ -73,18 +73,6 @@ Requires:
 * Mac OS X 10.9+
 """
 
-# quiet = {"extra_compile_args":['-Qunused-arguments']}
-
-# ext_modules = [
-#     Extension('cGeo', ['libs/cGeo/cGeo.c'], **quiet),
-#     Extension('cPathmatics', ['libs/pathmatics/pathmatics.c'], **quiet),
-#     Extension('cPolymagic', ['libs/polymagic/gpc.c', 'libs/polymagic/polymagic.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation'], **quiet),
-#     Extension('cIO', ['libs/IO/module.m','libs/IO/SysAdmin.m', 'libs/IO/ImageSequence.m', 'libs/IO/AnimatedGif.m', 'libs/IO/Video.m'], extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation', '-framework', 'Security', '-framework', 'AVFoundation', '-framework', 'CoreMedia', '-framework', 'CoreVideo'], **quiet),
-#     Extension('cEvents', ['libs/macfsevents/_fsevents.c', 'libs/macfsevents/compat.c'], extra_link_args = ["-framework","CoreFoundation", "-framework","CoreServices"], **quiet),
-# ]
-
-
-
 plist={
    "UTExportedTypeDeclarations":[
       {
@@ -115,7 +103,7 @@ plist={
         "LSTypeIsPackage":0,
         "NSDocumentClass":"PlotDeviceDocument",
         "CFBundleTypeName":"PlotDevice Document",
-        "CFBundleTypeIconFile":"PlotDeviceFile",
+        "CFBundleTypeIconFile":"PlotDeviceFile.icns",
         "LSItemContentTypes":[
           "io.plotdevice.document"
         ],
@@ -149,14 +137,9 @@ plist={
     "NSPrincipalClass": 'NSApplication',
 }
 
-
 rsrc = [
-    "app/Resources/English.lproj/AskString.xib",
-    "app/Resources/English.lproj/Credits.rtf",
-    "app/Resources/English.lproj/MainMenu.xib",
-    "app/Resources/English.lproj/PlotDeviceDocument.xib",
-    "app/Resources/English.lproj/PlotDevicePreferences.xib",
     "app/Resources/ui",
+    "app/Resources/English.lproj",
     "app/Resources/PlotDevice.icns",
     "app/Resources/PlotDeviceFile.icns",
 ]
@@ -176,42 +159,15 @@ class CleanCommand(Command):
         os.system('rm -rf ./build ./dist')
         os.system('rm -rf ./libs/*/build')
 
-# from distutils.command.build_ext import build_ext
-# class BuildExtCommand(build_ext):
-#     def run(self):
-#         # c-extensions post-build hook:
-#         #   - move all the .so files out of the top-level directory
-
-#         if BUILD_APP:
-#             build_ext.run(self) # first let the real build_ext routine do its thing
-#             return # py2app moves the libraries to lib-dynload instead
-
-#         self.spawn(['/usr/bin/python', 'libs/buildlibs.py'])
-#         print "built libs from", os.getcwd()
-#         self.spawn(['/usr/bin/ditto', 'build/libs', '%s/plotdevice/lib'%self.build_lib])
-
-#         # build_ext.run(self) # first let the real build_ext routine do its thing
-#         # if BUILD_APP: return # py2app moves the libraries to lib-dynload instead
-#         # self.mkpath('%s/plotdevice/ext'%self.build_lib)
-
-#         # for ext in self.extensions:
-#         #     print "each", self.build_lib, ext.name
-#         #     src = "%s/%s.so"%(self.build_lib, ext.name)
-#         #     dst = "%s/plotdevice/libs/%s.so"%(self.build_lib, ext.name)
-#         #     self.move_file(src, dst)
-#             # self.spawn(['/usr/bin/touch',"%s/plotdevice/ext/__init__.py"%self.build_lib])
-
 from distutils.command.build_py import build_py
 class BuildCommand(build_py):
     def run(self):
-        # plotdevice module post-build hook:
-        #   - include some ui resources for running a script from the command line
+        # first let the real build_py routine do its thing
+        build_py.run(self)
+        # then build the extensions
+        self.spawn(['/usr/bin/python', 'libs/buildlibs.py'])
 
-        build_py.run(self) # first let the real build_py routine do its thing
-        self.spawn(['/usr/bin/python', 'libs/buildlibs.py']) # then build the extensions
-        print "built libs from", os.getcwd()
-
-        if BUILD_APP: return # the app bundle doesn't need the PlotDeviceScript nib
+        # include some ui resources for running a script from the command line
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
         self.mkpath(rsrc_dir)
         self.copy_file("app/Resources/colors.json", '%s/colors.json'%rsrc_dir)
@@ -233,42 +189,41 @@ if BUILD_APP:
             build_app.initialize_options(self)
         def finalize_options(self):
             self.cwd = os.getcwd()
+            self.verbose=0
             build_app.finalize_options(self)
         def run(self):
             TOP=self.cwd
             assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
             build_app.run(self)
+            if self.dry_run:
+                return
 
-            # Do some py2app `configuration' to make the bundle layout more
-            # like what xcode produces
-            RSRC="%s/dist/PlotDevice.app/Contents/Resources"%self.cwd
-            BIN="%s/dist/PlotDevice.app/Contents/SharedSupport"%self.cwd
-            self.mkpath(BIN)
-            self.mkpath("%s/python"%RSRC)
-            # self.mkpath("%s/English.lproj"%RSRC)
-            remove_tree("%s/../Frameworks"%RSRC, dry_run=self.dry_run)
+            # set up internal paths and ensure destination dirs exist
+            from os.path import join, dirname
+            RSRC = self.resdir
+            BIN = join(dirname(RSRC), 'SharedSupport')
+            MODULE = join(self.bdist_base, 'lib/plotdevice')
+            EGG = join(RSRC, 'lib/python2.7/site-packages.zip')
+            PY = join(RSRC, 'python')
+            for pth in BIN, PY:
+                self.mkpath(pth)
+
+            # unpack the zipped up pyc files and merge with the module sources
+            self.spawn(['unzip', '-q', EGG, '-d', PY])
+            self.spawn(['/usr/bin/ditto', MODULE, join(PY, 'plotdevice')])
+
+            # discard the eggery-pokery
+            remove_tree(join(RSRC,'lib'), dry_run=self.dry_run)
+            os.unlink(join(RSRC,'include'))
+            os.unlink(join(RSRC,'site.pyc'))
+            os.unlink(join(PY,'test.pyc'))
 
             # place the command line tool in SharedSupport
             self.copy_file("%s/app/plotdevice"%TOP, BIN)
 
-            # put the module and .so files in a known location (primarily so the
-            # tool can find console.py)
-            self.copy_tree('%s/plotdevice'%TOP, '%s/python/plotdevice'%RSRC)
-            # self.copy_tree('%s/lib/python2.7/lib-dynload'%RSRC, '%s/python/plotdevice/ext'%RSRC)
-            self.spawn(['/usr/bin/ditto', '%s/build/ext'%TOP, '%s/python/plotdevice/lib'%RSRC])
-            self.spawn(['/usr/bin/ditto', '%s/build/ext'%TOP, '%s/lib/python2.7/lib-dynload'%RSRC])
-
-            # populate the rsrc subdir
-            data_dir = '%s/python/plotdevice/rsrc'%RSRC
-            self.mkpath(data_dir)
-            self.copy_file("%s/app/Resources/colors.json"%TOP, '%s/colors.json'%data_dir)
-            self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%data_dir, "app/Resources/English.lproj/PlotDeviceScript.xib"])
-            self.copy_file("%s/app/Resources/PlotDeviceFile.icns"%TOP, '%s/viewer.icns'%data_dir)
-
-            # find $TOP/plotdevice -name \*pyc -exec rm {} \;
-
             # install the documentation
-            self.copy_tree('%s/app/Resources/examples'%TOP, '%s/examples'%RSRC)
+            self.spawn(['/usr/bin/ditto', join(TOP, 'doc'), join(RSRC, 'doc')])
+            self.spawn(['/usr/bin/ditto', join(TOP, 'app/Resources/examples'), join(RSRC, 'examples')])
 
             print "done building PlotDevice.app in ./dist"
 
@@ -281,41 +236,19 @@ if BUILD_APP:
             self.cwd = os.getcwd()
         def run(self):
             TOP = self.cwd
-            DEST = "%s/dist/PlotDevice/PlotDevice"%self.cwd
-            DMG = 'PlotDevice-%s.dmg'%VERSION
-            ZIP = 'PlotDevice-%s.zip'%VERSION
+            APP = '%s/dist/PlotDevice.app'%TOP
+            ZIP = APP.replace('.app', '-%s.zip'%VERSION)
 
             # build the app
-            self.run_command('py2app')
+            if not os.path.exists(APP):
+                self.run_command('py2app')
+                # or:
+                # self.spawn(['xcodebuild'])
+                # remove_tree(APP+'.dSYM')
 
-            # Make a staging area for the disk image
-            self.mkpath(DEST)
 
-            # Copy the current PlotDevice application.
-            self.copy_tree("dist/PlotDevice.app", "%s/PlotDevice.app"%DEST)
-
-            # Copy changes and readme
-            self.copy_file('CHANGES.md', '%s/Changes.txt'%DEST)
-            self.copy_file('README.md', '%s/Readme.txt'%DEST)
-
-            # Copy examples
-            self.copy_tree('%s/app/Resources/examples'%TOP, '%s/Examples'%DEST)
-            # chmod 755 Examples/*/*.py
-
-            # Make DMG
-            os.chdir('dist')
-            self.spawn(['hdiutil','create',DMG,'-srcfolder','PlotDevice'])
-            self.spawn(['hdiutil','internet-enable',DMG])
-
-            # Make Zip
-            os.chdir('PlotDevice')
-            self.spawn(['zip','-r','-q',ZIP,'PlotDevice'])
-            self.move_file(ZIP, '%s/dist'%TOP)
-
-            # clean up the staging area
-            remove_tree('%s/dist/PlotDevice'%TOP, verbose=False)
-
-            print "done building PlotDevice.app, %s, and %s in ./dist"%(ZIP,DMG)
+            # create a versioned zip file
+            self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
 
 
 if __name__=='__main__':
@@ -331,15 +264,12 @@ if __name__=='__main__':
         author_email = AUTHOR_EMAIL,
         url = URL,
         classifiers = CLASSIFIERS,
-        # ext_modules = ext_modules,
         packages = find_packages(),
-        package_data = {'plotdevice.graphics':['css.json']},
         scripts = ["app/plotdevice"],
         zip_safe=False,
         cmdclass={
             'clean': CleanCommand,
-            'build_py': BuildCommand,
-            # 'build_ext': BuildExtCommand,
+            'build_py': BuildCommand
         },
     ))
 
