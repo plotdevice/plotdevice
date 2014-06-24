@@ -47,7 +47,6 @@ class DraggyWebView(WebView):
         return True
 
 class EditorView(NSView):
-    # document = objc.IBOutlet()
     jumpPanel = objc.IBOutlet()
     jumpLine = objc.IBOutlet()
 
@@ -92,11 +91,19 @@ class EditorView(NSView):
         self._doers = mm.itemWithTitle_('Edit').submenu().itemArray()[1:3]
         self._undo_mgr = None
 
+    def _jostle(self):
+        awoke = self.webview.stringByEvaluatingJavaScriptFromString_('window.editor && window.editor.ready')
+        if awoke:
+            for op in self._queue:
+                self.webview.stringByEvaluatingJavaScriptFromString_(op)
+            self._wakeup.invalidate()
+            self._wakeup = None
+            self._queue = None
+
     def _cleanup(self):
         nc = NSNotificationCenter.defaultCenter()
         nc.removeObserver_(self)
         self._doers = self._undo_mgr = self.jumpPanel = self.jumpLine = None
-
 
     # def webView_didFinishLoadForFrame_(self, sender, frame):
     def webView_didClearWindowObject_forFrame_(self, sender, win, frame):
@@ -147,21 +154,20 @@ class EditorView(NSView):
             return self._undo_mgr.canRedo()
         return True
 
-    def js(self, cmd, args=''):
-        op = '%s(%s);'%(cmd,args)
-        if self._wakeup:
-            self._queue.append(op)
-        else:
-            return self.webview.stringByEvaluatingJavaScriptFromString_(op)
+    def updateTrackingAreas(self):
+        # keep a single tracking area (with our whole bounds) up to date
+        for area in self.trackingAreas():
+            self.removeTrackingArea_(area)
 
-    def _jostle(self):
-        awoke = self.webview.stringByEvaluatingJavaScriptFromString_('window.editor && window.editor.ready')
-        if awoke:
-            for op in self._queue:
-                self.webview.stringByEvaluatingJavaScriptFromString_(op)
-            self._wakeup.invalidate()
-            self._wakeup = None
-            self._queue = None
+        opts = (NSTrackingMouseEnteredAndExited | NSTrackingActiveInActiveApp);
+        area = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(self.bounds(), opts, self, None)
+        self.addTrackingArea_(area)
+
+    def mouseExited_(self, e):
+        # use the tracking area to restore the cursor when it leaves the bounds.
+        # works around a bug where either ace.js or the WebView was leaving the
+        # I-beam cursor active on-exit
+        NSCursor.arrowCursor().set()
 
     # App-initiated actions
 
@@ -196,11 +202,17 @@ class EditorView(NSView):
     def report(self, crashed, script):
         if not crashed:
             self.js('editor.mark', args(None))
-            return
+        else:
+            exc, traceback = crashed
+            err_lines = [line-1 for fn, line, env, src in reversed(traceback) if fn==script]
+            self.js('editor.mark', args("\n".join(exc), err_lines))
 
-        exc, traceback = crashed
-        err_lines = [line-1 for fn, line, env, src in reversed(traceback) if fn==script]
-        self.js('editor.mark', args("\n".join(exc), err_lines))
+    def js(self, cmd, args=''):
+        op = '%s(%s);'%(cmd,args)
+        if self._wakeup:
+            self._queue.append(op)
+        else:
+            return self.webview.stringByEvaluatingJavaScriptFromString_(op)
 
     # Menubar actions
 
