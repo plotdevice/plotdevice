@@ -24,7 +24,9 @@ import sys,os
 from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
+from os.path import join, exists, dirname, basename, abspath
 import plotdevice
+import plistlib
 
 # PyPI fields
 NAME = 'PlotDevice'
@@ -54,7 +56,7 @@ LONG_DESCRIPTION = """PlotDevice is a Macintosh application used in graphic desi
 interactive Python environment where you can create two-dimensional graphics
 and output them in a variety of vector, bitmap, and animation formats. It is
 meant both as a sketch environment for exploring generative design and as a
-general purpose graphics library for use in external Python programs.
+general purpose graphics library for use in stand-alone Python programs.
 
 PlotDevice is a fork of NodeBox 1.9.7rc1 with support for modern versions of
 Python and Mac OS.
@@ -69,7 +71,6 @@ The new version features:
 * External scripts can use `from plotdevice.script import *` to create a drawing environment.
 * Simplified bezier & affine transform api using the python ‘with’ statement
 * Now uses the system's Python 2.7 interpreter.
-* Includes refreshed offline docs.
 
 Requires:
 * Mac OS X 10.9+
@@ -79,18 +80,20 @@ Requires:
 SPARKLE_VERSION = '1.7.0'
 SPARKLE_URL = 'https://github.com/pornel/Sparkle/releases/download/%(v)s/Sparkle-%(v)s.tar.bz2'% {'v':SPARKLE_VERSION}
 
-# read in a json conversion of the main Info.plist
-def info_plist(key=None):
-    import json
-    from subprocess import Popen, PIPE
-    src='app/PlotDevice-Info.plist'
-    convert = ['plutil', '-convert', 'json', src, '-o', '-']
-    plist, _ = Popen(convert, stdout=PIPE).communicate()
-    for placeholder in '${EXECUTABLE_NAME}', '${PRODUCT_NAME}':
-        plist = plist.replace(placeholder, NAME)
-    if key is None:
-        return json.loads(plist)
-    return json.loads(plist)[key]
+def info_plist(pth='app/PlotDevice-Info.plist'):
+    info = plistlib.readPlist(pth)
+    info['CFBundleExecutable'] = info['CFBundleName'] = NAME
+    return info
+
+def update_plist(pth, **modifications):
+    info = plistlib.readPlist(pth)
+    for key, val in modifications.items():
+        if val is None:
+            info.pop(key)
+        else:
+            info[key] = val
+    plistlib.writePlist(info, pth)
+
 
 from distutils.core import Command
 class CleanCommand(Command):
@@ -111,8 +114,8 @@ class BuildCommand(build_py):
         # first let the real build_py routine do its thing
         build_py.run(self)
 
-        # then build the extensions
-        self.spawn(['/usr/bin/python', 'app/deps/build.py', os.path.abspath(self.build_lib)])
+        # then compile the extensions into the just-built module
+        self.spawn(['/usr/bin/python', 'app/deps/build.py', abspath(self.build_lib)])
 
         # include some ui resources for running a script from the command line
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
@@ -142,7 +145,6 @@ class DistCommand(Command):
     def finalize_options(self):
         self.cwd = os.getcwd()
     def run(self):
-        from os.path import join, exists, dirname, basename, abspath
         from subprocess import Popen, PIPE
         TOP = self.cwd
         APP = '%s/dist/PlotDevice.app'%TOP
@@ -152,15 +154,17 @@ class DistCommand(Command):
         # build the app
         self.spawn(['xcodebuild'])
 
-        # set the bundle version to the current commit number
-        info_pth = join(TOP, 'dist/PlotDevice.app/Contents/Info.plist')
-        Popen(['plutil', '-replace', 'CFBundleVersion', '-string', 'r'+BUILD, info_pth]).wait()
-        Popen(['plutil', '-replace', 'CFBundleShortVersionString', '-string', VERSION, info_pth]).wait()
-        Popen(['plutil', '-replace', 'SUFeedURL', '-string', 'http://plotdevice.io/app.xml', info_pth]).wait()
-        Popen(['plutil', '-replace', 'SUEnableSystemProfiling', '-bool', 'YES', info_pth]).wait()
-
         # we don't need no stinking core dumps
         remove_tree(APP+'.dSYM')
+
+        # set the bundle version to the current commit number and prime the updater
+        info_pth = join(TOP, 'dist/PlotDevice.app/Contents/Info.plist')
+        update_plist(info_pth,
+            CFBundleVersion = 'r'+BUILD,
+            CFBundleShortVersionString = VERSION,
+            SUFeedURL = 'http://plotdevice.io/app.xml',
+            SUEnableSystemProfiling = 'YES'
+        )
 
         # Download Sparkle (if necessary) and copy it into the bundle
         ORIG = 'app/deps/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
@@ -208,8 +212,11 @@ if BUILD_APP:
             if self.dry_run:
                 return
 
+            # undo py2app's weird treatment of the config.version value
+            info_pth = join(TOP, 'dist/PlotDevice.app/Contents/Info.plist')
+            update_plist(info_pth, CFBundleShortVersionString=None)
+
             # set up internal paths and ensure destination dirs exist
-            from os.path import join, dirname
             RSRC = self.resdir
             BIN = join(dirname(RSRC), 'SharedSupport')
             MODULE = join(self.bdist_base, 'lib/plotdevice')
@@ -217,7 +224,7 @@ if BUILD_APP:
             for pth in BIN, PY:
                 self.mkpath(pth)
 
-            # unpack the zipped up pyc files and merge with the module sources
+            # install the module in Resources/python
             self.spawn(['/usr/bin/ditto', MODULE, join(PY, 'plotdevice')])
 
             # discard the eggery-pokery
@@ -236,7 +243,7 @@ if __name__=='__main__':
     # common config between module and app builds
     config.update(dict(
         name = NAME,
-        version = info_plist(key='CFBundleShortVersionString'),
+        version = VERSION,
         description = DESCRIPTION,
         long_description = LONG_DESCRIPTION,
         author = AUTHOR,
