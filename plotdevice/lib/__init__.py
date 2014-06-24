@@ -1,21 +1,23 @@
 import sys
 from os.path import join, abspath, dirname, exists
 
-# do some special-case handling when the module is imported from within the source dist.
-# if the libraries build dir exists, add it to the path so we can pick up the .so files,
-# otherwise leave the path as it is and bomb on failure to find the libraries.
-lib_root = abspath(dirname(__file__))
-inplace = exists(join(lib_root, '../../app/main.m'))
-if inplace:
-    sys.path.append(join(lib_root, '../../build/lib/plotdevice/lib'))
+# do some special-case handling when the module is imported from within the source dist
+# (determined by checking the existence project files at a known path). if we're in the
+# source dist, add the build dir to the path so we can pick up the .so files,
+module_root = abspath(join(abspath(dirname(__file__)), '../..'))
+if exists(join(module_root, 'app/PlotDevice-Info.plist')):
+    so_dir = join(module_root, 'build/lib/plotdevice/lib')
+    sys.path.append(so_dir)
+    if not exists(so_dir):
+        unbuilt = 'Build the plotdevice module with `python setup.pt build\' before attempting import it.'
+        raise RuntimeError(unbuilt)
 
 # test the sys.path by attempting to load the c-extensions
 try:
     import geometry, io, pathmatics
 except ImportError:
-    # print "failed with path", sys.path
-    suggest = ' (try running `python setup.py build` before using the module from within the repository)'
-    notfound = "Couldn't locate C extensions%s." % (suggest if inplace else '')
+    from pprint import pformat
+    notfound = "Couldn't locate C extensions (cIO.so, cGeometry.so, & cPathmatics.so).\nSearched in:\n%s\nto no avail..."%pformat(sys.path)
     raise RuntimeError(notfound)
 
 # allow Libraries to request a _ctx reference
