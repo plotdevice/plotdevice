@@ -11,7 +11,7 @@ class DeviceError(Exception):
 import sys, re
 called_from = getattr(sys.modules['__main__'], '__file__', '<interactive>')
 is_windowed = bool(re.search(r'plotdevice(-app|/run/console)\.py$', called_from))
-in_setup = bool(sys.modules['__main__'].__file__.endswith('setup.py'))
+in_setup = bool(called_from.endswith('setup.py'))
 
 # add the Extras directory to sys.path since every module depends on PyObjC and friends
 try:
