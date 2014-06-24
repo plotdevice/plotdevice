@@ -1,4 +1,4 @@
-__version__='1.0'
+__version__='0.9'
 __MAGIC = '_p_l_o_t_d_e_v_i_c_e_'
 
 def get_version():
@@ -11,6 +11,7 @@ class DeviceError(Exception):
 import sys, re
 called_from = getattr(sys.modules['__main__'], '__file__', '<interactive>')
 is_windowed = bool(re.search(r'plotdevice(-app|/run/console)\.py$', called_from))
+in_setup = bool(sys.modules['__main__'].__file__.endswith('setup.py'))
 
 # add the Extras directory to sys.path since every module depends on PyObjC and friends
 try:
@@ -28,7 +29,7 @@ from os import getenv
 from os.path import join
 sys.path.append(join(getenv('HOME'), 'Library', 'Application Support', 'PlotDevice'))
 
-if is_windowed:
+if is_windowed or in_setup:
     # if a script imports * from within the app/tool, nothing should be (re-)added to the
     # global namespace. we'll let the Sandbox handle populating the namespace instead.
     __all__ = []

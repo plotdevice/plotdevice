@@ -24,12 +24,14 @@ import sys,os
 from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
+import plotdevice
 
 # PyPI fields
 NAME = 'PlotDevice'
-AUTHOR = "Christian Swinehart",
-AUTHOR_EMAIL = "drafting@samizdat.cc",
-URL = "http://plotdevice.io/",
+VERSION = plotdevice.__version__
+AUTHOR = "Christian Swinehart"
+AUTHOR_EMAIL = "drafting@samizdat.cc"
+URL = "http://plotdevice.io/"
 CLASSIFIERS = (
     "Development Status :: 5 - Production/Stable",
     "Environment :: MacOS X :: Cocoa",
@@ -144,8 +146,7 @@ class DistCommand(Command):
         from subprocess import Popen, PIPE
         TOP = self.cwd
         APP = '%s/dist/PlotDevice.app'%TOP
-        VERSION = info_plist(key='CFBundleShortVersionString')
-        BUILD, _ = Popen('git log --oneline | wc -l', stdout=PIPE, shell=True).communicate()
+        BUILD, _ = Popen('git log --oneline | wc -l |  tr -d " \n"', stdout=PIPE, shell=True).communicate()
         ZIP = APP.replace('.app', '_app-%s.zip'%VERSION)
 
         # build the app
@@ -153,7 +154,8 @@ class DistCommand(Command):
 
         # set the bundle version to the current commit number
         info_pth = join(TOP, 'dist/PlotDevice.app/Contents/Info.plist')
-        Popen(['plutil', '-replace', 'CFBundleVersion', '-string', BUILD.strip(), info_pth]).wait()
+        Popen(['plutil', '-replace', 'CFBundleVersion', '-string', 'r'+BUILD, info_pth]).wait()
+        Popen(['plutil', '-replace', 'CFBundleShortVersionString', '-string', VERSION, info_pth]).wait()
         Popen(['plutil', '-replace', 'SUFeedURL', '-string', 'http://plotdevice.io/app.xml', info_pth]).wait()
         Popen(['plutil', '-replace', 'SUEnableSystemProfiling', '-bool', 'YES', info_pth]).wait()
 
@@ -180,7 +182,7 @@ class DistCommand(Command):
 
         # print out a snippet for the app.xml feed
         print "done building PlotDevice.app and %s in ./dist" % basename(ZIP)
-        tmpl='<enclosure url="http://plotdevice.io/app/%s" sparkle:shortVersionString="%s" sparkle:version="%i" length="%i" type="application/octet-stream" />'
+        tmpl='<enclosure url="http://plotdevice.io/app/%s" sparkle:shortVersionString="%s" sparkle:version="r%i" length="%i" type="application/octet-stream" />'
         print tmpl % (basename(ZIP), VERSION, int(BUILD), os.path.getsize(ZIP))
 
 BUILD_APP = any(v in ('py2app','dist') for v in sys.argv)
