@@ -239,7 +239,7 @@ class PlotDevicePreferencesController(NSWindowController):
             valid = False
             action = 'install' if not found else 'repair'
 
-       return found, valid, action
+        return found, valid, action
 
     @objc.IBAction
     def toolChanged_(self, sender):
