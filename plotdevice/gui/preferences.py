@@ -88,11 +88,13 @@ class PlotDevicePreferencesController(NSWindowController):
     bindingsMenu = objc.IBOutlet()
     fontMenu = objc.IBOutlet()
     fontSizeMenu = objc.IBOutlet()
-    toolInstall = objc.IBOutlet()
     toolPath = objc.IBOutlet()
-    toolRepair = objc.IBOutlet()
+    toolAction = objc.IBOutlet()
+    toolBoilerplate = objc.IBOutlet()
     toolInstallSheet = objc.IBOutlet()
     toolInstallMenu = objc.IBOutlet()
+    updateDaily = objc.IBOutlet()
+    updateNow = objc.IBOutlet()
 
     def init(self):
         self = self.initWithWindowNibName_("PlotDevicePreferences")
@@ -105,6 +107,7 @@ class PlotDevicePreferencesController(NSWindowController):
         self.checkThemes()
         self.checkFonts()
         self.checkBindings()
+        self.checkUpdater()
 
     def _notify(self, notification):
         nc = NSNotificationCenter.defaultCenter()
@@ -116,6 +119,23 @@ class PlotDevicePreferencesController(NSWindowController):
     def windowDidBecomeMain_(self, notification):
         self.checkTool()
         self.checkFonts()
+
+    def checkUpdater(self):
+        sparkle_path = bundle_path(fmwk='Sparkle')
+        if os.path.exists(sparkle_path):
+            # if this is a sparkle build, hook the ui elements up to the sharedUpdater
+            objc.loadBundle('Sparkle', globals(), bundle_path=sparkle_path)
+            sparkle = objc.lookUpClass('SUUpdater').sharedUpdater()
+            self.updateDaily.bind_toObject_withKeyPath_options_('value', sparkle, "automaticallyChecksForUpdates", None)
+            self.updateNow.setTarget_(sparkle)
+            self.updateNow.setAction_("checkForUpdates:")
+        else:
+            # otherwise hide the Software Update box and resize the window
+            updater_box = self.updateNow.superview().superview()
+            updater_box.setHidden_(True)
+            frame = self.window().frame()
+            frame.size.height -= 52
+            self.window().setFrame_display_(frame, True)
 
     def checkBindings(self):
         style = get_default('bindings')
@@ -188,6 +208,17 @@ class PlotDevicePreferencesController(NSWindowController):
         self._notify("FontChanged")
 
     def checkTool(self):
+        found, valid, action = self._tool
+
+        self.toolAction.setTitle_(action.title())
+        self.toolPath.setSelectable_(found is not None)
+        self.toolPath.setStringValue_(found if found else '')
+        self.toolPath.setTextColor_(OK_COL if valid else ERR_COL)
+        self.toolBoilerplate.setHidden_(found is not None)
+        self.toolPath.setHidden_(found is None)
+
+    @property
+    def _tool(self):
         broken = []
         for path in possibleToolLocations():
             if os.path.islink(path):
@@ -195,7 +226,9 @@ class PlotDevicePreferencesController(NSWindowController):
                 tool_path = os.path.realpath(path)
                 found = path
                 valid = tool_path.startswith(bundle_path())
-                if valid: break
+                if valid:
+                    action = 'reveal'
+                    break
                 broken.append(path)
             if os.path.exists(path):
                 # if it's a normal file, something went wrong
@@ -204,20 +237,21 @@ class PlotDevicePreferencesController(NSWindowController):
             # didn't find any working symlinks in the $PATH
             found = broken[0] if broken else None
             valid = False
+            action = 'install' if not found else 'repair'
 
-        self.toolInstall.setHidden_(found is not None)
-        self.toolPath.setSelectable_(found is not None)
-        # self.toolPath.setStringValue_(found.replace(os.environ['HOME'],'~') if found else '')
-        self.toolPath.setStringValue_(found if found else '')
-        self.toolPath.setTextColor_(ERR_COL if not valid else OK_COL)
-        self.toolRepair.setHidden_(not (found and not valid) )
+       return found, valid, action
 
     @objc.IBAction
-    def installTool_(self, sender):
-        locs = [loc.replace(os.environ['HOME'],'~') for loc in possibleToolLocations()]
-        self.toolInstallMenu.removeAllItems()
-        self.toolInstallMenu.addItemsWithTitles_(locs)
-        NSApp().beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.toolInstallSheet, self.window(), self, None, 0)
+    def toolChanged_(self, sender):
+        found, _, action = self._tool
+
+        if action == 'reveal':
+            os.system('open --reveal "%s"'%found)
+        elif action in ('install', 'repair'):
+            locs = [loc.replace(os.environ['HOME'],'~') for loc in possibleToolLocations()]
+            self.toolInstallMenu.removeAllItems()
+            self.toolInstallMenu.addItemsWithTitles_(locs)
+            NSApp().beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.toolInstallSheet, self.window(), self, None, 0)
 
     @objc.IBAction
     def finishInstallation_(self, sender):

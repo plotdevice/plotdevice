@@ -11,11 +11,13 @@
                 <outlet property="fontMenu" destination="e2R-x9-uL7" id="dQo-AC-x7h"/>
                 <outlet property="fontSizeMenu" destination="6ih-c5-vLJ" id="UW2-OU-N5k"/>
                 <outlet property="themeMenu" destination="CaR-Wn-WAI" id="bO2-aK-jzu"/>
-                <outlet property="toolInstall" destination="U4T-Iz-3Du" id="byU-VI-EYZ"/>
+                <outlet property="toolAction" destination="bar-jt-drT" id="OcH-nl-qOC"/>
+                <outlet property="toolBoilerplate" destination="sQe-Q3-waN" id="lxj-1L-CZ2"/>
                 <outlet property="toolInstallMenu" destination="mnx-Hy-Lba" id="q5K-JP-zXt"/>
                 <outlet property="toolInstallSheet" destination="zey-1s-azI" id="meb-9R-5X7"/>
                 <outlet property="toolPath" destination="UxM-tv-d5u" id="52z-Rc-kyc"/>
-                <outlet property="toolRepair" destination="bar-jt-drT" id="hqs-o9-D3F"/>
+                <outlet property="updateDaily" destination="LeO-L8-lya" id="iCC-yr-Y6f"/>
+                <outlet property="updateNow" destination="gt2-UG-Qmd" id="YyQ-Qt-KLY"/>
                 <outlet property="window" destination="5" id="197"/>
             </connections>
         </customObject>
@@ -145,34 +147,32 @@
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textField verticalHuggingPriority="750" id="UxM-tv-d5u">
-                                    <rect key="frame" x="16" y="7" width="231" height="22"/>
+                                    <rect key="frame" x="16" y="10" width="216" height="16"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" lineBreakMode="truncatingMiddle" selectable="YES" sendsActionOnEndEditing="YES" state="on" title="/usr/local/bin/plotdevice" id="Psj-xs-GZG">
-                                        <font key="font" size="11" name="Menlo-Regular"/>
+                                        <font key="font" size="10" name="Monaco"/>
                                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
                                 </textField>
+                                <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="sQe-Q3-waN">
+                                    <rect key="frame" x="16" y="12" width="168" height="14"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" placeholderString="run scripts from the terminal" id="fee-4z-kHa">
+                                        <font key="font" metaFont="smallSystem"/>
+                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
                                 <button verticalHuggingPriority="750" id="bar-jt-drT">
-                                    <rect key="frame" x="247" y="3" width="71" height="28"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <buttonCell key="cell" type="push" title="Reinstall" bezelStyle="rounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="WY6-mn-T7K">
+                                    <rect key="frame" x="233" y="3" width="86" height="28"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="push" title="Install" bezelStyle="rounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="WY6-mn-T7K">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="smallSystem"/>
                                     </buttonCell>
                                     <connections>
-                                        <action selector="installTool:" target="-2" id="GUv-eK-w15"/>
-                                    </connections>
-                                </button>
-                                <button verticalHuggingPriority="750" id="U4T-Iz-3Du">
-                                    <rect key="frame" x="13" y="3" width="67" height="28"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <buttonCell key="cell" type="push" title="Install" bezelStyle="rounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="97t-ZD-fnC">
-                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                        <font key="font" metaFont="smallSystem"/>
-                                    </buttonCell>
-                                    <connections>
-                                        <action selector="installTool:" target="-2" id="YAe-CP-b4Q"/>
+                                        <action selector="toolChanged:" target="-2" id="Rxh-qQ-RNl"/>
                                     </connections>
                                 </button>
                             </subviews>
@@ -191,18 +191,15 @@
                                 <button verticalHuggingPriority="750" id="gt2-UG-Qmd">
                                     <rect key="frame" x="232" y="4" width="86" height="28"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <buttonCell key="cell" type="push" title="Check Now" bezelStyle="rounded" alignment="center" controlSize="small" enabled="NO" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Adv-rZ-vla">
+                                    <buttonCell key="cell" type="push" title="Check Now" bezelStyle="rounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Adv-rZ-vla">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="smallSystem"/>
                                     </buttonCell>
-                                    <connections>
-                                        <action selector="installTool:" target="-2" id="qOm-Sv-MEL"/>
-                                    </connections>
                                 </button>
                                 <button id="LeO-L8-lya">
                                     <rect key="frame" x="15" y="8" width="116" height="20"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <buttonCell key="cell" type="check" title="Check once a day" bezelStyle="regularSquare" imagePosition="left" controlSize="small" enabled="NO" state="on" inset="2" id="bwO-bu-Tq1">
+                                    <buttonCell key="cell" type="check" title="Check once a day" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="bwO-bu-Tq1">
                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                         <font key="font" metaFont="smallSystem"/>
                                     </buttonCell>

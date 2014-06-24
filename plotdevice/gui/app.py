@@ -56,7 +56,6 @@ class PlotDeviceAppDelegate(NSObject):
             self.updatesMenu.setTarget_(self.sparkle)
             self.updatesMenu.setAction_("checkForUpdates:")
             self.updatesMenu.setHidden_(False)
-            print self.sparkle
 
 
     def applicationWillBecomeActive_(self, note):
