@@ -150,7 +150,6 @@
 		611CC5A710BA919A00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/PlotDevicePreferences.xib; sourceTree = "<group>"; };
 		611CC67F10BAA08300B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		611CC68610BAA0A600B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/AskString.xib; sourceTree = "<group>"; };
-		612813B310BD2C9400B18218 /* deps */ = {isa = PBXFileReference; lastKnownFileType = folder; name = deps; path = app/deps; sourceTree = "<group>"; };
 		6155D9F213E2B79E00675A92 /* CHANGES.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGES.md; sourceTree = "<group>"; };
 		6155D9F313E2B79E00675A92 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		8D15AC370486D014006FF6A4 /* PlotDevice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlotDevice.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -243,7 +242,6 @@
 				2A37F4AFFDCFA73011CA2CEA /* Other Sources */,
 				2A37F4B8FDCFA73011CA2CEA /* Resources */,
 				2A7AF5C718D2AFAA00F8FFC2 /* examples */,
-				612813B310BD2C9400B18218 /* deps */,
 				2A37F4C3FDCFA73011CA2CEA /* Frameworks */,
 				19C28FB0FE9D524F11CA2CBB /* Products */,
 			);
