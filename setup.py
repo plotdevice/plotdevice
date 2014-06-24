@@ -24,6 +24,7 @@ import sys,os
 from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
+from pkg_resources import DistributionNotFound
 from os.path import join, exists, dirname, basename, abspath
 import plotdevice
 import plistlib
@@ -82,6 +83,7 @@ SPARKLE_URL = 'https://github.com/pornel/Sparkle/releases/download/%(v)s/Sparkle
 
 def info_plist(pth='app/PlotDevice-Info.plist'):
     info = plistlib.readPlist(pth)
+    # overwrite the xcode placeholder vars
     info['CFBundleExecutable'] = info['CFBundleName'] = NAME
     return info
 
@@ -94,17 +96,21 @@ def update_plist(pth, **modifications):
             info[key] = val
     plistlib.writePlist(info, pth)
 
+def rev_id():
+    from subprocess import Popen, PIPE
+    commit_count, _ = Popen('git log --oneline | wc -l', stdout=PIPE, shell=True).communicate()
+    return 'r%s' % commit_count.strip()
+
 
 from distutils.core import Command
 class CleanCommand(Command):
     description = "wipe out the ./build ./dist and app/deps/.../build dirs"
     user_options = []
     def initialize_options(self):
-        self.cwd = None
+        pass
     def finalize_options(self):
-        self.cwd = os.getcwd()
+        pass
     def run(self):
-        assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
         os.system('rm -rf ./build ./dist')
         os.system('rm -rf ./app/deps/*/build')
 
@@ -128,27 +134,24 @@ class BuildAppCommand(Command):
     description = "Build PlotDevice.app with xcode"
     user_options = []
     def initialize_options(self):
-        self.cwd = None
+        pass
     def finalize_options(self):
-        self.cwd = os.getcwd()
+        pass
     def run(self):
-        # build the app
         self.spawn(['xcodebuild'])
-        remove_tree('%s/dist/PlotDevice.app.dSYM'%self.cwd)
+        remove_tree('dist/PlotDevice.app.dSYM')
         print "done building PlotDevice.app in ./dist"
 
 class DistCommand(Command):
     description = "Create distributable zip and dmg files containing the app + documentation"
     user_options = []
     def initialize_options(self):
-        self.cwd = None
+        pass
     def finalize_options(self):
-        self.cwd = os.getcwd()
+        pass
     def run(self):
-        from subprocess import Popen, PIPE
-        TOP = self.cwd
-        APP = '%s/dist/PlotDevice.app'%TOP
-        BUILD, _ = Popen('git log --oneline | wc -l |  tr -d " \n"', stdout=PIPE, shell=True).communicate()
+        APP = 'dist/PlotDevice.app'
+        REV = rev_id()
         ZIP = APP.replace('.app', '_app-%s.zip'%VERSION)
 
         # build the app
@@ -158,9 +161,9 @@ class DistCommand(Command):
         remove_tree(APP+'.dSYM')
 
         # set the bundle version to the current commit number and prime the updater
-        info_pth = join(TOP, 'dist/PlotDevice.app/Contents/Info.plist')
+        info_pth = 'dist/PlotDevice.app/Contents/Info.plist'
         update_plist(info_pth,
-            CFBundleVersion = 'r'+BUILD,
+            CFBundleVersion = REV,
             CFBundleShortVersionString = VERSION,
             SUFeedURL = 'http://plotdevice.io/app.xml',
             SUEnableSystemProfiling = 'YES'
@@ -171,7 +174,7 @@ class DistCommand(Command):
         SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
         if not exists(ORIG):
             print "Downloading Sparkle.framework"
-            self.mkpath(join(TOP,'app/deps'))
+            self.mkpath('app/deps')
             os.system('curl -L %s | bunzip2 -c | tar xf - -C app/deps'%SPARKLE_URL)
         self.mkpath(dirname(SPARKLE))
         self.spawn(['ditto', ORIG, SPARKLE])
@@ -186,34 +189,27 @@ class DistCommand(Command):
 
         # print out a snippet for the app.xml feed
         print "done building PlotDevice.app and %s in ./dist" % basename(ZIP)
-        tmpl='<enclosure url="http://plotdevice.io/app/%s" sparkle:shortVersionString="%s" sparkle:version="r%i" length="%i" type="application/octet-stream" />'
-        print tmpl % (basename(ZIP), VERSION, int(BUILD), os.path.getsize(ZIP))
+        tmpl='<enclosure url="http://plotdevice.io/app/%s" sparkle:shortVersionString="%s" sparkle:version="%s" length="%i" type="application/octet-stream" />'
+        print tmpl % (basename(ZIP), VERSION, REV, os.path.getsize(ZIP))
 
-BUILD_APP = any(v in ('py2app','dist') for v in sys.argv)
-if BUILD_APP:
-    # virtualenv doesn't include pyobjc, py2app, etc. in the sys.path for some reason, so make sure
-    # we only try to import them if a py2app build was explicitly requested (implying we're using
-    # the system's python interpreter rather than pip+virtualenv)
+try:
     import py2app
-    from py2app.build_app import py2app as build_app
-    class BuildPy2AppCommand(build_app):
+    from py2app.build_app import py2app as build_py2app
+    class BuildPy2AppCommand(build_py2app):
         description = """Build PlotDevice.app with py2app (then undo some of its questionable layout defaults)"""
         def initialize_options(self):
-            self.cwd = None
-            build_app.initialize_options(self)
+            build_py2app.initialize_options(self)
         def finalize_options(self):
-            self.cwd = os.getcwd()
             self.verbose=0
-            build_app.finalize_options(self)
+            build_py2app.finalize_options(self)
         def run(self):
-            TOP=self.cwd
             assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
-            build_app.run(self)
+            build_py2app.run(self)
             if self.dry_run:
                 return
 
             # undo py2app's weird treatment of the config.version value
-            info_pth = join(TOP, 'dist/PlotDevice.app/Contents/Info.plist')
+            info_pth = 'dist/PlotDevice.app/Contents/Info.plist'
             update_plist(info_pth, CFBundleShortVersionString=None)
 
             # set up internal paths and ensure destination dirs exist
@@ -233,15 +229,28 @@ if BUILD_APP:
             os.unlink(join(RSRC,'site.pyc'))
 
             # place the command line tool in SharedSupport
-            self.copy_file("%s/app/plotdevice"%TOP, BIN)
+            self.copy_file("app/plotdevice", BIN)
 
+            # success!
             print "done building PlotDevice.app in ./dist"
 
+except DistributionNotFound:
+    # virtualenv doesn't include pyobjc, py2app, etc. in the sys.path for some reason.
+    # not being able to access py2app isn't a big deal for 'build', 'app', 'dist', or 'clean'
+    # so only abort the build if the 'py2app' command was given
+    if 'py2app' in sys.argv:
+        print """setup.py: py2app build failed
+          Couldn't find the py2app module (perhaps because you've called setup.py from a virtualenv).
+          Make sure you're using the system's /usr/bin/python interpreter for py2app builds."""
+        sys.exit(1)
+
 if __name__=='__main__':
-    config = {}
+    # make sure we're at the project root regardless of the cwd
+    # (this means the various commands don't have to play path games)
+    os.chdir(dirname(abspath(__file__)))
 
     # common config between module and app builds
-    config.update(dict(
+    config = dict(
         name = NAME,
         version = VERSION,
         description = DESCRIPTION,
@@ -259,10 +268,10 @@ if __name__=='__main__':
             'build_py': BuildCommand,
             'dist': DistCommand,
         },
-    ))
+    )
 
     # py2app-specific config
-    if BUILD_APP:
+    if 'py2app' in sys.argv:
         config.update(dict(
             app = [{
                 'script': "app/plotdevice-app.py",
@@ -283,8 +292,11 @@ if __name__=='__main__':
                     "strip":False,
                 }
             },
+            cmdclass={
+                'build_py': BuildCommand,
+                'py2app': BuildPy2AppCommand,
+            }
         ))
-        config['cmdclass'].update({
-            'py2app': BuildPy2AppCommand,
-        })
+
+    # begin the build process
     setup(**config)
