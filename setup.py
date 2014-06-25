@@ -23,7 +23,6 @@
 import sys,os
 from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
-from setuptools.extension import Extension
 from pkg_resources import DistributionNotFound
 from os.path import join, exists, dirname, basename, abspath
 import plotdevice
@@ -37,6 +36,7 @@ VERSION = plotdevice.__version__
 AUTHOR = "Christian Swinehart"
 AUTHOR_EMAIL = "drafting@samizdat.cc"
 URL = "http://plotdevice.io/"
+LICENSE = "MIT"
 CLASSIFIERS = (
     "Development Status :: 5 - Production/Stable",
     "Environment :: MacOS X :: Cocoa",
@@ -103,6 +103,20 @@ def update_plist(pth, **modifications):
             info[key] = val
     plistlib.writePlist(info, pth)
 
+def last_commit():
+    commit_count, _, _ = gosub('git log --oneline | wc -l')
+    return 'r%s' % commit_count.strip()
+
+def commits_since(rev, raw=False):
+    log, _, _ = gosub('git log --oneline')
+    commits = log.decode('utf-8').splitlines()
+    since = int(rev.replace('r',''))
+    recent = [c.split(' ',1)[1] for c in commits[:-since]]
+    if not raw:
+        return u'<li>%s</li>'%u'</li><li>'.join(recent)
+    return recent
+
+# basicaly `backticks`
 def gosub(cmd, on_err=True):
     """Run a shell command and return the output"""
     from subprocess import Popen, PIPE
@@ -116,16 +130,6 @@ def gosub(cmd, on_err=True):
 
     return out, err, ret
 
-def last_commit():
-    commit_count, _, _ = gosub('git log --oneline | wc -l')
-    return 'r%s' % commit_count.strip()
-
-def commits_since(rev):
-    log, _, _ = gosub('git log --oneline')
-    commits = log.decode('utf-8').splitlines()
-    since = int(rev.replace('r',''))
-    return [c.split(' ',1)[1] for c in commits[:-since]]
-
 ## Distribution Build Utils ##
 
 def timestamp():
@@ -134,12 +138,26 @@ def timestamp():
     now = utc.localize(datetime.utcnow()).astimezone(timezone('US/Eastern'))
     return now.strftime("%a, %d %b %Y %H:%M:%S %z")
 
-def merged_feed(new_release):
-    import urllib2
-    # yes, this is totally caveman parsing, but xml.etree doesn't support cdata blocks...
+import urllib2
+def last_release():
+    from xml.etree.ElementTree import fromstring, tostring
     feed_xml = urllib2.urlopen('http://plotdevice.io/app.xml').read().decode('utf-8')
+    for item in fromstring(feed_xml.encode('utf-8')).iter('revision'):
+        return item.text
+    return 'r0'
+
+def merged_feed(new_release):
+    # fetch the current app feed
+    feed_xml = urllib2.urlopen('http://plotdevice.io/app.xml').read().decode('utf-8')
+
+    # collect the commit logs since the previous post
+    new_release['commits'] = commits_since(last_release())
+
+    # yes, this is totally caveman parsing, but xml.etree doesn't support cdata blocks...
+    spliced = []
     item_tmpl = u"""<item>
       <title>Version %(version)s</title>
+      <revision>%(revision)s</revision>
       <pubDate>%(now)s</pubDate>
       <sparkle:minimumSystemVersion>10.9</sparkle:minimumSystemVersion>
       <description><![CDATA[
@@ -148,8 +166,6 @@ def merged_feed(new_release):
       ]]></description>
       <enclosure url="http://plotdevice.io/app/%(zipfile)s" sparkle:shortVersionString="%(version)s" sparkle:version="%(revision)s" length="%(bytes)s" type="application/octet-stream" />
     </item>"""
-
-    spliced = []
     item_xml = item_tmpl%new_release
     for line in feed_xml.splitlines():
         if '<item>' in line and item_xml:
@@ -173,6 +189,24 @@ class CleanCommand(Command):
     def run(self):
         os.system('rm -rf ./build ./dist')
         os.system('rm -rf ./app/deps/*/build')
+        os.system('rm -rf plotdevice.egg-info MANIFEST.in PKG')
+
+from setuptools.command.sdist import sdist
+class BuildDistCommand(sdist):
+    def finalize_options(self):
+        with file('MANIFEST.in','w') as f:
+            tracked, _, _ = gosub('git ls-tree --full-tree --name-only -r HEAD')
+            for line in tracked.splitlines()[1:]:
+                f.write("include %s\n"%line)
+        sdist.finalize_options(self)
+
+    def run(self):
+        sdist.run(self)
+
+        # it would be nice to clean up MANIFEST.in and plotdevice.egg-info here,
+        # but we'll see if the upload command depends on them...
+        remove_tree('plotdevice.egg-info')
+        os.unlink('MANIFEST.in')
 
 from distutils.command.build_py import build_py
 class BuildCommand(build_py):
@@ -267,7 +301,6 @@ class DistCommand(Command):
     def run(self):
         APP = 'dist/PlotDevice.app'
         ZIP = 'dist/PlotDevice_app-%s.zip' % VERSION
-        DISTRO = 'plotdevice-%s' % VERSION
 
         # build the app
         self.spawn(['xcodebuild'])
@@ -299,18 +332,19 @@ class DistCommand(Command):
         self.spawn(['codesign', '-f', '-v', '-s', "Developer ID Application", APP])
         self.spawn(['spctl', '--assess', '-v', 'dist/PlotDevice.app'])
 
-        # create versioned archive files of the app and source distribution
+        # create versioned zipfile of the app
         self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
-        gosub("git archive --prefix='%(d)s/' -o dist/%(d)s.tar.gz HEAD" % {'d':DISTRO})
 
         # update the app.xml feed (pulled from the server)
         release = dict(zipfile=basename(ZIP), bytes=os.path.getsize(ZIP),
-                       commits = u'<li>%s</li>'%u'</li><li>'.join(commits_since('r480')),
                        version=VERSION, revision=last_commit(), now=timestamp())
         with file('dist/app.xml','w') as f:
             f.write(merged_feed(release))
 
-        print "Built PlotDevice.app, %s, and app.xml in ./dist" % basename(ZIP)
+        print "\nBuilt PlotDevice.app, %s, and app.xml in ./dist" % basename(ZIP)
+        print " -" + "\n -".join(commits_since(last_release(), raw=True))
+        print "now edit dist/app.xml then run `python setup.py submit`."
+
 
 class SubmitCommand(Command):
     description = "Validate contents of dist subdir then send them to the net"
@@ -331,15 +365,15 @@ class SubmitCommand(Command):
             assert release['url'].endswith(basename(zipfile)), "Version mismatch: %s vs %r" % (zipfile, release['url'])
             break
 
+        # <confirmation y.n goes here>
+
         print "posting dist/app.xml"
         gosub('scp dist/app.xml plotdevice.io:plod')
 
         print "posting", zipfile
         gosub('scp %s plotdevice.io:plod/app'%zipfile)
 
-        print "posting", tarfile
-        gosub('scp %s plotdevice.io:plod/app'%tarfile)
-
+        # <upload to pypi goes here>
 
 ## Run Build ##
 
@@ -350,13 +384,14 @@ if __name__=='__main__':
 
     # common config between module and app builds
     config = dict(
-        name = NAME,
+        name = NAME.lower(),
         version = VERSION,
         description = DESCRIPTION,
         long_description = LONG_DESCRIPTION,
         author = AUTHOR,
         author_email = AUTHOR_EMAIL,
         url = URL,
+        license = LICENSE,
         classifiers = CLASSIFIERS,
         packages = find_packages(),
         scripts = ["app/plotdevice"],
@@ -366,6 +401,7 @@ if __name__=='__main__':
             'clean': CleanCommand,
             'build_py': BuildCommand,
             'dist': DistCommand,
+            'sdist': BuildDistCommand,
             'submit': SubmitCommand,
         },
     )
