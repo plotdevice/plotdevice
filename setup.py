@@ -266,7 +266,8 @@ class DistCommand(Command):
         pass
     def run(self):
         APP = 'dist/PlotDevice.app'
-        ZIP = APP.replace('.app', '_app-%s.zip'%VERSION)
+        ZIP = 'dist/PlotDevice_app-%s.zip' % VERSION
+        DISTRO = 'plotdevice-%s' % VERSION
 
         # build the app
         self.spawn(['xcodebuild'])
@@ -298,11 +299,12 @@ class DistCommand(Command):
         self.spawn(['codesign', '-f', '-v', '-s', "Developer ID Application", APP])
         self.spawn(['spctl', '--assess', '-v', 'dist/PlotDevice.app'])
 
-        # create a versioned zip file
+        # create versioned archive files of the app and source distribution
         self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
+        gosub("git archive --prefix='%(d)s/' -o dist/%(d)s.tar.gz HEAD" % {'d':DISTRO})
 
         # update the app.xml feed (pulled from the server)
-        release = dict(zipfile=ZIP, bytes=os.path.getsize(ZIP),
+        release = dict(zipfile=basename(ZIP), bytes=os.path.getsize(ZIP),
                        commits = u'<li>%s</li>'%u'</li><li>'.join(commits_since('r480')),
                        version=VERSION, revision=last_commit(), now=timestamp())
         with file('dist/app.xml','w') as f:
@@ -321,19 +323,22 @@ class SubmitCommand(Command):
         print "Checking feed xml"
         gosub('tidy -xml -utf8 -e dist/app.xml', on_err="app.xml didn't validate properly")
 
+        tarfile = 'dist/plotdevice-%s.tar.gz'%VERSION
         zipfile = 'dist/PlotDevice_app-%s.zip'%VERSION
         from xml.etree.ElementTree import parse, dump
         for item in parse('dist/app.xml').getroot().iter('item'):
             release = item.find('enclosure').attrib
-            assert release['url'].endswith(zipfile), "Version mismatch: %r" % release
+            assert release['url'].endswith(basename(zipfile)), "Version mismatch: %s vs %r" % (zipfile, release['url'])
             break
 
-        print "posting updated app.xml"
+        print "posting dist/app.xml"
         gosub('scp dist/app.xml plotdevice.io:plod')
 
         print "posting", zipfile
         gosub('scp %s plotdevice.io:plod/app'%zipfile)
 
+        print "posting", tarfile
+        gosub('scp %s plotdevice.io:plod/app'%tarfile)
 
 
 ## Run Build ##
