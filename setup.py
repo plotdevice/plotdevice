@@ -27,7 +27,9 @@ from setuptools.extension import Extension
 from pkg_resources import DistributionNotFound
 from os.path import join, exists, dirname, basename, abspath
 import plotdevice
-import plistlib
+
+
+## Metadata ##
 
 # PyPI fields
 NAME = 'PlotDevice'
@@ -77,10 +79,15 @@ Requires:
 * Mac OS X 10.9+
 """
 
-# Choose the Sparkle framework version to use in `dist` builds
+
+## Basic Utils ##
+
+# the sparkle updater framework will be fetched as needed
 SPARKLE_VERSION = '1.7.0'
 SPARKLE_URL = 'https://github.com/pornel/Sparkle/releases/download/%(v)s/Sparkle-%(v)s.tar.bz2'% {'v':SPARKLE_VERSION}
 
+# helpers for dealing with plists & git (spiritual cousins if ever there were)
+import plistlib
 def info_plist(pth='app/PlotDevice-Info.plist'):
     info = plistlib.readPlist(pth)
     # overwrite the xcode placeholder vars
@@ -96,11 +103,64 @@ def update_plist(pth, **modifications):
             info[key] = val
     plistlib.writePlist(info, pth)
 
-def rev_id():
+def gosub(cmd, on_err=True):
+    """Run a shell command and return the output"""
     from subprocess import Popen, PIPE
-    commit_count, _ = Popen('git log --oneline | wc -l', stdout=PIPE, shell=True).communicate()
+    shell = isinstance(cmd, basestring)
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=shell)
+    out, err = proc.communicate()
+    ret = proc.returncode
+    if on_err:
+        msg = '%s:\n' % on_err if isinstance(on_err, basestring) else ''
+        assert ret==0, msg + (err or out)
+
+    return out, err, ret
+
+def last_commit():
+    commit_count, _, _ = gosub('git log --oneline | wc -l')
     return 'r%s' % commit_count.strip()
 
+def commits_since(rev):
+    log, _, _ = gosub('git log --oneline')
+    commits = log.decode('utf-8').splitlines()
+    since = int(rev.replace('r',''))
+    return [c.split(' ',1)[1] for c in commits[:-since]]
+
+## Distribution Build Utils ##
+
+def timestamp():
+    from datetime import datetime
+    from pytz import timezone, utc
+    now = utc.localize(datetime.utcnow()).astimezone(timezone('US/Eastern'))
+    return now.strftime("%a, %d %b %Y %H:%M:%S %z")
+
+def merged_feed(new_release):
+    import urllib2
+    # yes, this is totally caveman parsing, but xml.etree doesn't support cdata blocks...
+    feed_xml = urllib2.urlopen('http://plotdevice.io/app.xml').read().decode('utf-8')
+    item_tmpl = u"""<item>
+      <title>Version %(version)s</title>
+      <pubDate>%(now)s</pubDate>
+      <sparkle:minimumSystemVersion>10.9</sparkle:minimumSystemVersion>
+      <description><![CDATA[
+        <h2>Recent changes</h2>
+        <ul>%(commits)s</ul>
+      ]]></description>
+      <enclosure url="http://plotdevice.io/app/%(zipfile)s" sparkle:shortVersionString="%(version)s" sparkle:version="%(revision)s" length="%(bytes)s" type="application/octet-stream" />
+    </item>"""
+
+    spliced = []
+    item_xml = item_tmpl%new_release
+    for line in feed_xml.splitlines():
+        if '<item>' in line and item_xml:
+            spliced.append(u' '*4 + item_xml)
+            item_xml = None
+        spliced.append(line)
+    return (u"\n".join(spliced)).encode('utf-8')
+
+
+
+## Build Commands ##
 
 from distutils.core import Command
 class CleanCommand(Command):
@@ -141,56 +201,6 @@ class BuildAppCommand(Command):
         self.spawn(['xcodebuild'])
         remove_tree('dist/PlotDevice.app.dSYM')
         print "done building PlotDevice.app in ./dist"
-
-class DistCommand(Command):
-    description = "Create distributable zip and dmg files containing the app + documentation"
-    user_options = []
-    def initialize_options(self):
-        pass
-    def finalize_options(self):
-        pass
-    def run(self):
-        APP = 'dist/PlotDevice.app'
-        REV = rev_id()
-        ZIP = APP.replace('.app', '_app-%s.zip'%VERSION)
-
-        # build the app
-        self.spawn(['xcodebuild'])
-
-        # we don't need no stinking core dumps
-        remove_tree(APP+'.dSYM')
-
-        # set the bundle version to the current commit number and prime the updater
-        info_pth = 'dist/PlotDevice.app/Contents/Info.plist'
-        update_plist(info_pth,
-            CFBundleVersion = REV,
-            CFBundleShortVersionString = VERSION,
-            SUFeedURL = 'http://plotdevice.io/app.xml',
-            SUEnableSystemProfiling = 'YES'
-        )
-
-        # Download Sparkle (if necessary) and copy it into the bundle
-        ORIG = 'app/deps/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
-        SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
-        if not exists(ORIG):
-            print "Downloading Sparkle.framework"
-            self.mkpath('app/deps')
-            os.system('curl -L %s | bunzip2 -c | tar xf - -C app/deps'%SPARKLE_URL)
-        self.mkpath(dirname(SPARKLE))
-        self.spawn(['ditto', ORIG, SPARKLE])
-
-        # code-sign the app and sparkle bundles, then verify
-        self.spawn(['codesign', '-f', '-v', '-s', "Developer ID Application", SPARKLE])
-        self.spawn(['codesign', '-f', '-v', '-s', "Developer ID Application", APP])
-        self.spawn(['spctl', '--assess', '-v', 'dist/PlotDevice.app'])
-
-        # create a versioned zip file
-        self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
-
-        # print out a snippet for the app.xml feed
-        print "done building PlotDevice.app and %s in ./dist" % basename(ZIP)
-        tmpl='<enclosure url="http://plotdevice.io/app/%s" sparkle:shortVersionString="%s" sparkle:version="%s" length="%i" type="application/octet-stream" />'
-        print tmpl % (basename(ZIP), VERSION, REV, os.path.getsize(ZIP))
 
 try:
     import py2app
@@ -244,6 +254,90 @@ except DistributionNotFound:
           Make sure you're using the system's /usr/bin/python interpreter for py2app builds."""
         sys.exit(1)
 
+
+## Packaging Commands (really only useful to the maintainer) ##
+
+class DistCommand(Command):
+    description = "Create distributable zip of the app and an updated app.xml feed"
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+        APP = 'dist/PlotDevice.app'
+        ZIP = APP.replace('.app', '_app-%s.zip'%VERSION)
+
+        # build the app
+        self.spawn(['xcodebuild'])
+
+        # we don't need no stinking core dumps
+        remove_tree(APP+'.dSYM')
+
+        # set the bundle version to the current commit number and prime the updater
+        info_pth = 'dist/PlotDevice.app/Contents/Info.plist'
+        update_plist(info_pth,
+            CFBundleVersion = last_commit(),
+            CFBundleShortVersionString = VERSION,
+            SUFeedURL = 'http://plotdevice.io/app.xml',
+            SUEnableSystemProfiling = 'YES'
+        )
+
+        # Download Sparkle (if necessary) and copy it into the bundle
+        ORIG = 'app/deps/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
+        SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
+        if not exists(ORIG):
+            print "Downloading Sparkle.framework"
+            self.mkpath('app/deps')
+            os.system('curl -L %s | bunzip2 -c | tar xf - -C app/deps'%SPARKLE_URL)
+        self.mkpath(dirname(SPARKLE))
+        self.spawn(['ditto', ORIG, SPARKLE])
+
+        # code-sign the app and sparkle bundles, then verify
+        self.spawn(['codesign', '-f', '-v', '-s', "Developer ID Application", SPARKLE])
+        self.spawn(['codesign', '-f', '-v', '-s', "Developer ID Application", APP])
+        self.spawn(['spctl', '--assess', '-v', 'dist/PlotDevice.app'])
+
+        # create a versioned zip file
+        self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
+
+        # update the app.xml feed (pulled from the server)
+        release = dict(zipfile=ZIP, bytes=os.path.getsize(ZIP),
+                       commits = u'<li>%s</li>'%u'</li><li>'.join(commits_since('r480')),
+                       version=VERSION, revision=last_commit(), now=timestamp())
+        with file('dist/app.xml','w') as f:
+            f.write(merged_feed(release))
+
+        print "Built PlotDevice.app, %s, and app.xml in ./dist" % basename(ZIP)
+
+class SubmitCommand(Command):
+    description = "Validate contents of dist subdir then send them to the net"
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+        print "Checking feed xml"
+        gosub('tidy -xml -utf8 -e dist/app.xml', on_err="app.xml didn't validate properly")
+
+        zipfile = 'dist/PlotDevice_app-%s.zip'%VERSION
+        from xml.etree.ElementTree import parse, dump
+        for item in parse('dist/app.xml').getroot().iter('item'):
+            release = item.find('enclosure').attrib
+            assert release['url'].endswith(zipfile), "Version mismatch: %r" % release
+            break
+
+        print "posting updated app.xml"
+        gosub('scp dist/app.xml plotdevice.io:plod')
+
+        print "posting", zipfile
+        gosub('scp %s plotdevice.io:plod/app'%zipfile)
+
+
+
+## Run Build ##
+
 if __name__=='__main__':
     # make sure we're at the project root regardless of the cwd
     # (this means the various commands don't have to play path games)
@@ -267,6 +361,7 @@ if __name__=='__main__':
             'clean': CleanCommand,
             'build_py': BuildCommand,
             'dist': DistCommand,
+            'submit': SubmitCommand,
         },
     )
 
