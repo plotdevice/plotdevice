@@ -1,5 +1,4 @@
 __version__='0.9'
-__MAGIC = '_p_l_o_t_d_e_v_i_c_e_'
 
 def get_version():
     return __version__
@@ -28,6 +27,9 @@ objc.setVerbose(True)
 from os import getenv
 from os.path import join
 sys.path.append(join(getenv('HOME'), 'Library', 'Application Support', 'PlotDevice'))
+
+# the global non-conflicting token (fingers crossed)
+DEFAULT = '_p_l_o_t_d_e_v_i_c_e_'
 
 if is_windowed or in_setup:
     # if a script imports * from within the app/tool, nothing should be (re-)added to the

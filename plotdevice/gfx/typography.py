@@ -6,7 +6,7 @@ from plotdevice.util import odict, ddict
 from AppKit import *
 from Foundation import *
 
-from plotdevice import DeviceError
+from plotdevice import DeviceError, DEFAULT
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, BoundsMixin, Grob
 from . import _save, _restore, _ns_context
 from .transform import Transform, Region, Size
@@ -18,9 +18,6 @@ from ..util import _copy_attrs
 _ctx = None
 __all__ = ("Text", "Family", "Font", "Stylesheet",
            "LEFT", "RIGHT", "CENTER", "JUSTIFY", "DEFAULT")
-
-# hopefully non-conflicting style name for the stylesheet defaults
-from plotdevice import __MAGIC as DEFAULT
 
 # text alignments
 LEFT = "left"

@@ -8,7 +8,7 @@ from Foundation import *
 from AppKit import *
 from ..run import stacktrace, coredump
 from ..lib.io import MovieExportSession, ImageExportSession
-from plotdevice import util, context, gfx, DeviceError, __MAGIC as MAGICVAR
+from plotdevice import util, context, gfx, DeviceError
 
 __all__ = ['Sandbox']
 
@@ -53,7 +53,6 @@ class Sandbox(object):
         self.session = None     # the image/movie export session (if any)
         self.stationery = False # whether the script is from the examples folder
         self.delegate = None    # object with exportStatus and exportProgress methods
-        self.magicvar = 0       # used for value ladders
 
         # set up the graphics plumbing
         self.canvas = context.Canvas()
@@ -139,7 +138,6 @@ class Sandbox(object):
         self.namespace.update(dict(self._env))
         # self.__doc__ = {}
         # self.namespace.update(dict( __doc__=self.__doc__, ))
-        self.namespace[MAGICVAR] = self.magicvar # Add the magic var
 
         result = Outcome(True, [])
         if not self._code:
@@ -190,9 +188,6 @@ class Sandbox(object):
 
         # Reset the context state (and bind the .gfx objects as a side-effect)
         self.context._resetContext()
-
-        # Initalize the magicvar
-        self.namespace[MAGICVAR] = self.magicvar
 
         # Set the frame/pagenum
         self.namespace['PAGENUM'] = self.namespace['FRAME'] = self._meta.next

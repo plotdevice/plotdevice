@@ -4,7 +4,7 @@ from Foundation import *
 from Quartz import *
 from collections import namedtuple, defaultdict
 
-from plotdevice import DeviceError
+from plotdevice import DeviceError, DEFAULT
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes
 from .colors import Color
 from .transform import Transform
@@ -308,7 +308,6 @@ class PenMixin(Grob):
         self._penstyle = self._penstyle._replace(dash=steps)
     dash = dashstyle = property(_get_dashstyle, _set_dashstyle)
 
-from plotdevice import __MAGIC as DEFAULT
 class StyleMixin(Grob):
     """Mixin class for text-styling support.
     Adds the stylesheet, fill, and style attributes to the class."""
