@@ -9,7 +9,7 @@ MIT Licensed (see README file for details)
 """
 
 __title__ = 'plotdevice'
-__version__ = '0.9'
+__version__ = '0.9.1'
 __author__ = 'Christian Swinehart'
 __credits__ = 'Frederik De Bleser, Tom De Smedt, Just van Rossum, & Marcos Ojeda'
 __copyright__ = 'Copyright 2014 Samizdat Drafting Co.'
