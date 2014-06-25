@@ -1,10 +1,19 @@
-__version__='0.9'
+# encoding: utf-8
+"""PlotDevice | quartz-powered vector machine
 
-def get_version():
-    return __version__
+Copyright (C) 2014 Samizdat Drafting Co.
+A derivative of http://nodebox.net/code by Frederik De Bleser & Tom De Smedt
 
-class DeviceError(Exception):
-    pass
+All rights reserved.
+MIT Licensed (see README file for details)
+"""
+
+__title__ = 'plotdevice'
+__version__ = '0.9'
+__author__ = 'Christian Swinehart'
+__credits__ = 'Frederik De Bleser, Tom De Smedt, Just van Rossum, & Marcos Ojeda'
+__copyright__ = 'Copyright 2014 Samizdat Drafting Co.'
+__license__ = 'MIT'
 
 # note whether the module is being used within the .app, via console.py, or from the repl
 import sys, re
@@ -30,6 +39,10 @@ sys.path.append(join(getenv('HOME'), 'Library', 'Application Support', 'PlotDevi
 
 # the global non-conflicting token (fingers crossed)
 DEFAULT = '_p_l_o_t_d_e_v_i_c_e_'
+
+# please excuse our technical difficulties
+class DeviceError(Exception):
+    pass
 
 if is_windowed or in_setup:
     # if a script imports * from within the app/tool, nothing should be (re-)added to the
