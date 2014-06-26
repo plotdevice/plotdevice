@@ -3,12 +3,11 @@ import sys
 import os
 import objc
 from glob import glob
-import plotdevice
 from Foundation import *
 from AppKit import *
-from plotdevice.gui.preferences import get_default
-from plotdevice.gui import bundle_path, set_timeout
-from plotdevice import util
+from PyObjCTools import AppHelper
+from .preferences import PlotDevicePreferencesController, get_default
+from . import bundle_path, set_timeout
 
 LIB_DIR_README = """"You can put PlotDevice libraries In this directory to make them available to your scripts.
 """
@@ -81,9 +80,9 @@ class PlotDeviceAppDelegate(NSObject):
     @objc.IBAction
     def newSketch_(self, sender):
         kind = ['sketch','anim','ottobot'][sender.tag()]
-        self.docFromTemplate_('TMPL:'+kind)
+        doc = self.docFromTemplate_('TMPL:'+kind)
         if kind=='ottobot':
-            doc.runScript()
+            AppHelper.callLater(0.1, doc.script.runScript)
 
     @objc.IBAction
     def openExample_(self, sender):
@@ -102,7 +101,6 @@ class PlotDeviceAppDelegate(NSObject):
     @objc.IBAction
     def showPreferencesPanel_(self, sender):
         if self._prefsController is None:
-            from plotdevice.gui.preferences import PlotDevicePreferencesController
             self._prefsController = PlotDevicePreferencesController.alloc().init()
         self._prefsController.showWindow_(sender)
 
