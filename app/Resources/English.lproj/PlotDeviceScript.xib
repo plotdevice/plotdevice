@@ -39,7 +39,7 @@
                                             <rect key="frame" x="200" y="185" width="200" height="39"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                             <connections>
-                                                <outlet property="document" destination="Krd-r8-qxe" id="pqg-93-0n3"/>
+                                                <outlet property="script" destination="Krd-r8-qxe" id="nmo-v1-4qb"/>
                                             </connections>
                                         </customView>
                                     </subviews>
@@ -51,7 +51,7 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="vzN-o6-7sn">
-                            <rect key="frame" x="584" y="0.0" width="16" height="485"/>
+                            <rect key="frame" x="585" y="0.0" width="15" height="485"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>

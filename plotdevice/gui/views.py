@@ -73,7 +73,7 @@ class PlotDeviceBackdrop(NSView):
 
 # class defined in PlotDeviceGraphicsView.xib
 class PlotDeviceGraphicsView(NSView):
-    document = objc.IBOutlet()
+    script = objc.IBOutlet()
     placeholder = NSImage.imageNamed_('placeholder.pdf')
 
     # The zoom levels are 10%, 25%, 50%, 75%, 100%, 200% and so on up to 2000%.
@@ -141,7 +141,7 @@ class PlotDeviceGraphicsView(NSView):
                 # wait, really? won't this always be a dupe of something that was
                 # rendered during the volatile phase?
                 #
-                # self.document.crash()
+                # self.script.crash()
                 pass
 
     def _get_zoom(self):
@@ -244,7 +244,7 @@ class PlotDeviceGraphicsView(NSView):
             except:
                 # Display the error in the output view.
                 # (this is where invalid args passed to grobs will throw exceptions)
-                self.document.crash()
+                self.script.crash()
             NSGraphicsContext.currentContext().restoreGraphicsState()
         elif self.placeholder:
             # until the script runs (and generates a meaningful canvas) display the placeholder
