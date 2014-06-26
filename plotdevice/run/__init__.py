@@ -33,10 +33,11 @@ def stacktrace(script=None, src=None):
     # return formatted traceback as a single string (with multiple newlines)
     enc = encoding(src) or 'utf-8'
     if stack:
-        trace = ("".join(format_list(stack))).decode(enc)
-        msg = trace + ("".join(err_msg)).decode(enc)
+        msg = "".join([l.decode(enc) for l in format_list(stack) + err_msg])
     else:
         msg = ("".join(err_msg)).decode(enc)
+        # we only want to prepend the Traceback text for syntax errs
+        if 'SyntaxError' not in msg: return msg
 
     return u"Traceback (most recent call last):\n%s" % msg
 
