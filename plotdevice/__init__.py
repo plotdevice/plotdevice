@@ -25,7 +25,9 @@ __email__   = "drafting@samizdat.cc"
 __credits__ = 'Frederik De Bleser, Tom De Smedt, Just van Rossum, & Marcos Ojeda'
 __license__ = 'MIT'
 
+
 # add the shared directory (for Libraries) to the path
+import sys, re, os
 sys.path.append(os.path.join(os.getenv('HOME'), 'Library', 'Application Support', 'PlotDevice'))
 
 # add the Extras directory to sys.path since every module depends on PyObjC and friends
@@ -40,14 +42,13 @@ except ImportError:
 objc.setVerbose(True)
 
 # the global non-conflicting token (fingers crossed)
-DEFAULT = '_p_l_o_t_d_e_v_i_c_e_'
+INTERNAL = '_p_l_o_t_d_e_v_i_c_e_'
 
 # please excuse our technical difficulties
 class DeviceError(Exception):
     pass
 
 # note whether the module is being used within the .app, via console.py, or from the repl
-import sys, re, os
 called_from = getattr(sys.modules['__main__'], '__file__', '<interactive>')
 is_windowed = bool(re.search(r'plotdevice(-app|/run/console)\.py$', called_from))
 in_setup = bool(called_from.endswith('setup.py')) # (for builds)

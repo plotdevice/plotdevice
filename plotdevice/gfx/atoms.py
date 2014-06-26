@@ -4,7 +4,7 @@ from Foundation import *
 from Quartz import *
 from collections import namedtuple, defaultdict
 
-from plotdevice import DeviceError, DEFAULT
+from plotdevice import DeviceError, INTERNAL as DEFAULT
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes
 from .colors import Color
 from .transform import Transform

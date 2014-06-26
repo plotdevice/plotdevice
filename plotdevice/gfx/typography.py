@@ -6,7 +6,7 @@ from plotdevice.util import odict, ddict
 from AppKit import *
 from Foundation import *
 
-from plotdevice import DeviceError, DEFAULT
+from plotdevice import DeviceError, INTERNAL as DEFAULT
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, BoundsMixin, Grob
 from . import _save, _restore, _ns_context
 from .transform import Transform, Region, Size
