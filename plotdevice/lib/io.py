@@ -1,5 +1,5 @@
+import objc, cIO, os
 from PyObjCTools import AppHelper
-import objc, cIO
 for cls in ["AnimatedGif", "ImageSequence", "SysAdmin", "Video"]:
     globals()[cls] = objc.lookUpClass(cls)
 
