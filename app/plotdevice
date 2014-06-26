@@ -12,22 +12,22 @@ Run python scripts in PlotDevice.app or export graphics to a document (pdf/eps),
 image (png/gif/jpg/tiff), or movie (mov/gif).
 
   Run a script:
-    plotdevice script.py
+    plotdevice script.pv
 
   Run fullscreen:
-    plotdevice -f script.py
+    plotdevice -f script.pv
 
   Save script's output to pdf:
-    plotdevice script.py --export output.pdf
+    plotdevice script.pv --export output.pdf
 
   Create an animated gif that loops every 2 seconds:
-    plotdevice script.py --export output.gif --frames 60 --fps 30 --loop
+    plotdevice script.pv --export output.gif --frames 60 --fps 30 --loop
 
   Create a sequence of numbered png files – one for each frame in the animation:
-    plotdevice script.py --export output.png --frames 10
+    plotdevice script.pv --export output.png --frames 10
 
   Create a 5 second long H.264 video at 2 megabits/sec:
-    plotdevice script.py --export output.mov --frames 150 --rate 2.0
+    plotdevice script.pv --export output.mov --frames 150 --rate 2.0
 
 Options:
   -h, --help          show this help message and exit
