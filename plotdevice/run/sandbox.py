@@ -37,7 +37,6 @@ class Delegate(object):
 class Sandbox(object):
 
     def __init__(self, delegate=None):
-        self._env = {}          # the base namespace for the script (with all the gfx routines)
         self._meta = None       # runtime opts for the script
         self._path = None       # file path to the active script
         self._source = None     # unicode contents of script
@@ -46,7 +45,7 @@ class Sandbox(object):
         self._statevar = None   # persistent dict passed to animation functions in script
         self.canvas = None      # can be handed off to views or exporters to access the image
         self.context = None     # quartz playground
-        self.namespace = {}     # a mutable copy of _env with the user script's functions mixed in
+        self.namespace = {}     # a reference to the script's namespace (managed by self.context)
         self.crashed = False    # flag whether the script exited abnormally
         self.live = False       # whether to keep the output pipe open between runs
         self.session = None     # the image/movie export session (if any)
@@ -58,8 +57,7 @@ class Sandbox(object):
         self.context = context.Context(self.canvas, self.namespace)
         self.delegate = delegate or Delegate()
 
-        # make a copy of the clean namespace env to use as a template during runs
-        self._env = dict(self.namespace)
+        # control params used during exports and console-based runs
         self._meta = Metadata(args=[], virtualenv=None, first=1, next=1, last=None, running=False, console=None, loop=False)
 
     # .script
@@ -123,72 +121,46 @@ class Sandbox(object):
     def tty(self):
         """Whether the script's output is being redirected to a pipe (r)"""
         return getattr(self.delegate, 'graphicsView', None) is None
-        # return self._meta.console is not None
 
-    def compile(self, src=None):
-        """Set up a namespace for the script (or src if specified) and prepare it for rendering"""
-        if src:
-            self.source = src
-
-        self.crashed = False
+    def _preflight(self):
+        """Set up a namespace for the script and prepare it for rendering"""
 
         # Initialize the namespace
-        self.namespace.clear()
-        self.namespace.update(dict(self._env))
-        # self.__doc__ = {}
-        # self.namespace.update(dict( __doc__=self.__doc__, ))
+        self.context._resetEnvironment()
 
-
+        # start off with all systems nominal (fingers crossed)
+        self.crashed = False
         result = Outcome(True, [])
+        self._meta.running = False
+        self._meta.next = self._meta.first
+
+        # if our .source attr has been changed since the last run, compile it now
         if not self._code:
-            # Compile the script
             def compileScript():
                 scriptname = self._path or "<Untitled>"
                 # src needs to be a bytestring if the script defines its encoding in an
                 # `encoding: ...` comment. otherwise just pass the unicode to compile()
                 enc = encoding(self._source)
                 src = self._source.encode(enc) if enc else self._source
-                self._code = compile(src, scriptname.encode('ascii', 'ignore'), "exec")
+                fname = scriptname.encode('ascii', 'ignore')
+                self._code = compile(src, fname, "exec")
             result = self.call(compileScript)
             if not result.ok:
                 return result
 
-        # Reset the frame / animation status
-        self._meta.running = False
-        self._meta.next = self._meta.first
-        self.canvas.speed = None
-        return result
-
-    def crash(self):
-        self.crashed = coredump(self._path, self._source)
-        return stacktrace(self._path, self._source)
-
-    def stop(self):
-        """Called once the script has stopped running (voluntarily or otherwise)"""
-        # print "stopping at", self._meta.next-1, "of", self._meta.last
-        result = Outcome(True, [])
-        if self._meta.running:
-            if not self.crashed:
-                result = self.call("stop")
-            self._meta.running = False
-        self._meta.first, self._meta.last = (1,None)
-        if self._meta.console and not self.live:
-            self._meta.console.put(None)
-            self._meta.console = None
         return result
 
     def render(self, method=None):
-        """Run either the entire script or call a specific method"""
-        # Check if there is code to run
-        if self._code is None:
-            self.compile() # hmmm... shouldn't this be checking for failures?
-
-        # Clear the canvas
-        self.canvas.clear()
+        """Clear the context and run either the entire script or a specific method."""
 
         # if this is the initial pass, reset the namespace and canvas state
         if method is None:
-            self.context._resetEnvironment()
+            check = self._preflight() # compile the script
+            if not check.ok:
+                return check
+
+        # Clear the canvas
+        self.canvas.clear()
 
         # Reset the context state (and bind the .gfx objects as a side-effect)
         self.context._resetContext()
@@ -196,36 +168,40 @@ class Sandbox(object):
         # Set the frame/pagenum
         self.namespace['PAGENUM'] = self.namespace['FRAME'] = self._meta.next
 
-        # Run the script
-        self.crashed = False
+        # Run the script's top-level
         result = self.call(method)
 
-        if self.animated:
-            if method is None:
-                # If no method was specified, we're in the initial pass through the script
-                # so flag the run as having begun
-                self._meta.running = True
+        # bail out if we crashed or we're a non-anim and are thus `done'
+        if not result.ok or not self.animated:
+            return result
 
-                # determine which of the script's routines expect a state varaiable
-                self._stateful = []
-                for routine in 'setup','draw','stop':
-                    func = self.namespace.get(routine)
-                    if func and getargspec(func).args:
-                        self._stateful.append(routine)
-                # allocate a fresh state var if any routines are using it
-                self._statevar = util.adict() if self._stateful else None
+        # if we're still here, deal with some special-handling for animations
+        if method is None:
+            # we're in the initial pass through the script so flag the run as ongoing
+            self._meta.running = True
 
-            elif method=='draw':
-                # tick the frame ahead after each draw call
-                self._meta.next+=1
-                if self._meta.next > self._meta.last and self._meta.loop:
-                    self._meta.next = self._meta.first
+            # determine which of the script's routines expect a state varaiable
+            self._stateful = []
+            for routine in 'setup','draw','stop':
+                func = self.namespace.get(routine)
+                if func and getargspec(func).args:
+                    self._stateful.append(routine)
+
+            # allocate a fresh state var if any routines are using it
+            self._statevar = util.adict() if self._stateful else None
+
+        elif method=='draw':
+            # tick the frame ahead after each draw call
+            self._meta.next+=1
+            if self._meta.next > self._meta.last and self._meta.loop:
+                self._meta.next = self._meta.first
 
         return result
 
     def call(self, method=None):
         """
         Runs the given method in a boxed environment.
+
         Boxed environments:
          - Have their current directory set to the directory of the file
          - Have their argument set to the filename
@@ -293,6 +269,24 @@ class Sandbox(object):
             sys.argv = argv
         return Outcome(True, output.data)
 
+    def crash(self):
+        self.crashed = coredump(self._path, self._source)
+        return stacktrace(self._path, self._source)
+
+    def stop(self):
+        """Called once the script has stopped running (voluntarily or otherwise)"""
+        # print "stopping at", self._meta.next-1, "of", self._meta.last
+        result = Outcome(True, [])
+        if self._meta.running:
+            if not self.crashed:
+                result = self.call("stop")
+            self._meta.running = False
+        self._meta.first, self._meta.last = (1,None)
+        if self._meta.console and not self.live:
+            self._meta.console.put(None)
+            self._meta.console = None
+        return result
+
     def export(self, kind, fname, opts):
         """Export graphics and animations to image and movie files.
 
@@ -304,12 +298,9 @@ class Sandbox(object):
                    and for a movie export, also include:
                      bitrate, fps, loop
         """
-        compilation = self.compile() # compile the script
-        self.delegate.exportStatus(compilation)
-        if not compilation.ok:
-            return
 
-        firstpass = self.render() # evaluate the script once
+        # compile & evaluate the script once
+        firstpass = self.render()
         self.delegate.exportStatus(firstpass)
         if not firstpass.ok:
             return

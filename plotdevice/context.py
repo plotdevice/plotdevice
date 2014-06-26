@@ -57,6 +57,7 @@ class Context(object):
         # clear the canvas and reset the dims/background
         self.canvas.reset()
         self.canvas.background = Color(1.0)
+        self.canvas.speed = None
         self.canvas._ctx = self
 
     def _resetContext(self):

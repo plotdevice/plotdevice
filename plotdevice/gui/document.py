@@ -34,9 +34,9 @@ class PlotDeviceDocument(NSDocument):
             if os.path.exists(self.stationery) and not self.stationery.startswith('TMPL:'):
                 self.setDisplayName_(os.path.basename(self.stationery).replace('.pv',''))
                 self.script.synchronizeWindowTitleWithDocumentName()
-
         elif self.source is not None:
             self.script.setPath_source_(self.path, self.source)
+
         self.addWindowController_(self.script)
 
     @property
@@ -164,8 +164,6 @@ class ScriptController(NSWindowController):
         if is_example:
             self.vm.stationery = tmpl
             self.source = file(tmpl).read().decode("utf-8")
-            if self.editorView:
-                self.editorView.source = self.source
             if self.document():
                 # when an example script is opened, setStatioenry is called before the
                 # ScriptController gets a reference to the document and the doc handles
@@ -331,6 +329,16 @@ class ScriptController(NSWindowController):
         self.runScript()
 
     def runScript(self):
+        """Compile the script and run its global scope.
+
+        For non-animated scripts, this is a whole run since all of their drawing and control
+        flow is at the module level. For animated scripts, this is just a first pass to populate
+        the namespace with the script's variables and particularly the setup/draw/stop functions.
+
+        If a draw() function is defined, we'll start the animationTimer which will repeatedly
+        call self.invoke('draw') until cancelled by the user.
+        """
+
         # halt any animation that was already running
         if self.animationTimer:
             self.haltRun()
@@ -338,11 +346,32 @@ class ScriptController(NSWindowController):
         # disable double buffering during the run (stopScript reënables it)
         self.graphicsView.volatile = True
 
-        # execute the script
-        if not self.eval():
-            # syntax error. bail out before looping
-            self.vm.stop()
-        elif self.vm.animated:
+        # get all the output progress indicators going
+        self.statusView.beginRun()
+        if (self.outputView):
+            self.editorView.clearErrors()
+            self.outputView.clear(timestamp=True)
+
+        # Compile the script and run its global scope
+        self.vm.source = self.source
+        success = self.invoke(None)
+
+        if not success or not self.vm.animated:
+            # halt the progress indicator if we crashed (or if we succeeded in a non-anim)
+            self.statusView.endRun()
+
+            # don't mess with the gui window-state if running in fullscreen until the
+            # user explicitly cancels with esc or cmd-period
+            if not self.fullScreen:
+                self.stopScript()
+
+            return # and we're done
+
+        # Display the dashboard if the var() command was called
+        if self.vm.vars:
+            self.dashboardController.buildInterface(self.vm.vars)
+
+        if self.vm.animated:
             # Check whether we are dealing with animation
             if 'draw' not in self.vm.namespace:
                 errorAlert("Not a proper PlotDevice animation",
@@ -351,6 +380,7 @@ class ScriptController(NSWindowController):
 
             # Run setup routine
             self.invoke("setup")
+
             if not self.vm.crashed:
                 window = self.currentView.window()
                 window.makeFirstResponder_(self.currentView)
@@ -358,13 +388,6 @@ class ScriptController(NSWindowController):
                 # Start the timer
                 self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
 
-                # Start the spinner
-                self.statusView.beginRun()
-        else:
-            # clean up ui state after successful non-animated run (but don't mess with the gui
-            # if running in fullscreen until the user explicitly cancsle with esc or cmd-period)
-            if not self.fullScreen:
-                self.stopScript()
 
     def step(self):
         """Keep calling the script's draw method until an error occurs or the animation complete."""
@@ -372,41 +395,14 @@ class ScriptController(NSWindowController):
         if not ok or not self.vm.running:
             self.stopScript()
 
-    def eval(self):
-        """Compile the script and run its global scope.
-
-        For non-animated scripts, this is a whole run since all of their drawing and control
-        flow is at the module level. For animated scripts, this is just a first pass to populate
-        the namespace with the script's variables and particularly the setup/draw/stop functions.
-        """
-        self.statusView.beginRun()
-        if (self.outputView):
-            self.editorView.clearErrors()
-            self.outputView.clear(timestamp=True)
-
-        # Compile the script
-        compilation = self.vm.compile(self.source)
-        self.echo(compilation.output)
-        if not compilation.ok:
-            self.stopScript()
-            return False
-
-        # Run the actual script
-        success = self.invoke(None)
-        self.statusView.endRun()
-
-        if success and self.vm.vars:
-            # Build the interface
-            self.dashboardController.buildInterface(self.vm.vars)
-
-        return success
-
     def invoke(self, method):
-        """Call a method defined in the script's global namespace.
+        """Call a method defined in the script's global namespace and update the ui appropriately
 
         If `method` exists in the namespace, it is called. If it's undefined, the invocation
         is ignored and no error is raised. If the method is None, the script's global scope
         will be run, but no additional methods will be called.
+
+        Returns a boolean flagging whether the call was successful.
         """
         # Run the script
         self.vm.state = self._ui_state()
@@ -470,10 +466,10 @@ class ScriptController(NSWindowController):
 
     def exportConfig(self, kind, fname, opts):
         """Begin actual export (invoked by self.exportSheet unless sheet was cancelled)"""
-        self.vm.source = self.source
         if self.animationTimer is not None:
             self.stopScript()
 
+        self.vm.source = self.source
         if kind=='image' and opts['last'] == opts['first']:
             self.runScript()
             self.vm.canvas.save(fname, opts.get('format'))
