@@ -21,7 +21,7 @@ def stacktrace(script=None, src=None):
     # preprocess the stacktrace
     stack = []
     basedir = dirname(script) if script else None
-    err_msg, frames = coredump(script, src)
+    err_msg, frames = coredump(script, src, syntax=False)
     for frame in frames:
         # rewrite file paths relative to the script's path (but only if it's shorter)
         if basedir:
@@ -31,21 +31,27 @@ def stacktrace(script=None, src=None):
         stack.append(frame)
 
     # return formatted traceback as a single string (with multiple newlines)
+    enc = encoding(src) or 'utf-8'
     if stack:
-        return "Traceback (most recent call last):\n%s" % "".join(format_list(stack) + err_msg)
+        trace = ("".join(format_list(stack))).decode(enc)
+        msg = trace + ("".join(err_msg)).decode(enc)
     else:
-        return "".join(err_msg)
+        msg = ("".join(err_msg)).decode(enc)
 
-def coredump(script=None, src=None):
+    return u"Traceback (most recent call last):\n%s" % msg
+
+def coredump(script=None, src=None, syntax=True):
     """Get a clean stacktrace with absolute paths and source pulled from the editor rather than disk"""
     # use the most recently caught exception
     etype, value, tb = exc_info()
     script = script or '<Untitled>' if src else None
     frames = extract_tb(tb, script, src)
 
-    # BUG
-    # this means we don't catch errors in autosaved `draft' docs...
-    if etype is SyntaxError and value.filename==script:
+    # syntax errors are peculiar in that there's no stack trace and the line-level
+    # error reporting happens in the formatted exception instead. since the editor
+    # needs the line number, synthesize a tracebak frame for it (unless the syntax
+    # arg is False, as it is when building up the stacktrace message...)
+    if syntax and etype is SyntaxError: # and value.filename==script:
         frames.append((script, value.lineno, '', ''))
 
     return [format_exception_only(etype, value), frames]
