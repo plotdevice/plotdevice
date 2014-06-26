@@ -17,7 +17,7 @@ from ..util import _copy_attrs
 
 _ctx = None
 __all__ = ("Text", "Family", "Font", "Stylesheet",
-           "LEFT", "RIGHT", "CENTER", "JUSTIFY", "DEFAULT")
+           "LEFT", "RIGHT", "CENTER", "JUSTIFY",)
 
 # text alignments
 LEFT = "left"
