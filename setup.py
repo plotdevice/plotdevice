@@ -31,12 +31,13 @@ import plotdevice
 ## Metadata ##
 
 # PyPI fields
-NAME = 'PlotDevice'
+APP_NAME = 'PlotDevice'
+MODULE = APP_NAME.lower()
 VERSION = plotdevice.__version__
-AUTHOR = "Christian Swinehart"
-AUTHOR_EMAIL = "drafting@samizdat.cc"
+AUTHOR = plotdevice.__author__
+AUTHOR_EMAIL = plotdevice.__email__
+LICENSE = plotdevice.__license__
 URL = "http://plotdevice.io/"
-LICENSE = "MIT"
 CLASSIFIERS = (
     "Development Status :: 5 - Production/Stable",
     "Environment :: MacOS X :: Cocoa",
@@ -91,7 +92,7 @@ import plistlib
 def info_plist(pth='app/PlotDevice-Info.plist'):
     info = plistlib.readPlist(pth)
     # overwrite the xcode placeholder vars
-    info['CFBundleExecutable'] = info['CFBundleName'] = NAME
+    info['CFBundleExecutable'] = info['CFBundleName'] = APP_NAME
     return info
 
 def update_plist(pth, **modifications):
@@ -384,7 +385,7 @@ if __name__=='__main__':
 
     # common config between module and app builds
     config = dict(
-        name = NAME.lower(),
+        name = MODULE,
         version = VERSION,
         description = DESCRIPTION,
         long_description = LONG_DESCRIPTION,
