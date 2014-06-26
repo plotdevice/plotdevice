@@ -30,6 +30,7 @@ from AppKit import *
 from PyObjCTools import AppHelper
 from plotdevice.gui import ScriptController
 from plotdevice.util import rsrc_path
+from plotdevice.run import encoding
 
 STDOUT = sys.stdout
 STDERR = sys.stderr
@@ -64,7 +65,6 @@ class ScriptAppDelegate(NSObject):
 
     def applicationDidFinishLaunching_(self, note):
         pth = self.opts['file']
-        src = file(pth).read()
 
         if self.mode=='windowed':
             # load the viewer ui from the nib in plotdevice/rsrc
@@ -74,7 +74,7 @@ class ScriptAppDelegate(NSObject):
             NSApp().setMainMenu_(self.menu)
 
             # configure the window script-controller, and update-watcher
-            self.script.setPath_source_options_(pth, src, self.opts)
+            self.script.setScript_options_(pth, self.opts)
             self.window.setTitleWithRepresentedFilename_(pth)
             # self.script.setWindowFrameAutosaveName_('plotdevice:%s'%self.opts['file'])
 
@@ -86,7 +86,7 @@ class ScriptAppDelegate(NSObject):
         elif self.mode=='headless':
             # create a window-less WindowController
             self.script = ConsoleScript.alloc().init()
-            self.script.setPath_source_options_(pth, src, self.opts)
+            self.script.setScript_options_(pth, self.opts)
 
             # BUG? FEATURE? (it's a mystery!)
             # not sure why this is necessary. does this not get validated by the
@@ -152,11 +152,18 @@ class ConsoleScript(ScriptController):
         self._init_state()
         return super(ScriptController, self).init()
 
-    def setPath_source_options_(self, path, source, opts):
+    def setScript_options_(self, path, opts):
         self.vm.path = path
-        self.vm.source = source
+        self.vm.source = self.unicode_src
         self.vm.metadata = self.opts = opts
         self.watcher = ScriptWatcher.alloc().initWithScript_(self)
+
+    @property
+    def unicode_src(self):
+        """Read in our script file's contents (honoring its `# encoding: ...` if present)"""
+        src = file(self.path).read()
+        enc = encoding(src) or 'utf-8'
+        return src.decode(enc)
 
     def scriptedRun(self):
         # this is the first run that gets triggered at invocation
@@ -168,18 +175,18 @@ class ConsoleScript(ScriptController):
 
     def _refresh(self):
         # file changed: reread the script (and potentially run it)
-        self.vm.source = file(self.path).read()
+        self.vm.source = self.unicode_src
         if self.opts['live']:
             self.scriptedRun()
 
     def runScript(self):
         if self.watcher.stale():
-            self.vm.source = file(self.path).read()
+            self.vm.source = self.unicode_src
         super(ConsoleScript, self).runScript()
 
     def runFullscreen_(self, sender):
         if self.watcher.stale():
-            self.vm.source = file(self.path).read()
+            self.vm.source = self.unicode_src
         super(ConsoleScript, self).runFullscreen_(sender)
 
     def windowWillClose_(self, note):
