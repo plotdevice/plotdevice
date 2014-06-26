@@ -14,7 +14,6 @@ __all__ = ['Sandbox']
 
 Outcome = namedtuple('Outcome', ['ok', 'output'])
 Output = namedtuple('Output', ['isErr', 'data'])
-PLUGIN_DIR = os.path.join(os.getenv("HOME"), "Library", "Application Support", "PlotDevice")
 
 class Metadata(object):
     __slots__ = 'args', 'virtualenv', 'first', 'next', 'last', 'console', 'running', 'loop'
@@ -267,8 +266,6 @@ class Sandbox(object):
         # set up environment for script
         output = StdIO(pipe=self._meta.console)
         sys.stdout, sys.stderr = output.pipes
-        if isdir(PLUGIN_DIR):
-            sys.path.insert(0, PLUGIN_DIR)
         if self._meta.virtualenv:
             sys.path.insert(0, self._meta.virtualenv)
         sys.path.insert(0, scriptDir)
