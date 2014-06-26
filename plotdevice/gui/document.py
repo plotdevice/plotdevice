@@ -10,13 +10,11 @@ import objc
 from Foundation import *
 from AppKit import *
 
-# from plotdevice.gui.preferences import editor_info
-from plotdevice.gui.editor import OutputTextView, EditorView
-from plotdevice.gui.widgets import DashboardController, ExportSheet
-from plotdevice.gui.views import FullscreenWindow, FullscreenView
-from plotdevice.gui import set_timeout
-from plotdevice.run import Sandbox
-from plotdevice import util
+from .editor import OutputTextView, EditorView
+from .widgets import DashboardController, ExportSheet
+from .views import FullscreenWindow, FullscreenView
+from ..run import Sandbox, encoding
+from . import set_timeout
 
 NSEventGestureAxisVertical = 2
 
@@ -24,6 +22,7 @@ class PlotDeviceDocument(NSDocument):
     def init(self):
         self.stationery = "TMPL:sketch" # untitled/example docs flag
         self.source = None # string read in from file
+        self.source_enc = 'utf-8' # or the contents of a coding: comment
         self.script = None # window controller
         return super(PlotDeviceDocument,self).init()
 
@@ -54,14 +53,18 @@ class PlotDeviceDocument(NSDocument):
 
     def writeToURL_ofType_error_(self, url, tp, err):
         path = url.fileSystemRepresentation()
-        text = self.script._get_source().encode("utf8")
+        src = self.script._get_source()
+        # always use the same encoding we were read in with
+        text = src.encode(self.source_enc)
         with file(path, 'w', 0) as f:
             f.write(text)
         return True, err
 
     def readFromURL_ofType_error_(self, url, tp, err):
         path = url.fileSystemRepresentation()
-        self.source = file(path).read().decode("utf-8")
+        src = file(path).read()
+        self.source_enc = encoding(src) or 'utf-8'
+        self.source = src.decode(self.source_enc)
         if self.script:
             self.script.setPath_source_(self.path, self.source)
         return True, err

@@ -1,7 +1,19 @@
-import linecache
+import linecache, re
 from sys import exc_info
 from os.path import abspath, dirname, relpath
 from traceback import format_list, format_exception_only
+
+def encoding(src):
+    """Searches the first two lines of a string looking for an `# encoding: ???` comment."""
+    re_enc = re.compile(r'coding[=:]\s*([-\w.]+)')
+    for line in src.split('\n')[:2]:
+        if not line.strip().startswith('#'):
+            continue
+        m = re_enc.search(line)
+        if not m:
+            continue
+        return m.group(1)
+    return None
 
 def stacktrace(script=None, src=None):
     """print a clean traceback and optionally rewrite the paths relative to a script path"""

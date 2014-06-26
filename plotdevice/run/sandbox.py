@@ -6,7 +6,7 @@ from collections import namedtuple
 from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
-from ..run import stacktrace, coredump
+from ..run import stacktrace, coredump, encoding
 from ..lib.io import MovieExportSession, ImageExportSession
 from plotdevice import util, context, gfx, DeviceError
 
@@ -138,12 +138,17 @@ class Sandbox(object):
         # self.__doc__ = {}
         # self.namespace.update(dict( __doc__=self.__doc__, ))
 
+
         result = Outcome(True, [])
         if not self._code:
             # Compile the script
             def compileScript():
                 scriptname = self._path or "<Untitled>"
-                self._code = compile("%s\n\n"%self._source, scriptname.encode('ascii', 'ignore'), "exec")
+                # src needs to be a bytestring if the script defines its encoding in an
+                # `encoding: ...` comment. otherwise just pass the unicode to compile()
+                enc = encoding(self._source)
+                src = self._source.encode(enc) if enc else self._source
+                self._code = compile(src, scriptname.encode('ascii', 'ignore'), "exec")
             result = self.call(compileScript)
             if not result.ok:
                 return result
