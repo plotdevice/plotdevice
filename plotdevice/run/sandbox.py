@@ -150,7 +150,7 @@ class Sandbox(object):
 
         return result
 
-    def render(self, method=None):
+    def run(self, method=None):
         """Clear the context and run either the entire script or a specific method."""
 
         # if this is the initial pass, reset the namespace and canvas state
@@ -269,10 +269,6 @@ class Sandbox(object):
             sys.argv = argv
         return Outcome(True, output.data)
 
-    def crash(self):
-        self.crashed = coredump(self._path, self._source)
-        return stacktrace(self._path, self._source)
-
     def stop(self):
         """Called once the script has stopped running (voluntarily or otherwise)"""
         # print "stopping at", self._meta.next-1, "of", self._meta.last
@@ -287,6 +283,11 @@ class Sandbox(object):
             self._meta.console = None
         return result
 
+    def die(self):
+        """Called by the windowcontroller if the graphicsview bombed during canvas.draw()"""
+        self.crashed = coredump(self._path, self._source)
+        return stacktrace(self._path, self._source)
+
     def export(self, kind, fname, opts):
         """Export graphics and animations to image and movie files.
 
@@ -300,7 +301,7 @@ class Sandbox(object):
         """
 
         # compile & evaluate the script once
-        firstpass = self.render()
+        firstpass = self.run()
         self.delegate.exportStatus(firstpass)
         if not firstpass.ok:
             return
@@ -341,7 +342,7 @@ class Sandbox(object):
                     break
 
                 self._meta.next = i
-                result = self.render(method)
+                result = self.run(method)
                 self.delegate.exportStatus(result, self.canvas)
                 self.delegate.exportProgress(self.session.written, self.session.total, self.session.cancelled)
                 if not result.ok:

@@ -362,10 +362,10 @@ class ScriptController(NSWindowController):
 
             # don't mess with the gui window-state if running in fullscreen until the
             # user explicitly cancels with esc or cmd-period
-            if not self.fullScreen:
+            if success and not self.fullScreen:
                 self.stopScript()
 
-            return # and we're done
+            return # either way, the run is complete
 
         # Display the dashboard if the var() command was called
         if self.vm.vars:
@@ -382,6 +382,7 @@ class ScriptController(NSWindowController):
             self.invoke("setup")
 
             if not self.vm.crashed:
+                # shift the focus so we can catch mouse events in the canvas
                 window = self.currentView.window()
                 window.makeFirstResponder_(self.currentView)
 
@@ -406,7 +407,7 @@ class ScriptController(NSWindowController):
         """
         # Run the script
         self.vm.state = self._ui_state()
-        result = self.vm.render(method=method)
+        result = self.vm.run(method=method)
         self.echo(result.output)
 
         # only update the view during animations after the script's draw()
@@ -550,7 +551,7 @@ class ScriptController(NSWindowController):
 
         # relay any errors to the text panes (if we're in the app)
         if self.editorView:
-            self.editorView.report(self.vm.crashed, self.document().path)
+            self.editorView.report(self.vm.crashed, self.vm.path or "<Untitled>")
             self.outputView.report(self.vm.crashed, self.vm.namespace.get('FRAME') if self.vm.animated else None)
 
         # return from fullscreen (if applicable)
@@ -583,7 +584,7 @@ class ScriptController(NSWindowController):
 
     def crash(self):
         # called by the graphicsview when a grob blows up with unexpected input
-        errtxt = self.vm.crash()
+        errtxt = self.vm.die()
         self.echo([(True, errtxt)])
         self.stopScript()
 
