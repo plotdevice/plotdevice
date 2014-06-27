@@ -152,7 +152,13 @@ class Context(object):
         `draw()` method (and optionally, `setup()` and `stop()` methods to be called at the
         beginning and end of the run respectively). Your draw method will be called repeatedly
         until hitting command-period.
+
+        If you set the speed to 0 your draw method will be called only once and the animation
+        will terminate.
         """
+        if fps<0:
+            timetraveler = "Sorry, can't animate at %r fps" % fps
+            raise DeviceError(timetraveler)
         self.canvas.speed = fps
 
     def background(self, *args, **kwargs):

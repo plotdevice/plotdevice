@@ -371,17 +371,17 @@ class ScriptController(NSWindowController):
         if self.vm.vars:
             self.dashboardController.buildInterface(self.vm.vars)
 
+        # Check whether we are dealing with animation
         if self.vm.animated:
-            # Check whether we are dealing with animation
-            if 'draw' not in self.vm.namespace:
-                errorAlert("Not a proper PlotDevice animation",
-                    "PlotDevice animations should have at least a draw() method.")
-                return
 
             # Run setup routine
             self.invoke("setup")
 
             if not self.vm.crashed:
+                # calling speed(0) just draws the first frame, so bail out before repeating
+                if self.vm.speed<=0:
+                    return self.step()
+
                 # shift the focus so we can catch mouse events in the canvas
                 window = self.currentView.window()
                 window.makeFirstResponder_(self.currentView)

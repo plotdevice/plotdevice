@@ -41,8 +41,7 @@ class Sandbox(object):
         self._path = None       # file path to the active script
         self._source = None     # unicode contents of script
         self._code = None       # byte-compiled source
-        self._stateful = []     # list of script functions that expect a state variable
-        self._statevar = None   # persistent dict passed to animation functions in script
+        self._anim = None       # persistent dict passed to animation functions in script
         self.canvas = None      # can be handed off to views or exporters to access the image
         self.context = None     # quartz playground
         self.namespace = {}     # a reference to the script's namespace (managed by self.context)
@@ -51,6 +50,7 @@ class Sandbox(object):
         self.session = None     # the image/movie export session (if any)
         self.stationery = False # whether the script is from the examples folder
         self.delegate = None    # object with exportStatus and exportProgress methods
+
 
         # set up the graphics plumbing
         self.canvas = context.Canvas()
@@ -108,7 +108,7 @@ class Sandbox(object):
     @property
     def animated(self):
         """Whether the script has multiple frames (r)"""
-        return bool(self.canvas.speed)
+        return self._anim is not None or callable(self.namespace.get('draw',None))
 
     @property
     def running(self):
@@ -133,6 +133,7 @@ class Sandbox(object):
         result = Outcome(True, [])
         self._meta.running = False
         self._meta.next = self._meta.first
+        self._anim = None
 
         # if our .source attr has been changed since the last run, compile it now
         if not self._code:
@@ -168,33 +169,35 @@ class Sandbox(object):
         # Set the frame/pagenum
         self.namespace['PAGENUM'] = self.namespace['FRAME'] = self._meta.next
 
-        # Run the script's top-level
+        # Run the specified method (or script's top-level if None)
         result = self.call(method)
 
-        # bail out if we crashed or we're a non-anim and are thus `done'
-        if not result.ok or not self.animated:
-            return result
+        # (non-animation scripts are now complete (as are anims that just crashed))
 
-        # if we're still here, deal with some special-handling for animations
-        if method is None:
-            # we're in the initial pass through the script so flag the run as ongoing
-            self._meta.running = True
+        if self.animated and result.ok:
+            # animations require special bookkeeping depending on which routine is being run
+            if method is None:
+                # we're in the initial pass through the script so flag the run as ongoing
+                self._meta.running = True
+                self._anim = util.adict()
 
-            # determine which of the script's routines expect a state varaiable
-            self._stateful = []
-            for routine in 'setup','draw','stop':
-                func = self.namespace.get(routine)
-                if func and getargspec(func).args:
-                    self._stateful.append(routine)
+                # default to 30fps if speed() wasn't called in the script
+                if self.speed is None:
+                    self.canvas.speed = 30
 
-            # allocate a fresh state var if any routines are using it
-            self._statevar = util.adict() if self._stateful else None
+                # determine which of the script's routines accept an argument
+                for routine in 'setup','draw','stop':
+                    func = self.namespace.get(routine)
+                    # replace each such routine with a partial application passing
+                    # the dict. this means we can .call() it without any explicit args
+                    if callable(func) and getargspec(func).args:
+                        self.namespace[routine] = partial(self.namespace[routine], self._anim)
 
-        elif method=='draw':
-            # tick the frame ahead after each draw call
-            self._meta.next+=1
-            if self._meta.next > self._meta.last and self._meta.loop:
-                self._meta.next = self._meta.first
+            elif method=='draw':
+                # tick the frame ahead after each draw call
+                self._meta.next+=1
+                if self._meta.next > self._meta.last and self._meta.loop:
+                    self._meta.next = self._meta.first
 
         return result
 
@@ -217,11 +220,8 @@ class Sandbox(object):
             def execScript():
                 exec self._code in self.namespace
             method = execScript
-        elif method in self.namespace:
-            if method in self._stateful:
-                method = partial(self.namespace[method], self._statevar)
-            else:
-                method = self.namespace[method]
+        elif callable(self.namespace.get(method, None)):
+            method = self.namespace[method]
         elif not callable(method):
             # silently skip over undefined methods (convenient if a script lacks 'setup' or 'draw')
             return Outcome(True, [])
