@@ -33,7 +33,7 @@ def grid(cols, rows, colSize=1, rowSize=1, shuffled=False):
         for x in colRange:
             yield (x*colSize,y*rowSize)
 
-def random(v1=None, v2=None):
+def random(v1=None, v2=None, mean=None, sd=None):
     """Returns a random value.
 
     This function does a lot of things depending on the parameters:
@@ -60,6 +60,8 @@ def random(v1=None, v2=None):
             start = min(v1, v2)
             end = max(v1, v2) + 1
             return int(start + random.random() * (end-start))
+    elif mean != None and sd!= None:
+        return random.normalvariate(mean, sd)
     else: # No values means 0.0 -> 1.0
         return random.random()
 
