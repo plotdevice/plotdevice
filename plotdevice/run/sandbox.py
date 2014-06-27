@@ -8,8 +8,7 @@ from Foundation import *
 from AppKit import *
 from ..run import stacktrace, coredump, encoding
 from ..lib.io import MovieExportSession, ImageExportSession
-from ..context import Halted
-from plotdevice import util, context, gfx, DeviceError
+from plotdevice import util, context, gfx, Halted, DeviceError
 
 __all__ = ['Sandbox']
 

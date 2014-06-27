@@ -48,6 +48,10 @@ INTERNAL = '_p_l_o_t_d_e_v_i_c_e_'
 class DeviceError(Exception):
     pass
 
+# special exception to cleanly exit animations
+class Halted(Exception):
+    pass
+
 # note whether the module is being used within the .app, via console.py, or from the repl
 called_from = getattr(sys.modules['__main__'], '__file__', '<interactive>')
 is_windowed = bool(re.search(r'plotdevice(-app|/run/console)\.py$', called_from))

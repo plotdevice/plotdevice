@@ -8,7 +8,7 @@ from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
 from .lib import geometry, pathmatics
 from .gfx.transform import Dimension
 from .gfx import *
-from . import gfx, lib, util, DeviceError
+from . import gfx, lib, util, Halted, DeviceError
 
 __all__ = ('Context', 'Canvas')
 
@@ -18,10 +18,6 @@ DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 # named tuples for grouping state attrs
 PenStyle = namedtuple('PenStyle', ['nib', 'cap', 'join', 'dash'])
 TypeStyle = namedtuple('TypeStyle', ['face', 'size', 'leading', 'align'])
-
-# special exception to cleanly exit animations
-class Halted(Exception):
-    pass
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
