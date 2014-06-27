@@ -209,7 +209,7 @@ class DashboardController(NSObject):
         control.setAction_(objc.selector(self.buttonClicked_, signature="v@:@@"))
         self.panel.contentView().addSubview_(control)
 
-
+from ..context import RGB, CMYK
 class ExportSheet(NSObject):
     # the script whose doExportAsImage and doExportAsMovie methods will be called
     script = objc.IBOutlet()
@@ -218,6 +218,8 @@ class ExportSheet(NSObject):
     imageAccessory = objc.IBOutlet()
     imageFormat = objc.IBOutlet()
     imagePageCount = objc.IBOutlet()
+    imagePagination = objc.IBOutlet()
+    imageColorMode = objc.IBOutlet()
 
     # Movie export settings
     movieAccessory = objc.IBOutlet()
@@ -230,8 +232,9 @@ class ExportSheet(NSObject):
     def awakeFromNib(self):
         self.formats = dict(image=('pdf', 'eps', 'png', 'tiff', 'jpg', 'gif'), movie=('mov', 'gif'))
         self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0)
-        self.image = dict(format='pdf', first=1, last=1)
+        self.image = dict(format='pdf', first=1, last=1, cmyk=False, book=False)
         self.cwd = None
+
 
     def beginExport(self, kind):
         # configure the accessory controls
@@ -241,6 +244,9 @@ class ExportSheet(NSObject):
             format_idx = self.formats['image'].index(self.image['format'])
             self.imageFormat.selectItemAtIndex_(format_idx)
             self.imagePageCount.setIntValue_(self.image['last'])
+            self.imagePagination.selectItemAtIndex_(1 if self.image['book'] else 0)
+            self.imageColorMode.selectItemAtIndex_(1 if self.image['cmyk'] else 0)
+            self.updatePagination()
 
         elif kind=='movie':
             format = self.movie['format']
@@ -287,14 +293,14 @@ class ExportSheet(NSObject):
         )
 
     def exportPanelDidEnd_returnCode_contextInfo_(self, panel, returnCode, context):
-        if not returnCode: return
-
         kind = 'movie' if context else 'image'
         fname = panel.filename()
         self.cwd = os.path.split(fname)[0] # Save the directory we exported to.
         if kind=='image':
             opts = dict(format=panel.requiredFileType(),
                         first=1,
+                        cmyk=self.imageColorMode.indexOfSelectedItem()==1,
+                        book=self.imagePagination.indexOfSelectedItem()==1,
                         last=self.imagePageCount.intValue())
 
         elif kind=='movie':
@@ -306,16 +312,39 @@ class ExportSheet(NSObject):
                         loop=-1 if self.movieLoop.state()==NSOnState else 0,
                         bitrate=self.movieBitrate.selectedItem().tag() )
 
-        setattr(self, kind, dict(opts))
         panel.close()
         panel.setAccessoryView_(None)
-        self.script.exportConfig(kind, fname, opts)
+
+        if returnCode:
+            setattr(self, kind, dict(opts))
+            self.script.exportInit(kind, fname, opts)
+
+    def updatePagination(self):
+        format = self.formats['image'][self.imageFormat.indexOfSelectedItem()]
+        can_paginate = format=='pdf'
+        self.imagePagination.cellWithTag_(1).setEnabled_(can_paginate)
+        if not can_paginate:
+            self.imagePagination.selectCellWithTag_(0)
+
+    def updateColorMode(self):
+        format = self.formats['image'][self.imageFormat.indexOfSelectedItem()]
+        can_cmyk = format in ('pdf','eps','tiff')
+        self.imageColorMode.setEnabled_(can_cmyk)
+        if not can_cmyk:
+            self.imageColorMode.selectItemAtIndex_(0)
 
     @objc.IBAction
     def imageFormatChanged_(self, sender):
         panel = sender.window()
         format = self.formats['image'][sender.indexOfSelectedItem()]
         panel.setRequiredFileType_(format)
+
+        self.updateColorMode()
+        self.updatePagination()
+
+    @objc.IBAction
+    def imagePageCountChanged_(self, sender):
+        self.updatePagination()
 
     @objc.IBAction
     def movieFormatChanged_(self, sender):

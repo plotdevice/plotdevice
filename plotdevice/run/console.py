@@ -98,7 +98,7 @@ class ScriptAppDelegate(NSObject):
             # kick off an export session
             format = self.opts['export'].rsplit('.',1)[1]
             kind = 'movie' if format in ('mov','gif') else 'image'
-            self.script.exportConfig(kind, self.opts['export'], self.opts)
+            self.script.exportInit(kind, self.opts['export'], self.opts)
 
     def catchInterrupts_(self, sender):
         read, write, timeout = select.select([sys.stdin.fileno()], [], [], 0)

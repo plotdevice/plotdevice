@@ -59,7 +59,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="Gog-0j-9A9">
-                                    <rect key="frame" x="321" y="0.0" width="16" height="485"/>
+                                    <rect key="frame" x="322" y="0.0" width="15" height="485"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
@@ -187,8 +187,10 @@
         <customObject id="2ZA-Wl-gCw" customClass="ExportSheet">
             <connections>
                 <outlet property="imageAccessory" destination="1ay-3f-Xpc" id="5gb-qo-l0J"/>
+                <outlet property="imageColorMode" destination="hiW-y8-FJh" id="xeW-lA-MB6"/>
                 <outlet property="imageFormat" destination="E8Q-mV-qkm" id="wrd-2l-ozw"/>
-                <outlet property="imagePageCount" destination="k3J-Rh-V0T" id="AKJ-99-7vN"/>
+                <outlet property="imagePageCount" destination="fzL-qH-ldF" id="NlN-bp-Mxg"/>
+                <outlet property="imagePagination" destination="fMl-Ao-fcy" id="WjE-TF-7Im"/>
                 <outlet property="movieAccessory" destination="Kjz-ld-Gx7" id="m4P-Fx-cqU"/>
                 <outlet property="movieBitrate" destination="2Ww-nN-yOm" id="hGF-mo-Boa"/>
                 <outlet property="movieFormat" destination="bLs-eY-UUK" id="jN1-Dy-0X1"/>
@@ -199,11 +201,20 @@
             </connections>
         </customObject>
         <customView id="1ay-3f-Xpc" userLabel="View">
-            <rect key="frame" x="0.0" y="0.0" width="265" height="107"/>
+            <rect key="frame" x="0.0" y="0.0" width="354" height="110"/>
             <autoresizingMask key="autoresizingMask"/>
             <subviews>
+                <textField verticalHuggingPriority="750" id="iwt-aZ-JIS">
+                    <rect key="frame" x="17" y="73" width="53" height="17"/>
+                    <autoresizingMask key="autoresizingMask"/>
+                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Format:" id="pY4-bA-RRT">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
                 <popUpButton verticalHuggingPriority="750" id="E8Q-mV-qkm">
-                    <rect key="frame" x="100" y="63" width="103" height="26"/>
+                    <rect key="frame" x="74" y="67" width="79" height="26"/>
                     <autoresizingMask key="autoresizingMask"/>
                     <popUpButtonCell key="cell" type="push" title="PDF" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="i6B-eY-35k" id="ejg-Vh-EUZ">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -223,46 +234,104 @@
                         <action selector="imageFormatChanged:" target="2ZA-Wl-gCw" id="Vlj-FC-gh7"/>
                     </connections>
                 </popUpButton>
-                <textField verticalHuggingPriority="750" id="iwt-aZ-JIS">
-                    <rect key="frame" x="17" y="69" width="81" height="17"/>
+                <popUpButton verticalHuggingPriority="750" id="hiW-y8-FJh">
+                    <rect key="frame" x="174" y="67" width="71" height="26"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="Qbt-v6-We4">
+                        <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                        <menu key="menu" title="OtherViews" id="kFX-IW-ioO">
+                            <items>
+                                <menuItem title="RGB" state="on" id="GQO-Ht-gR1"/>
+                                <menuItem title="CMYK" id="f3R-4j-7Sp"/>
+                            </items>
+                        </menu>
+                    </popUpButtonCell>
+                </popUpButton>
+                <textField verticalHuggingPriority="750" id="N81-kh-7dy">
+                    <rect key="frame" x="17" y="-117" width="81" height="17"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="File Format:" id="pY4-bA-RRT">
+                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="Page Count:" id="Fur-NH-QIz">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
-                <textField verticalHuggingPriority="750" id="UsC-vt-jvH">
-                    <rect key="frame" x="17" y="20" width="231" height="11"/>
-                    <autoresizingMask key="autoresizingMask"/>
-                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" id="Jjf-fR-TZf">
-                        <font key="font" metaFont="miniSystem"/>
-                        <string key="title">Multiple pages will be numbered &lt;File&gt;-00001.pdf
-bered page-00003.pdf</string>
-                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                    </textFieldCell>
-                </textField>
-                <textField verticalHuggingPriority="750" id="k3J-Rh-V0T">
-                    <rect key="frame" x="142" y="37" width="58" height="22"/>
-                    <autoresizingMask key="autoresizingMask"/>
-                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="left" title="1" drawsBackground="YES" id="ZXk-Is-EdK">
-                        <numberFormatter key="formatter" formatterBehavior="10_0" positiveFormat="0" negativeFormat="-0" localizesFormat="NO" hasThousandSeparators="NO" thousandSeparator="," id="ZJF-j2-eBt">
-                            <attributedString key="attributedStringForZero">
-                                <fragment content="0"/>
-                            </attributedString>
-                            <decimal key="minimum" value="1"/>
-                            <decimal key="maximum" value="99999"/>
+                <comboBox verticalHuggingPriority="750" id="hPq-19-fLD">
+                    <rect key="frame" x="124" y="-121" width="77" height="22"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <comboBoxCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" title="1" drawsBackground="YES" completes="NO" numberOfVisibleItems="5" id="HiY-Yy-cpK">
+                        <numberFormatter key="formatter" formatterBehavior="default10_4" usesGroupingSeparator="NO" groupingSize="0" minimumIntegerDigits="0" maximumIntegerDigits="42" id="rrJ-8R-DgP">
+                            <real key="minimum" value="0.0"/>
                         </numberFormatter>
-                        <font key="font" metaFont="system"/>
+                        <font key="font" metaFont="smallSystem"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </comboBoxCell>
+                    <connections>
+                        <action selector="imagePageCountChanged:" target="2ZA-Wl-gCw" id="57D-LW-nJ4"/>
+                    </connections>
+                </comboBox>
+                <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" autorecalculatesCellSize="YES" id="fMl-Ao-fcy">
+                    <rect key="frame" x="175" y="20" width="159" height="38"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    <size key="cellSize" width="159" height="18"/>
+                    <size key="intercellSpacing" width="4" height="2"/>
+                    <buttonCell key="prototype" type="radio" title="Radio" imagePosition="left" alignment="left" controlSize="small" inset="2" id="6Zc-U7-K3r">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="smallSystem"/>
+                    </buttonCell>
+                    <cells>
+                        <column>
+                            <buttonCell type="radio" title="Sequentially named files" imagePosition="left" alignment="left" controlSize="small" state="on" inset="2" id="mLS-Fc-5JX">
+                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                <font key="font" metaFont="smallSystem"/>
+                            </buttonCell>
+                            <buttonCell type="radio" title="Pages of single document" imagePosition="left" alignment="left" controlSize="small" tag="1" inset="2" id="iRm-ft-dfq">
+                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                <font key="font" metaFont="smallSystem"/>
+                            </buttonCell>
+                        </column>
+                    </cells>
+                </matrix>
+                <textField verticalHuggingPriority="750" id="fzL-qH-ldF">
+                    <rect key="frame" x="76" y="40" width="74" height="19"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" title="1" drawsBackground="YES" id="SGw-eo-3Pl">
+                        <numberFormatter key="formatter" formatterBehavior="default10_4" localizesFormat="NO" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="309" maximumFractionDigits="3" id="wJk-Oq-Yvd">
+                            <real key="minimum" value="1"/>
+                        </numberFormatter>
+                        <font key="font" metaFont="smallSystem"/>
                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
+                    <connections>
+                        <action selector="imagePageCountChanged:" target="2ZA-Wl-gCw" id="aUM-a3-v4G"/>
+                    </connections>
                 </textField>
-                <textField verticalHuggingPriority="750" id="N81-kh-7dy">
-                    <rect key="frame" x="17" y="39" width="120" height="17"/>
+                <textField verticalHuggingPriority="750" id="lS7-vg-63p">
+                    <rect key="frame" x="17" y="42" width="53" height="17"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="Number of Pages:" id="Fur-NH-QIz">
+                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Pages:" id="i5X-Vb-9Kx">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="ux5-eq-5ln">
+                    <rect key="frame" x="154" y="73" width="18" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="justified" title="in" id="ELX-dh-Q7c">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="rGY-Ny-yrv">
+                    <rect key="frame" x="153" y="42" width="18" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="justified" title="as" id="eey-Tz-yJp">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -467,6 +536,6 @@ DQ
         </customView>
     </objects>
     <resources>
-        <image name="NSStopProgressFreestandingTemplate" width="12" height="12"/>
+        <image name="NSStopProgressFreestandingTemplate" width="83" height="83"/>
     </resources>
 </document>

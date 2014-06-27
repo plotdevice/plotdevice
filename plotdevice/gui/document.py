@@ -467,7 +467,7 @@ class ScriptController(NSWindowController):
         # print "sheet", self.exportSheet
         self.exportSheet.beginExport('movie')
 
-    def exportConfig(self, kind, fname, opts):
+    def exportInit(self, kind, fname, opts):
         """Begin actual export (invoked by self.exportSheet unless sheet was cancelled)"""
         if self.animationTimer is not None:
             self.stopScript()
