@@ -19,6 +19,10 @@ DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 PenStyle = namedtuple('PenStyle', ['nib', 'cap', 'join', 'dash'])
 TypeStyle = namedtuple('TypeStyle', ['face', 'size', 'leading', 'align'])
 
+# special exception to cleanly exit animations
+class Halted(Exception):
+    pass
+
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
     _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_typestyle', '_stylesheet', '_oldvars', '_vars'
@@ -160,6 +164,10 @@ class Context(object):
             timetraveler = "Sorry, can't animate at %r fps" % fps
             raise DeviceError(timetraveler)
         self.canvas.speed = fps
+
+    def halt(self):
+        """Cleanly terminates an animation when called from your draw() function"""
+        raise Halted()
 
     def background(self, *args, **kwargs):
         """Set the canvas background color

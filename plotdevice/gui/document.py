@@ -420,6 +420,8 @@ class ScriptController(NSWindowController):
             self.currentView.setCanvas(self.vm.canvas)
         if not result.ok and method in (None, "setup"):
             self.stopScript()
+        if result.ok=='HALTED':
+            self.stopScript()
 
         return result.ok
 

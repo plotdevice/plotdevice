@@ -8,6 +8,7 @@ from Foundation import *
 from AppKit import *
 from ..run import stacktrace, coredump, encoding
 from ..lib.io import MovieExportSession, ImageExportSession
+from ..context import Halted
 from plotdevice import util, context, gfx, DeviceError
 
 __all__ = ['Sandbox']
@@ -255,6 +256,8 @@ class Sandbox(object):
         try:
             # run the code object we were passed
             method()
+        except Halted:
+            return Outcome('HALTED', output.data)
         except:
             # print the stacktrace and quit
             self.crashed = coredump(self._path, self._source)
