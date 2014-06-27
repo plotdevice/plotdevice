@@ -60,12 +60,15 @@ class Context(object):
         self.canvas.speed = None
         self.canvas._ctx = self
 
+        # default output colorspace
+        self._outputmode = RGB
+
     def _resetContext(self):
         """Do a thorough reset of all the state variables"""
         self._activate()
 
         # color state
-        self._colormode = self._outputmode = RGB
+        self._colormode = RGB
         self._colorrange = 1.0
         self._fillcolor = Color() # can also be a Gradient or Pattern
         self._strokecolor = None

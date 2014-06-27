@@ -76,7 +76,7 @@ class ImageExportSession(ExportSession):
         self.fname = fname
         self.single_page = first==last
         self.batches = [(n, min(n+IMG_BATCH_SIZE-1,last)) for n in range(first, last+1, IMG_BATCH_SIZE)]
-        self.writer = _ImageSequence.alloc().init()
+        self.writer = ImageSequence.alloc().init()
 
     def add(self, canvas, frame):
         if self.cancelled: return

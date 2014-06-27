@@ -219,7 +219,7 @@ class ExportSheet(NSObject):
     imageFormat = objc.IBOutlet()
     imagePageCount = objc.IBOutlet()
     imagePagination = objc.IBOutlet()
-    imageColorMode = objc.IBOutlet()
+    imageCMYK = objc.IBOutlet()
 
     # Movie export settings
     movieAccessory = objc.IBOutlet()
@@ -230,9 +230,9 @@ class ExportSheet(NSObject):
     movieBitrate = objc.IBOutlet()
 
     def awakeFromNib(self):
-        self.formats = dict(image=('pdf', 'eps', 'png', 'tiff', 'jpg', 'gif'), movie=('mov', 'gif'))
+        self.formats = dict(image=(0, 'pdf', 0,0, 'pdf', 'eps', 'png', 'tiff', 'jpg', 'gif'), movie=('mov', 'gif'))
         self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0)
-        self.image = dict(format='pdf', first=1, last=1, cmyk=False, book=False)
+        self.image = dict(format='pdf', first=1, last=1, cmyk=False, book=True)
         self.cwd = None
 
 
@@ -241,12 +241,16 @@ class ExportSheet(NSObject):
         if kind=='image':
             format = self.image['format']
             accessory = self.imageAccessory
-            format_idx = self.formats['image'].index(self.image['format'])
-            self.imageFormat.selectItemAtIndex_(format_idx)
+
+            if self.image['book']:
+                self.imageFormat.selectItemAtIndex_(1)
+            else:
+                format_idx = 2 + self.formats['image'][2:].index(self.image['format'])
+                self.imageFormat.selectItemAtIndex_(format_idx)
             self.imagePageCount.setIntValue_(self.image['last'])
-            self.imagePagination.selectItemAtIndex_(1 if self.image['book'] else 0)
-            self.imageColorMode.selectItemAtIndex_(1 if self.image['cmyk'] else 0)
+
             self.updatePagination()
+            self.updateColorMode()
 
         elif kind=='movie':
             format = self.movie['format']
@@ -281,7 +285,7 @@ class ExportSheet(NSObject):
         exportPanel.setPrompt_("Export")
         exportPanel.setCanSelectHiddenExtension_(True)
         exportPanel.setShowsTagField_(False)
-        exportPanel.setAllowedFileTypes_(self.formats[kind])
+        exportPanel.setAllowedFileTypes_(filter(None, self.formats[kind]))
         exportPanel.setRequiredFileType_(format)
         exportPanel.setAccessoryView_(accessory)
 
@@ -293,57 +297,63 @@ class ExportSheet(NSObject):
         )
 
     def exportPanelDidEnd_returnCode_contextInfo_(self, panel, returnCode, context):
-        kind = 'movie' if context else 'image'
         fname = panel.filename()
-        self.cwd = os.path.split(fname)[0] # Save the directory we exported to.
-        if kind=='image':
-            opts = dict(format=panel.requiredFileType(),
-                        first=1,
-                        cmyk=self.imageColorMode.indexOfSelectedItem()==1,
-                        book=self.imagePagination.indexOfSelectedItem()==1,
-                        last=self.imagePageCount.intValue())
-
-        elif kind=='movie':
-            format_idx = self.movieFormat.indexOfSelectedItem()
-            opts = dict(format=panel.requiredFileType(),
-                        first=1,
-                        last=self.movieFrames.intValue(),
-                        fps=self.movieFps.floatValue(),
-                        loop=-1 if self.movieLoop.state()==NSOnState else 0,
-                        bitrate=self.movieBitrate.selectedItem().tag() )
-
         panel.close()
         panel.setAccessoryView_(None)
 
+        # if the user clicked Save:
         if returnCode:
-            setattr(self, kind, dict(opts))
+            if context:
+                kind, opts = 'movie', self.movieState()
+            else:
+                kind, opts = 'image', self.imageState()
+            setattr(self, kind, dict(opts))    # save the options for next time
+            self.cwd = os.path.split(fname)[0] # save the directory we exported to
             self.script.exportInit(kind, fname, opts)
 
+    def movieState(self, key=None):
+        fmts = self.formats['movie']
+        fmt_idx = self.movieFormat.indexOfSelectedItem()
+        state = dict(format = fmts[fmt_idx],
+                     # format=panel.requiredFileType(),
+                     first=1,
+                     last=self.movieFrames.intValue(),
+                     fps=self.movieFps.floatValue(),
+                     loop=-1 if self.movieLoop.state()==NSOnState else 0,
+                     bitrate=self.movieBitrate.selectedItem().tag() )
+        if key:
+            return state[key]
+        return state
+
+    def imageState(self, key=None):
+        fmts = self.formats['image']
+        fmt_idx = self.imageFormat.indexOfSelectedItem()
+        state = dict(format=fmts[fmt_idx],
+                     first=1,
+                     cmyk=self.imageCMYK.state()==NSOnState,
+                     book=fmt_idx==1,
+                     last=self.imagePageCount.intValue())
+        if key:
+            return state[key]
+        return state
+
     def updatePagination(self):
-        format = self.formats['image'][self.imageFormat.indexOfSelectedItem()]
-        can_paginate = format=='pdf'
-        self.imagePagination.cellWithTag_(1).setEnabled_(can_paginate)
-        if not can_paginate:
-            self.imagePagination.selectCellWithTag_(0)
+        label = 'Pages:' if self.imageState('book') else 'Files:'
+        self.imagePagination.setStringValue_(label)
 
     def updateColorMode(self):
-        format = self.formats['image'][self.imageFormat.indexOfSelectedItem()]
+        format = self.imageState('format')
         can_cmyk = format in ('pdf','eps','tiff')
-        self.imageColorMode.setEnabled_(can_cmyk)
+        self.imageCMYK.setEnabled_(can_cmyk)
         if not can_cmyk:
-            self.imageColorMode.selectItemAtIndex_(0)
+            self.imageCMYK.setState_(NSOffState)
 
     @objc.IBAction
     def imageFormatChanged_(self, sender):
         panel = sender.window()
         format = self.formats['image'][sender.indexOfSelectedItem()]
         panel.setRequiredFileType_(format)
-
         self.updateColorMode()
-        self.updatePagination()
-
-    @objc.IBAction
-    def imagePageCountChanged_(self, sender):
         self.updatePagination()
 
     @objc.IBAction

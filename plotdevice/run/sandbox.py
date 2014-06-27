@@ -58,7 +58,9 @@ class Sandbox(object):
         self.delegate = delegate or Delegate()
 
         # control params used during exports and console-based runs
-        self._meta = Metadata(args=[], virtualenv=None, first=1, next=1, last=None, running=False, console=None, loop=False)
+        self._meta = Metadata(args=[], virtualenv=None, console=None, # environmant
+                              first=1, next=1, last=None, running=False, # runtime
+                              loop=False) # export opts
 
     # .script
     def _get_path(self):
@@ -151,12 +153,13 @@ class Sandbox(object):
 
         return result
 
-    def run(self, method=None):
+    def run(self, method=None, cmyk=False):
         """Clear the context and run either the entire script or a specific method."""
 
         # if this is the initial pass, reset the namespace and canvas state
         if method is None:
             check = self._preflight() # compile the script
+            self.context._outputmode = 'cmyk' if cmyk else 'rgb'
             if not check.ok:
                 return check
 
@@ -298,14 +301,23 @@ class Sandbox(object):
             fname - path to outputfile
             opts - dictionary with required keys:
                      first, last, format
-                   and for a movie export, also include:
+                   for a movie export also include:
                      bitrate, fps, loop
+                   and for an image sequence:
+                     cmyk, book
         """
 
+        print "OPTS", opts
+
+
         # compile & evaluate the script once
-        firstpass = self.run()
+        firstpass = self.run(cmyk=opts.get('cmyk',False))
         self.delegate.exportStatus(firstpass)
         if not firstpass.ok:
+            return
+
+        if kind=='image' and opts['first']==opts['last']:
+            self.canvas.save(fname, opts['format'])
             return
 
         if self.animated:

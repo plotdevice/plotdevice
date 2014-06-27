@@ -472,17 +472,17 @@ class ScriptController(NSWindowController):
         if self.animationTimer is not None:
             self.stopScript()
 
-        self.vm.source = self.source
-        if kind=='image' and opts['last'] == opts['first']:
-            self.runScript()
-            self.vm.canvas.save(fname, opts.get('format'))
-        else:
+        # if we're exporting multiple frames, give some ui feedback
+        if opts['last'] != opts['first']:
             if self.outputView:
                 msg = u"Generating %s %s…\n"%(opts['last']-opts['first']+1, 'pages' if kind=='image' else 'frames')
                 self.outputView.append(msg, stream='info')
             if self.statusView:
                 self.statusView.beginExport()
-            self.vm.export(kind, fname, opts)
+
+        # let the Sandbox take over
+        self.vm.source = self.source
+        self.vm.export(kind, fname, opts)
 
     def exportStatus(self, status, canvas=None):
         """Handle export-related events (invoked by self.vm)
