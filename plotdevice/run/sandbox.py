@@ -29,9 +29,11 @@ class Metadata(object):
 
 class Delegate(object):
     """No-op sandbox delegate that will be used by default if a delegate isn't specified"""
-    def exportStatus(self, status, canvas=None):
+    def exportFrame(self, status, canvas=None):
         pass
     def exportProgress(self, written, total, cancelled):
+        pass
+    def exportStatus(self, *args, **kwargs):
         pass
 
 class Sandbox(object):
@@ -49,7 +51,7 @@ class Sandbox(object):
         self.live = False       # whether to keep the output pipe open between runs
         self.session = None     # the image/movie export session (if any)
         self.stationery = False # whether the script is from the examples folder
-        self.delegate = None    # object with exportStatus and exportProgress methods
+        self.delegate = None    # object with exportFrame and exportProgress methods
 
 
         # set up the graphics plumbing
@@ -307,12 +309,9 @@ class Sandbox(object):
                      cmyk, book
         """
 
-        print "OPTS", opts
-
-
         # compile & evaluate the script once
         firstpass = self.run(cmyk=opts.get('cmyk',False))
-        self.delegate.exportStatus(firstpass)
+        self.delegate.exportFrame(firstpass)
         if not firstpass.ok:
             return
 
@@ -322,57 +321,43 @@ class Sandbox(object):
 
         if self.animated:
             setup = self.call("setup")
-            self.delegate.exportStatus(setup)
+            self.delegate.exportFrame(setup)
             if not setup.ok:
                 return
 
         opts.setdefault('console', self.tty)
         opts.setdefault('first', 1)
+        self._meta.first, self._meta.last = opts['first'], opts['last']
+
+        # set up an export manager and attach the delegate's callbacks
         ExportSession = ImageExportSession if kind=='image' else MovieExportSession
         self.session = ExportSession(fname, **opts)
         self.session.on_progress(self.delegate.exportProgress)
+        self.session.on_status(self.delegate.exportStatus)
+        self.session.on_complete(self._exportComplete)
 
-        self._meta.first, self._meta.last = opts['first'], opts['last']
-        self._runExportBatch()
+        self._exportFrame()
 
-    def _finishExport(self):
-        self.session.done()
-        if self.session.running:
-            self.session.on_complete(self._exportComplete)
+    def _exportFrame(self):
+        if self.session.next():
+            # run the script with the proper FRAME value
+            self._meta.next = self.session.next()
+            result = self.run(method="draw" if self.animated else None)
+
+            # add the frame to the export and draw to screen
+            self.delegate.exportFrame(result, self.canvas)
+            if result.ok:
+                self.session.add(self.canvas)
+            else:
+                self.session.cancel()
+
+            # give the runloop a chance to collect events between frames
+            AppHelper.callAfter(self._exportFrame)
         else:
-            self._exportComplete()
+            self.session.done()
 
     def _exportComplete(self):
         self.session = None
-        self.delegate.exportStatus(status=Outcome(None, [])) # the delegate should run vm.stop() on its own
-
-    def _runExportBatch(self):
-        if self.session.batches:
-            first, last = self.session.batches.pop(0)
-
-            method = "draw" if self.animated else None
-            for i in range(first, last+1):
-                if self.session.cancelled:
-                    break
-
-                self._meta.next = i
-                result = self.run(method)
-                self.delegate.exportStatus(result, self.canvas)
-                self.delegate.exportProgress(self.session.written, self.session.total, self.session.cancelled)
-                if not result.ok:
-                    self.session._shutdown()
-                    return self._finishExport()
-                self.session.add(self.canvas, i)
-
-                # give the runloop a chance to collect events (rather than just beachballing)
-                date = NSDate.dateWithTimeIntervalSinceNow_(0.05);
-                NSRunLoop.currentRunLoop().acceptInputForMode_beforeDate_(NSDefaultRunLoopMode, date)
-
-        if self.session.batches:
-            # keep running _runExportBatch until we run out of batches
-            AppHelper.callLater(0.1, self._runExportBatch)
-        else:
-            self._finishExport()
 
     def _cleanup(self):
         # self.session = None

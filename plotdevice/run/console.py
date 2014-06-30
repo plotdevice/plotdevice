@@ -200,21 +200,31 @@ class ConsoleScript(ScriptController):
             stream.write(data)
             stream.flush()
 
-    def exportStatus(self, status, canvas=None):
-        super(ConsoleScript, self).exportStatus(status, canvas)
+    def exportFrame(self, status, canvas=None):
+        super(ConsoleScript, self).exportFrame(status, canvas)
         if not status.ok:
+            NSApp().delegate().done()
+
+    def exportStatus(self, status):
+        super(ConsoleScript, self).exportStatus(status)
+
+        if status in('cancelled','complete'):
+            msg = '' if status=='complete' else 'Finishing export'
+            STDERR.write(ERASER + msg)
+            STDERR.flush()
+
+        if status=='complete':
             NSApp().delegate().done()
 
     def exportProgress(self, written, total, cancelled):
         super(ConsoleScript, self).exportProgress(written, total, cancelled)
-        if cancelled:
-            msg = u'Cancelling export…'
-        elif total==written:
-            msg = u'Finishing export…'
-        else:
+        if not cancelled and written<total:
             msg = "\rGenerating %i frames %s"%(total, progress(written, total))
-        STDERR.write(ERASER + msg)
-        STDERR.flush()
+            STDERR.write(ERASER + msg)
+            STDERR.flush()
+        else:
+            STDERR.write(".")
+            STDERR.flush()
 
 def progress(written, total, width=20):
     pct = int(ceil(width*written/float(total)))

@@ -5,9 +5,6 @@ for cls in ["AnimatedGif", "ImageSequence", "SysAdmin", "Video"]:
 
 ### Session objects which wrap the GCD-based export managers ###
 
-IMG_BATCH_SIZE = 8
-MOV_BATCH_SIZE = 16
-
 class ExportSession(object):
     running = True
     cancelled = False
@@ -19,36 +16,56 @@ class ExportSession(object):
     def __init__(self):
         self._complete = None
         self._progress = None
-        super(ExportSession, self).__init__()
+        self._status = None
 
     def begin(self, frames=None, pages=None, console=False):
         from plotdevice.gui import set_timeout
         self.total = frames if frames is not None else pages
         self.poll = set_timeout(self, "update:", 0.1, repeat=True)
 
-    def count(self):
-        self.written = self.writer.framesWritten()
-        return self.written, self.added
-
     def update_(self, note):
-        self.count()
+        self.written = self.writer.framesWritten()
+        if self._progress:
+            # let the delegate update the progress bar
+            self._progress(self.written, self.total, self.cancelled)
 
-        if self.writer:
-            if self._progress:
-                # let the delegate update the progress bar
-                self._progress(self.written, self.total, self.cancelled)
+        total = self.total if not self.cancelled else self.added
+        if self.written == total:
+            if self._status:
+                self._status('complete')
 
-            total = self.total if not self.cancelled else self.added
-            if self.written == total:
-                AppHelper.callLater(0.2, self._shutdown)
+            # AppHelper.callLater(0.2, self._shutdown)
+            self._shutdown()
+
+    def next(self):
+        if self.cancelled or self.added==self.total:
+            return None
+        return self.added + 1
+
+    def add(self, canvas):
+        if self.cancelled:
+            return False
+        self.added += 1
+        return True
 
     def cancel(self):
+        if self.cancelled:
+            return # be idem potent
+
         self.cancelled = True
-        self.batches = []
+        if self._status:
+            self._status('cancelled')
+
+    def done(self):
+        if self._status and not self.cancelled:
+            self._status('finishing')
+        if self.writer:
+            self.writer.closeFile()
 
     def _shutdown(self):
         self.running = False
         self._progress = None
+        self._status = None
         if self.poll:
             self.poll.invalidate()
             self.poll = None
@@ -67,30 +84,29 @@ class ExportSession(object):
         if self.running:
             self._progress = cb
 
+    def on_status(self, cb):
+        if self.running:
+            self._status = cb
+
 class ImageExportSession(ExportSession):
-    def __init__(self, fname, format='pdf', first=1, last=1, console=False, **rest):
+    def __init__(self, fname, format='pdf', first=1, last=1, book=False, console=False, **rest):
         super(ImageExportSession, self).__init__()
         last = last or first
         self.begin(pages=last-first+1, console=console)
         self.format = format
         self.fname = fname
+        self.book = book and format=='pdf'
         self.single_page = first==last
-        self.batches = [(n, min(n+IMG_BATCH_SIZE-1,last)) for n in range(first, last+1, IMG_BATCH_SIZE)]
-        self.writer = ImageSequence.alloc().init()
+        self.writer = ImageSequence.alloc().initWithFile_paginated_(self.fname, self.book)
 
-    def add(self, canvas, frame):
-        if self.cancelled: return
-        if self.single_page:
-            fn = self.fname
-        else:
-            basename, ext = os.path.splitext(self.fname)
-            fn = "%s-%05d%s" % (basename, frame, ext)
-        image = canvas._getImageData(self.format)
-        self.writer.writeData_toFile_(image, fn)
-        self.added += 1
-
-    def done(self):
-        pass
+    def add(self, canvas):
+        if super(ImageExportSession, self).add(canvas):
+            image = canvas._getImageData(self.format)
+            if self.single_page:
+                with file(self.fname, 'w') as f:
+                    f.write(image)
+            else:
+                self.writer.addPage_(image)
 
 class MovieExportSession(ExportSession):
     def __init__(self, fname, format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, console=False, **rest):
@@ -105,28 +121,20 @@ class MovieExportSession(ExportSession):
         self.fps = fps
         self.loop = loop
         self.bitrate = bitrate
-        self.batches = [(n, min(n+MOV_BATCH_SIZE-1,last)) for n in range(first, last+1, MOV_BATCH_SIZE)]
 
-    def add(self, canvas, frame=1):
-        if self.cancelled: return
-        image = canvas.rasterize()
-        if not self.writer:
-            dims = image.size()
-            if self.format == 'mov':
-                self.writer = Video.alloc()
-                self.writer.initWithFile_size_fps_bitrate_(self.fname, dims, self.fps, self.bitrate)
-            elif self.format == 'gif':
-                self.writer = AnimatedGif.alloc()
-                self.writer.initWithFile_size_fps_loop_(self.fname, dims, self.fps, self.loop)
-            else:
-                NSLog('unrecognized output format: %s' % self.format)
-                return self._shutdown()
-        self.writer.addFrame_(image)
-        self.added += 1
-
-    def done(self):
-        if self.writer:
-            self.writer.closeFile()
-
-
+    def add(self, canvas):
+        if super(MovieExportSession, self).add(canvas):
+            image = canvas.rasterize()
+            if not self.writer:
+                dims = image.size()
+                if self.format == 'mov':
+                    self.writer = Video.alloc()
+                    self.writer.initWithFile_size_fps_bitrate_(self.fname, dims, self.fps, self.bitrate)
+                elif self.format == 'gif':
+                    self.writer = AnimatedGif.alloc()
+                    self.writer.initWithFile_size_fps_loop_(self.fname, dims, self.fps, self.loop)
+                else:
+                    NSLog('unrecognized output format: %s' % self.format)
+                    return self._shutdown()
+            self.writer.addFrame_(image)
 

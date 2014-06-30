@@ -185,7 +185,7 @@ class ScriptController(NSWindowController):
         # place the statusView in the title bar
         frame = win.frame()
         win.contentView().superview().addSubview_(self.statusView)
-        self.statusView.setFrame_( ((frame.size.width-24,frame.size.height-22), (22,22)) )
+        self.statusView.setFrame_( ((frame.size.width-104,frame.size.height-22), (100,22)) )
 
         # sign up for autoresume on quit-and-relaunch (but only if this isn't console.py)
         if self.editorView:
@@ -484,40 +484,36 @@ class ScriptController(NSWindowController):
         self.vm.source = self.source
         self.vm.export(kind, fname, opts)
 
-    def exportStatus(self, status, canvas=None):
-        """Handle export-related events (invoked by self.vm)
-
-        Called with either a status flag + output text, a rendered canvas, or both."""
+    def exportFrame(self, status, canvas=None):
+        """Handle a newly rendered frame (and any console output it generated)"""
         if status.output:
             # print any console messages
             self.echo(status.output)
 
-        if status.ok:
-            # display the canvas (presuming there's a window to draw to)
-            if self.window():
-                self.currentView.setCanvas(canvas)
-        else:
-            # we're done, either because of an error or because the export is complete
-            failed = status.ok is False # whereas None means successful
-            self.stopScript()
-            if self.outputView:
-                self.outputView.append('export complete\n', stream='info')
-            if self.statusView:
+        if canvas and self.window():
+            # blit the canvas to the graphics view
+            self.currentView.setCanvas(canvas)
+
+    def exportStatus(self, status):
+        """Handle an export-lifecycle event (invoked by self.vm.session)"""
+        if self.statusView:
+            if status=='cancelled':
+                self.statusView.finishExport()
+            if status=='complete':
                 self.statusView.endExport()
+
+        if self.outputView:
+            msg = dict(cancelled=u'halting export…',
+                       finishing=u'finishing file I/O…',
+                       complete=u'export complete')
+            self.outputView.append(u' - %s\n' % msg[status], stream='info')
+
+        if status=='complete':
+            self.stopScript()
 
     def exportProgress(self, written, total, cancelled):
         """Update the progress meter in the StatusView (invoked by self.vm.session)"""
-
-        # everything in this method talks to gui objects.
-        # if we're running in console.py, there's nothing to do
-        if not self.window():
-            return
-
-        if cancelled:
-            if self.statusView.finishExport():
-                if self.outputView:
-                    self.outputView.append('finishing...\n', stream='info')
-        else:
+        if self.statusView and not cancelled:
             if total != written:
                 self.statusView.updateExport_total_(written, total)
 
@@ -527,7 +523,10 @@ class ScriptController(NSWindowController):
     #
     @objc.IBAction
     def stopScript_(self, sender=None):
-        self.stopScript()
+        if self.vm.session:
+            self.vm.session.cancel()
+        else:
+            self.stopScript()
 
     def haltRun(self):
         if self.animationTimer is not None:
@@ -539,16 +538,12 @@ class ScriptController(NSWindowController):
             result = self.vm.stop()
             self.echo(result.output)
 
-        # end any ongoing export cleanly
-        if self.vm.session:
-            self.vm.session.cancel()
-
     def stopScript(self):
         # shut down the draw/export loop
         self.haltRun()
 
         # disable progress spinner
-        if self.statusView:
+        if self.statusView and not self.vm.session:
             self.statusView.endRun()
 
         # relay any errors to the text panes (if we're in the app)
