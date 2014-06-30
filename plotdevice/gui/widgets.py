@@ -8,6 +8,7 @@ import objc
 
 class StatusView(NSView):
     spinner = objc.IBOutlet()
+    counter = objc.IBOutlet()
     cancel = objc.IBOutlet()
 
     def awakeFromNib(self):
@@ -21,6 +22,7 @@ class StatusView(NSView):
 
         self.cancel.cell().setHighlightsBy_(NSContentsCellMask)
         self.cancel.cell().setShowsStateBy_(NSContentsCellMask)
+        self.counter.setHidden_(True)
 
     def beginRun(self):
         self._state = 'run'
@@ -34,27 +36,39 @@ class StatusView(NSView):
 
     def beginExport(self):
         self._state = 'run'
+
+        self.spinner.stopAnimation_(None)
+        self.cancel.setHidden_(True)
         self.spinner.setIndeterminate_(False)
+        self.spinner.setDoubleValue_(0)
         self.spinner.startAnimation_(None)
 
+        self.counter.setHidden_(False)
+        self.counter.setStringValue_("")
+
     def updateExport_total_(self, written, total):
+        # print "- %i/%i" % (written, total)
         self.spinner.setMaxValue_(total)
         self.spinner.setDoubleValue_(written)
-        self.spinner.setIndeterminate_(False)
+        self.counter.setStringValue_("Frame %i/%i"%(written, total))
 
     def finishExport(self):
         if self._state == 'run':
-            self.cancel.setHidden_(False)
+            self.cancel.setHidden_(True)
+            self.spinner.setHidden_(False)
             self.spinner.stopAnimation_(None)
             self.spinner.setIndeterminate_(True)
             self.spinner.startAnimation_(None)
-            self._state = 'idle'
+            self._state = 'finish'
+            self.counter.setStringValue_("Finishing export")
             return True
 
     def endExport(self):
         self.spinner.setIndeterminate_(True)
         self.spinner.stopAnimation_(None)
         self.cancel.setHidden_(True)
+        self.counter.setHidden_(True)
+        self._state = 'idle'
 
     def mouseEntered_(self, e):
         if self._state == 'run':

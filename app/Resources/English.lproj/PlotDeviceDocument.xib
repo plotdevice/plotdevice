@@ -201,11 +201,11 @@
             </connections>
         </customObject>
         <customView id="1ay-3f-Xpc" userLabel="View">
-            <rect key="frame" x="0.0" y="0.0" width="281" height="91"/>
+            <rect key="frame" x="0.0" y="0.0" width="260" height="89"/>
             <autoresizingMask key="autoresizingMask"/>
             <subviews>
                 <textField verticalHuggingPriority="750" id="ieT-Bf-SZ4">
-                    <rect key="frame" x="27" y="51" width="53" height="17"/>
+                    <rect key="frame" x="27" y="49" width="53" height="17"/>
                     <autoresizingMask key="autoresizingMask"/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="Format:" id="L8z-Ba-1FP">
                         <font key="font" metaFont="system"/>
@@ -214,7 +214,7 @@
                     </textFieldCell>
                 </textField>
                 <popUpButton verticalHuggingPriority="750" id="E8Q-mV-qkm">
-                    <rect key="frame" x="86" y="45" width="157" height="26"/>
+                    <rect key="frame" x="86" y="43" width="157" height="26"/>
                     <autoresizingMask key="autoresizingMask"/>
                     <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" autoenablesItems="NO" id="ejg-Vh-EUZ">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -263,7 +263,7 @@
                     </connections>
                 </popUpButton>
                 <textField verticalHuggingPriority="750" id="uC3-5R-AFK">
-                    <rect key="frame" x="19" y="22" width="61" height="17"/>
+                    <rect key="frame" x="19" y="20" width="61" height="17"/>
                     <autoresizingMask key="autoresizingMask"/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="Pages:" id="w9u-HD-vKS">
                         <font key="font" metaFont="system"/>
@@ -272,7 +272,7 @@
                     </textFieldCell>
                 </textField>
                 <textField verticalHuggingPriority="750" id="Cip-ue-ZaX">
-                    <rect key="frame" x="88" y="20" width="36" height="19"/>
+                    <rect key="frame" x="88" y="18" width="36" height="19"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" title="1" drawsBackground="YES" id="2gj-Qh-bJc">
                         <numberFormatter key="formatter" formatterBehavior="default10_4" localizesFormat="NO" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="309" maximumFractionDigits="3" id="2d5-x6-hRt">
@@ -284,7 +284,7 @@
                     </textFieldCell>
                 </textField>
                 <button id="nEb-l2-r1B">
-                    <rect key="frame" x="127" y="20" width="113" height="18"/>
+                    <rect key="frame" x="127" y="18" width="113" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="check" title="Convert to CMYK" bezelStyle="regularSquare" imagePosition="left" controlSize="small" enabled="NO" inset="2" id="9Uu-ao-an8">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -292,7 +292,7 @@
                     </buttonCell>
                 </button>
                 <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" id="WFv-Q1-yOl">
-                    <rect key="frame" x="86" y="-117" width="177" height="28"/>
+                    <rect key="frame" x="86" y="-119" width="177" height="28"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="Files will be named sequentially: Untitled-00001.pdf" id="QXB-cv-FGt">
                         <font key="font" metaFont="smallSystem"/>
@@ -498,15 +498,15 @@ DQ
             </connections>
         </window>
         <customView id="NAS-Uo-kIt" customClass="StatusView">
-            <rect key="frame" x="0.0" y="0.0" width="22" height="22"/>
+            <rect key="frame" x="0.0" y="0.0" width="100" height="22"/>
             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
             <subviews>
                 <progressIndicator canDrawConcurrently="YES" maxValue="100" displayedWhenStopped="NO" indeterminate="YES" controlSize="small" style="spinning" id="OJ6-ac-5EU">
-                    <rect key="frame" x="5" y="3" width="16" height="16"/>
+                    <rect key="frame" x="83" y="3" width="16" height="16"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                 </progressIndicator>
                 <button id="4lL-EC-Lny">
-                    <rect key="frame" x="7" y="5" width="12" height="12"/>
+                    <rect key="frame" x="85" y="5" width="12" height="12"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="NSStopProgressFreestandingTemplate" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="ano-B7-bzc">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -516,14 +516,24 @@ DQ
                         <action selector="stopScript:" target="-2" id="e6L-20-IFv"/>
                     </connections>
                 </button>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="jHA-5Y-kZ4">
+                    <rect key="frame" x="3" y="6" width="76" height="11"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="101/500" id="Ehs-N6-3Qw">
+                        <font key="font" metaFont="miniSystem"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
             </subviews>
             <connections>
                 <outlet property="cancel" destination="4lL-EC-Lny" id="vfQ-Ew-JYJ"/>
+                <outlet property="counter" destination="jHA-5Y-kZ4" id="hYX-Iw-PZM"/>
                 <outlet property="spinner" destination="OJ6-ac-5EU" id="LnL-OM-xFa"/>
             </connections>
         </customView>
     </objects>
     <resources>
-        <image name="NSStopProgressFreestandingTemplate" width="83" height="83"/>
+        <image name="NSStopProgressFreestandingTemplate" width="12" height="12"/>
     </resources>
 </document>
