@@ -277,6 +277,12 @@ class EditorView(NSView):
     def loadPrefs(self):
        NSApp().delegate().showPreferencesPanel_(self)
 
+    def cancelRun(self):
+        # catch command-period even when the editor is first responder
+        mm=NSApp().mainMenu()
+        menu = mm.itemWithTitle_("Python")
+        menu.submenu().performActionForItemAtIndex_(3)
+
     def edits(self, count):
         # inform the undo manager of the changes
         um = self._undo_mgr

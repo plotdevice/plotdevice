@@ -25,8 +25,11 @@ NODEBOX_KEYBINDINGS=[
         name: "refreshdoc",
         exec: function(editor, str) { editor.session.setValue(str); },
     },{
-        name: "refreshdoc",
-        exec: function(editor, str) { editor.session.setValue(str); },
+        name: "cancelRun",
+        bindKey: {mac: "Command-."},
+        exec: function(editor) {
+            app.cancelRun()
+        }
     },{
         name: "openPreferences",
         bindKey: {mac: "Command-,"},
