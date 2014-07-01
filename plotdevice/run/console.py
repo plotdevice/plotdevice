@@ -158,6 +158,7 @@ class ConsoleScript(ScriptController):
 
     def init(self):
         self._init_state()
+        self._buf = '' # cache the export progress message between stdout writes
         return super(ScriptController, self).init()
 
     def setScript_options_(self, path, opts):
@@ -207,6 +208,9 @@ class ConsoleScript(ScriptController):
             stream = STDERR if isErr else STDOUT
             stream.write(data)
             stream.flush()
+        if self._buf:
+            STDERR.write(self._buf)
+            STDERR.flush()
 
     def exportFrame(self, status, canvas=None):
         super(ConsoleScript, self).exportFrame(status, canvas)
@@ -216,23 +220,34 @@ class ConsoleScript(ScriptController):
     def exportStatus(self, status):
         super(ConsoleScript, self).exportStatus(status)
 
-        if status in('cancelled','complete'):
-            msg = '' if status=='complete' else 'Finishing export'
-            STDERR.write(ERASER + msg)
-            STDERR.flush()
+        if status == 'finishing':
+            return # we can just rely on super's handling
+
+        if status == 'cancelled':
+            msg = 'Halted after %i frames. Finishing file I/O...\n' % self.vm.session.added
+        else:
+            msg = ''
+        STDOUT.flush()
+        STDERR.write(ERASER + msg)
+        STDERR.flush()
 
         if status=='complete':
             NSApp().delegate().done()
 
     def exportProgress(self, written, total, cancelled):
         super(ConsoleScript, self).exportProgress(written, total, cancelled)
-        if not cancelled and written<total:
-            msg = "\rGenerating %i frames %s"%(total, progress(written, total))
-            STDERR.write(ERASER + msg)
-            STDERR.flush()
+
+        if cancelled:
+            msg = "%i frames to go..."%(total-written)
         else:
-            STDERR.write(".")
-            STDERR.flush()
+            padding = len(str(total)) - len(str(written))
+            msg = "%s%i/%i frames written"%(' '*padding, written, total)
+
+        dots = progress(written, total)
+        self._buf = '\r%s %s\r%s'%(dots, msg, dots[:1+dots.count('#')])
+        STDERR.write(ERASER + self._buf)
+        STDERR.flush()
+
 
 def progress(written, total, width=20):
     pct = int(ceil(width*written/float(total)))
