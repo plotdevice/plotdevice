@@ -493,33 +493,41 @@ class ScriptController(NSWindowController):
             # print any console messages
             self.echo(status.output)
 
-        if canvas and self.window():
-            # blit the canvas to the graphics view
+        if canvas and self.window() and self.vm._meta.next % 2:
+            # blit the canvas to the graphics view           ^ (but only every other frame)
             self.currentView.setCanvas(canvas)
+
+    def exportProgress(self, written, total, cancelled):
+        """Update the progress meter in the StatusView (invoked by self.vm.session)"""
+        if cancelled:
+            return
+
+        if self.statusView:
+            if total != written:
+                self.statusView.updateExport_total_(written, total)
 
     def exportStatus(self, status):
         """Handle an export-lifecycle event (invoked by self.vm.session)"""
+
+        if status=='finishing':
+            # run stop() method if the script defines one
+            result = self.vm.stop()
+            self.echo(result.output)
+
+        # give ui feedback for export state
         if self.statusView:
             if status=='cancelled':
                 self.statusView.finishExport()
             if status=='complete':
                 self.statusView.endExport()
-
         if self.outputView:
-            msg = dict(cancelled=u'halting export…',
-                       finishing=u'finishing file I/O…',
-                       complete=u'export complete')
-            self.outputView.append(u' - %s\n' % msg[status], stream='info')
+            msg = dict(cancelled=u'halting export…', complete=u'export complete', finishing='')[status]
+            if msg:
+                self.outputView.append(u' - %s\n' % msg, stream='info')
 
         if status=='complete':
+            # shut down the export ui
             self.stopScript()
-
-    def exportProgress(self, written, total, cancelled):
-        """Update the progress meter in the StatusView (invoked by self.vm.session)"""
-        if self.statusView and not cancelled:
-            if total != written:
-                self.statusView.updateExport_total_(written, total)
-
 
     #
     # Interrupting the run
