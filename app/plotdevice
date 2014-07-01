@@ -39,6 +39,7 @@ Options:
                       subdirectory)
   --export FILE       a destination filename ending in pdf, eps, png, tiff,
                       jpg, gif, or mov
+  --cmyk              sets the output color mode for PDF, EPS, or TIFF exports
   --frames N or M-N   number of frames to render or a range specifying the
                       first and last frames (default "1-")
   --fps N             frames per second in exported video (default 30)
@@ -52,7 +53,7 @@ PlotDevice Script File:
   file                the python script to be rendered
 """
 
-import sys, os
+import sys, os, re
 import argparse
 import json
 import signal
@@ -122,6 +123,12 @@ def parse_args():
     # movies aren't allowed to be infinitely long (sorry)
     if opts.last is None and ext in ('mov','gif'):
       opts.first, opts.last = (1, 150)
+
+    # if it's a multiframe pdf, check for a telltale "{n}" to determine whether it's
+    # a `book' or a sequence of numbered pdf files
+    opts.book = bool(opts.first<opts.last and ext=='pdf' and not re.search('{\d+}', opts.export))
+
+
 
   return opts
 
