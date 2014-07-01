@@ -24,12 +24,15 @@
 @implementation ImageWriter
 @synthesize delegate, fname, image;
 -(void)main{
-	@autoreleasepool{
-		[self.image writeToFile:self.fname atomically:NO];
-		[self.delegate performSelectorOnMainThread:@selector(_wroteFrame) withObject:nil waitUntilDone:NO];
+    @autoreleasepool{
+        // getting a nil image is code for `we're done'
+        if (!image) return;
+
+        [self.image writeToFile:self.fname atomically:NO];
+        [self.delegate performSelectorOnMainThread:@selector(_wroteFrame) withObject:nil waitUntilDone:NO];
         self.fname = nil;
         self.image = nil;
-	}
+    }
 }
 @end
 
@@ -72,30 +75,37 @@
 @end
 
 @implementation Pages
-@synthesize framesWritten, doneWriting, filePath, paginated, book, pageCount;
-- (id)initWithFile:(NSString *)fname paginated:(BOOL)isMultipage{
-	if ((self = [super init])) {
-		self.framesWritten = self.pageCount = 0;
-        self.paginated = isMultipage;
+@synthesize framesWritten, doneWriting, filePath, filePattern, paginated, book, pageCount;
+
+
+- (id)init{
+    if ((self = [super init])) {
+        self.framesWritten = self.pageCount = 0;
         queue = [[NSOperationQueue alloc] init];
+        queue.maxConcurrentOperationCount = 3;
+    }
+    return self;
+}
 
-        if (isMultipage){
-            self.filePath = fname;
-            queue.maxConcurrentOperationCount = 1;
-        }else{
-            NSString *ext = [fname pathExtension];
-            NSString *basename = [fname stringByDeletingPathExtension];
-            NSString *seq = @"%04d";
-            self.filePath = [NSString stringWithFormat:@"%@-%@.%@", basename, seq, ext];
-            queue.maxConcurrentOperationCount = 3;
-        }
+- (id)initWithPattern:(NSString *)pat{
+    if ((self = [self init])) {
+        self.filePattern = pat;
+    }
+    return self;
+}
 
-	}
-	return self;
+- (id)initWithFile:(NSString *)fname{
+    if ((self = [self init])) {
+        self.filePath = fname;
+    }
+    return self;
 }
 
 - (void)addPage:(NSData *)img{
-    if (self.paginated){
+    self.pageCount++;
+
+    if (self.filePath){
+        // add a pdf page to the one-and-only output file
         if (!self.book){
             self.book = [[PDFDocument alloc] initWithData:img];
             [self _wroteFrame];
@@ -106,29 +116,42 @@
             pw.page = img;
             [queue addOperation:pw];
         }
-    }else{
+    }else if(self.filePattern){
+        // create another in the sequence of output files
         ImageWriter *iw = [[[ImageWriter alloc] init] autorelease];
         iw.delegate = self;
-        iw.fname = [NSString stringWithFormat:self.filePath, ++self.pageCount];;
         iw.image = img;
+        if (self.filePath){
+            iw.fname = self.filePath;
+        }else{
+            iw.fname = [NSString stringWithFormat:self.filePattern, self.pageCount];;
+        }
         [queue addOperation:iw];
     }
 }
 
 - (void)closeFile{
-    if (!self.paginated) return;
-
-    PaperbackWriter *pw = [[[PaperbackWriter alloc] init] autorelease];
-    pw.delegate = self;
-    pw.book = self.book;
-    pw.page = nil;
-    pw.destination = self.filePath;
-    [queue addOperation:pw];
-
-    NSInvocationOperation *done = [[NSInvocationOperation alloc] initWithTarget:self
+    // create an all-done operation to add to the end of the queue
+    NSInvocationOperation *done = [[[NSInvocationOperation alloc] initWithTarget:self
                                                                         selector:@selector(_wroteAll)
-                                                                          object:nil];
-    [done addDependency:pw];
+                                                                          object:nil] autorelease];
+    // create an EOF operation of the appropriate type
+    NSOperation *bubble;
+    if (self.filePattern){
+        ImageWriter *iw = [[[ImageWriter alloc] init] autorelease];
+        bubble = iw;
+    }else{
+        PaperbackWriter *pw = [[[PaperbackWriter alloc] init] autorelease];
+        pw.delegate = self;
+        pw.book = self.book;
+        pw.page = nil;
+        pw.destination = self.filePath;
+        bubble = pw;
+    }
+
+    // make the all-done op wait for our EOF to go through the pipeline before running
+    [queue addOperation:bubble];
+    [done addDependency:bubble];
     [queue addOperation:done];
 }
 
@@ -141,7 +164,7 @@
 }
 
 - (void)dealloc{
-	[queue release];
+    [queue release];
     [super dealloc];
 }
 

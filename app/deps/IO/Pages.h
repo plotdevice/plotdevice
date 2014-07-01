@@ -16,6 +16,7 @@
     NSInteger pageCount;
     BOOL paginated;
     NSString *filePath;
+    NSString *filePattern;
     BOOL doneWriting;
 }
 @property (nonatomic, assign) NSInteger framesWritten;
@@ -23,10 +24,11 @@
 @property (nonatomic, assign) BOOL paginated;
 @property (nonatomic, retain) PDFDocument *book;
 @property (nonatomic, copy) NSString *filePath;
+@property (nonatomic, copy) NSString *filePattern;
 @property (assign) BOOL doneWriting;
 
-- (id)initWithFile:(NSString *)fname paginated:(BOOL)isMultipage;
-// - (void)writeData:(NSData *)img toFile:(NSString *)fname;
+- (id)initWithPattern:(NSString *)pat;
+- (id)initWithFile:(NSString *)fname;
 - (void)closeFile;
 - (void)_wroteFrame;
 
