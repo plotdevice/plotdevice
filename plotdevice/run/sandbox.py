@@ -16,7 +16,7 @@ Outcome = namedtuple('Outcome', ['ok', 'output'])
 Output = namedtuple('Output', ['isErr', 'data'])
 
 class Metadata(object):
-    __slots__ = 'args', 'virtualenv', 'first', 'next', 'last', 'console', 'running', 'loop'
+    __slots__ = 'args', 'virtualenv', 'first', 'next', 'last', 'running', 'loop'
     def __init__(self, **opts):
         for k,v in opts.items(): setattr(self,k,v)
     def update(self, changes):
@@ -31,9 +31,9 @@ class Delegate(object):
     """No-op sandbox delegate that will be used by default if a delegate isn't specified"""
     def exportFrame(self, status, canvas=None):
         pass
-    def exportProgress(self, written, total, cancelled):
+    def exportStatus(self, status):
         pass
-    def exportStatus(self, *args, **kwargs):
+    def exportProgress(self, written, total):
         pass
 
 class Sandbox(object):
@@ -60,7 +60,7 @@ class Sandbox(object):
         self.delegate = delegate or Delegate()
 
         # control params used during exports and console-based runs
-        self._meta = Metadata(args=[], virtualenv=None, console=None, # environmant
+        self._meta = Metadata(args=[], virtualenv=None, # environmant
                               first=1, next=1, last=None, running=False, # runtime
                               loop=False) # export opts
 
@@ -250,7 +250,7 @@ class Sandbox(object):
         sys.argv = [scriptName] + self._meta.args
 
         # set up environment for script
-        output = StdIO(pipe=self._meta.console)
+        output = StdIO()
         sys.stdout, sys.stderr = output.pipes
         if self._meta.virtualenv:
             sys.path.insert(0, self._meta.virtualenv)
@@ -284,10 +284,9 @@ class Sandbox(object):
             if not self.crashed:
                 result = self.call("stop")
             self._meta.running = False
+
+        # controvertial resetting behavior! (should we hold onto a bounded range?)
         self._meta.first, self._meta.last = (1,None)
-        if self._meta.console and not self.live:
-            self._meta.console.put(None)
-            self._meta.console = None
         return result
 
     def die(self):
@@ -309,23 +308,28 @@ class Sandbox(object):
                      cmyk, book
         """
 
+
         # compile & evaluate the script once
         firstpass = self.run(cmyk=opts.get('cmyk',False))
         self.delegate.exportFrame(firstpass)
         if not firstpass.ok:
             return
 
+        # pull off the file extension and use that as the format
+        opts.setdefault('format', fname.lower().rsplit('.',1)[-1])
+
+        # don't bother engaging all the export machinery if it's a single image
         if kind=='image' and opts['first']==opts['last']:
             self.canvas.save(fname, opts['format'])
             return
 
+        # call the script's setup() routine and pass the output along to the delegate
         if self.animated:
             setup = self.call("setup")
-            self.delegate.exportFrame(setup)
+            self.delegate.exportFrame(setup, canvas=None)
             if not setup.ok:
                 return
 
-        opts.setdefault('console', self.tty)
         opts.setdefault('first', 1)
         self._meta.first, self._meta.last = opts['first'], opts['last']
 
@@ -339,6 +343,7 @@ class Sandbox(object):
         self._exportFrame()
 
     def _exportFrame(self):
+
         if self.session.next():
             # run the script with the proper FRAME value
             self._meta.next = self.session.next()
@@ -352,7 +357,7 @@ class Sandbox(object):
                 self.session.cancel()
 
             # give the runloop a chance to collect events between frames
-            AppHelper.callAfter(self._exportFrame)
+            AppHelper.callLater(0.001, self._exportFrame)
         else:
             self.session.done()
 
@@ -378,8 +383,7 @@ class StdIO(object):
                     data = "XXX " + repr(data)
             self.stream.write(Output(self.isErr, data))
 
-    def __init__(self, pipe=None):
-        self.pipe = pipe # the console (if we were called outside of the app)
+    def __init__(self):
         self.data = [] # the list of (isErr, txt) tuples .write calls go to
 
     @property
@@ -388,10 +392,3 @@ class StdIO(object):
 
     def write(self, output):
         self.data.append(output)
-
-        # and echo to console if we were passed a pipe
-        if self.pipe:
-            self.pipe.put(output.data.encode('utf8'))
-
-
-
