@@ -1,24 +1,30 @@
-import objc, cIO, os
+import objc, os, re
 from PyObjCTools import AppHelper
+import cIO
 for cls in ["AnimatedGif", "Pages", "SysAdmin", "Video"]:
     globals()[cls] = objc.lookUpClass(cls)
 
 ### Session objects which wrap the GCD-based export managers ###
 
 class ExportSession(object):
-    running = True
-    cancelled = False
-    writer = None
-    added = 0
-    written = 0
-    total = 0
 
     def __init__(self):
+        # state flags
+        self.running = True
+        self.cancelled = False
+        self.added = 0
+        self.written = 0
+        self.total = 0
+
+        # callbacks
         self._complete = None
         self._progress = None
         self._status = None
 
-    def begin(self, frames=None, pages=None, console=False):
+        # one of the cIO classes
+        self.writer = None
+
+    def begin(self, frames=None, pages=None):
         from plotdevice.gui import set_timeout
         self.total = frames if frames is not None else pages
         self.poll = set_timeout(self, "update:", 0.1, repeat=True)
@@ -27,14 +33,10 @@ class ExportSession(object):
         self.written = self.writer.framesWritten()
         if self._progress:
             # let the delegate update the progress bar
-            self._progress(self.written, self.total, self.cancelled)
+            goal = self.added if self.cancelled else self.total
+            self._progress(self.written, goal, self.cancelled)
 
-        total = self.total if not self.cancelled else self.added
-        if self.written == total:
-            if self._status:
-                self._status('complete')
-
-            # AppHelper.callLater(0.2, self._shutdown)
+        if self.writer.doneWriting():
             self._shutdown()
 
     def next(self):
@@ -65,7 +67,9 @@ class ExportSession(object):
     def _shutdown(self):
         self.running = False
         self._progress = None
-        self._status = None
+        if self._status:
+            self._status('complete')
+            self._status = None
         if self.poll:
             self.poll.invalidate()
             self.poll = None
@@ -88,16 +92,29 @@ class ExportSession(object):
         if self.running:
             self._status = cb
 
+
+re_padded = re.compile(r'{(\d+)}')
 class ImageExportSession(ExportSession):
-    def __init__(self, fname, format='pdf', first=1, last=1, book=False, console=False, **rest):
+    def __init__(self, fname, format='pdf', first=1, last=1, book=False, **rest):
         super(ImageExportSession, self).__init__()
         last = last or first
-        self.begin(pages=last-first+1, console=console)
-        self.format = format
-        self.fname = fname
-        self.book = book and format=='pdf'
+        self.begin(pages=last-first+1)
         self.single_page = first==last
-        self.writer = Pages.alloc().initWithFile_paginated_(self.fname, self.book)
+        self.format = format
+
+        if self.single_page or book:
+            # output a single file (potentially a multipage PDF)
+            self.writer = Pages.alloc().initWithFile_(fname)
+        else:
+            # output multiple, sequentially-named files
+            m = re_padded.search(fname)
+            if m:
+                padding = int(m.group(1))
+                name_tmpl = re_padded.sub('%%0%id'%padding, fname, count=1)
+            else:
+                basename, ext = os.path.splitext(fname)
+                name_tmpl = "".join([basename, '-%04d', ext])
+            self.writer = Pages.alloc().initWithPattern_(name_tmpl)
 
     def add(self, canvas):
         if super(ImageExportSession, self).add(canvas):
@@ -107,13 +124,14 @@ class ImageExportSession(ExportSession):
                 self.done()
 
 class MovieExportSession(ExportSession):
-    def __init__(self, fname, format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, console=False, **rest):
+    def __init__(self, fname, format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, **rest):
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
         except:
             pass
-        self.begin(frames=last-first+1, console=console)
+
+        self.begin(frames=last-first+1)
         self.fname = fname
         self.format = format
         self.fps = fps
