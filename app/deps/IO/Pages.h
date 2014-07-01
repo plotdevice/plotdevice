@@ -1,5 +1,5 @@
 //
-//  ImageSequence.h
+//  Pages.h
 //  PlotDevice
 //
 //  Created by Christian Swinehart on 12/8/13.
@@ -9,10 +9,10 @@
 #import <Foundation/Foundation.h>
 #import <Quartz/Quartz.h>
 
-@interface ImageSequence : NSObject{
+@interface Pages : NSObject{
     NSOperationQueue *queue;
     NSInteger framesWritten;
-    PDFDocument *pages;
+    PDFDocument *book;
     NSInteger pageCount;
     BOOL paginated;
     NSString *filePath;
@@ -21,7 +21,7 @@
 @property (nonatomic, assign) NSInteger framesWritten;
 @property (nonatomic, assign) NSInteger pageCount;
 @property (nonatomic, assign) BOOL paginated;
-@property (nonatomic, retain) PDFDocument *pages;
+@property (nonatomic, retain) PDFDocument *book;
 @property (nonatomic, copy) NSString *filePath;
 @property (assign) BOOL doneWriting;
 

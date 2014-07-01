@@ -1,22 +1,22 @@
 //
-//  ImageSequence.m
+//  Pages.m
 //  PlotDevice
 //
 //  Created by Christian Swinehart on 12/8/13.
 //
 //
 
-#import "ImageSequence.h"
+#import "Pages.h"
 
 //
 // batch imagefile writer
 //
 @interface ImageWriter : NSOperation{
-    ImageSequence *delegate;
+    Pages *delegate;
     NSString *fname;
     NSData *image;
 }
-@property (nonatomic, assign) ImageSequence *delegate;
+@property (nonatomic, assign) Pages *delegate;
 @property (nonatomic, retain) NSString *fname;
 @property (nonatomic, retain) NSData *image;
 @end
@@ -37,12 +37,12 @@
 // multipage pdf writer
 //
 @interface PaperbackWriter : NSOperation{
-    ImageSequence *delegate;
+    Pages *delegate;
     PDFDocument *book;
     NSData *page;
     NSString *destination;
 }
-@property (nonatomic, assign) ImageSequence *delegate;
+@property (nonatomic, assign) Pages *delegate;
 @property (nonatomic, retain) PDFDocument *book;
 @property (nonatomic, retain) NSData *page;
 @property (nonatomic, retain) NSString *destination;
@@ -71,8 +71,8 @@
 
 @end
 
-@implementation ImageSequence
-@synthesize framesWritten, doneWriting, filePath, paginated, pages, pageCount;
+@implementation Pages
+@synthesize framesWritten, doneWriting, filePath, paginated, book, pageCount;
 - (id)initWithFile:(NSString *)fname paginated:(BOOL)isMultipage{
 	if ((self = [super init])) {
 		self.framesWritten = self.pageCount = 0;
@@ -85,7 +85,7 @@
         }else{
             NSString *ext = [fname pathExtension];
             NSString *basename = [fname stringByDeletingPathExtension];
-            NSString *seq = @"%05d";
+            NSString *seq = @"%04d";
             self.filePath = [NSString stringWithFormat:@"%@-%@.%@", basename, seq, ext];
             queue.maxConcurrentOperationCount = 3;
         }
@@ -96,13 +96,13 @@
 
 - (void)addPage:(NSData *)img{
     if (self.paginated){
-        if (!self.pages){
-            self.pages = [[PDFDocument alloc] initWithData:img];
+        if (!self.book){
+            self.book = [[PDFDocument alloc] initWithData:img];
             [self _wroteFrame];
         }else{
             PaperbackWriter *pw = [[[PaperbackWriter alloc] init] autorelease];
             pw.delegate = self;
-            pw.book = self.pages;
+            pw.book = self.book;
             pw.page = img;
             [queue addOperation:pw];
         }
@@ -120,7 +120,7 @@
 
     PaperbackWriter *pw = [[[PaperbackWriter alloc] init] autorelease];
     pw.delegate = self;
-    pw.book = self.pages;
+    pw.book = self.book;
     pw.page = nil;
     pw.destination = self.filePath;
     [queue addOperation:pw];

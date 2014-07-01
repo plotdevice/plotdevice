@@ -1,6 +1,6 @@
 import objc, cIO, os
 from PyObjCTools import AppHelper
-for cls in ["AnimatedGif", "ImageSequence", "SysAdmin", "Video"]:
+for cls in ["AnimatedGif", "Pages", "SysAdmin", "Video"]:
     globals()[cls] = objc.lookUpClass(cls)
 
 ### Session objects which wrap the GCD-based export managers ###
@@ -97,16 +97,14 @@ class ImageExportSession(ExportSession):
         self.fname = fname
         self.book = book and format=='pdf'
         self.single_page = first==last
-        self.writer = ImageSequence.alloc().initWithFile_paginated_(self.fname, self.book)
+        self.writer = Pages.alloc().initWithFile_paginated_(self.fname, self.book)
 
     def add(self, canvas):
         if super(ImageExportSession, self).add(canvas):
             image = canvas._getImageData(self.format)
+            self.writer.addPage_(image)
             if self.single_page:
-                with file(self.fname, 'w') as f:
-                    f.write(image)
-            else:
-                self.writer.addPage_(image)
+                self.done()
 
 class MovieExportSession(ExportSession):
     def __init__(self, fname, format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, console=False, **rest):
