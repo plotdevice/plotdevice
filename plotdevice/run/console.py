@@ -116,6 +116,14 @@ class ScriptAppDelegate(NSObject):
                         NSApp().delegate().done(quit=True)
         self.poll.waitForDataInBackgroundAndNotify()
 
+    @objc.IBAction
+    def openLink_(self, sender):
+        link = 'http://plotdevice.io'
+        if sender.tag() > 0:
+            link += '/doc'
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(link))
+
+
     def done(self, quit=False):
         if self.mode=='headless' or quit:
             NSApp().terminate_(None)
