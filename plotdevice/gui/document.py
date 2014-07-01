@@ -460,11 +460,14 @@ class ScriptController(NSWindowController):
     #
     @objc.IBAction
     def exportAsImage_(self, sender):
+        if self.vm.session:
+            return NSBeep()
         self.exportSheet.beginExport('image')
 
     @objc.IBAction
     def exportAsMovie_(self, sender):
-        # print "sheet", self.exportSheet
+        if self.vm.session:
+            return NSBeep()
         self.exportSheet.beginExport('movie')
 
     def exportInit(self, kind, fname, opts):
