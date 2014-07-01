@@ -1147,12 +1147,12 @@ class Context(object):
         else:
             eslf.canvas.clear(*grobs)
 
-    def export(self, fname, fps=None, loop=None, bitrate=1.0, mode=None):
+    def export(self, fname, fps=None, loop=None, bitrate=1.0, cmyk=False):
         """Write single images or manage batch exports for animations.
 
         To write the canvas's current contents to a file, simply call export("~/somefile.png")
         after your drawing commands have executed. When writing files that support non-RGB colors
-        (e.g., PDFs or TIFFs), the `mode` argument lets you optionally specify CMYK output.
+        (e.g., PDFs or TIFFs), the `cmyk` argument lets you optionally specify CMYK output.
 
         When writing multiple images or frames of animation, the export manager keeps track of when
         the canvas needs to be cleared, when to write the graphics to file, and preventing the python
@@ -1183,8 +1183,7 @@ class Context(object):
 
         format = fname.rsplit('.',1)[1]
         fname = re.sub(r'^~(?=/|$)',os.getenv('HOME'),fname)
-        if mode is None:
-            mode = self._outputmode
+        mode = CMYK if cmyk else self._outputmode
 
         if format=='mov' or (format=='gif' and fps or loop is not None):
             fps = fps or 30 # set a default for .mov exports
