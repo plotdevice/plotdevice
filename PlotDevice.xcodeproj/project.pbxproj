@@ -101,6 +101,7 @@
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		2A64AB46195F4E78001E4E69 /* deps */ = {isa = PBXFileReference; lastKnownFileType = folder; name = deps; path = app/deps; sourceTree = "<group>"; };
 		2A66ECDE18A992BD002903DE /* ace.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = ace.js; path = Resources/ui/js/ace.js; sourceTree = "<group>"; };
 		2A66ECDF18A992BD002903DE /* editor.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = editor.js; path = Resources/ui/js/editor.js; sourceTree = "<group>"; };
 		2A66ECE018A992BD002903DE /* jquery-2.1.0.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "jquery-2.1.0.js"; path = "Resources/ui/js/jquery-2.1.0.js"; sourceTree = "<group>"; };
@@ -242,6 +243,7 @@
 				2A37F4AFFDCFA73011CA2CEA /* Other Sources */,
 				2A37F4B8FDCFA73011CA2CEA /* Resources */,
 				2A7AF5C718D2AFAA00F8FFC2 /* examples */,
+				2A64AB46195F4E78001E4E69 /* deps */,
 				2A37F4C3FDCFA73011CA2CEA /* Frameworks */,
 				19C28FB0FE9D524F11CA2CBB /* Products */,
 			);
