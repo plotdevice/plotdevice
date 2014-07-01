@@ -47,7 +47,7 @@
                 ok = YES;
                 if(buffer) CVBufferRelease(buffer);
             }
-            [NSThread sleepForTimeInterval:ok ? 0.05 : 0.1];
+            [NSThread sleepForTimeInterval: (ok) ? 0.0 : 0.05];
         }
         if (!ok) {
             NSLog(@"Video export failed: couldn't write frame %li", (long)frameNum);
@@ -68,7 +68,7 @@
     // config
     CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
     NSDictionary* pixelBufferProperties = @{(id)kCVPixelBufferCGImageCompatibilityKey:@YES, (id)kCVPixelBufferCGBitmapContextCompatibilityKey:@YES};
-    
+
     // create pixel buffer
     CVPixelBufferRef pixelBuffer = NULL;
     CVPixelBufferCreate(kCFAllocatorDefault, [image size].width, [image size].height, k32ARGBPixelFormat, (__bridge CFDictionaryRef)pixelBufferProperties, &pixelBuffer);
@@ -78,7 +78,7 @@
     void* baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
     size_t bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
     CGContextRef context = CGBitmapContextCreate(baseAddress, [image size].width, [image size].height, 8, bytesPerRow, colorSpace, (CGBitmapInfo)kCGImageAlphaNoneSkipFirst);
-    
+
     // draw
     NSGraphicsContext* imageContext = [NSGraphicsContext graphicsContextWithGraphicsPort:context flipped:NO];
     [NSGraphicsContext saveGraphicsState];
@@ -119,16 +119,16 @@
                                          };
         videoWriterInput = [[AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo
                                                                outputSettings:videoSettings] retain];
-        
+
         adaptor = [[AVAssetWriterInputPixelBufferAdaptor
                     assetWriterInputPixelBufferAdaptorWithAssetWriterInput:videoWriterInput
                     sourcePixelBufferAttributes:nil] retain];
-        
+
         NSParameterAssert(videoWriterInput);
         NSParameterAssert([videoWriter canAddInput:videoWriterInput]);
         videoWriterInput.expectsMediaDataInRealTime = YES;
         [videoWriter addInput:videoWriterInput];
-        
+
         //Start a session:
         [videoWriter startWriting];
         [videoWriter startSessionAtSourceTime:kCMTimeZero];
@@ -149,9 +149,9 @@
     fw.delegate=self;
     [frames addOperation:fw];
 
-    NSInvocationOperation *wrote = [[NSInvocationOperation alloc] initWithTarget:self
+    NSInvocationOperation *wrote = [[[NSInvocationOperation alloc] initWithTarget:self
                                                                         selector:@selector(_wroteFrame)
-                                                                          object:nil];
+                                                                          object:nil] autorelease];
     [wrote addDependency:fw];
     [frames addOperation:wrote];
 }
@@ -162,13 +162,13 @@
     fw.videoWriterInput = videoWriterInput;
     [frames addOperation:fw];
 
-    NSInvocationOperation *done = [[NSInvocationOperation alloc] initWithTarget:self
+    NSInvocationOperation *done = [[[NSInvocationOperation alloc] initWithTarget:self
                                                                         selector:@selector(_wroteAll)
-                                                                          object:nil];
+                                                                          object:nil] autorelease];
     [done addDependency:fw];
     [frames addOperation:done];
 }
-        
+
 - (void)_wroteFrame{
     self.framesWritten++;
 }
