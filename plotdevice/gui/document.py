@@ -296,10 +296,6 @@ class ScriptController(NSWindowController):
     def shouldCloseDocument(self):
         return True
 
-    def cancelOperation_(self, sender):
-        # for the various times that some other control caught a cmd-period
-        self.stopScript()
-
     #
     # Running the script in the main window
     #
@@ -341,7 +337,8 @@ class ScriptController(NSWindowController):
 
         # halt any animation that was already running
         if self.animationTimer:
-            self.haltRun()
+            self.animationTimer.invalidate()
+            self.animationTimer = None
 
         # disable double buffering during the run (stopScript reënables it)
         self.graphicsView.volatile = True
@@ -393,7 +390,7 @@ class ScriptController(NSWindowController):
     def step(self):
         """Keep calling the script's draw method until an error occurs or the animation complete."""
         ok = self.invoke("draw")
-        if not ok or not self.vm.running:
+        if not ok:
             self.stopScript()
 
     def invoke(self, method):
@@ -509,11 +506,6 @@ class ScriptController(NSWindowController):
     def exportStatus(self, status):
         """Handle an export-lifecycle event (invoked by self.vm.session)"""
 
-        if status=='finishing':
-            # run stop() method if the script defines one
-            result = self.vm.stop()
-            self.echo(result.output)
-
         # give ui feedback for export state
         if self.statusView:
             if status=='cancelled':
@@ -521,9 +513,8 @@ class ScriptController(NSWindowController):
             if status=='complete':
                 self.statusView.endExport()
         if self.outputView:
-            msg = dict(cancelled=u'halting export…', complete=u'export complete', finishing='')[status]
-            if msg:
-                self.outputView.append(u' - %s\n' % msg, stream='info')
+            msg = dict(cancelled=u'halting export…', complete=u'export complete')[status]
+            self.outputView.append(u' - %s\n' % msg, stream='info')
 
         if status=='complete':
             # shut down the export ui
@@ -534,24 +525,25 @@ class ScriptController(NSWindowController):
     #
     @objc.IBAction
     def stopScript_(self, sender=None):
+        # catch command-period
         if self.vm.session:
             self.vm.session.cancel()
         else:
             self.stopScript()
 
-    def haltRun(self):
-        if self.animationTimer is not None:
-            # stop looping
+    def cancelOperation_(self, sender):
+        # catch the escape key
+        self.stopScript_(sender)
+
+    def stopScript(self):
+        # if we're currently animating, finish up the draw loop
+        if self.animationTimer:
             self.animationTimer.invalidate()
             self.animationTimer = None
 
             # run stop() method if the script defines one
             result = self.vm.stop()
             self.echo(result.output)
-
-    def stopScript(self):
-        # shut down the draw/export loop
-        self.haltRun()
 
         # disable progress spinner
         if self.statusView and not self.vm.session:

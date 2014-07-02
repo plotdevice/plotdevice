@@ -16,7 +16,7 @@ Outcome = namedtuple('Outcome', ['ok', 'output'])
 Output = namedtuple('Output', ['isErr', 'data'])
 
 class Metadata(object):
-    __slots__ = 'args', 'virtualenv', 'first', 'next', 'last', 'running', 'loop'
+    __slots__ = 'args', 'virtualenv', 'first', 'next', 'last', 'loop'
     def __init__(self, **opts):
         for k,v in opts.items(): setattr(self,k,v)
     def update(self, changes):
@@ -61,7 +61,7 @@ class Sandbox(object):
 
         # control params used during exports and console-based runs
         self._meta = Metadata(args=[], virtualenv=None, # environmant
-                              first=1, next=1, last=None, running=False, # runtime
+                              first=1, next=1, last=None, # runtime
                               loop=False) # export opts
 
     # .script
@@ -115,13 +115,6 @@ class Sandbox(object):
         return self._anim is not None or callable(self.namespace.get('draw',None))
 
     @property
-    def running(self):
-        """Whether the script still has frames to be rendered (r)"""
-        if self._meta.running and self.canvas.speed and 'draw' in self.namespace:
-            return self._meta.last is None or self._meta.next <= self._meta.last
-        return self._meta.running
-
-    @property
     def tty(self):
         """Whether the script's output is being redirected to a pipe (r)"""
         return getattr(self.delegate, 'graphicsView', None) is None
@@ -135,7 +128,6 @@ class Sandbox(object):
         # start off with all systems nominal (fingers crossed)
         self.crashed = False
         result = Outcome(True, [])
-        self._meta.running = False
         self._meta.next = self._meta.first
         self._anim = None
 
@@ -183,7 +175,6 @@ class Sandbox(object):
             # animations require special bookkeeping depending on which routine is being run
             if method is None:
                 # we're in the initial pass through the script so flag the run as ongoing
-                self._meta.running = True
                 self._anim = util.adict()
 
                 # default to 30fps if speed() wasn't called in the script
@@ -277,17 +268,16 @@ class Sandbox(object):
         return Outcome(True, output.data)
 
     def stop(self):
-        """Called once the script has stopped running (voluntarily or otherwise)"""
+        """Called when an animated run is halted (voluntarily or otherwise)"""
         # print "stopping at", self._meta.next-1, "of", self._meta.last
         result = Outcome(True, [])
-        if self._meta.running:
-            if not self.crashed:
-                result = self.call("stop")
-            self._meta.running = False
-
-        # controvertial resetting behavior! (should we hold onto a bounded range?)
-        self._meta.first, self._meta.last = (1,None)
+        if not self.crashed:
+            result = self.call("stop")
         return result
+
+        # # controvertial resetting behavior! (should we hold onto a bounded range?)
+        # self._meta.first, self._meta.last = (1,None)
+        # return result
 
     def die(self):
         """Called by the windowcontroller if the graphicsview bombed during canvas.draw()"""
@@ -308,30 +298,36 @@ class Sandbox(object):
                      cmyk, book
         """
 
-
-        # compile & evaluate the script once
-        firstpass = self.run(cmyk=opts.get('cmyk',False))
-        self.delegate.exportFrame(firstpass)
-        if not firstpass.ok:
-            return
-
         # pull off the file extension and use that as the format
         opts.setdefault('format', fname.lower().rsplit('.',1)[-1])
 
-        # don't bother engaging all the export machinery if it's a single image
-        if kind=='image' and opts['first']==opts['last']:
-            self.canvas.save(fname, opts['format'])
+        opts.setdefault('first', 1) # <- is this ever necessary?
+        self._meta.first, self._meta.last = opts['first'], opts['last']
+        single_page = kind=='image' and opts['first']==opts['last']
+
+        # compile & evaluate the script once
+        firstpass = self.run(cmyk=opts.get('cmyk',False))
+        self.delegate.exportFrame(firstpass, canvas=None)
+        if not firstpass.ok:
             return
 
         # call the script's setup() routine and pass the output along to the delegate
         if self.animated:
-            setup = self.call("setup")
-            self.delegate.exportFrame(setup, canvas=None)
-            if not setup.ok:
-                return
+            # run only setup() if this is a multi-frame export
+            # run the whole trio if this is a single-page
+            for fn in "setup", "draw", "stop":
+                result = self.call(fn)
+                self.delegate.exportFrame(result, self.canvas if fn=='draw' else None)
+                if not result.ok: return
+                if not single_page: break
+            else:
+                # for single_page runs, we've now completed the 1-frame animation
+                return self.canvas.save(fname, opts['format'])
 
-        opts.setdefault('first', 1)
-        self._meta.first, self._meta.last = opts['first'], opts['last']
+        elif single_page:
+            # non-animated single_page export
+            self.delegate.exportFrame(Outcome(True, []), canvas=self.canvas)
+            return self.canvas.save(fname, opts['format'])
 
         # set up an export manager and attach the delegate's callbacks
         ExportSession = ImageExportSession if kind=='image' else MovieExportSession
@@ -340,10 +336,11 @@ class Sandbox(object):
         self.session.on_status(self.delegate.exportStatus)
         self.session.on_complete(self._exportComplete)
 
+        # start looping through frames, calling draw() and adding the canvas
+        # to the export-session on each iteration
         self._exportFrame()
 
     def _exportFrame(self):
-
         if self.session.next():
             # run the script with the proper FRAME value
             self._meta.next = self.session.next()
@@ -359,10 +356,13 @@ class Sandbox(object):
             # give the runloop a chance to collect events between frames
             AppHelper.callLater(0.001, self._exportFrame)
         else:
+            result = self.call("stop")
+            self.delegate.exportFrame(result, canvas=None)
             self.session.done()
 
     def _exportComplete(self):
         self.session = None
+        print "_exportComplete"
 
     def _cleanup(self):
         # self.session = None

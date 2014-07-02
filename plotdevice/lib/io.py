@@ -59,8 +59,8 @@ class ExportSession(object):
             self._status('cancelled')
 
     def done(self):
-        if self._status and not self.cancelled:
-            self._status('finishing')
+        # if self._status:
+        #     self._status('finishing')
         if self.writer:
             self.writer.closeFile()
 
