@@ -25,9 +25,6 @@
 @synthesize delegate, fname, image;
 -(void)main{
     @autoreleasepool{
-        // getting a nil image is code for `we're done'
-        if (!image) return;
-
         [self.image writeToFile:self.fname atomically:NO];
         [self.delegate performSelectorOnMainThread:@selector(_wroteFrame) withObject:nil waitUntilDone:NO];
         self.fname = nil;
@@ -90,6 +87,7 @@
 - (id)initWithPattern:(NSString *)pat{
     if ((self = [self init])) {
         self.filePattern = pat;
+        self.paginated = NO;
     }
     return self;
 }
@@ -97,6 +95,7 @@
 - (id)initWithFile:(NSString *)fname{
     if ((self = [self init])) {
         self.filePath = fname;
+        self.paginated = [[[fname pathExtension] lowercaseString] isEqualToString:@"pdf"];
     }
     return self;
 }
@@ -104,7 +103,7 @@
 - (void)addPage:(NSData *)img{
     self.pageCount++;
 
-    if (self.filePath){
+    if (self.paginated){
         // add a pdf page to the one-and-only output file
         if (!self.book){
             self.book = [[PDFDocument alloc] initWithData:img];
@@ -116,7 +115,7 @@
             pw.page = img;
             [queue addOperation:pw];
         }
-    }else if(self.filePattern){
+    }else{
         // create another in the sequence of output files
         ImageWriter *iw = [[[ImageWriter alloc] init] autorelease];
         iw.delegate = self;
@@ -127,6 +126,7 @@
             iw.fname = [NSString stringWithFormat:self.filePattern, self.pageCount];;
         }
         [queue addOperation:iw];
+
     }
 }
 
@@ -135,23 +135,20 @@
     NSInvocationOperation *done = [[[NSInvocationOperation alloc] initWithTarget:self
                                                                         selector:@selector(_wroteAll)
                                                                           object:nil] autorelease];
-    // create an EOF operation of the appropriate type
-    NSOperation *bubble;
-    if (self.filePattern){
-        ImageWriter *iw = [[[ImageWriter alloc] init] autorelease];
-        bubble = iw;
-    }else{
+    // create an EOF operation if we're generating a paginated pdf file
+    if (self.paginated){
         PaperbackWriter *pw = [[[PaperbackWriter alloc] init] autorelease];
         pw.delegate = self;
         pw.book = self.book;
         pw.page = nil;
         pw.destination = self.filePath;
-        bubble = pw;
+
+        // make the all-done op wait for our EOF to go through the pipeline before running
+        [queue addOperation:pw];
+        [done addDependency:pw];
     }
 
-    // make the all-done op wait for our EOF to go through the pipeline before running
-    [queue addOperation:bubble];
-    [done addDependency:bubble];
+    // stick the done op on the queue and wait for it to call _wroteAll
     [queue addOperation:done];
 }
 
