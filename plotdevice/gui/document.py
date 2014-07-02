@@ -503,20 +503,20 @@ class ScriptController(NSWindowController):
             if total != written:
                 self.statusView.updateExport_total_(written, total)
 
-    def exportStatus(self, status):
+    def exportStatus(self, event):
         """Handle an export-lifecycle event (invoked by self.vm.session)"""
 
         # give ui feedback for export state
         if self.statusView:
-            if status=='cancelled':
-                self.statusView.finishExport()
-            if status=='complete':
-                self.statusView.endExport()
+            if event=='cancelled': self.statusView.finishExport()
+            elif event=='complete': self.statusView.endExport()
+
+        # print some non-diagetic status noise to the output pane
         if self.outputView:
-            msg = dict(cancelled=u'halting export…', complete=u'export complete')[status]
+            msg = dict(cancelled=u'halting export…', complete=u'export complete')[event]
             self.outputView.append(u' - %s\n' % msg, stream='info')
 
-        if status=='complete':
+        if event=='complete':
             # shut down the export ui
             self.stopScript()
 

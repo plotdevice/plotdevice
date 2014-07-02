@@ -217,13 +217,10 @@ class ConsoleScript(ScriptController):
         if not status.ok:
             NSApp().delegate().done()
 
-    def exportStatus(self, status):
-        super(ConsoleScript, self).exportStatus(status)
+    def exportStatus(self, event):
+        super(ConsoleScript, self).exportStatus(event)
 
-        if status == 'finishing':
-            return # we can just rely on super's handling
-
-        if status == 'cancelled':
+        if event == 'cancelled':
             msg = 'Halted after %i frames. Finishing file I/O...\n' % self.vm.session.added
         else:
             msg = ''
@@ -231,7 +228,8 @@ class ConsoleScript(ScriptController):
         STDERR.write(ERASER + msg)
         STDERR.flush()
 
-        if status=='complete':
+        if event=='complete':
+            self._buf = ''
             NSApp().delegate().done()
 
     def exportProgress(self, written, total, cancelled):
