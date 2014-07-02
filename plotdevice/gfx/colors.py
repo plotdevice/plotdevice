@@ -319,10 +319,10 @@ class Color(object):
 
     @classmethod
     def _nscolor(cls, scheme, *components):
-        factory = {RGB: NSColor.colorWithDeviceRed_green_blue_alpha_,
-                   HSV: NSColor.colorWithDeviceHue_saturation_brightness_alpha_,
+        factory = {RGB: NSColor.colorWithSRGBRed_green_blue_alpha_,
+                   HSV: NSColor.colorWithHue_saturation_brightness_alpha_,
                    CMYK: NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_,
-                   GREY: NSColor.colorWithDeviceWhite_alpha_}
+                   GREY: NSColor.colorWithGenericGamma22White_alpha_}
         return factory[scheme](*components)
 
     @classmethod
