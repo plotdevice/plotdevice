@@ -255,9 +255,7 @@ class Sandbox(object):
             return Outcome('HALTED', output.data)
         except:
             # print the stacktrace and quit
-            self.crashed = coredump(self._path, self._source)
-            errtxt = stacktrace(self._path, self._source)
-            sys.stderr.write(errtxt)
+            sys.stderr.write(self.die())
             return Outcome(False, output.data)
         finally:
             # restore the environment
@@ -275,12 +273,9 @@ class Sandbox(object):
             result = self.call("stop")
         return result
 
-        # # controvertial resetting behavior! (should we hold onto a bounded range?)
-        # self._meta.first, self._meta.last = (1,None)
-        # return result
-
     def die(self):
-        """Called by the windowcontroller if the graphicsview bombed during canvas.draw()"""
+        """Triggered by self.call() if the script raised an exception or by
+        the ScriptController if the view bombed during canvas.draw()"""
         self.crashed = coredump(self._path, self._source)
         return stacktrace(self._path, self._source)
 
@@ -301,9 +296,8 @@ class Sandbox(object):
         # pull off the file extension and use that as the format
         opts.setdefault('format', fname.lower().rsplit('.',1)[-1])
 
-        opts.setdefault('first', 1) # <- is this ever necessary?
+        # set the in/out frames for the export
         self._meta.first, self._meta.last = opts['first'], opts['last']
-        single_page = kind=='image' and opts['first']==opts['last']
 
         # compile & evaluate the script once
         firstpass = self.run(cmyk=opts.get('cmyk',False))
@@ -313,21 +307,10 @@ class Sandbox(object):
 
         # call the script's setup() routine and pass the output along to the delegate
         if self.animated:
-            # run only setup() if this is a multi-frame export
-            # run the whole trio if this is a single-page
-            for fn in "setup", "draw", "stop":
-                result = self.call(fn)
-                self.delegate.exportFrame(result, self.canvas if fn=='draw' else None)
-                if not result.ok: return
-                if not single_page: break
-            else:
-                # for single_page runs, we've now completed the 1-frame animation
-                return self.canvas.save(fname, opts['format'])
-
-        elif single_page:
-            # non-animated single_page export
-            self.delegate.exportFrame(Outcome(True, []), canvas=self.canvas)
-            return self.canvas.save(fname, opts['format'])
+            setup = self.run("setup")
+            self.delegate.exportFrame(setup)
+            if not setup.ok:
+                return
 
         # set up an export manager and attach the delegate's callbacks
         ExportSession = ImageExportSession if kind=='image' else MovieExportSession
@@ -342,27 +325,33 @@ class Sandbox(object):
 
     def _exportFrame(self):
         if self.session.next():
-            # run the script with the proper FRAME value
+            # step to the proper FRAME value
             self._meta.next = self.session.next()
+
+            # run the draw() function if it exists (or the whole top-level if not)
             result = self.run(method="draw" if self.animated else None)
 
-            # add the frame to the export and draw to screen
+            # let the delegate draw to the screen
             self.delegate.exportFrame(result, self.canvas)
+
+            # pass the frame content to the file-writer
             if result.ok:
                 self.session.add(self.canvas)
-            else:
+
+            # know when to fold 'em
+            if result.ok in (False, 'HALTED'):
                 self.session.cancel()
 
             # give the runloop a chance to collect events between frames
             AppHelper.callLater(0.001, self._exportFrame)
         else:
+            # we've drawn the final frame in the export
             result = self.call("stop")
             self.delegate.exportFrame(result, canvas=None)
             self.session.done()
 
     def _exportComplete(self):
         self.session = None
-        print "_exportComplete"
 
     def _cleanup(self):
         # self.session = None
