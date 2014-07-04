@@ -94,12 +94,16 @@ var Editor = function(elt){
             // configure the editor
             ed.setShowPrintMargin(false);
             ed.setFadeFoldWidgets(true);
+            ed.setHighlightActiveLine(false);
+            ed.setHighlightGutterLine(false);
             ed.commands.addCommands(NODEBOX_KEYBINDINGS)
             ed.setOptions({
                 enableBasicAutocompletion: true,
                 enableSnippets: true
             });
             ed.commands.on("afterExec", that._commandStream)
+            ed.on("blur", that._blur)
+            ed.on("focus", that._focus)
 
             // configure the buffer
             sess = ed.getSession()
@@ -152,12 +156,23 @@ var Editor = function(elt){
             }, Math.max(_vmin-now, 180))
         },
 
+
         blur:function(){
             ed.blur()
         },
+        _blur:function(){
+            ed.setHighlightActiveLine(false)
+            ed.setHighlightGutterLine(false)
+        },
+
         focus:function(){
             ed.focus()
         },
+        _focus:function(){
+            ed.setHighlightActiveLine(true)
+            ed.setHighlightGutterLine(true)
+        },
+
         source:function(src){
             if (src===undefined){
                 return ed.getValue()
