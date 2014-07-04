@@ -11,7 +11,7 @@
 //
 // batch imagefile writer
 //
-@interface ImageWriter : NSOperation{
+@interface IterWriter : NSOperation{
     Pages *delegate;
     NSString *fname;
     NSData *image;
@@ -21,7 +21,7 @@
 @property (nonatomic, retain) NSData *image;
 @end
 
-@implementation ImageWriter
+@implementation IterWriter
 @synthesize delegate, fname, image;
 -(void)main{
     @autoreleasepool{
@@ -117,7 +117,7 @@
         }
     }else{
         // create another in the sequence of output files
-        ImageWriter *iw = [[[ImageWriter alloc] init] autorelease];
+        IterWriter *iw = [[[IterWriter alloc] init] autorelease];
         iw.delegate = self;
         iw.image = img;
         if (self.filePath){
