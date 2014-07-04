@@ -290,7 +290,7 @@ class Sandbox(object):
                    for a movie export also include:
                      bitrate, fps, loop
                    and for an image sequence:
-                     cmyk, book
+                     cmyk, single
         """
 
         # pull off the file extension and use that as the format

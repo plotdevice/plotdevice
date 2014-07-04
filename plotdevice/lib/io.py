@@ -95,22 +95,25 @@ class ExportSession(object):
 
 re_padded = re.compile(r'{(\d+)}')
 class ImageExportSession(ExportSession):
-    def __init__(self, fname, format='pdf', first=1, last=1, book=False, **rest):
+    def __init__(self, fname, format='pdf', first=1, last=None, single=False, **rest):
         super(ImageExportSession, self).__init__()
+        self.single_file = single or first==last
         last = last or first
         self.begin(pages=last-first+1)
-        self.single_page = first==last
         self.format = format
 
-        if self.single_page or book:
+        m = re_padded.search(fname)
+        pad = '%%0%id' % int(m.group(1)) if m else None
+
+        if self.single_file:
             # output a single file (potentially a multipage PDF)
+            if pad:
+                fname = re_padded.sub(pad%0, fname, count=1)
             self.writer = Pages.alloc().initWithFile_(fname)
         else:
             # output multiple, sequentially-named files
-            m = re_padded.search(fname)
-            if m:
-                padding = int(m.group(1))
-                name_tmpl = re_padded.sub('%%0%id'%padding, fname, count=1)
+            if pad:
+                name_tmpl = re_padded.sub(pad, fname, count=1)
             else:
                 basename, ext = os.path.splitext(fname)
                 name_tmpl = "".join([basename, '-%04d', ext])
@@ -120,8 +123,6 @@ class ImageExportSession(ExportSession):
         if super(ImageExportSession, self).add(canvas):
             image = canvas._getImageData(self.format)
             self.writer.addPage_(image)
-            if self.single_page:
-                self.done()
 
 class MovieExportSession(ExportSession):
     def __init__(self, fname, format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, **rest):

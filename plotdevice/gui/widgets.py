@@ -246,7 +246,7 @@ class ExportSheet(NSObject):
     def awakeFromNib(self):
         self.formats = dict(image=(0, 'pdf', 0,0, 'pdf', 'eps', 'png', 'tiff', 'jpg', 'gif'), movie=('mov', 'gif'))
         self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0)
-        self.image = dict(format='pdf', first=1, last=1, cmyk=False, book=True)
+        self.image = dict(format='pdf', first=1, last=1, cmyk=False, single=True)
         self.cwd = None
 
 
@@ -256,7 +256,7 @@ class ExportSheet(NSObject):
             format = self.image['format']
             accessory = self.imageAccessory
 
-            if self.image['book']:
+            if self.image['single']:
                 self.imageFormat.selectItemAtIndex_(1)
             else:
                 format_idx = 2 + self.formats['image'][2:].index(self.image['format'])
@@ -345,14 +345,14 @@ class ExportSheet(NSObject):
         state = dict(format=fmts[fmt_idx],
                      first=1,
                      cmyk=self.imageCMYK.state()==NSOnState,
-                     book=fmt_idx==1,
+                     single=fmt_idx==1,
                      last=self.imagePageCount.intValue())
         if key:
             return state[key]
         return state
 
     def updatePagination(self):
-        label = 'Pages:' if self.imageState('book') else 'Files:'
+        label = 'Pages:' if self.imageState('single') else 'Files:'
         self.imagePagination.setStringValue_(label)
 
     def updateColorMode(self):

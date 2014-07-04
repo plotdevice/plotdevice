@@ -124,9 +124,9 @@ def parse_args():
     if opts.last is None and ext in ('mov','gif'):
       opts.first, opts.last = (1, 150)
 
-    # if it's a multiframe pdf, check for a telltale "{n}" to determine whether it's
-    # a `book' or a sequence of numbered pdf files
-    opts.book = bool(opts.first<opts.last and ext=='pdf' and not re.search('{\d+}', opts.export))
+    # if it's a multiframe pdf, check for a telltale "{n}" to determine whether
+    # it's a `single' doc or a sequence of numbered pdf files
+    opts.single = bool(opts.first<opts.last and ext=='pdf' and not re.search('{\d+}', opts.export))
 
 
 
