@@ -101,6 +101,7 @@ class Context(object):
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context._state_vars]
         self._statestack.insert(0, cached)
+        self.clear(all)
 
     def _restoreContext(self):
         try:
@@ -1179,33 +1180,21 @@ class Context(object):
         Note that the `loop` argument only applies to animated gifs and `bitrate` is used in the H.264
         encoding of `mov` files.
         """
-        # from plotdevice.run.export import PDF, Movie, ImageSequence
 
-        format = fname.rsplit('.',1)[1]
-        fname = re.sub(r'^~(?=/|$)',os.getenv('HOME'),fname)
-        mode = CMYK if cmyk else self._outputmode
+        # determine the format by normalizing the file extension
+        format = fname.lower().rsplit('.',1)[1]
+        if format not in ('pdf','eps','png','jpg','gif','tiff'):
+            badform = 'Unknown export format "%s"'%format
+            raise DeviceError(badform)
 
+        # build up opts based on type of output file (anim vs static)
+        opts = {"cmyk":cmyk}
         if format=='mov' or (format=='gif' and fps or loop is not None):
-            fps = fps or 30 # set a default for .mov exports
-            loop = {True:-1, False:0, None:0}.get(loop, loop) # convert bool args to int
-            return Movie(fname, format, fps=fps, bitrate=bitrate, loop=loop)
-        else:
-            # if the output is a static image, first write the current canvas contents
-            # to fname (meaning export can be called on its own, not just as part of
-            # a `with` statement)
-            oldmode = self._outputmode
-            self._outputmode = mode
-            self.canvas.save(fname, format=format)
-            self._outputmode = oldmode
+            opts.update(fps=fps or 30, # set a default for .mov exports
+                        loop={True:-1, False:0, None:0}.get(loop, loop), # convert bool args to int
+                        bitrate=bitrate)
 
-        if format=='pdf':
-            return PDF(fname, mode)
-        elif format in ('eps','png','jpg','gif','tiff'):
-            return ImageSequence(fname, format, mode)
-        else:
-            unknown = 'Unknown export format "%s"'%format
-            raise RuntimeError(unknown)
-
+        return ImageWriter(fname, format, **opts)
 
     ### Geometry
 
