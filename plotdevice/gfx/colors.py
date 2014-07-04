@@ -135,7 +135,7 @@ class Color(object):
         self._cmyk = self._rgb.colorUsingColorSpaceName_(NSDeviceCMYKColorSpace)
 
     def _updateRgb(self):
-        self._rgb = self._cmyk.colorUsingColorSpaceName_(NSDeviceRGBColorSpace)
+        self._rgb = self._cmyk.colorUsingColorSpace_(NSColorSpace.sRGBColorSpace())
 
     def _get_hue(self):
         return self._rgb.hueComponent()
