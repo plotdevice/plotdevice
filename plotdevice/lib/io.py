@@ -98,8 +98,8 @@ class ImageExportSession(ExportSession):
     def __init__(self, fname, format='pdf', first=1, last=None, single=False, **rest):
         super(ImageExportSession, self).__init__()
         self.single_file = single or first==last
-        last = last or first
-        self.begin(pages=last-first+1)
+        if last is not None:
+            self.begin(pages=last-first+1)
         self.format = format
 
         m = re_padded.search(fname)
@@ -125,14 +125,14 @@ class ImageExportSession(ExportSession):
             self.writer.addPage_(image)
 
 class MovieExportSession(ExportSession):
-    def __init__(self, fname, format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, **rest):
+    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=1, loop=0, **rest):
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
         except:
             pass
-
-        self.begin(frames=last-first+1)
+        if last is not None:
+            self.begin(frames=last-first+1)
         self.fname = fname
         self.format = format
         self.fps = fps
