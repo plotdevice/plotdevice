@@ -1,3 +1,4 @@
+# encoding: utf-8
 import os
 from PyObjCTools import AppHelper
 from Foundation import *
@@ -47,10 +48,10 @@ class StatusView(NSView):
         self.counter.setStringValue_("")
 
     def updateExport_total_(self, written, total):
-        # print "- %i/%i" % (written, total)
         self.spinner.setMaxValue_(total)
         self.spinner.setDoubleValue_(written)
-        self.counter.setStringValue_("Frame %i/%i"%(written, total))
+        msg = "Frame %i/%i"%(written, total) if written<total else u"Finishing…"
+        self.counter.setStringValue_(msg)
 
     def finishExport(self):
         if self._state == 'run':
