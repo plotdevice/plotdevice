@@ -241,8 +241,12 @@ class EditorView(NSView):
     def performJump_(self, sender):
         # if triggered by the ok button, jump to the line. otherwise just hide the panel if sender.tag():
         if sender.tag():
-            line = int(self.jumpLine.stringValue().replace(',',''))
-            self.js('editor.jump', args(line))
+            try:
+                line_str = re.sub(r'[^\d\.]', '', self.jumpLine.stringValue())
+                line = round(float(line_str))
+                self.js('editor.jump', args(line))
+            except ValueError:
+                pass # ignore non-integer input
         self.jumpPanel.orderOut_(self)
 
     @objc.IBAction
