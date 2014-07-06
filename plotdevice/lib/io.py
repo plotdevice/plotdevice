@@ -72,20 +72,11 @@ class ExportSession(object):
             self._complete = None
         self.writer = None
 
-    def on_complete(self, cb):
-        if not self.running:
-            cb()
-        else:
-            self._complete = cb
-
-    def on_progress(self, cb):
-        if self.running:
-            self._progress = cb
-
-    def on_status(self, cb):
-        if self.running:
-            self._status = cb
-
+    def on(self, **handlers):
+        for event, cb in handlers.items():
+            setattr(self, '_'+event, cb)
+        if 'complete' in handlers and not self.running:
+            self.shutdown() # call the handler immediately
 
 re_padded = re.compile(r'{(\d+)}')
 class ImageExportSession(ExportSession):

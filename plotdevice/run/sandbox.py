@@ -315,9 +315,9 @@ class Sandbox(object):
         # set up an export manager and attach the delegate's callbacks
         ExportSession = ImageExportSession if kind=='image' else MovieExportSession
         self.session = ExportSession(fname, **opts)
-        self.session.on_progress(self.delegate.exportProgress)
-        self.session.on_status(self.delegate.exportStatus)
-        self.session.on_complete(self._exportComplete)
+        self.session.on(progress=self.delegate.exportProgress,
+                        status=self.delegate.exportStatus,
+                        complete=self._exportComplete)
 
         # start looping through frames, calling draw() and adding the canvas
         # to the export-session on each iteration
