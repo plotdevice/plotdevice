@@ -474,12 +474,11 @@ class ScriptController(NSWindowController):
             self.stopScript()
 
         # if we're exporting multiple frames, give some ui feedback
-        if opts['last'] != opts['first']:
-            if self.outputView:
-                msg = u"Generating %s %s…\n"%(opts['last']-opts['first']+1, 'pages' if kind=='image' else 'frames')
-                self.outputView.append(msg, stream='info')
-            if self.statusView:
-                self.statusView.beginExport()
+        # if opts['last'] != opts['first']:
+        if self.outputView:
+            self.outputView.clear(timestamp=True)
+        if self.statusView:
+            self.statusView.beginExport()
 
         # let the Sandbox take over
         self.vm.source = self.source
@@ -497,25 +496,16 @@ class ScriptController(NSWindowController):
 
     def exportProgress(self, written, total, cancelled):
         """Update the progress meter in the StatusView (invoked by self.vm.session)"""
-        if cancelled:
-            return
-
         if self.statusView:
-            if total != written:
-                self.statusView.updateExport_total_(written, total)
+            self.statusView.updateExport_total_(written, total)
 
     def exportStatus(self, event):
         """Handle an export-lifecycle event (invoked by self.vm.session)"""
 
-        # give ui feedback for export state
         if self.statusView:
+            # give ui feedback for export state
             if event=='cancelled': self.statusView.finishExport()
             elif event=='complete': self.statusView.endExport()
-
-        # print some non-diagetic status noise to the output pane
-        if self.outputView:
-            msg = dict(cancelled=u'halting export…', complete=u'export complete')[event]
-            self.outputView.append(u' - %s\n' % msg, stream='info')
 
         if event=='complete':
             # shut down the export ui
