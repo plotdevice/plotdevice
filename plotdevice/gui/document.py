@@ -181,6 +181,7 @@ class ScriptController(NSWindowController):
     def awakeFromNib(self):
         win = self.window()
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
+        win.useOptimizedDrawing_(True)
 
         # place the statusView in the title bar
         frame = win.frame()
