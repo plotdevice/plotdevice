@@ -58,6 +58,7 @@ class EditorView(NSView):
         self.webview.setFrameLoadDelegate_(self)
         self.webview.setUIDelegate_(self)
         self.addSubview_(self.webview)
+        self.webview.setHidden_(True)
 
         html = bundle_path(rsrc='ui/editor.html')
         ui = file(html).read().decode('utf-8')
@@ -91,6 +92,15 @@ class EditorView(NSView):
         self._doers = mm.itemWithTitle_('Edit').submenu().itemArray()[1:3]
         self._undo_mgr = None
 
+    def drawRect_(self, rect):
+        if self._wakeup:
+            # try to minimize the f.o.u.c. while the webview starts up
+            bgcolor = editor_info('colors')['background']
+            bgcolor.setFill()
+            NSRectFillUsingOperation(rect, NSCompositeCopy)
+        super(EditorView, self).drawRect_(rect)
+
+
     def _jostle(self):
         awoke = self.webview.stringByEvaluatingJavaScriptFromString_('window.editor && window.editor.ready')
         if awoke:
@@ -99,6 +109,7 @@ class EditorView(NSView):
             self._wakeup.invalidate()
             self._wakeup = None
             self._queue = None
+            self.webview.setHidden_(False)
 
     def _cleanup(self):
         nc = NSNotificationCenter.defaultCenter()
@@ -468,8 +479,6 @@ class OutputTextView(NSTextView):
 
     def __del__(self):
         nc = NSNotificationCenter.defaultCenter()
-        nc.removeObserver_name_object_(self, "ThemeChanged", None)
-        nc.removeObserver_name_object_(self, "FontChanged", None)
-        nc.removeObserver_name_object_(self, "DropOperation", self.webview)
+        nc.removeObserver_(self)
         if self._findTimer:
             self._findTimer.invalidate()

@@ -101,6 +101,7 @@ var Editor = function(elt){
                 enableBasicAutocompletion: true,
                 enableSnippets: true
             });
+            ed.renderer.updateCharacterSize()
             ed.commands.on("afterExec", that._commandStream)
             ed.on("blur", that._blur)
             ed.on("focus", that._focus)
