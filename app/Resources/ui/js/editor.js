@@ -82,8 +82,8 @@ var Editor = function(elt){
     var undo = new UndoMgr()
     var sess = null
     var _menu_cmds = { // commands whose keyboard shortcuts are caught by ace rather than NSView
-        "Edit":['selectline', 'splitIntoLines', 'addCursorAboveSkipCurrent', 'addCursorBelowSkipCurrent', 'centerselection',
-                'blockindent', 'blockoutdent', 'togglecomment', //'gotoline',
+        "Edit":['selectline', 'splitIntoLines', 'addCursorAbove', 'addCursorBelow', 'centerselection',
+                'blockindent', 'blockoutdent', 'togglecomment','selectMoreAfter', 'selectMoreBefore',
                 'expandSnippet', 'startAutocomplete'],
         "Python":[]
     }

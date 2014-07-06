@@ -261,34 +261,47 @@ CQ
                                                 <action selector="selectAll:" target="-1" id="232"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Expand Selection to Line" keyEquivalent="l" id="kMw-0w-hjQ">
+                                        <menuItem title="Expand Selection to Line" tag="1" keyEquivalent="l" id="kMw-0w-hjQ">
                                             <connections>
                                                 <action selector="editorAction:" target="-1" id="4QM-2R-UwB"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem isSeparatorItem="YES" id="ZrF-Qb-SZb"/>
-                                        <menuItem title="Split into Lines" tag="1" keyEquivalent="L" id="1eZ-vy-9bI">
+                                        <menuItem isSeparatorItem="YES" id="6nR-n0-wGT"/>
+                                        <menuItem title="Scroll to Selection" tag="2" keyEquivalent="l" id="447">
+                                            <modifierMask key="keyEquivalentModifierMask" control="YES"/>
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="pWG-JF-EhA"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="LfT-5s-ZSo"/>
+                                        <menuItem title="Split into Lines" tag="3" keyEquivalent="L" id="1eZ-vy-9bI">
                                             <connections>
                                                 <action selector="editorAction:" target="-1" id="4Jb-L4-a1k"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Add Previous Line" tag="2" keyEquivalent="" id="3c7-na-X2S">
-                                            <modifierMask key="keyEquivalentModifierMask" control="YES" option="YES"/>
-                                            <connections>
-                                                <action selector="editorAction:" target="-1" id="rOW-ys-Mun"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Add Next Line" tag="3" keyEquivalent="" id="H8D-HQ-QVu">
+                                        <menuItem title="Add Next Line" tag="5" keyEquivalent="" id="H8D-HQ-QVu">
                                             <modifierMask key="keyEquivalentModifierMask" control="YES" option="YES"/>
                                             <connections>
                                                 <action selector="editorAction:" target="-1" id="bl1-lx-4y3"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem isSeparatorItem="YES" id="6nR-n0-wGT"/>
-                                        <menuItem title="Scroll to Selection" tag="4" keyEquivalent="l" id="447">
-                                            <modifierMask key="keyEquivalentModifierMask" control="YES"/>
+                                        <menuItem title="Add Previous Line" tag="4" keyEquivalent="" id="3c7-na-X2S">
+                                            <modifierMask key="keyEquivalentModifierMask" control="YES" option="YES"/>
                                             <connections>
-                                                <action selector="editorAction:" target="-1" id="pWG-JF-EhA"/>
+                                                <action selector="editorAction:" target="-1" id="rOW-ys-Mun"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="ZrF-Qb-SZb"/>
+                                        <menuItem title="Add Next Match" tag="6" keyEquivalent="" id="ORx-X6-LTO">
+                                            <modifierMask key="keyEquivalentModifierMask" control="YES" option="YES"/>
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="a7K-0G-UUQ"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Add Previous Match" tag="7" keyEquivalent="" id="bYZ-UG-onK">
+                                            <modifierMask key="keyEquivalentModifierMask" control="YES" option="YES"/>
+                                            <connections>
+                                                <action selector="editorAction:" target="-1" id="BgH-Te-2KE"/>
                                             </connections>
                                         </menuItem>
                                     </items>
@@ -298,30 +311,30 @@ CQ
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Line" id="gjZ-vo-aoJ">
                                     <items>
-                                        <menuItem title="Shift Right" tag="5" keyEquivalent="]" id="394">
+                                        <menuItem title="Shift Right" tag="8" keyEquivalent="]" id="394">
                                             <connections>
                                                 <action selector="editorAction:" target="-1" id="nbB-aj-hoG"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Shift Left" tag="6" keyEquivalent="[" id="399">
+                                        <menuItem title="Shift Left" tag="9" keyEquivalent="[" id="399">
                                             <connections>
                                                 <action selector="editorAction:" target="-1" id="onZ-bq-h6D"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Shift Upward" tag="7" keyEquivalent="" id="ide-G8-bu2">
+                                        <menuItem title="Shift Upward" tag="10" keyEquivalent="" id="ide-G8-bu2">
                                             <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
                                             <connections>
                                                 <action selector="editorAction:" target="-1" id="7MQ-SS-maJ"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Shift Downward" tag="8" keyEquivalent="" id="cVe-PP-big">
+                                        <menuItem title="Shift Downward" tag="11" keyEquivalent="" id="cVe-PP-big">
                                             <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
                                             <connections>
                                                 <action selector="editorAction:" target="-1" id="bQb-hH-de0"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="OSl-8q-kaa"/>
-                                        <menuItem title="Toggle Comment" tag="9" keyEquivalent="/" id="398">
+                                        <menuItem title="Toggle Comment" tag="12" keyEquivalent="/" id="398">
                                             <connections>
                                                 <action selector="editorAction:" target="-1" id="qTQ-Bb-wDW"/>
                                             </connections>
