@@ -31,9 +31,13 @@
 -(void) main{
     @autoreleasepool{
         if (self.isCancelled || !frame){
+            __unsafe_unretained FrameWriter *welf = self;
+
             // close the file
             [videoWriterInput markAsFinished];
-            [videoWriter finishWritingWithCompletionHandler:^{}];
+            [videoWriter finishWritingWithCompletionHandler:^{
+                [welf.delegate wroteLast];
+            }];
             return;
         }
 
@@ -52,6 +56,7 @@
         if (!ok) {
             NSLog(@"Video export failed: couldn't write frame %li", (long)frameNum);
         }
+        [self.delegate wroteFrame];
     }
 }
 
@@ -140,43 +145,31 @@
 
 - (void)addFrame:(NSImage *)frame{
     FrameWriter *fw = [[[FrameWriter alloc] init] autorelease];
-    fw.frame=frame;
+    fw.frame = frame;
     fw.frameNum = frameCount++;
     fw.frameRate = frameRate;
     fw.videoWriter = videoWriter;
     fw.videoWriterInput = videoWriterInput;
-    fw.adaptor=adaptor;
-    fw.delegate=self;
+    fw.adaptor = adaptor;
+    fw.delegate = self;
     [frames addOperation:fw];
-
-    NSInvocationOperation *wrote = [[[NSInvocationOperation alloc] initWithTarget:self
-                                                                        selector:@selector(_wroteFrame)
-                                                                          object:nil] autorelease];
-    [wrote addDependency:fw];
-    [frames addOperation:wrote];
 }
 
 - (void)closeFile{
     FrameWriter *fw = [[[FrameWriter alloc] init] autorelease];
     fw.videoWriter = videoWriter;
     fw.videoWriterInput = videoWriterInput;
+    fw.delegate = self;
     [frames addOperation:fw];
-
-    NSInvocationOperation *done = [[[NSInvocationOperation alloc] initWithTarget:self
-                                                                        selector:@selector(_wroteAll)
-                                                                          object:nil] autorelease];
-    [done addDependency:fw];
-    [frames addOperation:done];
 }
 
-- (void)_wroteFrame{
-    self.framesWritten++;
+- (void)wroteFrame{
+    @synchronized(self){ self.framesWritten++; }
 }
 
-- (void)_wroteAll{
-    self.doneWriting = YES;
+- (void)wroteLast{
+    @synchronized(self){ self.doneWriting = YES; }
 }
-
 
 - (void)dealloc{
     [frames release];

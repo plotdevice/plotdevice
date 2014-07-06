@@ -35,6 +35,7 @@
 			[fileHandle writeData:encoded];
 			[fileHandle closeFile];
 			[fileHandle release];
+			[self.delegate wroteLast];
 			return;
 		}
 
@@ -46,11 +47,11 @@
 
 		// don't echo the application extension (though maybe one of them should get passed through?)
 		// if (map.ext_addr) [fileHandle writeData:[NSData dataWithBytesNoCopy:gif+map.ext_addr length:map.ext_n freeWhenDone:NO]];
-		
+
 		// write graphics control extension for frame
 		UInt8 *buf = gif+map.gfx_addr;
 		UInt16 rate = round(frameRate);
-		UInt8 gfx_ctrl[8] = { kExtSeparator, kGraphicControlLabel, 4, 
+		UInt8 gfx_ctrl[8] = { kExtSeparator, kGraphicControlLabel, 4,
 							  (buf[3] & 1) | (3 << 2), // <Packed Fields> w/ transp color from img + disposal method #3
 							  LO(rate), HI(rate), // delay
 							  buf[6], // transparent color idx
@@ -71,6 +72,7 @@
 		[fileHandle writeData:[NSData dataWithBytesNoCopy:gif+map.data_addr length:map.data_n freeWhenDone:NO]];
 
 		self.frame = nil;
+		[self.delegate wroteFrame];
 	}
 }
 
@@ -80,7 +82,7 @@
 	GifMap map;
 	memset(&map, 0, sizeof map);
 	UInt8 *gif = (UInt8 *)[gifData bytes];
-	
+
 	// step over the header, screen description, and global color map (if present)
 	UInt8 gColorFlags = gif[10];
 	BOOL hasGlobalColors = gColorFlags & 0x80;
@@ -138,7 +140,7 @@
 					map.gfx_n = 8;
 					cursor += 8; // skip over control block
 					break;
-				
+
 				case 0xFF: // application extension
 					cursor+=2;
 					blockSize = cursor[0];
@@ -169,7 +171,7 @@
 		// Success!
 	}
 
-	return map;	
+	return map;
 }
 @end
 
@@ -190,7 +192,7 @@
 
 		// write header
 		[fileHandle writeData:[NSData dataWithBytes:kGifHeader length:strlen(kGifHeader)]];
-		
+
 		// write logical screen desc
 		UInt8 screen_desc[7] = { LO(aSize.width),HI(aSize.width),
 								 LO(aSize.height),HI(aSize.height),
@@ -202,11 +204,11 @@
 		// if looping is enabled, write an application extension block with the loop count
 		if (count!=0){
 			UInt16 loopCount = (count==-1) ? 0 : count;
-			UInt8 loop_ext[19] = { kExtSeparator, kApplicationExtLabel, 
+			UInt8 loop_ext[19] = { kExtSeparator, kApplicationExtLabel,
 								   11, 'N','E','T','S','C','A','P','E','2','.','0',
 								   3, 1, LO(loopCount), HI(loopCount), 0 };
 			[fileHandle writeData:[NSData dataWithBytesNoCopy:&loop_ext length:19 freeWhenDone:NO]];
-		}	
+		}
 	}
 	return self;
 }
@@ -218,20 +220,6 @@
 	gw.frame = gifImage;
 	gw.frameRate = frameRate;
 	[frames addOperation:gw];
-
-	NSInvocationOperation *wrote = [[NSInvocationOperation alloc] initWithTarget:self 
-																			                                selector:@selector(_wroteFrame) 
-																			                                  object:nil];
-	[wrote addDependency:gw];
-	[frames addOperation:wrote];
-}
-
-- (void) _wroteFrame{
-	self.framesWritten++;
-}
-
-- (void)_wroteAll{
-    self.doneWriting = YES;
 }
 
 - (void) closeFile{
@@ -239,12 +227,14 @@
 	gw.fileHandle = fileHandle;
   gw.delegate = self;
 	[frames addOperation:gw];
+}
 
-	NSInvocationOperation *done = [[NSInvocationOperation alloc] initWithTarget:self
-	                                                                    selector:@selector(_wroteAll)
-	                                                                      object:nil];
-	[done addDependency:gw];
-	[frames addOperation:done];
+- (void)wroteFrame{
+    @synchronized(self){ self.framesWritten++; }
+}
+
+- (void)wroteLast{
+    @synchronized(self){ self.doneWriting = YES; }
 }
 
 @end

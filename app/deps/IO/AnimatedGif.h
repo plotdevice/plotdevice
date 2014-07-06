@@ -33,12 +33,14 @@ typedef struct {
     NSInteger framesWritten;
     BOOL doneWriting;
 }
-@property (assign) NSInteger framesWritten;
-@property (assign) BOOL doneWriting;
+@property NSInteger framesWritten;
+@property BOOL doneWriting;
 
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps loop:(NSInteger)count;
 - (void)addFrame:(NSData *)gifData;
 - (void)closeFile;
-- (void)_wroteFrame;
-- (void)_wroteAll;
+
+// internal callbacks
+- (void)wroteFrame;
+- (void)wroteLast;
 @end

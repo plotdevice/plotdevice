@@ -19,17 +19,20 @@
     NSString *filePattern;
     BOOL doneWriting;
 }
-@property (nonatomic, assign) NSInteger framesWritten;
+@property (nonatomic, copy) NSString *filePath;
+@property (nonatomic, copy) NSString *filePattern;
 @property (nonatomic, assign) NSInteger pageCount;
 @property (nonatomic, assign) BOOL paginated;
 @property (nonatomic, retain) PDFDocument *book;
-@property (nonatomic, copy) NSString *filePath;
-@property (nonatomic, copy) NSString *filePattern;
-@property (assign) BOOL doneWriting;
+@property NSInteger framesWritten;
+@property BOOL doneWriting;
 
 - (id)initWithPattern:(NSString *)pat;
 - (id)initWithFile:(NSString *)fname;
 - (void)closeFile;
-- (void)_wroteFrame;
+
+// internal callbacks
+- (void)wrotePage;
+- (void)wroteLast;
 
 @end
