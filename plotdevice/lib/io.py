@@ -37,18 +37,12 @@ class ExportSession(object):
             self._progress(self.written, goal, self.cancelled)
 
         if self.writer.doneWriting():
-            self._shutdown()
+            self.shutdown()
 
     def next(self):
         if self.cancelled or self.added==self.total:
             return None
         return self.added + 1
-
-    def add(self, canvas):
-        if self.cancelled:
-            return False
-        self.added += 1
-        return True
 
     def cancel(self):
         if self.cancelled:
@@ -64,7 +58,7 @@ class ExportSession(object):
         if self.writer:
             self.writer.closeFile()
 
-    def _shutdown(self):
+    def shutdown(self):
         self.running = False
         self._progress = None
         if self._status:
@@ -120,9 +114,9 @@ class ImageExportSession(ExportSession):
             self.writer = Pages.alloc().initWithPattern_(name_tmpl)
 
     def add(self, canvas):
-        if super(ImageExportSession, self).add(canvas):
-            image = canvas._getImageData(self.format)
-            self.writer.addPage_(image)
+        image = canvas._getImageData(self.format)
+        self.writer.addPage_(image)
+        self.added += 1
 
 class MovieExportSession(ExportSession):
     def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=1, loop=0, **rest):
@@ -140,18 +134,18 @@ class MovieExportSession(ExportSession):
         self.bitrate = bitrate
 
     def add(self, canvas):
-        if super(MovieExportSession, self).add(canvas):
-            image = canvas.rasterize()
-            if not self.writer:
-                dims = image.size()
-                if self.format == 'mov':
-                    self.writer = Video.alloc()
-                    self.writer.initWithFile_size_fps_bitrate_(self.fname, dims, self.fps, self.bitrate)
-                elif self.format == 'gif':
-                    self.writer = AnimatedGif.alloc()
-                    self.writer.initWithFile_size_fps_loop_(self.fname, dims, self.fps, self.loop)
-                else:
-                    NSLog('unrecognized output format: %s' % self.format)
-                    return self._shutdown()
-            self.writer.addFrame_(image)
+        image = canvas.rasterize()
+        if not self.writer:
+            dims = image.size()
+            if self.format == 'mov':
+                self.writer = Video.alloc()
+                self.writer.initWithFile_size_fps_bitrate_(self.fname, dims, self.fps, self.bitrate)
+            elif self.format == 'gif':
+                self.writer = AnimatedGif.alloc()
+                self.writer.initWithFile_size_fps_loop_(self.fname, dims, self.fps, self.loop)
+            else:
+                NSLog('unrecognized output format: %s' % self.format)
+                return self.shutdown()
+        self.writer.addFrame_(image)
+        self.added += 1
 
