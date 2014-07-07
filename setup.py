@@ -114,7 +114,7 @@ def commits_since(rev, raw=False):
     since = int(rev.replace('r',''))
     recent = [c.split(' ',1)[1] for c in commits[:-since]]
     if not raw:
-        return u'<li>%s</li>'%u'</li><li>'.join(recent)
+        return u'\n<li>%s</li>\n'%u'</li>\n<li>'.join(recent)
     return recent
 
 # basicaly `backticks`
