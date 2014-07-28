@@ -68,7 +68,9 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         if self.width is None:
             self.stylesheet._styles[DEFAULT]['align'] = LEFT
 
-        self.text = unicode(text)
+        # try to insulate people from the need to use a unicode constant for any text
+        # with high-ascii characters (while waiting for the other shoe to drop)
+        self.text = text.decode('utf-8') if isinstance(text, str) else unicode(text)
 
     @property
     def font(self):

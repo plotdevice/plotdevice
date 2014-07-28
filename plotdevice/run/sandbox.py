@@ -6,7 +6,7 @@ from collections import namedtuple
 from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
-from ..run import stacktrace, coredump, encoding
+from ..run import stacktrace, coredump, uncoded, encoding
 from ..lib.io import MovieExportSession, ImageExportSession
 from plotdevice import util, context, gfx, Halted, DeviceError
 
@@ -134,11 +134,9 @@ class Sandbox(object):
         # if our .source attr has been changed since the last run, compile it now
         if not self._code:
             def compileScript():
+                # _source is already unicode so strip out the `encoding:` comment
+                src = uncoded(self._source)
                 scriptname = self._path or "<Untitled>"
-                # src needs to be a bytestring if the script defines its encoding in an
-                # `encoding: ...` comment. otherwise just pass the unicode to compile()
-                enc = encoding(self._source)
-                src = self._source.encode(enc) if enc else self._source
                 fname = scriptname.encode('ascii', 'ignore')
                 self._code = compile(src, fname, "exec")
             result = self.call(compileScript)

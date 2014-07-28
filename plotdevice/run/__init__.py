@@ -15,6 +15,13 @@ def encoding(src):
         return m.group(1)
     return None
 
+def uncoded(src):
+    """Strips out any `# encoding: ???` lines found at the head of the source listing"""
+    lines = src.split("\n")
+    for i in range(2):
+        lines[i] = re.sub(r'#.*coding[=:]\s*([-\w.]+)', '#', lines[i])
+    return "\n".join(lines)
+
 def stacktrace(script=None, src=None):
     """print a clean traceback and optionally rewrite the paths relative to a script path"""
 
