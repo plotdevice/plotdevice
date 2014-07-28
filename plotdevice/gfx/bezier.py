@@ -503,10 +503,9 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             empty = "The given path is empty"
             raise DeviceError(empty)
 
-        # The delta value is divided by amount-1, to ensure the last point is at t=1.0
-        delta = 1.0/max(1, amount-1)
-
-        for i in xrange(amount):
+        count = int(amount) # make sure we don't choke on a float
+        delta = 1.0/max(1, count-1) # div by count-1 so the last point is at t=1.0
+        for i in xrange(count):
             yield pathmatics.point(self, delta*i)
 
     def addpoint(self, t):
