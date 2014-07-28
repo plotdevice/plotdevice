@@ -413,5 +413,7 @@ class Variable(object):
 
     @trim_zeroes
     def __repr__(self):
-        return "Variable(name=%s, type=%s, default=%s, min=%s, max=%s, value=%s)" % (self.name, self.type, self.default, self.min, self.max, self.value)
+        if hasattr(self, 'min'):
+            return "Variable(name=%s, type=%s, default=%s, min=%s, max=%s, value=%s)" % (self.name, self.type, self.default, self.min, self.max, self.value)
 
+        return "Variable(name=%s, type=%s, default=%s, value=%s)" % (self.name, self.type, self.default, self.value)

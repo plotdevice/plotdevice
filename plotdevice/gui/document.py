@@ -354,6 +354,10 @@ class ScriptController(NSWindowController):
         self.vm.source = self.source
         success = self.invoke(None)
 
+        # Display the dashboard if the var() command was called
+        if self.vm.vars:
+            self.dashboardController.buildInterface(self.vm.vars)
+
         if not success or not self.vm.animated:
             # halt the progress indicator if we crashed (or if we succeeded in a non-anim)
             self.statusView.endRun()
@@ -364,10 +368,6 @@ class ScriptController(NSWindowController):
                 self.stopScript()
 
             return # either way, the run is complete
-
-        # Display the dashboard if the var() command was called
-        if self.vm.vars:
-            self.dashboardController.buildInterface(self.vm.vars)
 
         # Check whether we are dealing with animation
         if self.vm.animated:
