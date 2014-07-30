@@ -224,9 +224,9 @@ colormode(HSB)
 
 def genTemplate(kind='sketch'):
     if kind=='sketch':
-        return u"""# Welcome to PlotDevice
-size(500, 500)
+        return u"""size(512, 512)
 background(1)
+
 text("Welcome to PlotDevice", 40, 40)
 """
     elif kind=='anim':
