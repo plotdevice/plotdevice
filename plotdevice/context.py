@@ -453,21 +453,21 @@ class Context(object):
         except IndexError, e:
             raise DeviceError, "pop: too many pops!"
 
-    def transform(self, *args):
+    def transform(self, mode=None):
         """Change the transform mode or begin a `with`-statement-scoped set of transformations
 
         Transformation Modes
 
-        PlotDevice determines graphic objects' screen positions using two factors:
+        PlotDevice determines graphic objects' final screen positions using two factors:
           - the (x,y)/(w,h) point passed to rect(), text(), etc. at creation time
           - the ‘current transform’ which has accumulated as a result of prior calls
             to commands like scale() or rotate()
 
         By default these transformations are applied relative to the centermost point of the
-        object. This is convenient since it prevents scaling and rotation from changing the
-        location of the object.
+        object (based on its x/y/w/h). This is convenient since it prevents scaling and rotation
+        from changing the location of the object.
 
-        If you prefer to apply transformations relative to objects' upper-left corner, use:
+        If you prefer to apply transformations relative to the canvas's upper-left corner, use:
             transform(CORNER)
         You can then switch back to the default scheme with:
             transform(CENTER)
@@ -477,38 +477,15 @@ class Context(object):
         Transformation Context Manager
 
         When used as part of a `with` statement, the transform() command will ensure the
-        mode and accumulated transformations are reverted to their previous state once the
-        block completes.
-
-        As positional args, it can accept a sequence of transformation operations. It will
-        apply these at the beginning of the block, then revert them on exit (as well as any
-        additional transformations made within the block). For instance,
-            with transform(translate(100, 100), rotate(45)):
-                skew(45)           # (this will also be reset after the block exits)
-                rect(0, 0, 50, 50) # drawn as a repositioned parallelogram
-            rect(0, 0, 50, 50)     # drawn as a square in the top-left corner
+        mode and transformations applied during the indented code-block are reverted to their
+        previous state once the block completes.
         """
 
-        mode = args[0] if args and args[0] in (CENTER, CORNER) else None
-        if mode is not None and mode not in (CORNER, CENTER):
-            raise DeviceError, "transform: mode must be CORNER or CENTER"
-        elif mode:
-            args = args[1:]
-
-        xforms = [xf for xf in args if isinstance(xf, Transform)]
-        if len(xforms) != len(args):
-            badarg = "transform: valid arguments are reset(), rotate(), scale(), skew(), and translate()"
-            raise DeviceError(badarg)
-
+        if mode not in (CORNER, CENTER, None):
+            badmode = "transform: mode must be CORNER or CENTER"
+            raise DeviceError(badmode)
         rollback = {"_transform":self._transform.copy(),
                     "_transformmode":self._transformmode}
-        for xf in reversed(xforms):
-            if hasattr(xf, '_rollback'):
-                rollback.update(xf._rollback)
-            else:
-                # if the transform was created manually, it hasn't yet made its modification
-                self._transform.prepend(xf)
-
         if mode:
             self._transformmode = mode
 
