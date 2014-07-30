@@ -245,7 +245,7 @@ class ExportSheet(NSObject):
     movieBitrate = objc.IBOutlet()
 
     def awakeFromNib(self):
-        self.formats = dict(image=(0, 'pdf', 0,0, 'pdf', 'eps', 'png', 'tiff', 'jpg', 'gif'), movie=('mov', 'gif'))
+        self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'gif'))
         self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0)
         self.image = dict(format='pdf', first=1, last=1, cmyk=False, single=True)
         self.cwd = None

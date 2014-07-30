@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1090" defaultVersion="1090" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -124,7 +124,7 @@
             </connections>
         </window>
         <window title="Variables" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="169" userLabel="Panel" customClass="NSPanel">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES" nonactivatingPanel="YES" HUD="YES"/>
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="395" y="467" width="300" height="97"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1058"/>
@@ -216,7 +216,7 @@
                 <popUpButton verticalHuggingPriority="750" id="E8Q-mV-qkm">
                     <rect key="frame" x="86" y="43" width="157" height="26"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" autoenablesItems="NO" id="ejg-Vh-EUZ">
+                    <popUpButtonCell key="cell" type="push" title="Multiple Pages" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" autoenablesItems="NO" selectedItem="PoA-80-u3N" id="ejg-Vh-EUZ">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="menu"/>
                         <menu key="menu" title="OtherViews" autoenablesItems="NO" id="S0K-lx-Xdg">
@@ -236,9 +236,25 @@
                                     <modifierMask key="keyEquivalentModifierMask"/>
                                 </menuItem>
                                 <menuItem isSeparatorItem="YES" id="dwL-7Z-CCj"/>
-                                <menuItem title="Sequential Files" enabled="NO" id="1Jh-Vm-xJi">
+                                <menuItem title="Raster Files" enabled="NO" id="1Jh-Vm-xJi">
                                     <attributedString key="attributedTitle">
-                                        <fragment content="Sequential Files">
+                                        <fragment content="Raster Files">
+                                            <attributes>
+                                                <font key="NSFont" metaFont="toolTip"/>
+                                                <paragraphStyle key="NSParagraphStyle" alignment="natural" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
+                                            </attributes>
+                                        </fragment>
+                                    </attributedString>
+                                    <modifierMask key="keyEquivalentModifierMask"/>
+                                </menuItem>
+                                <menuItem title="PNG" id="4W6-bu-kaR"/>
+                                <menuItem title="JPEG" id="0qw-ua-TC9"/>
+                                <menuItem title="TIFF" id="mwT-zZ-3Ey"/>
+                                <menuItem title="GIF" id="a7B-K1-13X"/>
+                                <menuItem isSeparatorItem="YES" id="Qfu-ho-ZMc"/>
+                                <menuItem title="Vector Files" enabled="NO" id="dks-HR-pKt">
+                                    <attributedString key="attributedTitle">
+                                        <fragment content="Vector Files">
                                             <attributes>
                                                 <font key="NSFont" metaFont="toolTip"/>
                                                 <paragraphStyle key="NSParagraphStyle" alignment="natural" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
@@ -251,10 +267,6 @@
                                     <modifierMask key="keyEquivalentModifierMask"/>
                                 </menuItem>
                                 <menuItem title="EPS" id="aqh-1o-Tyw"/>
-                                <menuItem title="PNG" id="4W6-bu-kaR"/>
-                                <menuItem title="TIFF" id="mwT-zZ-3Ey"/>
-                                <menuItem title="JPEG" id="0qw-ua-TC9"/>
-                                <menuItem title="GIF" id="a7B-K1-13X"/>
                             </items>
                         </menu>
                     </popUpButtonCell>
