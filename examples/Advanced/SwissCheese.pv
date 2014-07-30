@@ -3,18 +3,12 @@
 # circle. It demonstrates the use of boolean operations on paths.
 
 size(300, 300)
-background(0.0, 0.0, 0.15)
-
-# We define a custom circle function that draws from the middle.
-# This is easier to work with in this case than the regular oval
-# function.
-def circle(x, y, sz, draw=True):
-    return oval(x-sz, y-sz, sz*2, sz*2, draw)
+# background(0.0, 0.0, 0.15)
 
 # Now create the "cheese" -- the central circle in the middle.
 # Don't draw it yet, since we will be creating a new path were
 # pieces are cut out off.
-cheese = circle(WIDTH/2, HEIGHT/2, 130, draw=False)
+cheese = arc(WIDTH/2, HEIGHT/2, 130, plot=False)
 # Instead of the circle, you can use any arbitrary path.
 # Try out the following lines to use a letter.
 #font("Helvetica-Bold", 400)
@@ -26,7 +20,7 @@ for i in range(10):
     x = random(WIDTH)
     y = random(HEIGHT)
     sz = random(10, 60)
-    c = circle(x, y, sz, draw=False)
+    c = arc(x, y, sz, plot=False)
     # Now comes the central part: create a new path out of the cheese
     # that is the difference between the cheese and the newly created
     # circle. Save this in cheese (so the old cheese gets overwritten.
@@ -42,12 +36,11 @@ for i in range(10):
 
 # Here's a little caveat: you can only draw an object once.
 # Here, we create a copy of the cheese to use as a shadow object.
-shadow_cheese = BezierPath(cheese)
 fill(0.1)
-drawpath(shadow_cheese)
+bezier(cheese)
 
 # Once the shadow is drawn, translate the original cheese and
 # draw it as well.
 translate(-3, -3)
-fill(0.3, 0.9, 0.1,  0.8)
-drawpath(cheese)
+fill(1, 0.9, 0.1,  0.8)
+bezier(cheese)
