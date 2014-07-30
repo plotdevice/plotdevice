@@ -118,17 +118,17 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def curveto(self, x1, y1, x2, y2, x3, y3):
         self._nsBezierPath.curveToPoint_controlPoint1_controlPoint2_( (x3, y3), (x1, y1), (x2, y2) )
 
-    def arcto(self, x, y, cx=None, cy=None, radius=None, ccw=False):
-        if cx is not None and cy is not None:
-            # arc toward the control point then turn to the x,y dest point. round off the triangle
-            # created between the current point, the control point, and the dest point with an arc
-            # of the given radius.
+    def arcto(self, x1, y1, x2=None, y2=None, radius=None, ccw=False):
+        if x2 is not None and y2 is not None:
+            # arc toward the x1,y1 control point then turn toward the x2,y2 dest point. round off the
+            # triangle created between the current point, the control point, and the dest point with
+            # an arc of the given radius.
             #
             # Take a look at the Adding Arcs section of apple's docs for some important edge cases:
             # https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaDrawingGuide/Paths/Paths.html
             radius = 1.0 if radius is None else radius
-            self._nsBezierPath.appendBezierPathWithArcFromPoint_toPoint_radius_( (cx,cy), (x,y), radius)
-            self._nsBezierPath.lineToPoint_( (x,y) )
+            self._nsBezierPath.appendBezierPathWithArcFromPoint_toPoint_radius_( (x1,y1), (x2,y2), radius)
+            self._nsBezierPath.lineToPoint_( (x2,y2) )
         else:
             # create a unitary semicircle...
             k = 0.5522847498 / 2.0
@@ -139,12 +139,12 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
             # ...and transform it to match the endpoints
             src = self._nsBezierPath.currentPoint()
-            theta = geometry.angle(src.x, src.y, x, y)
-            dw = geometry.distance(src.x, src.y, x, y)
+            theta = geometry.angle(src.x, src.y, x1, y1)
+            dw = geometry.distance(src.x, src.y, x1, y1)
             dh = dw*(-1.0 if ccw else 1.0)
             t = Transform()
             t.translate(src.x,src.y)
-            t.rotate(theta)
+            t.rotate(-theta)
             t.scale(dw, dh)
             p.transformUsingAffineTransform_(t._nsAffineTransform)
             self.extend(Bezier(p)[1:]) # omit the initial moveto in the semicircle

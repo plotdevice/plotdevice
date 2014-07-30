@@ -281,7 +281,7 @@ class Context(object):
         if close:
             self._path.closepath()
 
-    def arcto(self, x, y, cx=None, cy=None, radius=None, ccw=False, close=False):
+    def arcto(self, x1, y1, x2=None, y2=None, radius=None, ccw=False, close=False):
         """Draw a circular arc from the current point in the active path to a destination point
 
         To draw a semicircle to the destination point use one of:
@@ -291,13 +291,13 @@ class Context(object):
         To draw a parabolic arc in the triangle between the current point, an
         intermediate control point, and the destination; choose a radius small enough
         to fit in that angle and call:
-            arcto(dest_x, dest_y, cp_x, cp_y, radius)
+            arcto(mid_x, mid_y, dest_x, dest_y, radius)
 
         Calling with close=True will close the subpath after adding the arc.
         """
         if self._path is None:
             raise DeviceError, "No active path. Use bezier() or beginpath() first."
-        self._path.arcto(x, y, cx, cy, radius, ccw)
+        self._path.arcto(x1, y1, x2, y2, radius, ccw)
         if close:
             self._path.closepath()
 
