@@ -2,6 +2,7 @@ import linecache, re
 from sys import exc_info
 from os.path import abspath, dirname, relpath
 from traceback import format_list, format_exception_only
+from AppKit import NSBundle
 
 def encoding(src):
     """Searches the first two lines of a string looking for an `# encoding: ???` comment."""
@@ -64,7 +65,7 @@ def coredump(script=None, src=None, syntax=True):
 
     return [format_exception_only(etype, value), frames]
 
-def extract_tb(tb, script=None, src=None, debug=True):
+def extract_tb(tb, script=None, src=None):
     """Return a list of pre-processed entries from traceback."""
     list = []
     n = 0
@@ -84,7 +85,8 @@ def extract_tb(tb, script=None, src=None, debug=True):
         list.append((filename, lineno, name, line))
         tb = tb.tb_next
 
-    # omit the internal plotdevice stack frames unless debugging
+    # omit the internal plotdevice stack frames in `dist` builds
+    debug = 'flux' in NSBundle.mainBundle().infoDictionary().get('CFBundleVersion','')
     if not debug:
         moduledir = abspath(dirname(dirname(__file__)))
         return [frame for frame in list if moduledir not in frame[0]]
