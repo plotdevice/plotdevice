@@ -7,7 +7,7 @@ from collections import namedtuple, defaultdict
 from plotdevice import DeviceError, INTERNAL as DEFAULT
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes
 from .colors import Color
-from .transform import Transform
+from .transform import Transform, Dimension
 
 _ctx = None
 __all__ = [
@@ -160,6 +160,8 @@ class BoundsMixin(Grob):
     def _get_x(self):
         return self._bounds.x
     def _set_x(self, x):
+        if isinstance(x, Dimension):
+            x = float(x)
         if not isinstance(x, (int,float)):
             raise DeviceError('x coordinate must be int or float (not %r)'%type(x))
         self._bounds = self._bounds._replace(x=x)
@@ -168,6 +170,8 @@ class BoundsMixin(Grob):
     def _get_y(self):
         return self._bounds.y
     def _set_y(self, y):
+        if isinstance(y, Dimension):
+            y = float(y)
         if not isinstance(y, (int,float)):
             raise DeviceError('y coordinate must be int or float (not %r)'%type(y))
         self._bounds = self._bounds._replace(y=y)
@@ -176,6 +180,8 @@ class BoundsMixin(Grob):
     def _get_width(self):
         return self._bounds.w
     def _set_width(self, w):
+        if isinstance(w, Dimension):
+            w = float(w)
         if w and not isinstance(w, (int,float)):
             raise DeviceError('width value must be a number or None (not %r)'%type(w))
         self._bounds = self._bounds._replace(w=w)
@@ -184,6 +190,8 @@ class BoundsMixin(Grob):
     def _get_height(self):
         return self._bounds.h
     def _set_height(self, h):
+        if isinstance(h, Dimension):
+            h = float(h)
         if h and not isinstance(h, (int,float)):
             raise DeviceError('height value must be a number or None (not %r)'%type(h))
         self._bounds = self._bounds._replace(h=h)
