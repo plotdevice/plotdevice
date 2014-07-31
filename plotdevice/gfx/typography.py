@@ -299,6 +299,12 @@ class Stylesheet(object):
             badarg = 'unknown keyword argument%s for font style: %s'%('' if len(badargs)==1 else 's', eg)
             raise DeviceError(badarg)
 
+        # convert any bytestrings to unicode (presuming utf8 everywhere)
+        for k,v in kwargs.items():
+            if isinstance(v, str):
+                kwargs[k] = v.decode('utf-8')
+        args = [v.decode('utf-8') if isinstance(v,str) else v for v in args]
+
         # start with kwarg values as the canonical settings
         _canon = ('family','size','weight','italic','width','variant','leading','fill')
         spec = {k:v for k,v in kwargs.items() if k in _canon}
@@ -308,6 +314,12 @@ class Stylesheet(object):
             spec.setdefault('size', kwargs['fontsize'])
         if 'lineheight' in kwargs:
             spec.setdefault('leading', kwargs['lineheight'])
+
+        # validate the weight and width args (if any)
+        if not weighty(spec.get('weight','regular')):
+            print 'Font: unknown weight "%s"' % spec.pop('weight')
+        if not widthy(spec.get('width','condensed')):
+            print 'Font: unknown width "%s"' % spec.pop('width')
 
         # look for a postscript name passed as `face` or `fontname` and validate it
         basis = kwargs.get('face', kwargs.get('fontname'))
@@ -332,7 +344,7 @@ class Stylesheet(object):
             if isinstance(item, Font):
                 spec.setdefault('face', item._face)
                 spec.setdefault('size', item._size)
-            elif isinstance(item, basestring):
+            elif isinstance(item, unicode):
                 if facey(item):
                     spec.setdefault('face', item)
                 elif widthy(item):
@@ -342,7 +354,7 @@ class Stylesheet(object):
                 elif fammy(item):
                     spec.setdefault('family', family_name(item))
                 else:
-                    print 'font(): unintelligible weight or family name "%s"'%item
+                    print 'Font: unintelligible weight or family name "%s"'%item
             elif isinstance(item, (int, float, long)):
                 spec.setdefault('size', item)
         return spec
