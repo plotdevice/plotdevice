@@ -314,7 +314,7 @@ class StyleMixin(Grob):
     ctxAttrs = ('_stylesheet', '_typestyle', '_fillcolor',)
     stateAttrs = ('_style',)
     opts = ('fill','family','size','leading','weight','width','variant','italic','fill','face',
-              'fontname','fontsize','lineheight')
+              'fontname','fontsize','lineheight','font')
 
     def __init__(self, **kwargs):
         super(StyleMixin, self).__init__(**kwargs)
@@ -325,9 +325,12 @@ class StyleMixin(Grob):
 
         # combine ctx state and kwargs to create a DEFAULT style
         from .typography import Stylesheet
-        spec = {k:v for k,v in kwargs.items() if k in StyleMixin.opts}
-        baseline = self._typestyle._asdict()       # font() settings
-        baseline.update(Stylesheet._spec(**spec))  # inline style params
+        fontargs = kwargs.get('font',[])
+        if not isinstance(fontargs, (list,tuple)):
+            fontargs = [fontargs]
+        fontspec = {k:v for k,v in kwargs.items() if k in StyleMixin.opts}
+        baseline = self._typestyle._asdict() # current font() setting
+        baseline.update(Stylesheet._spec(*fontargs, **fontspec)) # inline style params
         self._stylesheet._styles[DEFAULT] = baseline
 
         # color & style overrides

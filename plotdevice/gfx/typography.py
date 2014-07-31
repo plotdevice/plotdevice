@@ -167,7 +167,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
 class Stylesheet(object):
     kwargs = ('family','size','leading','weight','width','variant','italic','fill','face',
-              'fontname','fontsize','lineheight')
+              'fontname','fontsize','lineheight','font')
 
     def __init__(self, styles=None):
         super(Stylesheet, self).__init__()
