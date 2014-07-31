@@ -166,8 +166,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         return self._spool.typeblock.size
 
 class Stylesheet(object):
-    kwargs = ('family','size','leading','weight','width','variant','italic','fill','face',
-              'fontname','fontsize','lineheight','font')
+    kwargs = StyleMixin.opts
 
     def __init__(self, styles=None):
         super(Stylesheet, self).__init__()
@@ -385,9 +384,11 @@ class Typesetter(object):
 
     @property
     def offset(self):
+        if not self.store.length():
+            return 0
+
         txtFont, _ = self.store.attribute_atIndex_effectiveRange_("NSFont", 0, None)
-        h = self.layout.defaultLineHeightForFont_(txtFont)
-        return h
+        return self.layout.defaultLineHeightForFont_(txtFont)
 
     @property
     def nsBezierPath(self):
