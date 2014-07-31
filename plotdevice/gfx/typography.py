@@ -78,15 +78,23 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
     @property
     def _screen_position(self):
-        x,y = self.x, self.y
-        if self.width is not None:
-            printer = self._spool
+        """Returns the origin point for a Bezier containing the outlined text.
+
+        The coordinates will reflect the current text-alignment and baseline heigh."""
+
+        printer = self._spool
+        if self.width is None:
+            col_w, col_h = 0, 0
+        else:
             col_w, col_h = printer.colsize
-            (dx, dy), (w, h) = printer.typeblock
-            if self._typestyle.align == RIGHT:
-                x += col_w - w
-            elif self._typestyle.align == CENTER:
-                x += (col_w-w)/2
+
+        x,y = self.x, self.y
+        (dx, dy), (w, h) = printer.typeblock
+        if self._typestyle.align == RIGHT:
+            x += col_w - w
+        elif self._typestyle.align == CENTER:
+            x += (col_w-w)/2
+        y -= printer.offset
         return (x,y)
 
     @property
@@ -131,14 +139,12 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     @property
     def path(self):
         # calculate the proper transform for alignment and flippedness
-        printer = self._spool
-        x,y = self._screen_position
         trans = Transform()
-        trans.translate(x, y-printer.offset)
+        trans.translate(*self._screen_position)
         trans.scale(1.0,-1.0)
 
         # generate an unflipped bezier with all the glyphs
-        path = Bezier(printer.nsBezierPath)
+        path = Bezier(self._spool.nsBezierPath)
         path.inherit(self)
         return trans.apply(path)
 

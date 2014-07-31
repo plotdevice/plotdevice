@@ -1023,15 +1023,14 @@ class Context(object):
               txt.draw()
             return txt
 
-    def textpath(self, txt, x, y, width=None, height=None, style=None, **kwargs):
+    def textpath(self, txt, x, y, **kwargs):
         """Format a string with the current font() settings and return it as a Bezier
 
         textpath() accepts the same arguments as text() and is a shorthand for
         text(txt, outline=True, plot=False).
         """
-        txt = Text(txt, x, y, width, height, style, **kwargs)
-        # txt.inherit()
-        return txt.path
+        text_args = {k:v for k,v in kwargs.items() if k in Text._opts}
+        return Text(txt, x, y, **text_args).path
 
     def textmetrics(self, txt, width=None, height=None, style=None, **kwargs):
         """Legacy command. Equivalent to: measure(txt, width, height)"""
