@@ -246,10 +246,16 @@ def sanitized(unclean):
     return cleaned[0] if single else cleaned
 
 def fammy(word):
-    return bool(family_name(word))
+    try:
+        family_name(word)
+    except DeviceError:
+        return False
+    return True
 
 def facey(word):
-    return word in _fm.availableFonts() and word not in _fm.availableFontFamilies()
+    if word in _fm.availableFontFamilies():
+        return False
+    return word in _fm.availableFonts() or NSFont.fontWithName_size_(word,9)
 
 def widthy(word):
     return sanitized(word) in wid_corpus+wid_abbrevs.keys()

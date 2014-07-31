@@ -325,13 +325,6 @@ class Stylesheet(object):
             # unclear whether it's better to handle this in _inherit to avoid
             # messing with the way Font uses _spec...
 
-        # allow for negative values in the weight step params, but
-        # normalize them in the spec
-        mod = int(kwargs.get('heavier', -kwargs.get('lighter', 0)))
-        if mod:
-            direction = 'lighter' if mod < 0 else 'heavier'
-            spec[direction] = abs(mod)
-
         # search the positional args for either name/size or a Font object
         # we want the kwargs to have higher priority, so setdefault everywhere...
         for item in args:
@@ -350,23 +343,10 @@ class Stylesheet(object):
                 elif fammy(item):
                     spec.setdefault('family', family_name(item))
                 else:
-                    print 'No clue what to make of "%s"'%item
+                    print 'font(): unintelligible weight or family name "%s"'%item
             elif isinstance(item, (int, float, long)):
                 spec.setdefault('size', item)
         return spec
-
-
-
-# UIFontDescriptor* desc =
-#     [UIFontDescriptor fontDescriptorWithName:@"Didot" size:18];
-#     NSArray* arr =
-#     @[@{UIFontFeatureTypeIdentifierKey:@(kLetterCaseType),
-#         UIFontFeatureSelectorIdentifierKey:@(kSmallCapsSelector)}];
-#     desc =
-#     [desc fontDescriptorByAddingAttributes:
-#      @{UIFontDescriptorFeatureSettingsAttribute:arr}];
-#     UIFont* f = [UIFont fontWithDescriptor:desc size:0];
-
 
 class Typesetter(object):
 
