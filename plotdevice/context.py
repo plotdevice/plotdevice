@@ -1394,6 +1394,10 @@ class Canvas(object):
         # import cProfile
         # cProfile.runctx('[grob._draw() for grob in self._grobs*10]', globals(), {"self":self}, sort='cumulative')
 
+    @property
+    def _nsImage(self):
+        return self.rasterize()
+
     def rasterize(self, zoom=1.0):
         """Return an NSImage with the canvas dimensions scaled to the specified zoom level"""
         w,h = self.pagesize
