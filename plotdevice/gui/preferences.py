@@ -1,8 +1,10 @@
 import re
 import os
 import json
-from AppKit import *
-from Foundation import *
+import objc
+from AppKit import NSWindowController, NSFontManager, NSNotificationCenter, NSColor, NSFont
+from AppKit import NSMacOSRomanStringEncoding, NSFixedPitchFontMask, NSUnboldFontMask, NSUnitalicFontMask
+from Foundation import NSUserDefaults
 from subprocess import Popen, PIPE
 from plotdevice.gui import bundle_path, set_timeout
 
