@@ -65,14 +65,13 @@ def possibleToolLocations():
     localbin = '/usr/local/bin/plotdevice'
     locations = [homebin, localbin]
 
-    # find the user's path by launching the same shell Terminal.app uses
-    # and peeking at the $PATH
-    term = NSUserDefaults.standardUserDefaults().persistentDomainForName_('com.apple.Terminal')
-    if term:
-        setting = term['Default Window Settings']
-        shell = term['Window Settings'][setting]['CommandString']
-        p = Popen([shell,"-l"], stdout=PIPE, stderr=PIPE, stdin=PIPE)
-        out, err = p.communicate("echo $PATH")
+    # find the user's login shell
+    out, _ = Popen(['dscl','.','-read',os.environ['HOME'],'UserShell'], stdout=PIPE).communicate()
+    shell = out.replace('UserShell:','').strip()
+
+    # try launching a shell to extract the user's path
+    if shell:
+        out, _ = Popen([shell,"-l"], stdout=PIPE, stderr=PIPE, stdin=PIPE).communicate("echo $PATH")
         for path in out.strip().split(':'):
             path += '/plotdevice'
             if '/sbin' in path: continue
