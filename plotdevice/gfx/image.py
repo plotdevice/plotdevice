@@ -26,11 +26,10 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
     stateAttrs = ('_nsImage',)
     opts = ('data',)
 
-    # def __init__(self, path, x=0, y=0, width=None, height=None, **kwargs):
     def __init__(self, *args, **kwargs):
         """
         Positional parameters:
-          - path: the path to an image file, or an existing Image object
+          - src: the path to an image file, an existing Image object, or the `canvas` global
           - x & y: position of top-left corner
           - width & height: limit either or both dimensions to a maximum size
               If a width and height are both given, the narrower dimension is used
@@ -49,34 +48,42 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
            Image(<Image object>, x, y, height=h)
            Image(x, y, data='<raw bytes from an image file>')
            Image(x, y, data='base64,<b64-encoded bytes>')
+           Image(canvas, x, y)
         """
-        super(Image, self).__init__(**kwargs)
 
-        # look for a path or Image as the first arg, or a `data` kwarg
+        # look for a path or Image as the first arg, or a `data` kwarg (plus `image` for compat)
         args = list(args)
         data = kwargs.get('data', None)
-        src = kwargs.get('path', None)
+        src = kwargs.get('path', kwargs.get('image', None))
         if args and not (src or data):
             src = args.pop(0)
 
-        # self.x, self.y = kwargs.get('x',0), kwargs.get('y',0)
-        # self.width, self.height = kwargs.get('width',None), kwargs.get('height',None)
-        for attr, val in zip(['x','y','width','height'], args):
-            setattr(self, attr, val)
-
+        # get an NSImage reference (once way or another)
         if data:
             self._nsImage = self._lazyload(data=data)
         elif src:
             if isinstance(src, NSImage):
-                self._nsImage = image
+                self._nsImage = src.copy()
                 self._nsImage.setFlipped_(True)
-            elif isinstance(src, Image):
-                self.inherit(src)
+            elif hasattr(src, '_nsImage'):
+                self._nsImage = src._nsImage
             elif isinstance(src, basestring):
                 self._nsImage = self._lazyload(path=src)
             else:
                 invalid = "Not a valid image source: %r" % type(src)
                 raise DeviceError(invalid)
+
+        # incorporate positional bounds args
+        for attr, val in zip(['x','y','width','height'], args):
+            kwargs.setdefault(attr, val)
+
+        # let the mixins handle bounds & effects
+        super(Image, self).__init__(**kwargs)
+
+        # make real copies when passed another instance as the source
+        if isinstance(src, Image):
+            self.inherit(src)
+
 
     def _lazyload(self, path=None, data=None):
         # loads either a `path` or `data` kwarg and returns an NSImage
