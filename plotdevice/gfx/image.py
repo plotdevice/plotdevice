@@ -56,7 +56,9 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
         data = kwargs.get('data', None)
         src = kwargs.get('path', kwargs.get('image', None))
         if args and not (src or data):
-            src = args.pop(0)
+            src = args.pop(0) # use first arg if image wasn't in kwargs
+        elif args and args[0] is None:
+            args.pop(0) # make image(None, 10,20, image=...) work properly for compat
 
         # get an NSImage reference (once way or another)
         if data:
@@ -77,12 +79,13 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
         for attr, val in zip(['x','y','width','height'], args):
             kwargs.setdefault(attr, val)
 
+        # incorporate existing bounds when working with an Image
+        if isinstance(src, Image):
+            for attr in ['x','y','width','height']:
+                kwargs.setdefault(attr, getattr(src, attr))
+
         # let the mixins handle bounds & effects
         super(Image, self).__init__(**kwargs)
-
-        # make real copies when passed another instance as the source
-        if isinstance(src, Image):
-            self.inherit(src)
 
 
     def _lazyload(self, path=None, data=None):
