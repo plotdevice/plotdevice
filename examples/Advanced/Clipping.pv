@@ -1,60 +1,57 @@
 size(300,300)
-# Examples of clipping in NodeBox.
-# NodeBox can clip to any path using the beginclip() and endclip() commands.
-# The beginclip can take any path, be it one of the drawing primitives or text 
-# (using the textpath command demonstrated below)
+# PlotDevice can use any Bezier path as a clipping "mask" to matte-out
+# shapes you draw to the canvas. The clip() and mask() commands work with
+# drawing primitives as well as text and images.
 
-# ---- PART 1: Clipping Primitives ---- #
+# ---- Clipping with Primitive Shapes ---- #
 
-# Transformation commands can have an effect on the clipped path, the things within
-# the clipped path, or both. If you only want to rotate the clipped path 
-# (and not subsequent draws), make sure you surround the command that generates the path 
-# (in this case, the arrow) with push() and pop().
-push()
+# Transformation commands can have an effect on the clipped path, the
+# drawing that occurs within the clipping mask, or both. In this case
+# we only want our arrow-shaped mask to be rotated (not its contents).
+# So we'll generate its Bezier inside a `with rotate' block.
+
 # Rotate the arrow to let it point down.
-rotate(-90)
-# The last parameter instructs the command not to draw the output, but return it as a path.
-p = arrow(250, 100, 200, draw=False)
-pop()
+with rotate(-90):
+    # The last parameter instructs the command to return the arrow shape
+    # as a Bezier object rather than drawing it to the canvas.
+    p = arrow(250, 100, 200, plot=False)
 
-# The path is an object that has several useful methods. We use the bounds method to 
-# get the bounding box of the arrow, used for defining where we should draw the ovals.
+# Beziers have a particularly useful property called `bounds` that returns
+# the dimensions of the "bounding box". We'll use these coordinates to
+# figure out where to draw ovals so they lie inside the visible portion.
 (x,y), (w,h) = p.bounds
 
-# Begin the clipping operation.
-# All drawing methods inside of the beginclip() and endclip() are clipped according
-# to the given path.
-beginclip(p)
-# Draw 200 ovals of a random size.
-for i in range(200):
-    fill(random(), 0.7, 0, random())
-    s = random(50)
-    oval(x+random(w), y+random(h), s, s)
-endclip()
+# All drawing commands inside of the `with clip()' block are clipped
+# according to the given path (in this case the arrow we just defined).
+with clip(p):
+    # Draw 200 rects of a random size and position them within the bounds
+    for i in range(200):
+        fill(random(), 0.7, 0, random())
+        s = random(50)
+        rect(x+random(w), y+random(h), s, s)
 
-# ---- PART 2: Clipping Text ---- #
-# There is no fundamental difference in clipping text or primitives: 
-# all you have to do is to use the textpath command to return the path. 
-# Note that you CANNOT use text("<string>", x, y, draw=False).
+# ---- Clipping with Text ---- #
 
-# Set the font. Note that all state operations work as expected for the textpath
-# command, such as font, align, and giving a width.
-font('Lucida Grande Bold', 72)
+# Clipping with text works just like clipping with shapes. The clip() and
+# mask() commands can both work with text() objects, but in this case we'll
+# use textpath() to generate a Bezier instead (since we need to access its
+# `bounds` property).
+
+# Set the font. Note that all state operations work as expected for the
+# textpath() command just as they would with text()
+font("Lucida Grande", "bold", 72)
 align(CENTER)
-# Return a path that can be used for clipping. Textpaths never draw on screen.
-p = textpath("Clippy!", 0, 270, width=300)
 
-# The path is an object that has several useful methods. We use the bounds method to 
-# get the bounding box of the arrow, used for defining where we should draw the ovals.
+# Return a path that can be used for clipping. Textpaths never draw on screen.
+p = textpath("Clipped", WIDTH/2, 270)
+
+# As before, we'll use the Bezier path's bounds to position our clipped contents
 (x,y), (w,h) = p.bounds
-# Begin the clipping operation.
-# All drawing methods inside of the beginclip() and endclip() are clipped according
-# to the given path.
-beginclip(p)
-# Draw 200 rectangles of a random size.
-for i in range(105):
-    fill(random(), random(), 0, random())
-    s = random(50)
-    rotate(random(5, -5))
-    rect(x+random(w), y+random(h), s, s)
-endclip()
+
+# use the text's boundaries as a clipping mask
+with clip(p):
+    # Draw 200 circles with random sizes and positions.
+    for i in range(105):
+        fill(random(), random(), 0, random())
+        s = random(30)
+        arc(x+random(w), y+random(h), s)

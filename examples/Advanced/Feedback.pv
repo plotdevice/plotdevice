@@ -1,9 +1,11 @@
-# NodeBox allows you to query the current state of the canvas, and even
-# the contents of it as an image. This allows for some nice feed-back effects.
+# PlotDevice allows you to query the current state of the canvas,
+# and even use its contents as an image. This allows for some trippy
+# feed-back effects.
 size(500, 500)
 
-# Currently, we use a background, so all content gets replaced.
-# Enabling the next line to get a transparent background.
+# By default, the canvas draws a white background, so as we overlay
+# each copy it replaces everything below it. Try uncommenting the
+# next line to use a transparent background instead:
 # background(None)
 
 # Draw some ovals on screen, just to get something to display.
@@ -12,12 +14,14 @@ for i in range(1000):
 
 # Now do the feedback ten times.
 for i in range(10):
-    # Scale each copy down a bit, and rotate it. This gives the familiar feedback effect.
-    # Play with these parameters to get other effects.
+    # Scale each copy down a bit and rotate it. This gives the familiar
+    # betacam-pointing-at-a-television feedback effect. You can play with
+    # these parameters to get other effects.
     scale(0.98)
     rotate(1)
-    # This is the trick. We don't use an image from file, but we load image data from the canvas.
-    # The canvas is a variable set in the local namespace: it has a private _nsImage property 
-    # that renders its current contents as an NSImage, which the image command accepts.
-    # Try blurring the image: add alpha=0.8
-    image(None, random(-50,49), random(-50,49), image=canvas._nsImage)
+
+    # Here's the tricky bit. We call the image() command but rather than
+    # passing it the path to an image file, we use the contents of the
+    # canvas itself (using the `canvas` variable in the local namespace).
+    # Try blurring the image by addding: alpha=0.8
+    image(canvas, random(-50,49), random(-50,49))

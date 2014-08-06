@@ -1,36 +1,38 @@
 # A simple animation example.
-# The hypnotating ovals use a little bit of math to
-# make smooth animations, notably sinus and cosinus functions.
-# NodeBox knows a script is an animation when it calls the "speed" method.
-# Animation scripts always contain:
-#  - a setup method that is run once, at the start of the animation
+# The hypnotizing ovals use a little bit of math to make smooth animations.
+# PlotDevice knows a script is an animation if it defines a function called
+# 'draw'. Animation scripts can contain:
+#  - a setup method that is run once (at the start of the animation)
 #  - a draw method that is run for every frame.
-# Variables that you want to use in your script should be declared global.
+#  - a stop method that is run once (at the end of the animation)
+# Variables that you want to use in your script should be defined as
+# globals or added as attributes to the optional dictionary argument
+# passed to your functions. Here we've named the argument `anim` but you
+# can choose whatever name you like (or omit it entirely).
 
-# Because we use some math functions, we import sinus and cosinus functions
-# from the math library.
+# Because we'll be doing some trig, we import sine and cosine functions
+# from the stdlib's math module.
 from math import sin, cos
 
 size(300,300)
 
-# This method indicates this script will be an animation.
+# Set the animation speed to 30 frames per second
 speed(30)
 
 # The setup method is called once, at the start of the animation.
 # Here, it initializes the counter.
-def setup():
-    global cnt
-    cnt = 0.0
+def setup(anim):
+    anim.counter = 0.0
 
-# The draw method is called for every frame.
-# Here, it draws the oval grid.
-def draw():
-    global cnt
-    # We use an internal counter that modifies each
-    # oval slightly
+# The draw method is called for every frame. Here it draws an oval grid.
+def draw(anim):
+    # We use an internal counter that modifies each oval slightly
+    cnt = anim.counter
     s = 0.0
+
     # Move the canvas a bit.
     translate(29,40)
+
     # Draw a grid of 5 by 5.
     for x, y in grid(5,5,45,42):
         # Oscillate the fill color.
@@ -39,5 +41,7 @@ def draw():
         oval(x + sin(cnt+s)*10.0, y + cos(cnt+s)*-6.0, 41.0, 36.0)
         # Increase the counter so that every oval looks a bit different.
         s += 0.05
-    # Increase the global counter.
-    cnt += 0.19
+
+    # Increase the global counter. The `anim` object will stick around
+    # between calls to setup, draw, and stop.
+    anim.counter += 0.19

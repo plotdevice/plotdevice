@@ -151,11 +151,11 @@ def images(x, y):
     bmp = image("icon.png", x,y, width=w/2, plot=False) # half size
     plot(bmp)
     with translate(125,0), rotate(90):                  # half size, rotated
-        plot(bmp, inherit=True)
+        image(bmp)
     with translate(259,0), rotate(180), scale(2.0):     # doubled (back to full size), flipped
-        plot(bmp, inherit=True)
+        image(bmp)
     with translate(375,0), scale(2.0), shadow(.8, blur=10): # doubled (back to full size), dropshadowed
-        plot(bmp, inherit=True)
+        image(bmp)
 
 def classicpaths():
     beginpath(165, 140)

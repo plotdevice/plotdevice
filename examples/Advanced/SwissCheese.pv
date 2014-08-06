@@ -1,20 +1,19 @@
 # Swiss Cheese Factory
 # This program makes swiss cheese by cutting out circles from another
 # circle. It demonstrates the use of boolean operations on paths.
-
 size(300, 300)
-# background(0.0, 0.0, 0.15)
 
-# Now create the "cheese" -- the central circle in the middle.
-# Don't draw it yet, since we will be creating a new path were
-# pieces are cut out off.
+# First, create the "cheese" -- the central circle in the middle.
+# But don't plot it yet, since we will be creating a new path
+# with holes poked out of it.
 cheese = arc(WIDTH/2, HEIGHT/2, 130, plot=False)
-# Instead of the circle, you can use any arbitrary path.
-# Try out the following lines to use a letter.
-#font("Helvetica-Bold", 400)
-#cheese = textpath("S", 7, 291)
 
-# Do ten punches out of the cheese
+# Instead of the circle, we could use any arbitrary path.
+# Try uncommenting the following lines to use a letter:
+# font("Helvetica","bold", 400)
+# cheese = textpath("S", 7, 291)
+
+# Punch ten holes in the cheese
 for i in range(10):
     # Make a circle somewhere on the canvas, with a random size.
     x = random(WIDTH)
@@ -23,24 +22,23 @@ for i in range(10):
     c = arc(x, y, sz, plot=False)
     # Now comes the central part: create a new path out of the cheese
     # that is the difference between the cheese and the newly created
-    # circle. Save this in cheese (so the old cheese gets overwritten.
+    # circle. Save this in cheese (overwriting the old value).
     cheese  = cheese.difference(c, 0.1)
+
     # Another cool effect is to mirror the cutouts. Here, we create a
     # mirrored copy of the circle, then cut it out of the cheese
     # as well. (You might want to change the number of punchouts.)
-    #mx = WIDTH - x
-    #c = circle(mx, y, sz, draw=False)
-    #cheese  = cheese.difference(c, 0.1)
+    # mx = WIDTH - x
+    # c = arc(mx, y, sz, plot=False)
+    # cheese  = cheese.difference(c, 0.1)
 
-# Now that the cheese is ready, draw it.
-
-# Here's a little caveat: you can only draw an object once.
-# Here, we create a copy of the cheese to use as a shadow object.
+# Now that the cheese is ready, draw it. First we pass it to the
+# bezier() command with a dark fill color to draw a "shadow".
 fill(0.1)
 bezier(cheese)
 
-# Once the shadow is drawn, translate the original cheese and
-# draw it as well.
+# Once the shadow is drawn, translate the canvas a bit and draw the
+# path again in glorious yellow:
 translate(-3, -3)
 fill(1, 0.9, 0.1,  0.8)
 bezier(cheese)
