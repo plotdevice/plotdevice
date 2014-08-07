@@ -24,11 +24,13 @@ with rotate(-90):
 # All drawing commands inside of the `with clip()' block are clipped
 # according to the given path (in this case the arrow we just defined).
 with clip(p):
-    # Draw 200 rects of a random size and position them within the bounds
-    for i in range(200):
-        fill(random(), 0.7, 0, random())
-        s = random(50)
-        rect(x+random(w), y+random(h), s, s)
+    # draw 200 randomly-rotated lines (actually rectangles with a height of 1)
+    # positioned within the bounds of the clipping mask
+    for i in range(400):
+        fill(random(), random(), 0, random())
+        s = random(30, 120)
+        with rotate(random(45, 135)):
+            rect(x+random(w)-s/2, y+random(h), s, 1)
 
 # ---- Clipping with Text ---- #
 
@@ -39,19 +41,19 @@ with clip(p):
 
 # Set the font. Note that all state operations work as expected for the
 # textpath() command just as they would with text()
-font("Lucida Grande", "bold", 72)
+font("Bodoni", "bold", 72)
 align(CENTER)
 
 # Return a path that can be used for clipping. Textpaths never draw on screen.
-p = textpath("Clipped", WIDTH/2, 270)
+p = textpath("Stencil", WIDTH/2, 270)
 
 # As before, we'll use the Bezier path's bounds to position our clipped contents
 (x,y), (w,h) = p.bounds
 
 # use the text's boundaries as a clipping mask
 with clip(p):
-    # Draw 200 circles with random sizes and positions.
-    for i in range(105):
-        fill(random(), random(), 0, random())
-        s = random(30)
+    # Draw 200 rects of a random size and position them within the bounds
+    for i in range(200):
+        fill(random(), 0.7, 0, random())
+        s = random(20)
         arc(x+random(w), y+random(h), s)
