@@ -12,6 +12,7 @@ from Quartz.PDFKit import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attrs
+from ..util.http import GET
 from ..lib.io import MovieExportSession, ImageExportSession
 from .transform import Region, Size, Point, Transform, CENTER
 from .atoms import TransformMixin, EffectsMixin, BoundsMixin, Grob
@@ -110,23 +111,36 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
             # ...or load from the data
             image = NSImage.alloc().initWithData_(data)
         elif path is not None:
-            # return a cached image if possible...
-            try:
-                path = NSString.stringByExpandingTildeInPath(path)
-                mtime = os.path.getmtime(path)
+            if re.match(r'https?:', path):
+                # load from url
+                key = err_info = path
+                resp, mtime = GET(path)
+                # return a cached image if possible...
                 if path in _cache and _cache[path][1] >= mtime:
                     return _cache[path][0]
-            except:
-                notfound = 'Image "%s" not found.' % path
-                raise DeviceError(notfound)
-            key = err_info = path
-            # ...or load from the file
-            image = NSImage.alloc().initWithContentsOfFile_(path)
+                # ...or load from the data
+                bytes = resp.read()
+                data = NSData.dataWithBytes_length_(bytes, len(bytes))
+                image = NSImage.alloc().initWithData_(data)
+            else:
+                # load from file path
+                try:
+                    path = NSString.stringByExpandingTildeInPath(path)
+                    mtime = os.path.getmtime(path)
+                    # return a cached image if possible...
+                    if path in _cache and _cache[path][1] >= mtime:
+                        return _cache[path][0]
+                except:
+                    notfound = 'Image "%s" not found.' % path
+                    raise DeviceError(notfound)
+                key = err_info = path
+                # ...or load from the file
+                image = NSImage.alloc().initWithContentsOfFile_(path)
 
         # if we wound up with a valid image, configure and cache the NSImage
         # before returning it
         if image is None:
-            invalid = "Doesn't look like image data in: %r" % err_info
+            invalid = "Doesn't seem to contain image data: %r" % err_info
             raise DeviceError(invalid)
         image.setFlipped_(True)
         image.setCacheMode_(NSImageCacheNever)

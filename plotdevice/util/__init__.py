@@ -8,6 +8,7 @@ from AppKit import NSFontManager, NSFont, NSMacOSRomanStringEncoding, NSItalicFo
 from os.path import abspath, dirname, exists, join
 from random import choice, shuffle
 from plotdevice import DeviceError
+from .http import GET
 
 __all__ = ('grid', 'random', 'shuffled', 'choice', 'ordered', 'order', 'files', 'read', 'autotext', '_copy_attr', '_copy_attrs', 'odict', 'ddict', 'adict')
 
@@ -278,9 +279,10 @@ def csv_dictreader(pth, encoding, dialect=csv.excel, cols=None, dict=dict, **kwa
             # decode UTF-8 back to Unicode, cell by cell:
             yield dict( (col, unicode(cell, 'utf-8')) for (col,cell) in zip(cols,row) )
 
-def csv_dialect(pth):
-    with file(pth, 'Urb') as f:
-        return csv.Sniffer().sniff(f.read(1024))
+def csv_dialect(fd):
+    dialect = csv.Sniffer().sniff(fd.read(1024))
+    fd.seek(0)
+    return dialect
 
 def utf_8_encoder(unicode_csv_data):
     for line in unicode_csv_data:
@@ -305,20 +307,24 @@ def read(pth, format=None, encoding='utf-8', cols=None, **kwargs):
     using those names as keys. If the file doesn't define its own column names,
     you can pass a list of strings as the `cols` parameter.
     """
-    pth = re.sub(r'^~(?=/|$)',os.getenv('HOME'),pth)
+    if re.match(r'https?:', pth):
+        fd, _ = GET(pth)
+    else:
+        pth = re.sub(r'^~(?=/|$)',os.getenv('HOME'),pth)
+        fd = file(pth, 'Urb')
+
     format = format.lstrip('.') if format else pth.rsplit('.',1)[-1]
     dict_type = kwargs.get('dict', dict)
 
     if format=='json':
-        return json.load(file(pth), object_pairs_hook=dict_type, encoding=encoding)
-    elif format=='csv':
+        return json.load(fd, object_pairs_hook=dict_type, encoding=encoding)
+    elif format=='csv' and not re.match(r'https?:', pth):
         dialect = csv_dialect(pth)
         if cols:
             return list(csv_dictreader(pth, encoding, dialect=dialect, cols=cols, dict=dict_type))
         return list(csv_reader(pth, encoding, dialect=dialect))
     else:
-        with open(pth, 'Urb', encoding=encoding) as f:
-            return f.read()
+        return fd.read().decode(encoding)
 
 ### module data dir ###
 
