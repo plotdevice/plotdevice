@@ -260,7 +260,7 @@ class ScriptController(NSWindowController):
         current = frame.size
         gworld = self.graphicsView.frame().size
         scrollview = self.graphicsView.superview().superview().superview().frame().size
-        thumb_w = 9 if type(container) is NSSplitView else 0 # no thumb when running from command line
+        thumb_w = 1 if type(container) is NSSplitView else 0 # no thumb when running from command line
 
         gfx_share = scrollview.width / (current.width-thumb_w)
         best_w = round(gworld.width/gfx_share) + thumb_w
