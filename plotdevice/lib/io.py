@@ -135,7 +135,7 @@ class MovieExportSession(ExportSession):
                 self.writer = AnimatedGif.alloc()
                 self.writer.initWithFile_size_fps_loop_(self.fname, dims, self.fps, self.loop)
             else:
-                NSLog('unrecognized output format: %s' % self.format)
+                print 'unrecognized output format: %s' % self.format
                 return self.shutdown()
         self.writer.addFrame_(image)
         self.added += 1

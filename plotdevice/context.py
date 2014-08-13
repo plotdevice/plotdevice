@@ -1,9 +1,9 @@
 # encoding: utf-8
 import os, re, types
-from AppKit import *
 from contextlib import contextmanager, nested
 from collections import namedtuple
 
+from .lib.cocoa import *
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
 from .lib import geometry, pathmatics
 from .gfx.transform import Dimension

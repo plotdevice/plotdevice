@@ -2,9 +2,7 @@
 import os
 import re
 from contextlib import contextmanager
-from AppKit import *
-from Foundation import *
-from Quartz import *
+from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs

@@ -25,9 +25,8 @@ from codecs import open
 
 import plotdevice # adds pyobjc to sys.path as a side effect...
 import objc # ...otherwise this would fail
-from Foundation import *
-from AppKit import *
 from PyObjCTools import AppHelper
+from plotdevice.lib.cocoa import *
 from plotdevice.gui import ScriptController
 from plotdevice.util import rsrc_path
 from plotdevice.run import encoding

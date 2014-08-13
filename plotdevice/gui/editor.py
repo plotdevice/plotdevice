@@ -1,15 +1,12 @@
 # encoding: utf-8
 import os
 import re
-import objc
 import json
 import cgi
 from pprint import pprint
 from time import time
 from bisect import bisect
-from Foundation import *
-from AppKit import *
-from WebKit import * # (defaults write io.plotdevice.PlotDevice WebKitDeveloperExtras -bool true)
+from ..lib.cocoa import *
 from plotdevice.gui.preferences import get_default, editor_info
 from plotdevice.gui import bundle_path, set_timeout
 
@@ -47,8 +44,8 @@ class DraggyWebView(WebView):
         return True
 
 class EditorView(NSView):
-    jumpPanel = objc.IBOutlet()
-    jumpLine = objc.IBOutlet()
+    jumpPanel = IBOutlet()
+    jumpLine = IBOutlet()
 
     # WebKit mgmt
 
@@ -227,7 +224,7 @@ class EditorView(NSView):
 
     # Menubar actions
 
-    @objc.IBAction
+    @IBAction
     def editorAction_(self, sender):
         # map the tags in the nib's menu items to ace.js commandnames
         cmds = [None, 'selectline', 'centerselection', 'splitIntoLines', 'addCursorAbove', 'addCursorBelow',
@@ -235,7 +232,7 @@ class EditorView(NSView):
                       'movelinesdown', 'togglecomment']
         self.js('editor.exec', args(cmds[sender.tag()]))
 
-    @objc.IBAction
+    @IBAction
     def jumpToLine_(self, sender):
         # place the panel in the middle of the editor's rect and display it
         e_frame = self.frame()
@@ -249,7 +246,7 @@ class EditorView(NSView):
         self.jumpPanel.setFrame_display_(p_frame, False)
         self.jumpPanel.makeKeyAndOrderFront_(self)
 
-    @objc.IBAction
+    @IBAction
     def performJump_(self, sender):
         # if triggered by the ok button, jump to the line. otherwise just hide the panel if sender.tag():
         if sender.tag():
@@ -261,31 +258,31 @@ class EditorView(NSView):
                 pass # ignore non-integer input
         self.jumpPanel.orderOut_(self)
 
-    @objc.IBAction
+    @IBAction
     def aceAutocomplete_(self, sender):
         cmd = ['startAutocomplete', 'expandSnippet'][sender.tag()]
         self.js('editor.exec', args(cmd))
 
-    @objc.IBAction
+    @IBAction
     def aceWrapLines_(self, sender):
         newstate = NSOnState if sender.state()==NSOffState else NSOffState
         sender.setState_(newstate)
         self.js('editor.wrap', args(newstate==NSOnState))
 
-    @objc.IBAction
+    @IBAction
     def aceInvisibles_(self, sender):
         newstate = NSOnState if sender.state()==NSOffState else NSOffState
         sender.setState_(newstate)
         self.js('editor.invisibles', args(newstate==NSOnState))
 
-    @objc.IBAction
+    @IBAction
     def performFindAction_(self, sender):
         actions = {1:'find', 2:'findnext', 3:'findprevious', 7:'setneedle'}
         self.js('editor.exec', args(actions[sender.tag()]))
 
     # JS-initiated actions
 
-    @objc.IBAction
+    @IBAction
     def undoAction_(self, sender):
         undoredo = ['editor.undo', 'editor.redo']
         self.js(undoredo[sender.tag()])
@@ -333,7 +330,7 @@ class EditorView(NSView):
         menu.submenu().performActionForItemAtIndex_(0)
 
 class OutputTextView(NSTextView):
-    # editor = objc.IBOutlet()
+    # editor = IBOutlet()
     endl = False
     scroll_lock = True
 
@@ -453,7 +450,7 @@ class OutputTextView(NSTextView):
         self.append(outcome, 'info')
         del self._begin
 
-    @objc.IBAction
+    @IBAction
     def performFindAction_(self, sender):
         # this is the renamed target of the Find... menu items (shared with EditorView)
         # just pass the event along to the real implementation

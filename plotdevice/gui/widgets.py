@@ -1,16 +1,15 @@
 # encoding: utf-8
 import os
 from PyObjCTools import AppHelper
-from Foundation import *
-from AppKit import *
+from ..lib.cocoa import *
 import objc
 
 ## classes instantiated by PlotDeviceDocument.xib & PlotDeviceScript.xib
 
 class StatusView(NSView):
-    spinner = objc.IBOutlet()
-    counter = objc.IBOutlet()
-    cancel = objc.IBOutlet()
+    spinner = IBOutlet()
+    counter = IBOutlet()
+    cancel = IBOutlet()
 
     def awakeFromNib(self):
         self.cancel.setHidden_(True)
@@ -85,8 +84,8 @@ from plotdevice.context import NUMBER, TEXT, BOOLEAN, BUTTON
 SMALL_FONT = NSFont.systemFontOfSize_(NSFont.smallSystemFontSize())
 MINI_FONT = NSFont.systemFontOfSize_(NSFont.systemFontSizeForControlSize_(NSMiniControlSize))
 class DashboardController(NSObject):
-    script = objc.IBOutlet()
-    panel = objc.IBOutlet()
+    script = IBOutlet()
+    panel = IBOutlet()
 
     def clearInterface(self):
         for s in list(self.panel.contentView().subviews()):
@@ -227,22 +226,22 @@ class DashboardController(NSObject):
 from ..context import RGB, CMYK
 class ExportSheet(NSObject):
     # the script whose doExportAsImage and doExportAsMovie methods will be called
-    script = objc.IBOutlet()
+    script = IBOutlet()
 
     # Image export settings
-    imageAccessory = objc.IBOutlet()
-    imageFormat = objc.IBOutlet()
-    imagePageCount = objc.IBOutlet()
-    imagePagination = objc.IBOutlet()
-    imageCMYK = objc.IBOutlet()
+    imageAccessory = IBOutlet()
+    imageFormat = IBOutlet()
+    imagePageCount = IBOutlet()
+    imagePagination = IBOutlet()
+    imageCMYK = IBOutlet()
 
     # Movie export settings
-    movieAccessory = objc.IBOutlet()
-    movieFormat = objc.IBOutlet()
-    movieFrames = objc.IBOutlet()
-    movieFps = objc.IBOutlet()
-    movieLoop = objc.IBOutlet()
-    movieBitrate = objc.IBOutlet()
+    movieAccessory = IBOutlet()
+    movieFormat = IBOutlet()
+    movieFrames = IBOutlet()
+    movieFps = IBOutlet()
+    movieLoop = IBOutlet()
+    movieBitrate = IBOutlet()
 
     def awakeFromNib(self):
         self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'gif'))
@@ -363,7 +362,7 @@ class ExportSheet(NSObject):
         if not can_cmyk:
             self.imageCMYK.setState_(NSOffState)
 
-    @objc.IBAction
+    @IBAction
     def imageFormatChanged_(self, sender):
         panel = sender.window()
         format = self.formats['image'][sender.indexOfSelectedItem()]
@@ -371,7 +370,7 @@ class ExportSheet(NSObject):
         self.updateColorMode()
         self.updatePagination()
 
-    @objc.IBAction
+    @IBAction
     def movieFormatChanged_(self, sender):
         panel = sender.window()
         format = self.formats['movie'][sender.indexOfSelectedItem()]

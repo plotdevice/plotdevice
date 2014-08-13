@@ -1,8 +1,6 @@
 # encoding: utf-8
 import warnings
-from AppKit import *
-from Foundation import *
-from Quartz import *
+from ..lib.cocoa import *
 from math import pi, sin, cos, sqrt
 
 from plotdevice import DeviceError

@@ -5,8 +5,7 @@ import difflib
 from pprint import pprint, pformat
 from operator import itemgetter, attrgetter
 from collections import namedtuple, Counter, OrderedDict as odict, defaultdict as ddict
-from AppKit import *
-from Foundation import *
+from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 

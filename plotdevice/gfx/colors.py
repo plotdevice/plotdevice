@@ -3,9 +3,7 @@ import os
 import re
 import json
 import warnings
-from AppKit import *
-from Foundation import *
-from Quartz import *
+from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path

@@ -5,10 +5,7 @@ import json
 import warnings
 import math
 from contextlib import contextmanager
-from AppKit import *
-from Foundation import *
-from Quartz import *
-from Quartz.PDFKit import *
+from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attrs

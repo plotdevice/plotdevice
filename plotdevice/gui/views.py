@@ -2,10 +2,8 @@
 import sys
 import os
 import traceback
-import objc
 
-from Foundation import *
-from AppKit import *
+from ..lib.cocoa import *
 from PyObjCTools import AppHelper
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
@@ -73,7 +71,7 @@ class PlotDeviceBackdrop(NSView):
 
 # class defined in PlotDeviceGraphicsView.xib
 class PlotDeviceGraphicsView(NSView):
-    script = objc.IBOutlet()
+    script = IBOutlet()
     placeholder = NSImage.imageNamed_('placeholder.pdf')
 
     # The zoom levels are 10%, 25%, 50%, 75%, 100%, 200% and so on up to 2000%.
@@ -178,7 +176,7 @@ class PlotDeviceGraphicsView(NSView):
                 idx = len(self.zoomLevels) - 1 # Just return the last index.
             return idx, False
 
-    @objc.IBAction
+    @IBAction
     def zoomIn_(self, sender):
         idx, direct = self.findNearestZoomIndex(self.zoom)
         # Direct hits are perfect, but indirect hits require a bit of help.
@@ -189,21 +187,21 @@ class PlotDeviceGraphicsView(NSView):
         idx = max(min(idx, len(self.zoomLevels)-1), 0)
         self.zoom = self.zoomLevels[idx]
 
-    @objc.IBAction
+    @IBAction
     def zoomOut_(self, sender):
         idx, direct = self.findNearestZoomIndex(self.zoom)
         idx -= 1
         idx = max(min(idx, len(self.zoomLevels)-1), 0)
         self.zoom = self.zoomLevels[idx]
 
-    @objc.IBAction
+    @IBAction
     def resetZoom_(self, sender):
         self.zoom = 1.0
 
     def zoomTo_(self, zoom):
         self.zoom = zoom
 
-    @objc.IBAction
+    @IBAction
     def zoomToFit_(self, sender):
         if not self.canvas:
             return

@@ -7,8 +7,7 @@ import random
 import time
 import objc
 
-from Foundation import *
-from AppKit import *
+from ..lib.cocoa import *
 
 from .editor import OutputTextView, EditorView
 from .widgets import DashboardController, ExportSheet
@@ -114,14 +113,14 @@ class PlotDeviceDocument(NSDocument):
 # `file's owner' in PlotDeviceDocument.xib
 class ScriptController(NSWindowController):
     # main document window
-    graphicsView = objc.IBOutlet()
-    outputView = objc.IBOutlet()
-    editorView = objc.IBOutlet()
-    statusView = objc.IBOutlet()
+    graphicsView = IBOutlet()
+    outputView = IBOutlet()
+    editorView = IBOutlet()
+    statusView = IBOutlet()
 
     # auxiliary windows
-    dashboardController = objc.IBOutlet()
-    exportSheet = objc.IBOutlet()
+    dashboardController = IBOutlet()
+    exportSheet = IBOutlet()
 
     ## Properties
 
@@ -301,14 +300,14 @@ class ScriptController(NSWindowController):
     # Running the script in the main window
     #
 
-    @objc.IBAction
+    @IBAction
     def runScript_(self, sender):
         # listens for cmd-r
         if self.vm.session:
             return NSBeep()
         self.runScript()
 
-    @objc.IBAction
+    @IBAction
     def runFullscreen_(self, sender):
         # listens for cmd-shift-r
         if not self.fullScreen:
@@ -456,13 +455,13 @@ class ScriptController(NSWindowController):
     #
     # Exporting to file(s)
     #
-    @objc.IBAction
+    @IBAction
     def exportAsImage_(self, sender):
         if self.vm.session:
             return NSBeep()
         self.exportSheet.beginExport('image')
 
-    @objc.IBAction
+    @IBAction
     def exportAsMovie_(self, sender):
         if self.vm.session:
             return NSBeep()
@@ -514,7 +513,7 @@ class ScriptController(NSWindowController):
     #
     # Interrupting the run
     #
-    @objc.IBAction
+    @IBAction
     def stopScript_(self, sender=None):
         # catch command-period
         if self.vm.session:
@@ -583,14 +582,14 @@ class ScriptController(NSWindowController):
     #
     # Pasteboards
     #
-    @objc.IBAction
+    @IBAction
     def copyImageAsPDF_(self, sender):
         pboard = NSPasteboard.generalPasteboard()
         # graphicsView implements the pboard delegate method to provide the data
         pboard.declareTypes_owner_([NSPDFPboardType,NSPostScriptPboardType,NSTIFFPboardType], self.graphicsView)
 
 
-    @objc.IBAction
+    @IBAction
     def printDocument_(self, sender):
         op = NSPrintOperation.printOperationWithView_printInfo_(self.graphicsView, self.printInfo())
         op.runOperationModalForWindow_delegate_didRunSelector_contextInfo_(
@@ -607,22 +606,22 @@ class ScriptController(NSWindowController):
     #
     # Zoom commands, forwarding to the graphics view.
     #
-    @objc.IBAction
+    @IBAction
     def zoomIn_(self, sender):
         if self.fullScreen is not None: return
         self.graphicsView.zoomIn_(sender)
 
-    @objc.IBAction
+    @IBAction
     def zoomOut_(self, sender):
         if self.fullScreen is not None: return
         self.graphicsView.zoomOut_(sender)
 
-    @objc.IBAction
+    @IBAction
     def zoomToTag_(self, sender):
         if self.fullScreen is not None: return
         self.graphicsView.zoomTo_(sender.tag() / 100.0)
 
-    @objc.IBAction
+    @IBAction
     def zoomToFit_(self, sender):
         if self.fullScreen is not None: return
         self.graphicsView.zoomToFit_(sender)

@@ -3,8 +3,7 @@ import sys
 import os
 import objc
 from glob import glob
-from Foundation import *
-from AppKit import *
+from ..lib.cocoa import *
 from PyObjCTools import AppHelper
 from .preferences import PlotDevicePreferencesController, get_default
 from . import bundle_path, set_timeout
@@ -13,8 +12,8 @@ LIB_DIR_README = """"You can put PlotDevice libraries In this directory to make 
 """
 
 class PlotDeviceAppDelegate(NSObject):
-    examplesMenu = objc.IBOutlet()
-    updatesMenu = objc.IBOutlet()
+    examplesMenu = IBOutlet()
+    updatesMenu = IBOutlet()
 
     def awakeFromNib(self):
         self._prefsController = None
@@ -77,14 +76,14 @@ class PlotDeviceAppDelegate(NSObject):
             folders[cat].addItem_(item)
         self.examplesMenu.setHidden_(not pyfiles)
 
-    @objc.IBAction
+    @IBAction
     def newSketch_(self, sender):
         kind = ['sketch','anim','ottobot'][sender.tag()]
         doc = self.docFromTemplate_('TMPL:'+kind)
         if kind=='ottobot':
             AppHelper.callLater(0.1, doc.script.runScript)
 
-    @objc.IBAction
+    @IBAction
     def openExample_(self, sender):
         tmpl = sender.representedObject()
         self.docFromTemplate_(tmpl)
@@ -98,18 +97,18 @@ class PlotDeviceAppDelegate(NSObject):
         doc.showWindows()
         return doc
 
-    @objc.IBAction
+    @IBAction
     def showPreferencesPanel_(self, sender):
         if self._prefsController is None:
             self._prefsController = PlotDevicePreferencesController.alloc().init()
         self._prefsController.showWindow_(sender)
 
-    @objc.IBAction
+    @IBAction
     def showHelp_(self, sender):
         url = NSURL.URLWithString_("http://plotdevice.io/doc")
         NSWorkspace.sharedWorkspace().openURL_(url)
 
-    @objc.IBAction
+    @IBAction
     def showSite_(self, sender):
         url = NSURL.URLWithString_("http://plotdevice.io/")
         NSWorkspace.sharedWorkspace().openURL_(url)

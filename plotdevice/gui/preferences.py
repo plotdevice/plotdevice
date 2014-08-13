@@ -2,9 +2,8 @@ import re
 import os
 import json
 import objc
-from AppKit import NSWindowController, NSFontManager, NSNotificationCenter, NSColor, NSFont
-from AppKit import NSMacOSRomanStringEncoding, NSFixedPitchFontMask, NSUnboldFontMask, NSUnitalicFontMask
-from Foundation import NSUserDefaults
+from ..lib.cocoa import *
+
 from subprocess import Popen, PIPE
 from plotdevice.gui import bundle_path, set_timeout
 
@@ -85,17 +84,17 @@ def possibleToolLocations():
 
 # class defined in PlotDevicePreferences.xib
 class PlotDevicePreferencesController(NSWindowController):
-    themeMenu = objc.IBOutlet()
-    bindingsMenu = objc.IBOutlet()
-    fontMenu = objc.IBOutlet()
-    fontSizeMenu = objc.IBOutlet()
-    toolPath = objc.IBOutlet()
-    toolAction = objc.IBOutlet()
-    toolBoilerplate = objc.IBOutlet()
-    toolInstallSheet = objc.IBOutlet()
-    toolInstallMenu = objc.IBOutlet()
-    updateDaily = objc.IBOutlet()
-    updateNow = objc.IBOutlet()
+    themeMenu = IBOutlet()
+    bindingsMenu = IBOutlet()
+    fontMenu = IBOutlet()
+    fontSizeMenu = IBOutlet()
+    toolPath = IBOutlet()
+    toolAction = IBOutlet()
+    toolBoilerplate = IBOutlet()
+    toolInstallSheet = IBOutlet()
+    toolInstallMenu = IBOutlet()
+    updateDaily = IBOutlet()
+    updateNow = IBOutlet()
 
     def init(self):
         self = self.initWithWindowNibName_("PlotDevicePreferences")
@@ -143,7 +142,7 @@ class PlotDevicePreferencesController(NSWindowController):
         tag = ['mac','emacs','vim']
         self.bindingsMenu.selectItemWithTag_(tag.index(style))
 
-    @objc.IBAction
+    @IBAction
     def bindingsChanged_(self, sender):
         style = ['mac','emacs','vim'][sender.selectedItem().tag()]
         set_default('bindings', style)
@@ -165,7 +164,7 @@ class PlotDevicePreferencesController(NSWindowController):
 
         self.themeMenu.selectItemWithTitle_(selected)
 
-    @objc.IBAction
+    @IBAction
     def themeChanged_(self, sender):
         set_default('theme', sender.title())
         _editor_info.clear()
@@ -195,7 +194,7 @@ class PlotDevicePreferencesController(NSWindowController):
         for item, size in zip(self.fontSizeMenu.itemArray(), sizes):
             item.setRepresentedObject_(size)
 
-    @objc.IBAction
+    @IBAction
     def fontChanged_(self, sender):
         if sender is self.fontMenu:
             default = 'font-name'
@@ -242,7 +241,7 @@ class PlotDevicePreferencesController(NSWindowController):
 
         return found, valid, action
 
-    @objc.IBAction
+    @IBAction
     def toolChanged_(self, sender):
         found, _, action = self._tool
 
@@ -254,7 +253,7 @@ class PlotDevicePreferencesController(NSWindowController):
             self.toolInstallMenu.addItemsWithTitles_(locs)
             NSApp().beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.toolInstallSheet, self.window(), self, None, 0)
 
-    @objc.IBAction
+    @IBAction
     def finishInstallation_(self, sender):
         should_install = sender.tag()
         if should_install:

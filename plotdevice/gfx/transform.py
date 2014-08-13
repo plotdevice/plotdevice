@@ -4,9 +4,7 @@ import re
 import json
 import warnings
 import math
-from AppKit import *
-from Foundation import *
-from Quartz import *
+from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import trim_zeroes

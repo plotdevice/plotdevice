@@ -3,8 +3,7 @@ import re
 from xml.parsers import expat
 from operator import itemgetter, attrgetter
 from plotdevice.util import odict, ddict
-from AppKit import *
-from Foundation import *
+from ..lib.cocoa import *
 
 from plotdevice import DeviceError, INTERNAL as DEFAULT
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, BoundsMixin, Grob

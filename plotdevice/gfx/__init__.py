@@ -1,8 +1,6 @@
 # encoding: utf-8
 from contextlib import contextmanager
-from AppKit import *
-from Foundation import *
-from Quartz import *
+from ..lib.cocoa import *
 
 ### graphics context mgmt ###
 
