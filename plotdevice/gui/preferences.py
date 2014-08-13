@@ -23,7 +23,7 @@ def set_default(label, value):
 def defaultDefaults():
     return {
         "WebKitDeveloperExtras":True,
-        "plotdevice:theme":"Blackboard",
+        "plotdevice:theme":"Solarized Dark",
         "plotdevice:bindings":"mac",
         "plotdevice:font-name":"Menlo",
         "plotdevice:font-size":11,
