@@ -386,6 +386,7 @@
 				2A66ECEA18A99303002903DE /* Copy Editor Scripts */,
 				2A758E411957B7CE003ECF9D /* Copy PlotDevice Module */,
 				2ABDB76F1867D9560069EFC3 /* Copy 'plotdevice' Tool */,
+				2AF8981419953CA1005A49A5 /* Manually Update Examples */,
 				8D15AC300486D014006FF6A4 /* Sources */,
 				8D15AC330486D014006FF6A4 /* Frameworks */,
 			);
@@ -462,6 +463,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# let the setup script handle updating\n/usr/bin/python setup.py build\n\n# copy the up-to-date module contents into the app bundle\nEXT_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/\"\nmkdir -p $EXT_DIR\nditto build/lib/plotdevice \"$EXT_DIR/plotdevice\"\n\n# make sure everything has a .pyc (so code-signing doesn't break on first run)\n/usr/bin/python -m compileall \"$EXT_DIR/plotdevice\"";
+		};
+		2AF8981419953CA1005A49A5 /* Manually Update Examples */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Manually Update Examples";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "examples=\"$CONFIGURATION_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\"\nditto Examples $examples";
 		};
 /* End PBXShellScriptBuildPhase section */
 
