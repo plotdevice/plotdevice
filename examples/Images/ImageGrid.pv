@@ -1,26 +1,26 @@
-size(400, 400)
-# Demonstrates some uses of the image command.
+"""Demonstrates some uses of the image command."""
 
-# There are several ways to scale an image, 
+size(400, 400)
+background('#32321f')
+
+# There are several ways to scale an image,
 # but by far the easiest is to provide a width
 # parameter, such as here.
-for x, y in grid(8, 8, 50, 50):
-    image("nodeboxicon.png", x, y, width=50)
+for x, y in grid(16, 16, 25, 25):
+    image("http://plotdevice.io/data/icon.png", x, y, width=25)
 
 # Overlay the grid of images with an alpha-transparent
 # rectangle.
-fill(0.1, 0.1, 0.75, 0.8)
+fill(0.4, 0.4, 0.3, 0.8)
 rect(0, 0, WIDTH, HEIGHT)
 
 # Show the main image.
-image("nodeboxicon.png", 100, 100)
+image("http://plotdevice.io/data/icon.png", 70, 70)
 
 # Show the text below the image
-font("Georgia Bold", 39)
-fill(1, 1, 1)
+font("Helvetica", "bold", 39)
+fill("white")
 # We use center-alignment so we can change the
 # text without impacting its placement.
-# Note that for this to work, we need to give
-# a width as parameter for the text command.
 align(CENTER)
-text("NodeBox", 0, 345, width=400)
+text("PlotDevice", WIDTH/2, 350)

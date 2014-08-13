@@ -1,6 +1,11 @@
-# PlotDevice allows you to query the current state of the canvas,
-# and even use its contents as an image. This allows for some trippy
-# feed-back effects.
+"""
+Getting meta with the canvas.
+
+PlotDevice allows you to query the current state of the canvas,
+and even use its contents as an image. This allows for some trippy
+feed-back effects.
+"""
+
 size(500, 500)
 
 # By default, the canvas draws a white background, so as we overlay

@@ -1,16 +1,22 @@
-# Automatically generates text based on the Kant Generator Pro.
-# The Kant Generator Pro is an example script of the
-# "Dive Into Python" manual.
+"""
+Automatically generates text based on the Kant Generator Pro.
 
-size(400, 1000)
+The Kant Generator Pro is an example script from Mark Pilgrim's
+book "Dive Into Python".
+"""
+
+size(400, 500)
 
 # Generate automatic text from an XML file and store it as a string
-# in the txt variable. Also try the "thanks.xml", which generates
-# "thank you" notes, and "insults.xml", which generates all sorts
-# of crazy insults.
-txt = autotext("kant.xml") 
+# in the txt variable.
+txt = autotext("http://plotdevice.io/data/kant.xml")
+
+# Also try the "thanks.xml" file, which generates "thank you" notes,
+# or "insults.xml", which generates all sorts of crazy epithets:
+#txt = autotext("http://plotdevice.io/data/thanks.xml")
+#txt = autotext("http://plotdevice.io/data/insults.xml")
 
 font("Times", 12)
 lineheight(1.7)
 
-text(txt, 25, 30, width=320, height=950)
+text(txt, 25, 30, width=320, height=450)

@@ -1,18 +1,19 @@
-# Generates sculptures using a set of mathematical functions.
-# Every iteration adds a certain value to the current coordinates.
-# Rewriting this program to use transforms is left as an exercise
-# for the reader.
+"""
+Generates sculptures using a set of mathematical functions.
 
-# This program uses some mathematical functions that are not
-# standard functions of PlotDevice.
-# Instead, they are in Python's math library. The next
-# line imports those functions.
+Every iteration adds a certain value to the current coordinates.
+Rewriting this program to use transforms is left as an exercise
+for the reader.
+"""
+
+# Since trig functions aren't provided by PlotDevice, we import
+# them from the Python `math` library instead:
 from math import sin, cos, tan, log10
 from random import seed
 
 size(400, 400)
 background(0,0,0.15)
-speed(100)
+speed(50)
 
 def setup(anim):
     anim.a = 10.0

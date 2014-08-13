@@ -1,0 +1,25 @@
+"""Generate randomized album covers (with müller brockmann-ish overtones)."""
+
+size(400, 400)
+
+# The HSV color mode is the big trick here. We use it to generate
+# a fixed hue with a random brightness and saturation. That way,
+# we can use all kinds of different colors that automatically fit
+# together.
+color(mode=HSV)
+
+# Set a random background color
+background(0.5, random(.5,1), random(.2, 0.5))
+
+# draw everything at an angle
+rotate(45)
+
+# Draw 10 rectangles on top of each other, each with a different color,
+# and a random starting position and height.
+for i in range(10):
+    fill(0.5, random(.5,1), random(.2, 0.5))
+    rect(0,random(-200,HEIGHT+200), WIDTH,random(-200,HEIGHT+200))
+
+# Draw the text.
+with font('Avenir', 24), fill('white'):
+    text("P L O T D E V I C E", WIDTH/2, HEIGHT/2)

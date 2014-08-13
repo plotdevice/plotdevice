@@ -1,0 +1,30 @@
+"""Draws randomly-positioned circles on a dark background."""
+
+size(500, 500)
+
+# Set the background color to a specific hue of red
+background(0.16, 0, 0)
+
+# Set filling off, so ovals will be stroked only
+nofill()
+
+for i in range(50):
+
+    # Set the stroke color to a random tint of orange
+    stroke(random(), random(0.31), 0)
+
+    # Set the stroke width
+    pen(random(0.2, 4.0))
+
+    # Choose a random radius before drawing the oval. This needs
+    # to be pre-calculated "oval(20, 20, random(50), random(50))"
+    # would set the width & height to different random values.
+    radius = random(50)
+
+    # Draw the oval onscreen. The width/height are both set to the
+    # radius * 2 to get the diameter. The radius is subtracted from the
+    # x and y coordinates to place the oval in the middle.
+    oval(random(WIDTH)-radius, random(HEIGHT)-radius, radius*2, radius*2)
+
+    # Note that we could also use the arc() command to similar effect:
+    # arc(random(WIDTH), random(HEIGHT), random(50))

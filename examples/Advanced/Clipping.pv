@@ -1,7 +1,10 @@
+"""
+PlotDevice can use any Bezier path as a "stencil" to mask-out any
+shapes you draw to the canvas. The clip() and mask() commands work with
+drawing primitives as well as text and images.
+"""
+
 size(300,300)
-# PlotDevice can use any Bezier path as a clipping "mask" to matte-out
-# shapes you draw to the canvas. The clip() and mask() commands work with
-# drawing primitives as well as text and images.
 
 # ---- Clipping with Primitive Shapes ---- #
 

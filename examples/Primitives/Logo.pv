@@ -1,0 +1,19 @@
+"""
+The PlotDevice logo.
+"""
+
+size(300,300)
+translate(100,64)
+background(0)
+
+# draw the parallelograms
+fill("#b7b49d")
+with skew(-45):
+    rect(14,65, 60,30)
+with rotate(90), skew(45):
+    rect(-20,100, 60,30)
+    rect(50,32, 60,30)
+
+# draw the squares
+poly(27,27, 32, fill="#027ea0")
+poly(63,134, 32, fill="#dc5d26")

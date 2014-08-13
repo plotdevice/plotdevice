@@ -1,6 +1,11 @@
-# This example shows how you can create interesting effects by
-# messing with the internals of the `canvas` object *after* shapes
-# have already been drawn to it.
+"""
+Primitives can be modified even after being "drawn" to the canvas.
+
+This example shows how you can create interesting effects by
+messing with the internals of the `canvas` object after shapes
+have already been drawn to it.
+"""
+
 size(550, 300)
 
 pen(1.5)

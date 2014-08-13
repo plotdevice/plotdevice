@@ -1,6 +1,10 @@
-# Swiss Cheese Factory
-# This program makes swiss cheese by cutting out circles from another
-# circle. It demonstrates the use of boolean operations on paths.
+"""
+Boolean operations and Bezier paths.
+
+This program makes swiss cheese by cutting out circles from another
+circle. It demonstrates the use of boolean operations on paths.
+"""
+
 size(300, 300)
 
 # First, create the "cheese" -- the central circle in the middle.

@@ -1,0 +1,27 @@
+"""Cumulative transformations for very large and very small compositions."""
+
+size(600, 600)
+
+translate(WIDTH/2, HEIGHT/2)
+scale(5)
+
+# Because we don't use `with transform()` anywhere, all the transformations
+# are appended to one another. This means that, depending on the random value, a
+# composition might grow to be very big or very small.
+for i in range(100):
+    # Wobble the orientation a bit in either direction:
+    rotate(random(-10, 10))
+    # Use the next line instead of the previous ones to keep everything
+    # aligned to compass directions:
+    # rotate(random(1,4)*45)
+
+    scale(random(0.6,1.4))
+    translate(random(-5,5),random(-5,5))
+
+    # After all transformations are done, pick a color and draw the shape.
+    fill(random()-0.4, 0.2, 0.2, random())
+    poly(0,0, 5)
+
+    # To see how it looks with shapes other than squares, try:
+    # star(0,0,points=random(5,50),inner=1,outer=14)
+

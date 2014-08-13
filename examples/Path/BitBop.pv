@@ -1,15 +1,17 @@
-# BitBop -- a fun demonstration of path.contains.
-#
-# The textpath command returns a BezierPath of the text that can
-# be manipulated or, as demonstrated here, queried using path.contains.
-# A grid is generated and everywhere a point in the path is encountered,
-# a random square is drawn.
+"""
+Using a text path to position other primitives.
+
+In addition to using the text() command to draw type immediately, you
+can call textpath() to trace the text's outline into a Bezier path (without
+adding it to the canvas). The Bezier can be manipulated or, as demonstrated
+# here, queried using its .contains() method.
+"""
 
 size(550, 140)
-background(0.8, 0.7, 0)
-fill(0.1, 0.1, 0.2)
+background('#ca0')
+fill('#223', .75)
 
-# Set the font and create the text path.
+# Set the font and create a text path.
 font("Verdana", 100)
 align(CENTER)
 tp = textpath("PlotDevice", WIDTH/2, 100)
@@ -24,9 +26,10 @@ dotsize = 3.0 # The maximum size of one dot.
 dx = WIDTH / float(resx) # The width each dot covers
 dy = HEIGHT / float(resy) # The height each dot covers
 
-# We create a grid of the specified resolution.
-# Each x,y coordinate is a measuring point where
-# we check if it falls within the path.
+
+# We create a grid of the specified resolution. For each x,y
+# coordinate in the space, we first check whether it lies within
+# one of the letterforms, then (if so) draw a random square.
 for x, y in grid(resx, resy):
     sz = random(dotsize)
     # Create the point that will be checked
@@ -37,7 +40,10 @@ for x, y in grid(resx, resy):
     # empty positions.
     if tp.contains(x, y):
         # Change the color for each point -- try it out!
-        # fill(0, 0, random(), random())
-        arc(x+random(-rx, rx),
-            y+random(-ry, ry),
-            sz)
+        # fill(random(), 0,0, random())
+        poly(x+random(-rx, rx),
+             y+random(-ry, ry),
+             sz)
+    # else:
+    #     with fill('white',.2):
+    #         arc(x,y,sz)

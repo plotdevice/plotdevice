@@ -1,14 +1,18 @@
-# A simple animation example.
-# The hypnotizing ovals use a little bit of math to make smooth animations.
-# PlotDevice knows a script is an animation if it defines a function called
-# 'draw'. Animation scripts can contain:
-#  - a setup method that is run once (at the start of the animation)
-#  - a draw method that is run for every frame.
-#  - a stop method that is run once (at the end of the animation)
-# Variables that you want to use in your script should be defined as
-# globals or added as attributes to the optional dictionary argument
-# passed to your functions. Here we've named the argument `anim` but you
-# can choose whatever name you like (or omit it entirely).
+"""
+A simple animation example.
+
+The hypnotizing ovals use a little bit of math to make smooth animations.
+PlotDevice knows a script is an animation if it defines a function called
+'draw'. Animation scripts can contain:
+ - a setup method that is run once (at the start of the animation)
+ - a draw method that is run for every frame.
+ - a stop method that is run once (at the end of the animation)
+
+Variables that you want to use in your script should be defined as
+globals or added as attributes to the optional dictionary argument
+passed to your functions. Here we've named the argument `anim` but you
+can choose whatever name you like (or omit it entirely).
+"""
 
 # Because we'll be doing some trig, we import sine and cosine functions
 # from the stdlib's math module.

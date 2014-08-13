@@ -1,13 +1,16 @@
+"""Draws a cloud of overlapping hubs & spokes."""
+
 size(600, 600)
-# Fun with stars! 
 
-# Use the HSB color model to generate matching random colors.
-colormode(HSB)
+# Use the HSV color model to generate matching random colors.
+color(HSV)
 
-# This loop has no push and pop, meaning that every transformation
-# is appended to the previous ones. 
+# The loop doesn't contain a `with transform()` block, so every
+# translation & rotation is appended to the previous ones.
 for y in range(100):
     fill(random(0.8,1),random(),random(0.2,0.6),random())
     rotate(random(-3,3))
     translate(random(-100,100), random(-100,100))
-    star(300,300,random(1,100), random(1,5), random(1,500))
+    star(300,300, points=random(1,100),
+         inner=random(1,5),
+         outer=random(1,500))
