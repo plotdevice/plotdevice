@@ -1,0 +1,122 @@
+"""
+Draw a hypercube rotating in four dimensions.
+
+Derived from https://github.com/matthiask/hypercube/blob/master/rcube.cc
+Copyright (C) 2003 Matthias Kestenholz, mk@webinterface.ch (GPL)
+"""
+
+size(512,512)
+speed(60)
+background('#777')
+
+# 4d points in the hypercube
+def Vertices():
+  return[
+    [ 1, -1,  1,  1], [ 1,  1,  1,  1], [-1,  1,  1,  1], [-1, -1,  1,  1],
+    [ 1, -1, -1,  1], [ 1,  1, -1,  1], [-1,  1, -1,  1], [-1, -1, -1,  1],
+    [ 1, -1,  1, -1], [ 1,  1,  1, -1], [-1,  1,  1, -1], [-1, -1,  1, -1],
+    [ 1, -1, -1, -1], [ 1,  1, -1, -1], [-1,  1, -1, -1], [-1, -1, -1, -1],
+  ]
+
+# pairs of index-addresses into the array returned by Cube
+def Edges():
+    lines = [0, 1, 1, 2, 2, 3, 3, 0] + [0]*56
+    for i in xrange(8):
+        lines[i+8]=lines[i]+4
+    for i in xrange(4):
+        lines[i*2 + 16]=i
+        lines[i*2 + 17]=i+4
+    for i in xrange(24):
+        lines[i+24]=lines[i]+8
+    for i in xrange(8):
+        lines[i*2 + 48]=i
+        lines[i*2 + 49]=i+8
+    return lines
+
+from math import cos, sin
+def rotateaxis(v, src, dst, angle):
+  c=cos(angle)
+  s=sin(angle)
+
+  tmp = v[src]
+  v[src] = c*tmp - s*v[dst]
+  v[dst] = s*tmp + c*v[dst]
+
+def rotatepoint(v, angles):
+  rotateaxis(v, 0, 1, angles[0])
+  rotateaxis(v, 0, 2, angles[1])
+  rotateaxis(v, 0, 3, angles[2])
+  rotateaxis(v, 1, 2, angles[3])
+  rotateaxis(v, 1, 3, angles[4])
+  rotateaxis(v, 2, 3, angles[5])
+
+# projection from 4d to 3d, and from 3d to 2d ...
+def project(v, eyeW, eyeZ):
+  x,y,z,w = v
+  k4=(eyeW+w)/eyeW
+  x*=k4;
+  y*=k4;
+  z*=k4;
+  k3=(eyeZ+z)/eyeZ;
+  x*=k3;
+  y*=k3;
+  v[:] = x,y,z,w
+
+
+# ... transformation to screen coordinates
+def transform2d(v):
+  x,y,_,_ = v
+  return [int((WIDTH/2)+x*(WIDTH/7.5)), int((HEIGHT/2)+y*(HEIGHT/7.5))]
+
+def setup(state):
+    state.normal = 200
+    state.update(dict(
+        normal=0,
+        angles=[0, 0, 0, 0, 0, 0],
+        lines=Edges()
+    ))
+
+def draw(state):
+    eyeW=4;
+    eyeZ=4;
+    points = Vertices()
+    spoints = [0] * 16
+
+    # revolve the camera in 3d space
+    state.angles[0]+=0.003
+    state.angles[1]-=0.006
+    state.angles[3]+=0.009
+
+    # rotate the hypercube in 4d
+    if not state.normal:
+        # state.angles[2]+=0.001
+        state.angles[4]-=0.005
+        state.angles[5]+=0.008
+    else:
+        state.normal-=1
+
+    for i, pt in enumerate(points):
+        rotatepoint(pt, state.angles)
+        project(pt, eyeW, eyeZ)
+        spoints[i] = transform2d(pt)
+    lines = state.lines
+
+    pen(13, cap=ROUND)
+    with bezier(stroke='#aaa', strokewidth=6):
+        for i in xrange(24, 32):
+            src = spoints[lines[i*2]]
+            dst = spoints[lines[i*2+1]]
+            line(src[0],src[1],dst[0],dst[1])
+
+    with bezier(stroke=('#fff', 0.5)):
+        for i in xrange(12):
+            src = spoints[lines[i*2]]
+            dst = spoints[lines[i*2+1]]
+            line(src[0],src[1],dst[0],dst[1])
+
+    with bezier(stroke=('#444',0.8)):
+        for i in xrange(12, 24):
+            src = spoints[lines[i*2]]
+            dst = spoints[lines[i*2+1]]
+            line(src[0],src[1],dst[0],dst[1])
+
