@@ -5,7 +5,7 @@ Here, we are creating some sort of tunnel effect by
 using sine and cosine functions.
 """
 
-size(1000, 1000)
+size(800, 800)
 
 # Since sine and cosine are not PlotDevice commands, we import
 # them from the Python `math` library instead:
