@@ -20,7 +20,7 @@
 # - cPathMatics, cGeo, cIO, cEvent, & polymagic (included in the "app/deps" folder)
 # - Sparkle.framework (auto-downloaded only for `dist` builds)
 
-import sys,os
+import sys,os,json
 from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
 from pkg_resources import DistributionNotFound
@@ -72,7 +72,7 @@ The new version features:
 * Added support for external editors by reloading the source when changed.
 * Build system now works with Xcode or `py2app` for the application and `pip` for the module.
 * Virtualenv support (for both installation of the module and running scripts with dependencies).
-* External scripts can use `from plotdevice.script import *` to create a drawing environment.
+* External scripts can use `from plotdevice import *` to create a drawing environment.
 * Simplified bezier & affine transform api using the python ‘with’ statement
 * Now uses the system's Python 2.7 interpreter.
 
@@ -108,16 +108,6 @@ def last_commit():
     commit_count, _, _ = gosub('git log --oneline | wc -l')
     return 'r%s' % commit_count.strip()
 
-def commits_since(rev, raw=False):
-    log, _, _ = gosub('git log --oneline')
-    commits = log.decode('utf-8').splitlines()
-    since = int(rev.replace('r',''))
-    recent = [c.split(' ',1)[1] for c in commits[:-since]]
-    if not raw:
-        return u'\n<li>%s</li>\n'%u'</li>\n<li>'.join(recent)
-    return recent
-
-# basicaly `backticks`
 def gosub(cmd, on_err=True):
     """Run a shell command and return the output"""
     from subprocess import Popen, PIPE
@@ -131,51 +121,11 @@ def gosub(cmd, on_err=True):
 
     return out, err, ret
 
-## Distribution Build Utils ##
-
 def timestamp():
     from datetime import datetime
     from pytz import timezone, utc
     now = utc.localize(datetime.utcnow()).astimezone(timezone('US/Eastern'))
     return now.strftime("%a, %d %b %Y %H:%M:%S %z")
-
-import urllib2
-def last_release():
-    from xml.etree.ElementTree import fromstring, tostring
-    feed_xml = urllib2.urlopen('http://plotdevice.io/app.xml').read().decode('utf-8')
-    for item in fromstring(feed_xml.encode('utf-8')).iter('revision'):
-        return item.text
-    return 'r0'
-
-def merged_feed(new_release):
-    # fetch the current app feed
-    feed_xml = urllib2.urlopen('http://plotdevice.io/app.xml').read().decode('utf-8')
-
-    # collect the commit logs since the previous post
-    new_release['commits'] = commits_since(last_release())
-
-    # yes, this is totally caveman parsing, but xml.etree doesn't support cdata blocks...
-    spliced = []
-    item_tmpl = u"""<item>
-      <title>Version %(version)s</title>
-      <revision>%(revision)s</revision>
-      <pubDate>%(now)s</pubDate>
-      <sparkle:minimumSystemVersion>10.9</sparkle:minimumSystemVersion>
-      <description><![CDATA[
-        <h2>Recent changes</h2>
-        <ul>%(commits)s</ul>
-      ]]></description>
-      <enclosure url="http://plotdevice.io/app/%(zipfile)s" sparkle:shortVersionString="%(version)s" sparkle:version="%(revision)s" length="%(bytes)s" type="application/octet-stream" />
-    </item>"""
-    item_xml = item_tmpl%new_release
-    for line in feed_xml.splitlines():
-        if '<item>' in line and item_xml:
-            spliced.append(u' '*4 + item_xml)
-            item_xml = None
-        spliced.append(line)
-    return (u"\n".join(spliced)).encode('utf-8')
-
-
 
 ## Build Commands ##
 
@@ -293,7 +243,7 @@ except DistributionNotFound:
 ## Packaging Commands (really only useful to the maintainer) ##
 
 class DistCommand(Command):
-    description = "Create distributable zip of the app and an updated app.xml feed"
+    description = "Create distributable zip of the app and release metadata"
     user_options = []
     def initialize_options(self):
         pass
@@ -336,15 +286,14 @@ class DistCommand(Command):
         # create versioned zipfile of the app
         self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
 
-        # update the app.xml feed (pulled from the server)
-        release = dict(zipfile=basename(ZIP), bytes=os.path.getsize(ZIP),
-                       version=VERSION, revision=last_commit(), now=timestamp())
-        with file('dist/app.xml','w') as f:
-            f.write(merged_feed(release))
+        # write out the release metadata for plotdevice-site to consume/merge
+        with file('dist/release.json','w') as f:
+            release = dict(zipfile=basename(ZIP), bytes=os.path.getsize(ZIP),
+                           version=VERSION, revision=last_commit(),
+                           timestamp=timestamp())
+            json.dump(release, f)
 
-        print "\nBuilt PlotDevice.app, %s, and app.xml in ./dist" % basename(ZIP)
-        print " -" + "\n -".join(commits_since(last_release(), raw=True))
-        print "now edit dist/app.xml then run `python setup.py submit`."
+        print "\nBuilt PlotDevice.app, %s, and release.json in ./dist" % basename(ZIP)
 
 
 class SubmitCommand(Command):
@@ -355,25 +304,7 @@ class SubmitCommand(Command):
     def finalize_options(self):
         pass
     def run(self):
-        print "Checking feed xml"
-        gosub('tidy -xml -utf8 -e dist/app.xml', on_err="app.xml didn't validate properly")
-
-        tarfile = 'dist/plotdevice-%s.tar.gz'%VERSION
-        zipfile = 'dist/PlotDevice_app-%s.zip'%VERSION
-        from xml.etree.ElementTree import parse, dump
-        for item in parse('dist/app.xml').getroot().iter('item'):
-            release = item.find('enclosure').attrib
-            assert release['url'].endswith(basename(zipfile)), "Version mismatch: %s vs %r" % (zipfile, release['url'])
-            break
-
-        # <confirmation y.n goes here>
-
-        print "posting dist/app.xml"
-        gosub('scp dist/app.xml plotdevice.io:plod')
-
-        print "posting", zipfile
-        gosub('scp %s plotdevice.io:plod/app'%zipfile)
-
+        pass
         # <upload to pypi goes here>
 
 ## Run Build ##
