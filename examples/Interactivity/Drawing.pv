@@ -1,16 +1,16 @@
-# This example allows you to draw lines on screen.
-# It also transforms the line while you're drawing it.
+"""Draw lines on screen using the mouse (and transform them in the process).
 
-# Each time you move the mouse, a new point is stored in a list of points.
-# The draw method first transforms this list (to get a mutated line),
-# then draws the points in this list. We use findpath to find a path
-# "through" the list of points.
+Each time you move the mouse, a new point is stored in a list of points.
+The draw method first transforms this list (to get a mutated line),
+then draws the points in this list. We use findpath to find a path
+"through" the list of points.
+"""
 
 size(500, 500)
 speed(30)
 
 def setup():
-    # px/py are the previous mouse coordinates. 
+    # px/py are the previous mouse coordinates.
     global px, py
     px, py = 0, 0
 
@@ -25,7 +25,7 @@ def draw():
     # For each frame, set the background color to a darkish blue.
     background(0.0, 0.0, 0.2)
 
-    # Only draw a new point if the mouse has moved, which means the current mouse 
+    # Only draw a new point if the mouse has moved, which means the current mouse
     # position is different from the previous one.
     # You can append "and mousedown" to the if statement to only draw points when
     # you hold down the mouse button. If you do, try clicking to get lines.
@@ -51,7 +51,7 @@ def draw():
         # whether the path is rounded (1.0) or straight (0.0).
         drawpath(findpath(pointlist, curvature=1.0))
 
-    
+
 def transform_point(pt, index, total_length):
     """This is the transformation function that gets applied to all points in the path.
     It returns either a new point, or None if the point needs to be deleted.
@@ -67,9 +67,9 @@ def transform_point(pt, index, total_length):
     if pt.x < 0 or pt.x > WIDTH or pt.y < 0 or pt.y > HEIGHT:
         return None
     return pt
-    
+
 def transform_list(pointlist, fn=transform_point):
-    """This method transforms a list of points, and returns a new list. 
+    """This method transforms a list of points, and returns a new list.
     For advanced users, you can specify the function that will be used to transform
     each point. You can copy/paste the transform_point function and try to make a
     new one yourself."""

@@ -1,4 +1,6 @@
 """
+Masked drawing operations.
+
 PlotDevice can use any Bezier path as a "stencil" to mask-out any
 shapes you draw to the canvas. The clip() and mask() commands work with
 drawing primitives as well as text and images.

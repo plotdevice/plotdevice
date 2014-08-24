@@ -1,9 +1,8 @@
 """
 Draw a hypercube rotating in four dimensions.
-
-Derived from https://github.com/matthiask/hypercube/blob/master/rcube.cc
-Copyright (C) 2003 Matthias Kestenholz, mk@webinterface.ch (GPL)
 """
+# Derived from https://github.com/matthiask/hypercube/blob/master/rcube.cc
+# Copyright (C) 2003 Matthias Kestenholz, mk@webinterface.ch (GPL)
 
 size(512,512)
 speed(60)

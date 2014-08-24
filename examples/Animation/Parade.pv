@@ -1,8 +1,8 @@
-# The parade!
-#
-# This example shows object-oriented design in animation for
-# defining a set of "actors" (the balls) that parade on stage.
+"""A balloon-launch simulation.
 
+This example shows object-oriented design in animation for
+defining a set of "actors" (the balls) that parade on stage.
+"""
 speed(30)
 size(340, 482)
 

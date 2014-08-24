@@ -1,9 +1,11 @@
-# Avoider: the first PlotDevice game!
-# The game's objective is pretty simple:
-# try to avoid the red blobs for as long as possible.
+"""The original NodeBox game.
 
-# This example is a bit longer than the others, and features some geometry,
-# object-oriented programming, and interactivity.
+The game's objective is pretty simple:
+try to avoid the red blobs for as long as possible.
+
+This example is a bit longer than the others, and features some geometry,
+object-oriented programming, and interactivity.
+"""
 
 # You can change the size of the canvas to get a bigger or smaller playing field.
 size(300, 324)
