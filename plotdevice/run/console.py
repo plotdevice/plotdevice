@@ -35,11 +35,10 @@ STDOUT = sys.stdout
 STDERR = sys.stderr
 ERASER = '\r%s\r'%(' '*80)
 
-
 class ScriptApp(NSApplication):
     @classmethod
     def sharedApplicationForMode_(cls, mode):
-        app = super(ScriptApp, cls).sharedApplication()
+        app = cls.sharedApplication()
         if mode=='headless':
             app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         elif mode=='windowed':
