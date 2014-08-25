@@ -88,7 +88,7 @@ def autotext(sourceFile):
 ### Permutation sugar ###
 
 def _as_sequence(seq):
-    if not isinstance(seq, (basestring, list, tuple) ):
+    if not hasattr(seq, '__getitem__'):
         badtype = 'ordered, shuffled, and friends only work for strings, tuples and lists (not %s)' % type(seq)
         raise DeviceError(badtype)
     return list(seq)
@@ -98,7 +98,9 @@ def _as_before(orig, lst):
 
 def _getter(seq, names):
     from operator import itemgetter, attrgetter
-    return itemgetter(*names) if names[0] in seq[0] else attrgetter(*names)
+    is_dotted = any(['.' in name for name in names])
+    getter = attrgetter if is_dotted or hasattr(seq[0],names[0]) else itemgetter
+    return getter(*names)
 
 def order(seq, *names, **kwargs):
     lst = _as_sequence(seq)
