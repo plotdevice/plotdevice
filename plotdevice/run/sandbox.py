@@ -50,7 +50,6 @@ class Sandbox(object):
         self.crashed = False    # flag whether the script exited abnormally
         self.live = False       # whether to keep the output pipe open between runs
         self.session = None     # the image/movie export session (if any)
-        self.stationery = False # whether the script is from the examples folder
         self.delegate = None    # object with exportFrame and exportProgress methods
 
 
@@ -221,10 +220,7 @@ class Sandbox(object):
             return Outcome(True, [])
 
         # find the script name and directory (or substitute placeholder values)
-        if self.stationery:
-            scriptDir = dirname(self.stationery)
-            scriptName = basename(self.stationery)
-        elif not self._path:
+        if not self._path:
             scriptDir = os.getenv("HOME")
             scriptName = "<untitled>"
         else:
