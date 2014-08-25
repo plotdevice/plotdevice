@@ -375,10 +375,6 @@ class Pattern(object):
     def copy(self):
         return Pattern(self)
 
-    @property
-    def brightness(self):
-        return self._nsColor.brightnessComponent()
-
 
 class Gradient(object):
     kwargs = ('steps', 'angle', 'center')

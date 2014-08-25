@@ -4,6 +4,7 @@ import os
 import traceback
 
 from ..lib.cocoa import *
+from ..gfx import Color
 from PyObjCTools import AppHelper
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
@@ -105,7 +106,8 @@ class PlotDeviceGraphicsView(NSView):
 
         self.canvas = canvas
         if canvas is not None:
-            is_dark = bool(canvas.background and canvas.background.brightness <= .5)
+            bg = canvas.background
+            is_dark = bool(isinstance(bg, Color) and bg.brightness <= .5)
             scrollview = self.superview().superview().superview()
             scrollview.setScrollerKnobStyle_(2 if is_dark else 1) # NSScrollerKnobStyleDark/Light
 
