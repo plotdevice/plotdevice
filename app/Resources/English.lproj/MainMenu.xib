@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1090" defaultVersion="1090" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -447,9 +447,9 @@ CQ
                 <menuItem title="Examples" hidden="YES" id="z3k-AC-imp">
                     <menu key="submenu" title="Examples" id="Oml-aU-aee">
                         <items>
-                            <menuItem title="Advanced" id="MTs-9o-pOj">
+                            <menuItem title="Drawing" id="MTs-9o-pOj">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Advanced" id="a0y-bN-rp5">
+                                <menu key="submenu" title="Drawing" id="a0y-bN-rp5">
                                     <items>
                                         <menuItem title="Item" id="WuW-ba-QGJ">
                                             <modifierMask key="keyEquivalentModifierMask"/>
@@ -457,9 +457,9 @@ CQ
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="Animation" id="QSV-Uu-IUX">
+                            <menuItem title="Text" id="QSV-Uu-IUX">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Animation" id="N8K-AU-o05">
+                                <menu key="submenu" title="Text" id="N8K-AU-o05">
                                     <items>
                                         <menuItem title="Item" id="PcI-vK-peW">
                                             <modifierMask key="keyEquivalentModifierMask"/>
@@ -467,9 +467,9 @@ CQ
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="Content" id="GhE-Hk-cxX">
+                            <menuItem title="Grid" id="GhE-Hk-cxX">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Content" id="xhd-Sj-PuF">
+                                <menu key="submenu" title="Grid" id="xhd-Sj-PuF">
                                     <items>
                                         <menuItem title="Item" id="WPK-4A-NK9">
                                             <modifierMask key="keyEquivalentModifierMask"/>
@@ -477,9 +477,9 @@ CQ
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="Grid" id="FSX-gC-0ut">
+                            <menuItem title="Content" id="FSX-gC-0ut">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Grid" id="SeR-GN-MNl">
+                                <menu key="submenu" title="Content" id="SeR-GN-MNl">
                                     <items>
                                         <menuItem title="Item" id="hfd-qI-mA2">
                                             <modifierMask key="keyEquivalentModifierMask"/>
@@ -487,9 +487,9 @@ CQ
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="Images" id="GMx-1H-l7t">
+                            <menuItem title="Animation" id="GMx-1H-l7t">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Images" id="RjG-JN-9D4">
+                                <menu key="submenu" title="Animation" id="RjG-JN-9D4">
                                     <items>
                                         <menuItem title="Item" id="S4c-nZ-trW">
                                             <modifierMask key="keyEquivalentModifierMask"/>
@@ -497,9 +497,9 @@ CQ
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="Interactivity" id="cV9-zd-3Y7">
+                            <menuItem title="Math" id="cV9-zd-3Y7">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Interactivity" id="4J8-io-Gmh">
+                                <menu key="submenu" title="Math" id="4J8-io-Gmh">
                                     <items>
                                         <menuItem title="Item" id="rKX-bO-Eo3">
                                             <modifierMask key="keyEquivalentModifierMask"/>
@@ -507,9 +507,9 @@ CQ
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="Math" id="Cg1-v0-k3P">
+                            <menuItem title="Interactivity" id="Cg1-v0-k3P">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Math" id="ZKd-YQ-iTZ">
+                                <menu key="submenu" title="Interactivity" id="ZKd-YQ-iTZ">
                                     <items>
                                         <menuItem title="Item" id="7HF-P3-DcJ">
                                             <modifierMask key="keyEquivalentModifierMask"/>
@@ -517,31 +517,11 @@ CQ
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="Path" id="aty-ax-cEX">
+                            <menuItem title="Advanced" id="aty-ax-cEX">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Path" id="r36-oQ-19z">
+                                <menu key="submenu" title="Advanced" id="r36-oQ-19z">
                                     <items>
                                         <menuItem title="Item" id="YfZ-qW-81k">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                        </menuItem>
-                                    </items>
-                                </menu>
-                            </menuItem>
-                            <menuItem title="Primitives" id="xey-OW-RMt">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Primitives" id="cus-A0-ykk">
-                                    <items>
-                                        <menuItem title="Item" id="xvC-jf-q56">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                        </menuItem>
-                                    </items>
-                                </menu>
-                            </menuItem>
-                            <menuItem title="Text" id="wh1-4Z-sGj">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Text" id="FEz-Jw-pfB">
-                                    <items>
-                                        <menuItem title="Item" id="KZ7-a5-np1">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
                                     </items>
