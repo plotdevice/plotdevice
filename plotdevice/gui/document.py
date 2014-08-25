@@ -471,8 +471,15 @@ class ScriptController(NSWindowController):
         if self.animationTimer is not None:
             self.stopScript()
 
+        # if this is a single-image export and the canvas already contains some grobs,
+        # write it out synchronously rather than starting up an export session
+        if kind=='image' and opts['last']==opts['first'] and list(self.vm.canvas):
+            img_data = self.vm.canvas._getImageData(opts['format'])
+            img_data.writeToFile_atomically_(fname, True)
+            self.exportStatus('complete')
+            return
+
         # if we're exporting multiple frames, give some ui feedback
-        # if opts['last'] != opts['first']:
         if self.outputView:
             self.outputView.clear(timestamp=True)
         if self.statusView:

@@ -238,11 +238,10 @@ class ConsoleScript(ScriptController):
             padding = len(str(total)) - len(str(written))
             msg = "%s%i/%i frames written"%(' '*padding, written, total)
 
-        if total>1:
-            dots = progress(written, total)
-            self._buf = '\r%s %s\r%s'%(dots, msg, dots[:1+dots.count('#')])
-            STDERR.write(ERASER + self._buf)
-            STDERR.flush()
+        dots = progress(written, total)
+        self._buf = '\r%s %s\r%s'%(dots, msg, dots[:1+dots.count('#')])
+        STDERR.write(ERASER + self._buf)
+        STDERR.flush()
 
 
 def progress(written, total, width=20):
