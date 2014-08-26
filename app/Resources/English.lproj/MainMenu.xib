@@ -322,13 +322,13 @@ CQ
                                             </connections>
                                         </menuItem>
                                         <menuItem title="Shift Upward" tag="10" keyEquivalent="" id="ide-G8-bu2">
-                                            <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES"/>
                                             <connections>
                                                 <action selector="editorAction:" target="-1" id="7MQ-SS-maJ"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="Shift Downward" tag="11" keyEquivalent="" id="cVe-PP-big">
-                                            <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES"/>
                                             <connections>
                                                 <action selector="editorAction:" target="-1" id="bQb-hH-de0"/>
                                             </connections>

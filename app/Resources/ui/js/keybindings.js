@@ -1,4 +1,4 @@
-NODEBOX_KEYBINDINGS=[
+PLOTDEVICE_KEYBINDINGS=[
     {
         name: "setneedle",
         bindKey: {mac: "Command-e"},
@@ -36,24 +36,28 @@ NODEBOX_KEYBINDINGS=[
         exec: function(editor) {
             app.loadPrefs()
         }
-    },{
-        name: "showKeyboardShortcuts",
-        bindKey: {mac: "Command-Alt-h"},
-        exec: function(editor) {
-            ace.config.loadModule("ace/ext/keybinding_menu", function(module) {
-                module.init(editor);
-                editor.showKeyboardShortcuts()
-            })
-        }
+    // },{
+    //     name: "showKeyboardShortcuts",
+    //     bindKey: {mac: "Command-Alt-h"},
+    //     exec: function(editor) {
+    //         ace.config.loadModule("ace/ext/keybinding_menu", function(module) {
+    //             module.init(editor);
+    //             editor.showKeyboardShortcuts()
+    //         })
+    //     }
     },{
         name: "movelinesup",
-        bindKey: "Command-Option-Up",
-        exec: function(editor) { editor.moveLinesUp(); },
+        bindKey: "Alt-Up",
+        exec: function(editor) {
+            editor.moveLinesUp();
+        },
         scrollIntoView: "cursor"
     }, {
         name: "movelinesdown",
-        bindKey: "Command-Option-Down",
-        exec: function(editor) { editor.moveLinesDown(); },
+        bindKey: "Alt-Down",
+        exec: function(editor) {
+            editor.moveLinesDown();
+        },
         scrollIntoView: "cursor"
     }, {
        name: "gotoline", // knock out the binding for the javascript-dialog version
