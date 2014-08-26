@@ -229,7 +229,7 @@ class EditorView(NSView):
         # map the tags in the nib's menu items to ace.js commandnames
         cmds = [None, 'selectline', 'centerselection', 'splitIntoLines', 'addCursorAbove', 'addCursorBelow',
                       'selectMoreAfter', 'selectMoreBefore', 'blockindent', 'blockoutdent', 'movelinesup',
-                      'movelinesdown', 'togglecomment']
+                      'movelinesdown', 'togglecomment', 'modifyNumberUp','modifyNumberDown']
         self.js('editor.exec', args(cmds[sender.tag()]))
 
     @IBAction

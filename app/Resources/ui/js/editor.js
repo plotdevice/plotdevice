@@ -84,7 +84,8 @@ var Editor = function(elt){
     var _menu_cmds = { // commands whose keyboard shortcuts are caught by ace rather than NSView
         "Edit":['selectline', 'splitIntoLines', 'addCursorAbove', 'addCursorBelow', 'centerselection',
                 'blockindent', 'blockoutdent', 'togglecomment','selectMoreAfter', 'selectMoreBefore',
-                'expandSnippet', 'startAutocomplete', 'movelinesup', 'movelinesdown'],
+                'expandSnippet', 'startAutocomplete', 'movelinesup', 'movelinesdown','modifyNumberUp',
+                'modifyNumberDown'],
         "Python":[]
     }
     var _htimer = null, _vtimer = null, _hmin=0, _vmin=0;

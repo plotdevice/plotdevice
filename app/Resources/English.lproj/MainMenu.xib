@@ -197,6 +197,19 @@
                                     <action selector="paste:" target="-1" id="226"/>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" id="BIh-6U-iX0"/>
+                            <menuItem title="Increment Number" tag="13" keyEquivalent="" id="h7n-Id-Vvg">
+                                <modifierMask key="keyEquivalentModifierMask" control="YES"/>
+                                <connections>
+                                    <action selector="editorAction:" target="-1" id="zBG-5Z-YHb"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Decrement Number" tag="14" keyEquivalent="" id="UdY-IQ-vlC">
+                                <modifierMask key="keyEquivalentModifierMask" control="YES"/>
+                                <connections>
+                                    <action selector="editorAction:" target="-1" id="oKe-qy-p7V"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="32v-aL-p8z"/>
                             <menuItem title="Tab Completion" id="lxu-Ni-axm">
                                 <modifierMask key="keyEquivalentModifierMask"/>
@@ -222,9 +235,6 @@ CQ
                                         </menuItem>
                                     </items>
                                 </menu>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="214">
-                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
                             <menuItem title="Find" id="444">
                                 <menu key="submenu" title="Find" id="443">
@@ -582,5 +592,8 @@ CQ
                 <outlet property="updatesMenu" destination="YYp-CZ-oB1" id="dB9-oO-Tqq"/>
             </connections>
         </customObject>
+        <menuItem isSeparatorItem="YES" id="214">
+            <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+        </menuItem>
     </objects>
 </document>

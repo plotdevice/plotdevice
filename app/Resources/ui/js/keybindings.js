@@ -60,6 +60,16 @@ PLOTDEVICE_KEYBINDINGS=[
         },
         scrollIntoView: "cursor"
     }, {
+        name: "modifyNumberUp",
+        bindKey: "Ctrl-Up",
+        exec: function(editor) { editor.modifyNumber(1); },
+        multiSelectAction: "forEach"
+    }, {
+        name: "modifyNumberDown",
+        bindKey: "Ctrl-Down",
+        exec: function(editor) { editor.modifyNumber(-1); },
+        multiSelectAction: "forEach"
+    }, {
        name: "gotoline", // knock out the binding for the javascript-dialog version
         // bindKey: "Command-J",
         exec: function(editor) {},
