@@ -350,6 +350,8 @@ class Pattern(object):
         if isinstance(img, Pattern):
             self._nsColor = img._nsColor
         else:
+            from .image import Image
+            img = Image(img) if isinstance(img, basestring) else img
             self._nsColor = NSColor.colorWithPatternImage_(img._nsImage)
 
     # fill() and stroke() both cache the previous canvas state by creating a _rollback attr.

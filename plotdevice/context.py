@@ -2,6 +2,7 @@
 import os, re, types
 from contextlib import contextmanager, nested
 from collections import namedtuple
+from os.path import exists, expanduser
 
 from .lib.cocoa import *
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
@@ -193,6 +194,8 @@ class Context(object):
             elif isinstance(args[0], Image):
                 bg = Pattern(args[0])
                 self.canvas.clear(args[0])
+            elif isinstance(args[0],basestring) and (args[0].startswith('http') or exists(expanduser(args[0]))):
+                bg = Pattern(args[0])
             elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
                 bg = Gradient(*args, **kwargs)
             else:
@@ -669,6 +672,8 @@ class Context(object):
             if isinstance(args[0], Image):
                 clr = Pattern(args[0])
                 self.canvas.clear(args[0])
+            elif isinstance(args[0],basestring) and (args[0].startswith('http') or exists(expanduser(args[0]))):
+                clr = Pattern(args[0])
             elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
                 clr = Gradient(*args, **kwargs)
             else:
