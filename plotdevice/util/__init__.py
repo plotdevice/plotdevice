@@ -173,6 +173,11 @@ def _flatten(seq):
 def trim_zeroes(func):
     return lambda slf: re.sub(r'\.?0+(?=[,\)\]])', '', func(slf))
 
+### Dimension-aware number detector (replacement for isintance) ###
+
+def numlike(obj):
+    return hasattr(obj, '__int__') or hasattr(obj, '__float__')
+
 ### give ordered- and default-dict a nicer repr ###
 
 class BetterRepr(object):

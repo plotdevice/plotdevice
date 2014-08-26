@@ -8,7 +8,7 @@ from . import _cg_context
 from .atoms import PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .colors import Color, Gradient, Pattern
 from .transform import CENTER, Transform, Region, Size, Point, DEGREES
-from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten
+from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten, numlike
 from ..lib import pathmatics, geometry
 
 _ctx = None
@@ -175,7 +175,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         if radius is None:
             self._nsBezierPath.appendBezierPathWithRect_( ((x, y), (width, height)) )
         else:
-            if isinstance(radius, (int,float,long)):
+            if numlike(radius):
                 radius = (radius, radius)
             elif not isinstance(radius, (list, tuple)) or len(radius)!=2:
                 badradius = 'the radius for a rect must be either a number or an (x,y) tuple'
@@ -190,7 +190,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             self._nsBezierPath.appendBezierPathWithOvalInRect_( ((x, y), (width, height)) )
         else:
             # convert angles from canvas units to degrees
-            if isinstance(rng, (int,float,long)):
+            if numlike(rng):
                 start, end = sorted([0, rng])
             else:
                 start, end = rng
@@ -258,7 +258,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             self.oval(x-r, y-r, 2*r, 2*r)
         else:
             # convert angles from canvas units to degrees
-            if isinstance(rng, (int,float,long)):
+            if numlike(rng):
                 start, end = sorted([0, rng])
             else:
                 start, end = rng

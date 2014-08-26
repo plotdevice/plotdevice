@@ -6,7 +6,7 @@ import warnings
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
-from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path
+from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path, numlike
 _ctx = None
 __all__ = ("RGB", "HSV", "HSB", "CMYK", "GREY",
            "Color", "Pattern", "Gradient",)
@@ -304,13 +304,13 @@ class Color(object):
                                                              re.match(r'#?[a-z0-9]{3,8}$', s.strip()) )
         if isinstance(blob, (tuple, list)):
             demoded = [b for b in blob if b not in (RGB,HSV,CMYK,GREY)]
-            if all(isinstance(n, (int,long,float)) and len(demoded)<=5 for n in blob):
+            if all(numlike(n) and len(demoded)<=5 for n in blob):
                 return True
 
             if demoded and valid_str(demoded[0]):
                 if len(demoded) < 2:
                     return True
-                if len(demoded)==2 and isinstance(demoded[1], (int,float,long)):
+                if len(demoded)==2 and numlike(demoded[1]):
                     return True
         elif isinstance(blob, basestring):
             return valid_str(blob)
@@ -391,11 +391,11 @@ class Gradient(object):
         num_c = len(colors)
         steps = kwargs.get('steps', [i/(num_c-1.0) for i in range(num_c)])
         num_s = len(steps)
-        if num_s!=num_c or not all(isinstance(n, (int,float,long)) and 0<=n<=1 for n in steps):
+        if num_s!=num_c or not all(numlike(n) and 0<=n<=1 for n in steps):
             wrongstep = 'Gradient steps must equal in length to the number of colors (and lie in the range 0-1)'
             raise DeviceError(wrongstep)
         center = kwargs.get('center', [0,0])
-        if len(center)!=2 or not all(isinstance(n, (int,float,long)) and -1<=n<=1 for n in center):
+        if len(center)!=2 or not all(numlike(n) and -1<=n<=1 for n in center):
             offsides = 'Gradient center must be a 2-tuple or Point using relative values ranging from -1 to 1'
             raise DeviceError(offsides)
         self._steps = steps

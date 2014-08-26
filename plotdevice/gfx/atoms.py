@@ -5,7 +5,7 @@ from Quartz import *
 from collections import namedtuple, defaultdict
 
 from plotdevice import DeviceError, INTERNAL as DEFAULT
-from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes
+from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
 from .transform import Transform, Dimension
 
@@ -160,41 +160,33 @@ class BoundsMixin(Grob):
     def _get_x(self):
         return self._bounds.x
     def _set_x(self, x):
-        if isinstance(x, Dimension):
-            x = float(x)
-        if not isinstance(x, (int,float)):
+        if not numlike(x):
             raise DeviceError('x coordinate must be int or float (not %r)'%type(x))
-        self._bounds = self._bounds._replace(x=x)
+        self._bounds = self._bounds._replace(x=float(x))
     x = property(_get_x, _set_x)
 
     def _get_y(self):
         return self._bounds.y
     def _set_y(self, y):
-        if isinstance(y, Dimension):
-            y = float(y)
-        if not isinstance(y, (int,float)):
+        if not numlike(y):
             raise DeviceError('y coordinate must be int or float (not %r)'%type(y))
-        self._bounds = self._bounds._replace(y=y)
+        self._bounds = self._bounds._replace(y=float(y))
     y = property(_get_y, _set_y)
 
     def _get_width(self):
         return self._bounds.w
     def _set_width(self, w):
-        if isinstance(w, Dimension):
-            w = float(w)
-        if w and not isinstance(w, (int,float)):
+        if w and not numlike(w):
             raise DeviceError('width value must be a number or None (not %r)'%type(w))
-        self._bounds = self._bounds._replace(w=w)
+        self._bounds = self._bounds._replace(w=float(w))
     w = width = property(_get_width, _set_width)
 
     def _get_height(self):
         return self._bounds.h
     def _set_height(self, h):
-        if isinstance(h, Dimension):
-            h = float(h)
-        if h and not isinstance(h, (int,float)):
+        if h and not numlike(h):
             raise DeviceError('height value must be a number or None (not %r)'%type(h))
-        self._bounds = self._bounds._replace(h=h)
+        self._bounds = self._bounds._replace(h=float(h))
     h = height = property(_get_height, _set_height)
 
 class ColorMixin(Grob):

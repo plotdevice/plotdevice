@@ -12,7 +12,7 @@ from .transform import Transform, Region, Size
 from .colors import Color
 from .bezier import Bezier
 from ..util.foundry import *
-from ..util import _copy_attrs
+from ..util import _copy_attrs, numlike
 
 _ctx = None
 __all__ = ("Text", "Family", "Font", "Stylesheet",
@@ -360,7 +360,7 @@ class Stylesheet(object):
                     spec.setdefault('family', family_name(item))
                 else:
                     print 'Font: unintelligible weight or family name "%s"'%item
-            elif isinstance(item, (int, float, long)):
+            elif numlike(item):
                 spec.setdefault('size', item)
         return spec
 

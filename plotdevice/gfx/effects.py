@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
-from ..util import _copy_attr, _copy_attrs
+from ..util import _copy_attr, _copy_attrs, numlike
 from .colors import Color
 from .transform import Point
 from .image import ciFilter
@@ -175,7 +175,7 @@ class Effect(Frob):
     def _validate(self, eff, val):
         if val is None:
             pass
-        elif eff=='alpha' and not (isinstance(val, (int,float,long)) and 0<=val<=1):
+        elif eff=='alpha' and not (numlike(val) and 0<=val<=1):
             badalpha = 'alpha() value must be a number between 0 and 1.0'
             raise DeviceError(badalpha)
         elif eff=='blend':
@@ -236,7 +236,7 @@ class Shadow(object):
             self.color = Color(kwargs.get('color', ('#000', .75)))
             self.blur = kwargs.get('blur', 10 if self.color.a else 0)
             offset = kwargs.get('offset', self.blur/2.0)
-            if isinstance(offset, (int,float,long)):
+            if numlike(offset):
                 offset = [offset]
             if len(offset)==1:
                 offset *= 2
@@ -271,7 +271,7 @@ class Shadow(object):
         x,y = self._nsShadow.shadowOffset()
         return Point(x,-y)
     def _set_offset(self, offset):
-        if isinstance(offset, (int,float,long)):
+        if numlike(offset):
             x = y = offset
         else:
             x,y = offset
