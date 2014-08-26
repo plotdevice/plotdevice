@@ -297,18 +297,6 @@ class DistCommand(Command):
 
         print "\nBuilt PlotDevice.app, %s, and release.json in ./dist" % basename(ZIP)
 
-
-class SubmitCommand(Command):
-    description = "Validate contents of dist subdir then send them to the net"
-    user_options = []
-    def initialize_options(self):
-        pass
-    def finalize_options(self):
-        pass
-    def run(self):
-        pass
-        # <upload to pypi goes here>
-
 ## Run Build ##
 
 if __name__=='__main__':
