@@ -55,7 +55,7 @@ CLASSIFIERS = (
     "Topic :: Software Development :: User Interfaces",
     "Topic :: Text Editors :: Integrated Development Environments (IDE)",
 )
-DESCRIPTION = "Create 2-dimensional graphics and animation using Python code"
+DESCRIPTION = "Create two-dimensional graphics and animations with code"
 LONG_DESCRIPTION = """PlotDevice is a Macintosh application used in graphic design research. It provides an
 interactive Python environment where you can create two-dimensional graphics
 and output them in a variety of vector, bitmap, and animation formats. It is
@@ -66,17 +66,19 @@ PlotDevice is a fork of NodeBox 1.9.7rc1 with support for modern versions of
 Python and Mac OS.
 
 The new version features:
+
 * Enhanced command line interface.
 * New text editor with tab completion, syntax color themes, and emacs/vi bindings.
-* Video export in H.264 or animated gif formats (with [GCD](http://en.wikipedia.org/wiki/Grand_Central_Dispatch)-based i/o).
+* Video export in H.264 or animated gif formats (with GCD-based i/o).
 * Added support for external editors by reloading the source when changed.
-* Build system now works with Xcode or `py2app` for the application and `pip` for the module.
+* Build system now works with Xcode or ``py2app`` for the application and ``pip`` for the module.
 * Virtualenv support (for both installation of the module and running scripts with dependencies).
-* External scripts can use `from plotdevice import *` to create a drawing environment.
+* External scripts can use ``from plotdevice import *`` to create a drawing environment.
 * Simplified bezier & affine transform api using the python ‘with’ statement
 * Now uses the system's Python 2.7 interpreter.
 
 Requires:
+
 * Mac OS X 10.9+
 """
 
