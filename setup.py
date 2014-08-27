@@ -56,7 +56,7 @@ CLASSIFIERS = (
     "Topic :: Text Editors :: Integrated Development Environments (IDE)",
 )
 DESCRIPTION = "Create two-dimensional graphics and animations with code"
-LONG_DESCRIPTION = """PlotDevice is a Macintosh application used in graphic design research. It provides an
+LONG_DESCRIPTION = """PlotDevice is a Macintosh application used for computational graphic design. It provides an
 interactive Python environment where you can create two-dimensional graphics
 and output them in a variety of vector, bitmap, and animation formats. It is
 meant both as a sketch environment for exploring generative design and as a
@@ -75,6 +75,8 @@ The new version features:
 * Virtualenv support (for both installation of the module and running scripts with dependencies).
 * External scripts can use ``from plotdevice import *`` to create a drawing environment.
 * Simplified bezier & affine transform api using the python ‘with’ statement
+* New compositing operations for blend mode, global opacity, and dropshadows
+* Simplified typography commands with stylesheet-based character styles
 * Now uses the system's Python 2.7 interpreter.
 
 Requires:
@@ -324,7 +326,6 @@ if __name__=='__main__':
             'build_py': BuildCommand,
             'dist': DistCommand,
             'sdist': BuildDistCommand,
-            'submit': SubmitCommand,
         },
     )
 
