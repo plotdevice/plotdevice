@@ -1,9 +1,37 @@
+PlotDevice 0.9.4
+----------------
+* External scripts can use `from plotdevice import *` to create a drawing environment.
+* Color commands now support gradients and image-based patterns
+* Strokes can now be dashed lines of configurable segment lengths
+* Added `pen()` command, incorporating `strokewidth()`, `joinstyle()`, and `capstyle()`
+* The canvas `size()` can be set to non-pixel units (`cm`, `inch`, `pica`, etc.)
+* Commands dealing with angles can be switched between radians & degrees with `geometry()`
+* Added compositing support via the `blend()`, `alpha()`, and `shadow()` commands
+* New utility methods: `fonts()`, `export()`, `read()`, `measure()`, `ordered()`, `shuffled()`
+* Font styles can be set at the character level using the `stylesheet()` command
+* The `font()` command accepts separate family and weight strings (not just PostScript Names)
+* In addition to `rect()` and `oval()` you can now use `poly()` and `arc()`
+* Grobs can be manually added/removed from the canvas with `plot()` and `clear()`
+* New `halt()` command to "gracefully" bail out of an animation 
+* Libraries no longer require `ximport()` (since they now use `plotdevice.lib.register`)
+* Quitting the app and re-launching will restore all open (auto-saved) documents
+* Integrated the Sparkle framework for auto-updating of official builds
+* Replaced the NSTextView-based editor with the much more capable ace.js
+* Modernized document-window UI, keyboard shortcuts, and prefs panel
+* Revised and extended User Manual
+
 PlotDevice 0.9 (unreleased)
 ---------------------------
 * Enhanced command line interface.
-* Video export in H.264 or animated gif formats.
-* Build system now works with xcode or py2app for the application and pip for the module.
+* Video export in H.264 or animated gif formats (with GCD-based i/o).
+* Virtualenv support (for both installation of the module and running in-app with dependencies).
+* Build system now works with Xcode or `py2app` for the application and `pip` for the module.
 * A few more text colors are configurable in the preferences pane.
+* Disabled scrollWheel and wheelDelta event data (to support ‘responsive scrolling’)
+* Simplified bezier path API (including `with` statement support): `bezier()`, `clip()`
+* Transformation commands all support the `with` statement
+* Added support for external editors by reloading the source when changed.
+* Example scripts are now embedded in the app and accessed from the menu bar
 * Python 2.7, virtualenv support, and 64 bit extensions (now requires OS X 10.9+).
 
 NodeBox 1.9.7
