@@ -19,7 +19,7 @@ All rights reserved.
 MIT Licensed (see README file for details)
 """
 
-__version__ = '0.9.3'
+__version__ = '0.9.4'
 __author__  = 'Christian Swinehart'
 __email__   = "drafting@samizdat.cc"
 __credits__ = 'Frederik De Bleser, Tom De Smedt, Just van Rossum, & Marcos Ojeda'
