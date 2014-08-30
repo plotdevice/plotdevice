@@ -474,7 +474,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 t.scale(min(width /pw, height / ph))
         t.translate(-px, -py)
         self._nsBezierPath = t.apply(self)._nsBezierPath
-        self._fulcrum = t.apply(self._fulcrum)
+        self._fulcrum = t.apply(self._fulcrum) if self._fulcrum else None
         self._segment_cache = {}
 
 
