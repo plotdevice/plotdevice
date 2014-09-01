@@ -595,20 +595,6 @@ class ScriptController(NSWindowController):
         pboard.declareTypes_owner_([NSPDFPboardType,NSPostScriptPboardType,NSTIFFPboardType], self.graphicsView)
 
 
-    @IBAction
-    def printDocument_(self, sender):
-        op = NSPrintOperation.printOperationWithView_printInfo_(self.graphicsView, self.printInfo())
-        op.runOperationModalForWindow_delegate_didRunSelector_contextInfo_(
-            NSApp().mainWindow(), self, "printOperationDidRun:success:contextInfo:",
-            0)
-
-    def printOperationDidRun_success_contextInfo_(self, op, success, info):
-        if success:
-            self.setPrintInfo_(op.printInfo())
-    printOperationDidRun_success_contextInfo_ = objc.selector(printOperationDidRun_success_contextInfo_,
-            signature="v@:@ci")
-
-
     #
     # Zoom commands, forwarding to the graphics view.
     #
