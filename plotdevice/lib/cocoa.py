@@ -1,6 +1,6 @@
 # all the NSBits and NSPieces
 
-from Quartz import CGColorCreate, CGContextAddPath, CGContextAddRect, CGContextBeginPath, \
+from Quartz import CALayer, CGColorCreate, CGContextAddPath, CGContextAddRect, CGContextBeginPath, \
                    CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, \
                    CGContextClip, CGContextClipToMask, CGContextDrawPath, CGContextEOClip, \
                    CGContextEndTransparencyLayer, CGContextRestoreGState, CGContextSaveGState, \
