@@ -9,8 +9,8 @@ from PyObjCTools import AppHelper
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
 
-class PlotDeviceBackdrop(NSView):
-    """A container that sits between the NSClipView and PlotDeviceGraphicsView
+class GraphicsBackdrop(NSView):
+    """A container that sits between the NSClipView and GraphicsView
 
        It resizes to fit the size of the canvas and centers it when the canvas
        is smaller than the display space in the NSSplitView. It also draws the
@@ -34,10 +34,10 @@ class PlotDeviceBackdrop(NSView):
             frame.size.height = max(visible.size.height, minsize.height)
             scrollview.horizontalScroller().setControlSize_(1) #NSSmallControlSize
             scrollview.verticalScroller().setControlSize_(1)
-        self = super(PlotDeviceBackdrop, self).setFrame_(frame)
+        self = super(GraphicsBackdrop, self).setFrame_(frame)
 
     def didAddSubview_(self, subview):
-        if isinstance(subview, PlotDeviceGraphicsView):
+        if isinstance(subview, GraphicsView):
             self.gfxView = subview
             nc = NSNotificationCenter.defaultCenter()
             nc.addObserver_selector_name_object_(self, "viewFrameDidChange:", NSViewFrameDidChangeNotification, subview)
@@ -47,14 +47,14 @@ class PlotDeviceBackdrop(NSView):
         nc.removeObserver_(self)
 
     def willRemoveSubview_(self, subview):
-        if isinstance(subview, PlotDeviceGraphicsView):
+        if isinstance(subview, GraphicsView):
             nc = NSNotificationCenter.defaultCenter()
             nc.removeObserver_name_object_(self, NSViewFrameDidChangeNotification, subview)
 
     def drawRect_(self, rect):
         DARK_GREY.setFill()
         NSRectFillUsingOperation(rect, NSCompositeCopy)
-        super(PlotDeviceBackdrop, self).drawRect_(rect)
+        super(GraphicsBackdrop, self).drawRect_(rect)
 
     def viewFrameDidChange_(self, note):
         self.setFrame_(self.frame())
@@ -70,8 +70,7 @@ class PlotDeviceBackdrop(NSView):
             gfxframe.origin.y = 0
         self.gfxView.setFrame_(gfxframe)
 
-# class defined in PlotDeviceGraphicsView.xib
-class PlotDeviceGraphicsView(NSView):
+class GraphicsView(NSView):
     script = IBOutlet()
     placeholder = NSImage.imageNamed_('placeholder.pdf')
 

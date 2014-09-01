@@ -31,11 +31,11 @@
                             <rect key="frame" x="0.0" y="0.0" width="600" height="485"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <customView id="haD-l0-piW" customClass="PlotDeviceBackdrop">
+                                <customView id="haD-l0-piW" customClass="GraphicsBackdrop">
                                     <rect key="frame" x="0.0" y="0.0" width="600" height="485"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <customView id="vrd-6s-Y5i" customClass="PlotDeviceGraphicsView">
+                                        <customView id="vrd-6s-Y5i" customClass="GraphicsView">
                                             <rect key="frame" x="200" y="185" width="200" height="39"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                             <connections>

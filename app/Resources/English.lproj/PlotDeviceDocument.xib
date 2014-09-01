@@ -39,11 +39,11 @@
                                     <rect key="frame" x="0.0" y="0.0" width="337" height="485"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <customView id="W8B-XM-nL9" customClass="PlotDeviceBackdrop">
+                                        <customView id="W8B-XM-nL9" customClass="GraphicsBackdrop">
                                             <rect key="frame" x="0.0" y="0.0" width="337" height="485"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
-                                                <customView id="15o-mm-Ppr" customClass="PlotDeviceGraphicsView">
+                                                <customView id="15o-mm-Ppr" customClass="GraphicsView">
                                                     <rect key="frame" x="80" y="180" width="176" height="44"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                                     <connections>
