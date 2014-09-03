@@ -1,6 +1,5 @@
 # encoding: utf-8
 import re
-from xml.parsers import expat
 from operator import itemgetter, attrgetter
 from plotdevice.util import odict, ddict
 from ..lib.cocoa import *
@@ -12,7 +11,7 @@ from .transform import Transform, Region, Size
 from .colors import Color
 from .bezier import Bezier
 from ..util.foundry import *
-from ..util import _copy_attrs, numlike
+from ..util import _copy_attrs, numlike, XMLParser
 
 _ctx = None
 __all__ = ("Text", "Family", "Font", "Stylesheet",
@@ -431,97 +430,6 @@ class Typesetter(object):
             path.appendBezierPathWithGlyph_inFont_(g, txtFont)
             path.closePath()
         return path
-
-class XMLParser(object):
-    _log = 0
-
-    def __init__(self, txt):
-        # configure the parsing machinery/callbacks
-        p = expat.ParserCreate()
-        p.StartElementHandler = self._enter
-        p.EndElementHandler = self._leave
-        p.CharacterDataHandler = self._chars
-        self._expat = p
-
-        # set up state attrs to record the parse results
-        self.stack = []
-        self.cursor = 0
-        self.regions = ddict(list)
-        self.body = []
-
-        try:
-            # parse the input xml string
-            if isinstance(txt, unicode):
-                txt = txt.encode('utf-8')
-            wrap = "<%s>" % ">%s</".join([DEFAULT]*2)
-            self._expat.Parse(wrap%txt, True)
-        except expat.ExpatError, e:
-            # go a little overboard providing context for syntax errors
-            line = self.xml.split('\n')[e.lineno-1]
-            self._expat_error(e, line)
-
-    @property
-    def text(self):
-        # returns the processed string (with all markup removed)
-        return "".join(self.body)
-
-    def _expat_error(self, e, line):
-        measure = 80
-        col = e.offset
-        start, end = len('<%s>'%DEFAULT), -len('</%s>'%DEFAULT)
-        line = line[start:end]
-        col -= start
-
-        # move the column range with the typo into `measure` chars
-        snippet = line
-        if col>measure:
-            snippet = snippet[col-measure:]
-            col -= col-measure
-        snippet = snippet[:max(col+12, measure-col)]
-        col = min(col, len(snippet))
-
-        # show which ends of the line are truncated
-        clipped = [snippet]
-        if not line.endswith(snippet):
-            clipped.append('...')
-        if not line.startswith(snippet):
-            clipped.insert(0, '...')
-            col+=3
-        caret = ' '*col + '^'
-
-        # raise the exception
-        msg = 'Text: ' + "\n".join(e.args)
-        stack = 'stack: ' + " ".join(['<%s>'%tag for tag in self.stack[1:]]) + ' ...'
-        xmlfail = "\n".join([msg, "".join(clipped), caret, stack])
-        raise DeviceError(xmlfail)
-
-    def log(self, s=None, indent=0):
-        if not isinstance(s, basestring):
-            if s is None:
-                return self._log
-            self._log = int(s)
-            return
-        if not self._log: return
-        if indent<0: self._log-=1
-        msg = (u'  '*self._log)+(s if s.startswith('<') else repr(s))
-        print msg.encode('utf-8')
-        if indent>0: self._log+=1
-
-    def _enter(self, name, attrs):
-        self.stack.append(name)
-        self.log(u'<%s>'%(name), indent=1)
-
-    def _leave(self, name):
-        if name == DEFAULT:
-            self.body = u"".join(self.body)
-        self.stack.pop()
-        self.log(u'</%s>'%(name), indent=-1)
-
-    def _chars(self, data):
-        self.regions[tuple(self.stack)].append(tuple([self.cursor, len(data)]))
-        self.cursor += len(data)
-        self.body.append(data)
-        self.log(u'"%s"'%(data))
 
 
 class Font(object):
