@@ -61,7 +61,8 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         if not isinstance(text, basestring):
             raise DeviceError("text() must be called with a string as its first argument")
         for attr, val in zip(['x','y','width','height'], args):
-            setattr(self, attr, val)
+            if val is not None:
+                setattr(self, attr, val)
 
         # let _screen_transform handle alignment for single-line text
         if self.width is None:
