@@ -128,6 +128,10 @@ class GraphicsView(NSView):
         # cache the canvas image
         self.layer().setContents_(canvas.rasterize(zoom=self.zoom))
 
+        # possible bug:
+        # rasterize might be better off creating cgimages instead:
+        # http://sean.voisen.org/blog/2013/04/high-performance-image-loading-os-x/
+
         # keep a reference to the canvas so we can zoom later on
         self.canvas = canvas
 
