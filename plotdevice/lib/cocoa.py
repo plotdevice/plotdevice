@@ -28,8 +28,8 @@ from AppKit import NSAlert, NSApp, NSApplication, NSApplicationActivationPolicyA
                    NSCompositeSourceOver, NSContentsCellMask, NSCriticalAlertStyle, NSCursor, \
                    NSCurveToBezierPathElement, NSDeviceCMYKColorSpace, NSDeviceRGBColorSpace, NSDocument, \
                    NSDocumentController, NSFindPboard, NSFixedPitchFontMask, NSFocusRingTypeExterior, \
-                   NSFont, NSFontManager, NSForegroundColorAttributeName, NSGIFFileType, NSGradient, \
-                   NSGraphicsContext, NSGraphiteControlTint, NSImage, NSImageCacheNever, \
+                   NSFont, NSFontDescriptor, NSFontManager, NSForegroundColorAttributeName, NSGIFFileType, \
+                   NSGradient, NSGraphicsContext, NSGraphiteControlTint, NSImage, NSImageCacheNever, \
                    NSImageCompressionFactor, NSImageInterpolationHigh, NSItalicFontMask, NSJPEGFileType, \
                    NSJustifiedTextAlignment, NSLayoutManager, NSLeftTextAlignment, NSLineBreakByWordWrapping, \
                    NSLineToBezierPathElement, NSMenu, NSMenuItem, NSMiniControlSize, NSMoveToBezierPathElement, \
@@ -41,7 +41,7 @@ from AppKit import NSAlert, NSApp, NSApplication, NSApplicationActivationPolicyA
                    NSTIFFPboardType, NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, NSTextView, \
                    NSTrackingActiveInActiveApp, NSTrackingArea, NSTrackingMouseEnteredAndExited, NSUnboldFontMask, \
                    NSUnitalicFontMask, NSView, NSViewFrameDidChangeNotification, NSWindow, \
-                   NSWindowBackingLocationVideoMemory, NSWindowController, NSWorkspace
+                   NSWindowBackingLocationVideoMemory, NSWindowController, NSWorkspace, NSKernAttributeName
 from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, \
                    CIVector, Foundation, NO, NSAffineTransform, NSAffineTransformStruct, \
                    NSAttributedString, NSBundle, NSData, NSDate, NSDateFormatter, \
