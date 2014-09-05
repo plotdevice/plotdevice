@@ -11,7 +11,8 @@ from plotdevice import DeviceError
 
 __all__ = ["standardized", "sanitized", "fammy", "facey", "widthy", "weighty",
            "font_exists", "font_family", "font_encoding", "font_face",
-           "family_names", "family_name", "family_members", "Face"]
+           "family_names", "family_name", "family_members", "Face",
+           "aat_attrs"]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic', 'traits'])
 
@@ -208,6 +209,89 @@ def family_members(famname, names=False):
     # save the collection to the cache before returning it
     _FAMILIES[famname] = sorted(fam, key=attrgetter('italic','wid','wgt'))
     return _FAMILIES[famname]
+
+
+# conversions between pythonic typography feature names and AAT integers
+
+aat_consts = {
+    "Ligatures":1, # kLigaturesType
+    "CommonOn":2, "CommonOff":3, "RareOn":4, "RareOff":5, 
+    
+    "LowerCase":37, # kLowerCaseType
+    "UpperCase":38, # kUpperCaseType
+    "DefaultCase":0, "SmallCaps":1, 
+
+    "NumberCase":21, # kNumberCaseType
+    "LowerCaseNumbers":0, "UpperCaseNumbers":1,
+
+    "NumberSpacing":6, # kNumberSpacingType
+    "Monospaced":0, "Proportional":1,
+
+    "Fractions":11, # kFractionsType
+    "NoFractions":0, "Diagonal":2,
+
+    "VerticalPosition":10, # kVerticalPositionType
+    "NormalPosition":0, "Superiors":1, "Inferiors":2,
+}
+
+pd_features = {
+    "lig":{
+        0:[("Ligatures", "CommonOff"), ("Ligatures", "RareOff")],
+        1:[("Ligatures", "CommonOn")],
+        all:[("Ligatures", "CommonOn"), ("Ligatures", "RareOn")],
+    },
+
+    "sc":{
+        0:[("LowerCase", "DefaultCase"), ("UpperCase", "DefaultCase")],
+        1:[("LowerCase", "SmallCaps")],
+        all:[("LowerCase", "SmallCaps"), ("UpperCase", "SmallCaps")],
+    },
+
+    "osf":{
+        0:[("NumberCase", "UpperCaseNumbers")],
+        1:[("NumberCase", "LowerCaseNumbers")],
+    },
+
+    "tab":{
+        0:[("NumberSpacing", "Proportional")],
+        1:[("NumberSpacing", "Monospaced")],
+    },
+
+    "frac":{
+        0:[("Fractions", "NoFractions")],
+        1:[("Fractions", "Diagonal")],
+    },
+
+    "vpos":{
+        1:[("VerticalPosition", "Superiors")],
+        0:[("VerticalPosition", "NormalPosition")],
+        -1:[("VerticalPosition", "Inferiors")],
+    }
+}
+
+from AppKit import NSFontFeatureSettingsAttribute as settings_attr, \
+                   NSFontFeatureTypeIdentifierKey as feature_id, \
+                   NSFontFeatureSelectorIdentifierKey as selector_id
+
+# convert the semi-sensibly named items in features into their SFNTLayoutTypes.h equivalents
+aat_features = {}
+for arg, vals in pd_features.items():
+    aat_features[arg] = {}
+    for val, actions in vals.items():
+        aat_features[arg][val] = []
+        for ftype, fsel in actions:
+            feature, selector = aat_consts[ftype], aat_consts[fsel]
+            aat_features[arg][val].append({feature_id:feature, selector_id:selector})
+
+def aat_attrs(spec):
+    """Converts a Font spec to a features dictionary suitable for NSFontDescriptor"""
+    settings = []
+    for k,v in spec.items():
+        if k in aat_features:
+            settings += aat_features[k][v]
+    return {settings_attr:settings}
+
+
 
 # sausage gets made below:
 
