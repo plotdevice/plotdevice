@@ -14,7 +14,7 @@ __all__ = ["standardized", "sanitized", "fammy", "facey", "widthy", "weighty",
            "family_names", "family_name", "family_members", "Face",
            "aat_attrs"]
 
-Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic', 'traits'])
+Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic',])
 
 # introspection methods for postscript names/nsfonts
 
@@ -131,7 +131,7 @@ def family_members(famname, names=False):
         weight, wgt, width, wid, var = parse_display_name(dname)
         traits = tuple([k for k,v in ns_traits.items() if v&traits])
         slanted = 'italic' in traits
-        fam.append(Face(famname, psname, weight, wgt, width, wid, var, slanted, traits))
+        fam.append(Face(famname, psname, weight, wgt, width, wid, var, slanted))
 
     # if the font is totally nuts and doesn't have anything recognizable as a weight in
     # its name, pick one from the standard list based on the wgt value (because surely
@@ -151,7 +151,7 @@ def family_members(famname, names=False):
     # lots of times an italic in the ‘default’ weight will leave that out of its name.
     # fill this info back in by trying to match its wgt against other weights with
     # more verbose naming.
-    same_slant = lambda x,y: ('italic' in x.traits)==('italic' in y.traits)
+    same_slant = lambda x,y: x.italic==y.italic
     weightless = lambda: (f for f in fam if f.weight is None)
     weighted = lambda: (f for f in fam if f.weight is not None)
 
