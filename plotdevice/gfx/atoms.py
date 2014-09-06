@@ -178,7 +178,9 @@ class BoundsMixin(Grob):
     def _set_width(self, w):
         if w and not numlike(w):
             raise DeviceError('width value must be a number or None (not %r)'%type(w))
-        self._bounds = self._bounds._replace(w=float(w))
+        elif numlike(w):
+            w = float(w)
+        self._bounds = self._bounds._replace(w=w)
     w = width = property(_get_width, _set_width)
 
     def _get_height(self):
@@ -186,7 +188,9 @@ class BoundsMixin(Grob):
     def _set_height(self, h):
         if h and not numlike(h):
             raise DeviceError('height value must be a number or None (not %r)'%type(h))
-        self._bounds = self._bounds._replace(h=float(h))
+        elif numlike(h):
+            h = float(h)
+        self._bounds = self._bounds._replace(h=h)
     h = height = property(_get_height, _set_height)
 
 class ColorMixin(Grob):
