@@ -6,13 +6,14 @@ from pprint import pprint, pformat
 from operator import itemgetter, attrgetter
 from collections import namedtuple, Counter, OrderedDict as odict, defaultdict as ddict
 from ..lib.cocoa import *
+from . import numlike
 
 from plotdevice import DeviceError
 
 __all__ = ["standardized", "sanitized", "fammy", "facey", "widthy", "weighty",
            "font_exists", "font_family", "font_encoding", "font_face",
            "family_names", "family_name", "family_members", "Face",
-           "aat_attrs"]
+           "aat_attrs", "typespec", "fontspec"]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic',])
 
@@ -209,6 +210,83 @@ def family_members(famname, names=False):
     # save the collection to the cache before returning it
     _FAMILIES[famname] = sorted(fam, key=attrgetter('italic','wid','wgt'))
     return _FAMILIES[famname]
+
+# typography arg validators/standardizers
+
+def fontspec(*args, **kwargs):
+    # convert any bytestrings to unicode (presuming utf8 everywhere)
+    for k,v in kwargs.items():
+        if isinstance(v, str):
+            kwargs[k] = v.decode('utf-8')
+    args = [v.decode('utf-8') if isinstance(v,str) else v for v in args]
+
+    # start with kwarg values as the canonical settings
+    _canon = ('family','size','weight','italic','width','variant')
+    spec = {k:v for k,v in kwargs.items() if k in _canon}
+
+    # be backward compatible with the old arg names
+    if 'fontsize' in kwargs:
+        spec.setdefault('size', kwargs['fontsize'])
+    if 'italic' in spec:
+        spec['italic'] = bool(spec['italic'])
+    if 'family' in spec:
+        spec['family'] = family_name(spec['family'])
+
+    # validate the weight and width args (if any)
+    if not weighty(spec.get('weight','regular')):
+        print 'Font: unknown weight "%s"' % spec.pop('weight')
+    if not widthy(spec.get('width','condensed')):
+        print 'Font: unknown width "%s"' % spec.pop('width')
+
+    # look for a postscript name passed as `face` or `fontname` and validate it
+    basis = kwargs.get('name')
+    if basis and not font_exists(basis):
+        notfound = 'Font: no matches for Postscript name "%s"'%basis
+        raise DeviceError(notfound)
+    elif basis:
+        # if the psname exists, inherit its attributes
+        face = font_face(basis)
+        for axis in ('family','weight','width','variant','italic'):
+            spec.setdefault(axis, getattr(face, axis))
+
+    # search the positional args for either name/size or a Font object
+    # we want the kwargs to have higher priority, so setdefault everywhere...
+    for item in args:
+        if hasattr(item, '_spec'):
+            for k,v in item._spec.items():
+                spec.setdefault(k,v)
+        elif isinstance(item, unicode):
+            if fammy(item):
+                spec.setdefault('family', family_name(item))
+            elif widthy(item):
+                spec.setdefault('width', item)
+            elif weighty(item):
+                spec.setdefault('weight', item)
+            else:
+                print 'Font: unrecognized weight or family name "%s"'%item
+        elif numlike(item) and 'size' not in kwargs:
+            spec['size'] = item
+    
+    # incorporate any typesetting features
+    _aat = aat_features.keys()
+    spec.update({k:(int(v) if v is not all else v) for k,v in kwargs.items() if k in _aat})
+    return spec
+
+def typespec(**kwargs):
+    # start with kwarg values as the canonical settings
+    _canon = ('align','leading','tracking')
+    spec = {k:v for k,v in kwargs.items() if k in _canon}
+
+    # validate alignment
+    if spec.get('align','left') not in ('left','right','center','justify'):
+        chaoticneutral = 'Text alignment must be LEFT, RIGHT, CENTER, or JUSTIFY'
+        raise DeviceError(chaoticneutral)
+
+    # be backward compatible with the old arg names
+    if 'lineheight' in kwargs:
+        spec.setdefault('leading', kwargs['lineheight'])
+    return spec
+
 
 
 # conversions between pythonic typography feature names and AAT integers

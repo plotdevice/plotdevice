@@ -295,73 +295,7 @@ class Stylesheet(object):
         # build the dict of features for this combination of styles
         return {"NSFont":font._nsFont, "NSColor":color, NSParagraphStyleAttributeName:graf}
 
-    @classmethod
-    def _spec(cls, *args, **kwargs):
-        badargs = [k for k in kwargs if k not in Stylesheet.kwargs]
-        if badargs:
-            eg = '"'+'", "'.join(badargs)+'"'
-            badarg = 'unknown keyword argument%s for font style: %s'%('' if len(badargs)==1 else 's', eg)
-            raise DeviceError(badarg)
 
-        # convert any bytestrings to unicode (presuming utf8 everywhere)
-        for k,v in kwargs.items():
-            if isinstance(v, str):
-                kwargs[k] = v.decode('utf-8')
-        args = [v.decode('utf-8') if isinstance(v,str) else v for v in args]
-
-        # start with kwarg values as the canonical settings
-        _canon = ('family','size','weight','italic','width','variant','leading','fill')
-        spec = {k:v for k,v in kwargs.items() if k in _canon}
-
-        # be backward compatible with the old arg names
-        if 'fontsize' in kwargs:
-            spec.setdefault('size', kwargs['fontsize'])
-        if 'lineheight' in kwargs:
-            spec.setdefault('leading', kwargs['lineheight'])
-
-        # validate the weight and width args (if any)
-        if not weighty(spec.get('weight','regular')):
-            print 'Font: unknown weight "%s"' % spec.pop('weight')
-        if not widthy(spec.get('width','condensed')):
-            print 'Font: unknown width "%s"' % spec.pop('width')
-
-        # look for a postscript name passed as `face` or `fontname` and validate it
-        basis = kwargs.get('face', kwargs.get('fontname'))
-        if basis and not font_exists(basis):
-            notfound = 'Font: no matches for Postscript name "%s"'%basis
-            raise DeviceError(notfound)
-        elif basis:
-            spec['face'] = basis
-            # hrm...
-            #
-            # for cascading purposes this might be better expanded to its
-            # fam/wgt/wid/var values. otherwise a rule that sets a face over a
-            # previously imposed family ends up getting overruled from below.
-            # unclear whether it's better to handle this in _inherit to avoid
-            # messing with the way Font uses _spec...
-
-        # search the positional args for either name/size or a Font object
-        # we want the kwargs to have higher priority, so setdefault everywhere...
-        for item in args:
-            if isinstance(item, Face):
-                spec.setdefault('face', item)
-            if isinstance(item, Font):
-                spec.setdefault('face', item._face)
-                spec.setdefault('size', item._size)
-            elif isinstance(item, unicode):
-                if facey(item):
-                    spec.setdefault('face', item)
-                elif widthy(item):
-                    spec.setdefault('width', item)
-                elif weighty(item):
-                    spec.setdefault('weight', item)
-                elif fammy(item):
-                    spec.setdefault('family', family_name(item))
-                else:
-                    print 'Font: unintelligible weight or family name "%s"'%item
-            elif numlike(item):
-                spec.setdefault('size', item)
-        return spec
 
 class Typesetter(object):
 
