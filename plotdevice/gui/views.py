@@ -22,6 +22,9 @@ class GraphicsBackdrop(NSView):
     def isOpaque(self):
         return True
 
+    def isFlipped(self):
+        return True
+
     def setFrame_(self, frame):
         if self.gfxView:
             scrollview = self.superview().superview()
@@ -118,7 +121,7 @@ class GraphicsView(NSView):
 
         if self.canvas is None:
             # draw from top-left corner if first-run
-            self.scrollPoint_( (0,h) )
+            self.scrollPoint_( (0,0) )
         else:
             # otherwise preserve the prior scrollpoint
             half_w = NSWidth(visible) / 2.0
@@ -193,6 +196,9 @@ class GraphicsView(NSView):
 
     def isOpaque(self):
         return False
+
+    def isFlipped(self):
+        return True
 
     ### pasteboard delegate method ###
 
