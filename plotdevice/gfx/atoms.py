@@ -5,6 +5,7 @@ from Quartz import *
 from collections import namedtuple, defaultdict
 
 from plotdevice import DeviceError, INTERNAL as DEFAULT
+from ..util.foundry import fontspec, typespec
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
 from .transform import Transform, Dimension
@@ -315,10 +316,14 @@ class PenMixin(Grob):
 class StyleMixin(Grob):
     """Mixin class for text-styling support.
     Adds the stylesheet, fill, and style attributes to the class."""
-    ctxAttrs = ('_stylesheet', '_typestyle', '_fillcolor',)
+    ctxAttrs = ('_stylesheet', '_typography', '_fillcolor')
     stateAttrs = ('_style',)
-    opts = ('fill','family','size','leading','weight','width','variant','italic','fill','face',
-              'fontname','fontsize','lineheight','font')
+    opts = ('face','family','size','weight','width','variant','italic', # font selection
+            'lig','sc','osf','tab','vpos','frac', # aat features
+            'leading', 'tracking', 'align', # layout
+            'fontname','fontsize','lineheight','font', # nodebox compat
+            'fill', # color override
+            )
 
     def __init__(self, **kwargs):
         super(StyleMixin, self).__init__(**kwargs)
@@ -328,18 +333,24 @@ class StyleMixin(Grob):
             del kwargs['width']
 
         # combine ctx state and kwargs to create a DEFAULT style
-        from .typography import Stylesheet
+        fontopts = {k:v for k,v in kwargs.items() if k in StyleMixin.opts}
         fontargs = kwargs.get('font',[])
         if not isinstance(fontargs, (list,tuple)):
             fontargs = [fontargs]
-        fontspec = {k:v for k,v in kwargs.items() if k in StyleMixin.opts}
-        baseline = self._typestyle._asdict() # current font() setting
-        baseline.update(Stylesheet._spec(*fontargs, **fontspec)) # inline style params
+
+        # start with the current font & typography settings
+        baseline = self._typography.font._spec
+        baseline.update(typespec(**self._typography._asdict()))
+        # merge in any modifications from the text() call
+        baseline.update(fontspec(*fontargs, **fontopts))
+        baseline.update(typespec(**fontopts))
+        # let the stylesheet hold the merged spec
         self._stylesheet._styles[DEFAULT] = baseline
 
-        # color & style overrides
+        # color, style, and text-metrics overrides
         self.fill = kwargs.get('fill', self._fillcolor)
         self.style = kwargs.get('style', True)
+        self._typography = self._typography._replace(**typespec(**fontopts))
 
     @property
     def stylesheet(self):

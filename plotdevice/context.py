@@ -5,6 +5,7 @@ from collections import namedtuple
 from os.path import exists, expanduser
 
 from .lib.cocoa import *
+from .util.foundry import typespec, fontspec
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
 from .lib import geometry, pathmatics
 from .gfx.transform import Dimension
@@ -18,11 +19,12 @@ DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
 # named tuples for grouping state attrs
 PenStyle = namedtuple('PenStyle', ['nib', 'cap', 'join', 'dash'])
-TypeStyle = namedtuple('TypeStyle', ['face', 'size', 'leading', 'align'])
+Typography = namedtuple('Typography', ['font', 'leading', 'tracking', 'align'])
+
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_typestyle', '_stylesheet', '_oldvars', '_vars'
+    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_typography', '_stylesheet', '_oldvars', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -59,7 +61,6 @@ class Context(object):
         self.canvas.reset()
         self.canvas.background = Color(1.0)
         self.canvas.speed = None
-        self.canvas._ctx = self
 
         # default output colorspace
         self._outputmode = RGB
@@ -87,7 +88,7 @@ class Context(object):
 
         # type styles
         self._stylesheet = Stylesheet()
-        self._typestyle = TypeStyle(face="Helvetica", size=24, leading=1.2, align=LEFT)
+        self._typography = Typography(Font("Helvetica Neue", 24), leading=1.2, tracking=0, align=LEFT)
 
         # bezier construction internals
         self._path = None
@@ -918,7 +919,10 @@ class Context(object):
 
     def font(self, *args, **kwargs):
         """Set the current font to be used in subsequent calls to text()"""
-        return Font(*args, **kwargs)._use()
+        font = Font.select(*args, **kwargs)
+        font._rollback = self._typography
+        self._typography = self._typography._replace(font=font, **typespec(**kwargs))
+        return font
 
     def fonts(self, like=None, western=True):
         """Returns a list of all fonts installed on the system (with filtering capabilities)
@@ -933,22 +937,20 @@ class Context(object):
     def fontsize(self, fontsize=None):
         """Legacy command. Equivalent to: font(size=fontsize)"""
         if fontsize is not None:
-            self._typestyle = self._typestyle._replace(size=fontsize)
-        return self._typestyle.size
+            self.font(size=fontsize)
+        return self._typography.font.size
 
     def lineheight(self, lineheight=None):
         """Legacy command. Equivalent to: font(leading=lineheight)"""
         if lineheight is not None:
-            self._typestyle = self._typestyle._replace(leading=lineheight)
-        return self._typestyle.leading
+            self.font(leading=lineheight)
+        return self._typography.leading
 
     def align(self, align=None):
-        """Set the text alignment (to LEFT, RIGHT, or CENTER)
-
-        Alignment only applies to text() calls that include a column `width` parameter"""
+        """Set the text alignment (to LEFT, RIGHT, CENTER, or JUSTIFY)"""
         if align is not None:
-            self._typestyle = self._typestyle._replace(align=align)
-        return self._typestyle.align
+            self.font(align=align)
+        return self._typography.align
 
     def stylesheet(self, name=None, *args, **kwargs):
         """Access the context's Stylesheet (used by the text() command to format marked-up strings)

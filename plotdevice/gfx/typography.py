@@ -72,7 +72,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
     @property
     def font(self):
-        return NSFont.fontWithName_size_(_ctx._typestyle.face, _ctx._typestyle.size)
+        return self._typography.font._nsFont
 
     @property
     def _screen_position(self):
@@ -88,9 +88,9 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
         x,y = self.x, self.y
         (dx, dy), (w, h) = printer.typeblock
-        if self._typestyle.align == RIGHT:
+        if self._typography.align == RIGHT:
             x += col_w - w
-        elif self._typestyle.align == CENTER:
+        elif self._typography.align == CENTER:
             x += (col_w-w)/2
         y -= printer.offset
         return (x,y)
@@ -111,9 +111,9 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         # adjust the positioning for alignment on single-line runs
         x, y = self.x, self.y
         if self.width is None:
-            if self._typestyle.align == RIGHT:
+            if self._typography.align == RIGHT:
                 x -= w
-            elif self._typestyle.align == CENTER:
+            elif self._typography.align == CENTER:
                 x -= w/2.0
         # accumulate transformations in a fresh matrix
         xf = Transform()
@@ -128,7 +128,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             xf.translate(x, y-offset)  # set the position before applying transforms
             xf.prepend(nudge)          # nudge the block to its center (or not)
             xf.prepend(self.transform) # add context's CTM.
-            xf.prepend(nudge.inverse)   # Move back to the real origin.
+            xf.prepend(nudge.inverse)  # Move back to the real origin.
         else:
             xf.prepend(self.transform) # in CORNER mode simply apply the CTM
             xf.translate(x, y-offset)  # then move to the baseline origin point
@@ -217,7 +217,8 @@ class Stylesheet(object):
         if not kwargs and any(a in (None,'inherit') for a in args[:1]):
             del self[name]
         elif args or kwargs:
-            spec = Stylesheet._spec(*args, **kwargs)
+            spec = fontspec(*args, **kwargs)
+            spec.update(typespec(**kwargs))
             color = kwargs.get('fill')
             if color and not isinstance(color, Color):
                 if isinstance(color, basestring):
@@ -280,8 +281,9 @@ class Stylesheet(object):
             spec.update(self._styles.get(tag,{}))
 
         # assign a font and color based on the coalesced spec
+        font = Font.select({k:v for k,v in spec.items() if k in Stylesheet.kwargs})
         color = Color(spec.pop('fill')).nsColor
-        font = Font(**{k:v for k,v in spec.items() if k in Stylesheet.kwargs} )
+        kern = (spec['tracking'] * font.size)/1000.0
 
         # factor the relevant attrs into a paragraph style
         graf = NSMutableParagraphStyle.alloc().init()
@@ -293,7 +295,7 @@ class Stylesheet(object):
         # graf.setMinimumLineHeight_(self._lineheight)
 
         # build the dict of features for this combination of styles
-        return {"NSFont":font._nsFont, "NSColor":color, NSParagraphStyleAttributeName:graf}
+        return dict(NSFont=font._nsFont, NSColor=color, NSParagraphStyle=graf, NSKern=kern)
 
 
 
@@ -366,40 +368,28 @@ class Typesetter(object):
         return path
 
 
+
 class Font(object):
+    _aat = ('lig','sc','osf','tab','vpos','frac')
 
-    def __init__(self, *args, **kwargs):
-        # normalize the names of the keyword args and do fuzzy matching on positional args
-        # to create a specification with just the valid keys
-        spec = Stylesheet._spec(*args, **kwargs)
-
-        # initialize our internals based on the spec
-        if 'face' not in spec or any(arg not in ('face','size') for arg in spec):
-            # we only need to search if no face arg was supplied or if there are
-            # style modifications to be applied on top of it
-            self._update_face(**spec)
+    def __init__(self, psname, size=None, **features):
+        if isinstance(psname, Font):
+            _copy_attrs(psname, self, ('_face','_size','_features'))
         else:
-            if not isinstance(spec['face'], Face):
-                spec['face'] = font_face(spec['face'])
-            self._face = spec['face']
+            self._face = font_face(psname)
+            self._size = _ctx._typography.font.size if size is None else max(0.1, float(size))
+            self._features = {}
+            for feat, val in features.items():
+                if feat not in self._aat:
+                    misfeature = 'Unknown typographic feature %r. Stick with %r' % (feat,self._aat)
+                    raise DeviceError(misfeature)
 
-        # BUG: probably don't want to inherit this immediately...
-        self._size = float(spec.get('size', _ctx._typestyle.size))
-
-    def __enter__(self):
-        if hasattr(self, '_prior'):
-            self._rollback = self._prior
-            del self._prior
-        else:
-            self._rollback = self._get_ctx()
-        self._update_ctx()
-        return self
-
-    def __exit__(self, type, value, tb):
-        self._update_ctx(*self._rollback)
+                val = int(val) if val is not all else val
+                if val is not None:
+                    self._features[feat] = val
 
     def __repr__(self):
-        spec = (u'"%(family)s"|-|%(weight)s|-|<%(psname)s>'%(self._face._asdict())).split('|-|')
+        spec = [self.family, self.weight, self.face]
         if self._face.variant:
             spec.insert(2, self._face.variant)
         spec.insert(1, '/' if self._face.italic else '|')
@@ -407,151 +397,139 @@ class Font(object):
             spec.insert(1, ("%rpt"%self._size).replace('.0pt','pt'))
         return (u'Font(%s)'%" ".join(spec)).encode('utf-8')
 
-    def __call__(self, *args, **kwargs):
-        return Font(self, *args, **kwargs)
-
-    def _get_ctx(self):
-        return _ctx._typestyle[:2]
-
-    def _update_ctx(self, face=None, size=None):
-        face, size = (face or self.face), (size or self.size)
-        _ctx._typestyle = _ctx._typestyle._replace(face=face, size=size)
-
-    def _update_face(self, **spec):
-        # use the basis kwarg (or this _face if omitted) as a starting point
-        basis = spec.get('face', getattr(self,'_face', _ctx._typestyle.face))
-        if isinstance(basis, basestring):
-            basis = font_face(basis)
-
-        # if there weren't any args to fine tune the fam/weight/width/variant, just
-        # use the basis Face as is and bail out
-        if not {'family','weight','width','variant','italic'}.intersection(spec):
-            self._face = basis
-            return
-
-        # otherwise try to find the best match for the new attributes within either
-        # the family in the spec, or the current family if omitted
-        try:
-            spec['face'] = basis
-            fam = Family(spec.get('family', basis.family))
-            candidates, scores = zip(*fam.select(spec).items())
-            self._face = candidates[0]
-        except IndexError:
-              nomatch = "Font: couldn't find a face matching criteria %r"%spec
-              raise DeviceError(nomatch)
-
-    def _use(self):
-        # called right after allocation by the font() command. remembers the font state
-        # from before applying itself since by the time __enter__ takes a snapshot the
-        # prior state will already be overwritten
-        self._prior = self._get_ctx()
-        self._update_ctx()
+    def __enter__(self):
+        if not hasattr(self, '_rollback'):
+            self._rollback = _ctx._typography
+        _ctx._typography = _ctx._typography._replace(font = self)
         return self
 
-    @property
-    def _nsFont(self):
-        return NSFont.fontWithName_size_(self._face.psname, self._size)
+    def __exit__(self, type, value, tb):
+        _ctx._typography = self._rollback
+        del self._rollback
 
+    ### face introspection ###
+    
     @property
-    def _nsColor(self):
-        return _ctx._fillcolor.nsColor
-
-    # .name
-    def _get_name(self):
+    def family(self):
         return self._face.family
-    def _set_name(self, f):
-        self.family = f
-    name = property(_get_name, _set_name)
-
-    # .family
-    def _get_family(self):
-        return Family(self._face.family)
-    def _set_family(self, f):
-        if isinstance(f, Family):
-            f = f.name
-        self._update_face(family=family_name(f))
-    family = property(_get_family, _set_family)
-
-    # .weight
-    def _get_weight(self):
-        return self._face.weight
-    def _set_weight(self, w):
-        self._update_face(weight=w)
-    weight = property(_get_weight, _set_weight)
-
-    # .width
-    def _get_width(self):
-        return self._face.width
-    def _set_width(self, w):
-        self._update_face(width=w)
-    width = property(_get_width, _set_width)
-
-    # .variant
-    def _get_variant(self):
-        return self._face.variant
-    def _set_variant(self, v):
-        self._update_face(variant=v)
-    variant = property(_get_variant, _set_variant)
-
-    # .size
-    def _get_size(self):
-        return self._size
-    def _set_size(self, s):
-        self._size = float(s)
-    size = property(_get_size, _set_size)
-
-    # .italic
-    def _get_italic(self):
-        return self._face.italic
-    def _set_italic(self, ital):
-        if ital != self.italic:
-            self._update_face(italic=ital)
-    italic = property(_get_italic, _set_italic)
-
-    # .face
-    def _get_face(self):
-        return self._face.psname
-    def _set_face(self, face):
-        self._face = font_face(face)
-    face = property(_get_face, _set_face)
 
     @property
-    def traits(self):
-        return self._face.traits
+    def weight(self):
+        return self._face.weight
+
+    @property
+    def width(self):
+        return self._face.width
+
+    @property
+    def variant(self):
+        return self._face.variant
+
+    @property
+    def size(self):
+        return self._size
+
+    @property
+    def italic(self):
+        return self._face.italic
+
+    @property
+    def face(self):
+        return self._face.psname
+
+    ### family introspection ###
 
     @property
     def weights(self):
-        return self.family.weights
+        return Family(self.family).weights
 
     @property
     def widths(self):
-        return self.family.widths
+        return Family(self.family).widths
 
     @property
     def variants(self):
-        return self.family.variants
+        return Family(self.family).variants
 
     @property
     def siblings(self):
-        return self.family.fonts
+        return Family(self.family).fonts
 
-    def heavier(self, steps=1):
-        self.modulate(steps)
+    ### internals ###
 
-    def lighter(self, steps=1):
-        self.modulate(-steps)
+    @property
+    def _nsFont(self):
+        fd = NSFontDescriptor.fontDescriptorWithName_size_(self._face.psname, self._size)
+        if self._features:
+            fd = fd.fontDescriptorByAddingAttributes_(aat_attrs(self._features))
+        return NSFont.fontWithDescriptor_textTransform_(fd,None)
 
-    def modulate(self, steps):
-        if not steps:
-            return
-        seq = self.weights
-        idx = seq.index(self.weight)
-        less, more = list(reversed(seq[:idx+1])), seq[idx:]
-        if steps<0:
-            match = less[abs(steps):abs(steps)+1] or [less[-1]]
-        elif steps>0:
-            match = more[steps:steps+1] or [more[-1]]
-        self.weight = match[0]
+    @property
+    def _spec(self):
+        spec = {axis:getattr(self._face, axis) for axis in ('family','weight','width','variant','italic')}
+        spec['size'] = self._size
+        spec.update(self._features)
+        return spec
+
+    @classmethod
+    def select(self, *args, **kwargs):
+        if args and hasattr(args[0], 'items'):
+            # treat dict as output of a prior call to fontspec()
+            new_spec = dict(args[0])
+        else:
+            # validate & standardize the kwargs first
+            new_spec = fontspec(*args, **kwargs)
+        if not new_spec:
+            return _ctx._typography.font
+
+        # collect the attrs from the current font and merge in changes from the new spec
+        current = _ctx._typography.font
+        cur_spec = current._spec
+        for axis, num_axis in dict(weight='wgt', width='wid').items():  
+            # convert weight & width to integer values
+            cur_spec[num_axis] = getattr(current._face, num_axis)
+            if axis in new_spec:
+                name, val = standardized(axis, new_spec[axis])
+                new_spec.update({axis:name, num_axis:val})
+        
+        spec = dict(cur_spec.items() + new_spec.items()) # our criteria
+        faces = family_members(spec['family'])           # the candidates
+
+        # map the requested weight/width onto what's available in the family
+        w_spans = {"wgt":[1,14], "wid":[-15,15]}
+        for axis, num_axis in dict(weight='wgt', width='wid').items():
+            w_vals = [getattr(f, num_axis) for f in faces]
+            w_min, w_max = min(w_vals), max(w_vals)
+            spec[num_axis] = max(w_min, min(w_max, spec[num_axis]))
+            w_spans[num_axis] = [w_min, w_max]
+
+        # wipe out any inherited variants that don't exist in this family
+        if spec.get('variant'):
+            if sanitized(spec['variant']) not in [sanitized(f.variant) for f in faces]:
+                spec['variant'] = None
+
+        def score(axis, f):
+            val = spec[axis]
+            vs = getattr(f,axis)
+            if axis in ('wgt','wid'):
+                w_min, w_max = w_spans[axis]
+                agree = 1 if val==vs else -abs(val-vs) / float(max(w_max-w_min, 1))
+            elif axis == 'variant':
+                agree = 1 if sanitized(val) == sanitized(vs) else 0
+            else:
+                agree = 1 if (val or None) == (vs or None) else -1
+            return agree
+
+        scores = {}
+        for f in faces:
+            scores[f] = sum([score(axis,f) for axis in 'italic', 'wgt', 'wid', 'variant'])
+
+        candidates = [dict(score=s, face=f, ps=f.psname) for f,s in scores.items()]
+        candidates.sort(key=itemgetter('score'), reverse=True)
+
+        features = ({k:v for k,v in spec.items() if k in self._aat})
+
+        return Font(candidates[0]['ps'], spec['size'], **features)
 
 class Family(object):
     def __init__(self, famname=None, of=None):
@@ -579,7 +557,8 @@ class Family(object):
                 old, new = fam[axis], getattr(f,axis[:-1])
                 if new not in old:
                     fam[axis].append(new)
-            has_italic = has_italic or 'italic' in f.traits
+            # has_italic = has_italic or 'italic' in f.traits
+            has_italic = has_italic or f.italic
         self.has_italic = has_italic
 
         for f in sorted(faces, key=attrgetter('wid')):
@@ -616,68 +595,3 @@ class Family(object):
     @property
     def fonts(self):
         return odict( (k,Font(v)) for k,v in self._faces.items())
-
-    def select(self, spec):
-        current = spec.get('face', _ctx._typestyle.face)
-        if isinstance(current, basestring):
-            current = font_face(current)
-
-        axes = ('weight','width','italic','variant')
-        opts = {k:v for k,v in spec.items() if k in axes}
-        defaults = dict( (k, getattr(current, k)) for k in axes + ('wid', 'wgt'))
-
-        # map the requested weight/width onto what's available in the family
-        w_spans = {"wgt":[1,14], "wid":[-15,15]}
-        for axis, num_axis in dict(weight='wgt', width='wid').items():
-            w_vals = [getattr(f, num_axis) for f in self._faces.values()]
-            w_spans[num_axis] = [min(w_vals), max(w_vals)]
-            dst = opts if axis in opts else defaults
-            wname, wval = self._closest(axis, opts.get(axis, getattr(current,axis)))
-            dst.update({axis:wname, num_axis:wval})
-
-        def score(axis, f):
-            bonus = 2 if axis in opts else 1
-            val = opts[axis] if axis in opts else defaults.get(axis)
-            vs = getattr(f,axis)
-            if axis in ('wgt','wid'):
-                w_min, w_max = w_spans[axis]
-                agree = 1 if val==vs else -abs(val-vs) / float(max(w_max-w_min, 1))
-            elif axis in ('weight','width'):
-                # agree = 1 if (val or None) == (vs or None) else 0
-                agree = 0
-            else:
-                agree = 1 if (val or None) == (vs or None) else -1
-            return agree * bonus
-
-        scores = ddict(int)
-        for f in self.faces.values():
-            # consider = 'italic', 'weight', 'width', 'variant', 'wgt', 'wid'
-            # print [score(axis,f) for axis in consider], [getattr(f,axis) for axis in consider]
-            scores[f] += sum([score(axis,f) for axis in 'italic', 'weight', 'width', 'variant', 'wgt', 'wid'])
-
-        candidates = [dict(score=s, face=f, ps=f.psname) for f,s in scores.items()]
-        candidates.sort(key=itemgetter('ps'))
-        candidates.sort(key=itemgetter('score'), reverse=True)
-        # for c in candidates[:10]:
-        #     print "  %0.2f"%c['score'], c['face']
-        return odict( (c['face'],c['score']) for c in candidates)
-
-    def _closest(self, axis, val):
-        # validate the width/weight string and make sure it either conforms to the
-        # family's names, or can be turned into an std. integer value
-        num_axis = dict(weight='wgt', width='wid')[axis]
-        corpus = {getattr(f,axis):getattr(f,num_axis) for f in self._faces.values()}
-        w_names, w_vals = corpus.keys(), corpus.values()
-
-        if sanitized(val) in sanitized(w_names):
-            wname = w_names[sanitized(w_names).index(sanitized(val))]
-            return wname, corpus[wname]
-
-        # if the name doesn't exist in the family, find its standard name/num values
-        # then truncate them by the range of the face (so e.g., asking for `obese' will
-        # only turn into `semibold' if that's as heavy as the family gets)
-        wname, wval = standardized(axis, val)
-        wval = max(min(w_vals), min(max(w_vals), wval))
-        if wval in w_vals:
-            wname = w_names[w_vals.index(wval)]
-        return wname, wval
