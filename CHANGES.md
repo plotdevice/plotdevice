@@ -2,8 +2,7 @@ PlotDevice 0.9.5
 ----------------
 * Now using core animation layers to (hopefully) speed up graphics rendering
 * Enhanced `font()` command with support for OpenType/AAT features (currently
-  supporting `lig`, `sc`, `osf`, `tab`, `vpos`, and `frac` args). Also added 
-  `tracking` arg to set letter-spacing in terms of thousandths of an em.
+  supporting `lig`, `sc`, `osf`, `tab`, `vpos`, and `frac` args).
 * In addition to the `align()` command, you can now pass an `align` arg to 
   `font()` and `text()`
 * Letterspacing can now be set (in terms of thousandths of an em) via the 
