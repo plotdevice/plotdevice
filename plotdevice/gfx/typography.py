@@ -1,5 +1,6 @@
 # encoding: utf-8
 import re
+import sys
 from operator import itemgetter, attrgetter
 from plotdevice.util import odict, ddict
 from ..lib.cocoa import *
@@ -283,7 +284,6 @@ class Stylesheet(object):
         # assign a font and color based on the coalesced spec
         font = Font.select({k:v for k,v in spec.items() if k in Stylesheet.kwargs})
         color = Color(spec.pop('fill')).nsColor
-        kern = (spec['tracking'] * font.size)/1000.0
 
         # factor the relevant attrs into a paragraph style
         graf = NSMutableParagraphStyle.alloc().init()
@@ -293,6 +293,13 @@ class Stylesheet(object):
         # graf.setLineSpacing_(extra_px_of_lead)
         # graf.setParagraphSpacing_(1em?)
         # graf.setMinimumLineHeight_(self._lineheight)
+
+        if not spec['tracking']:
+            # None means `kerning off entirely', 0 means `default letterspacing'
+            kern = 0 if spec['tracking'] is None else sys.float_info.epsilon
+        else:
+            # convert the em-based tracking val to a point-based kerning val
+            kern = (spec['tracking'] * font.size)/1000.0
 
         # build the dict of features for this combination of styles
         return dict(NSFont=font._nsFont, NSColor=color, NSParagraphStyle=graf, NSKern=kern)
