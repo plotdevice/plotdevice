@@ -388,6 +388,8 @@ class Font(object):
                 if val is not None:
                     self._features[feat] = val
 
+            aat_attrs(self._features) # make sure we bomb early on bad configs
+
     def __repr__(self):
         spec = [self.family, self.weight, self.face]
         if self._face.variant:

@@ -270,6 +270,10 @@ def fontspec(*args, **kwargs):
     # incorporate any typesetting features
     _aat = aat_features.keys()
     spec.update({k:(int(v) if v is not all else v) for k,v in kwargs.items() if k in _aat})
+
+    # validate the aat features (so they don't blow up during canvas.draw)
+    aat_attrs(spec)
+
     return spec
 
 def typespec(**kwargs):
@@ -323,6 +327,7 @@ pd_features = {
         0:[("LowerCase", "DefaultCase"), ("UpperCase", "DefaultCase")],
         1:[("LowerCase", "SmallCaps")],
         all:[("LowerCase", "SmallCaps"), ("UpperCase", "SmallCaps")],
+        -1:[("UpperCase", "SmallCaps")],
     },
 
     "osf":{
@@ -366,9 +371,12 @@ def aat_attrs(spec):
     settings = []
     for k,v in spec.items():
         if k in aat_features:
-            settings += aat_features[k][v]
+            try:
+                settings += aat_features[k][v]
+            except KeyError:
+                badstyle = 'Bad `%s` argumeent: %r'%(k,v)
+                raise DeviceError(badstyle)
     return {settings_attr:settings}
-
 
 
 # sausage gets made below:
