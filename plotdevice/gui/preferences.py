@@ -65,7 +65,7 @@ def possibleToolLocations():
     locations = [homebin, localbin]
 
     # find the user's login shell
-    out, _ = Popen(['dscl','.','-read',os.environ['HOME'],'UserShell'], stdout=PIPE).communicate()
+    out, _ = Popen(['dscl','.','-read','/Users/'+os.environ['USER'],'UserShell'], stdout=PIPE).communicate()
     shell = out.replace('UserShell:','').strip()
 
     # try launching a shell to extract the user's path
