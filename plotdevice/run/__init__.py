@@ -19,7 +19,7 @@ def encoding(src):
 def uncoded(src):
     """Strips out any `# encoding: ???` lines found at the head of the source listing"""
     lines = src.split("\n")
-    for i in range(2):
+    for i in range(min(len(lines), 2)):
         lines[i] = re.sub(r'#.*coding[=:]\s*([-\w.]+)', '#', lines[i])
     return "\n".join(lines)
 
