@@ -119,7 +119,10 @@ def family_members(famname, names=False):
 
     # use cached data if possible...
     if famname in _FAMILIES:
-        return _FAMILIES[famname]
+        if names:
+            return [f[0] for f in _FAMILIES[famname]]
+        else:
+            return _FAMILIES[famname]
 
     # ...otherwise build the list of faces
     all_members = _fm.availableMembersOfFontFamily_(famname)
