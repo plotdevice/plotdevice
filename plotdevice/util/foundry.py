@@ -13,7 +13,7 @@ from plotdevice import DeviceError
 __all__ = ["standardized", "sanitized", "fammy", "facey", "widthy", "weighty",
            "font_exists", "font_family", "font_encoding", "font_face",
            "family_names", "family_name", "family_members", "Face",
-           "aat_attrs", "typespec", "fontspec"]
+           "aat_attrs", "aat_features", "typespec", "fontspec", "best_face"]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic',])
 
@@ -211,6 +211,46 @@ def family_members(famname, names=False):
     _FAMILIES[famname] = sorted(fam, key=attrgetter('italic','wid','wgt'))
     return _FAMILIES[famname]
 
+def best_face(spec):
+    """Returns the PostScript name of the best match for a given fontspec"""
+
+    # the candidates
+    faces = family_members(spec['family'])
+
+    # map the requested weight/width onto what's available in the family
+    w_spans = {"wgt":[1,14], "wid":[-15,15]}
+    for axis, num_axis in dict(weight='wgt', width='wid').items():
+        w_vals = [getattr(f, num_axis) for f in faces]
+        w_min, w_max = min(w_vals), max(w_vals)
+        spec[num_axis] = max(w_min, min(w_max, spec[num_axis]))
+        w_spans[num_axis] = [w_min, w_max]
+
+    # wipe out any inherited variants that don't exist in this family
+    if spec.get('variant'):
+        if sanitized(spec['variant']) not in [sanitized(f.variant) for f in faces]:
+            spec['variant'] = None
+
+    def score(axis, f):
+        val = spec[axis]
+        vs = getattr(f,axis)
+        if axis in ('wgt','wid'):
+            w_min, w_max = w_spans[axis]
+            agree = 1 if val==vs else -abs(val-vs) / float(max(w_max-w_min, 1))
+        elif axis == 'variant':
+            agree = 1 if sanitized(val) == sanitized(vs) else 0
+        else:
+            agree = 1 if (val or None) == (vs or None) else -1
+        return agree
+
+    scores = {}
+    for f in faces:
+        scores[f] = sum([score(axis,f) for axis in 'italic', 'wgt', 'wid', 'variant'])
+
+    candidates = [dict(score=s, face=f, ps=f.psname) for f,s in scores.items()]
+    candidates.sort(key=itemgetter('score'), reverse=True)
+
+    return font_face(candidates[0]['ps'])
+
 # typography arg validators/standardizers
 
 def fontspec(*args, **kwargs):
@@ -239,7 +279,7 @@ def fontspec(*args, **kwargs):
         print 'Font: unknown width "%s"' % spec.pop('width')
 
     # look for a postscript name passed as `face` or `fontname` and validate it
-    basis = kwargs.get('name')
+    basis = kwargs.get('face', kwargs.get('fontname'))
     if basis and not font_exists(basis):
         notfound = 'Font: no matches for Postscript name "%s"'%basis
         raise DeviceError(notfound)
@@ -268,11 +308,7 @@ def fontspec(*args, **kwargs):
             spec['size'] = item
     
     # incorporate any typesetting features
-    _aat = aat_features.keys()
-    spec.update({k:(int(v) if v is not all else v) for k,v in kwargs.items() if k in _aat})
-
-    # validate the aat features (so they don't blow up during canvas.draw)
-    aat_attrs(spec)
+    spec.update(aat_features(kwargs))
 
     return spec
 
@@ -290,8 +326,6 @@ def typespec(**kwargs):
     if 'lineheight' in kwargs:
         spec.setdefault('leading', kwargs['lineheight'])
     return spec
-
-
 
 # conversions between pythonic typography feature names and AAT integers
 
@@ -313,7 +347,7 @@ aat_consts = {
     "NoFractions":0, "Diagonal":2,
 
     "VerticalPosition":10, # kVerticalPositionType
-    "NormalPosition":0, "Superiors":1, "Inferiors":2,
+    "NormalPosition":0, "Superiors":1, "Inferiors":2, "Ordinals":3,
 }
 
 pd_features = {
@@ -349,6 +383,7 @@ pd_features = {
         1:[("VerticalPosition", "Superiors")],
         0:[("VerticalPosition", "NormalPosition")],
         -1:[("VerticalPosition", "Inferiors")],
+        ord:[("VerticalPosition", "Ordinals")]
     }
 }
 
@@ -357,25 +392,39 @@ from AppKit import NSFontFeatureSettingsAttribute as settings_attr, \
                    NSFontFeatureSelectorIdentifierKey as selector_id
 
 # convert the semi-sensibly named items in features into their SFNTLayoutTypes.h equivalents
-aat_features = {}
+_aat_features = {}
 for arg, vals in pd_features.items():
-    aat_features[arg] = {}
+    _aat_features[arg] = {}
     for val, actions in vals.items():
-        aat_features[arg][val] = []
+        _aat_features[arg][val] = []
         for ftype, fsel in actions:
             feature, selector = aat_consts[ftype], aat_consts[fsel]
-            aat_features[arg][val].append({feature_id:feature, selector_id:selector})
+            _aat_features[arg][val].append({feature_id:feature, selector_id:selector})
 
-def aat_attrs(spec):
-    """Converts a Font spec to a features dictionary suitable for NSFontDescriptor"""
-    settings = []
+def aat_features(spec):
+    """Validate features in a Font spec and normalize settings values"""
+    features = {}
+
+    # if 'alt' in spec:
+    #     sets = [spec['alt']] if not isinstance(spec['alt'], (list, tuple)) else spec['alt']
+    #     if not all
+
     for k,v in spec.items():
-        if k in aat_features:
+        if k in _aat_features:
             try:
-                settings += aat_features[k][v]
+                _aat_features[k][v]
+                features[k] = int(v) if not callable(v) else v
             except KeyError:
                 badstyle = 'Bad `%s` argumeent: %r'%(k,v)
                 raise DeviceError(badstyle)
+    return features
+
+def aat_attrs(spec):
+    """Converts a validated features spec to a dict suitable for NSFontDescriptor"""
+    settings = []
+    for k,v in spec.items():
+        if k in _aat_features:
+            settings += _aat_features[k][v]
     return {settings_attr:settings}
 
 

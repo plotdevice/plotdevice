@@ -282,7 +282,7 @@ class Stylesheet(object):
             spec.update(self._styles.get(tag,{}))
 
         # assign a font and color based on the coalesced spec
-        font = Font.select({k:v for k,v in spec.items() if k in Stylesheet.kwargs})
+        font = Font({k:v for k,v in spec.items() if k in Stylesheet.kwargs})
         color = Color(spec.pop('fill')).nsColor
 
         # factor the relevant attrs into a paragraph style
@@ -377,25 +377,50 @@ class Typesetter(object):
 
 
 class Font(object):
-    _aat = ('lig','sc','osf','tab','vpos','frac')
+    def __init__(self, *args, **kwargs):
 
-    def __init__(self, psname, size=None, **features):
-        if isinstance(psname, Font):
-            _copy_attrs(psname, self, ('_face','_size','_features'))
-        else:
-            self._face = font_face(psname)
-            self._size = _ctx._typography.font.size if size is None else max(0.1, float(size))
+        # handle the bootstrap case where we're initializing the ctx's font
+        if args==(None,):
+            self._face = font_face("HelveticaNeue")
+            self._size = 24.0
             self._features = {}
-            for feat, val in features.items():
-                if feat not in self._aat:
-                    misfeature = 'Unknown typographic feature %r. Stick with %r' % (feat,self._aat)
-                    raise DeviceError(misfeature)
+            return
 
-                val = int(val) if val is not all else val
-                if val is not None:
-                    self._features[feat] = val
+        # check for invalid kwarg names
+        rest = [k for k in kwargs if k not in StyleMixin.opts]
+        if rest:
+            unknown = 'Invalid keyword argument%s: %s'%('' if len(rest)==1 else 's', ", ".join(rest))
+            raise DeviceError(unknown)
 
-            aat_attrs(self._features) # make sure we bomb early on bad configs
+        # accept Font objects or spec dicts as first positional arg
+        first = args[0] if args else None
+        if isinstance(first, Font):
+            # make a copy of the existing font obj
+            _copy_attrs(first, self, ('_face','_size','_features'))
+            return
+        elif hasattr(first, 'items'):
+            # treat dict as output of a prior call to fontspec()
+            new_spec = dict(first)
+        else:
+            # validate & standardize the kwargs first
+            new_spec = fontspec(*args, **kwargs)
+
+        # collect the attrs from the current font to fill in any gaps
+        current = _ctx._typography.font
+        cur_spec = current._spec
+        for axis, num_axis in dict(weight='wgt', width='wid').items():  
+            # convert weight & width to integer values
+            cur_spec[num_axis] = getattr(current._face, num_axis)
+            if axis in new_spec:
+                name, val = standardized(axis, new_spec[axis])
+                new_spec.update({axis:name, num_axis:val})
+        
+        # merge in changes from the new spec
+        spec = dict(cur_spec.items() + new_spec.items()) # our criteria
+
+        self._face = best_face(spec)
+        self._size = spec['size']
+        self._features = aat_features(spec)
 
     def __repr__(self):
         spec = [self.family, self.weight, self.face]
@@ -480,65 +505,6 @@ class Font(object):
         spec.update(self._features)
         return spec
 
-    @classmethod
-    def select(self, *args, **kwargs):
-        if args and hasattr(args[0], 'items'):
-            # treat dict as output of a prior call to fontspec()
-            new_spec = dict(args[0])
-        else:
-            # validate & standardize the kwargs first
-            new_spec = fontspec(*args, **kwargs)
-        if not new_spec:
-            return _ctx._typography.font
-
-        # collect the attrs from the current font and merge in changes from the new spec
-        current = _ctx._typography.font
-        cur_spec = current._spec
-        for axis, num_axis in dict(weight='wgt', width='wid').items():  
-            # convert weight & width to integer values
-            cur_spec[num_axis] = getattr(current._face, num_axis)
-            if axis in new_spec:
-                name, val = standardized(axis, new_spec[axis])
-                new_spec.update({axis:name, num_axis:val})
-        
-        spec = dict(cur_spec.items() + new_spec.items()) # our criteria
-        faces = family_members(spec['family'])           # the candidates
-
-        # map the requested weight/width onto what's available in the family
-        w_spans = {"wgt":[1,14], "wid":[-15,15]}
-        for axis, num_axis in dict(weight='wgt', width='wid').items():
-            w_vals = [getattr(f, num_axis) for f in faces]
-            w_min, w_max = min(w_vals), max(w_vals)
-            spec[num_axis] = max(w_min, min(w_max, spec[num_axis]))
-            w_spans[num_axis] = [w_min, w_max]
-
-        # wipe out any inherited variants that don't exist in this family
-        if spec.get('variant'):
-            if sanitized(spec['variant']) not in [sanitized(f.variant) for f in faces]:
-                spec['variant'] = None
-
-        def score(axis, f):
-            val = spec[axis]
-            vs = getattr(f,axis)
-            if axis in ('wgt','wid'):
-                w_min, w_max = w_spans[axis]
-                agree = 1 if val==vs else -abs(val-vs) / float(max(w_max-w_min, 1))
-            elif axis == 'variant':
-                agree = 1 if sanitized(val) == sanitized(vs) else 0
-            else:
-                agree = 1 if (val or None) == (vs or None) else -1
-            return agree
-
-        scores = {}
-        for f in faces:
-            scores[f] = sum([score(axis,f) for axis in 'italic', 'wgt', 'wid', 'variant'])
-
-        candidates = [dict(score=s, face=f, ps=f.psname) for f,s in scores.items()]
-        candidates.sort(key=itemgetter('score'), reverse=True)
-
-        features = ({k:v for k,v in spec.items() if k in self._aat})
-
-        return Font(candidates[0]['ps'], spec['size'], **features)
 
 class Family(object):
     def __init__(self, famname=None, of=None):
