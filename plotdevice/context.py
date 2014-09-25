@@ -19,12 +19,12 @@ DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
 # named tuples for grouping state attrs
 PenStyle = namedtuple('PenStyle', ['nib', 'cap', 'join', 'dash'])
-Typography = namedtuple('Typography', ['font', 'leading', 'tracking', 'align'])
+Typography = namedtuple('Typography', ['font', 'stylesheet', 'leading', 'tracking', 'align'])
 
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_typography', '_stylesheet', '_oldvars', '_vars'
+    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_typography', '_oldvars', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -87,8 +87,7 @@ class Context(object):
         self._effects = Effect()
 
         # type styles
-        self._stylesheet = Stylesheet()
-        self._typography = Typography(Font("Helvetica Neue", 24), leading=1.2, tracking=0, align=LEFT)
+        self._typography = Typography(Font(None), Stylesheet(), 1.2, 0, LEFT)
 
         # bezier construction internals
         self._path = None
@@ -919,7 +918,7 @@ class Context(object):
 
     def font(self, *args, **kwargs):
         """Set the current font to be used in subsequent calls to text()"""
-        font = Font.select(*args, **kwargs)
+        font = Font(*args, **kwargs)
         font._rollback = self._typography
         self._typography = self._typography._replace(font=font, **typespec(**kwargs))
         return font
@@ -984,9 +983,9 @@ class Context(object):
             It acts as a dictionary with all currently defined styles as its keys.
         """
         if name is None:
-            return self._stylesheet
+            return self._typography.stylesheet
         else:
-            return self._stylesheet.style(name, *args, **kwargs)
+            return self._typography.stylesheet.style(name, *args, **kwargs)
 
     def text(self, txt, *args, **kwargs):
         """Draw a single line (or a block) of text
@@ -1020,6 +1019,16 @@ class Context(object):
         path_args = {k:v for k,v in kwargs.items() if k in Bezier._opts}
         text_args = {k:v for k,v in kwargs.items() if k in Text._opts}
 
+        # make sure we didn't get any invalid kwargs
+        if outline:
+            rest = [k for k in kwargs if k not in Bezier._opts.union(Text._opts)]
+        else:
+            rest = [k for k in kwargs if k not in Text._opts]
+        if rest:
+            unknown = 'Invalid keyword argument%s: %s'%('' if len(rest)==1 else 's', ", ".join(rest))
+            raise DeviceError(unknown)
+
+        # draw the text (either as a bezier or as type)
         txt = Text(txt, *args, **text_args)
         if outline:
             with self._active_path(path_args) as p:
@@ -1042,7 +1051,6 @@ class Context(object):
     def textmetrics(self, txt, width=None, height=None, style=None, **kwargs):
         """Legacy command. Equivalent to: measure(txt, width, height)"""
         txt = Text(txt, 0, 0, width, height, style, **kwargs)
-        # txt.inherit()
         return txt.metrics
 
     def textwidth(self, txt, width=None, **kwargs):

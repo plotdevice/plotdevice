@@ -101,7 +101,7 @@ class Grob(object):
         """Sanity check a potential set of constructor kwargs"""
         remaining = [arg for arg in kwargs.keys() if arg not in cls._opts]
         if remaining:
-            unknown = "Unknown argument(s) '%s'" % ", ".join(remaining)
+            unknown = "Unknown argument%s '%s'" % ('' if len(remaining)==1 else 's', ", ".join(remaining))
             raise DeviceError(unknown)
 
 class EffectsMixin(Grob):
@@ -316,7 +316,7 @@ class PenMixin(Grob):
 class StyleMixin(Grob):
     """Mixin class for text-styling support.
     Adds the stylesheet, fill, and style attributes to the class."""
-    ctxAttrs = ('_stylesheet', '_typography', '_fillcolor')
+    ctxAttrs = ('_typography', '_fillcolor')
     stateAttrs = ('_style',)
     opts = ('face','family','size','weight','width','variant','italic', # font selection
             'lig','sc','osf','tab','vpos','frac', # aat features
@@ -345,22 +345,19 @@ class StyleMixin(Grob):
         baseline.update(fontspec(*fontargs, **fontopts))
         baseline.update(typespec(**fontopts))
         # let the stylesheet hold the merged spec
-        self._stylesheet._styles[DEFAULT] = baseline
+        self.stylesheet = self._typography.stylesheet.copy()
+        self.stylesheet._styles[DEFAULT] = baseline
 
         # color, style, and text-metrics overrides
         self.fill = kwargs.get('fill', self._fillcolor)
         self.style = kwargs.get('style', True)
         self._typography = self._typography._replace(**typespec(**fontopts))
 
-    @property
-    def stylesheet(self):
-        return self._stylesheet
-
     def _get_fill(self):
         return self._fillcolor
     def _set_fill(self, *args):
         self._fillcolor = Color(*args)
-        self._stylesheet._styles[DEFAULT]['fill'] = self._fillcolor
+        self.stylesheet._styles[DEFAULT]['fill'] = self._fillcolor
     fill = property(_get_fill, _set_fill)
 
     def _get_style(self):
