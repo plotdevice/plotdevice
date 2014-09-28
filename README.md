@@ -29,14 +29,14 @@ and movies for use elsewhere. To that end it provides functionality to
 efficiently export script output as vector documents (`pdf`,`eps`),
 bitmap images (`png`,`gif`,`jpg`,`tiff`), or animations (`mov`,`gif`).
 
-#### Latest changes (Aug 2014)
+#### Latest changes (Sept 2014)
 
 * Enhanced command line interface.
 * Simplified api with broad support for the Python `with` statement
 * New text editor with tab completion, syntax color themes, and emacs/vi bindings.
 * Video export in H.264 or animated gif formats (with [GCD](http://en.wikipedia.org/wiki/Grand_Central_Dispatch)-based i/o).
 * Core Graphics support for gradients, shadows, blend modes, and alpha channels
-* Enhanced typography with inline styles and simpler font selection.
+* Enhanced typography with inline styles, OpenType features, and simpler font selection.
 * Added support for external editors by reloading the source when changed.
 * Build system now works with Xcode or `py2app` for the application and `pip` for the module.
 * Virtualenv support (for both installation of the module and running scripts with dependencies).
