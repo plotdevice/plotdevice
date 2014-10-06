@@ -115,8 +115,11 @@ class GraphicsView(NSView):
         x_pct = NSMidX(visible) / NSWidth(oldframe)
         y_pct = NSMidY(visible) / NSHeight(oldframe)
 
+        # render (and possibly bomb...)
+        bitmap = canvas.rasterize(zoom=self.zoom)
+
         # resize
-        w, h = [s*self._zoom for s in canvas.pagesize]
+        w, h = [s*self.zoom for s in canvas.pagesize]
         self.setFrameSize_([w, h])
 
         if self.canvas is None:
@@ -129,7 +132,7 @@ class GraphicsView(NSView):
             self.scrollPoint_( (x_pct*w-half_w, y_pct*h-half_h) )
 
         # cache the canvas image
-        self.layer().setContents_(canvas.rasterize(zoom=self.zoom))
+        self.layer().setContents_(bitmap)
 
         # possible bug:
         # rasterize might be better off creating cgimages instead:

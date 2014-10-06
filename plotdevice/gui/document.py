@@ -13,6 +13,7 @@ from .editor import OutputTextView, EditorView
 from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
 from ..run import Sandbox, encoding
+from .. import DeviceError
 from . import set_timeout
 
 NSEventGestureAxisVertical = 2
@@ -409,7 +410,10 @@ class ScriptController(NSWindowController):
 
         # Display the output of the script
         if result.ok and redraw:
-            self.currentView.setCanvas(self.vm.canvas)
+            try:
+                self.currentView.setCanvas(self.vm.canvas)
+            except DeviceError, e:
+                return self.crash()
         if not result.ok and method in (None, "setup"):
             self.stopScript()
         if result.ok=='HALTED':
