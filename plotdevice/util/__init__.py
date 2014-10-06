@@ -289,7 +289,7 @@ class XMLParser(object):
             self._expat.Parse(wrap%txt, True)
         except expat.ExpatError, e:
             # go a little overboard providing context for syntax errors
-            line = self.xml.split('\n')[e.lineno-1]
+            line = (wrap%txt).split('\n')[e.lineno-1]
             self._expat_error(e, line)
 
     @property
