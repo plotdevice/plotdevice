@@ -19,7 +19,7 @@ DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
 # named tuples for grouping state attrs
 PenStyle = namedtuple('PenStyle', ['nib', 'cap', 'join', 'dash'])
-Typography = namedtuple('Typography', ['font', 'stylesheet', 'leading', 'tracking', 'align'])
+Typography = namedtuple('Typography', ['font', 'stylesheet', 'leading', 'tracking', 'align', 'hyphenate'])
 
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
@@ -87,7 +87,7 @@ class Context(object):
         self._effects = Effect()
 
         # type styles
-        self._typography = Typography(Font(None), Stylesheet(), 1.2, 0, LEFT)
+        self._typography = Typography(Font(None), Stylesheet(), 1.2, 0, LEFT, 0)
 
         # bezier construction internals
         self._path = None

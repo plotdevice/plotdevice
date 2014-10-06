@@ -317,13 +317,17 @@ def fontspec(*args, **kwargs):
 
 def typespec(**kwargs):
     # start with kwarg values as the canonical settings
-    _canon = ('align','leading','tracking')
+    _canon = ('align','leading','tracking','hyphenate')
     spec = {k:v for k,v in kwargs.items() if k in _canon}
 
     # validate alignment
     if spec.get('align','left') not in ('left','right','center','justify'):
         chaoticneutral = 'Text alignment must be LEFT, RIGHT, CENTER, or JUSTIFY'
         raise DeviceError(chaoticneutral)
+
+    # floatify hyphenation (mapping bools to 0/1)
+    if 'hyphenate' in spec:
+        spec['hyphenate'] = float(spec['hyphenate'])
 
     # be backward compatible with the old arg names
     if 'lineheight' in kwargs:

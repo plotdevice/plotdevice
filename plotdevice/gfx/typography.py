@@ -290,6 +290,7 @@ class Stylesheet(object):
         graf.setLineBreakMode_(NSLineBreakByWordWrapping)
         graf.setAlignment_(_TEXT[spec['align']])
         graf.setLineHeightMultiple_(spec['leading'])
+        graf.setHyphenationFactor_(spec['hyphenate'])
         # graf.setLineSpacing_(extra_px_of_lead)
         # graf.setParagraphSpacing_(1em?)
         # graf.setMinimumLineHeight_(self._lineheight)
