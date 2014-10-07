@@ -355,6 +355,8 @@ aat_consts = {
 
     "VerticalPosition":10, # kVerticalPositionType
     "NormalPosition":0, "Superiors":1, "Inferiors":2, "Ordinals":3,
+
+    "Alternates":35, # kStylisticAlternativesType
 }
 
 pd_features = {
@@ -398,8 +400,13 @@ from AppKit import NSFontFeatureSettingsAttribute as settings_attr, \
                    NSFontFeatureTypeIdentifierKey as feature_id, \
                    NSFontFeatureSelectorIdentifierKey as selector_id
 
-# convert the semi-sensibly named items in features into their SFNTLayoutTypes.h equivalents
+# convert the semi-sensibly named items in pd_features's arrays into their SFNTLayoutTypes.h 
+# const values. the _aat_features dict uses the same keys as pd_features but the contents of 
+# the 'command' tuples become ints
 _aat_features = {}
+# build feature dicts for the numbered `stylistic sets' construction
+_aat_features["ss"] = {n:[{feature_id:aat_consts['Alternates'], selector_id:n*2}] for n in range(1,21)}
+# incorporate the pd_features items
 for arg, vals in pd_features.items():
     _aat_features[arg] = {}
     for val, actions in vals.items():
@@ -412,12 +419,25 @@ def aat_features(spec):
     """Validate features in a Font spec and normalize settings values"""
     features = {}
 
-    # if 'alt' in spec:
-    #     sets = [spec['alt']] if not isinstance(spec['alt'], (list, tuple)) else spec['alt']
-    #     if not all
-
     for k,v in spec.items():
-        if k in _aat_features:
+        if k=='ss':
+            # unpack & validate the ss arg (which might be a sequence of ints)
+            ss = (int(v),) if numlike(v) or isinstance(v, bool) else v
+            if ss is None or ss==(0,):
+                features['ss'] = tuple()
+            elif ss is all:
+                features['ss'] = tuple(range(1,21))
+            elif isinstance(ss, (list,tuple)):
+                badvals = [n for n in ss if not (numlike(n) and 0<n<21)]
+                if badvals:
+                    badset = 'The `ss` argument only accepts integers in the range 1-20 (not %r)' % badvals
+                    raise DeviceError(badset)
+                features['ss'] = tuple(int(n) for n in ss)
+            else:
+                badset = 'The `ss` argument must be an integer in the range 1-20 or a list of them (not %r)' % ss
+                raise DeviceError(badset)
+        elif k in _aat_features:
+            # with all the other features, just check that the arg value is in the dict
             try:
                 _aat_features[k][v]
                 features[k] = int(v) if not callable(v) else v
@@ -430,8 +450,9 @@ def aat_attrs(spec):
     """Converts a validated features spec to a dict suitable for NSFontDescriptor"""
     settings = []
     for k,v in spec.items():
-        if k in _aat_features:
-            settings += _aat_features[k][v]
+        if k not in _aat_features: continue
+        for vv in (v,) if not isinstance(v, tuple) else v:
+            settings += _aat_features[k][vv]
     return {settings_attr:settings}
 
 

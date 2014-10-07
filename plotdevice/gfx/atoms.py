@@ -319,7 +319,7 @@ class StyleMixin(Grob):
     ctxAttrs = ('_typography', '_fillcolor')
     stateAttrs = ('_style',)
     opts = ('face','family','size','weight','width','variant','italic', # font selection
-            'lig','sc','osf','tab','vpos','frac', # aat features
+            'lig','sc','osf','tab','vpos','frac', 'ss', # aat features
             'leading', 'tracking', 'align', 'hyphenate', # layout
             'fontname','fontsize','lineheight','font', # nodebox compat
             'fill', # color override
