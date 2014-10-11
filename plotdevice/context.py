@@ -1016,8 +1016,10 @@ class Context(object):
           - the `fill` argument can override the color inherited from the graphics state
         """
         outline = kwargs.pop('outline', False)
-        path_args = {k:v for k,v in kwargs.items() if k in Bezier._opts}
+        draw = kwargs.pop('plot', kwargs.pop('draw', self._autoplot))
         text_args = {k:v for k,v in kwargs.items() if k in Text._opts}
+        path_args = {k:v for k,v in kwargs.items() if k in Bezier._opts}
+        path_args['draw'] = draw
 
         # make sure we didn't get any invalid kwargs
         if outline:
@@ -1035,7 +1037,7 @@ class Context(object):
                 p.extend(txt.path)
             return p
         else:
-            if kwargs.get('draw', kwargs.get('plot', self._autoplot)):
+            if draw:
               txt.draw()
             return txt
 
