@@ -53,6 +53,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
     def __init__(self, text, *args, **kwargs):
         super(Text, self).__init__(**kwargs)
+        self._typesetter = None
 
         if isinstance(text, Text):
             self.inherit(text)
@@ -254,7 +255,6 @@ class Stylesheet(object):
         """Convert a string to an attributed string, either based on inline tags or the `style` arg"""
 
         # if the string begins and ends with a root element, treat it as xml
-        # unless called w/ text(…, style=False)
         is_xml = bool(re.match(r'<([^>]*)>.*</\1>$', words, re.S))
 
         if is_xml:

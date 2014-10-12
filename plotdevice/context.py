@@ -1051,9 +1051,9 @@ class Context(object):
         text_args = {k:v for k,v in kwargs.items() if k in Text._opts}
         return Text(txt, x, y, **text_args).path
 
-    def textmetrics(self, txt, width=None, height=None, style=None, **kwargs):
+    def textmetrics(self, txt, width=None, height=None, **kwargs):
         """Legacy command. Equivalent to: measure(txt, width, height)"""
-        txt = Text(txt, 0, 0, width, height, style, **kwargs)
+        txt = Text(txt, 0, 0, width, height, **kwargs)
         return txt.metrics
 
     def textwidth(self, txt, width=None, **kwargs):
