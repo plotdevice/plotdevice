@@ -19,7 +19,7 @@ DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
 # named tuples for grouping state attrs
 PenStyle = namedtuple('PenStyle', ['nib', 'cap', 'join', 'dash'])
-Typography = namedtuple('Typography', ['font', 'stylesheet', 'leading', 'tracking', 'align', 'hyphenate'])
+Typography = namedtuple('Typography', ['font', 'leading', 'tracking', 'align', 'hyphenate'])
 
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
@@ -87,7 +87,8 @@ class Context(object):
         self._effects = Effect()
 
         # type styles
-        self._typography = Typography(Font(None), Stylesheet(), 1.2, 0, LEFT, 0)
+        self._stylesheet = Stylesheet()
+        self._typography = Typography(Font(None), 1.2, 0, LEFT, 0)
 
         # bezier construction internals
         self._path = None
@@ -983,9 +984,9 @@ class Context(object):
             It acts as a dictionary with all currently defined styles as its keys.
         """
         if name is None:
-            return self._typography.stylesheet
+            return self._stylesheet
         else:
-            return self._typography.stylesheet.style(name, *args, **kwargs)
+            return self._stylesheet.style(name, *args, **kwargs)
 
     def text(self, txt, *args, **kwargs):
         """Draw a single line (or a block) of text
