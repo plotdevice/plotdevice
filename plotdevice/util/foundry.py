@@ -278,7 +278,7 @@ def fontspec(*args, **kwargs):
     # validate the weight and width args (if any)
     if not weighty(spec.get('weight','regular')):
         print 'Font: unknown weight "%s"' % spec.pop('weight')
-    if not widthy(spec.get('width','condensed')):
+    if not widthy(spec.get('width','condensed')) and spec.get('width') is not None:
         print 'Font: unknown width "%s"' % spec.pop('width')
 
     # look for a postscript name passed as `face` or `fontname` and validate it
