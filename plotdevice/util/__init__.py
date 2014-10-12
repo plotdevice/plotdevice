@@ -8,7 +8,7 @@ from collections import OrderedDict, defaultdict
 from AppKit import NSFontManager, NSFont, NSMacOSRomanStringEncoding, NSItalicFontMask
 from os.path import abspath, dirname, exists, join
 from random import choice, shuffle
-from plotdevice import DeviceError, INTERNAL as DEFAULT
+from plotdevice import DeviceError, INTERNAL
 from .http import GET
 
 __all__ = ('grid', 'random', 'shuffled', 'choice', 'ordered', 'order', 'files', 'read', 'autotext', '_copy_attr', '_copy_attrs', 'odict', 'ddict', 'adict')
@@ -285,7 +285,7 @@ class XMLParser(object):
             # parse the input xml string
             if isinstance(txt, unicode):
                 txt = txt.encode('utf-8')
-            wrap = "<%s>" % ">%s</".join([DEFAULT]*2)
+            wrap = "<%s>" % ">%s</".join([INTERNAL]*2)
             self._expat.Parse(wrap%txt, True)
         except expat.ExpatError, e:
             # go a little overboard providing context for syntax errors
@@ -300,7 +300,7 @@ class XMLParser(object):
     def _expat_error(self, e, line):
         measure = 80
         col = e.offset
-        start, end = len('<%s>'%DEFAULT), -len('</%s>'%DEFAULT)
+        start, end = len('<%s>'%INTERNAL), -len('</%s>'%INTERNAL)
         line = line[start:end]
         col -= start
 
@@ -344,7 +344,7 @@ class XMLParser(object):
         self.log(u'<%s>'%(name), indent=1)
 
     def _leave(self, name):
-        if name == DEFAULT:
+        if name == INTERNAL:
             self.body = u"".join(self.body)
         self.stack.pop()
         self.log(u'</%s>'%(name), indent=-1)

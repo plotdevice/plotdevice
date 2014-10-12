@@ -4,7 +4,7 @@ from Foundation import *
 from Quartz import *
 from collections import namedtuple, defaultdict
 
-from plotdevice import DeviceError, INTERNAL as DEFAULT
+from plotdevice import DeviceError
 from ..util.foundry import fontspec, typespec
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
@@ -317,11 +317,12 @@ class StyleMixin(Grob):
     """Mixin class for text-styling support.
     Adds the stylesheet, fill, and style attributes to the class."""
     ctxAttrs = ('_typography', '_stylesheet', '_fillcolor')
-    stateAttrs = ('_style',)
+    stateAttrs = ('_style', )
     opts = ('face','family','size','weight','width','variant','italic', # font selection
             'lig','sc','osf','tab','vpos','frac', 'ss', # aat features
             'leading', 'tracking', 'align', 'hyphenate', # layout
             'fontname','fontsize','lineheight','font', # nodebox compat
+            'style', # use named style as baseline
             'fill', # color override
             )
 
@@ -332,45 +333,35 @@ class StyleMixin(Grob):
         if not isinstance(kwargs.get('width', ''), basestring):
             del kwargs['width']
 
-        # combine ctx state and kwargs to create a DEFAULT style
+        # combine inherited ctx state and kwargs to create a baseline style
+        self._style = dict(fill=self._fillcolor) # use the ctx's current fill by default
+        self._style.update(self._typography.font._spec) # and the current font
+        self._style.update(typespec(**self._typography._asdict())) # and the inherited layout settings, then
+        self._style.update(self._parse_style(**kwargs)) # merge in any modifications from the text() call
+
+    def _parse_style(self, **kwargs):
         fontopts = {k:v for k,v in kwargs.items() if k in StyleMixin.opts}
         fontargs = kwargs.get('font',[])
         if not isinstance(fontargs, (list,tuple)):
             fontargs = [fontargs]
 
-        # start with the current font & typography settings
-        baseline = self._typography.font._spec
-        baseline.update(typespec(**self._typography._asdict()))
-        # merge in any modifications from the text() call
-        baseline.update(fontspec(*fontargs, **fontopts))
-        baseline.update(typespec(**fontopts))
-        # let the stylesheet hold the merged spec
-        self._stylesheet._styles[DEFAULT] = baseline
-
-        # color, style, and text-metrics overrides
-        self.fill = kwargs.get('fill', self._fillcolor)
-        self.style = kwargs.get('style', True)
-        self._typography = self._typography._replace(**typespec(**fontopts))
+        spec = {}
+        spec.update(self.stylesheet._styles.get( kwargs.get('style'), {} ))
+        spec.update(fontspec(*fontargs, **fontopts))
+        spec.update(typespec(**fontopts))
+        if 'fill' in kwargs:
+            spec['fill'] = Color(kwargs['fill'])
+        return spec
 
     @property
     def stylesheet(self):
         return self._stylesheet
 
     def _get_fill(self):
-        return self._fillcolor
+        return self._style['fill']
     def _set_fill(self, *args):
-        self._fillcolor = Color(*args)
-        self._stylesheet._styles[DEFAULT]['fill'] = self._fillcolor
+        self._style['fill'] = Color(*args)
     fill = property(_get_fill, _set_fill)
-
-    def _get_style(self):
-        return self._style
-    def _set_style(self, style):
-        if not (style in self._stylesheet or isinstance(style, bool)):
-            badstyle = "Stylesheet doesn't have a definition for style: %s", style
-            raise DeviceError(badstyle)
-        self._style = style
-    style = property(_get_style, _set_style)
 
 
 class Variable(object):

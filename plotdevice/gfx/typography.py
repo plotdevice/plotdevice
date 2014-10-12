@@ -5,7 +5,7 @@ from operator import itemgetter, attrgetter
 from plotdevice.util import odict, ddict
 from ..lib.cocoa import *
 
-from plotdevice import DeviceError, INTERNAL as DEFAULT
+from plotdevice import DeviceError
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, BoundsMixin, Grob
 from . import _save, _restore, _ns_context
 from .transform import Transform, Region, Size
@@ -48,8 +48,8 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     # from TransformMixin: transform transformmode translate() rotate() scale() skew() reset()
     # from EffectsMixin:   alpha blend shadow
     # from BoundsMixin:    x y width height
-    # from StyleMixin:     stylesheet fill
-    stateAttrs = ('_style', 'text')
+    # from StyleMixin:     stylesheet fill _parse_style()
+    stateAttrs = ('_attrib_str', '_align')
 
     def __init__(self, text, *args, **kwargs):
         super(Text, self).__init__(**kwargs)
@@ -63,17 +63,40 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         for attr, val in zip(['x','y','width','height'], args):
             setattr(self, attr, val)
 
-        # let _screen_transform handle alignment for single-line text
-        if self.width is None:
-            self.stylesheet._styles[DEFAULT]['align'] = LEFT
+        # store the alignment outside of self._style (in case we're drawing to a point)
+        self._align = kwargs.get('align', self._style['align'])
 
+        # let _screen_transform handle alignment for single-line text via x-offset instead
+        if self.width is None:
+            self._style['align'] = LEFT
+
+        # fontify the txt arg and store it ns-style
+        self._attrib_str = NSMutableAttributedString.alloc().init()
+        self.append(text)
+
+    def append(self, txt, **kwargs):
         # try to insulate people from the need to use a unicode constant for any text
         # with high-ascii characters (while waiting for the other shoe to drop)
-        self.text = text.decode('utf-8') if isinstance(text, str) else unicode(text)
+        decoded = txt.decode('utf-8') if isinstance(txt, str) else unicode(txt)
+
+        # invalidate prior layout (if any)
+        self._typesetter = None
+
+        # use the inherited baseline style but allow one-off overrides from kwargs
+        merged_style = dict(self._style)
+        merged_style.update(self._parse_style(**kwargs))
+
+        # generate an attributed string and append it the internal nsattrstring
+        styled = self.stylesheet._apply(decoded, merged_style)
+        self._attrib_str.appendAttributedString_(styled)
+
+    @property
+    def text(self):
+        return self._attrib_str.string()
 
     @property
     def font(self):
-        return self._typography.font._nsFont
+        return Font(**self._style)
 
     @property
     def _screen_position(self):
@@ -89,9 +112,9 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
         x,y = self.x, self.y
         (dx, dy), (w, h) = printer.typeblock
-        if self._typography.align == RIGHT:
+        if self._align == RIGHT:
             x += col_w - w
-        elif self._typography.align == CENTER:
+        elif self._align == CENTER:
             x += (col_w-w)/2
         y -= printer.offset
         return (x,y)
@@ -112,9 +135,9 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         # adjust the positioning for alignment on single-line runs
         x, y = self.x, self.y
         if self.width is None:
-            if self._typography.align == RIGHT:
+            if self._align == RIGHT:
                 x -= w
-            elif self._typography.align == CENTER:
+            elif self._align == CENTER:
                 x -= w/2.0
         # accumulate transformations in a fresh matrix
         xf = Transform()
@@ -149,9 +172,8 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
     @property
     def _spool(self):
-        if not hasattr(self, '_typesetter'):
-            attrib_str = self.stylesheet._apply(self.text, self.style)
-            self._typesetter = Typesetter(attrib_str, self.width, self.height)
+        if not self._typesetter:
+            self._typesetter = Typesetter(self._attrib_str, self.width, self.height)
         return self._typesetter
 
     def _draw(self):
@@ -174,14 +196,10 @@ class Stylesheet(object):
     kwargs = StyleMixin.opts
 
     def __init__(self, styles=None):
-        super(Stylesheet, self).__init__()
         self._styles = dict(styles or {})
 
     def __repr__(self):
-        styles = repr({k.replace(DEFAULT,'DEFAULT'):v for k,v in self._styles.items() if k is not DEFAULT})
-        if DEFAULT in self._styles:
-            styles = '{DEFAULT: %r, '%self._styles[DEFAULT] + styles[1:]
-        return "Stylesheet(%s)"%(styles)
+        return "Stylesheet(%r)"%(self._styles)
 
     def __iter__(self):
         return iter(self._styles.keys())
@@ -218,7 +236,9 @@ class Stylesheet(object):
         if not kwargs and any(a in (None,'inherit') for a in args[:1]):
             del self[name]
         elif args or kwargs:
-            spec = fontspec(*args, **kwargs)
+            spec = {}
+            spec.update(self._styles.get( kwargs.get('style'), {} ))
+            spec.update(fontspec(*args, **kwargs))
             spec.update(typespec(**kwargs))
             color = kwargs.get('fill')
             if color and not isinstance(color, Color):
@@ -230,52 +250,40 @@ class Stylesheet(object):
             self._styles[name] = spec
         return self[name]
 
-    def _apply(self, words, style):
+    def _apply(self, words, defaults):
         """Convert a string to an attributed string, either based on inline tags or the `style` arg"""
 
         # if the string begins and ends with a root element, treat it as xml
         # unless called w/ text(…, style=False)
         is_xml = bool(re.match(r'<([^>]*)>.*</\1>$', words, re.S))
 
-        if style and is_xml:
+        if is_xml:
             # find any tagged regions that need styling
             parser = XMLParser(words)
 
             # start building the display-string (with all the tags now removed)
             astr = NSMutableAttributedString.alloc().initWithString_(parser.text)
 
-            # apply formatting (either based on the style kwarg, or by mapping tags to styles)
-            if style in self._styles:
-                # use specified style for entire string
-                attrs = self._cascade(DEFAULT, style)
-                astr.setAttributes_range_(attrs, (0,astr.length()))
-            else:
-                # generate the proper `ns' font attrs for each unique cascade of xml tags
-                attrs = {seq:self._cascade(*seq) for seq in sorted(parser.regions)}
+            # generate the proper `ns' font attrs for each unique cascade of xml tags
+            attrs = {seq:self._cascade(defaults, *seq) for seq in sorted(parser.regions)}
 
-                # apply the attributes to the runs found by the parser
-                for cascade, runs in parser.regions.items():
-                    style = attrs[cascade]
-                    for rng in runs:
-                        astr.setAttributes_range_(style, rng)
-
-        elif style in self._styles:
-            # don't parse as xml, use specified style name
-            attrs = self._cascade(DEFAULT, style)
-            astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
-
+            # apply the attributes to the runs found by the parser
+            for cascade, runs in parser.regions.items():
+                style = attrs[cascade]
+                for rng in runs:
+                    astr.setAttributes_range_(style, rng)
         else:
             # don't parse as xml, just apply the current font(), align(), and fill()
-            attrs = self._cascade(DEFAULT)
+            attrs = self._cascade(defaults)
             astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
 
         return astr
 
-    def _cascade(self, *styles):
+    def _cascade(self, defaults, *styles):
         """Apply the listed styles in order and return nsattibutedstring attrs"""
 
         # use the inherited context settings as a baseline spec
-        spec = dict(self._styles[DEFAULT])
+        spec = dict(defaults)
 
         # layer the styles to generate a final font and color
         for tag in styles:
@@ -409,13 +417,13 @@ class Font(object):
         # collect the attrs from the current font to fill in any gaps
         current = _ctx._typography.font
         cur_spec = current._spec
-        for axis, num_axis in dict(weight='wgt', width='wid').items():  
+        for axis, num_axis in dict(weight='wgt', width='wid').items():
             # convert weight & width to integer values
             cur_spec[num_axis] = getattr(current._face, num_axis)
             if axis in new_spec:
                 name, val = standardized(axis, new_spec[axis])
                 new_spec.update({axis:name, num_axis:val})
-        
+
         # merge in changes from the new spec
         spec = dict(cur_spec.items() + new_spec.items()) # our criteria
 
@@ -443,7 +451,7 @@ class Font(object):
         del self._rollback
 
     ### face introspection ###
-    
+
     @property
     def family(self):
         return self._face.family
