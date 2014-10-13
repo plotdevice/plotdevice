@@ -357,12 +357,6 @@ class StyleMixin(Grob):
     def stylesheet(self):
         return self._stylesheet
 
-    def _get_fill(self):
-        return self._style['fill']
-    def _set_fill(self, *args):
-        self._style['fill'] = Color(*args)
-    fill = property(_get_fill, _set_fill)
-
 
 class Variable(object):
     def __init__(self, name, type, default=None, min=0, max=100, value=None):
