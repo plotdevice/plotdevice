@@ -56,7 +56,8 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         self._typesetter = None
 
         if isinstance(text, Text):
-            self.inherit(text)
+            self.inherit(text) # makes copied _attrib_str immutable...
+            self._attrib_str = self._attrib_str.mutableCopy() # ...so fix that
             return
 
         if not isinstance(text, basestring):
