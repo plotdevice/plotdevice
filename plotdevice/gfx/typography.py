@@ -53,7 +53,6 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
     def __init__(self, text, *args, **kwargs):
         super(Text, self).__init__(**kwargs)
-        self._typesetter = None
 
         if isinstance(text, Text):
             self.inherit(text) # makes copied _attrib_str immutable...
@@ -80,9 +79,6 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         # try to insulate people from the need to use a unicode constant for any text
         # with high-ascii characters (while waiting for the other shoe to drop)
         decoded = txt.decode('utf-8') if isinstance(txt, str) else unicode(txt)
-
-        # invalidate prior layout (if any)
-        self._typesetter = None
 
         # use the inherited baseline style but allow one-off overrides from kwargs
         merged_style = dict(self._style)
@@ -174,8 +170,10 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
     @property
     def _spool(self):
-        if not self._typesetter:
-            self._typesetter = Typesetter(self._attrib_str, self.width, self.height)
+        # lazily create the _typesetter and set its layout size & content
+        self._typesetter = getattr(self, '_typesetter', Typesetter())
+        self._typesetter.size = (self.width, self.height)
+        self._typesetter.content = self._attrib_str
         return self._typesetter
 
     def _draw(self):
@@ -318,26 +316,34 @@ class Stylesheet(object):
 
 class Typesetter(object):
 
-    def __init__(self, attrib_str, width, height):
+    def __init__(self):
         # collect nstext system objects
-        store = NSTextStorage.alloc().init()
-        layout = NSLayoutManager.alloc().init()
-        column = NSTextContainer.alloc().init()
+        self.store = NSTextStorage.alloc().init()
+        self.layout = NSLayoutManager.alloc().init()
+        self.column = NSTextContainer.alloc().init()
 
         # assemble nsmachinery
-        layout.addTextContainer_(column)
-        store.addLayoutManager_(layout)
-        column.setLineFragmentPadding_(0)
-
-        # pour in the styled text
-        store.setAttributedString_(attrib_str)
-        column.setContainerSize_([d or 1000000 for d in (width,height)])
-
-        # save the nsmachinery for later
-        self.store, self.layout, self.column = store, layout, column
+        self.layout.addTextContainer_(self.column)
+        self.store.addLayoutManager_(self.layout)
+        self.column.setLineFragmentPadding_(0)
 
     def draw_glyphs(self, x, y):
         self.layout.drawGlyphsForGlyphRange_atPoint_(self.visible, (x,y))
+
+    def _get_content(self):
+        return self.store
+    def _set_content(self, attrib_str):
+        if not self.store.isEqualToAttributedString_(attrib_str):
+            self.store.setAttributedString_(attrib_str)
+    content = property(_get_content, _set_content)
+
+    def _get_size(self):
+        return self.column.containerSize()
+    def _set_size(self, dims):
+        new_size = [d or 10000000 for d in dims]
+        if new_size != self.size:
+            self.column.setContainerSize_(new_size)
+    size = property(_get_size, _set_size)
 
     @property
     def typeblock(self):
