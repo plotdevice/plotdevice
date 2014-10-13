@@ -1117,6 +1117,9 @@ class Context(object):
         # for any valid kwargs, assign the value to the attr of the same name
         grob.__class__.validate(kwargs)
         for arg_key, arg_val in kwargs.items():
+            if not hasattr(grob, arg_key):
+                badattr = "Unknown property '%s' for object of class %r"%(arg_key, grob.__class__.__name__)
+                raise DeviceError(badattr)
             setattr(grob, arg_key, _copy_attr(arg_val))
 
         grob.draw() # add to canvas
