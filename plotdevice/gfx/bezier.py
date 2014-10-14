@@ -42,7 +42,7 @@ FORTYFIVE = "fortyfive"
 
 class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     """A Bezier provides a wrapper around NSBezierPath."""
-    stateAttrs = ('_nsBezierPath',)
+    stateAttrs = ('_nsBezierPath', '_fulcrum')
 
     def __init__(self, path=None, immediate=False, **kwargs):
         super(Bezier, self).__init__(**kwargs)
@@ -286,6 +286,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
           pt = (x+radius*sin(angle), y+radius*cos(angle))
           self._nsBezierPath.lineToPoint_(pt)
         self.closepath()
+        self._fulcrum = Point(x,y)
 
     def arrow(self, x, y, width=100, type=NORMAL):
         if type not in (NORMAL, FORTYFIVE):
@@ -477,6 +478,21 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         self._fulcrum = t.apply(self._fulcrum) if self._fulcrum else None
         self._segment_cache = {}
 
+    def _get_x(self):
+        return getattr(self._fulcrum or self.bounds.origin.x, 'x')
+    def _set_x(self, new_x):
+        if self._fulcrum:
+            new_x -= self._fulcrum.x - self.bounds.origin.x
+        self.fit(x=new_x)
+    x = property(_get_x, _set_x)
+
+    def _get_y(self):
+        return getattr(self._fulcrum or self.bounds.origin.x, 'y')
+    def _set_y(self, new_y):
+        if self._fulcrum:
+            new_y -= self._fulcrum.y - self.bounds.origin.y
+        self.fit(y=new_y)
+    y = property(_get_y, _set_y)
 
     ### Mathematics ###
 
