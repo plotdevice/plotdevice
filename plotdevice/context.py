@@ -1095,7 +1095,43 @@ class Context(object):
 
     ### draw, erase, and save-to-file ###
 
-    def plot(self, obj=None, live=False, inherit=False, **kwargs):
+    def plot(self, obj=None, *coords, **kwargs):
+        """Add a new copy of a graphics object to the canvas
+
+        Arguments:
+          Accepts an object to be drawn followed (optionally) by x & y arguments
+          specifying a location. If coordinates are omitted, the object will be
+          drawn without modifying its original position:
+              box = poly(10,10, 5, plot=False) # create a sqaure w/o drawing it
+              plot(box)      # draw a square centered at (10,10)
+              plot(box, 0,0) # draw another square at (0,0)
+
+          When called with True or False, sets whether the primitive commands
+          draw to the canvas by default or just return a reference.
+
+        Keyword args:
+          If `live` is set to True, the command will add the graphics object to
+          the canvas directly (rather than drawing a copy of it). As a result,
+          your variable reference to the object will remain `connected', allowing
+          you to modify its properties even though it's already on the canvas.
+
+          You may also include any keyword args that are approriate for the kind of
+          object being drawn and its values will be updated before it is rendered.
+          Valid keywords correspond to the attributes provided by the object in
+          question (fill, stroke, width, height, etc.):
+              dot = arc(0,0, 4, plot=False)
+              plot(dot, 10,10, fill='red')        # a bright red dot
+              plot(dot, 15,10, fill=0, alpha=0.2) # a pale black dot
+
+        Context Manager:
+          plot() can be used as part of a `with` statement to control whether
+          primitive commands like rect() and image() draw to the screen by default.
+          For instance, calling `with plot(False)` will inhibit drawing even if
+          the primitive command is called without a `plot=False` keyword argument:
+              r = rect(100,100, 20,20, plot=False) # not drawn
+              with plot(False):
+                  s = rect(0,0, 20,20) # not drawn either
+        """
         if obj is None:
             return self._autoplot
         elif obj in (True,False):
@@ -1107,12 +1143,11 @@ class Context(object):
         # by default, plot a copy of the grob and return a reference to that new copy.
         # if live=True, the obj itself will be added to the canvas and the caller can
         # make additional modifications on that instance
-        grob = obj if live else obj.copy()
+        grob = obj if kwargs.get('live') else obj.copy()
 
-        # optionally reflect the *current* graphics state rather than the state
-        # that was inherited when the grob was originally created
-        if inherit:
-            grob.inherit()
+        # if there are any positional args following the grob, assign a new x/y
+        for attr, val in zip(['x','y'], coords):
+            setattr(grob, attr, val)
 
         # for any valid kwargs, assign the value to the attr of the same name
         grob.__class__.validate(kwargs)
