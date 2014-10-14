@@ -988,12 +988,16 @@ class Context(object):
         else:
             return self._stylesheet.style(name, *args, **kwargs)
 
-    def text(self, txt, *args, **kwargs):
+    def text(self, *args, **kwargs):
         """Draw a single line (or a block) of text
 
+        Usage:
+          text(str, x=0, y=0, width=None, height=None, **kwargs)
+          text(x=0, y=0, width=None, height=None, str="", **kwargs) # equivalent to first usage
+          text(x=0, y=0, width=None, height=None, xml="", **kwargs) # parses xml before rendering
+
         Arguments:
-          - `txt` is a unicode string. If it begins and ends with an xml tag, the string will
-            be parsed and styles from the stylesheet() applied to it. Otherwise the text will
+          - `str` is a unicode string or utf-8 encoded bytestring. The text will
             be drawn using the current font() and fill().
           - `x` & `y` set the position. Note that the `y` value corresponds to the the text's
             baseline rather than the top of its bounding box.
@@ -1015,6 +1019,10 @@ class Context(object):
           - you can pass any of the standard font() args as keyword commands:
               family, size, leading, weight, variant, italic, heavier, lighter
           - the `fill` argument can override the color inherited from the graphics state
+
+        Returns:
+          A Text object whose x, y, width, and height can be manipulated through its attribtues.
+          In addition, you can call its .append() method to add more text to the end of the run.
         """
         outline = kwargs.pop('outline', False)
         draw = kwargs.pop('plot', kwargs.pop('draw', self._autoplot))
@@ -1032,7 +1040,7 @@ class Context(object):
             raise DeviceError(unknown)
 
         # draw the text (either as a bezier or as type)
-        txt = Text(txt, *args, **text_args)
+        txt = Text(*args, **text_args)
         if outline:
             with self._active_path(path_args) as p:
                 p.extend(txt.path)

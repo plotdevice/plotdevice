@@ -50,17 +50,30 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     # from BoundsMixin:    x y width height
     # from StyleMixin:     stylesheet fill _parse_style()
     stateAttrs = ('_attrib_str', '_align')
+    opts = ('str', 'xml')
 
-    def __init__(self, text, *args, **kwargs):
-        super(Text, self).__init__(**kwargs)
-
-        if isinstance(text, Text):
-            self.inherit(text) # makes copied _attrib_str immutable...
+    def __init__(self, *args, **kwargs):
+        # bail out quickly if we're just making a copy of an existing Text object
+        if args and isinstance(args[0], Text):
+            self.inherit(text) # .copy() makes cloned _attrib_str immutable...
             self._attrib_str = self._attrib_str.mutableCopy() # ...so fix that
             return
 
-        if not isinstance(text, basestring):
-            raise DeviceError("text() must be called with a string as its first argument")
+        # let the various mixins have a crack at the kwargs
+        super(Text, self).__init__(**kwargs)
+
+        # look for a string as the first positional arg or an xml/str kwarg
+        txt = None
+        fmt = 'xml' if 'xml' in kwargs else 'str'
+        if args and isinstance(args[0], basestring):
+            txt, args = args[0], args[1:]
+        txt = kwargs.pop('xml', kwargs.pop('str', txt))
+
+        # fontify the text arg and store it ns-style
+        self._attrib_str = NSMutableAttributedString.alloc().init()
+        self.append(**{fmt:txt})
+
+        # merge in any numlike positional args to define bounds
         for attr, val in zip(['x','y','width','height'], args):
             setattr(self, attr, val)
 
@@ -71,22 +84,34 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         if self.width is None:
             self._style['align'] = LEFT
 
-        # fontify the txt arg and store it ns-style
-        self._attrib_str = NSMutableAttributedString.alloc().init()
-        self.append(text)
+    def append(self, txt=None, **kwargs):
+        """Add a string to the end of the text run (with optional styling)
 
-    def append(self, txt, **kwargs):
-        # try to insulate people from the need to use a unicode constant for any text
-        # with high-ascii characters (while waiting for the other shoe to drop)
-        decoded = txt.decode('utf-8') if isinstance(txt, str) else unicode(txt)
+        Usage:
+          txt.append(str, **kwargs) # add the string using included styling kwargs
+          txt.append(str="", **kwargs) # equivalent to first usage
+          txt.append(xml="", **kwargs) # parses xml for styling before rendering
 
-        # use the inherited baseline style but allow one-off overrides from kwargs
-        merged_style = dict(self._style)
-        merged_style.update(self._parse_style(**kwargs))
+        Keyword Args:
+          Accepts the same keyword arguments as the text() command. For any styling
+          parameters that are omitted the appended string will inherit the style of
+          the Text object it's being added to.
+        """
+        is_xml = 'xml' in kwargs
+        txt = kwargs.pop('xml', kwargs.pop('str', txt))
 
-        # generate an attributed string and append it the internal nsattrstring
-        styled = self.stylesheet._apply(decoded, merged_style)
-        self._attrib_str.appendAttributedString_(styled)
+        if txt:
+            # try to insulate people from the need to use a unicode constant for any text
+            # with high-ascii characters (while waiting for the other shoe to drop)
+            decoded = txt if isinstance(txt, unicode) else txt.decode('utf-8')
+
+            # use the inherited baseline style but allow one-off overrides from kwargs
+            merged_style = dict(self._style)
+            merged_style.update(self._parse_style(**kwargs))
+
+            # generate an attributed string and append it the internal nsattrstring
+            styled = self.stylesheet._apply(decoded, merged_style, is_xml)
+            self._attrib_str.appendAttributedString_(styled)
 
     @property
     def text(self):
@@ -250,11 +275,8 @@ class Stylesheet(object):
             self._styles[name] = spec
         return self[name]
 
-    def _apply(self, words, defaults):
+    def _apply(self, words, defaults, is_xml=False):
         """Convert a string to an attributed string, either based on inline tags or the `style` arg"""
-
-        # if the string begins and ends with a root element, treat it as xml
-        is_xml = bool(re.match(r'<([^>]*)>.*</\1>$', words, re.S))
 
         if is_xml:
             # find any tagged regions that need styling
@@ -338,7 +360,7 @@ class Typesetter(object):
     content = property(_get_content, _set_content)
 
     def _get_size(self):
-        return self.column.containerSize()
+        return Size(*self.column.containerSize())
     def _set_size(self, dims):
         new_size = [d or 10000000 for d in dims]
         if new_size != self.size:
