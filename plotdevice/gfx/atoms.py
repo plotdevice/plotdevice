@@ -230,7 +230,7 @@ class TransformMixin(Grob):
     def _get_transformmode(self):
         return self._transformmode
     def _set_transformmode(self, mode):
-        if style not in (BUTT, ROUND, SQUARE):
+        if style not in (CENTER, CORNER):
             badmode = 'Transform mode should be CENTER or CORNER.'
             raise DeviceError(badmode)
         self._transformmode = mode
