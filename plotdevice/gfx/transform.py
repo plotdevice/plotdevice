@@ -59,6 +59,9 @@ class Point(object):
         # allow for assignments like: x,y = Point()
         return iter([self.x, self.y])
 
+    def copy(self):
+        return Point(self.x, self.y)
+
     # lib.geometry methods (accept either x,y pairs or Point args)
 
     def angle(self, x=0, y=0):
