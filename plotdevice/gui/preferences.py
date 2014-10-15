@@ -63,21 +63,24 @@ def possibleToolLocations():
     homebin = '%s/bin/plotdevice'%os.environ['HOME']
     localbin = '/usr/local/bin/plotdevice'
     locations = [homebin, localbin]
-
-    # find the user's login shell
-    out, _ = Popen(['dscl','.','-read',os.environ['HOME'],'UserShell'], stdout=PIPE).communicate()
-    shell = out.replace('UserShell:','').strip()
-
-    # try launching a shell to extract the user's path
-    if shell:
-        out, _ = Popen([shell,"-l"], stdout=PIPE, stderr=PIPE, stdin=PIPE).communicate("echo $PATH")
-        for path in out.strip().split(':'):
-            path += '/plotdevice'
-            if '/sbin' in path: continue
-            if path.startswith('/bin'): continue
-            if path.startswith('/usr/bin'): continue
-            if path in locations: continue
-            locations.append(path)
+    
+    try:
+        # find the user's login shell
+        out, _ = Popen(['dscl','.','-read',os.environ['HOME'],'UserShell'], stdout=PIPE).communicate()
+        shell = out.replace('UserShell:','').strip()
+        
+        # try launching a shell to extract the user's path
+        if shell:
+            out, _ = Popen([shell,"-l"], stdout=PIPE, stderr=PIPE, stdin=PIPE).communicate("echo $PATH")
+            for path in out.strip().split(':'):
+                path += '/plotdevice'
+                if '/sbin' in path: continue
+                if path.startswith('/bin'): continue
+                if path.startswith('/usr/bin'): continue
+                if path in locations: continue
+                locations.append(path)
+    except:
+        print "Unable to get user's path"
     return locations
 
 
