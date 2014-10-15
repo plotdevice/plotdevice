@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1090" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -24,18 +24,18 @@
                 <rect key="frame" x="0.0" y="0.0" width="600" height="485"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="U9m-0Q-49M">
+                    <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" verticalScrollElasticity="none" id="U9m-0Q-49M">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="485"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <clipView key="contentView" drawsBackground="NO" id="8kr-Id-LqZ">
                             <rect key="frame" x="0.0" y="0.0" width="600" height="485"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <customView id="haD-l0-piW" customClass="PlotDeviceBackdrop">
+                                <customView id="haD-l0-piW" customClass="GraphicsBackdrop">
                                     <rect key="frame" x="0.0" y="0.0" width="600" height="485"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <customView id="vrd-6s-Y5i" customClass="PlotDeviceGraphicsView">
+                                        <customView id="vrd-6s-Y5i" customClass="GraphicsView">
                                             <rect key="frame" x="200" y="185" width="200" height="39"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                             <connections>
@@ -51,7 +51,7 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="vzN-o6-7sn">
-                            <rect key="frame" x="584" y="0.0" width="16" height="485"/>
+                            <rect key="frame" x="585" y="0.0" width="15" height="485"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
@@ -213,12 +213,6 @@
                             <menuItem title="Export as Movie..." keyEquivalent="P" id="i40-XA-Wcp">
                                 <connections>
                                     <action selector="exportAsMovie:" target="Krd-r8-qxe" id="qdA-LG-WcQ"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Print..." keyEquivalent="p" id="E7U-Yg-hej">
-                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
-                                <connections>
-                                    <action selector="printDocument:" target="-1" id="EGG-VZ-oMa"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -391,12 +385,12 @@
                 <popUpButton verticalHuggingPriority="750" id="tLr-cj-F0l">
                     <rect key="frame" x="86" y="43" width="157" height="26"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <popUpButtonCell key="cell" type="push" title="Multiple Pages" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" autoenablesItems="NO" id="FqU-gu-WpX">
+                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" autoenablesItems="NO" id="FqU-gu-WpX">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="menu"/>
                         <menu key="menu" title="OtherViews" autoenablesItems="NO" id="Uoh-CD-vTi">
                             <items>
-                                <menuItem title="Multiple Pages" state="on" enabled="NO" id="5dB-cs-VtR">
+                                <menuItem title="Multiple Pages" enabled="NO" id="5dB-cs-VtR">
                                     <attributedString key="attributedTitle">
                                         <fragment content="Multiple Pages">
                                             <attributes>
@@ -522,12 +516,12 @@
                 <popUpButton verticalHuggingPriority="750" id="Zbz-px-7RN">
                     <rect key="frame" x="86" y="105" width="178" height="26"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <popUpButtonCell key="cell" type="push" title="Video (H.264)" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="gth-cM-oZ1">
+                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="gth-cM-oZ1">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="menu"/>
                         <menu key="menu" title="OtherViews" id="sc1-3q-gzX">
                             <items>
-                                <menuItem title="Video (H.264)" state="on" id="ofq-JF-Wzg"/>
+                                <menuItem title="Video (H.264)" id="ofq-JF-Wzg"/>
                                 <menuItem title="Animated Gif" id="Ya9-Yg-AYB"/>
                             </items>
                         </menu>
@@ -553,12 +547,12 @@
                 <popUpButton verticalHuggingPriority="750" id="w8Y-cd-Lvr">
                     <rect key="frame" x="86" y="76" width="178" height="26"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <popUpButtonCell key="cell" type="push" title="1 mbit/s" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="1" imageScaling="proportionallyDown" inset="2" id="Aqa-3f-AA2">
+                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="Aqa-3f-AA2">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="menu"/>
                         <menu key="menu" title="OtherViews" id="ckt-IM-HVK">
                             <items>
-                                <menuItem title="1 mbit/s" state="on" tag="1" id="VbA-dr-N21"/>
+                                <menuItem title="1 mbit/s" tag="1" id="VbA-dr-N21"/>
                                 <menuItem title="2 mbit/s" tag="2" id="egK-6m-fek"/>
                                 <menuItem title="5 mbit/s" tag="5" id="dvd-Hr-cSg"/>
                                 <menuItem title="8 mbit/s" tag="8" id="wf6-D0-cOA">
@@ -615,6 +609,6 @@
         </customView>
     </objects>
     <resources>
-        <image name="NSStopProgressFreestandingTemplate" width="12" height="12"/>
+        <image name="NSStopProgressFreestandingTemplate" width="83" height="83"/>
     </resources>
 </document>

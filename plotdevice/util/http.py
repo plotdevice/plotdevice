@@ -21,7 +21,7 @@ import urllib2
 import StringIO
 from hashlib import md5
 from threading import RLock
-from Foundation import NSDateFormatter, NSLocale, NSTimeZone
+from Foundation import NSDateFormatter, NSLocale, NSTimeZone, NSDate
 
 _date_parser = NSDateFormatter.alloc().init()
 _date_parser.setLocale_(NSLocale.alloc().initWithLocaleIdentifier_("en_US_POSIX"))
@@ -33,7 +33,10 @@ def GET(url):
     """Return the contents of a url (from cache if possible)"""
     opener = urllib2.build_opener(CacheHandler("/tmp/plod"))
     response = opener.open(url)
-    last_mod = _date_parser.dateFromString_(response.headers['Last-Modified'])
+
+    last_mod = _date_parser.dateFromString_(response.headers.get('Last-Modified'))
+    if not last_mod:
+        last_mod = NSDate.date()
     return response, last_mod.timeIntervalSince1970()
 
 cache_lock = RLock()

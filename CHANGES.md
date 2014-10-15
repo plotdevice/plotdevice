@@ -1,3 +1,15 @@
+PlotDevice 0.9.5
+----------------
+* Now using core animation layers to (hopefully) speed up graphics rendering
+* Enhanced `font()` command with support for OpenType/AAT features (currently
+  supporting `lig`, `sc`, `osf`, `tab`, `vpos`, and `frac` args).
+* In addition to the `align()` command, you can now pass an `align` arg to 
+  `font()` and `text()`
+* Letterspacing can now be set (in terms of thousandths of an em) via the 
+  `tracking` arg to font/text/stylesheet
+* Bugfixes for `measure()`, `textpath().fit()`, and `read()` (which was crashing on
+  URLs that didn't provide a Last-Modified header)
+
 PlotDevice 0.9.4
 ----------------
 * External scripts can use `from plotdevice import *` to create a drawing environment.

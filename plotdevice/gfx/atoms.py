@@ -4,7 +4,8 @@ from Foundation import *
 from Quartz import *
 from collections import namedtuple, defaultdict
 
-from plotdevice import DeviceError, INTERNAL as DEFAULT
+from plotdevice import DeviceError
+from ..util.foundry import fontspec, typespec
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
 from .transform import Transform, Dimension
@@ -100,7 +101,7 @@ class Grob(object):
         """Sanity check a potential set of constructor kwargs"""
         remaining = [arg for arg in kwargs.keys() if arg not in cls._opts]
         if remaining:
-            unknown = "Unknown argument(s) '%s'" % ", ".join(remaining)
+            unknown = "Unknown argument%s '%s'" % ('' if len(remaining)==1 else 's', ", ".join(remaining))
             raise DeviceError(unknown)
 
 class EffectsMixin(Grob):
@@ -178,7 +179,9 @@ class BoundsMixin(Grob):
     def _set_width(self, w):
         if w and not numlike(w):
             raise DeviceError('width value must be a number or None (not %r)'%type(w))
-        self._bounds = self._bounds._replace(w=float(w))
+        elif numlike(w):
+            w = float(w)
+        self._bounds = self._bounds._replace(w=w)
     w = width = property(_get_width, _set_width)
 
     def _get_height(self):
@@ -186,7 +189,9 @@ class BoundsMixin(Grob):
     def _set_height(self, h):
         if h and not numlike(h):
             raise DeviceError('height value must be a number or None (not %r)'%type(h))
-        self._bounds = self._bounds._replace(h=float(h))
+        elif numlike(h):
+            h = float(h)
+        self._bounds = self._bounds._replace(h=h)
     h = height = property(_get_height, _set_height)
 
 class ColorMixin(Grob):
@@ -225,7 +230,7 @@ class TransformMixin(Grob):
     def _get_transformmode(self):
         return self._transformmode
     def _set_transformmode(self, mode):
-        if style not in (BUTT, ROUND, SQUARE):
+        if style not in (CENTER, CORNER):
             badmode = 'Transform mode should be CENTER or CORNER.'
             raise DeviceError(badmode)
         self._transformmode = mode
@@ -311,10 +316,15 @@ class PenMixin(Grob):
 class StyleMixin(Grob):
     """Mixin class for text-styling support.
     Adds the stylesheet, fill, and style attributes to the class."""
-    ctxAttrs = ('_stylesheet', '_typestyle', '_fillcolor',)
-    stateAttrs = ('_style',)
-    opts = ('fill','family','size','leading','weight','width','variant','italic','fill','face',
-              'fontname','fontsize','lineheight','font')
+    ctxAttrs = ('_typography', '_stylesheet', '_fillcolor')
+    stateAttrs = ('_style', )
+    opts = ('face','family','size','weight','width','variant','italic', # font selection
+            'lig','sc','osf','tab','vpos','frac', 'ss', # aat features
+            'leading', 'tracking', 'align', 'hyphenate', # layout
+            'fontname','fontsize','lineheight','font', # nodebox compat
+            'style', # use named style as baseline
+            'fill', # color override
+            )
 
     def __init__(self, **kwargs):
         super(StyleMixin, self).__init__(**kwargs)
@@ -323,39 +333,29 @@ class StyleMixin(Grob):
         if not isinstance(kwargs.get('width', ''), basestring):
             del kwargs['width']
 
-        # combine ctx state and kwargs to create a DEFAULT style
-        from .typography import Stylesheet
+        # combine inherited ctx state and kwargs to create a baseline style
+        self._style = dict(fill=self._fillcolor) # use the ctx's current fill by default
+        self._style.update(self._typography.font._spec) # and the current font
+        self._style.update(typespec(**self._typography._asdict())) # and the inherited layout settings, then
+        self._style.update(self._parse_style(**kwargs)) # merge in any modifications from the text() call
+
+    def _parse_style(self, **kwargs):
+        fontopts = {k:v for k,v in kwargs.items() if k in StyleMixin.opts}
         fontargs = kwargs.get('font',[])
         if not isinstance(fontargs, (list,tuple)):
             fontargs = [fontargs]
-        fontspec = {k:v for k,v in kwargs.items() if k in StyleMixin.opts}
-        baseline = self._typestyle._asdict() # current font() setting
-        baseline.update(Stylesheet._spec(*fontargs, **fontspec)) # inline style params
-        self._stylesheet._styles[DEFAULT] = baseline
 
-        # color & style overrides
-        self.fill = kwargs.get('fill', self._fillcolor)
-        self.style = kwargs.get('style', True)
+        spec = {}
+        spec.update(self.stylesheet._styles.get( kwargs.get('style'), {} ))
+        spec.update(fontspec(*fontargs, **fontopts))
+        spec.update(typespec(**fontopts))
+        if 'fill' in kwargs:
+            spec['fill'] = Color(kwargs['fill'])
+        return spec
 
     @property
     def stylesheet(self):
         return self._stylesheet
-
-    def _get_fill(self):
-        return self._fillcolor
-    def _set_fill(self, *args):
-        self._fillcolor = Color(*args)
-        self._stylesheet._styles[DEFAULT]['fill'] = self._fillcolor
-    fill = property(_get_fill, _set_fill)
-
-    def _get_style(self):
-        return self._style
-    def _set_style(self, style):
-        if not (style in self.stylesheet or isinstance(style, bool)):
-            badstyle = "Stylesheet doesn't have a definition for style: %s", style
-            raise DeviceError(badstyle)
-        self._style = style
-    style = property(_get_style, _set_style)
 
 
 class Variable(object):

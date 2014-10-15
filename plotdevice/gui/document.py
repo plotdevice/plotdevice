@@ -13,6 +13,7 @@ from .editor import OutputTextView, EditorView
 from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
 from ..run import Sandbox, encoding
+from .. import DeviceError
 from . import set_timeout
 
 NSEventGestureAxisVertical = 2
@@ -108,7 +109,6 @@ class PlotDeviceDocument(NSDocument):
         file_mtime = os.path.getmtime(self.fileURL().fileSystemRepresentation())
         if file_mtime > doc_mtime:
             self.revertToContentsOfURL_ofType_error_(self.fileURL(), self.fileType(), None)
-
 
 # `file's owner' in PlotDeviceDocument.xib
 class ScriptController(NSWindowController):
@@ -339,9 +339,6 @@ class ScriptController(NSWindowController):
             self.animationTimer.invalidate()
             self.animationTimer = None
 
-        # disable double buffering during the run (stopScript reënables it)
-        self.graphicsView.volatile = True
-
         # get all the output progress indicators going
         self.statusView.beginRun()
         if (self.outputView):
@@ -413,7 +410,10 @@ class ScriptController(NSWindowController):
 
         # Display the output of the script
         if result.ok and redraw:
-            self.currentView.setCanvas(self.vm.canvas)
+            try:
+                self.currentView.setCanvas(self.vm.canvas)
+            except DeviceError, e:
+                return self.crash()
         if not result.ok and method in (None, "setup"):
             self.stopScript()
         if result.ok=='HALTED':
@@ -554,8 +554,6 @@ class ScriptController(NSWindowController):
         if self.fullScreen is not None:
             # copy the final frame back to the window's view
             self.graphicsView.setCanvas(self.vm.canvas)
-            self.graphicsView._volatile = False
-            self.graphicsView.cache()
             self.currentView = self.graphicsView
 
             # close the fullscreen window
@@ -593,20 +591,6 @@ class ScriptController(NSWindowController):
         pboard = NSPasteboard.generalPasteboard()
         # graphicsView implements the pboard delegate method to provide the data
         pboard.declareTypes_owner_([NSPDFPboardType,NSPostScriptPboardType,NSTIFFPboardType], self.graphicsView)
-
-
-    @IBAction
-    def printDocument_(self, sender):
-        op = NSPrintOperation.printOperationWithView_printInfo_(self.graphicsView, self.printInfo())
-        op.runOperationModalForWindow_delegate_didRunSelector_contextInfo_(
-            NSApp().mainWindow(), self, "printOperationDidRun:success:contextInfo:",
-            0)
-
-    def printOperationDidRun_success_contextInfo_(self, op, success, info):
-        if success:
-            self.setPrintInfo_(op.printInfo())
-    printOperationDidRun_success_contextInfo_ = objc.selector(printOperationDidRun_success_contextInfo_,
-            signature="v@:@ci")
 
 
     #

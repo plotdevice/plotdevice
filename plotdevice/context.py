@@ -5,6 +5,7 @@ from collections import namedtuple
 from os.path import exists, expanduser
 
 from .lib.cocoa import *
+from .util.foundry import typespec, fontspec
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
 from .lib import geometry, pathmatics
 from .gfx.transform import Dimension
@@ -18,11 +19,12 @@ DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
 # named tuples for grouping state attrs
 PenStyle = namedtuple('PenStyle', ['nib', 'cap', 'join', 'dash'])
-TypeStyle = namedtuple('TypeStyle', ['face', 'size', 'leading', 'align'])
+Typography = namedtuple('Typography', ['font', 'leading', 'tracking', 'align', 'hyphenate'])
+
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_typestyle', '_stylesheet', '_oldvars', '_vars'
+    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_typography', '_oldvars', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -59,7 +61,6 @@ class Context(object):
         self.canvas.reset()
         self.canvas.background = Color(1.0)
         self.canvas.speed = None
-        self.canvas._ctx = self
 
         # default output colorspace
         self._outputmode = RGB
@@ -87,7 +88,7 @@ class Context(object):
 
         # type styles
         self._stylesheet = Stylesheet()
-        self._typestyle = TypeStyle(face="Helvetica", size=24, leading=1.2, align=LEFT)
+        self._typography = Typography(Font(None), 1.2, 0, LEFT, 0)
 
         # bezier construction internals
         self._path = None
@@ -918,7 +919,10 @@ class Context(object):
 
     def font(self, *args, **kwargs):
         """Set the current font to be used in subsequent calls to text()"""
-        return Font(*args, **kwargs)._use()
+        font = Font(*args, **kwargs)
+        font._rollback = self._typography
+        self._typography = self._typography._replace(font=font, **typespec(**kwargs))
+        return font
 
     def fonts(self, like=None, western=True):
         """Returns a list of all fonts installed on the system (with filtering capabilities)
@@ -933,22 +937,20 @@ class Context(object):
     def fontsize(self, fontsize=None):
         """Legacy command. Equivalent to: font(size=fontsize)"""
         if fontsize is not None:
-            self._typestyle = self._typestyle._replace(size=fontsize)
-        return self._typestyle.size
+            self.font(size=fontsize)
+        return self._typography.font.size
 
     def lineheight(self, lineheight=None):
         """Legacy command. Equivalent to: font(leading=lineheight)"""
         if lineheight is not None:
-            self._typestyle = self._typestyle._replace(leading=lineheight)
-        return self._typestyle.leading
+            self.font(leading=lineheight)
+        return self._typography.leading
 
     def align(self, align=None):
-        """Set the text alignment (to LEFT, RIGHT, or CENTER)
-
-        Alignment only applies to text() calls that include a column `width` parameter"""
+        """Set the text alignment (to LEFT, RIGHT, CENTER, or JUSTIFY)"""
         if align is not None:
-            self._typestyle = self._typestyle._replace(align=align)
-        return self._typestyle.align
+            self.font(align=align)
+        return self._typography.align
 
     def stylesheet(self, name=None, *args, **kwargs):
         """Access the context's Stylesheet (used by the text() command to format marked-up strings)
@@ -986,12 +988,16 @@ class Context(object):
         else:
             return self._stylesheet.style(name, *args, **kwargs)
 
-    def text(self, txt, *args, **kwargs):
+    def text(self, *args, **kwargs):
         """Draw a single line (or a block) of text
 
+        Usage:
+          text(str, x=0, y=0, width=None, height=None, **kwargs)
+          text(x=0, y=0, width=None, height=None, str="", **kwargs) # equivalent to first usage
+          text(x=0, y=0, width=None, height=None, xml="", **kwargs) # parses xml before rendering
+
         Arguments:
-          - `txt` is a unicode string. If it begins and ends with an xml tag, the string will
-            be parsed and styles from the stylesheet() applied to it. Otherwise the text will
+          - `str` is a unicode string or utf-8 encoded bytestring. The text will
             be drawn using the current font() and fill().
           - `x` & `y` set the position. Note that the `y` value corresponds to the the text's
             baseline rather than the top of its bounding box.
@@ -1013,18 +1019,34 @@ class Context(object):
           - you can pass any of the standard font() args as keyword commands:
               family, size, leading, weight, variant, italic, heavier, lighter
           - the `fill` argument can override the color inherited from the graphics state
+
+        Returns:
+          A Text object whose x, y, width, and height can be manipulated through its attribtues.
+          In addition, you can call its .append() method to add more text to the end of the run.
         """
         outline = kwargs.pop('outline', False)
-        path_args = {k:v for k,v in kwargs.items() if k in Bezier._opts}
+        draw = kwargs.pop('plot', kwargs.pop('draw', self._autoplot))
         text_args = {k:v for k,v in kwargs.items() if k in Text._opts}
+        path_args = {k:v for k,v in kwargs.items() if k in Bezier._opts}
+        path_args['draw'] = draw
 
-        txt = Text(txt, *args, **text_args)
+        # make sure we didn't get any invalid kwargs
+        if outline:
+            rest = [k for k in kwargs if k not in Bezier._opts.union(Text._opts)]
+        else:
+            rest = [k for k in kwargs if k not in Text._opts]
+        if rest:
+            unknown = 'Invalid keyword argument%s: %s'%('' if len(rest)==1 else 's', ", ".join(rest))
+            raise DeviceError(unknown)
+
+        # draw the text (either as a bezier or as type)
+        txt = Text(*args, **text_args)
         if outline:
             with self._active_path(path_args) as p:
                 p.extend(txt.path)
             return p
         else:
-            if kwargs.get('draw', kwargs.get('plot', self._autoplot)):
+            if draw:
               txt.draw()
             return txt
 
@@ -1037,10 +1059,9 @@ class Context(object):
         text_args = {k:v for k,v in kwargs.items() if k in Text._opts}
         return Text(txt, x, y, **text_args).path
 
-    def textmetrics(self, txt, width=None, height=None, style=None, **kwargs):
+    def textmetrics(self, txt, width=None, height=None, **kwargs):
         """Legacy command. Equivalent to: measure(txt, width, height)"""
-        txt = Text(txt, 0, 0, width, height, style, **kwargs)
-        # txt.inherit()
+        txt = Text(txt, 0, 0, width, height, **kwargs)
         return txt.metrics
 
     def textwidth(self, txt, width=None, **kwargs):
@@ -1082,7 +1103,43 @@ class Context(object):
 
     ### draw, erase, and save-to-file ###
 
-    def plot(self, obj=None, live=False, inherit=False, **kwargs):
+    def plot(self, obj=None, *coords, **kwargs):
+        """Add a new copy of a graphics object to the canvas
+
+        Arguments:
+          Accepts an object to be drawn followed (optionally) by x & y arguments
+          specifying a location. If coordinates are omitted, the object will be
+          drawn without modifying its original position:
+              box = poly(10,10, 5, plot=False) # create a sqaure w/o drawing it
+              plot(box)      # draw a square centered at (10,10)
+              plot(box, 0,0) # draw another square at (0,0)
+
+          When called with True or False, sets whether the primitive commands
+          draw to the canvas by default or just return a reference.
+
+        Keyword args:
+          If `live` is set to True, the command will add the graphics object to
+          the canvas directly (rather than drawing a copy of it). As a result,
+          your variable reference to the object will remain `connected', allowing
+          you to modify its properties even though it's already on the canvas.
+
+          You may also include any keyword args that are approriate for the kind of
+          object being drawn and its values will be updated before it is rendered.
+          Valid keywords correspond to the attributes provided by the object in
+          question (fill, stroke, width, height, etc.):
+              dot = arc(0,0, 4, plot=False)
+              plot(dot, 10,10, fill='red')        # a bright red dot
+              plot(dot, 15,10, fill=0, alpha=0.2) # a pale black dot
+
+        Context Manager:
+          plot() can be used as part of a `with` statement to control whether
+          primitive commands like rect() and image() draw to the screen by default.
+          For instance, calling `with plot(False)` will inhibit drawing even if
+          the primitive command is called without a `plot=False` keyword argument:
+              r = rect(100,100, 20,20, plot=False) # not drawn
+              with plot(False):
+                  s = rect(0,0, 20,20) # not drawn either
+        """
         if obj is None:
             return self._autoplot
         elif obj in (True,False):
@@ -1094,16 +1151,18 @@ class Context(object):
         # by default, plot a copy of the grob and return a reference to that new copy.
         # if live=True, the obj itself will be added to the canvas and the caller can
         # make additional modifications on that instance
-        grob = obj if live else obj.copy()
+        grob = obj if kwargs.get('live') else obj.copy()
 
-        # optionally reflect the *current* graphics state rather than the state
-        # that was inherited when the grob was originally created
-        if inherit:
-            grob.inherit()
+        # if there are any positional args following the grob, assign a new x/y
+        for attr, val in zip(['x','y'], coords):
+            setattr(grob, attr, val)
 
         # for any valid kwargs, assign the value to the attr of the same name
         grob.__class__.validate(kwargs)
         for arg_key, arg_val in kwargs.items():
+            if not hasattr(grob, arg_key):
+                badattr = "Unknown property '%s' for object of class %r"%(arg_key, grob.__class__.__name__)
+                raise DeviceError(badattr)
             setattr(grob, arg_key, _copy_attr(arg_val))
 
         grob.draw() # add to canvas

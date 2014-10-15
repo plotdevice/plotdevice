@@ -152,12 +152,6 @@
                                     <action selector="exportAsMovie:" target="-1" id="487"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Print..." keyEquivalent="p" id="78">
-                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
-                                <connections>
-                                    <action selector="printDocument:" target="-1" id="416"/>
-                                </connections>
-                            </menuItem>
                         </items>
                     </menu>
                 </menuItem>

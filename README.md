@@ -13,11 +13,11 @@ of 2D imagery and powerful compositing operations.
 
 #### Derived from NodeBox
 
-PlotDevice is a fork of the legacy [NodeBox 1](http://nodebox.net/code)
-application with a number of updates taking advantage of recent OS features and
-simplifying its build procedure. As a result it now happily runs on 64 bit systems,
-uses Python 2.7, and makes use of the version of PyObjC provided by the system.
-It requires a Macintosh running OS X 10.9 or greater.
+PlotDevice is a [fork](https://github.com/nodebox/nodebox-pyobjc) of the legacy 
+[NodeBox 1](http://nodebox.net/code) application with a number of updates taking 
+advantage of recent OS features and simplifying its build procedure. As a result 
+it now happily runs on 64 bit systems, uses Python 2.7, and makes use of the version 
+of PyObjC provided by the system. It requires a Macintosh running OS X 10.9 or greater.
 
 #### Alternatives
 
@@ -29,14 +29,14 @@ and movies for use elsewhere. To that end it provides functionality to
 efficiently export script output as vector documents (`pdf`,`eps`),
 bitmap images (`png`,`gif`,`jpg`,`tiff`), or animations (`mov`,`gif`).
 
-#### Latest changes (Aug 2014)
+#### Latest changes (Sept 2014)
 
 * Enhanced command line interface.
 * Simplified api with broad support for the Python `with` statement
 * New text editor with tab completion, syntax color themes, and emacs/vi bindings.
 * Video export in H.264 or animated gif formats (with [GCD](http://en.wikipedia.org/wiki/Grand_Central_Dispatch)-based i/o).
 * Core Graphics support for gradients, shadows, blend modes, and alpha channels
-* Enhanced typography with inline styles and simpler font selection.
+* Enhanced typography with inline styles, OpenType features, and simpler font selection.
 * Added support for external editors by reloading the source when changed.
 * Build system now works with Xcode or `py2app` for the application and `pip` for the module.
 * Virtualenv support (for both installation of the module and running scripts with dependencies).
@@ -150,11 +150,10 @@ by the community to solve more visualization-specific problems.
 
 #### Installing PlotDevice Libraries
 
-‘[Libraries](http://plotdevice.io/manual#lib)’ are Python modules that have been
-written specifically for PlotDevice. To install a Library, copy its folder to `~/Library/Application Support/PlotDevice`
-and then [`ximport`](http://nodebox.net/code/index.php/Libraries) it from your script.
+‘[Libraries](http://plotdevice.io/tut/Libraries)’ are Python modules that have been
+written specifically for PlotDevice. To install a Library, copy its folder to `~/Library/Application Support/PlotDevice` and then `import` it from your script.
 Libraries can be installed individually or en masse using the archive
-([35 MB](http://plotdevice.io/libs/plotdevice-libs.zip)) from the PlotDevice website.
+([35 MB](http://plotdevice.io/extras/plotdevice-libs.zip)) from the PlotDevice website.
 
 #### Installing Python modules
 
@@ -194,7 +193,7 @@ For instance, the following will draw a few boxes:
 
 ```py
 #!/usr/bin/env python
-from plotdevice.script import *
+from plotdevice import *
 for x, y in grid(10,10,12,12):
     rect(x,y, 10,10)
 ```
@@ -222,7 +221,7 @@ your drawing code in a `with` block, you can ensure that the correct sequence of
 calls is generated automatically. For instance these two methods of generating a png are equivalent:
 
 ```py
-from plotdevice.script import *
+from plotdevice import *
 
 # export an image
 clear(all)
@@ -319,7 +318,7 @@ with export('{2}-img.png') as img:
 Lineage
 -------
 PlotDevice was derived from [NodeBox](http://nodebox.net/code)'s 1.9.7 release. Its current maintainer is
-[Chirstian Swinehart](mailto:drafting@samizdat.cc).
+[Christian Swinehart](mailto:drafting@samizdat.cc).
 
 NodeBox is a BSD-licensed graphics environment written by [Frederik De Bleser](mailto:frederik@burocrazy.com).  
 The NodeBox manual and example code are by [Tom De Smedt](mailto:tomdesmedt@organisms.be).

@@ -17,5 +17,5 @@ def set_timeout(target, sel, delay, info=None, repeat=False):
 
 from .document import PlotDeviceDocument, PythonScriptDocument, ScriptController
 from .app import PlotDeviceAppDelegate
-from .views import PlotDeviceBackdrop, PlotDeviceGraphicsView, FullscreenView
+from .views import GraphicsBackdrop, GraphicsView, FullscreenView
 from .widgets import StatusView, DashboardController, ExportSheet
