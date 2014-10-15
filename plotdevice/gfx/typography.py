@@ -49,18 +49,21 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     # from EffectsMixin:   alpha blend shadow
     # from BoundsMixin:    x y width height
     # from StyleMixin:     stylesheet fill _parse_style()
-    stateAttrs = ('_attrib_str', '_align')
+    stateAttrs = ('_frame', '_align')
     opts = ('str', 'xml')
 
     def __init__(self, *args, **kwargs):
         # bail out quickly if we're just making a copy of an existing Text object
         if args and isinstance(args[0], Text):
-            self.inherit(text) # .copy() makes cloned _attrib_str immutable...
-            self._attrib_str = self._attrib_str.mutableCopy() # ...so fix that
+            self.inherit(args[0])
             return
 
         # let the various mixins have a crack at the kwargs
         super(Text, self).__init__(**kwargs)
+
+        # create a text frame to manage layout and glyph-drawing
+        self._frame = TextFrame()
+        self._frame.size = (self.width, self.height)
 
         # look for a string as the first positional arg or an xml/str kwarg
         txt = None
@@ -68,10 +71,6 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         if args and isinstance(args[0], basestring):
             txt, args = args[0], args[1:]
         txt = kwargs.pop('xml', kwargs.pop('str', txt))
-
-        # fontify the text arg and store it ns-style
-        self._attrib_str = NSMutableAttributedString.alloc().init()
-        self.append(**{fmt:txt})
 
         # merge in any numlike positional args to define bounds
         for attr, val in zip(['x','y','width','height'], args):
@@ -83,6 +82,10 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         # let _screen_transform handle alignment for single-line text via x-offset instead
         if self.width is None:
             self._style['align'] = LEFT
+
+        # fontify the text arg and store it in the TextFrame
+        self.append(**{fmt:txt})
+
 
     def append(self, txt=None, **kwargs):
         """Add a string to the end of the text run (with optional styling)
@@ -109,13 +112,13 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             merged_style = dict(self._style)
             merged_style.update(self._parse_style(**kwargs))
 
-            # generate an attributed string and append it the internal nsattrstring
+            # generate an attributed string and append it the text frame
             styled = self.stylesheet._apply(decoded, merged_style, is_xml)
-            self._attrib_str.appendAttributedString_(styled)
+            self._frame.store.appendAttributedString_(styled)
 
     @property
     def text(self):
-        return self._attrib_str.string()
+        return self._frame.store.string()
 
     @property
     def font(self):
@@ -127,7 +130,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
         The coordinates will reflect the current text-alignment and baseline heigh."""
 
-        printer = self._spool
+        printer = self._frame
         if self.width is None:
             col_w, col_h = 0, 0
         else:
@@ -150,7 +153,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         text alignment and column-width/height constraints set in the constructor."""
 
         # gather the relevant text metrics
-        printer = self._spool
+        printer = self._frame
         (dx, dy), (w, h) = printer.typeblock
         col_w, col_h = printer.colsize
         offset = printer.offset
@@ -189,17 +192,18 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         trans.scale(1.0,-1.0)
 
         # generate an unflipped bezier with all the glyphs
-        path = Bezier(self._spool.nsBezierPath)
+        path = Bezier(self._frame.nsBezierPath)
         path.inherit(self)
         return trans.apply(path)
 
     @property
-    def _spool(self):
-        # lazily create the _typesetter and set its layout size & content
-        self._typesetter = getattr(self, '_typesetter', Typesetter())
-        self._typesetter.size = (self.width, self.height)
-        self._typesetter.content = self._attrib_str
-        return self._typesetter
+    def flow(self):
+        parent = self
+        while True:
+            child = parent.copy()
+            child._frame = next(parent._frame)
+            yield child
+            parent = child
 
     def _draw(self):
         with _ns_context():                  # save and restore the gstate
@@ -209,13 +213,36 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
                 # debug: draw a grey background for the text's bounds
                 # with _ns_context():
                 #     NSColor.colorWithDeviceWhite_alpha_(0,.2).set()
-                #     NSBezierPath.fillRect_(self._spool.typeblock)
+                #     NSBezierPath.fillRect_(self._frame.typeblock)
 
-                self._spool.draw_glyphs(0,0) # and let 'er rip
+                self._frame.draw_glyphs() # and let 'er rip
 
     @property
     def metrics(self):
-        return self._spool.typeblock.size
+        return self._frame.typeblock.size
+
+    def _get_width(self):
+        return self._bounds.w
+    def _set_width(self, w):
+        if w and not numlike(w):
+            raise DeviceError('width value must be a number or None (not %r)'%type(w))
+        elif numlike(w):
+            w = float(w)
+        self._bounds = self._bounds._replace(w=w)
+        self._frame.width = w
+    w = width = property(_get_width, _set_width)
+
+    def _get_height(self):
+        return self._bounds.h
+    def _set_height(self, h):
+        if h and not numlike(h):
+            raise DeviceError('height value must be a number or None (not %r)'%type(h))
+        elif numlike(h):
+            h = float(h)
+        self._bounds = self._bounds._replace(h=h)
+        self._frame.height = h
+    h = height = property(_get_height, _set_height)
+
 class TextFrame(object):
     def __init__(self):
         # assemble nsmachinery (or just inherit it)
@@ -436,85 +463,6 @@ class Stylesheet(object):
 
         # build the dict of features for this combination of styles
         return dict(NSFont=font._nsFont, NSColor=color, NSParagraphStyle=graf, NSKern=kern)
-
-
-
-class Typesetter(object):
-
-    def __init__(self):
-        # collect nstext system objects
-        self.store = NSTextStorage.alloc().init()
-        self.layout = NSLayoutManager.alloc().init()
-        self.column = NSTextContainer.alloc().init()
-
-        # assemble nsmachinery
-        self.layout.addTextContainer_(self.column)
-        self.store.addLayoutManager_(self.layout)
-        self.column.setLineFragmentPadding_(0)
-
-    def draw_glyphs(self, x, y):
-        self.layout.drawGlyphsForGlyphRange_atPoint_(self.visible, (x,y))
-
-    def _get_content(self):
-        return self.store
-    def _set_content(self, attrib_str):
-        if not self.store.isEqualToAttributedString_(attrib_str):
-            self.store.setAttributedString_(attrib_str)
-    content = property(_get_content, _set_content)
-
-    def _get_size(self):
-        return Size(*self.column.containerSize())
-    def _set_size(self, dims):
-        new_size = [d or 10000000 for d in dims]
-        if new_size != self.size:
-            self.column.setContainerSize_(new_size)
-    size = property(_get_size, _set_size)
-
-    @property
-    def typeblock(self):
-        return Region(*self.layout.boundingRectForGlyphRange_inTextContainer_(self.visible, self.column))
-
-    @property
-    def visible(self):
-        return self.layout.glyphRangeForTextContainer_(self.column)
-
-    @property
-    def colsize(self):
-        return Size(*self.column.containerSize())
-
-    @property
-    def offset(self):
-        if not self.store.length():
-            return 0
-
-        txtFont, _ = self.store.attribute_atIndex_effectiveRange_("NSFont", 0, None)
-        return self.layout.defaultLineHeightForFont_(txtFont)
-
-    @property
-    def nsBezierPath(self):
-        (dx, dy), (w, h) = self.typeblock
-        preferredWidth, preferredHeight = self.colsize
-
-        length = self.layout.numberOfGlyphs()
-        path = NSBezierPath.bezierPath()
-        for glyphIndex in range(length):
-            txtIndex = self.layout.characterIndexForGlyphAtIndex_(glyphIndex)
-            txtFont, txtRng = self.store.attribute_atIndex_effectiveRange_("NSFont", txtIndex, None)
-            lineFragmentRect, _ = self.layout.lineFragmentRectForGlyphAtIndex_effectiveRange_(glyphIndex, None)
-
-            # convert glyph location from container coords to canvas coords
-            layoutPoint = self.layout.locationForGlyphAtIndex_(glyphIndex)
-            finalPoint = list(lineFragmentRect[0])
-            finalPoint[0] += layoutPoint[0] - dx
-            finalPoint[1] += layoutPoint[1] - dy
-            g = self.layout.glyphAtIndex_(glyphIndex)
-
-            if g == 0: continue # when does glyphAtIndex return nil in practice?
-            path.moveToPoint_((finalPoint[0], -finalPoint[1]))
-            path.appendBezierPathWithGlyph_inFont_(g, txtFont)
-            path.closePath()
-        return path
-
 
 
 class Font(object):
