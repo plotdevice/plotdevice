@@ -216,6 +216,109 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     @property
     def metrics(self):
         return self._spool.typeblock.size
+class TextFrame(object):
+    def __init__(self):
+        # assemble nsmachinery (or just inherit it)
+        self.store = NSTextStorage.alloc().init()
+        self.layout = NSLayoutManager.alloc().init()
+        self.store.addLayoutManager_(self.layout)
+
+        # create a new container and add it to the layout manager
+        self.block = NSTextContainer.alloc().init()
+        self.block.setLineFragmentPadding_(0)
+        self.layout.addTextContainer_(self.block)
+
+    def copy(self):
+        frame = TextFrame()
+        frame.store.setAttributedString_(self.store)
+        frame.layout.removeTextContainerAtIndex_(0)
+        for container in self.layout.textContainers():
+            block = NSTextContainer.alloc().init()
+            block.setLineFragmentPadding_(0)
+            block.setContainerSize_(container.containerSize())
+
+            frame.layout.addTextContainer_(block)
+            if container==self.block:
+                frame.block = block
+        return frame
+
+    def next(self):
+        if sum(self.visible) >= self.layout.numberOfGlyphs():
+            raise StopIteration
+
+        frame = TextFrame()
+        frame.store, frame.layout = self.store, self.layout
+        frame.block.setContainerSize_(self.block.containerSize())
+        frame.layout.addTextContainer_(frame.block)
+        return frame
+
+    def _get_size(self):
+        return Size(*self.block.containerSize())
+    def _set_size(self, dims):
+        new_size = [d or 10000000 for d in dims]
+        if new_size != self.size:
+            self.block.setContainerSize_(new_size)
+    size = property(_get_size, _set_size)
+
+    def _get_width(self):
+        return self.size.width
+    def _set_width(self, width):
+        self.size = (width, self.height)
+    width = property(_get_width, _set_width)
+
+    def _get_height(self):
+        return self.size.height
+    def _set_height(self, height):
+        self.size = (self.width, height)
+    height = property(_get_height, _set_height)
+
+    @property
+    def colsize(self):
+        return self.size
+
+    @property
+    def typeblock(self):
+        return Region(*self.layout.boundingRectForGlyphRange_inTextContainer_(self.visible, self.block))
+
+    @property
+    def visible(self):
+        return self.layout.glyphRangeForTextContainer_(self.block)
+
+    @property
+    def offset(self):
+        if not self.store.length():
+            return 0
+        txtFont, _ = self.store.attribute_atIndex_effectiveRange_("NSFont", self.visible.location, None)
+        return self.layout.defaultLineHeightForFont_(txtFont)
+
+    def draw_glyphs(self):
+        self.layout.drawGlyphsForGlyphRange_atPoint_(self.visible, (0,0))
+
+    @property
+    def nsBezierPath(self):
+        (dx, dy), (w, h) = self.typeblock
+        preferredWidth, preferredHeight = self.size
+
+        start, length = self.visible
+        stop = start+length+1
+        path = NSBezierPath.bezierPath()
+        for glyphIndex in range(start, stop):
+            txtIndex = self.layout.characterIndexForGlyphAtIndex_(glyphIndex)
+            txtFont, txtRng = self.store.attribute_atIndex_effectiveRange_("NSFont", txtIndex, None)
+            lineFragmentRect, _ = self.layout.lineFragmentRectForGlyphAtIndex_effectiveRange_(glyphIndex, None)
+
+            # convert glyph location from container coords to canvas coords
+            layoutPoint = self.layout.locationForGlyphAtIndex_(glyphIndex)
+            finalPoint = list(lineFragmentRect[0])
+            finalPoint[0] += layoutPoint[0] - dx
+            finalPoint[1] += layoutPoint[1] - dy
+            g = self.layout.glyphAtIndex_(glyphIndex)
+
+            if g == 0: continue # when does glyphAtIndex return nil in practice?
+            path.moveToPoint_((finalPoint[0], -finalPoint[1]))
+            path.appendBezierPathWithGlyph_inFont_(g, txtFont)
+            path.closePath()
+        return path
 
 class Stylesheet(object):
     kwargs = StyleMixin.opts
