@@ -7,7 +7,7 @@ import math
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
-from ..util import trim_zeroes
+from ..util import trim_zeroes, numlike
 from ..lib import geometry
 
 _ctx = None
@@ -93,6 +93,23 @@ class Point(object):
     def coordinates(self, distance, angle):
         angle = _ctx._angle(angle, DEGREES)
         return Point(geometry.coordinates(self.x, self.y, distance, angle))
+
+    def _get_x(self):
+        return self._x
+    def _set_x(self, x):
+        if not numlike(x):
+            raise DeviceError('x coordinate must be int or float (not %r)'%type(x))
+        self._x = x
+    x = property(_get_x, _set_x)
+
+    def _get_y(self):
+        return self._y
+    def _set_y(self, y):
+        if not numlike(y):
+            raise DeviceError('y coordinate must be int or float (not %r)'%type(y))
+        self._y = y
+    y = property(_get_y, _set_y)
+
 
 class Size(tuple):
     def __new__(cls, width, height):
