@@ -8,7 +8,7 @@ from ..lib.cocoa import *
 from plotdevice import DeviceError
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, BoundsMixin, Grob
 from . import _save, _restore, _ns_context
-from .transform import Transform, Region, Size
+from .transform import Transform, Region, Size, Point
 from .colors import Color
 from .bezier import Bezier
 from ..util.foundry import *
@@ -49,7 +49,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     # from EffectsMixin:   alpha blend shadow
     # from BoundsMixin:    x y width height
     # from StyleMixin:     stylesheet fill _parse_style()
-    stateAttrs = ('_frame', '_align')
+    stateAttrs = ('_frames', '_align')
     opts = ('str', 'xml')
 
     def __init__(self, *args, **kwargs):
@@ -62,8 +62,8 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         super(Text, self).__init__(**kwargs)
 
         # create a text frame to manage layout and glyph-drawing
-        self._frame = TextFrame()
-        self._frame.size = (self.width, self.height)
+        self._frames = FrameSetter()
+        self._frames[0].size = (self.width, self.height)
 
         # look for a string as the first positional arg or an xml/str kwarg
         txt = None
@@ -114,11 +114,11 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
             # generate an attributed string and append it the text frame
             styled = self.stylesheet._apply(decoded, merged_style, is_xml)
-            self._frame.store.appendAttributedString_(styled)
+            self._frames[0].store.appendAttributedString_(styled)
 
     @property
     def text(self):
-        return self._frame.store.string()
+        return self._frames[0].store.string()
 
     @property
     def font(self):
@@ -130,19 +130,19 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
         The coordinates will reflect the current text-alignment and baseline heigh."""
 
-        printer = self._frame
+        frame = self._frames[0]
         if self.width is None:
             col_w, col_h = 0, 0
         else:
-            col_w, col_h = printer.colsize
+            col_w, col_h = frame.size
 
         x,y = self.x, self.y
-        (dx, dy), (w, h) = printer.typeblock
+        (dx, dy), (w, h) = frame.bounds
         if self._align == RIGHT:
             x += col_w - w
         elif self._align == CENTER:
             x += (col_w-w)/2
-        y -= printer.offset
+        y -= frame.baseline
         return (x,y)
 
     @property
@@ -153,10 +153,9 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         text alignment and column-width/height constraints set in the constructor."""
 
         # gather the relevant text metrics
-        printer = self._frame
-        (dx, dy), (w, h) = printer.typeblock
-        col_w, col_h = printer.colsize
-        offset = printer.offset
+        frame = self._frames[0]
+        (dx, dy), (w, h) = frame.bounds
+        baseline = frame.baseline
 
         # adjust the positioning for alignment on single-line runs
         x, y = self.x, self.y
@@ -175,13 +174,13 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             height = h if self.height is None else self.height
             nudge.translate(width/2, height/2)
 
-            xf.translate(x, y-offset)  # set the position before applying transforms
-            xf.prepend(nudge)          # nudge the block to its center (or not)
-            xf.prepend(self.transform) # add context's CTM.
-            xf.prepend(nudge.inverse)  # Move back to the real origin.
+            xf.translate(x, y-baseline) # set the position before applying transforms
+            xf.prepend(nudge)           # nudge the block to its center (or not)
+            xf.prepend(self.transform)  # add context's CTM.
+            xf.prepend(nudge.inverse)   # Move back to the real origin.
         else:
-            xf.prepend(self.transform) # in CORNER mode simply apply the CTM
-            xf.translate(x, y-offset)  # then move to the baseline origin point
+            xf.prepend(self.transform)  # in CORNER mode simply apply the CTM
+            xf.translate(x, y-baseline) # then move to the baseline origin point
         return xf
 
     @property
@@ -192,34 +191,42 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         trans.scale(1.0,-1.0)
 
         # generate an unflipped bezier with all the glyphs
-        path = Bezier(self._frame.nsBezierPath)
+        path = Bezier()
+        for frame in self._frames:
+            path._nsBezierPath.appendBezierPath_(frame._nsBezierPath)
         path.inherit(self)
         return trans.apply(path)
 
     @property
+    def frames(self):
+        return list(self._frames)
+
     def flow(self):
-        parent = self
+        # start by iterating through any existing overflow frames
+        for prior, frame in zip(self._frames, self._frames[1:]):
+            frame.size = prior.size
+            frame.offset = prior.offset
+            yield frame
+
+        # then keep adding frames until the glyphs are fully laid out
         while True:
-            child = parent.copy()
-            child._frame = next(parent._frame)
-            yield child
-            parent = child
+            yield next(self._frames)
 
     def _draw(self):
         with _ns_context():                  # save and restore the gstate
             self._screen_transform.concat()  # transform so text can be drawn at the origin
             with self.effects.applied():     # apply any blend/alpha/shadow effects
+                for frame in self._frames:
+                    frame._draw()
 
-                # debug: draw a grey background for the text's bounds
-                # with _ns_context():
-                #     NSColor.colorWithDeviceWhite_alpha_(0,.2).set()
-                #     NSBezierPath.fillRect_(self._frame.typeblock)
-
-                self._frame.draw_glyphs() # and let 'er rip
+                    # debug: draw a grey background for the text's bounds
+                    # with _ns_context():
+                    #     NSColor.colorWithDeviceWhite_alpha_(0,.2).set()
+                    #     NSBezierPath.fillRect_(frame.bounds)
 
     @property
     def metrics(self):
-        return self._frame.typeblock.size
+        return self._frames[0].bounds.size
 
     def _get_width(self):
         return self._bounds.w
@@ -229,7 +236,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         elif numlike(w):
             w = float(w)
         self._bounds = self._bounds._replace(w=w)
-        self._frame.width = w
+        self._frames[0].width = w
     w = width = property(_get_width, _set_width)
 
     def _get_height(self):
@@ -240,8 +247,41 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         elif numlike(h):
             h = float(h)
         self._bounds = self._bounds._replace(h=h)
-        self._frame.height = h
+        self._frames[0].height = h
     h = height = property(_get_height, _set_height)
+
+class FrameSetter(object):
+    def __init__(self):
+        self._frames = [TextFrame()]
+
+    def __getitem__(self, index):
+        return self._frames[index]
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield self[i]
+
+    def __len__(self):
+        return len(self._frames)
+
+    def next(self):
+        tail = self[-1]
+        if sum(tail.visible) >= tail.layout.numberOfGlyphs():
+            raise StopIteration
+        frame = next(tail)
+        self._frames.append(frame)
+        return frame
+
+    def append(self, frame):
+        self._frames.append(frame)
+
+    def copy(self):
+        setter = FrameSetter()
+        setter[0].store.setAttributedString_(self[0].store)
+        setter._frames.extend([next(setter[0]) for i in range(len(self)-len(setter))])
+        for src, dst in zip(self, setter):
+            dst.offset, dst.size = src.offset, src.size
+        return setter
 
 class TextFrame(object):
     def __init__(self):
@@ -254,30 +294,37 @@ class TextFrame(object):
         self.block = NSTextContainer.alloc().init()
         self.block.setLineFragmentPadding_(0)
         self.layout.addTextContainer_(self.block)
+        self.offset = (0,0)
 
-    def copy(self):
-        frame = TextFrame()
-        frame.store.setAttributedString_(self.store)
-        frame.layout.removeTextContainerAtIndex_(0)
-        for container in self.layout.textContainers():
-            block = NSTextContainer.alloc().init()
-            block.setLineFragmentPadding_(0)
-            block.setContainerSize_(container.containerSize())
-
-            frame.layout.addTextContainer_(block)
-            if container==self.block:
-                frame.block = block
-        return frame
+    def __repr__(self):
+        return "TextFrame(offset=%r, size=%r)"%(tuple(self.offset), tuple(self.size))
 
     def next(self):
-        if sum(self.visible) >= self.layout.numberOfGlyphs():
-            raise StopIteration
-
         frame = TextFrame()
-        frame.store, frame.layout = self.store, self.layout
-        frame.block.setContainerSize_(self.block.containerSize())
-        frame.layout.addTextContainer_(frame.block)
+        for attr in 'store', 'layout', 'offset', 'size':
+            setattr(frame, attr, getattr(self, attr))
+        self.layout.addTextContainer_(frame.block)
         return frame
+
+    def _get_x(self):
+        return self.offset.x
+    def _set_x(self, x):
+        self.offset = (x, self.y)
+    x = property(_get_x, _set_x)
+
+    def _get_y(self):
+        return self.offset.y
+    def _set_y(self, y):
+        self.offset = (self.x, y)
+    y = property(_get_y, _set_y)
+
+    def _get_offset(self):
+        return Point(self._offset)
+    def _set_offset(self, dims):
+        if numlike(dims):
+            dims = [dims]*2
+        self._offset = Point(*dims)
+    offset = property(_get_offset, _set_offset)
 
     def _get_size(self):
         return Size(*self.block.containerSize())
@@ -300,11 +347,7 @@ class TextFrame(object):
     height = property(_get_height, _set_height)
 
     @property
-    def colsize(self):
-        return self.size
-
-    @property
-    def typeblock(self):
+    def bounds(self):
         return Region(*self.layout.boundingRectForGlyphRange_inTextContainer_(self.visible, self.block))
 
     @property
@@ -312,22 +355,23 @@ class TextFrame(object):
         return self.layout.glyphRangeForTextContainer_(self.block)
 
     @property
-    def offset(self):
+    def baseline(self):
         if not self.store.length():
             return 0
         txtFont, _ = self.store.attribute_atIndex_effectiveRange_("NSFont", self.visible.location, None)
         return self.layout.defaultLineHeightForFont_(txtFont)
 
-    def draw_glyphs(self):
-        self.layout.drawGlyphsForGlyphRange_atPoint_(self.visible, (0,0))
+    def _draw(self):
+        self.layout.drawGlyphsForGlyphRange_atPoint_(self.visible, self.offset)
 
     @property
-    def nsBezierPath(self):
-        (dx, dy), (w, h) = self.typeblock
-        preferredWidth, preferredHeight = self.size
+    def _nsBezierPath(self):
+        (dx, dy), (w, h) = self.bounds
+        dx -= self.offset.x
+        dy -= self.offset.y
 
         start, length = self.visible
-        stop = start+length+1
+        stop = start+length
         path = NSBezierPath.bezierPath()
         for glyphIndex in range(start, stop):
             txtIndex = self.layout.characterIndexForGlyphAtIndex_(glyphIndex)
