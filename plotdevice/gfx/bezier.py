@@ -150,25 +150,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def closepath(self):
         self._nsBezierPath.closePath()
 
-    @property
-    def bounds(self):
-        try:
-            return Region(*self._nsBezierPath.bounds())
-        except:
-            # Path is empty -- no bounds
-            return Region()
-
-    @property
-    def center(self):
-        if self._fulcrum:
-            return Point(self._fulcrum)
-        else:
-            (x, y), (w, h) = self.bounds
-            return Point(x+w/2, y+h/2)
-
-    def contains(self, x, y):
-        return self._nsBezierPath.containsPoint_((x,y))
-
     ### Basic shapes (origin + size) ###
 
     def rect(self, x, y, width, height, radius=None):
@@ -371,6 +352,25 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         return pathmatics.contours(self)
 
     ### Drawing methods ###
+
+    @property
+    def bounds(self):
+        try:
+            return Region(*self._nsBezierPath.bounds())
+        except:
+            # Path is empty -- no bounds
+            return Region()
+
+    @property
+    def center(self):
+        if self._fulcrum:
+            return Point(self._fulcrum)
+        else:
+            (x, y), (w, h) = self.bounds
+            return Point(x+w/2, y+h/2)
+
+    def contains(self, x, y):
+        return self._nsBezierPath.containsPoint_((x,y))
 
     @property
     def _screen_transform(self):
