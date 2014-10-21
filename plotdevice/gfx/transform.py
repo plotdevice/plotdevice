@@ -146,6 +146,14 @@ class Region(tuple):
     def __repr__(self):
         return 'Region(x=%.3f, y=%.3f, w=%.3f, h=%.3f)'%(self[0]+self[1])
 
+    def union(self, x=0, y=0, w=0, h=0):
+        other = x if isinstance(x, Region) else Region(x,y,w,h)
+        return Region(NSUnionRect(self, other))
+
+    def offset(self, dx=0, dy=0):
+        (x,y), (width,height) = self
+        return Region(x+dx, y+dy, width, height)
+
 
 ### NSAffineTransform wrapper used for positioning Grobs in a Context ###
 

@@ -40,7 +40,7 @@ from AppKit import NSAlert, NSApp, NSApplication, NSApplicationActivationPolicyA
                    NSSlider, NSSmallControlSize, NSSplitView, NSStringPboardType, NSSwitchButton, NSTIFFFileType, \
                    NSTIFFPboardType, NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, NSTextView, \
                    NSTrackingActiveInActiveApp, NSTrackingArea, NSTrackingMouseEnteredAndExited, NSUnboldFontMask, \
-                   NSUnitalicFontMask, NSView, NSViewFrameDidChangeNotification, NSWindow, \
+                   NSUnitalicFontMask, NSUnionRect, NSView, NSViewFrameDidChangeNotification, NSWindow, \
                    NSWindowBackingLocationVideoMemory, NSWindowController, NSWorkspace, NSKernAttributeName
 from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, \
                    CIVector, Foundation, NO, NSAffineTransform, NSAffineTransformStruct, \
