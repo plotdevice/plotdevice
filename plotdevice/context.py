@@ -226,7 +226,9 @@ class Context(object):
             # when called with an existing Bezier object, only pass the underlying NSBezierPath.
             # otherwise the constructor would make an identical copy of it rather than inheriting
             # from the current graphics state.
-            return Bezier(path=x._nsBezierPath, immediate=True, **kwargs)
+            p = Bezier(path=x._nsBezierPath, immediate=True, **kwargs)
+            p._fulcrum = x._fulcrum
+            return p
         else:
             # otherwise start a new path with the presumption that it will be populated
             # in a `with` block or by adding points manually. begins with a moveto
