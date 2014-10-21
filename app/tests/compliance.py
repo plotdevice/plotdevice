@@ -35,7 +35,7 @@ def basictext(x, y):
     text("Hello", x, y)
 
     for alignment in (LEFT, CENTER, RIGHT):
-        x += 60
+        x += 80
         align(alignment)
         stroke(0.5)
         nofill()
@@ -51,7 +51,7 @@ def alignedtext(x, y):
         line(x,y-12, x,y+12, dash=3)
         fill(0)
         text("Hello", x, y)
-        x += 115
+        x += 145
     align(LEFT)
 
 def textblock(x, y):
