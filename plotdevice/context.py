@@ -1188,7 +1188,7 @@ class Context(object):
             self.canvas.clear()
             self._resetContext()
         else:
-            eslf.canvas.clear(*grobs)
+            self.canvas.clear(*grobs)
 
     def export(self, fname, fps=None, loop=None, bitrate=1.0, cmyk=False):
         """Write single images or manage batch exports for animations.
