@@ -6,7 +6,7 @@ from os.path import exists, expanduser
 
 from .lib.cocoa import *
 from .util.foundry import typespec, fontspec
-from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes
+from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike
 from .lib import geometry, pathmatics
 from .gfx.transform import Dimension
 from .gfx import *
@@ -733,11 +733,14 @@ class Context(object):
           block of code following a `with` statement.
         """
         # stroke width can be positional or keyword
-        if nib is not None:
+        if numlike(nib):
             spec.setdefault('nib', nib)
+        elif nib is not None:
+            badnib = "the pen's nib size must be a number (not %r)" % type(nib)
+            raise DeviceError(badnib)
 
         # validate the line-dash stepsize (if any)
-        if isinstance(spec.get('dash',None), (int,float,long)):
+        if numlike(spec.get('dash',None)):
             spec['dash'] = [spec['dash']]
         if len(spec.get('dash',[])) % 2:
             spec['dash'] += spec['dash'][-1:] # assume even spacing for omitted skip sizes
