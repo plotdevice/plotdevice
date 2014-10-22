@@ -287,7 +287,7 @@ class Stencil(Frob):
             self.path = stencil.path
             self.evenodd = invert
         if isinstance(stencil, Bezier):
-            self.path = Bezier(stencil)
+            self.path = stencil.copy()
             self.evenodd = invert
         elif isinstance(stencil, Image):
             # default to using alpha if available and darkness if not
