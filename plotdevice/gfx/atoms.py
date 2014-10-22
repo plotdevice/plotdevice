@@ -101,7 +101,7 @@ class Grob(object):
         """Sanity check a potential set of constructor kwargs"""
         remaining = [arg for arg in kwargs.keys() if arg not in cls._opts]
         if remaining:
-            unknown = "Unknown argument%s '%s'" % ('' if len(remaining)==1 else 's', ", ".join(remaining))
+            unknown = "Unknown %s argument%s '%s'" % (cls.__name__, '' if len(remaining)==1 else 's', ", ".join(remaining))
             raise DeviceError(unknown)
 
 class EffectsMixin(Grob):
