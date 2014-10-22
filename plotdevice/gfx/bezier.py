@@ -43,11 +43,12 @@ FORTYFIVE = "fortyfive"
 class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     """A Bezier provides a wrapper around NSBezierPath."""
     stateAttrs = ('_nsBezierPath', '_fulcrum')
+    opts = ('close',)
 
-    def __init__(self, path=None, immediate=False, **kwargs):
+    def __init__(self, path=None, **kwargs):
         super(Bezier, self).__init__(**kwargs)
         self._segment_cache = {} # used by pathmatics
-        self._fulcrum = None # centerpoint (set only for primitives)
+        self._fulcrum = None # centerpoint (set only for center-based primitives)
 
         # path arg might contain a list of point tuples, a bezier to copy, or a raw
         # nsbezier reference to use as the backing store. otherwise start with a
@@ -62,22 +63,15 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 p = pathmatics.findpath(path, 1.0 if kwargs.get('smooth') else 0.0)
                 self._nsBezierPath = p._nsBezierPath
         elif isinstance(path, Bezier):
-            self.inherit(path)
+            _copy_attrs(path, self, Bezier.stateAttrs)
         elif isinstance(path, NSBezierPath):
-            self._nsBezierPath = path
+            self._nsBezierPath = path.copy()
         else:
             badpath = "Don't know what to do with %s." % path
             raise DeviceError(badpath)
 
         # decide what needs to be done at the end of the `with` context
-        self._autoclose = kwargs.get('close', False)
-        self._autodraw = kwargs.get('draw', False)
-
-        # finish the path (and potentially draw it) immediately if flagged to do so.
-        # in practice, `immediate` is only passed when invoked by the `bezier()` command
-        # with a preexisting point-set or bezier `path` argument.
-        if immediate and kwargs.get('draw',True):
-            self._autofinish()
+        self._needs_closure = kwargs.get('close', False)
 
     def __enter__(self):
         self._rollback = {attr:getattr(_ctx,attr) for attr in ['_path','_transform','_transformmode']}
@@ -86,21 +80,14 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         return self
 
     def __exit__(self, type, value, tb):
-        self._autofinish()
+        self._autoclose()
         for attr, val in self._rollback.items():
             setattr(_ctx, attr, val)
 
-    def _autofinish(self):
-        if self._autoclose:
-            self.closepath()
-        if self._autodraw:
-            self.draw()
-        self._autoclose = self._autodraw = False
-
-    @property
-    def path(self):
-        warnings.warn("The 'path' attribute is deprecated. Please use _nsBezierPath instead.", DeprecationWarning, stacklevel=2)
-        return self._nsBezierPath
+    def copy(self):
+        clone = Bezier()
+        clone.inherit(self)
+        return clone
 
     ### Path methods ###
 
@@ -149,6 +136,11 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
     def closepath(self):
         self._nsBezierPath.closePath()
+
+    def _autoclose(self):
+        if self._needs_closure:
+            self.closepath()
+            self._needs_closure = False
 
     ### Basic shapes (origin + size) ###
 

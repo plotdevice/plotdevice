@@ -213,40 +213,33 @@ class Context(object):
 
     def bezier(self, x=None, y=None, **kwargs):
         """Create and plot a new bezier path."""
-        draw = kwargs.pop('draw', self._autoplot)
-        draw = kwargs.pop('plot', draw)
-        kwargs['draw'] = draw
+        draw = kwargs.pop('plot', kwargs.pop('draw', self._autoplot))
 
-        if isinstance(x, (list, tuple)):
-            # if the first arg is an iterable of point tuples, there's no need to open a context
-            # since the path is already fully-specified. Instead handle the path immediately
-            # (passing along styles and `draw` kwarg)
-            return Bezier(path=x, immediate=True, **kwargs)
-        elif isinstance(x, Bezier):
-            # when called with an existing Bezier object, only pass the underlying NSBezierPath.
-            # otherwise the constructor would make an identical copy of it rather than inheriting
-            # from the current graphics state.
-            p = Bezier(path=x._nsBezierPath, immediate=True, **kwargs)
-            p._fulcrum = x._fulcrum
-            return p
+        Bezier.validate(kwargs)
+        if isinstance(x, (list, tuple, Bezier)):
+            # if the first arg is an iterable of point tuples or an existing Bezier, apply
+            # the `close` kwarg immediately since the path is already fully-specified
+            pth = Bezier(path=x, **kwargs)
+            pth._autoclose()
         else:
             # otherwise start a new path with the presumption that it will be populated
             # in a `with` block or by adding points manually. begins with a moveto
             # element if an x,y coord was provided and relies on Bezier's __enter__
             # method to update self._path if appropriate
-            p = Bezier(**kwargs)
-            origin = (x,y) if all(isinstance(c, (int,float)) for c in (x,y)) else None
-            if origin:
-                p.moveto(*origin)
-            return p
+            pth = Bezier(**kwargs)
+            if numlike(x) and numlike(y):
+                pth.moveto(x,y)
+        if draw:
+            pth.draw()
+        return pth
 
     @contextmanager
     def _active_path(self, kwargs):
         """Provides a target Bezier object for drawing commands within the block.
         If a bezier is currently being constructed, drawing will be appended to it.
         Otherwise a new Bezier will be created and autoplot'ed as appropriate."""
-        draw = kwargs.pop('draw', self._autoplot)
-        draw = kwargs.pop('plot', draw)
+        draw = kwargs.pop('plot', kwargs.pop('draw', self._autoplot))
+
         Bezier.validate(kwargs)
         p=Bezier(**kwargs)
         yield p
@@ -1041,7 +1034,7 @@ class Context(object):
         else:
             rest = [k for k in kwargs if k not in Text._opts]
         if rest:
-            unknown = 'Invalid keyword argument%s: %s'%('' if len(rest)==1 else 's', ", ".join(rest))
+            unknown = 'Invalid Text argument%s: %s'%('' if len(rest)==1 else 's', ", ".join(rest))
             raise DeviceError(unknown)
 
         # draw the text (either as a bezier or as type)
@@ -1093,9 +1086,7 @@ class Context(object):
           - `blend`, `alpha`, and `shadow` will be inherited from the context but can
             be overridden via the corresponding keyword arguments.
         """
-        draw = kwargs.pop('draw', self._autoplot)
-        draw = kwargs.pop('plot', draw)
-
+        draw = kwargs.pop('plot', kwargs.pop('draw', self._autoplot))
         img = Image(*args, **kwargs)
         if draw:
             img.draw()
