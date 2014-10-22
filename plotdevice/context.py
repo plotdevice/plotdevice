@@ -213,7 +213,7 @@ class Context(object):
 
     def bezier(self, x=None, y=None, **kwargs):
         """Create and plot a new bezier path."""
-        draw = kwargs.pop('plot', kwargs.pop('draw', self._autoplot))
+        draw = self._should_plot(kwargs)
 
         Bezier.validate(kwargs)
         if isinstance(x, (list, tuple, Bezier)):
@@ -238,7 +238,7 @@ class Context(object):
         """Provides a target Bezier object for drawing commands within the block.
         If a bezier is currently being constructed, drawing will be appended to it.
         Otherwise a new Bezier will be created and autoplot'ed as appropriate."""
-        draw = kwargs.pop('plot', kwargs.pop('draw', self._autoplot))
+        draw = self._should_plot(kwargs)
 
         Bezier.validate(kwargs)
         p=Bezier(**kwargs)
@@ -411,8 +411,7 @@ class Context(object):
             self.closepath()
         p = self._path
 
-        draw = kwargs.pop('draw', self._autoplot)
-        draw = kwargs.pop('plot', draw)
+        draw = self._should_plot(kwargs)
         if draw:
             p.draw()
         self._path = None
@@ -1023,7 +1022,7 @@ class Context(object):
           In addition, you can call its .append() method to add more text to the end of the run.
         """
         outline = kwargs.pop('outline', False)
-        draw = kwargs.pop('plot', kwargs.pop('draw', self._autoplot))
+        draw = self._should_plot(kwargs)
         text_args = {k:v for k,v in kwargs.items() if k in Text._opts}
         path_args = {k:v for k,v in kwargs.items() if k in Bezier._opts}
         path_args['draw'] = draw
@@ -1086,7 +1085,7 @@ class Context(object):
           - `blend`, `alpha`, and `shadow` will be inherited from the context but can
             be overridden via the corresponding keyword arguments.
         """
-        draw = kwargs.pop('plot', kwargs.pop('draw', self._autoplot))
+        draw = self._should_plot(kwargs)
         img = Image(*args, **kwargs)
         if draw:
             img.draw()
@@ -1098,6 +1097,15 @@ class Context(object):
         return img.size
 
     ### draw, erase, and save-to-file ###
+
+    def _should_plot(self, opts):
+        """Extracts the `plot` and/or `draw` args from a kwargs dict and returns a
+        boolean signaling whether to immediately draw the grob based on the input.
+
+        Note that as a side effect it removes the keys from the dict (which many
+        constructors count on before passing what remains to validate())
+        """
+        return opts.pop('plot', opts.pop('draw', self._autoplot))
 
     def plot(self, obj=None, *coords, **kwargs):
         """Add a new copy of a graphics object to the canvas
