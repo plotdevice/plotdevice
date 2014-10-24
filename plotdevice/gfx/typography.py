@@ -12,7 +12,7 @@ from .transform import Transform, Region, Size, Point
 from .colors import Color
 from .bezier import Bezier
 from ..util.foundry import *
-from ..util import _copy_attrs, numlike, XMLParser
+from ..util import _copy_attrs, numlike, XMLParser, read
 
 _ctx = None
 __all__ = ("Text", "Family", "Font", "Stylesheet",
@@ -50,7 +50,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     # from BoundsMixin:    x y width height
     # from StyleMixin:     stylesheet fill _parse_style()
     stateAttrs = ('_frameset',)
-    opts = ('str', 'xml')
+    opts = ('str', 'xml', 'src')
 
     def __init__(self, *args, **kwargs):
         # bail out quickly if we're just making a copy of an existing Text object
@@ -77,7 +77,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             setattr(self, attr, val)
 
         # fontify the text arg and store it in the TextFrame
-        self.append(**{fmt:txt})
+        self.append(**{fmt:txt, "src":kwargs.get('src')})
 
 
     def append(self, txt=None, **kwargs):
@@ -87,6 +87,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
           txt.append(str, **kwargs) # add the string using included styling kwargs
           txt.append(str="", **kwargs) # equivalent to first usage
           txt.append(xml="", **kwargs) # parses xml for styling before rendering
+          txt.append(src="", **kwargs) # reads from the contents of a file or url
 
         Keyword Args:
           Accepts the same keyword arguments as the text() command. For any styling
@@ -95,8 +96,23 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         """
         is_xml = 'xml' in kwargs
         txt = kwargs.pop('xml', kwargs.pop('str', txt))
+        src = kwargs.pop('src')
+        attrib_txt = None
 
-        if txt:
+        if src:
+            # fetch a url or file's contents as unicode...
+            txt = read(src)
+
+            # ...unless it's a styled format in which case cross fingers and
+            # trust the text system's support for rtf/html rendering
+            ext = src.lower().rsplit('.',1)[-1]
+            if ext in ('html', 'rtf'):
+                txt_bytes = txt.encode('utf-8')
+                attrib_txt, _, _ = NSAttributedString.alloc().initWithData_options_documentAttributes_error_(
+                    NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes)), None, None, None
+                )
+
+        if txt and not attrib_txt:
             # try to insulate people from the need to use a unicode constant for any text
             # with high-ascii characters (while waiting for the other shoe to drop)
             decoded = txt if isinstance(txt, unicode) else txt.decode('utf-8')
@@ -104,10 +120,11 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             # use the inherited baseline style but allow one-off overrides from kwargs
             merged_style = dict(self._style)
             merged_style.update(self._parse_style(**kwargs))
+            attrib_txt = self.stylesheet._apply(decoded, merged_style, is_xml)
 
-            # generate an attributed string and append it the text frame
-            styled = self.stylesheet._apply(decoded, merged_style, is_xml)
-            self._frameset.add_text(styled)
+        if attrib_txt:
+            # only bother the typesetter if there's text to display
+            self._frameset.add_text(attrib_txt)
             self._frameset.resize(self._bounds)
 
     @property
