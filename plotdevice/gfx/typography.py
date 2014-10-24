@@ -139,9 +139,10 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
     @property
     def frames(self):
+        """Returns a list of one or more TextFrames defining the bounding box for layout"""
         return list(self._frameset)
 
-
+    @property
     def _flow(self):
         # wipe out any previously set frames then keep adding new ones until
         # the glyphs are fully laid out
@@ -150,10 +151,19 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             yield next(self._frameset)
 
     def flow(self, layout=None):
-        gen = self._flow()
+        """Add as many text frames as necessary to fully lay out the string
+
+        When called without arguments, returns a generator that you can iterate through to
+        set the position and size of each frame in turn (starting with the second). Each frame
+        is initialized with the same dimensions as the previous frame in the sequence.
+
+        The optional layout argument can be a reference to a function which takes a single
+        TextFrame argument. If present, your layout function will be called once for each
+        frame added to the stream.
+        """
         if not layout:
-            return gen
-        map(layout, gen)
+            return self._flow   # return the generator for iteration
+        map(layout, self._flow) # apply the layout function to each frame in sequence
 
     @property
     def metrics(self):
@@ -274,7 +284,7 @@ class FrameSetter(object):
 
     def next(self):
         tail = self[-1]
-        if sum(tail.visible) >= tail.layout.numberOfGlyphs():
+        if sum(tail._glyphs) >= tail.layout.numberOfGlyphs():
             raise StopIteration
         frame = next(tail)
         self._overflow.append(frame)
@@ -337,7 +347,7 @@ class FrameSetter(object):
         main = self._main
         if not main.store.length():
             return 0
-        txtFont, _ = main.store.attribute_atIndex_effectiveRange_("NSFont", main.visible.location, None)
+        txtFont, _ = main.store.attribute_atIndex_effectiveRange_("NSFont", main._glyphs.location, None)
         return main.layout.defaultLineHeightForFont_(txtFont)
 
 
@@ -357,6 +367,23 @@ class TextFrame(object):
     def __repr__(self):
         return "TextFrame(offset=%r, size=%r)"%(tuple(self.offset), tuple(self.size))
 
+    @property
+    def idx(self):
+        """An integer marking this frame's place in the flow sequence"""
+        return self.layout.textContainers().index(self.block)
+
+    @property
+    def text(self):
+        """The portion of the parent Text object's string that is visible in this frame"""
+        rng, _ = self.layout.characterRangeForGlyphRange_actualGlyphRange_(self._glyphs, None)
+        return self.store.string().substringWithRange_(rng)
+
+    @property
+    def metrics(self):
+        """The size of the rendered text"""
+        self.layout.glyphRangeForTextContainer_(self.block) # force layout & glyph gen
+        return Region(*self.layout.usedRectForTextContainer_(self.block)).size
+
     def next(self):
         frame = TextFrame()
         for attr in 'store', 'layout', 'offset', 'size':
@@ -367,10 +394,6 @@ class TextFrame(object):
     def _eject(self):
         idx = self.layout.textContainers().index(self.block)
         self.layout.removeTextContainerAtIndex_(idx)
-
-    @property
-    def idx(self):
-        return self.layout.textContainers().index(self.block)
 
     def _get_x(self):
         return self.offset.x
@@ -413,21 +436,16 @@ class TextFrame(object):
     h = height = property(_get_height, _set_height)
 
     @property
-    def metrics(self):
-        self.layout.glyphRangeForTextContainer_(self.block) # force layout & glyph gen
-        return Region(*self.layout.usedRectForTextContainer_(self.block)).size
-
-    @property
-    def visible(self):
+    def _glyphs(self):
         return self.layout.glyphRangeForTextContainer_(self.block)
 
     def _draw(self):
-        self.layout.drawGlyphsForGlyphRange_atPoint_(self.visible, self.offset)
+        self.layout.drawGlyphsForGlyphRange_atPoint_(self._glyphs, self.offset)
 
     @property
     def _nsBezierPath(self):
         dx, dy = self.offset
-        start, length = self.visible
+        start, length = self._glyphs
         path = NSBezierPath.bezierPath()
         txt = self.store.string()
         for glyph_idx in range(start, start+length):
