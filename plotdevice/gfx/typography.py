@@ -99,18 +99,20 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         src = kwargs.pop('src')
         attrib_txt = None
 
-        if src:
-            # fetch a url or file's contents as unicode...
-            txt = read(src)
+        if src is not None:
+            # fetch the url or file's contents as unicode
+            txt = read(src, format='txt')
 
-            # ...unless it's a styled format in which case cross fingers and
-            # trust the text system's support for rtf/html rendering
-            ext = src.lower().rsplit('.',1)[-1]
-            if ext in ('html', 'rtf'):
-                txt_bytes = txt.encode('utf-8')
-                attrib_txt, _, _ = NSAttributedString.alloc().initWithData_options_documentAttributes_error_(
-                    NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes)), None, None, None
-                )
+            # try building an attributed string out of the contents
+            txt_bytes = txt.encode('utf-8')
+            decoded, info, err = NSAttributedString.alloc().initWithData_options_documentAttributes_error_(
+                NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes)), None, None, None
+            )
+
+            # if the data got unpacked into anything more interesting than plain text,
+            # preserve its styling. otherwise fall through and style the txt val
+            if info.get('UTI') != "public.plain-text":
+                attrib_txt = decoded
 
         if txt and not attrib_txt:
             # try to insulate people from the need to use a unicode constant for any text
