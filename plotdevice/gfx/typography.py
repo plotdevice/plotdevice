@@ -249,6 +249,17 @@ class FrameSetter(object):
     def __getitem__(self, index):
         return ([self._main]+self._overflow)[index]
 
+    def __delitem__(self, index):
+        dropped = self.__getitem__(index)
+        if not isinstance(index, slice):
+            dropped = [dropped]
+
+        for frame in dropped:
+            if frame is self._main:
+                continue
+            frame._eject()
+            self._overflow.remove(frame)
+
     def __iter__(self):
         yield self._main
         for frame in self._overflow:
@@ -351,6 +362,10 @@ class TextFrame(object):
             setattr(frame, attr, getattr(self, attr))
         self.layout.addTextContainer_(frame.block)
         return frame
+
+    def _eject(self):
+        idx = self.layout.textContainers().index(self.block)
+        self.layout.removeTextContainerAtIndex_(idx)
 
     def _get_x(self):
         return self.offset.x
