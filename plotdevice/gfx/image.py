@@ -291,7 +291,7 @@ re_padded = re.compile(r'{(\d+)}')
 class ImageWriter(object):
     def __init__(self, fname, format, **opts):
         self.mode = CMYK if opts['cmyk'] else _ctx._outputmode
-        self.fname = re.sub(r'^~(?=/|$)',os.getenv('HOME'),fname)
+        self.fname = os.path.expanduser(fname)
         self.format = format
         self.opts = opts
         self.anim = 'fps' in opts

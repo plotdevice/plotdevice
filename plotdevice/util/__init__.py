@@ -78,7 +78,8 @@ def files(path="*", case=True):
     from iglob import iglob
     if type(path)==unicode:
         path.encode('utf-8')
-    path = re.sub(r'^~(?=/|$)',os.getenv('HOME'),path)
+    path = os.path.expanduser(path)
+
     return list(iglob(path.decode('utf-8'), case=case))
 
 def autotext(sourceFile):
@@ -411,8 +412,7 @@ def read(pth, format=None, encoding='utf-8', cols=None, **kwargs):
     if re.match(r'https?:', pth):
         fd, _ = GET(pth)
     else:
-        pth = re.sub(r'^~(?=/|$)',os.getenv('HOME'),pth)
-        fd = file(pth, 'Urb')
+        fd = file(os.path.expanduser(pth), 'Urb')
 
     format = format.lstrip('.') if format else pth.rsplit('.',1)[-1]
     dict_type = kwargs.get('dict', dict)
