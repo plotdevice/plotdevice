@@ -96,7 +96,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         """
         is_xml = 'xml' in kwargs
         txt = kwargs.pop('xml', kwargs.pop('str', txt))
-        src = kwargs.pop('src')
+        src = kwargs.pop('src', None)
         attrib_txt = None
 
         if src is not None:
@@ -444,6 +444,9 @@ class TextFrame(object):
         path = NSBezierPath.bezierPath()
         txt = self.store.string()
         for glyph_idx in range(start, start+length):
+            if self.layout.notShownAttributeForGlyphAtIndex_(glyph_idx):
+                continue # don't draw tabs, newlines, etc.
+
             txt_idx = self.layout.characterIndexForGlyphAtIndex_(glyph_idx)
             ns_font, _ = self.store.attribute_atIndex_effectiveRange_("NSFont", txt_idx, None)
             line_rect, _ = self.layout.lineFragmentRectForGlyphAtIndex_effectiveRange_(glyph_idx, None)
@@ -456,8 +459,7 @@ class TextFrame(object):
             g = self.layout.glyphAtIndex_(glyph_idx)
             if g==0: continue # when does glyphAtIndex return nil in practice?
 
-            # control characters are being drawn as outlined rects. what gives?
-            if txt[txt_idx]!='\n':
+            if ns_font:
                 path.moveToPoint_((final_pt[0], -final_pt[1]))
                 path.appendBezierPathWithGlyph_inFont_(g, ns_font)
                 path.closePath()
