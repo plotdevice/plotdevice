@@ -119,6 +119,48 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         return Font(**self._style)
 
     @property
+    def frames(self):
+        return list(self._frameset)
+
+    def flow(self):
+        # start by iterating through any existing overflow frames
+        for prior, frame in zip(self._frameset, self._frameset[1:]):
+            frame.size = prior.size
+            frame.offset = prior.offset
+            yield frame
+
+        # then keep adding frames until the glyphs are fully laid out
+        while True:
+            yield next(self._frameset)
+
+    @property
+    def metrics(self):
+        """Returns the size of the actual text (typically a subset of the bounds)"""
+        return self._frameset.metrics
+
+    @property
+    def bounds(self):
+        """Returns the bounding box in which the text will be laid out"""
+        (dx, dy), (w, h) = self._frameset.bounds
+        baseline = self._frameset.baseline
+        origin = Point(self.x + dx, self.y + dy - baseline)
+        return Region(origin, (w,h))
+
+    def _get_width(self):
+        return self._bounds.w
+    def _set_width(self, w):
+        BoundsMixin._set_width(self, w)
+        self._frameset.resize(self._bounds)
+    w = width = property(_get_width, _set_width)
+
+    def _get_height(self):
+        return self._bounds.h
+    def _set_height(self, h):
+        BoundsMixin._set_height(self, h)
+        self._frameset.resize(self._bounds)
+    h = height = property(_get_height, _set_height)
+
+    @property
     def _screen_transform(self):
         """Returns the Transform object that will be used to draw the text block.
 
@@ -148,6 +190,18 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             xf.translate(x, y-baseline) # then move to the baseline origin point
         return xf
 
+    def _draw(self):
+        with _ns_context():                  # save and restore the gstate
+            self._screen_transform.concat()  # transform so text can be drawn at the origin
+            with self.effects.applied():     # apply any blend/alpha/shadow effects
+                for frame in self._frameset:
+                    frame._draw()
+
+                    # debug: draw a grey background for the text's bounds
+                    # with _ns_context():
+                    #     NSColor.colorWithDeviceWhite_alpha_(0,.2).set()
+                    #     NSBezierPath.fillRect_(Region(frame.offset, frame.bounds.size))
+
     @property
     def path(self):
         # calculate the proper transform for alignment and flippedness
@@ -166,60 +220,6 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         path._fulcrum = Point(dx + self.x + w/2.0,
                               dy + self.y - baseline + h/2.0 )
         return trans.apply(path)
-
-    @property
-    def frames(self):
-        return list(self._frameset)
-
-    def flow(self):
-        # start by iterating through any existing overflow frames
-        for prior, frame in zip(self._frameset, self._frameset[1:]):
-            frame.size = prior.size
-            frame.offset = prior.offset
-            yield frame
-
-        # then keep adding frames until the glyphs are fully laid out
-        while True:
-            yield next(self._frameset)
-
-    def _draw(self):
-        with _ns_context():                  # save and restore the gstate
-            self._screen_transform.concat()  # transform so text can be drawn at the origin
-            with self.effects.applied():     # apply any blend/alpha/shadow effects
-                for frame in self._frameset:
-                    frame._draw()
-
-                    # debug: draw a grey background for the text's bounds
-                    # with _ns_context():
-                    #     NSColor.colorWithDeviceWhite_alpha_(0,.2).set()
-                    #     NSBezierPath.fillRect_(Region(frame.offset, frame.bounds.size))
-
-    @property
-    def metrics(self):
-        """Returns the size of the actual text (typically a subset of the bounds)"""
-        return self._frameset.metrics
-
-    @property
-    def bounds(self):
-        """Returns the bounding box in which the text will be laid out"""
-        (dx, dy), (w, h) = self._frameset.bounds
-        baseline = self._frameset.baseline
-        origin = Point(self.x + dx, self.y + dy - baseline)
-        return Region(origin, (w,h))
-
-    def _get_width(self):
-        return self._bounds.w
-    def _set_width(self, w):
-        BoundsMixin._set_width(self, w)
-        self._frameset.resize(self._bounds)
-    w = width = property(_get_width, _set_width)
-
-    def _get_height(self):
-        return self._bounds.h
-    def _set_height(self, h):
-        BoundsMixin._set_height(self, h)
-        self._frameset.resize(self._bounds)
-    h = height = property(_get_height, _set_height)
 
 class FrameSetter(object):
     def __init__(self, alignment):
