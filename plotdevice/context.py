@@ -989,9 +989,10 @@ class Context(object):
         """Draw a single line (or a block) of text
 
         Usage:
-          text(str, x=0, y=0, width=None, height=None, **kwargs)
-          text(x=0, y=0, width=None, height=None, str="", **kwargs) # equivalent to first usage
-          text(x=0, y=0, width=None, height=None, xml="", **kwargs) # parses xml before rendering
+          text(str, x, y, width=None, height=None, **kwargs)
+          text(x, y, width=None, height=None, str="", **kwargs) # equivalent to first usage
+          text(x, y, width=None, height=None, xml="", **kwargs) # parses xml before rendering
+          text(x, y, width=None, height=None, src="", **kwargs) # reads from file path or url
 
         Arguments:
           - `str` is a unicode string or utf-8 encoded bytestring. The text will
