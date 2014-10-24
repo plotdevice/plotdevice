@@ -141,16 +141,19 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     def frames(self):
         return list(self._frameset)
 
-    def flow(self):
-        # start by iterating through any existing overflow frames
-        for prior, frame in zip(self._frameset, self._frameset[1:]):
-            frame.size = prior.size
-            frame.offset = prior.offset
-            yield frame
 
-        # then keep adding frames until the glyphs are fully laid out
+    def _flow(self):
+        # wipe out any previously set frames then keep adding new ones until
+        # the glyphs are fully laid out
+        del self._frameset[1:]
         while True:
             yield next(self._frameset)
+
+    def flow(self, layout=None):
+        gen = self._flow()
+        if not layout:
+            return gen
+        map(layout, gen)
 
     @property
     def metrics(self):
@@ -255,10 +258,8 @@ class FrameSetter(object):
             dropped = [dropped]
 
         for frame in dropped:
-            if frame is self._main:
-                continue
-            frame._eject()
             self._overflow.remove(frame)
+            frame._eject()
 
     def __iter__(self):
         yield self._main
@@ -367,6 +368,10 @@ class TextFrame(object):
         idx = self.layout.textContainers().index(self.block)
         self.layout.removeTextContainerAtIndex_(idx)
 
+    @property
+    def idx(self):
+        return self.layout.textContainers().index(self.block)
+
     def _get_x(self):
         return self.offset.x
     def _set_x(self, x):
@@ -399,13 +404,13 @@ class TextFrame(object):
         return self.size.width
     def _set_width(self, width):
         self.size = (width, self.height)
-    width = property(_get_width, _set_width)
+    w = width = property(_get_width, _set_width)
 
     def _get_height(self):
         return self.size.height
     def _set_height(self, height):
         self.size = (self.width, height)
-    height = property(_get_height, _set_height)
+    h = height = property(_get_height, _set_height)
 
     @property
     def metrics(self):
