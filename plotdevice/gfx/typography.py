@@ -142,14 +142,6 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         """Returns a list of one or more TextFrames defining the bounding box for layout"""
         return list(self._frameset)
 
-    @property
-    def _flow(self):
-        # wipe out any previously set frames then keep adding new ones until
-        # the glyphs are fully laid out
-        del self._frameset[1:]
-        while True:
-            yield next(self._frameset)
-
     def flow(self, layout=None):
         """Add as many text frames as necessary to fully lay out the string
 
@@ -162,8 +154,8 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         frame added to the stream.
         """
         if not layout:
-            return self._flow   # return the generator for iteration
-        map(layout, self._flow) # apply the layout function to each frame in sequence
+            return self._frameset.reflow   # return the generator for iteration
+        map(layout, self._frameset.reflow) # apply the layout function to each frame in sequence
 
     @property
     def metrics(self):
@@ -282,14 +274,6 @@ class FrameSetter(object):
     def __unicode__(self):
         return self._main.store.string()
 
-    def next(self):
-        tail = self[-1]
-        if sum(tail._glyphs) >= tail.layout.numberOfGlyphs():
-            raise StopIteration
-        frame = next(tail)
-        self._overflow.append(frame)
-        return frame
-
     def copy(self):
         clone = FrameSetter(self._align)
         clone._main.store.setAttributedString_(self._main.store)
@@ -325,6 +309,17 @@ class FrameSetter(object):
             if not dims.h:
                 frame.height = min_h
 
+    @property
+    def reflow(self):
+        # wipe out any previously set frames then keep adding new ones until
+        # the glyphs are fully laid out
+        while self._overflow:
+            self._overflow.pop()._eject()
+        frame = self._main
+        while sum(frame._glyphs) < frame.layout.numberOfGlyphs():
+            frame = next(frame)
+            self._overflow.append(frame)
+            yield frame
 
     @property
     def metrics(self):
