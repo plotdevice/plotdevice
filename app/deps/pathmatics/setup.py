@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from setuptools.extension import Extension
 
 cPathmatics = Extension("cPathmatics",
-                        sources = ["pathmatics.m", "gpc.c",],
+                        sources = ["pathmatics.m", "gpc.c", "Vandercook.m"],
                         extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation'],
                         extra_compile_args=['-Qunused-arguments'])
 

@@ -13,6 +13,7 @@ from .colors import Color
 from .bezier import Bezier
 from ..util.foundry import *
 from ..util import _copy_attrs, numlike, XMLParser, read
+from ..lib import pathmatics
 
 _ctx = None
 __all__ = ("Text", "Family", "Font", "Stylesheet",
@@ -439,31 +440,7 @@ class TextFrame(object):
 
     @property
     def _nsBezierPath(self):
-        dx, dy = self.offset
-        start, length = self._glyphs
-        path = NSBezierPath.bezierPath()
-        txt = self.store.string()
-        for glyph_idx in range(start, start+length):
-            if self.layout.notShownAttributeForGlyphAtIndex_(glyph_idx):
-                continue # don't draw tabs, newlines, etc.
-
-            txt_idx = self.layout.characterIndexForGlyphAtIndex_(glyph_idx)
-            ns_font, _ = self.store.attribute_atIndex_effectiveRange_("NSFont", txt_idx, None)
-            line_rect, _ = self.layout.lineFragmentRectForGlyphAtIndex_effectiveRange_(glyph_idx, None)
-
-            # convert glyph location from container coords to canvas coords
-            layout_pt = self.layout.locationForGlyphAtIndex_(glyph_idx)
-            final_pt = list(line_rect[0])
-            final_pt[0] += layout_pt[0] + dx
-            final_pt[1] += layout_pt[1] + dy
-            g = self.layout.glyphAtIndex_(glyph_idx)
-            if g==0: continue # when does glyphAtIndex return nil in practice?
-
-            if ns_font:
-                path.moveToPoint_((final_pt[0], -final_pt[1]))
-                path.appendBezierPathWithGlyph_inFont_(g, ns_font)
-                path.closePath()
-        return path
+        return pathmatics.trace_text(frame=self)
 
 class Stylesheet(object):
     kwargs = StyleMixin.opts

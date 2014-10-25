@@ -382,21 +382,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
     @property
     def cgPath(self):
-        # this really ought to live in pathmatics...
-        ns = self._nsBezierPath
-        cg = CGPathCreateMutable()
-        for cmd, points in (ns.elementAtIndex_associatedPoints_(i) for i in xrange(ns.elementCount())):
-            if cmd==NSMoveToBezierPathElement:
-                CGPathMoveToPoint(cg, None, points[0].x, points[0].y)
-            elif cmd==NSLineToBezierPathElement:
-                CGPathAddLineToPoint(cg, None, points[0].x, points[0].y)
-            elif cmd==NSCurveToBezierPathElement:
-                CGPathAddCurveToPoint(cg, None, points[0].x, points[0].y,
-                                                points[1].x, points[1].y,
-                                                points[2].x, points[2].y)
-            elif cmd==NSClosePathBezierPathElement:
-                CGPathCloseSubpath(cg)
-        return CGPathCreateCopy(cg)
+        return pathmatics.convert_path(self._nsBezierPath)
 
     def _draw(self):
         with _cg_context() as port:

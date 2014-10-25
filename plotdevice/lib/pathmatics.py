@@ -1,6 +1,21 @@
-__all__ = ('linepoint', 'linelength', 'curvepoint', 'curvelength', 'segment_lengths',
-           'length', 'point', 'points', 'contours', 'findpath', 'insert_point')
+import objc
+from .cocoa import CGPathRelease
 from cPathmatics import intersects, union, intersect, difference, xor
+
+__all__ = ('linepoint', 'linelength', 'curvepoint', 'curvelength', 'segment_lengths',
+           'length', 'point', 'points', 'contours', 'findpath', 'insert_point',
+           'convert_path', 'trace_text')
+
+Vandercook = objc.lookUpClass('Vandercook')
+def convert_path(ns_path):
+    """Creates a CGPath from the points in an NSBezierPath"""
+    pth = Vandercook.cgPath_(ns_path)
+    CGPathRelease(pth)
+    return pth
+
+def trace_text(frame):
+    """Returns an NSBezierPath with the glyphs contained by a TextFrame object"""
+    return Vandercook.traceGlyphs_atOffset_withLayout_(frame._glyphs, frame.offset, frame.layout)
 
 try:
     from cPathmatics import linepoint, linelength, curvepoint, curvelength
@@ -574,3 +589,4 @@ def insert_point(path, t):
             if path[j].cmd == CLOSE:
                 new_path.closepath()
     return new_path
+
