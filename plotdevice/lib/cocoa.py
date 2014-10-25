@@ -9,7 +9,7 @@ from Quartz import CALayer, CGColorCreate, CGContextAddPath, CGContextAddRect, C
                    CGContextSetStrokeColorWithColor, CGImageGetBitsPerComponent, CGImageGetBitsPerPixel, \
                    CGImageGetBytesPerRow, CGImageGetDataProvider, CGImageGetHeight, CGImageGetWidth, \
                    CGImageMaskCreate, CGPathAddCurveToPoint, CGPathAddLineToPoint, CGPathCloseSubpath, \
-                   CGPathCreateCopy, CGPathCreateMutable, CGPathMoveToPoint, kCGBlendModeClear, \
+                   CGPathCreateCopy, CGPathCreateMutable, CGPathRelease, CGPathMoveToPoint, kCGBlendModeClear, \
                    kCGBlendModeColor, kCGBlendModeColorBurn, kCGBlendModeColorDodge, kCGBlendModeCopy, \
                    kCGBlendModeDarken, kCGBlendModeDestinationAtop, kCGBlendModeDestinationIn, \
                    kCGBlendModeDestinationOut, kCGBlendModeDestinationOver, kCGBlendModeDifference, \
