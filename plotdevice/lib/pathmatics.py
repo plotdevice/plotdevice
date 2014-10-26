@@ -6,16 +6,16 @@ __all__ = ('linepoint', 'linelength', 'curvepoint', 'curvelength', 'segment_leng
            'length', 'point', 'points', 'contours', 'findpath', 'insert_point',
            'convert_path', 'trace_text')
 
-Vandercook = objc.lookUpClass('Vandercook')
+Pathmatician = objc.lookUpClass('Pathmatician')
 def convert_path(ns_path):
     """Creates a CGPath from the points in an NSBezierPath"""
-    pth = Vandercook.cgPath_(ns_path)
+    pth = Pathmatician.cgPath_(ns_path)
     CGPathRelease(pth)
     return pth
 
 def trace_text(frame):
     """Returns an NSBezierPath with the glyphs contained by a TextFrame object"""
-    return Vandercook.traceGlyphs_atOffset_withLayout_(frame._glyphs, frame.offset, frame.layout)
+    return Pathmatician.traceGlyphs_atOffset_withLayout_(frame._glyphs, frame.offset, frame.layout)
 
 try:
     from cPathmatics import linepoint, linelength, curvepoint, curvelength
