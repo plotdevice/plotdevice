@@ -98,6 +98,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         is_xml = 'xml' in kwargs
         txt = kwargs.pop('xml', kwargs.pop('str', txt))
         src = kwargs.pop('src', None)
+        StyleMixin.validate(kwargs)
         attrib_txt = None
 
         if src is not None:
@@ -277,14 +278,18 @@ class FrameSetter(object):
 
     def copy(self):
         clone = FrameSetter(self._align)
-        clone._main.store.setAttributedString_(self._main.store)
+        clone._main.store.beginEditing()
+        clone._main.store.appendAttributedString_(self._main.store)
+        clone._main.store.endEditing()
         clone._overflow = [next(clone._main) for i in range(len(self)-len(clone))]
         for src, dst in zip(self, clone):
             dst.offset, dst.size = src.offset, src.size
         return clone
 
     def add_text(self, attrib_str):
+        self._main.store.beginEditing()
         self._main.store.appendAttributedString_(attrib_str)
+        self._main.store.endEditing()
 
     def resize(self, dims):
         # start with the max w/h passed by the Text object
@@ -350,8 +355,10 @@ class FrameSetter(object):
 class TextFrame(object):
     def __init__(self):
         # assemble nsmachinery (or just inherit it)
-        self.store = NSTextStorage.alloc().init()
         self.layout = NSLayoutManager.alloc().init()
+        self.layout.setUsesScreenFonts_(False)
+
+        self.store = NSTextStorage.alloc().init()
         self.store.addLayoutManager_(self.layout)
 
         # create a new container and add it to the layout manager
@@ -571,10 +578,7 @@ class Font(object):
             return
 
         # check for invalid kwarg names
-        rest = [k for k in kwargs if k not in StyleMixin.opts]
-        if rest:
-            unknown = 'Invalid keyword argument%s: %s'%('' if len(rest)==1 else 's', ", ".join(rest))
-            raise DeviceError(unknown)
+        StyleMixin.validate(kwargs)
 
         # accept Font objects or spec dicts as first positional arg
         first = args[0] if args else None
