@@ -99,7 +99,8 @@ class Grob(object):
     @classmethod
     def validate(cls, kwargs):
         """Sanity check a potential set of constructor kwargs"""
-        remaining = [arg for arg in kwargs.keys() if arg not in cls._opts]
+        known = getattr(cls, '_opts', cls.opts)
+        remaining = [arg for arg in kwargs.keys() if arg not in known]
         if remaining:
             unknown = "Unknown %s argument%s '%s'" % (cls.__name__, '' if len(remaining)==1 else 's', ", ".join(remaining))
             raise DeviceError(unknown)
