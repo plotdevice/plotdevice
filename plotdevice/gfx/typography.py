@@ -63,22 +63,18 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         super(Text, self).__init__(**kwargs)
 
         # create a text frame to manage layout and glyph-drawing
-        self._frameset = FrameSetter(self._style['align'])
-        self._frameset.resize(self._bounds)
+        self._frameset = FrameSetter(self._style['align'], (self.w, self.h))
 
         # look for a string as the first positional arg or an xml/str kwarg
-        txt = None
-        fmt = 'xml' if 'xml' in kwargs else 'str'
         if args and isinstance(args[0], basestring):
-            txt, args = args[0], args[1:]
-        txt = kwargs.pop('xml', kwargs.pop('str', txt))
+            kwargs['str'], args = args[0], args[1:]
 
         # merge in any numlike positional args to define bounds
         for attr, val in zip(['x','y','width','height'], args):
             setattr(self, attr, val)
 
-        # fontify the text arg and store it in the TextFrame
-        self.append(**{fmt:txt, "src":kwargs.get('src')})
+        # fontify the str/xml/src arg and store it in the TextFrame
+        self.append(**{k:v for k,v in kwargs.items() if k in self.opts})
 
 
     def append(self, txt=None, **kwargs):
@@ -248,22 +244,14 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         return trans.apply(path)
 
 class FrameSetter(object):
-    def __init__(self, alignment):
-        self._main = TextFrame()
-        self._overflow = []
+    def __init__(self, alignment, frame_size=(0,0)):
         self._align = alignment
+        self._main = TextFrame()
+        self._main.size = frame_size
+        self._overflow = []
 
     def __getitem__(self, index):
         return ([self._main]+self._overflow)[index]
-
-    def __delitem__(self, index):
-        dropped = self.__getitem__(index)
-        if not isinstance(index, slice):
-            dropped = [dropped]
-
-        for frame in dropped:
-            self._overflow.remove(frame)
-            frame._eject()
 
     def __iter__(self):
         yield self._main
