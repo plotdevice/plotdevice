@@ -1070,6 +1070,52 @@ class Context(object):
         """Calculates the height of a (probably) multi-line string."""
         return self.textmetrics(txt, width, **kwargs)[1]
 
+    def paginate(self, *args, **kwargs):
+        """Return a list of Text objects (as many as needed to fully lay out the string)
+
+        The paginate() command accepts the same arguments as text(), but rather than
+        drawing to the canvas it returns the resulting Text objects for your script
+        to plot() manually. Note that you must define both a width and a height for
+        pagination to be meaningful. In addition to the standard set of text() arguments,
+        paginate() accepts some optional keyword arguments to control the counters and
+        odd/even layout (see below).
+
+        The objects returned are standard Text objects with three additional `counter'
+        attributes attached to them:
+          txt.folio - the "page number" of the object (typically counting from one)
+          txt.pg - the index of the object in the series (counting from zero)
+          txt.pp - the total number of pages in the series
+
+        Additional Keyword Args:
+          - `folio` sets the "page number" of the first page in the sequence – accessible
+             through its corresponding .folio attribute. Defaults to 1 if omitted.
+          - `verso` is a 2-tuple with x/y coordinates for "even" pages in the sequence.
+             If omitted, all pages in the sequence will use the same x/y position as
+             defined in the positional arguments.
+        """
+        folio = kwargs.pop('folio', 1)
+        verso = kwargs.get('verso', None)
+
+        # create the sequence of Text objects
+        txt = Text(*args, **kwargs)
+        pages = []
+        while txt:
+            pages.append(txt)
+            txt = txt.overleaf()
+
+        # if a verso kwarg was passed, use its coords for alternate pages,
+        # otherwise use the x/y from the positional args for all pages
+        verso = verso or (txt.x, txt.y)
+
+        # decorate them with counter attrs
+        for i, page in enumerate(pages):
+            page.pg = i
+            page.pp = len(pages)
+            page.folio = i + folio
+            if i%2:
+                page.x, page.y = verso
+        return pages
+
     ### Image commands ###
 
     def image(self, *args, **kwargs):

@@ -76,7 +76,6 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         # fontify the str/xml/src arg and store it in the TextFrame
         self.append(**{k:v for k,v in kwargs.items() if k in self.opts})
 
-
     def append(self, txt=None, **kwargs):
         """Add a string to the end of the text run (with optional styling)
 
@@ -126,6 +125,16 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             # only bother the typesetter if there's text to display
             self._frameset.add_text(attrib_txt)
             self._frameset.resize(self._bounds)
+
+    def overleaf(self):
+        """Returns a Text object containing any characters that did not fit within this object's bounds.
+        If the entire string fits within the current object, returns None."""
+        seen = u"".join(getattr(f, 'text') for f in self._frameset)
+        full = self.text
+        if full not in seen:
+            next_pg = self.copy()
+            next_pg._frameset._main.store.deleteCharactersInRange_([0, len(seen)])
+            return next_pg
 
     @property
     def text(self):
