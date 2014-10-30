@@ -1073,6 +1073,13 @@ class Context(object):
     def paginate(self, *args, **kwargs):
         """Return a list of Text objects (as many as needed to fully lay out the string)
 
+        Usage:
+          paginate(str, x, y, width, height, **kwargs)
+          paginate(x, y, width, height, str="", **kwargs) # equivalent to first usage
+          paginate(x, y, width, height, xml="", **kwargs) # parses xml before rendering
+          paginate(x, y, width, height, src="", **kwargs) # reads from file path or url
+          paginate(Text, folio=1, verso=None) # works with existing Text objects too
+
         The paginate() command accepts the same arguments as text(), but rather than
         drawing to the canvas it returns the resulting Text objects for your script
         to plot() manually. Note that you must define both a width and a height for
@@ -1094,7 +1101,7 @@ class Context(object):
              defined in the positional arguments.
         """
         folio = kwargs.pop('folio', 1)
-        verso = kwargs.get('verso', None)
+        verso = kwargs.pop('verso', None)
 
         # create the sequence of Text objects
         txt = Text(*args, **kwargs)
