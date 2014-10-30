@@ -113,6 +113,10 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
                 attrib_txt = decoded
 
         if txt and not attrib_txt:
+            # convert numerical `str` args to strings
+            if not isinstance(txt, basestring) and not is_xml:
+                txt = repr(txt)
+
             # try to insulate people from the need to use a unicode constant for any text
             # with high-ascii characters (while waiting for the other shoe to drop)
             decoded = txt if isinstance(txt, unicode) else txt.decode('utf-8')
