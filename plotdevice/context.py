@@ -1520,6 +1520,56 @@ class Canvas(object):
     def _nsImage(self):
         return self.rasterize()
 
+    def _cg_image(self, zoom=1.0):
+        """Return a CGImage with the canvas dimensions scaled to the specified zoom level"""
+        from Quartz import CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpaceCreateDeviceRGB, CGContextClearRect
+        from Quartz import CGSizeMake, CGRectMake
+        from Quartz import kCGImageAlphaPremultipliedFirst, kCGBitmapByteOrder32Host, kCGImageAlphaNoneSkipFirst
+        w,h = self.pagesize
+        # size = Size(int(w*zoom), int(h*zoom))
+        size = Size(*[int(dim*zoom) for dim in self.pagesize])
+        bitmapBytesPerRow   = (size.width * 4);
+        bitmapByteCount     = (bitmapBytesPerRow * size.height);
+        bitmapContext = CGBitmapContextCreate(None,
+                                              size.width, size.height, 8, bitmapBytesPerRow,
+                                              CGColorSpaceCreateDeviceRGB(),
+                                              kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
+
+        ns_ctx = NSGraphicsContext.graphicsContextWithGraphicsPort_flipped_(bitmapContext, True)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.setCurrentContext_(ns_ctx)
+        trans = NSAffineTransform.transform()
+        trans.translateXBy_yBy_(0, size.height)
+        trans.scaleXBy_yBy_(zoom,-zoom)
+        trans.concat()
+        self.draw()
+        NSGraphicsContext.restoreGraphicsState()
+
+        return CGBitmapContextCreateImage(bitmapContext)
+
+    def _bitmap_image(self, zoom=1.0):
+        w,h = self.pagesize
+        img_rect = Region(0,0, int(w*zoom), int(h*zoom))
+
+        from Cocoa import NSBitmapImageRep, NSDeviceRGBColorSpace, NSAlphaFirstBitmapFormat
+
+        offscreen = NSBitmapImageRep.alloc().initWithBitmapDataPlanes_pixelsWide_pixelsHigh_bitsPerSample_samplesPerPixel_hasAlpha_isPlanar_colorSpaceName_bitmapFormat_bytesPerRow_bitsPerPixel_(
+          None, img_rect.w, img_rect.h, 8, 4, True, False, NSDeviceRGBColorSpace, NSAlphaFirstBitmapFormat, 0, 0
+        )
+
+        ns_ctx = NSGraphicsContext.graphicsContextWithBitmapImageRep_(offscreen)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.setCurrentContext_(ns_ctx)
+        trans = NSAffineTransform.transform()
+        trans.scaleBy_(zoom)
+        trans.concat()
+        self.draw()
+        NSGraphicsContext.restoreGraphicsState()
+
+        img = NSImage.alloc().initWithSize_(img_rect.size)
+        img.addRepresentation_(offscreen)
+        return img
+
     def rasterize(self, zoom=1.0):
         """Return an NSImage with the canvas dimensions scaled to the specified zoom level"""
         w,h = self.pagesize
