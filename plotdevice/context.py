@@ -1110,16 +1110,12 @@ class Context(object):
             pages.append(txt)
             txt = txt.overleaf()
 
-        # if a verso kwarg was passed, use its coords for alternate pages,
-        # otherwise use the x/y from the positional args for all pages
-        verso = verso or (txt.x, txt.y)
-
         # decorate them with counter attrs
         for i, page in enumerate(pages):
             page.pg = i
             page.pp = len(pages)
             page.folio = i + folio
-            if i%2:
+            if i%2 and verso:
                 page.x, page.y = verso
         return pages
 
