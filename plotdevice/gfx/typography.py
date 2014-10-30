@@ -99,6 +99,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         if src is not None:
             # fetch the url or file's contents as unicode
             txt = read(src, format='txt')
+            is_xml = src.lower().endswith('.xml')
 
             # try building an attributed string out of the contents
             txt_bytes = txt.encode('utf-8')
