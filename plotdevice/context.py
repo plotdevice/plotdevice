@@ -102,6 +102,7 @@ class Context(object):
 
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context._state_vars]
+        cached.append(self.canvas.unit)
         self._statestack.insert(0, cached)
         self.clear(all)
 
@@ -113,6 +114,7 @@ class Context(object):
 
         for attr, val in zip(Context._state_vars, cached):
             setattr(self, attr, val)
+        self.canvas.unit = cached[-1]
 
     def ximport(self, libName):
         lib = __import__(libName)
