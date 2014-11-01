@@ -223,11 +223,24 @@ class TransformMixin(Grob):
     """Mixin class for transformation support.
     Adds the _transform and _transformmode attributes to the class."""
     ctxAttrs = ('_transform', '_transformmode')
+    stateAttrs = ('_dpx',)
 
     def __init__(self, **kwargs):
         super(TransformMixin, self).__init__(**kwargs)
+        self._dpx = _ctx.canvas.unit.basis # dots per canvas unit
 
-    # CENTER or CORNER
+    def _to_px(self, unit):
+        """Convert from canvas units to postscript points"""
+        if numlike(unit):
+            return unit * self._dpx
+        return Transform().scale(self._dpx).apply(unit)
+
+    def _from_px(self, px):
+        """Convert from postscript points to canvas units"""
+        if numlike(px):
+            return px / self._dpx
+        return Transform().scale(1.0/self._dpx).apply(px)
+
     def _get_transformmode(self):
         return self._transformmode
     def _set_transformmode(self, mode):
