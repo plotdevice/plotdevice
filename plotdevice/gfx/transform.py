@@ -304,10 +304,14 @@ class Transform(object):
 
     def apply(self, point_or_path):
         from .bezier import Bezier
-        if isinstance(point_or_path, Bezier):
+        if isinstance(point_or_path, (Bezier, NSBezierPath)):
             return self.transformBezier(point_or_path)
-        elif isinstance(point_or_path, Point):
+        elif isinstance(point_or_path, (Point, NSPoint)):
             return self.transformPoint(point_or_path)
+        elif isinstance(point_or_path, (Size, NSSize)):
+            return self.transformSize(point_or_path)
+        elif isinstance(point_or_path, (Region, NSRect)):
+            return self.transformRegion(point_or_path)
         else:
             wrongtype = "Can only transform Beziers or Points"
             raise DeviceError(wrongtype)
@@ -315,7 +319,18 @@ class Transform(object):
     def transformPoint(self, point):
         return Point(self._nsAffineTransform.transformPoint_((point.x,point.y)))
 
+    def transformSize(self, size):
+        return Size(*self._nsAffineTransform.transformSize_((size.width,size.height)))
+
+    def transformRegion(self, rect):
+        origin = self.transformPoint(rect.origin)
+        size = self.transformSize(rect.size)
+        return Region(origin, size)
+
     def transformBezier(self, path):
+        if isinstance(path, NSBezierPath):
+            return self._nsAffineTransform.transformBezierPath_(path)
+
         from .bezier import Bezier
         if isinstance(path, Bezier):
             path = path.copy()
