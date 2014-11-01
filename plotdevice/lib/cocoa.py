@@ -48,7 +48,7 @@ from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CI
                    NSFileCoordinator, NSFileHandle, NSFileHandleDataAvailableNotification, \
                    NSHeight, NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, \
                    NSMakeRange, NSMidX, NSMidY, NSMutableAttributedString, NSNotificationCenter, \
-                   NSObject, NSOperationQueue, NSRect, NSRectFromString, NSSelectorFromString, \
-                   NSString, NSStringFromRect, NSTimeZone, NSTimer, NSURL, NSUserDefaults, NSWidth
+                   NSObject, NSOperationQueue, NSPoint, NSRect, NSRectFromString, NSSelectorFromString, \
+                   NSSize, NSString, NSStringFromRect, NSTimeZone, NSTimer, NSURL, NSUserDefaults, NSWidth
 from WebKit import WebView
 from objc import IBOutlet, IBAction
