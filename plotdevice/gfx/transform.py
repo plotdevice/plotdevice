@@ -59,6 +59,17 @@ class Point(object):
         # allow for assignments like: x,y = Point()
         return iter([self.x, self.y])
 
+
+    def __abs__(self): return Point(abs(self.x), abs(self.y))
+    def __pos__(self): return Point(self)
+    def __neg__(self): return Point(-self.x, -self.y)
+    def __invert__(self): return Point(-self.x, -self.y)
+
+    def __add__(self, other): return Point(self.x+other.x, self.y+other.y)
+    def __sub__(self, other): return Point(self.x-other.x, self.y-other.y)
+    def __radd__(self, other): return Point(other.x+self.x, other.y+self.y)
+    def __rsub__(self, other): return Point(other.x-self.x, other.y-self.y)
+
     def copy(self):
         return Point(self.x, self.y)
 
