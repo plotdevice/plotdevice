@@ -205,16 +205,16 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         has been flowed to multiple textframes, dimensions are calculated based on
         the union of the various bounds boxes."""
 
-        # gather the relevant text metrics
-        x, y = self.x, self.y
-        baseline = self._frameset.baseline
+        # gather the relevant text metrics (and convert them from canvas- to pixel-units)
+        x, y = self._to_px(Point(self.x, self.y))
+        baseline = self._to_px(self._frameset.baseline)
 
         # accumulate transformations in a fresh matrix
         xf = Transform()
 
         if self._transformmode == CENTER:
-            # calculate the (reversible) translation offset for centering
-            (dx, dy), (w, h) = self._frameset.bounds
+            # calculate the (reversible) translation offset for centering (in px)
+            (dx, dy), (w, h) = self._to_px(self._frameset.bounds)
             nudge = Transform().translate(dx+w/2.0, dy+h/2.0)
 
             xf.translate(x, y-baseline) # set the position before applying transforms
@@ -301,10 +301,10 @@ class FrameSetter(object):
 
         # if the rect isn't fully specified, size it to fit
         if not (dims.w and dims.h):
-            # compute the portion that's actually filled and add some extra padding to the
+            # compute the portion that's actually filled and add 1px of extra padding to the
             # calculated width (b/c believe it or not usedRectForTextContainer is buggy...)
             min_w, min_h = frame.metrics
-            min_w += 1
+            min_w += frame._from_px(1)
 
             # shift the offset if not left-aligned and drawing to a point
             nudge = {RIGHT:min_w, CENTER:min_w/2.0}
@@ -351,7 +351,7 @@ class FrameSetter(object):
         if not main.store.length():
             return 0
         txtFont, _ = main.store.attribute_atIndex_effectiveRange_("NSFont", main._glyphs.location, None)
-        return main.layout.defaultLineHeightForFont_(txtFont)
+        return main._from_px(main.layout.defaultLineHeightForFont_(txtFont))
 
 
 class TextFrame(object):
@@ -368,6 +368,7 @@ class TextFrame(object):
         self.block.setLineFragmentPadding_(0)
         self.layout.addTextContainer_(self.block)
         self.offset = (0,0)
+        self._dpx = _ctx.canvas.unit.basis
 
     def __repr__(self):
         return "TextFrame(offset=%r, size=%r)"%(tuple(self.offset), tuple(self.size))
@@ -387,7 +388,8 @@ class TextFrame(object):
     def metrics(self):
         """The size of the rendered text"""
         self.layout.glyphRangeForTextContainer_(self.block) # force layout & glyph gen
-        return Region(*self.layout.usedRectForTextContainer_(self.block)).size
+        _, block_size = self.layout.usedRectForTextContainer_(self.block)
+        return self._from_px(block_size)
 
     def next(self):
         frame = TextFrame()
@@ -399,6 +401,18 @@ class TextFrame(object):
     def _eject(self):
         idx = self.layout.textContainers().index(self.block)
         self.layout.removeTextContainerAtIndex_(idx)
+
+    def _to_px(self, unit):
+        """Convert from canvas units to postscript points"""
+        if numlike(unit):
+            return unit * self._dpx
+        return Transform().scale(self._dpx).apply(unit)
+
+    def _from_px(self, px):
+        """Convert from postscript points to canvas units"""
+        if numlike(px):
+            return px / self._dpx
+        return Transform().scale(1.0/self._dpx).apply(px)
 
     def _get_x(self):
         return self.offset.x
@@ -421,11 +435,11 @@ class TextFrame(object):
     offset = property(_get_offset, _set_offset)
 
     def _get_size(self):
-        return Size(*self.block.containerSize())
+        return self._from_px(self.block.containerSize())
     def _set_size(self, dims):
-        new_size = [d or 10000000 for d in dims]
+        new_size = [d or self._from_px(10000000) for d in dims]
         if new_size != self.size:
-            self.block.setContainerSize_(new_size)
+            self.block.setContainerSize_([self._to_px(d) for d in new_size])
     size = property(_get_size, _set_size)
 
     def _get_width(self):
@@ -445,7 +459,8 @@ class TextFrame(object):
         return self.layout.glyphRangeForTextContainer_(self.block)
 
     def _draw(self):
-        self.layout.drawGlyphsForGlyphRange_atPoint_(self._glyphs, self.offset)
+        px_offset = self._to_px(self.offset)
+        self.layout.drawGlyphsForGlyphRange_atPoint_(self._glyphs, px_offset)
 
     @property
     def _nsBezierPath(self):

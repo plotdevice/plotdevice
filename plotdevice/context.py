@@ -1503,12 +1503,6 @@ class Canvas(object):
             else:
                 self.background.set()
                 NSRectFillUsingOperation(rect, NSCompositeSourceOver)
-        if self.unit.basis != 1.0:
-            # it might be wiser to have this factor into ctx.transform so it doesn't end up
-            # scaling stroke widths...
-            t = Transform()
-            t.scale(self.unit.basis)
-            t.concat()
         for grob in self._grobs:
             grob._draw()
         # import cProfile

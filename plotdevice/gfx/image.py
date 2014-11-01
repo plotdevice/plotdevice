@@ -178,15 +178,15 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
 
     @property
     def bounds(self):
-        #
-        # hrm, so this should probably reflect the scale factor, no?
-        #
-        origin = self.transform.apply(Point(self.x, self.y))
-        return Region(origin.x, origin.y, *self._nsImage.size())
+        w, h = self.size.w*self._scalefactor, self.size.h*self._scalefactor
+        return Region(self.x, self.y, w, h)
 
     @property
     def size(self):
-        return Size(*self._nsImage.size())
+        """Returns the size of the source image in canvas units. Note that any magnification
+        via the width and height parameters is not factored in. For the displayed size, see
+        the .bounds property."""
+        return self._from_px(self._nsImage.size())
 
     @property
     def _scalefactor(self):
@@ -215,16 +215,20 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
         # set scale factor so entire image fits in the given rect or dimension
         factor = self._scalefactor
 
+        # calculate the pixel dimensions (accounting for the canvas's units)
+        dx, dy = self._to_px(Point(self.x, self.y))
+        w, h = self._to_px(self.size)
+
         # calculate the translation offset for centering (if any)
         nudge = Transform()
         if self._transformmode == CENTER:
-            nudge.translate(self.size.width*factor/2, self.size.height*factor/2)
+            nudge.translate(w*factor/2, h*factor/2)
 
-        xf.translate(self.x, self.y) # set the position before applying transforms
-        xf.prepend(nudge)            # nudge the image to its center (or not)
-        xf.prepend(self.transform)   # add context's CTM.
-        xf.prepend(nudge.inverse)    # Move back to the real origin.
-        xf.scale(factor)             # scale to fit size constraints (if any)
+        xf.translate(dx, dy)       # set the position before applying transforms
+        xf.prepend(nudge)          # nudge the image to its center (or not)
+        xf.prepend(self.transform) # add context's CTM.
+        xf.prepend(nudge.inverse)  # Move back to the real origin.
+        xf.scale(factor)           # scale to fit size constraints (if any)
         return xf
 
     def _draw(self):
@@ -234,7 +238,7 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
             self._screen_transform.concat() # move the image into place via transforms
             with self.effects.applied():    # apply any blend/alpha/shadow effects
                 ns_ctx.setImageInterpolation_(NSImageInterpolationHigh)
-                bounds = ((0,0), self.size) # draw the image at (0,0)
+                bounds = ((0,0), self._nsImage.size()) # draw the image at (0,0)
                 self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
                 # NB: the nodebox source warns about quartz bugs triggered by drawing
                 # EPSs to other origin points. no clue whether this still applies...

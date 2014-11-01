@@ -15,7 +15,11 @@ def convert_path(ns_path):
 
 def trace_text(frame):
     """Returns an NSBezierPath with the glyphs contained by a TextFrame object"""
-    return Pathmatician.traceGlyphs_atOffset_withLayout_(frame._glyphs, frame.offset, frame.layout)
+    # assemble the glyphs in px units then transform them back to screen units
+    # (since whatever Bezier it's appended to will handle screen->px conversion)
+    offset = frame._to_px(frame.offset)
+    nspath = Pathmatician.traceGlyphs_atOffset_withLayout_(frame._glyphs, offset, frame.layout)
+    return frame._from_px(nspath)
 
 try:
     from cPathmatics import linepoint, linelength, curvepoint, curvelength
