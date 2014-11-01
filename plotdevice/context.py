@@ -1327,6 +1327,8 @@ class Context(object):
             return Image(obj.name).size
         elif isinstance(obj, (Bezier, Image)):
             return obj.bounds.size
+        elif isinstance(obj, Canvas):
+            return obj.size
         else:
             badtype = "measure() can only handle Text, Images, Beziers, and file() objects (got %s)"%type(obj)
             raise DeviceError(badtype)
