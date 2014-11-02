@@ -46,9 +46,9 @@ from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CI
                    CIVector, Foundation, NO, NSAffineTransform, NSAffineTransformStruct, \
                    NSAttributedString, NSBundle, NSData, NSDate, NSDateFormatter, \
                    NSFileCoordinator, NSFileHandle, NSFileHandleDataAvailableNotification, \
-                   NSHeight, NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, \
-                   NSMakeRange, NSMidX, NSMidY, NSMutableAttributedString, NSNotificationCenter, \
-                   NSObject, NSOperationQueue, NSPoint, NSRect, NSRectFromString, NSSelectorFromString, \
+                   NSHeight, NSInsetRect, NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, \
+                   NSMakeRange, NSMidX, NSMidY, NSMutableAttributedString, NSNotificationCenter, NSObject,\
+                   NSOffsetRect, NSOperationQueue, NSPoint, NSRect, NSRectFromString, NSSelectorFromString, \
                    NSSize, NSString, NSStringFromRect, NSTimeZone, NSTimer, NSURL, NSUserDefaults, NSWidth
 from WebKit import WebView
 from objc import IBOutlet, IBAction
