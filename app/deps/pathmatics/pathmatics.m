@@ -604,6 +604,7 @@ int xmain(int argc, char *argv[])
 @interface Pathmatician : NSObject
 + (CGPathRef)cgPath:(NSBezierPath *)nsPath;
 + (NSBezierPath *)traceGlyphs:(NSRange)glyph_range atOffset:(NSPoint)offset withLayout:(NSLayoutManager *)layout;
++ (NSArray *)lineFragmentsInRange:(NSRange)char_range withLayout:(NSLayoutManager *)layout;
 @end
 @implementation Pathmatician
 
@@ -611,7 +612,7 @@ int xmain(int argc, char *argv[])
     NSBezierPath *path = [NSBezierPath bezierPath];
     NSTextStorage *store = layout.textStorage;
     NSUInteger start = glyph_range.location;
-    NSUInteger end = start + glyph_range.length;
+    NSUInteger end = NSMaxRange(glyph_range);
 
     for (NSUInteger glyph_idx=start; glyph_idx<end; glyph_idx++){
         // don't draw tabs, newlines, etc.
@@ -634,7 +635,47 @@ int xmain(int argc, char *argv[])
     }
 
     return path;
+}
 
++ (NSArray *)lineFragmentsInRange:(NSRange)char_range withLayout:(NSLayoutManager *)layout{
+    NSRange full_range = [layout glyphRangeForCharacterRange:char_range actualCharacterRange:NULL];
+    NSArray *frames = [layout textContainers];
+    NSString *text = [[layout textStorage] string];
+    NSMutableArray *fragments = [NSMutableArray array];
+
+    NSUInteger cursor = full_range.location;
+    NSUInteger last = NSMaxRange(full_range);
+    while(cursor<last){
+        // bail out if we've reached text that overflows the available containers
+        NSTextContainer *frame_ref = [layout textContainerForGlyphAtIndex:cursor effectiveRange:NULL];
+        if (!frame_ref) break;
+
+        // measure the line fragment's bounds
+        NSRange line_range;
+        NSRect line_rect = [layout lineFragmentRectForGlyphAtIndex:cursor effectiveRange:&line_range];
+        NSRect used_rect = [layout lineFragmentUsedRectForGlyphAtIndex:cursor effectiveRange:NULL];
+
+        // measure the portion of the line that's included in our char range
+        NSRange glyph_range = NSIntersectionRange(line_range, full_range);
+        NSRect bounds_rect = [layout boundingRectForGlyphRange:glyph_range inTextContainer:frame_ref];
+        NSRange char_range = [layout characterRangeForGlyphRange:glyph_range actualGlyphRange:NULL];
+        NSFont *line_font = [[layout textStorage] attribute:@"NSFont" atIndex:char_range.location effectiveRange:NULL];
+        double baseline = [layout defaultLineHeightForFont:line_font];
+
+        // package the measurements
+        [fragments addObject:@{
+            @"line": [NSValue valueWithRect:line_rect],
+            @"bounds": [NSValue valueWithRect:NSIntersectionRect(bounds_rect, used_rect)],
+            // @"bounds": [NSValue valueWithRect:bounds_rect], // NB: newlines gobble the full line width
+            // @"used": [NSValue valueWithRect:used_rect], // newlines ignored, but measures the entire line
+            @"text": [text substringWithRange:char_range],
+            @"range": [NSValue valueWithRange:char_range],
+            @"frame": [NSNumber numberWithUnsignedLong:[frames indexOfObject:frame_ref]],
+            @"baseline": [NSNumber numberWithDouble:baseline]
+        }];
+        cursor += line_range.length;
+    }
+    return fragments;
 }
 
 + (CGPathRef)cgPath:(NSBezierPath *)nsPath{

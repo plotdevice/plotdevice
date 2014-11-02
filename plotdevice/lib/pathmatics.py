@@ -1,4 +1,5 @@
 import objc
+from collections import namedtuple
 from .cocoa import CGPathRelease
 from cPathmatics import intersects, union, intersect, difference, xor
 
@@ -20,6 +21,32 @@ def trace_text(frame):
     offset = frame._to_px(frame.offset)
     nspath = Pathmatician.traceGlyphs_atOffset_withLayout_(frame._glyphs, offset, frame.layout)
     return frame._from_px(nspath)
+
+LineFragment = namedtuple("LineFragment", ["bounds", "line", "baseline", "range", "text"])
+def line_fragments(frames, txt_offset, rng=None):
+    """Returns a list of dictionaries describing the line fragments in the entire Text object
+    or a sub-range of it based on character indices"""
+    if rng is None:
+        full_text = frames._main.store.string()
+        rng = (0, len(full_text))
+
+    lines = []
+    for frag in Pathmatician.lineFragmentsInRange_withLayout_(rng, frames._main.layout):
+        frame = frames[frag['frame']]
+        txt_range = frag['range'].rangeValue()
+        info = {
+            "line":frame._from_px(frag['line'].rectValue()),
+            # "used":frame._from_px(frag['used'].rectValue()),
+            "bounds":frame._from_px(frag['bounds'].rectValue()),
+            "baseline":frame._from_px(frag['baseline']),
+            "range":(txt_range.location, txt_range.location+txt_range.length),
+            "text":frag['text'],
+        }
+        info['line'].origin += frame.offset + txt_offset
+        info['bounds'].origin += frame.offset + txt_offset
+        lines.append(LineFragment(**info))
+
+    return lines
 
 try:
     from cPathmatics import linepoint, linelength, curvepoint, curvelength

@@ -154,6 +154,14 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         """Returns a list of one or more TextFrames defining the bounding box for layout"""
         return list(self._frameset)
 
+    @property
+    def glyphs(self):
+        return LineSetter(self)
+
+    @property
+    def lines(self):
+        return list(LineSetter(self))
+
     def flow(self, layout=None):
         """Add as many text frames as necessary to fully lay out the string
 
@@ -256,6 +264,34 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         path._fulcrum = Point(dx + self.x + w/2.0,
                               dy + self.y - baseline + h/2.0 )
         return trans.apply(path)
+
+class LineSetter(object):
+    def __init__(self, text_obj):
+        self._text = text_obj
+        self._frames = text_obj._frameset
+
+    def __getitem__(self, index):
+        num_chars = len(self)
+
+        if not isinstance(index, slice):
+            while index < 0:
+                index += num_chars
+            if index>=num_chars:
+                raise IndexError
+            rng = (index, 1)
+        else:
+            start, stop, step = index.indices(num_chars)
+            rng = (start, stop-start)
+
+        offset = Point(self._text.x, self._text.y)
+        return pathmatics.line_fragments(self._frames, offset, rng)
+
+    def __iter__(self):
+        offset = Point(self._text.x, self._text.y)
+        return iter(pathmatics.line_fragments(self._frames, offset))
+
+    def __len__(self):
+        return len(unicode(self._frames))
 
 class FrameSetter(object):
     def __init__(self, alignment, frame_size=(0,0)):
