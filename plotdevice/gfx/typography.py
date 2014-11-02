@@ -193,14 +193,14 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     def _get_width(self):
         return self._bounds.w
     def _set_width(self, w):
-        BoundsMixin._set_width(self, w)
+        self._bounds.width = w
         self._frameset.resize(self._bounds)
     w = width = property(_get_width, _set_width)
 
     def _get_height(self):
         return self._bounds.h
     def _set_height(self, h):
-        BoundsMixin._set_height(self, h)
+        self._bounds.height = h
         self._frameset.resize(self._bounds)
     h = height = property(_get_height, _set_height)
 

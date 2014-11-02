@@ -8,7 +8,7 @@ from plotdevice import DeviceError
 from ..util.foundry import fontspec, typespec
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
-from .transform import Transform, Dimension
+from .transform import Transform, Dimension, Region
 
 _ctx = None
 __all__ = [
@@ -141,8 +141,6 @@ class EffectsMixin(Grob):
         self._effects.shadow = spec
     shadow = property(_get_shadow, _set_shadow)
 
-
-BoundsRect = namedtuple('BoundsRect', ['x', 'y', 'w', 'h'])
 class BoundsMixin(Grob):
     """Mixin class for dimensions.
     Adds x, y, width, & height properties to the class."""
@@ -157,42 +155,30 @@ class BoundsMixin(Grob):
         w = kwargs.get('w',kwargs.get('width',None))
         if isinstance(w, basestring):
             w = None # ignore width if it's passing a font style
-        self._bounds = BoundsRect(x,y,w,h)
+        self._bounds = Region(x,y,w,h)
 
     def _get_x(self):
         return self._bounds.x
     def _set_x(self, x):
-        if not numlike(x):
-            raise DeviceError('x coordinate must be int or float (not %r)'%type(x))
-        self._bounds = self._bounds._replace(x=float(x))
+        self._bounds.x = x
     x = property(_get_x, _set_x)
 
     def _get_y(self):
         return self._bounds.y
     def _set_y(self, y):
-        if not numlike(y):
-            raise DeviceError('y coordinate must be int or float (not %r)'%type(y))
-        self._bounds = self._bounds._replace(y=float(y))
+        self._bounds.y = y
     y = property(_get_y, _set_y)
 
     def _get_width(self):
-        return self._bounds.w
+        return self._bounds.width
     def _set_width(self, w):
-        if w and not numlike(w):
-            raise DeviceError('width value must be a number or None (not %r)'%type(w))
-        elif numlike(w):
-            w = float(w)
-        self._bounds = self._bounds._replace(w=w)
+        self._bounds.width = w
     w = width = property(_get_width, _set_width)
 
     def _get_height(self):
-        return self._bounds.h
+        return self._bounds.height
     def _set_height(self, h):
-        if h and not numlike(h):
-            raise DeviceError('height value must be a number or None (not %r)'%type(h))
-        elif numlike(h):
-            h = float(h)
-        self._bounds = self._bounds._replace(h=h)
+        self._bounds.height = h
     h = height = property(_get_height, _set_height)
 
 class ColorMixin(Grob):
