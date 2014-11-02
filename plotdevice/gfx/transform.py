@@ -430,25 +430,25 @@ class Transform(object):
             other = other._nsAffineTransform
         self._nsAffineTransform.prependTransform_(other)
 
-    def apply(self, point_or_path):
+    def apply(self, obj):
         from .bezier import Bezier
-        if isinstance(point_or_path, (Bezier, NSBezierPath)):
-            return self.transformBezier(point_or_path)
-        elif isinstance(point_or_path, (Point, NSPoint)):
-            return self.transformPoint(point_or_path)
-        elif isinstance(point_or_path, (Size, NSSize)):
-            return self.transformSize(point_or_path)
-        elif isinstance(point_or_path, (Region, NSRect)):
-            return self.transformRegion(point_or_path)
+        if isinstance(obj, (Bezier, NSBezierPath)):
+            return self.transformBezier(obj)
+        elif isinstance(obj, (Point, NSPoint)):
+            return self.transformPoint(obj)
+        elif isinstance(obj, (Size, NSSize)):
+            return self.transformSize(obj)
+        elif isinstance(obj, (Region, NSRect)):
+            return self.transformRegion(obj)
         else:
-            wrongtype = "Can only transform Beziers or Points"
+            wrongtype = "Can only transform Beziers, Points, Sizes, and Regions"
             raise DeviceError(wrongtype)
 
     def transformPoint(self, point):
-        return Point(self._nsAffineTransform.transformPoint_((point.x,point.y)))
+        return Point(self._nsAffineTransform.transformPoint_(tuple(point)))
 
     def transformSize(self, size):
-        return Size(*self._nsAffineTransform.transformSize_((size.width,size.height)))
+        return Size(self._nsAffineTransform.transformSize_(tuple(size)))
 
     def transformRegion(self, rect):
         origin = self.transformPoint(rect.origin)
