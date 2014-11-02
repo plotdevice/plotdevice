@@ -4,6 +4,7 @@ import re
 import json
 import warnings
 import math
+from operator import neg
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
@@ -33,7 +34,47 @@ tau = 2*pi
 
 ### tuple-like objects for grid dimensions ###
 
-class Point(object):
+class Pair(object):
+    """Base class for Point & Size objects (with basic arithmetic support)"""
+    def __eq__(self, other):
+        if other is None: return False
+        return all(a==b for a,b in zip(self, other))
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __abs__(self):
+        return self.__class__(map(abs, self))
+    def __pos__(self):
+        return self.__class__(self)
+    def __neg__(self):
+        return self.__class__(map(neg, self))
+
+    def __add__(self, other):
+        other = self.__class__(other)
+        return self.__class__(map(sum, zip(self, other)))
+    def __radd__(self, other):
+        return self.__add__(other)
+    def __sub__(self, other):
+        other = self.__class__(other)
+        return self.__class__(map(sum, zip(self, -other)))
+    def __rsub__(self, other):
+        other = self.__class__(other)
+        return self.__class__(map(sum, zip(other, -self)))
+
+    def copy(self):
+        return self.__class__(self)
+
+    @classmethod
+    def _unpack(cls, a, b):
+        try:
+            a, b = a # accept a 1st arg tuple
+        except:
+            if b is None:
+                b = a # accept a single float and copy it
+        return (a, b)
+
+class Point(Pair):
+    """Represents a 2D location with `x` and `y` properties"""
     def __init__(self, *args, **kwargs):
         if len(args) == 2:
             self.x, self.y = args
@@ -41,6 +82,9 @@ class Point(object):
             try:
                 self.x, self.y = args[0]
             except:
+                if args:
+                    baddims = 'Point requires both an x & y coordinate'
+                    raise DeviceError(baddims)
                 self.x = kwargs.get('x', 0.0)
                 self.y = kwargs.get('y', 0.0)
 
@@ -48,44 +92,22 @@ class Point(object):
     def __repr__(self):
         return "Point(x=%.3f, y=%.3f)" % (self.x, self.y)
 
-    def __eq__(self, other):
-        if other is None: return False
-        return self.x == other.x and self.y == other.y
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
     def __iter__(self):
         # allow for assignments like: x,y = Point()
         return iter([self.x, self.y])
-
-
-    def __abs__(self): return Point(abs(self.x), abs(self.y))
-    def __pos__(self): return Point(self)
-    def __neg__(self): return Point(-self.x, -self.y)
-    def __invert__(self): return Point(-self.x, -self.y)
-
-    def __add__(self, other): return Point(self.x+other.x, self.y+other.y)
-    def __sub__(self, other): return Point(self.x-other.x, self.y-other.y)
-    def __radd__(self, other): return Point(other.x+self.x, other.y+self.y)
-    def __rsub__(self, other): return Point(other.x-self.x, other.y-self.y)
-
-    def copy(self):
-        return Point(self.x, self.y)
 
     # lib.geometry methods (accept either x,y pairs or Point args)
 
     def angle(self, x=0, y=0):
         if isinstance(x, Point):
-            x, y = x.__iter__()
+            x, y = iter(x)
         theta = geometry.angle(self.x, self.y, x, y)
         basis={DEGREES:360.0, RADIANS:2*pi, PERCENT:1.0}
         return (theta*basis[_ctx._thetamode])/basis[DEGREES]
 
-
     def distance(self, x=0, y=0):
         if isinstance(x, Point):
-            x, y = x.__iter__()
+            x, y = iter(x)
         return geometry.distance(self.x, self.y, x, y)
 
     def reflect(self, *args, **kwargs):
@@ -122,48 +144,139 @@ class Point(object):
     y = property(_get_y, _set_y)
 
 
-class Size(tuple):
-    def __new__(cls, width, height):
-        this = tuple.__new__(cls, (width, height))
-        for attr in ('w','width'): setattr(this, attr, width)
-        for attr in ('h','height'): setattr(this, attr, height)
-        return this
+class Size(Pair):
+    """Represents a 2D area with `width` and `height` properties"""
+    def __init__(self, *args, **kwargs):
+        if len(args) == 2:
+            self.w, self.h = args
+        else:
+            try:
+                self.w, self.h = args[0]
+            except:
+                if args:
+                    baddims = 'Size requires both a width & height'
+                    raise DeviceError(baddims)
+                self.w = kwargs.get('width', kwargs.get('w', 0.0))
+                self.h = kwargs.get('height', kwargs.get('h', 0.0))
 
     @trim_zeroes
     def __repr__(self):
-        return 'Size(width=%.3f, height=%.3f)'%self
+        dims = ["%.3f"%d if numlike(d) else repr(d) for d in self]
+        return "Size(w=%s, h=%s)" % tuple(dims)
 
-class Region(tuple):
-    # Bug?: maybe this actually needs to be mutable...
-    def __new__(cls, x=0, y=0, w=0, h=0, **kwargs):
-        if isinstance(x, NSRect):
-            return Region(*x)
+    def __iter__(self):
+        # allow for assignments like: x,y = Point()
+        return iter([self.w, self.h])
 
-        try: # accept a pair of 2-tuples as origin/size
-            (x,y), (width,height) = x,y
-        except TypeError:
-            # accept both w/h and width/height spellings
-            width = kwargs.get('width', w)
-            height = kwargs.get('height', h)
-        this = tuple.__new__(cls, [(x,y), (width, height)])
-        for nm in ('x','y','width','height'):
-            if nm[1:]: setattr(this, nm[0], locals()[nm])
-            setattr(this, nm, locals()[nm])
-        this.origin = Point(x,y)
-        this.size = Size(width, height)
-        return this
+    def _get_w(self):
+        return self._w
+    def _set_w(self, w):
+        if not numlike(w) and w is not None:
+            raise DeviceError('width must be an int or float (not %r)'%type(w))
+        self._w = w
+    w = width = property(_get_w, _set_w)
+
+    def _get_h(self):
+        return self._h
+    def _set_h(self, h):
+        if not numlike(h) and h is not None:
+            raise DeviceError('height must be an int or float (not %r)'%type(h))
+        self._h = h
+    h = height = property(_get_h, _set_h)
+
+
+class Region(object):
+    """Represents a rectangular region combining a Point and a Size (as `origin` and `size`)"""
+    def __init__(self, *args, **kwargs):
+        self._origin = Point()
+        self._size = Size()
+
+        if len(args) == 4: # (x, y, w, h)
+            for k,v in zip('xywh', args):
+                setattr(self, k, v)
+        elif len(args)==2: # ((x,y), (w,h)) or (Point, Size)
+            self.origin, self.size = args
+        elif len(args)==1: # (Region)
+            self.origin, self.size = args[0]
+        else: # (**dict)
+            self.w = kwargs.get('width', kwargs.get('w', 0))
+            self.h = kwargs.get('height', kwargs.get('h', 0))
+            self.x = kwargs.get('x', 0.0)
+            self.y = kwargs.get('y', 0.0)
 
     @trim_zeroes
     def __repr__(self):
-        return 'Region(x=%.3f, y=%.3f, w=%.3f, h=%.3f)'%(self[0]+self[1])
+        vals = [getattr(self, attr) for attr in 'x','y','w','h']
+        dims = ["%.3f"%d if numlike(d) else repr(d) for d in vals]
+        return 'Region(x=%s, y=%s, w=%s, h=%s)' % tuple(dims)
 
-    def union(self, x=0, y=0, w=0, h=0):
-        other = x if isinstance(x, Region) else Region(x,y,w,h)
+    def __eq__(self, other):
+        if other is None: return False
+        other = Region(other)
+        return self.origin==other.origin and self.size==other.size
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __iter__(self):
+        # allow for assignments like: (x,y), (w,h) = Region()
+        return iter([self.origin, self.size])
+
+    def union(self, *args):
+        """Return a new Region which fully encloses the existing Region and the arguments"""
+        other = Region(*args)
         return Region(NSUnionRect(self, other))
 
-    def offset(self, dx=0, dy=0):
-        (x,y), (width,height) = self
-        return Region(x+dx, y+dy, width, height)
+    def intersect(self, *args):
+        """Return a new Region with the in-common portion of this Region and the arguments"""
+        other = Region(*args)
+        return Region(NSIntersectionRect(self, other))
+
+    def offset(self, dx=0, dy=None):
+        """Return a new Region whose origin is shifted by dx/dy or a Point object"""
+        dx, dy = Pair._unpack(dx, dy)
+        return Region(NSOffsetRect(self, dx, dy))
+
+    def inset(self, dx=0, dy=None):
+        """Return a new Region whose edges are moved `inward' by dx/dy or a Point/Size object"""
+        dx, dy = Pair._unpack(dx, dy)
+        return Region(NSInsetRect(self, dx, dy))
+
+    def _get_origin(self):
+        return self._origin
+    def _set_origin(self, pt):
+        self._origin = Point(pt)
+    origin = property(_get_origin, _set_origin)
+
+    def _get_x(self):
+        return self._origin.x
+    def _set_x(self, x):
+        self._origin.x = x
+    x = property(_get_x, _set_x)
+
+    def _get_y(self):
+        return self._origin.y
+    def _set_y(self, y):
+        self._origin.y = y
+    y = property(_get_y, _set_y)
+
+    def _get_size(self):
+        return self._size
+    def _set_size(self, dims):
+        self._size = Size(dims)
+    size = property(_get_size, _set_size)
+
+    def _get_w(self):
+        return self._size.w
+    def _set_w(self, w):
+        self._size.w = w
+    w = width = property(_get_w, _set_w)
+
+    def _get_h(self):
+        return self._size.h
+    def _set_h(self, h):
+        self._size.h = h
+    h = height = property(_get_h, _set_h)
 
 
 ### NSAffineTransform wrapper used for positioning Grobs in a Context ###
