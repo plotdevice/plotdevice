@@ -132,7 +132,7 @@ class Point(Pair):
     def _set_x(self, x):
         if not numlike(x):
             raise DeviceError('x coordinate must be int or float (not %r)'%type(x))
-        self._x = x
+        self._x = float(x)
     x = property(_get_x, _set_x)
 
     def _get_y(self):
@@ -140,7 +140,7 @@ class Point(Pair):
     def _set_y(self, y):
         if not numlike(y):
             raise DeviceError('y coordinate must be int or float (not %r)'%type(y))
-        self._y = y
+        self._y = float(y)
     y = property(_get_y, _set_y)
 
 
@@ -173,6 +173,8 @@ class Size(Pair):
     def _set_w(self, w):
         if not numlike(w) and w is not None:
             raise DeviceError('width must be an int or float (not %r)'%type(w))
+        elif w:
+            w = float(w)
         self._w = w
     w = width = property(_get_w, _set_w)
 
@@ -181,6 +183,8 @@ class Size(Pair):
     def _set_h(self, h):
         if not numlike(h) and h is not None:
             raise DeviceError('height must be an int or float (not %r)'%type(h))
+        elif h:
+            h = float(h)
         self._h = h
     h = height = property(_get_h, _set_h)
 
