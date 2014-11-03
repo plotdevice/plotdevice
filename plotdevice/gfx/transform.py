@@ -392,9 +392,6 @@ class Region(object):
                     setattr(self, k, v)
         elif len(args)==2: # ((x,y), (w,h)) or (Point, Size)
             self.origin, self.size = args
-        elif len(args)==1 and len(args[0])==4: # ([x,y,w,h]):
-            for k,v in zip('xywh', args[0]):
-                setattr(self, k, v)
         elif len(args)==1: # (Region)
             self.origin, self.size = args[0]
         elif args:
@@ -445,6 +442,9 @@ class Region(object):
         try: dx, dy = dx # accept an x/y tuple as 1st arg
         except: dy = dx if dy is None else dy # also accept a single float and copy it
         return Region(NSInsetRect(self, dx, dy))
+
+    def copy(self):
+        return Region(self)
 
     def _get_origin(self):
         return self._origin
