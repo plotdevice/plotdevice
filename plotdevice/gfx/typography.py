@@ -283,11 +283,11 @@ class LineSetter(object):
             start, stop, step = index.indices(num_chars)
             rng = (start, stop-start)
 
-        offset = Point(self._text.x, self._text.y)
+        offset = Point(self._text.x, self._text.y - self._frames.baseline)
         return pathmatics.line_fragments(self._frames, offset, rng)
 
     def __iter__(self):
-        offset = Point(self._text.x, self._text.y)
+        offset = Point(self._text.x, self._text.y - self._frames.baseline)
         return iter(pathmatics.line_fragments(self._frames, offset))
 
     def __len__(self):
