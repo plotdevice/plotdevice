@@ -36,6 +36,39 @@ tau = 2*pi
 
 class Pair(object):
     """Base class for Point & Size objects (with basic arithmetic support)"""
+    def __init__(self, *vals, **kwargs):
+        attrs = self._coords
+        kwargs = {k[0]:v for k,v in kwargs.items()}
+
+        if len(vals) == 2:
+            # handle Point(x, y) or Size(w, h)
+            for attr, val in zip(attrs, vals):
+                setattr(self, attr, val)
+        elif len(vals) == 1 and isinstance(vals[0], Pair):
+            # handle things like Point(Point())
+            for attr, val in zip(attrs, vals[0]):
+                setattr(self, attr, val)
+        elif len(vals) == 1 and hasattr(vals[0], '__getitem__'):
+            # handle Point(NSPoint()) and the like
+            for attr, val in zip(attrs, vals[0]):
+                setattr(self, attr, val)
+        elif vals:
+            baddims = '%s requires a single coordinate pair' % self.__class__.__name__
+            raise DeviceError(baddims)
+        else:
+            # kwargs will only be used if there are no positional args
+            for attr in attrs:
+                setattr(self, attr, kwargs.get(attr, 0.0))
+
+    @trim_zeroes
+    def __repr__(self):
+        dims = ["%s=%.3f"%(attr,d) if numlike(d) else repr(d) for attr, d in zip(self._coords, self)]
+        return self.__class__.__name__ + "(%s, %s)" % tuple(dims)
+
+    def __iter__(self):
+        # allow for assignments like: x,y = Point()
+        return iter([getattr(self, attr) for attr in self._coords])
+
     def __eq__(self, other):
         if other is None: return False
         return all(a==b for a,b in zip(self, other))
@@ -64,37 +97,13 @@ class Pair(object):
     def copy(self):
         return self.__class__(self)
 
-    @classmethod
-    def _unpack(cls, a, b):
-        try:
-            a, b = a # accept a 1st arg tuple
-        except:
-            if b is None:
-                b = a # accept a single float and copy it
-        return (a, b)
 
 class Point(Pair):
     """Represents a 2D location with `x` and `y` properties"""
+    _coords = ('x','y')
+
     def __init__(self, *args, **kwargs):
-        if len(args) == 2:
-            self.x, self.y = args
-        else:
-            try:
-                self.x, self.y = args[0]
-            except:
-                if args:
-                    baddims = 'Point requires both an x & y coordinate'
-                    raise DeviceError(baddims)
-                self.x = kwargs.get('x', 0.0)
-                self.y = kwargs.get('y', 0.0)
-
-    @trim_zeroes
-    def __repr__(self):
-        return "Point(x=%.3f, y=%.3f)" % (self.x, self.y)
-
-    def __iter__(self):
-        # allow for assignments like: x,y = Point()
-        return iter([self.x, self.y])
+        super(Point, self).__init__(*args, **kwargs)
 
     # lib.geometry methods (accept either x,y pairs or Point args)
 
@@ -131,7 +140,7 @@ class Point(Pair):
         return self._x
     def _set_x(self, x):
         if not numlike(x):
-            raise DeviceError('x coordinate must be int or float (not %r)'%type(x))
+            raise DeviceError('Point: x coordinate must be int or float (not %r)'%type(x))
         self._x = float(x)
     x = property(_get_x, _set_x)
 
@@ -139,40 +148,23 @@ class Point(Pair):
         return self._y
     def _set_y(self, y):
         if not numlike(y):
-            raise DeviceError('y coordinate must be int or float (not %r)'%type(y))
+            raise DeviceError('Point: y coordinate must be int or float (not %r)'%type(y))
         self._y = float(y)
     y = property(_get_y, _set_y)
 
 
 class Size(Pair):
     """Represents a 2D area with `width` and `height` properties"""
+    _coords = ('w','h')
+
     def __init__(self, *args, **kwargs):
-        if len(args) == 2:
-            self.w, self.h = args
-        else:
-            try:
-                self.w, self.h = args[0]
-            except:
-                if args:
-                    baddims = 'Size requires both a width & height'
-                    raise DeviceError(baddims)
-                self.w = kwargs.get('width', kwargs.get('w', 0.0))
-                self.h = kwargs.get('height', kwargs.get('h', 0.0))
-
-    @trim_zeroes
-    def __repr__(self):
-        dims = ["%.3f"%d if numlike(d) else repr(d) for d in self]
-        return "Size(w=%s, h=%s)" % tuple(dims)
-
-    def __iter__(self):
-        # allow for assignments like: x,y = Point()
-        return iter([self.w, self.h])
+        super(Size, self).__init__(*args, **kwargs)
 
     def _get_w(self):
         return self._w
     def _set_w(self, w):
         if not numlike(w) and w is not None:
-            raise DeviceError('width must be an int or float (not %r)'%type(w))
+            raise DeviceError('Size: width must be an int or float (not %r)'%type(w))
         elif w:
             w = float(w)
         self._w = w
@@ -182,7 +174,7 @@ class Size(Pair):
         return self._h
     def _set_h(self, h):
         if not numlike(h) and h is not None:
-            raise DeviceError('height must be an int or float (not %r)'%type(h))
+            raise DeviceError('Size: height must be an int or float (not %r)'%type(h))
         elif h:
             h = float(h)
         self._h = h
@@ -198,10 +190,23 @@ class Region(object):
         if len(args) == 4: # (x, y, w, h)
             for k,v in zip('xywh', args):
                 setattr(self, k, v)
+        elif len(args)==3:
+            try: # (x, y, (w,h))
+                for k,v in zip(['x','y','size'], args):
+                    setattr(self, k, v)
+            except: # ((x,y), w, h)
+                for k,v in zip(['origin','w','h'], args):
+                    setattr(self, k, v)
         elif len(args)==2: # ((x,y), (w,h)) or (Point, Size)
             self.origin, self.size = args
+        elif len(args)==1 and len(args[0])==4: # ([x,y,w,h]):
+            for k,v in zip('xywh', args[0]):
+                setattr(self, k, v)
         elif len(args)==1: # (Region)
             self.origin, self.size = args[0]
+        elif args:
+            badbox = 'Region requires a single Point and Size pair'
+            raise DeviceError(badbox)
         else: # (**dict)
             self.w = kwargs.get('width', kwargs.get('w', 0))
             self.h = kwargs.get('height', kwargs.get('h', 0))
@@ -236,14 +241,16 @@ class Region(object):
         other = Region(*args)
         return Region(NSIntersectionRect(self, other))
 
-    def offset(self, dx=0, dy=None):
+    def offset(self, dx, dy=None):
         """Return a new Region whose origin is shifted by dx/dy or a Point object"""
-        dx, dy = Pair._unpack(dx, dy)
+        try: dx, dy = dx # accept an x/y tuple as 1st arg
+        except: dy = dx if dy is None else dy # also accept a single float and copy it
         return Region(NSOffsetRect(self, dx, dy))
 
-    def inset(self, dx=0, dy=None):
+    def inset(self, dx, dy=None):
         """Return a new Region whose edges are moved `inward' by dx/dy or a Point/Size object"""
-        dx, dy = Pair._unpack(dx, dy)
+        try: dx, dy = dx # accept an x/y tuple as 1st arg
+        except: dy = dx if dy is None else dy # also accept a single float and copy it
         return Region(NSInsetRect(self, dx, dy))
 
     def _get_origin(self):
