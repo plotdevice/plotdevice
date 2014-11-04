@@ -9,7 +9,7 @@ from .atoms import PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .colors import Color, Gradient, Pattern
 from .transform import CENTER, Transform, Region, Size, Point, DEGREES
 from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten, numlike
-from ..lib import pathmatics, geometry
+from ..lib import pathmatics
 
 _ctx = None
 __all__ = ("Bezier", "Curve", "BezierPath", "PathElement",
@@ -124,8 +124,8 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
             # ...and transform it to match the endpoints
             src = self._nsBezierPath.currentPoint()
-            theta = geometry.angle(src.x, src.y, x1, y1)
-            dw = geometry.distance(src.x, src.y, x1, y1)
+            theta = pathmatics.angle(src.x, src.y, x1, y1)
+            dw = pathmatics.distance(src.x, src.y, x1, y1)
             dh = dw*(-1.0 if ccw else 1.0)
             t = Transform()
             t.translate(src.x,src.y)

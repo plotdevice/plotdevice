@@ -14,10 +14,10 @@ if exists(join(module_root, 'app/PlotDevice-Info.plist')):
 
 # test the sys.path by attempting to load the c-extensions
 try:
-    import geometry, io, pathmatics
+    import io, pathmatics
 except ImportError:
     from pprint import pformat
-    notfound = "Couldn't locate C extensions (cIO.so, cGeometry.so, & cPathmatics.so).\nSearched in:\n%s\nto no avail..."%pformat(sys.path)
+    notfound = "Couldn't locate C extensions (cIO.so, & cPathmatics.so).\nSearched in:\n%s\nto no avail..."%pformat(sys.path)
     raise RuntimeError(notfound)
 
 # allow Libraries to request a _ctx reference

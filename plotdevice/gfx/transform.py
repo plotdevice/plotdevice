@@ -9,7 +9,7 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import trim_zeroes, numlike
-from ..lib import geometry
+from ..lib import pathmatics
 
 _ctx = None
 __all__ = [
@@ -298,19 +298,19 @@ class Point(Pair):
     def __init__(self, *args, **kwargs):
         super(Point, self).__init__(*args, **kwargs)
 
-    # lib.geometry methods (accept either x,y pairs or Point args)
+    # lib.pathmatics methods (accept either x,y pairs or Point args)
 
     def angle(self, x=0, y=0):
         if isinstance(x, Point):
             x, y = iter(x)
-        theta = geometry.angle(self.x, self.y, x, y)
+        theta = pathmatics.angle(self.x, self.y, x, y)
         basis={DEGREES:360.0, RADIANS:2*pi, PERCENT:1.0}
         return (theta*basis[_ctx._thetamode])/basis[DEGREES]
 
     def distance(self, x=0, y=0):
         if isinstance(x, Point):
             x, y = iter(x)
-        return geometry.distance(self.x, self.y, x, y)
+        return pathmatics.distance(self.x, self.y, x, y)
 
     def reflect(self, *args, **kwargs):
         d = kwargs.get('d', 1.0)
@@ -323,11 +323,11 @@ class Point(Pair):
             d=opts[0]
         if opts[1:]:
             a=opts[1]
-        return Point(geometry.reflect(self.x, self.y, x, y, d, a))
+        return Point(pathmatics.reflect(self.x, self.y, x, y, d, a))
 
     def coordinates(self, distance, angle):
         angle = _ctx._angle(angle, DEGREES)
-        return Point(geometry.coordinates(self.x, self.y, distance, angle))
+        return Point(pathmatics.coordinates(self.x, self.y, distance, angle))
 
     def _get_x(self):
         return self._x
