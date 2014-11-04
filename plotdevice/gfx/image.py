@@ -49,6 +49,8 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
            Image(x, y, data='base64,<b64-encoded bytes>')
            Image(canvas, x, y)
         """
+        # let the mixins handle transforms & effects
+        super(Image, self).__init__(**kwargs)
 
         # look for a path or Image as the first arg, or a `data` kwarg (plus `image` for compat)
         args = list(args)
@@ -74,18 +76,19 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
                 invalid = "Not a valid image source: %r" % type(src)
                 raise DeviceError(invalid)
 
-        # incorporate positional bounds args
-        for attr, val in zip(['x','y','width','height'], args):
-            kwargs.setdefault(attr, val)
-
-        # incorporate existing bounds when working with an Image
+        # set the bounds (in phases)
         if isinstance(src, Image):
+            # if working from an existing Image, inherit its bounds as the default
             for attr in ['x','y','width','height']:
-                kwargs.setdefault(attr, getattr(src, attr))
-
-        # let the mixins handle bounds & effects
-        super(Image, self).__init__(**kwargs)
-
+                setattr(self, attr, getattr(src, attr))
+        if args:
+            # override defaults with positional bounds args (if any)
+            self._bounds._parse(args)
+        if kwargs:
+            # finally, let keyword args override the inherited & positional bounds
+            for k,v in kwargs.items():
+                if k in BoundsMixin.opts:
+                    setattr(self, k, v)
 
     def _lazyload(self, path=None, data=None):
         # loads either a `path` or `data` kwarg and returns an NSImage
