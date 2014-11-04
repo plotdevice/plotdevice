@@ -336,7 +336,7 @@ def _locate(path, t, segments=None):
     >>> _locate(path, 1.0)
     (0, 1.0, Point(x=0.0, y=0.0))
     """
-    from ..gfx.transform import Point
+    from ..gfx.geometry import Point
 
     if segments == None:
         segments = path.segmentlengths(relative=True)
@@ -521,7 +521,7 @@ def findpath(points, curvature=1.0):
     # The list of points consists of Point objects,
     # but it shouldn't crash on something straightforward
     # such as someone supplying a list of (x,y)-tuples.
-    from ..gfx.transform import Point
+    from ..gfx.geometry import Point
     from ..gfx.bezier import Bezier
     from types import TupleType, ListType
     for i, pt in enumerate(points):

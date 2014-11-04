@@ -8,7 +8,7 @@ from plotdevice import DeviceError
 from ..lib.foundry import fontspec, typespec
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
-from .transform import Transform, Dimension, Region
+from .geometry import Transform, Dimension, Region
 
 _ctx = None
 __all__ = [

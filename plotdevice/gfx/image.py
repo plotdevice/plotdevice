@@ -11,7 +11,7 @@ from plotdevice import DeviceError
 from ..util import _copy_attrs
 from ..util.http import GET
 from ..lib.io import MovieExportSession, ImageExportSession
-from .transform import Region, Size, Point, Transform, CENTER
+from .geometry import Region, Size, Point, Transform, CENTER
 from .atoms import TransformMixin, EffectsMixin, BoundsMixin, Grob
 from . import _ns_context
 

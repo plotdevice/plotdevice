@@ -8,7 +8,7 @@ from ..lib.cocoa import *
 from plotdevice import DeviceError
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, BoundsMixin, Grob
 from . import _save, _restore, _ns_context
-from .transform import Transform, Region, Size, Point
+from .geometry import Transform, Region, Size, Point
 from .colors import Color
 from .bezier import Bezier
 from ..util import _copy_attrs, numlike, XMLParser, read

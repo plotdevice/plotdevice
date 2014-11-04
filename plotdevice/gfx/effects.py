@@ -7,7 +7,7 @@ from ..lib.cocoa import *
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, numlike
 from .colors import Color
-from .transform import Point
+from .geometry import Point
 from .image import ciFilter
 from . import _cg_context, _cg_layer, _cg_port
 

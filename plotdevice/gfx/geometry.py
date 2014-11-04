@@ -225,6 +225,7 @@ class Transform(object):
         warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", DeprecationWarning, stacklevel=2)
         return self._nsAffineTransform
 
+
 ### tuple-like objects for grid dimensions ###
 
 class Pair(object):
@@ -557,7 +558,7 @@ def parse_coords(coords, types):
     return objs
 
 
-### canvas scale-factors ###
+### Unit-conversions for canvas measurements ###
 
 class MagicNumber(object):
     # be a well-behaved pseudo-number (based on the float in self.value)
@@ -630,4 +631,5 @@ class Unit(MagicNumber):
 
 # create a module-level variable for each of the standard units
 globals().update({u:Unit(u) for u in Unit._dpx})
+
 

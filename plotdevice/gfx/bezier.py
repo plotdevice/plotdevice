@@ -7,7 +7,7 @@ from plotdevice import DeviceError
 from . import _cg_context
 from .atoms import PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .colors import Color, Gradient, Pattern
-from .transform import CENTER, Transform, Region, Size, Point, DEGREES
+from .geometry import CENTER, Transform, Region, Size, Point, DEGREES
 from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten, numlike
 from ..lib import pathmatics
 
