@@ -1215,8 +1215,15 @@ class Context(object):
     def image(self, *args, **kwargs):
         """Draw a bitmap or vector image
 
+        Syntax:
+            image(src, x, y, width=None, height=None, **kwargs)
+            image(x, y, src='path-or-url', ...)
+            image(Point, src="", ...)
+            image(Point, Size, src="", ...)
+            image(Region, src="", ...)
+
         Arguments:
-          - `path` is the path to an image file (relative to the script's directory)
+          - `src` is a url or the path to an image file (relative to the script's directory)
           - `x` & `y` position the image on the canvas
           - `width` and `height` are optional and define maximum sizes for the image.
             If provided, the image will be scaled to fit the bounds while preserving

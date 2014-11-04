@@ -44,6 +44,7 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
            x,y, w,h = 10,10, 200,200
            Image("foo.png", x, y, w, h)
            Image(<Image object>, x, y, height=h)
+           Image(x, y, src='path-or-url')
            Image(x, y, data='<raw bytes from an image file>')
            Image(x, y, data='base64,<b64-encoded bytes>')
            Image(canvas, x, y)
@@ -52,7 +53,7 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
         # look for a path or Image as the first arg, or a `data` kwarg (plus `image` for compat)
         args = list(args)
         data = kwargs.get('data', None)
-        src = kwargs.get('path', kwargs.get('image', None))
+        src = kwargs.get('src', kwargs.get('image', None))
         if args and not (src or data):
             src = args.pop(0) # use first arg if image wasn't in kwargs
         elif args and args[0] is None:
