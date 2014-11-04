@@ -70,8 +70,8 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             kwargs['str'], args = args[0], args[1:]
 
         # merge in any numlike positional args to define bounds
-        for attr, val in zip(['x','y','width','height'], args):
-            setattr(self, attr, val)
+        if args:
+            self._bounds._parse(args)
 
         # fontify the str/xml/src arg and store it in the TextFrame
         self.append(**{k:v for k,v in kwargs.items() if k in self.opts})
