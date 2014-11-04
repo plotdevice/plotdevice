@@ -5,9 +5,9 @@ from collections import namedtuple
 from os.path import exists, expanduser
 
 from .lib.cocoa import *
-from .util.foundry import typespec, fontspec
-from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike
+from .lib.foundry import typespec
 from .lib import pathmatics
+from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike
 from .gfx.transform import Dimension, parse_coords
 from .gfx import *
 from . import gfx, lib, util, Halted, DeviceError

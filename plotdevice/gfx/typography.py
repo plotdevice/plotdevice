@@ -11,8 +11,8 @@ from . import _save, _restore, _ns_context
 from .transform import Transform, Region, Size, Point
 from .colors import Color
 from .bezier import Bezier
-from ..util.foundry import *
 from ..util import _copy_attrs, numlike, XMLParser, read
+from ..lib.foundry import *
 from ..lib import pathmatics
 
 _ctx = None

@@ -5,8 +5,8 @@ import difflib
 from pprint import pprint, pformat
 from operator import itemgetter, attrgetter
 from collections import namedtuple, Counter, OrderedDict as odict, defaultdict as ddict
-from ..lib.cocoa import *
-from . import numlike
+from .cocoa import *
+from ..util import numlike
 
 from plotdevice import DeviceError
 
@@ -309,7 +309,7 @@ def fontspec(*args, **kwargs):
                 print 'Font: unrecognized weight or family name "%s"'%item
         elif numlike(item) and 'size' not in kwargs:
             spec['size'] = item
-    
+
     # incorporate any typesetting features
     spec.update(aat_features(kwargs))
 
@@ -338,11 +338,11 @@ def typespec(**kwargs):
 
 aat_consts = {
     "Ligatures":1, # kLigaturesType
-    "CommonOn":2, "CommonOff":3, "RareOn":4, "RareOff":5, 
-    
+    "CommonOn":2, "CommonOff":3, "RareOn":4, "RareOff":5,
+
     "LowerCase":37, # kLowerCaseType
     "UpperCase":38, # kUpperCaseType
-    "DefaultCase":0, "SmallCaps":1, 
+    "DefaultCase":0, "SmallCaps":1,
 
     "NumberCase":21, # kNumberCaseType
     "LowerCaseNumbers":0, "UpperCaseNumbers":1,
@@ -400,8 +400,8 @@ from AppKit import NSFontFeatureSettingsAttribute as settings_attr, \
                    NSFontFeatureTypeIdentifierKey as feature_id, \
                    NSFontFeatureSelectorIdentifierKey as selector_id
 
-# convert the semi-sensibly named items in pd_features's arrays into their SFNTLayoutTypes.h 
-# const values. the _aat_features dict uses the same keys as pd_features but the contents of 
+# convert the semi-sensibly named items in pd_features's arrays into their SFNTLayoutTypes.h
+# const values. the _aat_features dict uses the same keys as pd_features but the contents of
 # the 'command' tuples become ints
 _aat_features = {}
 # build feature dicts for the numbered `stylistic sets' construction

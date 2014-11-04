@@ -5,7 +5,7 @@ from Quartz import *
 from collections import namedtuple, defaultdict
 
 from plotdevice import DeviceError
-from ..util.foundry import fontspec, typespec
+from ..lib.foundry import fontspec, typespec
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
 from .transform import Transform, Dimension, Region

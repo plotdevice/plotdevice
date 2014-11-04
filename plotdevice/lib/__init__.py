@@ -14,7 +14,7 @@ if exists(join(module_root, 'app/PlotDevice-Info.plist')):
 
 # test the sys.path by attempting to load the c-extensions
 try:
-    import io, pathmatics
+    import io, pathmatics, foundry
 except ImportError:
     from pprint import pformat
     notfound = "Couldn't locate C extensions (cIO.so, & cPathmatics.so).\nSearched in:\n%s\nto no avail..."%pformat(sys.path)
