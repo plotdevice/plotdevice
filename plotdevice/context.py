@@ -1305,9 +1305,15 @@ class Context(object):
         # make additional modifications on that instance
         grob = obj if kwargs.get('live') else obj.copy()
 
-        # if there are any positional args following the grob, assign a new x/y
-        for attr, val in zip(['x','y'], coords):
-            setattr(grob, attr, val)
+        # if there are any positional args following the grob, assign a new x/y (and possibly w/h)
+        if coords:
+            try:
+                (grob.x, grob.y), (grob.width, grob.height) = parse_coords(coords, [Point,Size])
+            except:
+                try:
+                    (grob.x, grob.y), grob.width = parse_coords(coords, [Point,float])
+                except:
+                    grob.x, grob.y = parse_coords(coords, [Point])
 
         # for any valid kwargs, assign the value to the attr of the same name
         grob.__class__.validate(kwargs)
