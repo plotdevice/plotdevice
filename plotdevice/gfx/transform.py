@@ -375,33 +375,53 @@ class Size(Pair):
 
 
 class Region(object):
-    """Represents a rectangular region combining a Point and a Size (as `origin` and `size`)"""
+    """Represents a rectangular region combining a Point and a Size (as `origin` and `size`)
+
+    Syntax:
+        Region(x, y, w, h)
+        Region(x, y, Size)
+        Region(Point, x, y)
+        Region(Point, Size)
+    """
+    opts = ('x','y','w','h','width','height')
+
     def __init__(self, *args, **kwargs):
         self._origin = Point()
         self._size = Size()
 
-        if len(args) == 4: # (x, y, w, h)
-            for k,v in zip('xywh', args):
-                setattr(self, k, v)
-        elif len(args)==3:
-            try: # (x, y, (w,h))
-                for k,v in zip(['x','y','size'], args):
-                    setattr(self, k, v)
-            except: # ((x,y), w, h)
-                for k,v in zip(['origin','w','h'], args):
-                    setattr(self, k, v)
-        elif len(args)==2: # ((x,y), (w,h)) or (Point, Size)
-            self.origin, self.size = args
-        elif len(args)==1: # (Region)
-            self.origin, self.size = args[0]
-        elif args:
-            badbox = 'Region requires a single Point and Size pair'
-            raise DeviceError(badbox)
-        else: # (**dict)
-            self.w = kwargs.get('width', kwargs.get('w', 0))
-            self.h = kwargs.get('height', kwargs.get('h', 0))
-            self.x = kwargs.get('x', 0.0)
-            self.y = kwargs.get('y', 0.0)
+        # process the positional args
+        self._parse(args)
+
+        # allow kwargs to override
+        for k,v in kwargs.items():
+            if k not in Region.opts:
+                badarg = 'Valid args for Region are %s (not %r)' % ("/".join(Region.opts), k)
+                raise DeviceError(badarg)
+            setattr(self, k[0], v)
+
+    def _parse(self, coords):
+        """Look for a Point and Size (or at least a Point and width-val) in an arg array
+
+        Any valid coordinates found in the `coords` will be merged into the object's current
+        measurements. If invalid syntax was used, raises a DeviceError"""
+
+        # return immediately if there's nothing to do or everything's prepared
+        if coords:
+            if isinstance(coords[0], (Region, NSRect)):
+                self.origin, self.size = coords[0]
+                return
+
+            # try to unpack a full rect or at least an origin from the args
+            try:
+                self.origin, self.size = parse_coords(coords, [Point,Size])
+            except Exception, e_orig:
+                try:
+                    self.origin, self.width = parse_coords(coords, [Point,float])
+                except:
+                    try:
+                        self.origin = parse_coords(coords, [Point])
+                    except:
+                        raise e_orig
 
     @trim_zeroes
     def __repr__(self):
@@ -481,6 +501,61 @@ class Region(object):
     def _set_h(self, h):
         self._size.h = h
     h = height = property(_get_h, _set_h)
+
+
+### argument destructuring madness (a.k.a. wouldn't multimethods be nice...) ###
+
+def parse_coords(coords, types):
+    """Unpacks (and validates) *args tuples representing sets of geometric or numeric types
+
+    The `types` arg should be a list of classes to be `found' in the coords list. Currently,
+    Point, Size, and float are supported. The elements of the coords list will be grouped
+    and coerced into the specified types. If the coords list can't be pattern-matched
+    precisely into the given sequence of types, an exception is raised.
+    """
+
+    # make a mutable copy we can traverse and an output list to shift into
+    stream = list(coords)
+    objs = []
+
+    def abort():
+        needed = [t.__name__ for t in types]
+        got = [o.__class__.__name__ for o in objs] + [arg.__class__.__name__ for arg in stream]
+        invalid = 'Invalid coordinates (looking for %r, got %r)' % (needed, got)
+        raise DeviceError(invalid)
+
+    # splice in a Point + Size for any Regions passed in the args
+    for i in xrange(len(stream)-1,-1,-1):
+        if isinstance(stream[i], Region):
+            stream[i:i+1] = [stream[i].origin, stream[i].size]
+
+    for cls in types:
+        # crash on insufficient args
+        if not stream:
+            abort()
+
+        # unpack the next 1 or 2 args into a Point/Size/float (or die trying)
+        try:
+            obj = cls(stream[0])
+            del stream[0]
+        except:
+            try:
+                obj = cls(stream[0], stream[1])
+                del stream[:2]
+            except:
+                abort()
+
+        objs.append(obj)
+
+    # crash on extraneous args
+    if stream:
+        abort()
+
+    # exclude the container list if only one arg is returned
+    if len(types) == 1:
+        return objs[0]
+    return objs
+
 
 ### canvas scale-factors ###
 

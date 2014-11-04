@@ -8,7 +8,7 @@ from .lib.cocoa import *
 from .util.foundry import typespec, fontspec
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike
 from .lib import geometry, pathmatics
-from .gfx.transform import Dimension
+from .gfx.transform import Dimension, parse_coords
 from .gfx import *
 from . import gfx, lib, util, Halted, DeviceError
 
@@ -216,6 +216,10 @@ class Context(object):
     def bezier(self, x=None, y=None, **kwargs):
         """Create and plot a new bezier path."""
         draw = self._should_plot(kwargs)
+        try: # accept a Point as the first arg
+            x, y = parse_coords([x], [Point])
+        except:
+            pass
 
         Bezier.validate(kwargs)
         if isinstance(x, (list, tuple, Bezier)):
@@ -254,36 +258,62 @@ class Context(object):
             # if this is a one-off primitive, draw it depending on the kwargs & state
             p.draw()
 
-    def moveto(self, x, y):
-        """Update the current point in the active path without drawing a line to it"""
+    def moveto(self, *coords):
+        """Update the current point in the active path without drawing a line to it
+
+        Syntax:
+            moveto(x, y)
+            moveto(Point)
+        """
+        (x,y) = parse_coords(coords, [Point])
         if self._path is None:
             raise DeviceError, "No active path. Use bezier() or beginpath() first."
         self._path.moveto(x,y)
 
-    def lineto(self, x, y, close=False):
+    def lineto(self, *coords, **kwargs):
         """Add a line from the current point in the active path to a destination point
-        (and optionally close the subpath)"""
+        (and optionally close the subpath)
+
+        Syntax:
+            lineto(x, y, close=False)
+            lineto(Point, close=False)
+        """
+        close = kwargs.pop('close', False)
+        (x,y) = parse_coords(coords, [Point])
         if self._path is None:
             raise DeviceError, "No active path. Use bezier() or beginpath() first."
         self._path.lineto(x, y)
         if close:
             self._path.closepath()
 
-    def curveto(self, x1, y1, x2, y2, x3, y3, close=False):
+    def curveto(self, *coords, **kwargs):
         """Draw a cubic bezier curve from the active path's current point to a destination
         point (x3,y3). The handles for the current and destination points will be set by
         (x1,y1) and (x2,y2) respectively.
 
+        Syntax:
+            curveto(x1, y1, x2, y2, x3, y3, close=False)
+            curveto(Point, Point, Point, close=False)
+
         Calling with close=True will close the subpath after adding the curve.
         """
+        close = kwargs.pop('close', False)
+        (x1,y1), (x2,y2), (x3,y3) = parse_coords(coords, [Point,Point,Point])
+
         if self._path is None:
             raise DeviceError, "No active path. Use bezier() or beginpath() first."
         self._path.curveto(x1, y1, x2, y2, x3, y3)
         if close:
             self._path.closepath()
 
-    def arcto(self, x1, y1, x2=None, y2=None, radius=None, ccw=False, close=False):
+    def arcto(self, *coords, **kwargs):
         """Draw a circular arc from the current point in the active path to a destination point
+
+        Syntax:
+            arcto(x1, y1, ccw=False, close=False)
+            arcto(Point, ...)
+            arcto(x1, y1, x2, y2, radius=None, close=False)
+            arcto(Point, Point, ...)
 
         To draw a semicircle to the destination point use one of:
             arcto(x,y)
@@ -296,6 +326,18 @@ class Context(object):
 
         Calling with close=True will close the subpath after adding the arc.
         """
+        ccw = kwargs.pop('ccw', False)
+        close = kwargs.pop('close', False)
+        radius = kwargs.pop('radius', None)
+        x2 = y2 = None
+        try:
+            (x1,y1), (x2,y2), radius = parse_coords(coords, [Point,Point,float])
+        except:
+            try:
+                (x1,y1), (x2,y2) = parse_coords(coords, [Point,Point])
+            except:
+                (x1,y1) = parse_coords(coords, [Point])
+
         if self._path is None:
             raise DeviceError, "No active path. Use bezier() or beginpath() first."
         self._path.arcto(x1, y1, x2, y2, radius, ccw)
@@ -304,8 +346,13 @@ class Context(object):
 
     ### Bezier Primitives ###
 
-    def rect(self, x, y, width, height, roundness=0.0, radius=None, **kwargs):
+    def rect(self, *coords, **kwargs):
         """Draw a rectangle with a corner of (x,y) and size of (width, height)
+
+        Syntax:
+            rect(x, y, width, height, roundness=0.0, radius=None, plot=True, **kwargs):
+            rect(Point, Size, ...)
+            rect(Region, ...)
 
         The `roundness` arg lets you control corner radii in a size-independent way.
         It can range from 0 (sharp corners) to 1.0 (maximally round) and will ensure
@@ -315,38 +362,67 @@ class Context(object):
         either a single float (specifying the corner radius in canvas units) or a
         2-tuple with the radii for the x- and y-axis respectively.
         """
+        try:
+            (x,y), (w,h), roundness = parse_coords(coords, [Point,Size,float])
+        except:
+            (x,y), (w,h) = parse_coords(coords, [Point,Size])
+            roundness = 0
+        roundness = kwargs.pop('roundness', roundness)
+        radius = kwargs.pop('radius', None)
         if roundness > 0:
-            radius = min(width,height)/2.0 * min(roundness, 1.0)
+            radius = min(w,h)/2.0 * min(roundness, 1.0)
+
         with self._active_path(kwargs) as p:
-            p.rect(x, y, width, height, radius=radius)
+            p.rect(x, y, w, h, radius=radius)
         return p
 
-    def oval(self, x, y, width, height, range=None, ccw=False, close=False, **kwargs):
+    def oval(self, *coords, **kwargs):
         """Draw an ellipse within the rectangle specified by (x,y) & (width,height)
+
+        Syntax:
+            oval(x, y, width, height, range=None, ccw=False, close=False, plot=True, **kwargs):
+            oval(Point, Size, ...)
+            oval(Region, ...)
 
         The `range` arg can be either a number of degrees (from 0°) or a 2-tuple
         with a start- and stop-angle. Only that subsection of the oval will be drawn.
         The `ccw` arg flags whether to interpret ranges in a counter-clockwise direction.
         If `close` is True, a chord will be drawn between the unconnected endpoints.
         """
+        rng = kwargs.pop('range', None)
+        ccw = kwargs.pop('ccw', False)
+        close = kwargs.pop('close', False)
+        (x,y), (w,h) = parse_coords(coords, [Point,Size])
+
         with self._active_path(kwargs) as p:
-            p.oval(x, y, width, height, range, ccw=ccw, close=close)
+            p.oval(x, y, w, h, rng, ccw, close)
         return p
     ellipse = oval
 
-    def line(self, x1, y1, x2, y2, ccw=None, **kwargs):
+    def line(self, *coords, **kwargs):
         """Draw an unconnected line segment from (x1,y1) to (x2,y2)
+
+        Syntax:
+            line(x1, y1, x2, y2, ccw=None, plot=True, **kwargs)
+            line(Point, Point, ...)
 
         Ordinarily this will be a straight line (a simple MOVETO & LINETO), but if
         the `ccw` arg is set to True or False, a semicircular arc will be drawn
         between the points in the specified direction.
         """
+        (x1,y1), (x2,y2) = parse_coords(coords, [Point,Point])
+        ccw = kwargs.pop('ccw', None)
+
         with self._active_path(kwargs) as p:
-            p.line(x1, y1, x2, y2, ccw=ccw)
+            p.line(x1, y1, x2, y2, ccw)
         return p
 
-    def poly(self, x, y, radius, sides=4, points=None, **kwargs):
+    def poly(self, *coords, **kwargs):
         """Draw a regular polygon centered at (x,y)
+
+        Syntax:
+            poly(x, y, radius, sides=4, points=None, plot=True, **kwargs)
+            poly(Point, radius, ...)
 
         The `sides` arg sets the type of polygon to draw. Regardless of the number,
         it will be oriented such that its base is horizontal.
@@ -354,20 +430,33 @@ class Context(object):
         If a `points` keyword argument is passed instead of a `sides` argument,
         a regularized star polygon will be drawn at the given coordinates & radius,
         """
+        sides = kwargs.pop('sides', 4)
+        points = kwargs.pop('points', None)
+        (x,y), radius = parse_coords(coords, [Point,float])
+
         with self._active_path(kwargs) as p:
             p.poly(x, y, radius, sides, points)
         return p
 
-    def arc(self, x, y, radius, range=None, ccw=False, close=False, **kwargs):
+    def arc(self, *coords, **kwargs):
         """Draw a full circle or partial arc centered at (x,y)
+
+        Syntax:
+            arc(x, y, radius, range=None, ccw=False, close=False, plot=True, **kwargs)
+            arc(Point, radius, ...)
 
         The `range` arg can be either a number of degrees (from 0°) or a 2-tuple
         with a start- and stop-angle.
         The `ccw` arg flags whether to interpret ranges in a counter-clockwise direction.
         If `close` is true, a pie-slice will be drawn to the origin from the ends.
         """
+        rng = kwargs.pop('range', None)
+        ccw = kwargs.pop('ccw', False)
+        close = kwargs.pop('close', False)
+        (x,y), radius = parse_coords(coords, [Point,float])
+
         with self._active_path(kwargs) as p:
-            p.arc(x, y, radius, range, ccw=ccw, close=close)
+            p.arc(x, y, radius, rng, ccw, close)
         return p
 
     def star(self, x, y, points=20, outer=100, inner=None, **kwargs):
