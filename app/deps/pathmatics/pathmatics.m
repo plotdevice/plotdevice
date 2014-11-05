@@ -721,20 +721,21 @@ coordinates(PyObject *self, PyObject *args) {
         // measure the portion of the line that's included in our char range
         NSRange glyph_range = NSIntersectionRange(line_range, full_range);
         NSRect bounds_rect = [layout boundingRectForGlyphRange:glyph_range inTextContainer:frame_ref];
+        NSRect glyph_rect = NSIntersectionRect(bounds_rect, used_rect);
         NSRange char_range = [layout characterRangeForGlyphRange:glyph_range actualGlyphRange:NULL];
-        NSFont *line_font = [[layout textStorage] attribute:@"NSFont" atIndex:char_range.location effectiveRange:NULL];
-        double baseline = [layout defaultLineHeightForFont:line_font];
+        NSPoint glyph_pt = [layout locationForGlyphAtIndex:cursor];
+        NSPoint baseline = NSOffsetRect(line_rect, glyph_pt.x, glyph_pt.y).origin;
 
         // package the measurements
         [fragments addObject:@{
             @"line": [NSValue valueWithRect:line_rect],
-            @"bounds": [NSValue valueWithRect:NSIntersectionRect(bounds_rect, used_rect)],
+            @"bounds": [NSValue valueWithRect:glyph_rect],
             // @"bounds": [NSValue valueWithRect:bounds_rect], // NB: newlines gobble the full line width
             // @"used": [NSValue valueWithRect:used_rect], // newlines ignored, but measures the entire line
             @"text": [text substringWithRange:char_range],
             @"range": [NSValue valueWithRange:char_range],
             @"frame": [NSNumber numberWithUnsignedLong:[frames indexOfObject:frame_ref]],
-            @"baseline": [NSNumber numberWithDouble:baseline]
+            @"baseline": [NSValue valueWithPoint:baseline]
         }];
         cursor += line_range.length;
     }

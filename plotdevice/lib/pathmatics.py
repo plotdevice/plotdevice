@@ -37,10 +37,11 @@ def line_fragments(frames, txt_offset, rng=None):
             "line":frame._from_px(frag['line'].rectValue()),
             # "used":frame._from_px(frag['used'].rectValue()),
             "bounds":frame._from_px(frag['bounds'].rectValue()),
-            "baseline":frame._from_px(frag['baseline']),
+            "baseline":frame._from_px(frag['baseline'].pointValue()),
             "range":(txt_range.location, txt_range.location+txt_range.length),
             "text":frag['text'],
         }
+        info['baseline'] += frame.offset + txt_offset
         info['line'].origin += frame.offset + txt_offset
         info['bounds'].origin += frame.offset + txt_offset
         lines.append(LineFragment(**info))
