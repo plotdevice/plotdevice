@@ -54,11 +54,6 @@ try:
     # Faster C versions.
     from pathmatics import fast_inverse_sqrt, angle, distance, coordinates
     isqrt = inverse_sqrt = fast_inverse_sqrt
-    # import cGeometry as geo
-    # isqrt = inverse_sqrt = geo.fast_inverse_sqrt
-    # angle = geo.angle
-    # distance = geo.distance
-    # coordinates = geo.coordinates
 except ImportError:
     from math import degrees, atan2
     from math import sqrt, pow
