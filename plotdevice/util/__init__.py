@@ -268,7 +268,7 @@ class adict(BetterRepr, dict):
 class XMLParser(object):
     _log = 0
 
-    def __init__(self, txt):
+    def __init__(self, txt, offset=0):
         # configure the parsing machinery/callbacks
         p = expat.ParserCreate()
         p.StartElementHandler = self._enter
@@ -276,10 +276,14 @@ class XMLParser(object):
         p.CharacterDataHandler = self._chars
         self._expat = p
 
+        # shift the range values in .nodes by offset (in case we're appending)
+        self._offset = offset
+
         # set up state attrs to record the parse results
         self.stack = []
         self.cursor = 0
         self.regions = ddict(list)
+        self.nodes = ddict(list)
         self.body = []
 
         try:
@@ -342,11 +346,14 @@ class XMLParser(object):
 
     def _enter(self, name, attrs):
         self.stack.append(name)
+        self.nodes[name].append( [attrs, tuple(reversed(self.stack[1:-1])), self.cursor+self._offset] )
         self.log(u'<%s>'%(name), indent=1)
 
     def _leave(self, name):
+        self.nodes[name][-1].append(self.cursor+self._offset)
         if name == INTERNAL:
             self.body = u"".join(self.body)
+            del self.nodes[INTERNAL]
         self.stack.pop()
         self.log(u'</%s>'%(name), indent=-1)
 
