@@ -405,12 +405,20 @@ class Context(object):
         Syntax:
             line(x1, y1, x2, y2, ccw=None, plot=True, **kwargs)
             line(Point, Point, ...)
+            line(x1, y1, dx=0, dy=0, ccw=None, plot=True, **kwargs)
+            line(Point, dx=0, dy=0, ...)
 
         Ordinarily this will be a straight line (a simple MOVETO & LINETO), but if
         the `ccw` arg is set to True or False, a semicircular arc will be drawn
         between the points in the specified direction.
         """
-        (x1,y1), (x2,y2) = parse_coords(coords, [Point,Point])
+        dx, dy = kwargs.pop('dx',None), kwargs.pop('dy', None)
+        if any(map(numlike, [dx, dy])):
+            start = parse_coords(coords, [Point])
+            end = start + (dx or 0, dy or 0)
+            (x1,y1), (x2,y2) = start, end
+        else:
+            (x1,y1), (x2,y2) = parse_coords(coords, [Point,Point])
         ccw = kwargs.pop('ccw', None)
 
         with self._active_path(kwargs) as p:
