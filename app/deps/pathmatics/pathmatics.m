@@ -707,8 +707,7 @@ coordinates(PyObject *self, PyObject *args) {
     NSMutableArray *fragments = [NSMutableArray array];
 
     NSUInteger cursor = full_range.location;
-    NSUInteger last = NSMaxRange(full_range);
-    while(cursor<last){
+    while(cursor<NSMaxRange(full_range)){
         // bail out if we've reached text that overflows the available containers
         NSTextContainer *frame_ref = [layout textContainerForGlyphAtIndex:cursor effectiveRange:NULL];
         if (!frame_ref) break;
