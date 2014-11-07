@@ -32,20 +32,6 @@ _TEXT=dict(
     justify = NSJustifiedTextAlignment
 )
 
-# utility method for filtering through the font library
-def families(like=None, western=True):
-    all_fams = family_names()
-    if like:
-        all_fams = [name for name in all_fams if sanitized(like) in sanitized(name)]
-
-    representatives = {fam:family_members(fam, names=True)[0] for fam in all_fams}
-    in_region = {fam:font_encoding(fnt)=="MacOSRoman" for fam,fnt in representatives.items()}
-    if not western:
-        in_region = {fam:not macroman for fam,macroman in in_region.items()}
-
-    # return [Family(fam) for fam in all_fams if in_region[fam]]
-    return [fam for fam in all_fams if in_region[fam]]
-
 class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     # from TransformMixin: transform transformmode translate() rotate() scale() skew() reset()
     # from EffectsMixin:   alpha blend shadow

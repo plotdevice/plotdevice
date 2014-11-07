@@ -5,7 +5,7 @@ from collections import namedtuple
 from os.path import exists, expanduser
 
 from .lib.cocoa import *
-from .lib.foundry import typespec
+from .lib.foundry import typespec, families
 from .lib import pathmatics
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike
 from .gfx.geometry import Dimension, parse_coords
@@ -1028,7 +1028,7 @@ class Context(object):
         If `western` is True (the default), fonts with non-western character sets will be omitted.
         If False, only non-western fonts will be returned.
         """
-        return gfx.typography.families(like, western)
+        return families(like, western)
 
     def fontsize(self, fontsize=None):
         """Legacy command. Equivalent to: font(size=fontsize)"""
