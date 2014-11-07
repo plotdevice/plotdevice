@@ -779,6 +779,24 @@ class Font(object):
     def siblings(self):
         return Family(self.family).fonts
 
+    ### line metrics ###
+
+    @property
+    def ascender(self):
+        return self._nsFont.ascender()
+
+    @property
+    def descender(self):
+        return self._nsFont.descender()
+
+    @property
+    def xheight(self):
+        return self._nsFont.xHeight()
+
+    @property
+    def capheight(self):
+        return self._nsFont.capHeight()
+
     ### internals ###
 
     @property
