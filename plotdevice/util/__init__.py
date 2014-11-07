@@ -352,8 +352,11 @@ class XMLParser(object):
     def _leave(self, name):
         self.nodes[name][-1].append(self.cursor+self._offset)
         if name == INTERNAL:
+            # now that we're done parsing, clean up the attrs for the caller to inspect
             self.body = u"".join(self.body)
             del self.nodes[INTERNAL]
+            for tag, elts in self.nodes.items():
+                self.nodes[tag] = [e+[self.body[slice(*e[-2:])]] for e in elts]
         self.stack.pop()
         self.log(u'</%s>'%(name), indent=-1)
 

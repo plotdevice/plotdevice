@@ -50,7 +50,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     # from EffectsMixin:   alpha blend shadow
     # from BoundsMixin:    x y width height
     # from StyleMixin:     stylesheet fill _parse_style()
-    stateAttrs = ('_frameset',)
+    stateAttrs = ('_frameset', '_nodes')
     opts = ('str', 'xml', 'src')
 
     def __init__(self, *args, **kwargs):
@@ -64,6 +64,9 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
         # create a text frame to manage layout and glyph-drawing
         self._frameset = FrameSetter(self._style['align'], (self.w, self.h))
+
+        # maintain a lookup table of nodes within xml input
+        self._nodes = {}
 
         # look for a string as the first positional arg or an xml/str kwarg
         if args and isinstance(args[0], basestring):
@@ -145,7 +148,10 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
                         attrib_txt.setAttributes_range_(style, rng)
 
                 # update our internal lookup table of nodes
-                self._frameset.add_nodes(parser.nodes)
+                for tag, elts in parser.nodes.items():
+                    elts = [TextElement(tag, *e) for e in elts]
+                    self._nodes[tag] = ordered(self._nodes.get(tag, []) + elts, 'start', reverse=True)
+
             else:
                 # don't parse as xml, just apply the current font(), align(), and fill()
                 attrs = _cascade(merged_style)
@@ -324,7 +330,6 @@ class FrameSetter(object):
         self._main = TextFrame()
         self._main.size = frame_size
         self._overflow = []
-        self._nodes = {}
 
     def __getitem__(self, index):
         return ([self._main]+self._overflow)[index]
@@ -342,7 +347,6 @@ class FrameSetter(object):
 
     def copy(self):
         clone = FrameSetter(self._align)
-        clone._nodes = {k:list(v) for k,v in self._nodes.items()}
         clone._main.store.beginEditing()
         clone._main.store.appendAttributedString_(self._main.store)
         clone._main.store.endEditing()
@@ -355,11 +359,6 @@ class FrameSetter(object):
         self._main.store.beginEditing()
         self._main.store.appendAttributedString_(attrib_str)
         self._main.store.endEditing()
-
-    def add_nodes(self, nodes):
-        for tag, elts in nodes.items():
-            elts = [TextElement(tag, *e, txt=self._main.store.string()) for e in elts]
-            self._nodes[tag] = self._nodes.get(tag, []) + elts
 
     def resize(self, dims):
         # start with the max w/h passed by the Text object
@@ -384,9 +383,6 @@ class FrameSetter(object):
                 frame.width = min_w
             if not dims.h:
                 frame.height = min_h
-
-    def tag(self, name):
-        return ordered(self._nodes.get(name, []), 'range', reverse=True)
 
     @property
     def reflow(self):
