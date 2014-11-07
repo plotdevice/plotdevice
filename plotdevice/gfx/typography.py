@@ -476,9 +476,7 @@ class FrameSetter(object):
         main = self._main
         if not main.store.length():
             return 0
-        txtFont, _ = main.store.attribute_atIndex_effectiveRange_("NSFont", main._glyphs.location, None)
-        return main._from_px(main.layout.defaultLineHeightForFont_(txtFont))
-
+        return main._from_px(main.layout.locationForGlyphAtIndex_(0).y)
 
 class TextFrame(object):
     def __init__(self):
