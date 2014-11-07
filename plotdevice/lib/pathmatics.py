@@ -21,7 +21,7 @@ def trace_text(frame):
     nspath = Pathmatician.traceGlyphs_atOffset_withLayout_(frame._glyphs, offset, frame.layout)
     return frame._from_px(nspath)
 
-LineFragment = namedtuple("LineFragment", ["bounds", "line", "baseline", "range", "text"])
+LineFragment = namedtuple("LineFragment", ["bounds", "line", "baseline", "span", "text"])
 def line_fragments(frames, txt_offset, rng=None):
     """Returns a list of dictionaries describing the line fragments in the entire Text object
     or a sub-range of it based on character indices"""
@@ -35,10 +35,9 @@ def line_fragments(frames, txt_offset, rng=None):
         txt_range = frag['range'].rangeValue()
         info = {
             "line":frame._from_px(frag['line'].rectValue()),
-            # "used":frame._from_px(frag['used'].rectValue()),
             "bounds":frame._from_px(frag['bounds'].rectValue()),
             "baseline":frame._from_px(frag['baseline'].pointValue()),
-            "range":(txt_range.location, txt_range.location+txt_range.length),
+            "span":(txt_range.location, txt_range.location+txt_range.length),
             "text":frag['text'],
         }
         info['baseline'] += frame.offset + txt_offset

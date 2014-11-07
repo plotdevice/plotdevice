@@ -1,6 +1,7 @@
 # encoding: utf-8
 import re
 import sys
+from collections import namedtuple
 from operator import itemgetter, attrgetter
 from plotdevice.util import odict, ddict
 from ..lib.cocoa import *
@@ -193,6 +194,34 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     def lines(self):
         return list(LineSetter(self))
 
+    def _seek(self, stream, limit):
+        found = []
+        for m in stream:
+            match = TextMatch(m)
+            fragments = self.glyphs[match.start:match.end]
+            if not fragments and limit is not all:
+                break
+            match.layout = fragments
+            found.append(match)
+            if len(found) == limit:
+                break
+        return found
+
+    def find(self, regex, matches=0):
+        if isinstance(regex, str):
+            regex = regex.decode('utf-8')
+        if isinstance(regex, basestring):
+            regex = re.compile(regex, re.S)
+        if not hasattr(regex, 'pattern'):
+            nonregex = "Text.find() must be called with an re.compile'd pattern object or a regular expression string"
+            raise DeviceError(nonregex)
+        return self._seek(regex.finditer(self.text), matches)
+
+    def select(self, tag_name, matches=0):
+        if isinstance(tag_name, str):
+            tag_name = tag_name.decode('utf-8')
+        return self._seek(self._nodes.get(tag_name, []), matches)
+
     def flow(self, layout=None):
         """Add as many text frames as necessary to fully lay out the string
 
@@ -295,6 +324,36 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         path._fulcrum = Point(dx + self.x + w/2.0,
                               dy + self.y - baseline + h/2.0 )
         return trans.apply(path)
+
+TextElement = namedtuple('TextElement', ['tag', 'attrs', 'parents', 'start', 'end', 'text'])
+
+class TextMatch(object):
+    def __init__(self, match):
+        self.layout = []
+        if isinstance(match, TextElement):
+            for k,v in zip(['tag', 'attrs', 'parents', 'start', 'end', 'text'], match):
+                setattr(self, k, v)
+        else:
+            self.tag, self.attrs, self.parents = None, {}, ()
+            self.start, self.end = match.span()
+            self.text = match.group()
+            self.m = match
+
+        def span(self):
+            return (self.start, self.end)
+
+    def __repr__(self):
+        lines, chars = map(len, [self.layout, self.text])
+        try:
+            pat = self.m.re.pattern
+            if len(pat)>18:
+                pat = "%s..."%(pat[:15])
+            tag = "r'%s'"%pat
+        except:
+            tag = "<%s>"%self.tag
+            if self.attrs:
+                tag = "%s, attrs=%i"%(tag, len(self.attrs))
+        return 'TextMatch(%s, lines=%i, characters=%i)' % (tag, lines, chars)
 
 class LineSetter(object):
     def __init__(self, text_obj):
