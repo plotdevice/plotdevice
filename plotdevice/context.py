@@ -833,7 +833,7 @@ class Context(object):
         # validate the line-dash stepsize (if any)
         if numlike(spec.get('dash',None)):
             spec['dash'] = [spec['dash']]
-        if len(spec.get('dash',[])) % 2:
+        if len(spec.get('dash') or []) % 2:
             spec['dash'] += spec['dash'][-1:] # assume even spacing for omitted skip sizes
 
         # pull relevant kwargs into a PenStyle tuple (but pass other args as-is)
