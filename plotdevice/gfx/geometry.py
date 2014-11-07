@@ -32,200 +32,6 @@ PERCENT = "percent"
 pi = math.pi
 tau = 2*pi
 
-### NSAffineTransform wrapper used for positioning Grobs in a Context ###
-
-class Transform(object):
-
-    def __init__(self, transform=None):
-        if transform is None:
-            transform = NSAffineTransform.transform()
-        elif isinstance(transform, Transform):
-            transform = transform._nsAffineTransform.copy()
-        elif isinstance(transform, NSAffineTransform):
-            transform = transform.copy()
-        elif isinstance(transform, (list, tuple, NSAffineTransformStruct)):
-            struct = tuple(transform)
-            transform = NSAffineTransform.transform()
-            transform.setTransformStruct_(struct)
-        else:
-            wrongtype = "Don't know how to handle transform %s." % transform
-            raise DeviceError(wrongtype)
-        self._nsAffineTransform = transform
-
-    def __enter__(self):
-        # Transform objects get _rollback attrs when they're derived from the graphics
-        # context's current transform via a state-mutation command. In these cases
-        # the global state has already been changed before the context manager was
-        # invoked, so don't re-apply it again here.
-        if not hasattr(self, '_rollback'):
-            _ctx._transform.prepend(self)
-
-    def __exit__(self, type, value, tb):
-        # once we've been through a block the _rollback (if any) can be discarded
-        if hasattr(self, '_rollback'):
-            # _rollback is a dict containing _transform and/or _transformmode.
-            # in these cases do a direct overwrite then bail out rather than
-            # applying the inverse transform
-            for attr, priorval in self._rollback.items():
-                setattr(_ctx, attr, priorval)
-            del self._rollback
-            return
-        else:
-            # invert our changes to restore the context's transform
-            _ctx._transform.prepend(self.inverse)
-
-    @trim_zeroes
-    def __repr__(self):
-        return "%s([%.3f, %.3f, %.3f, %.3f, %.3f, %.3f])" % ((self.__class__.__name__,)
-                 + tuple(self))
-
-    def __iter__(self):
-        for value in self._nsAffineTransform.transformStruct():
-            yield value
-
-    def copy(self):
-        return self.__class__(self)
-
-    def _get_matrix(self):
-        return self._nsAffineTransform.transformStruct()
-    def _set_matrix(self, value):
-        self._nsAffineTransform.setTransformStruct_(value)
-    matrix = property(_get_matrix, _set_matrix)
-
-    @property
-    def inverse(self):
-        inv = self.copy()
-        inv._nsAffineTransform.invert()
-        return inv
-
-    def rotate(self, arg=None, **opt):
-        """Prepend a rotation transform to the receiver
-
-        The angle should be specified through a keyword argument defining its range. e.g.,
-            t.rotate(degrees=180)
-            t.rotate(radians=pi)
-            t.rotate(percent=0.5)
-
-        If called with a positional arg, the angle will be interpreted as degrees unless a
-        prior call to geometry() changed the units.
-        """
-
-        # check the kwargs for unit-specific settings
-        units = {k:v for k,v in opt.items() if k in ['degrees', 'radians', 'percent']}
-        if len(units) > 1:
-            badunits = 'rotate: specify one rotation at a time (got %s)' % " & ".join(units.keys())
-            raise DeviceError(badunits)
-
-        # if nothing in the kwargs, use the current mode and take the quantity from the first arg
-        if not units:
-            units[_ctx._thetamode] = arg or 0
-
-        # add rotation to the graphics state
-        degrees = units.get('degrees', 0)
-        radians = units.get('radians', 0)
-        if 'percent' in units:
-            degrees, radians = 0, tau*units['percent']
-
-        xf = Transform()
-        if degrees:
-            xf._nsAffineTransform.rotateByDegrees_(-degrees)
-        else:
-            xf._nsAffineTransform.rotateByRadians_(-radians)
-        if opt.get('rollback'):
-            xf._rollback = {"_transform":self.copy()}
-        self.prepend(xf)
-        return xf
-
-    def translate(self, x=0, y=0, **opt):
-        xf = Transform()
-        xf._nsAffineTransform.translateXBy_yBy_(x, y)
-        if opt.get('rollback'):
-            xf._rollback = {"_transform":self.copy()}
-        self.prepend(xf)
-        return xf
-
-    def scale(self, x=1, y=None, **opt):
-        if y is None:
-            y = x
-        xf = Transform()
-        xf._nsAffineTransform.scaleXBy_yBy_(x, y)
-        if opt.get('rollback'):
-            xf._rollback = {"_transform":self.copy()}
-        self.prepend(xf)
-        return xf
-
-    def skew(self, x=0, y=0, **opt):
-        x,y = map(_ctx._angle, [x,y]) # convert from canvas units to radians
-        xf = Transform()
-        xf.matrix = (1, math.tan(y), -math.tan(x), 1, 0, 0)
-        if opt.get('rollback'):
-            xf._rollback = {"_transform":self.copy()}
-        self.prepend(xf)
-        return xf
-
-    def set(self):
-        self._nsAffineTransform.set()
-
-    def concat(self):
-        self._nsAffineTransform.concat()
-
-    def append(self, other):
-        if isinstance(other, Transform):
-            other = other._nsAffineTransform
-        self._nsAffineTransform.appendTransform_(other)
-
-    def prepend(self, other):
-        if isinstance(other, Transform):
-            other = other._nsAffineTransform
-        self._nsAffineTransform.prependTransform_(other)
-
-    def apply(self, obj):
-        from .bezier import Bezier
-        if isinstance(obj, (Bezier, NSBezierPath)):
-            return self.transformBezier(obj)
-        elif isinstance(obj, (Point, NSPoint)):
-            return self.transformPoint(obj)
-        elif isinstance(obj, (Size, NSSize)):
-            return self.transformSize(obj)
-        elif isinstance(obj, (Region, NSRect)):
-            return self.transformRegion(obj)
-        else:
-            wrongtype = "Can only transform Beziers, Points, Sizes, and Regions"
-            raise DeviceError(wrongtype)
-
-    def transformPoint(self, point):
-        return Point(self._nsAffineTransform.transformPoint_(tuple(point)))
-
-    def transformSize(self, size):
-        return Size(self._nsAffineTransform.transformSize_(tuple(size)))
-
-    def transformRegion(self, rect):
-        origin = self.transformPoint(rect.origin)
-        size = self.transformSize(rect.size)
-        return Region(origin, size)
-
-    def transformBezier(self, path):
-        if isinstance(path, NSBezierPath):
-            return self._nsAffineTransform.transformBezierPath_(path)
-
-        from .bezier import Bezier
-        if isinstance(path, Bezier):
-            path = path.copy()
-        else:
-            wrongtype = "Can only transform Beziers"
-            raise DeviceError(wrongtype)
-        path._nsBezierPath = self._nsAffineTransform.transformBezierPath_(path._nsBezierPath)
-        return path
-
-    def transformBezierPath(self, path):
-        return self.transformBezier(path)
-
-    @property
-    def transform(self):
-        warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", DeprecationWarning, stacklevel=2)
-        return self._nsAffineTransform
-
-
 ### tuple-like objects for grid dimensions ###
 
 class Pair(object):
@@ -632,4 +438,197 @@ class Unit(MagicNumber):
 # create a module-level variable for each of the standard units
 globals().update({u:Unit(u) for u in Unit._dpx})
 
+
+### NSAffineTransform wrapper used for positioning Grobs in a Context ###
+
+class Transform(object):
+
+    def __init__(self, transform=None):
+        if transform is None:
+            transform = NSAffineTransform.transform()
+        elif isinstance(transform, Transform):
+            transform = transform._nsAffineTransform.copy()
+        elif isinstance(transform, NSAffineTransform):
+            transform = transform.copy()
+        elif isinstance(transform, (list, tuple, NSAffineTransformStruct)):
+            struct = tuple(transform)
+            transform = NSAffineTransform.transform()
+            transform.setTransformStruct_(struct)
+        else:
+            wrongtype = "Don't know how to handle transform %s." % transform
+            raise DeviceError(wrongtype)
+        self._nsAffineTransform = transform
+
+    def __enter__(self):
+        # Transform objects get _rollback attrs when they're derived from the graphics
+        # context's current transform via a state-mutation command. In these cases
+        # the global state has already been changed before the context manager was
+        # invoked, so don't re-apply it again here.
+        if not hasattr(self, '_rollback'):
+            _ctx._transform.prepend(self)
+
+    def __exit__(self, type, value, tb):
+        # once we've been through a block the _rollback (if any) can be discarded
+        if hasattr(self, '_rollback'):
+            # _rollback is a dict containing _transform and/or _transformmode.
+            # in these cases do a direct overwrite then bail out rather than
+            # applying the inverse transform
+            for attr, priorval in self._rollback.items():
+                setattr(_ctx, attr, priorval)
+            del self._rollback
+            return
+        else:
+            # invert our changes to restore the context's transform
+            _ctx._transform.prepend(self.inverse)
+
+    @trim_zeroes
+    def __repr__(self):
+        return "%s([%.3f, %.3f, %.3f, %.3f, %.3f, %.3f])" % ((self.__class__.__name__,)
+                 + tuple(self))
+
+    def __iter__(self):
+        for value in self._nsAffineTransform.transformStruct():
+            yield value
+
+    def copy(self):
+        return self.__class__(self)
+
+    def _get_matrix(self):
+        return self._nsAffineTransform.transformStruct()
+    def _set_matrix(self, value):
+        self._nsAffineTransform.setTransformStruct_(value)
+    matrix = property(_get_matrix, _set_matrix)
+
+    @property
+    def inverse(self):
+        inv = self.copy()
+        inv._nsAffineTransform.invert()
+        return inv
+
+    def rotate(self, arg=None, **opt):
+        """Prepend a rotation transform to the receiver
+
+        The angle should be specified through a keyword argument defining its range. e.g.,
+            t.rotate(degrees=180)
+            t.rotate(radians=pi)
+            t.rotate(percent=0.5)
+
+        If called with a positional arg, the angle will be interpreted as degrees unless a
+        prior call to geometry() changed the units.
+        """
+
+        # check the kwargs for unit-specific settings
+        units = {k:v for k,v in opt.items() if k in ['degrees', 'radians', 'percent']}
+        if len(units) > 1:
+            badunits = 'rotate: specify one rotation at a time (got %s)' % " & ".join(units.keys())
+            raise DeviceError(badunits)
+
+        # if nothing in the kwargs, use the current mode and take the quantity from the first arg
+        if not units:
+            units[_ctx._thetamode] = arg or 0
+
+        # add rotation to the graphics state
+        degrees = units.get('degrees', 0)
+        radians = units.get('radians', 0)
+        if 'percent' in units:
+            degrees, radians = 0, tau*units['percent']
+
+        xf = Transform()
+        if degrees:
+            xf._nsAffineTransform.rotateByDegrees_(-degrees)
+        else:
+            xf._nsAffineTransform.rotateByRadians_(-radians)
+        if opt.get('rollback'):
+            xf._rollback = {"_transform":self.copy()}
+        self.prepend(xf)
+        return xf
+
+    def translate(self, x=0, y=0, **opt):
+        xf = Transform()
+        xf._nsAffineTransform.translateXBy_yBy_(x, y)
+        if opt.get('rollback'):
+            xf._rollback = {"_transform":self.copy()}
+        self.prepend(xf)
+        return xf
+
+    def scale(self, x=1, y=None, **opt):
+        if y is None:
+            y = x
+        xf = Transform()
+        xf._nsAffineTransform.scaleXBy_yBy_(x, y)
+        if opt.get('rollback'):
+            xf._rollback = {"_transform":self.copy()}
+        self.prepend(xf)
+        return xf
+
+    def skew(self, x=0, y=0, **opt):
+        x,y = map(_ctx._angle, [x,y]) # convert from canvas units to radians
+        xf = Transform()
+        xf.matrix = (1, math.tan(y), -math.tan(x), 1, 0, 0)
+        if opt.get('rollback'):
+            xf._rollback = {"_transform":self.copy()}
+        self.prepend(xf)
+        return xf
+
+    def set(self):
+        self._nsAffineTransform.set()
+
+    def concat(self):
+        self._nsAffineTransform.concat()
+
+    def append(self, other):
+        if isinstance(other, Transform):
+            other = other._nsAffineTransform
+        self._nsAffineTransform.appendTransform_(other)
+
+    def prepend(self, other):
+        if isinstance(other, Transform):
+            other = other._nsAffineTransform
+        self._nsAffineTransform.prependTransform_(other)
+
+    def apply(self, obj):
+        from .bezier import Bezier
+        if isinstance(obj, (Bezier, NSBezierPath)):
+            return self.transformBezier(obj)
+        elif isinstance(obj, (Point, NSPoint)):
+            return self.transformPoint(obj)
+        elif isinstance(obj, (Size, NSSize)):
+            return self.transformSize(obj)
+        elif isinstance(obj, (Region, NSRect)):
+            return self.transformRegion(obj)
+        else:
+            wrongtype = "Can only transform Beziers, Points, Sizes, and Regions"
+            raise DeviceError(wrongtype)
+
+    def transformPoint(self, point):
+        return Point(self._nsAffineTransform.transformPoint_(tuple(point)))
+
+    def transformSize(self, size):
+        return Size(self._nsAffineTransform.transformSize_(tuple(size)))
+
+    def transformRegion(self, rect):
+        origin = self.transformPoint(rect.origin)
+        size = self.transformSize(rect.size)
+        return Region(origin, size)
+
+    def transformBezier(self, path):
+        if isinstance(path, NSBezierPath):
+            return self._nsAffineTransform.transformBezierPath_(path)
+
+        from .bezier import Bezier
+        if isinstance(path, Bezier):
+            path = path.copy()
+        else:
+            wrongtype = "Can only transform Beziers"
+            raise DeviceError(wrongtype)
+        path._nsBezierPath = self._nsAffineTransform.transformBezierPath_(path._nsBezierPath)
+        return path
+
+    def transformBezierPath(self, path):
+        return self.transformBezier(path)
+
+    @property
+    def transform(self):
+        warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", DeprecationWarning, stacklevel=2)
+        return self._nsAffineTransform
 
