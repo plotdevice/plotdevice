@@ -40,6 +40,8 @@ def paired(func):
             return self.__class__(func(self))
         if numlike(other):
             other = self.__class__(other, other)
+        else:
+            other = self.__class__(other)
         return self.__class__(func(self, other))
     return to_pair
 
