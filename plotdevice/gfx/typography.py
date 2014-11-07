@@ -11,7 +11,7 @@ from . import _save, _restore, _ns_context
 from .geometry import Transform, Region, Size, Point
 from .colors import Color
 from .bezier import Bezier
-from ..util import _copy_attrs, numlike, XMLParser, read
+from ..util import _copy_attrs, numlike, ordered, XMLParser, read
 from ..lib.foundry import *
 from ..lib import pathmatics
 
@@ -113,7 +113,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
                 attrib_txt = decoded
 
         if txt and not attrib_txt:
-            # convert numerical `str` args to strings
+            # convert non-textual `str` args to strings
             if not isinstance(txt, basestring) and not is_xml:
                 txt = repr(txt)
 
@@ -124,7 +124,32 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             # use the inherited baseline style but allow one-off overrides from kwargs
             merged_style = dict(self._style)
             merged_style.update(self._parse_style(**kwargs))
-            attrib_txt = self.stylesheet._apply(decoded, merged_style, is_xml)
+
+            # if the text is xml, parse it an overlay any stylesheet entries that map to
+            # its tag names. otherwise apply the merged style to the entire string
+            _cascade = self.stylesheet._cascade
+            if is_xml:
+                # find any tagged regions that need styling
+                parser = XMLParser(decoded, offset=len(unicode(self._frameset)))
+
+                # start building the display-string (with all the tags now removed)
+                attrib_txt = NSMutableAttributedString.alloc().initWithString_(parser.text)
+
+                # generate the proper `ns' font attrs for each unique cascade of xml tags
+                attrs = {seq:_cascade(merged_style, *seq) for seq in sorted(parser.regions)}
+
+                # apply the attributes to the runs found by the parser
+                for cascade, runs in parser.regions.items():
+                    style = attrs[cascade]
+                    for rng in runs:
+                        attrib_txt.setAttributes_range_(style, rng)
+
+                # update our internal lookup table of nodes
+                self._frameset.add_nodes(parser.nodes)
+            else:
+                # don't parse as xml, just apply the current font(), align(), and fill()
+                attrs = _cascade(merged_style)
+                attrib_txt = NSAttributedString.alloc().initWithString_attributes_(decoded, attrs)
 
         if attrib_txt:
             # only bother the typesetter if there's text to display
@@ -299,6 +324,7 @@ class FrameSetter(object):
         self._main = TextFrame()
         self._main.size = frame_size
         self._overflow = []
+        self._nodes = {}
 
     def __getitem__(self, index):
         return ([self._main]+self._overflow)[index]
@@ -316,6 +342,7 @@ class FrameSetter(object):
 
     def copy(self):
         clone = FrameSetter(self._align)
+        clone._nodes = {k:list(v) for k,v in self._nodes.items()}
         clone._main.store.beginEditing()
         clone._main.store.appendAttributedString_(self._main.store)
         clone._main.store.endEditing()
@@ -328,6 +355,11 @@ class FrameSetter(object):
         self._main.store.beginEditing()
         self._main.store.appendAttributedString_(attrib_str)
         self._main.store.endEditing()
+
+    def add_nodes(self, nodes):
+        for tag, elts in nodes.items():
+            elts = [TextElement(tag, *e, txt=self._main.store.string()) for e in elts]
+            self._nodes[tag] = self._nodes.get(tag, []) + elts
 
     def resize(self, dims):
         # start with the max w/h passed by the Text object
@@ -352,6 +384,9 @@ class FrameSetter(object):
                 frame.width = min_w
             if not dims.h:
                 frame.height = min_h
+
+    def tag(self, name):
+        return ordered(self._nodes.get(name, []), 'range', reverse=True)
 
     @property
     def reflow(self):
@@ -559,31 +594,6 @@ class Stylesheet(object):
                 spec['fill'] = color
             self._styles[name] = spec
         return self[name]
-
-    def _apply(self, words, defaults, is_xml=False):
-        """Convert a string to an attributed string, either based on inline tags or the `style` arg"""
-
-        if is_xml:
-            # find any tagged regions that need styling
-            parser = XMLParser(words)
-
-            # start building the display-string (with all the tags now removed)
-            astr = NSMutableAttributedString.alloc().initWithString_(parser.text)
-
-            # generate the proper `ns' font attrs for each unique cascade of xml tags
-            attrs = {seq:self._cascade(defaults, *seq) for seq in sorted(parser.regions)}
-
-            # apply the attributes to the runs found by the parser
-            for cascade, runs in parser.regions.items():
-                style = attrs[cascade]
-                for rng in runs:
-                    astr.setAttributes_range_(style, rng)
-        else:
-            # don't parse as xml, just apply the current font(), align(), and fill()
-            attrs = self._cascade(defaults)
-            astr = NSMutableAttributedString.alloc().initWithString_attributes_(words, attrs)
-
-        return astr
 
     def _cascade(self, defaults, *styles):
         """Apply the listed styles in order and return nsattibutedstring attrs"""
