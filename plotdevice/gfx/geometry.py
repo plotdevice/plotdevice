@@ -34,6 +34,15 @@ tau = 2*pi
 
 ### tuple-like objects for grid dimensions ###
 
+def paired(func):
+    def to_pair(self, other=None):
+        if other is None:
+            return self.__class__(func(self))
+        if numlike(other):
+            other = self.__class__(other, other)
+        return self.__class__(func(self, other))
+    return to_pair
+
 class Pair(object):
     """Base class for Point & Size objects (with basic arithmetic support)"""
     def __init__(self, *vals, **kwargs):
@@ -70,29 +79,40 @@ class Pair(object):
         return iter([getattr(self, attr) for attr in self._coords])
 
     def __eq__(self, other):
-        if other is None: return False
-        return all(a==b for a,b in zip(self, other))
+        try:
+            return all(a==b for a,b in zip(self, other))
+        except:
+            return False
+
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __abs__(self):
-        return self.__class__(map(abs, self))
-    def __pos__(self):
-        return self.__class__(self)
-    def __neg__(self):
-        return self.__class__(map(neg, self))
-
-    def __add__(self, other):
-        other = self.__class__(other)
-        return self.__class__(map(sum, zip(self, other)))
-    def __radd__(self, other):
-        return self.__add__(other)
-    def __sub__(self, other):
-        other = self.__class__(other)
-        return self.__class__(map(sum, zip(self, -other)))
-    def __rsub__(self, other):
-        other = self.__class__(other)
-        return self.__class__(map(sum, zip(other, -self)))
+    @paired
+    def __abs__(self): return map(abs, self)
+    @paired
+    def __pos__(self): return self
+    @paired
+    def __neg__(self): return map(neg, self)
+    @paired
+    def __add__(self, other):  return map(sum, zip(self, other))
+    @paired
+    def __radd__(self, other): return map(sum, zip(self, other))
+    @paired
+    def __sub__(self, other):  return map(sum, zip(self, -other))
+    @paired
+    def __rsub__(self, other): return map(sum, zip(other, -self))
+    @paired
+    def __mul__(self, other):  return [a * b for a,b in zip(self, other)]
+    @paired
+    def __rmul__(self, other): return [b * a for a,b in zip(self, other)]
+    @paired
+    def __div__(self, other):  return [a / b for a,b in zip(self, other)]
+    @paired
+    def __rdiv__(self, other): return [b / a for a,b in zip(self, other)]
+    @paired
+    def __floordiv__(self, other): return [a // b for a,b in zip(self, other)]
+    @paired
+    def __rfloordiv__(self, other): return [b // a for a,b in zip(self, other)]
 
     def copy(self):
         return self.__class__(self)
