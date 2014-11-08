@@ -280,7 +280,7 @@ class Shadow(object):
 
 class Stencil(Frob):
     def __init__(self, stencil, invert=False, channel=None):
-        from .typography import Text
+        from .text import Text
         from .bezier import Bezier
         from .image import Image
         if isinstance(stencil, Text):
