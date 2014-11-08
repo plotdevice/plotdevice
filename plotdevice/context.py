@@ -5,7 +5,6 @@ from collections import namedtuple
 from os.path import exists, expanduser
 
 from .lib.cocoa import *
-from .lib.foundry import families
 from .lib import pathmatics
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike
 from .gfx.geometry import Dimension, parse_coords
@@ -1017,16 +1016,6 @@ class Context(object):
         newfont._rollback = self._font
         self._font = newfont
         return newfont
-
-    def fonts(self, like=None, western=True):
-        """Returns a list of all fonts installed on the system (with filtering capabilities)
-
-        If `like` is a string, only fonts whose names contain those characters will be returned.
-
-        If `western` is True (the default), fonts with non-western character sets will be omitted.
-        If False, only non-western fonts will be returned.
-        """
-        return families(like, western)
 
     def fontsize(self, fontsize=None):
         """Legacy command. Equivalent to: font(size=fontsize)"""

@@ -37,8 +37,8 @@ def _cg_port():
 ### submodule init ###
 
 # pool the submodules' __all__ namespaces into our own
-from . import atoms, effects, colors, typography, bezier, image, geometry
-modules = atoms, effects, colors, typography, bezier, image, geometry
+from . import atoms, effects, colors, text, typography, bezier, image, geometry
+modules = atoms, effects, colors, text, typography, bezier, image, geometry
 ns = {}
 for module in modules:
   ns.update( (a,getattr(module,a)) for a in module.__all__  )
