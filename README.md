@@ -92,10 +92,11 @@ it can be used to run scripts in a window or export graphics to file using one o
 supported image/video formats.
 
 #### Command line usage
-
-    plotdevice [-f] [-b] [--live] [--cmyk] [--virtualenv PATH] [--args [a [b ...]]]
-               [--export FILE] [--frames N or M-N] [--fps N] [--rate N] [--loop [N]]
-               file
+```
+plotdevice [-f] [-b] [--live] [--cmyk] [--virtualenv PATH] [--args [a [b ...]]]
+           [--export FILE] [--frames N or M-N] [--fps N] [--rate N] [--loop [N]]
+           file
+```
 
 > ##### Runtime arguments
 > `-f`                  run full-screen  
@@ -119,7 +120,7 @@ supported image/video formats.
 
 #### Usage examples
 
-```sh
+```bash
 # Run a script
 plotdevice script.pv
 
@@ -162,7 +163,7 @@ The easiest way to use third-party modules from a PlotDevice script is to create
 You can then launch your script with the `--virtualenv` option to add them to
 the import path:
 
-```sh
+```bash
 $ virtualenv env
 $ source ./env/bin/activate
 (env)$ pip install redis
@@ -174,7 +175,7 @@ of installing it directly into the virtualenv containing your script's other dep
 This places the `plotdevice` tool at a known location relative to your script and lets you
 omit the `--virtualenv` option:
 
-```sh
+```bash
 $ virtualenv env
 $ source ./env/bin/activate
 (env)$ pip install plotdevice
@@ -191,7 +192,7 @@ whichever `python` binary your system or virtualenv provides). Importing the `pl
 initializes your script's namespace with one identical to a script running with the app or command line tool.
 For instance, the following will draw a few boxes:
 
-```py
+```python
 #!/usr/bin/env python
 from plotdevice import *
 for x, y in grid(10,10,12,12):
@@ -201,14 +202,14 @@ for x, y in grid(10,10,12,12):
 You can then generate output files using the global `export` command. It takes a file path as an argument
 and the format will be determined by the file extension (`pdf`, `eps`, `png`, `jpg`, `gif`, or `tiff`):
 
-```py
+```python
 export('~/Pictures/output.pdf')
 ```
 
 If you plan to generate multiple images, be sure to call `clear()` to erase the canvas in between frames.
 Depending on the task you may also want to reset the graphics state. Use one of:
 
-```py
+```python
 clear()    # erases the canvas
 clear(all) # erases the canvas and resets colors, transforms, effects, etc.
 ```
@@ -220,7 +221,7 @@ that encapsulates this clear/draw/save cycle for both single images and animatio
 your drawing code in a `with` block, you can ensure that the correct sequence of `clear` and `export`
 calls is generated automatically. For instance these two methods of generating a png are equivalent:
 
-```py
+```python
 from plotdevice import *
 
 # export an image
@@ -242,7 +243,7 @@ As with the single-image version of the `export` call, you can use the `with` st
 code to tidy up some of the frame-drawing boilerplate. All three examples are equivalent (note the
 use of a nested `with` statement in the final example):
 
-```py
+```python
 # export a 100-frame movie
 movie = export('anim.mov', fps=50, bitrate=1.8)
 for i in xrange(100):
@@ -251,7 +252,7 @@ for i in xrange(100):
     movie.add() # add the canvas to the movie
 movie.finish()  # wait for i/o to complete
 ```
-```py
+```python
 # export a movie (with the context manager finishing the file when done)
 with export('anim.mov', fps=50, bitrate=1.8) as movie:
     for i in xrange(100):
@@ -259,7 +260,7 @@ with export('anim.mov', fps=50, bitrate=1.8) as movie:
         ...         # (do some drawing)
         movie.add() # add the canvas to the movie
 ```
-```py
+```python
 # export a movie (with the context manager finishing the file when done)
 # let the movie.frame context manager call clear() and add() for us
 with export('anim.mov', fps=50, bitrate=1.8) as movie:
@@ -273,7 +274,7 @@ Creating PDF documents works the same way, letting you either manually `clear`, 
 the export or take advantage of the `with` statement to hide the repetitive bits. Note that PDF exports
 use the `page` attribute rather than `frame`:
 
-```py
+```python
 # export a five-page pdf document
 pdf = export('multipage.pdf')
 for i in xrange(5):
@@ -282,7 +283,7 @@ for i in xrange(5):
     pdf.add()  # add the canvas to the pdf as a new page
 pdf.finish()   # write the pdf document to disk
 ```
-```py
+```python
 # export a pdf document more succinctly
 with export('multipage.pdf') as pdf:
     for i in xrange(5):
@@ -298,7 +299,7 @@ the sequence number will be appended with four characters of padding (yielding `
 
 If the filename contains a number between curly braces (e.g., `"name-{4}.ext"`), that substring will be replaced with the sequence number and zero padded to the specified number of digits:
 
-```py
+```python
 # export a sequence of images to output-0001.png, output-0002.png, ...
 #                                output-0099.png, output-0100.png
 with export('output.png') as img:
@@ -306,7 +307,7 @@ with export('output.png') as img:
         with img.frame:
             ... # draw the next image in the sequence
 ```
-```py
+```python
 # export a sequence of images to 01-img.png, 02-img.png, ...
 #                                99-img.png, 100-img.png
 with export('{2}-img.png') as img:
