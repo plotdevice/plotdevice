@@ -109,8 +109,8 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
                 # update our internal lookup table of nodes
                 for tag, elts in parser.nodes.items():
-                    elts = [TextElement(tag, *e) for e in elts]
-                    self._nodes[tag] = ordered(self._nodes.get(tag, []) + elts, 'start', reverse=True)
+                    old_elts = self._nodes.get(tag, [])
+                    self._nodes[tag] = old_elts + elts
 
                 # start building the display-string (with all the tags now removed)
                 attrib_txt = NSMutableAttributedString.alloc().initWithString_(parser.text)
@@ -510,8 +510,6 @@ class TextFrame(object):
     def _nsBezierPath(self):
         return pathmatics.trace_text(frame=self)
 
-TextElement = namedtuple('TextElement', ['tag', 'attrs', 'parents', 'start', 'end', 'text'])
-
 class TextMatch(object):
     """Represents a substring region within a Text object (via its `find` or `select` method)
 
@@ -530,17 +528,16 @@ class TextMatch(object):
     """
     def __init__(self, match):
         self.layout = []
-        if isinstance(match, TextElement):
+        try:
+            # handle xml Element objects
             for k,v in match._asdict().items():
                 setattr(self, k, v)
-        else:
+        except AttributeError:
+            # handle SRE_Match objects
             self.tag, self.attrs, self.parents = None, {}, ()
             self.start, self.end = match.span()
             self.text = match.group()
             self.m = match
-
-        def span(self):
-            return (self.start, self.end)
 
     def __repr__(self):
         lines, chars = map(len, [self.layout, self.text])
@@ -559,6 +556,10 @@ class LineSetter(object):
     def __init__(self, text_obj):
         self._text = text_obj
         self._frames = text_obj._frameset
+
+    def __repr__(self):
+        lens = len(self._frames), len(self), len(self._text.text)
+        return "LineSetter(frames=%i, lines=%i, characters=%i)" % lens
 
     def __getitem__(self, index):
         num_chars = len(self)
@@ -581,5 +582,5 @@ class LineSetter(object):
         return iter(pathmatics.line_fragments(self._frames, offset))
 
     def __len__(self):
-        return len(unicode(self._frames))
+        return len(list(self))
 

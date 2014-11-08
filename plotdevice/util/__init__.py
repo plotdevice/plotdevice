@@ -2,6 +2,7 @@ import os
 import re
 import json
 import csv
+from collections import namedtuple
 from codecs import open
 from xml.parsers import expat
 from collections import OrderedDict, defaultdict
@@ -264,7 +265,7 @@ class adict(BetterRepr, dict):
 
 
 ### datafile unpackers ###
-
+Element = namedtuple('Element', ['tag', 'attrs', 'parents', 'start', 'end', 'text'])
 class XMLParser(object):
     _log = 0
 
@@ -281,7 +282,7 @@ class XMLParser(object):
 
         # set up state attrs to record the parse results
         self.stack = []
-        self.cursor = 0
+        self.cursor = offset
         self.regions = ddict(list)
         self.nodes = ddict(list)
         self.body = []
@@ -345,28 +346,26 @@ class XMLParser(object):
         if indent>0: self._log+=1
 
     def _enter(self, name, attrs):
-        self.stack.append(name)
-        self.nodes[name].append( [attrs, tuple(reversed(self.stack[1:-1])), self.cursor+self._offset] )
+        parents = tuple(reversed([e.tag for e in self.stack[1:]]))
+        elt = Element(name, attrs, parents, self.cursor, end=None, text=None)
+        self.stack.append(elt)
         self.log(u'<%s>'%(name), indent=1)
 
-    def _leave(self, name):
-        self.nodes[name][-1].append(self.cursor+self._offset)
-        if name == INTERNAL:
-            # now that we're done parsing, clean up the attrs for the caller to inspect
-            self.body = u"".join(self.body)
-            del self.nodes[INTERNAL]
-            for tag, elts in self.nodes.items():
-                self.nodes[tag] = [e+[self.body[slice(*e[-2:])]] for e in elts]
-        self.stack.pop()
-        self.log(u'</%s>'%(name), indent=-1)
-
     def _chars(self, data):
-        self.regions[tuple(self.stack)].append(tuple([self.cursor, len(data)]))
+        selector = tuple([e.tag for e in self.stack])
+        self.regions[selector].append(tuple([self.cursor-self._offset, len(data)]))
         self.cursor += len(data)
         self.body.append(data)
         self.log(u'"%s"'%(data))
 
-
+    def _leave(self, name):
+        node = self.stack.pop()._replace(end=self.cursor)
+        contents = self.text[node.start-self._offset:node.end-self._offset]
+        self.nodes[name].append(node._replace(text=contents))
+        self.log(u'</%s>'%(name), indent=-1)
+        if name == INTERNAL:
+            del self.nodes[INTERNAL]
+            self.nodes = {tag:ordered(elts, 'start') for tag,elts in self.nodes.items()}
 
 def csv_reader(pth, encoding, dialect=csv.excel, **kwargs):
     # csv.py doesn't do Unicode; encode temporarily as UTF-8:
