@@ -51,9 +51,8 @@ class Font(object):
         # handle the bootstrap case where we're initializing the ctx's font
         if args==(None,):
             self._face = font_face("HelveticaNeue")
-            self._size = 24.0
+            self._metrics = dict(size=24.0, leading=1.2, tracking=0, align=LEFT, hyphenate=0)
             self._features = {}
-            self._layout = dict(leading=1.2, tracking=0, align=LEFT, hyphenate=0)
             return
 
         # check for invalid kwarg names
@@ -63,7 +62,7 @@ class Font(object):
         first = args[0] if args else None
         if isinstance(first, Font):
             # make a copy of the existing font obj
-            _copy_attrs(first, self, ('_face','_size','_features','_layout'))
+            _copy_attrs(first, self, ('_face','_metrics','_features'))
             return
         elif hasattr(first, 'items'):
             # treat dict as output of a prior call to fontspec()
@@ -86,17 +85,15 @@ class Font(object):
 
         # use the combined spec to pick a face then break it into attributes
         self._face = best_face(spec)
-        self._size = spec['size']
+        self._metrics = line_metrics(spec)
         self._features = aat_features(spec)
-        self._layout = line_layout(spec)
 
     def __repr__(self):
         spec = [self.family, self.weight, self.face]
         if self._face.variant:
             spec.insert(2, self._face.variant)
         spec.insert(1, '/' if self._face.italic else '|')
-        if self._size:
-            spec.insert(1, ("%.1fpt"%self._size).replace('.0pt','pt'))
+        spec.insert(1, ("%.1fpt"%self._metrics['size']).replace('.0pt','pt'))
         return (u'Font(%s)'%" ".join(spec)).encode('utf-8')
 
     def __enter__(self):
@@ -129,10 +126,6 @@ class Font(object):
     @property
     def variant(self):
         return self._face.variant
-
-    @property
-    def size(self):
-        return self._size
 
     @property
     def italic(self):
@@ -181,26 +174,30 @@ class Font(object):
     ### line layout ###
 
     @property
+    def size(self):
+        return self._metrics['size']
+
+    @property
     def leading(self):
-        return self._layout['leading']
+        return self._metrics['leading']
 
     @property
     def tracking(self):
-        return self._layout['tracking']
+        return self._metrics['tracking']
 
     @property
     def hyphenate(self):
-        return self._layout['hyphenate']
+        return self._metrics['hyphenate']
 
     @property
     def align(self):
-        return self._layout['align']
+        return self._metrics['align']
 
     ### internals ###
 
     @property
     def _nsFont(self):
-        fd = NSFontDescriptor.fontDescriptorWithName_size_(self._face.psname, self._size)
+        fd = NSFontDescriptor.fontDescriptorWithName_size_(self._face.psname, self._metrics['size'])
         if self._features:
             fd = fd.fontDescriptorByAddingAttributes_(aat_attrs(self._features))
         return NSFont.fontWithDescriptor_textTransform_(fd,None)
@@ -208,9 +205,8 @@ class Font(object):
     @property
     def _spec(self):
         spec = {axis:getattr(self._face, axis) for axis in ('family','weight','width','variant','italic')}
-        spec['size'] = self._size
         spec.update(self._features)
-        spec.update(self._layout)
+        spec.update(self._metrics)
         return spec
 
 

@@ -13,7 +13,7 @@ from plotdevice import DeviceError
 __all__ = ["standardized", "sanitized", "fammy", "facey", "widthy", "weighty",
            "font_exists", "font_family", "font_encoding", "font_face",
            "family_names", "family_name", "family_members", "Face",
-           "aat_attrs", "aat_features", "line_layout", "fontspec", "best_face",
+           "aat_attrs", "aat_features", "line_metrics", "fontspec", "best_face",
            ]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic',])
@@ -311,16 +311,16 @@ def fontspec(*args, **kwargs):
             else:
                 print 'Font: unrecognized weight or family name "%s"'%item
         elif numlike(item) and 'size' not in kwargs:
-            spec['size'] = item
+            spec['size'] = float(item)
 
     # incorporate line- and character-typesetting features
-    spec.update(line_layout(kwargs))
+    spec.update(line_metrics(kwargs))
     spec.update(aat_features(kwargs))
     return spec
 
-def line_layout(spec):
+def line_metrics(spec):
     # start with kwarg values as the canonical settings
-    _canon = ('align','leading','tracking','hyphenate')
+    _canon = ('size','align','leading','tracking','hyphenate')
     spec = {k:v for k,v in spec.items() if k in _canon}
 
     # validate alignment
@@ -328,8 +328,8 @@ def line_layout(spec):
         chaoticneutral = 'Text alignment must be LEFT, RIGHT, CENTER, or JUSTIFY'
         raise DeviceError(chaoticneutral)
 
-    # floatify leading, tracking, and hyphenation (mapping bools to 0/1)
-    for attr in 'leading', 'tracking', 'hyphenate':
+    # floatify dimensions and hyphenation (mapping bools to 0/1)
+    for attr in 'size', 'leading', 'tracking', 'hyphenate':
         if attr in spec:
             spec[attr] = float(spec[attr])
 
