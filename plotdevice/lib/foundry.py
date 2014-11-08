@@ -13,7 +13,8 @@ from plotdevice import DeviceError
 __all__ = ["standardized", "sanitized", "fammy", "facey", "widthy", "weighty",
            "font_exists", "font_family", "font_encoding", "font_face",
            "family_names", "family_name", "family_members", "Face",
-           "aat_attrs", "aat_features", "typespec", "fontspec", "best_face"]
+           "aat_attrs", "aat_features", "line_layout", "fontspec", "best_face",
+           ]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic',])
 
@@ -309,9 +310,11 @@ def fontspec(*args, **kwargs):
     # we want the kwargs to have higher priority, so setdefault everywhere...
     for item in args:
         if hasattr(item, '_spec'):
+            # existing Font object
             for k,v in item._spec.items():
                 spec.setdefault(k,v)
         elif isinstance(item, unicode):
+            # name-like values
             if fammy(item):
                 spec.setdefault('family', family_name(item))
             elif widthy(item):
@@ -323,28 +326,29 @@ def fontspec(*args, **kwargs):
         elif numlike(item) and 'size' not in kwargs:
             spec['size'] = item
 
-    # incorporate any typesetting features
+    # incorporate line- and character-typesetting features
+    spec.update(line_layout(kwargs))
     spec.update(aat_features(kwargs))
-
     return spec
 
-def typespec(**kwargs):
+def line_layout(spec):
     # start with kwarg values as the canonical settings
     _canon = ('align','leading','tracking','hyphenate')
-    spec = {k:v for k,v in kwargs.items() if k in _canon}
+    spec = {k:v for k,v in spec.items() if k in _canon}
 
     # validate alignment
     if spec.get('align','left') not in ('left','right','center','justify'):
         chaoticneutral = 'Text alignment must be LEFT, RIGHT, CENTER, or JUSTIFY'
         raise DeviceError(chaoticneutral)
 
-    # floatify hyphenation (mapping bools to 0/1)
-    if 'hyphenate' in spec:
-        spec['hyphenate'] = float(spec['hyphenate'])
+    # floatify leading, tracking, and hyphenation (mapping bools to 0/1)
+    for attr in 'leading', 'tracking', 'hyphenate':
+        if attr in spec:
+            spec[attr] = float(spec[attr])
 
     # be backward compatible with the old arg names
-    if 'lineheight' in kwargs:
-        spec.setdefault('leading', kwargs['lineheight'])
+    if 'lineheight' in spec:
+        spec.setdefault('leading', spec['lineheight'])
     return spec
 
 # conversions between pythonic typography feature names and AAT integers
