@@ -113,7 +113,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
 
             # use the inherited baseline style but allow one-off overrides from kwargs
             merged_style = dict(self._style)
-            merged_style.update(self._parse_style(**kwargs))
+            merged_style.update(self._parse_style(kwargs))
 
             # if the text is xml, parse it an overlay any stylesheet entries that map to
             # its tag names. otherwise apply the merged style to the entire string
@@ -629,7 +629,6 @@ class Stylesheet(object):
             spec = {}
             spec.update(self._styles.get( kwargs.get('style'), {} ))
             spec.update(fontspec(*args, **kwargs))
-            spec.update(typespec(**kwargs))
             color = kwargs.get('fill')
             if color and not isinstance(color, Color):
                 if isinstance(color, basestring):
@@ -674,7 +673,6 @@ class Stylesheet(object):
         # build the dict of features for this combination of styles
         return dict(NSFont=font._nsFont, NSColor=color, NSParagraphStyle=graf, NSKern=kern)
 
-
 class Font(object):
     def __init__(self, *args, **kwargs):
 
@@ -683,6 +681,7 @@ class Font(object):
             self._face = font_face("HelveticaNeue")
             self._size = 24.0
             self._features = {}
+            self._layout = dict(leading=1.2, tracking=0, align=LEFT, hyphenate=0)
             return
 
         # check for invalid kwarg names
@@ -692,7 +691,7 @@ class Font(object):
         first = args[0] if args else None
         if isinstance(first, Font):
             # make a copy of the existing font obj
-            _copy_attrs(first, self, ('_face','_size','_features'))
+            _copy_attrs(first, self, ('_face','_size','_features','_layout'))
             return
         elif hasattr(first, 'items'):
             # treat dict as output of a prior call to fontspec()
@@ -702,11 +701,10 @@ class Font(object):
             new_spec = fontspec(*args, **kwargs)
 
         # collect the attrs from the current font to fill in any gaps
-        current = _ctx._typography.font
-        cur_spec = current._spec
+        cur_spec = _ctx._font._spec
         for axis, num_axis in dict(weight='wgt', width='wid').items():
             # convert weight & width to integer values
-            cur_spec[num_axis] = getattr(current._face, num_axis)
+            cur_spec[num_axis] = getattr(_ctx._font._face, num_axis)
             if axis in new_spec:
                 name, val = standardized(axis, new_spec[axis])
                 new_spec.update({axis:name, num_axis:val})
@@ -714,9 +712,11 @@ class Font(object):
         # merge in changes from the new spec
         spec = dict(cur_spec.items() + new_spec.items()) # our criteria
 
+        # use the combined spec to pick a face then break it into attributes
         self._face = best_face(spec)
         self._size = spec['size']
         self._features = aat_features(spec)
+        self._layout = line_layout(spec)
 
     def __repr__(self):
         spec = [self.family, self.weight, self.face]
@@ -724,18 +724,21 @@ class Font(object):
             spec.insert(2, self._face.variant)
         spec.insert(1, '/' if self._face.italic else '|')
         if self._size:
-            spec.insert(1, ("%rpt"%self._size).replace('.0pt','pt'))
+            spec.insert(1, ("%.1fpt"%self._size).replace('.0pt','pt'))
         return (u'Font(%s)'%" ".join(spec)).encode('utf-8')
 
     def __enter__(self):
         if not hasattr(self, '_rollback'):
-            self._rollback = _ctx._typography
-        _ctx._typography = _ctx._typography._replace(font = self)
+            self._rollback = _ctx._font
+        _ctx._font = self
         return self
 
     def __exit__(self, type, value, tb):
-        _ctx._typography = self._rollback
+        _ctx._font = self._rollback
         del self._rollback
+
+    def copy(self):
+        return Font(self)
 
     ### face introspection ###
 
@@ -803,6 +806,24 @@ class Font(object):
     def capheight(self):
         return self._nsFont.capHeight()
 
+    ### line layout ###
+
+    @property
+    def leading(self):
+        return self._layout['leading']
+
+    @property
+    def tracking(self):
+        return self._layout['tracking']
+
+    @property
+    def hyphenate(self):
+        return self._layout['hyphenate']
+
+    @property
+    def align(self):
+        return self._layout['align']
+
     ### internals ###
 
     @property
@@ -817,6 +838,7 @@ class Font(object):
         spec = {axis:getattr(self._face, axis) for axis in ('family','weight','width','variant','italic')}
         spec['size'] = self._size
         spec.update(self._features)
+        spec.update(self._layout)
         return spec
 
 
@@ -883,4 +905,4 @@ class Family(object):
 
     @property
     def fonts(self):
-        return odict( (k,Font(v)) for k,v in self._faces.items())
+        return odict( (k,Font(face=v.psname)) for k,v in self._faces.items())

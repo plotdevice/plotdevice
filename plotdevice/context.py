@@ -5,7 +5,7 @@ from collections import namedtuple
 from os.path import exists, expanduser
 
 from .lib.cocoa import *
-from .lib.foundry import typespec, families
+from .lib.foundry import families
 from .lib import pathmatics
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike
 from .gfx.geometry import Dimension, parse_coords
@@ -19,12 +19,10 @@ DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
 # named tuples for grouping state attrs
 PenStyle = namedtuple('PenStyle', ['nib', 'cap', 'join', 'dash'])
-Typography = namedtuple('Typography', ['font', 'leading', 'tracking', 'align', 'hyphenate'])
-
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_typography', '_oldvars', '_vars'
+    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_oldvars', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -88,7 +86,7 @@ class Context(object):
 
         # type styles
         self._stylesheet = Stylesheet()
-        self._typography = Typography(Font(None), 1.2, 0, LEFT, 0)
+        self._font = Font(None)
 
         # bezier construction internals
         self._path = None
@@ -1015,10 +1013,10 @@ class Context(object):
 
     def font(self, *args, **kwargs):
         """Set the current font to be used in subsequent calls to text()"""
-        font = Font(*args, **kwargs)
-        font._rollback = self._typography
-        self._typography = self._typography._replace(font=font, **typespec(**kwargs))
-        return font
+        newfont = Font(*args, **kwargs)
+        newfont._rollback = self._font
+        self._font = newfont
+        return newfont
 
     def fonts(self, like=None, western=True):
         """Returns a list of all fonts installed on the system (with filtering capabilities)
@@ -1034,19 +1032,19 @@ class Context(object):
         """Legacy command. Equivalent to: font(size=fontsize)"""
         if fontsize is not None:
             self.font(size=fontsize)
-        return self._typography.font.size
+        return self._font.size
 
     def lineheight(self, lineheight=None):
         """Legacy command. Equivalent to: font(leading=lineheight)"""
         if lineheight is not None:
             self.font(leading=lineheight)
-        return self._typography.leading
+        return self._font.leading
 
     def align(self, align=None):
         """Set the text alignment (to LEFT, RIGHT, CENTER, or JUSTIFY)"""
         if align is not None:
             self.font(align=align)
-        return self._typography.align
+        return self._font.align
 
     def stylesheet(self, name=None, *args, **kwargs):
         """Access the context's Stylesheet (used by the text() command to format marked-up strings)

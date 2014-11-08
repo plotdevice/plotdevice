@@ -5,7 +5,7 @@ from Quartz import *
 from collections import namedtuple, defaultdict
 
 from plotdevice import DeviceError
-from ..lib.foundry import fontspec, typespec
+from ..lib.foundry import fontspec
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
 from .geometry import Transform, Dimension, Region
@@ -316,7 +316,7 @@ class PenMixin(Grob):
 class StyleMixin(Grob):
     """Mixin class for text-styling support.
     Adds the stylesheet, fill, and style attributes to the class."""
-    ctxAttrs = ('_typography', '_stylesheet', '_fillcolor')
+    ctxAttrs = ('_font', '_stylesheet', '_fillcolor')
     stateAttrs = ('_style', )
     opts = ('face','family','size','weight','width','variant','italic', # font selection
             'lig','sc','osf','tab','vpos','frac', 'ss', # aat features
@@ -334,23 +334,20 @@ class StyleMixin(Grob):
             del kwargs['width']
 
         # combine inherited ctx state and kwargs to create a baseline style
-        self._style = dict(fill=self._fillcolor) # use the ctx's current fill by default
-        self._style.update(self._typography.font._spec) # and the current font
-        self._style.update(typespec(**self._typography._asdict())) # and the inherited layout settings, then
-        self._style.update(self._parse_style(**kwargs)) # merge in any modifications from the text() call
+        self._style = dict(fill=self._fillcolor)      # use the ctx's current fill by default
+        self._style.update(self._font._spec)          # start with the current font, then
+        self._style.update(self._parse_style(kwargs)) # merge in any modifications from the text() call
 
-    def _parse_style(self, **kwargs):
-        fontopts = {k:v for k,v in kwargs.items() if k in StyleMixin.opts}
-        fontargs = kwargs.get('font',[])
+    def _parse_style(self, opts):
+        fontopts = {k:v for k,v in opts.items() if k in StyleMixin.opts}
+        fontargs = opts.get('font',[])
         if not isinstance(fontargs, (list,tuple)):
             fontargs = [fontargs]
 
-        spec = {}
-        spec.update(self.stylesheet._styles.get( kwargs.get('style'), {} ))
+        spec = self.stylesheet._styles.get( opts.get('style'), {} )
         spec.update(fontspec(*fontargs, **fontopts))
-        spec.update(typespec(**fontopts))
-        if 'fill' in kwargs:
-            spec['fill'] = Color(kwargs['fill'])
+        if 'fill' in opts:
+            spec['fill'] = Color(opts['fill'])
         return spec
 
     @property
