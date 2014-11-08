@@ -700,8 +700,8 @@ coordinates(PyObject *self, PyObject *args) {
     return path;
 }
 
-+ (NSArray *)lineFragmentsInRange:(NSRange)char_range withLayout:(NSLayoutManager *)layout{
-    NSRange full_range = [layout glyphRangeForCharacterRange:char_range actualCharacterRange:NULL];
++ (NSArray *)lineFragmentsInRange:(NSRange)rng withLayout:(NSLayoutManager *)layout{
+    NSRange full_range = [layout glyphRangeForCharacterRange:rng actualCharacterRange:NULL];
     NSArray *frames = [layout textContainers];
     NSString *text = [[layout textStorage] string];
     NSMutableArray *fragments = [NSMutableArray array];
@@ -715,13 +715,18 @@ coordinates(PyObject *self, PyObject *args) {
         // measure the line fragment's bounds
         NSRange line_range;
         NSRect line_rect = [layout lineFragmentRectForGlyphAtIndex:cursor effectiveRange:&line_range];
-        NSRect used_rect = [layout lineFragmentUsedRectForGlyphAtIndex:cursor effectiveRange:NULL];
 
-        // measure the portion of the line that's included in our char range
+        // update the ranges based on what's actually displayed in the bounds
         NSRange glyph_range = NSIntersectionRange(line_range, full_range);
-        NSRect bounds_rect = [layout boundingRectForGlyphRange:glyph_range inTextContainer:frame_ref];
-        NSRect glyph_rect = NSIntersectionRect(bounds_rect, used_rect);
         NSRange char_range = [layout characterRangeForGlyphRange:glyph_range actualGlyphRange:NULL];
+
+        // measure the portion of the line that's included in the glyph range (clipped against the
+        // line fragment's `used` rect to prevent \n from gobbling the entire column width)
+        NSRect bounds_rect = [layout boundingRectForGlyphRange:glyph_range inTextContainer:frame_ref];
+        NSRect used_rect = [layout lineFragmentUsedRectForGlyphAtIndex:cursor effectiveRange:NULL];
+        NSRect glyph_rect = NSIntersectionRect(bounds_rect, used_rect);
+
+        // calculate the baseline origin for the first glyph in the line
         NSPoint glyph_pt = [layout locationForGlyphAtIndex:cursor];
         NSPoint baseline = NSOffsetRect(line_rect, glyph_pt.x, glyph_pt.y).origin;
 
@@ -729,13 +734,13 @@ coordinates(PyObject *self, PyObject *args) {
         [fragments addObject:@{
             @"line": [NSValue valueWithRect:line_rect],
             @"bounds": [NSValue valueWithRect:glyph_rect],
-            // @"bounds": [NSValue valueWithRect:bounds_rect], // NB: newlines gobble the full line width
-            // @"used": [NSValue valueWithRect:used_rect], // newlines ignored, but measures the entire line
             @"text": [text substringWithRange:char_range],
             @"range": [NSValue valueWithRange:char_range],
             @"frame": [NSNumber numberWithUnsignedLong:[frames indexOfObject:frame_ref]],
             @"baseline": [NSValue valueWithPoint:baseline]
         }];
+
+        // move to the first glyph of the next line fragment
         cursor += line_range.length;
     }
     return fragments;
