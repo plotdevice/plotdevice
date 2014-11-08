@@ -50,7 +50,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
         super(Text, self).__init__(**kwargs)
 
         # create a text frame to manage layout and glyph-drawing
-        self._frameset = FrameSetter(self._style['align'], (self.w, self.h))
+        self._frameset = FrameSetter(self.w, self.h)
 
         # maintain a lookup table of nodes within xml input
         self._nodes = {}
@@ -370,10 +370,9 @@ class LineSetter(object):
         return len(unicode(self._frames))
 
 class FrameSetter(object):
-    def __init__(self, alignment, frame_size=(0,0)):
-        self._align = alignment
+    def __init__(self, w=0, h=0):
         self._main = TextFrame()
-        self._main.size = frame_size
+        self._main.size = (w, h)
         self._overflow = []
 
     def __getitem__(self, index):
@@ -391,7 +390,7 @@ class FrameSetter(object):
         return self._main.store.string()
 
     def copy(self):
-        clone = FrameSetter(self._align)
+        clone = FrameSetter()
         clone._main.store.beginEditing()
         clone._main.store.appendAttributedString_(self._main.store)
         clone._main.store.endEditing()
@@ -419,9 +418,9 @@ class FrameSetter(object):
             min_w += frame._from_px(1)
 
             # shift the offset if not left-aligned and drawing to a point
-            nudge = {RIGHT:min_w, CENTER:min_w/2.0}
-            if self._align in nudge and dims.w is None:
-                frame.x -= nudge[self._align]
+            nudge = {RIGHT:min_w, CENTER:min_w/2.0}.get(frame.alignment)
+            if nudge and dims.w is None:
+                frame.x -= nudge
 
             # shrink-to-fit any dims that were previously undefined
             if not dims.w:
@@ -563,6 +562,13 @@ class TextFrame(object):
     def _set_height(self, height):
         self.size = (self.width, height)
     h = height = property(_get_height, _set_height)
+
+    @property
+    def alignment(self):
+        if not self.store.string():
+            return LEFT
+        graf, _ = self.store.attribute_atIndex_effectiveRange_("NSParagraphStyle", 0, None)
+        return {_TEXT[a]:a for a in _TEXT}[graf.alignment()]
 
     @property
     def _glyphs(self):
