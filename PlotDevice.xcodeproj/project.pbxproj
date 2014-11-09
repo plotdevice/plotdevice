@@ -384,7 +384,7 @@
 				8D15AC2B0486D014006FF6A4 /* Resources */,
 				2A15C43718A20929006BDFF0 /* Copy Editor Assets */,
 				2A66ECEA18A99303002903DE /* Copy Editor Scripts */,
-				2A758E411957B7CE003ECF9D /* Copy PlotDevice Module */,
+				2A758E411957B7CE003ECF9D /* Build PlotDevice Module */,
 				2ABDB76F1867D9560069EFC3 /* Copy 'plotdevice' Tool */,
 				2AF8981419953CA1005A49A5 /* Manually Update Examples */,
 				8D15AC300486D014006FF6A4 /* Sources */,
@@ -450,19 +450,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		2A758E411957B7CE003ECF9D /* Copy PlotDevice Module */ = {
+		2A758E411957B7CE003ECF9D /* Build PlotDevice Module */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Copy PlotDevice Module";
+			name = "Build PlotDevice Module";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# let the setup script handle updating\n/usr/bin/python setup.py build\n\n# copy the up-to-date module contents into the app bundle\nEXT_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/\"\nmkdir -p $EXT_DIR\nditto build/lib/plotdevice \"$EXT_DIR/plotdevice\"\n\n# make sure everything has a .pyc (so code-signing doesn't break on first run)\n/usr/bin/python -m compileall \"$EXT_DIR/plotdevice\"";
+			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# let the setup script handle updating\n/usr/bin/python setup.py build\n\n# copy the up-to-date module contents into the app bundle\nEXT_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/\"\nmkdir -p $EXT_DIR\nditto build/lib/plotdevice \"$EXT_DIR/plotdevice\"\n\n# make sure everything has a .pyc (so code-signing doesn't break on first run)\n/usr/bin/python -m compileall \"$EXT_DIR/plotdevice\"";
 		};
 		2AF8981419953CA1005A49A5 /* Manually Update Examples */ = {
 			isa = PBXShellScriptBuildPhase;
