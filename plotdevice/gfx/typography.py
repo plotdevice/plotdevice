@@ -34,21 +34,7 @@ def fonts(like=None, encoding='western'):
     If `encoding` is "western" (the default), fonts with non-western character sets will
     be omitted. Setting it to another writing system like "korean" or "cyrillic".
     """
-    all_fams = family_names()
-    if like:
-        all_fams = [name for name in all_fams if sanitized(like) in sanitized(name)]
-
-    regions = {}
-    for fam in all_fams:
-        fnt = family_members(fam, names=True)[0]
-        enc = font_encoding(fnt)
-        regions[enc] = regions.get(enc, []) + [fam]
-
-    try:
-        return regions[encoding.title()]
-    except:
-        nosuchzone = "Couldn't find any fonts with an encoding of %r, choose from: %r" % (encoding, regions.keys())
-        raise DeviceError(nosuchzone)
+    return Family.find(like, encoding)
 
 class Font(object):
     def __init__(self, *args, **kwargs):
@@ -279,6 +265,25 @@ class Family(object):
     @property
     def fonts(self):
         return odict( (k,Font(face=v.psname)) for k,v in self._faces.items())
+
+    @classmethod
+    def find(cls, like=None, encoding="western"):
+        all_fams = family_names()
+        if like:
+            all_fams = [name for name in all_fams if sanitized(like) in sanitized(name)]
+
+        regions = {}
+        for fam in all_fams:
+            fnt = family_members(fam, names=True)[0]
+            enc = font_encoding(fnt)
+            regions[enc] = regions.get(enc, []) + [fam]
+
+        try:
+            return regions[encoding.title()]
+        except:
+            nosuchzone = "Couldn't find any fonts with an encoding of %r, choose from: %r" % (encoding, regions.keys())
+            raise DeviceError(nosuchzone)
+
 
 class Stylesheet(object):
     kwargs = StyleMixin.opts
