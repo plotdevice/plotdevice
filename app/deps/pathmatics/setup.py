@@ -1,10 +1,7 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 from setuptools.extension import Extension
 
-cPathmatics = Extension("cPathmatics",
-                        sources = ["pathmatics.m", "gpc.c"],
-                        extra_link_args=['-framework', 'AppKit', '-framework', 'Foundation'],
-                        extra_compile_args=['-Qunused-arguments'])
+cPathmatics = Extension("cPathmatics", sources = ["pathmatics.m", "gpc.c"], extra_link_args=['-framework', 'Cocoa'])
 
 setup (name = "pathmatics",
        version = "1.0",

@@ -5,10 +5,6 @@ from os.path import dirname, basename, abspath, isdir, join
 
 libs_root = dirname(abspath(__file__))
 
-# temporary workaround for broken clang 5.1 error: `unknown argument: '-mno-fused-madd'`
-quickfix = 'ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future'
-build_cmd = '%s python2.7 setup.py -q build'%quickfix
-
 def mkdirs(newdir, mode=0777):
     try: os.makedirs(newdir, mode)
     except OSError, err:
@@ -26,7 +22,7 @@ def build_libraries(dst_root):
         lib_name = basename(dirname(setup_script))
         print "Building %s..."% lib_name
         os.chdir(dirname(setup_script))
-        result = os.system(build_cmd) # call the lib's setup.py
+        result = os.system('python2.7 setup.py -q build') # call the lib's setup.py
         if result > 0:
             raise OSError("Could not build %s" % lib_name)
         os.chdir(libs_root)
