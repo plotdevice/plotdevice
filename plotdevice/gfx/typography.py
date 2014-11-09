@@ -26,24 +26,29 @@ _TEXT=dict(
     justify = NSJustifiedTextAlignment
 )
 
-def fonts(like=None, western=True):
+def fonts(like=None, encoding='western'):
     """Returns a list of all fonts installed on the system (with filtering capabilities)
 
     If `like` is a string, only fonts whose names contain those characters will be returned.
 
-    If `western` is True (the default), fonts with non-western character sets will be omitted.
-    If False, only non-western fonts will be returned.
+    If `encoding` is "western" (the default), fonts with non-western character sets will
+    be omitted. Setting it to another writing system like "korean" or "cyrillic".
     """
     all_fams = family_names()
     if like:
         all_fams = [name for name in all_fams if sanitized(like) in sanitized(name)]
 
-    representatives = {fam:family_members(fam, names=True)[0] for fam in all_fams}
-    in_region = {fam:font_encoding(fnt)=="MacOSRoman" for fam,fnt in representatives.items()}
-    if not western:
-        in_region = {fam:not macroman for fam,macroman in in_region.items()}
+    regions = {}
+    for fam in all_fams:
+        fnt = family_members(fam, names=True)[0]
+        enc = font_encoding(fnt)
+        regions[enc] = regions.get(enc, []) + [fam]
 
-    return [fam for fam in all_fams if in_region[fam]]
+    try:
+        return regions[encoding.title()]
+    except:
+        nosuchzone = "Couldn't find any fonts with an encoding of %r, choose from: %r" % (encoding, regions.keys())
+        raise DeviceError(nosuchzone)
 
 class Font(object):
     def __init__(self, *args, **kwargs):

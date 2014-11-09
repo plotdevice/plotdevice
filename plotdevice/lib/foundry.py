@@ -43,12 +43,15 @@ def font_family(font):
 @nsfont
 def font_encoding(font):
     """Return encoding name given a psname or nsfont"""
-    mask = font.mostCompatibleStringEncoding()
-    for nm,val in ns_encodings.items():
-        if mask==val: return nm
-    for nm,val in cf_encodings.items():
-        if mask==val: return nm
-    return None
+    enc = font.mostCompatibleStringEncoding()
+    enc_name = NSString.localizedNameOfStringEncoding_(enc)
+    return re.sub(r' \(Mac OS.*?\)$', '', enc_name)
+
+    # for nm,val in ns_encodings.items():
+    #     if mask==val: return nm
+    # for nm,val in cf_encodings.items():
+    #     if mask==val: return nm
+    # return None
 
 @nsfont
 def font_face(font):
@@ -464,9 +467,6 @@ def aat_attrs(spec):
 
 _fm = NSFontManager.sharedFontManager()
 re_italic = re.compile(r'^(?:(italic|oblique|slanted)|it(a(l(ics?)?)?)?)$', re.I)
-cf_encodings = {"DOSJapanese":8,"EUC_JP":3,"ISOLatin2":9,"ISO_2022_JP":21,"MacSymbol":6,"WindowsCyrillic":11,"WindowsGreek":13,"WindowsLatin2":15,"WindowsLatin5":14}
-cf_encodings.update({k:v|(2**31) for k,v in {"ANSEL":1537,"Big5":2563,"Big5_E":2569,"Big5_HKSCS_1999":2566,"CNS_11643_92_P1":1617,"CNS_11643_92_P2":1618,"CNS_11643_92_P3":1619,"DOSArabic":1049,"DOSBalticRim":1030,"DOSCanadianFrench":1048,"DOSChineseSimplif":1057,"DOSChineseTrad":1059,"DOSCyrillic":1043,"DOSGreek":1029,"DOSGreek1":1041,"DOSGreek2":1052,"DOSHebrew":1047,"DOSIcelandic":1046,"DOSKorean":1058,"DOSLatin1":1040,"DOSLatin2":1042,"DOSLatinUS":1024,"DOSNordic":1050,"DOSPortuguese":1045,"DOSRussian":1051,"DOSThai":1053,"DOSTurkish":1044,"EBCDIC_CP037":3074,"EBCDIC_US":3073,"EUC_CN":2352,"EUC_KR":2368,"EUC_TW":2353,"GBK_95":1585,"GB_18030_2000":1586,"GB_2312_80":1584,"HZ_GB_2312":2565,"ISOLatin10":528,"ISOLatin3":515,"ISOLatin4":516,"ISOLatin5":521,"ISOLatin6":522,"ISOLatin7":525,"ISOLatin8":526,"ISOLatin9":527,"ISOLatinArabic":518,"ISOLatinCyrillic":517,"ISOLatinGreek":519,"ISOLatinHebrew":520,"ISOLatinThai":523,"ISO_2022_CN":2096,"ISO_2022_CN_EXT":2097,"ISO_2022_JP_1":2082,"ISO_2022_JP_2":2081,"ISO_2022_JP_3":2083,"ISO_2022_KR":2112,"JIS_C6226_78":1572,"JIS_X0201_76":1568,"JIS_X0208_83":1569,"JIS_X0208_90":1570,"JIS_X0212_90":1571,"KOI8_R":2562,"KOI8_U":2568,"KSC_5601_87":1600,"KSC_5601_92_Johab":1601,"MacArabic":4,"MacArmenian":24,"MacBengali":13,"MacBurmese":19,"MacCeltic":39,"MacCentralEurRoman":29,"MacChineseSimp":25,"MacChineseTrad":2,"MacCroatian":36,"MacCyrillic":7,"MacDevanagari":9,"MacDingbats":34,"MacEthiopic":28,"MacExtArabic":31,"MacFarsi":140,"MacGaelic":40,"MacGeorgian":23,"MacGreek":6,"MacGujarati":11,"MacGurmukhi":10,"MacHFS":255,"MacHebrew":5,"MacIcelandic":37,"MacInuit":236,"MacJapanese":1,"MacKannada":16,"MacKhmer":20,"MacKorean":3,"MacLaotian":22,"MacMalayalam":17,"MacMongolian":27,"MacOriya":12,"MacRomanLatin1":2564,"MacRomanian":38,"MacSinhalese":18,"MacTamil":14,"MacTelugu":15,"MacThai":21,"MacTibetan":26,"MacTurkish":35,"MacUkrainian":152,"MacVT100":252,"MacVietnamese":30,"NextStepJapanese":2818,"ShiftJIS":2561,"ShiftJIS_X0213":1576,"ShiftJIS_X0213_00":1576,"ShiftJIS_X0213_MenKuTen":1577,"UTF7":67109120,"UTF7_IMAP":2576,"VISCII":2567,"WindowsArabic":1286,"WindowsBalticRim":1287,"WindowsHebrew":1285,"WindowsKoreanJohab":1296,"WindowsVietnamese":1288}.items()})
-ns_encodings = {"ASCII":1,"ISO2022JP":21,"ISOLatin1":5,"ISOLatin2":9,"JapaneseEUC":3,"MacOSRoman":30,"NEXTSTEP":2,"NonLossyASCII":7,"Proprietary":65536,"ShiftJIS":8,"Symbol":6,"UTF16BigEndian":0x90000100,"UTF16LittleEndian":0x94000100,"UTF32":0x8c000100,"UTF32BigEndian":0x98000100,"UTF32LittleEndian":0x9c000100,"UTF8":4,"Unicode":10,"WindowsCP1250":15,"WindowsCP1251":11,"WindowsCP1252":12,"WindowsCP1253":13,"WindowsCP1254":14}
 ns_traits = {"bold":2,"compressed":512,"condensed":64,"expanded":32,"fixedpitch":1024,"italic":1,"narrow":16,"nonstandardcharset":8,"poster":256,"smallcaps":128,"unbold":4,"unitalic":16777216}
 std_branding = 'adobe','std','pro','mt','ms','itc','let','tt'
 std_weights = [
