@@ -52,6 +52,7 @@ static NSDictionary *AAT;
       // ss
       @"Alternates":@(kStylisticAlternativesType),
   };
+  [AAT retain];
 }
 
 + (NSDictionary *)aatAttributes:(NSDictionary *)options{
