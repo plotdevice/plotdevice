@@ -13,40 +13,6 @@ def convert_path(ns_path):
     CGPathRelease(pth)
     return pth
 
-def trace_text(frame):
-    """Returns an NSBezierPath with the glyphs contained by a TextFrame object"""
-    # assemble the glyphs in px units then transform them back to screen units
-    # (since whatever Bezier it's appended to will handle screen->px conversion)
-    offset = frame._to_px(frame.offset)
-    nspath = Pathmatician.traceGlyphs_atOffset_withLayout_(frame._glyphs, offset, frame.layout)
-    return frame._from_px(nspath)
-
-LineFragment = namedtuple("LineFragment", ["bounds", "line", "baseline", "span", "text"])
-def line_fragments(frames, txt_offset, rng=None):
-    """Returns a list of dictionaries describing the line fragments in the entire Text object
-    or a sub-range of it based on character indices"""
-    if rng is None:
-        full_text = frames._main.store.string()
-        rng = (0, len(full_text))
-
-    lines = []
-    for frag in Pathmatician.lineFragmentsInRange_withLayout_(rng, frames._main.layout):
-        frame = frames[frag['frame']]
-        txt_range = frag['range'].rangeValue()
-        info = {
-            "line":frame._from_px(frag['line'].rectValue()),
-            "bounds":frame._from_px(frag['bounds'].rectValue()),
-            "baseline":frame._from_px(frag['baseline'].pointValue()),
-            "span":(txt_range.location, txt_range.location+txt_range.length),
-            "text":frag['text'],
-        }
-        info['baseline'] += frame.offset + txt_offset
-        info['line'].origin += frame.offset + txt_offset
-        info['bounds'].origin += frame.offset + txt_offset
-        lines.append(LineFragment(**info))
-
-    return lines
-
 
 # Trig helpers
 

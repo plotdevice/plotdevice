@@ -11,7 +11,7 @@ from .colors import Color
 from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, BoundsMixin, Grob
 from ..util import _copy_attrs, numlike, ordered, XMLParser, read
-from ..lib import pathmatics
+from ..lib import foundry
 from . import _ns_context
 
 _ctx = None
@@ -508,7 +508,7 @@ class TextFrame(object):
 
     @property
     def _nsBezierPath(self):
-        return pathmatics.trace_text(frame=self)
+        return foundry.trace_text(frame=self)
 
 class TextMatch(object):
     """Represents a substring region within a Text object (via its `find` or `select` method)
@@ -575,11 +575,11 @@ class LineSetter(object):
             rng = (start, stop-start)
 
         offset = Point(self._text.x, self._text.y - self._frames.baseline)
-        return pathmatics.line_fragments(self._frames, offset, rng)
+        return foundry.line_fragments(self._frames, offset, rng)
 
     def __iter__(self):
         offset = Point(self._text.x, self._text.y - self._frames.baseline)
-        return iter(pathmatics.line_fragments(self._frames, offset))
+        return iter(foundry.line_fragments(self._frames, offset))
 
     def __len__(self):
         return len(list(self))

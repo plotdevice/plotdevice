@@ -1,6 +1,7 @@
 # encoding: utf-8
 import os
 import re
+import objc
 import difflib
 from pprint import pprint, pformat
 from operator import itemgetter, attrgetter
@@ -17,6 +18,7 @@ __all__ = ["standardized", "sanitized", "fammy", "facey", "widthy", "weighty",
            ]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic',])
+LineFragment = namedtuple("LineFragment", ["bounds", "line", "baseline", "span", "text"])
 
 # introspection methods for postscript names/nsfonts
 
@@ -46,12 +48,6 @@ def font_encoding(font):
     enc = font.mostCompatibleStringEncoding()
     enc_name = NSString.localizedNameOfStringEncoding_(enc)
     return re.sub(r' \(Mac OS.*?\)$', '', enc_name)
-
-    # for nm,val in ns_encodings.items():
-    #     if mask==val: return nm
-    # for nm,val in cf_encodings.items():
-    #     if mask==val: return nm
-    # return None
 
 @nsfont
 def font_face(font):
@@ -341,32 +337,37 @@ def line_metrics(spec):
         spec.setdefault('leading', spec['lineheight'])
     return spec
 
-# conversions between pythonic typography feature names and AAT integers
+def aat_features(spec):
+    """Validate features in a Font spec and normalize settings values"""
+    features = {}
 
-aat_consts = {
-    "Ligatures":1, # kLigaturesType
-    "CommonOn":2, "CommonOff":3, "RareOn":4, "RareOff":5,
+    for k,v in spec.items():
+        if k=='ss':
+            # unpack & validate the ss arg (which might be a sequence of ints)
+            ss = (int(v),) if numlike(v) or isinstance(v, bool) else v
+            if ss is None or ss==(0,):
+                features['ss'] = tuple()
+            elif ss is all:
+                features['ss'] = tuple(range(1,21))
+            else:
+                try:
+                    if not all([numlike(val) and 0<val<21 for val in ss]):
+                        raise TypeError()
+                    features['ss'] = tuple(set(int(n) for n in ss))
+                except TypeError:
+                    badset = 'The `ss` argument must be an integer in the range 1-20 or a list of them (not %s)' % repr(ss)
+                    raise DeviceError(badset)
+        elif k in aat_options:
+            # with all the other features, just check that the arg value is in the dict
+            try:
+                aat_options[k][v] # crash if argname or val is invalid
+                features[k] = int(v) if not callable(v) else v
+            except KeyError:
+                badstyle = 'Bad `%s` argumeent: %r'%(k,v)
+                raise DeviceError(badstyle)
+    return features
 
-    "LowerCase":37, # kLowerCaseType
-    "UpperCase":38, # kUpperCaseType
-    "DefaultCase":0, "SmallCaps":1,
-
-    "NumberCase":21, # kNumberCaseType
-    "LowerCaseNumbers":0, "UpperCaseNumbers":1,
-
-    "NumberSpacing":6, # kNumberSpacingType
-    "Monospaced":0, "Proportional":1,
-
-    "Fractions":11, # kFractionsType
-    "NoFractions":0, "Diagonal":2,
-
-    "VerticalPosition":10, # kVerticalPositionType
-    "NormalPosition":0, "Superiors":1, "Inferiors":2, "Ordinals":3,
-
-    "Alternates":35, # kStylisticAlternativesType
-}
-
-pd_features = {
+aat_options = {
     "lig":{
         0:[("Ligatures", "CommonOff"), ("Ligatures", "RareOff")],
         1:[("Ligatures", "CommonOn")],
@@ -400,68 +401,58 @@ pd_features = {
         0:[("VerticalPosition", "NormalPosition")],
         -1:[("VerticalPosition", "Inferiors")],
         ord:[("VerticalPosition", "Ordinals")]
-    }
+    },
+
+    "ss":{n:[('Alternates', n)] for n in range(1,21)}
 }
 
-from AppKit import NSFontFeatureSettingsAttribute as settings_attr, \
-                   NSFontFeatureTypeIdentifierKey as feature_id, \
-                   NSFontFeatureSelectorIdentifierKey as selector_id
 
-# convert the semi-sensibly named items in pd_features's arrays into their SFNTLayoutTypes.h
-# const values. the _aat_features dict uses the same keys as pd_features but the contents of
-# the 'command' tuples become ints
-_aat_features = {}
-# build feature dicts for the numbered `stylistic sets' construction
-_aat_features["ss"] = {n:[{feature_id:aat_consts['Alternates'], selector_id:n*2}] for n in range(1,21)}
-# incorporate the pd_features items
-for arg, vals in pd_features.items():
-    _aat_features[arg] = {}
-    for val, actions in vals.items():
-        _aat_features[arg][val] = []
-        for ftype, fsel in actions:
-            feature, selector = aat_consts[ftype], aat_consts[fsel]
-            _aat_features[arg][val].append({feature_id:feature, selector_id:selector})
+# objc-bridged methods for generating beziers from glyphs, measuring text runs, and AAT-styling
 
-def aat_features(spec):
-    """Validate features in a Font spec and normalize settings values"""
-    features = {}
+import cFoundry
+Vandercook = objc.lookUpClass('Vandercook')
 
-    for k,v in spec.items():
-        if k=='ss':
-            # unpack & validate the ss arg (which might be a sequence of ints)
-            ss = (int(v),) if numlike(v) or isinstance(v, bool) else v
-            if ss is None or ss==(0,):
-                features['ss'] = tuple()
-            elif ss is all:
-                features['ss'] = tuple(range(1,21))
-            elif isinstance(ss, (list,tuple)):
-                badvals = [n for n in ss if not (numlike(n) and 0<n<21)]
-                if badvals:
-                    badset = 'The `ss` argument only accepts integers in the range 1-20 (not %r)' % badvals
-                    raise DeviceError(badset)
-                features['ss'] = tuple(int(n) for n in ss)
-            else:
-                badset = 'The `ss` argument must be an integer in the range 1-20 or a list of them (not %r)' % ss
-                raise DeviceError(badset)
-        elif k in _aat_features:
-            # with all the other features, just check that the arg value is in the dict
-            try:
-                _aat_features[k][v]
-                features[k] = int(v) if not callable(v) else v
-            except KeyError:
-                badstyle = 'Bad `%s` argumeent: %r'%(k,v)
-                raise DeviceError(badstyle)
-    return features
+def trace_text(frame):
+    """Returns an NSBezierPath with the glyphs contained by a TextFrame object"""
+    # assemble the glyphs in px units then transform them back to screen units
+    # (since whatever Bezier it's appended to will handle screen->px conversion)
+    offset = frame._to_px(frame.offset)
+    nspath = Vandercook.traceGlyphs_atOffset_withLayout_(frame._glyphs, offset, frame.layout)
+    return frame._from_px(nspath)
+
+def line_fragments(frames, txt_offset, rng=None):
+    """Returns a list of dictionaries describing the line fragments in the entire Text object
+    or a sub-range of it based on character indices"""
+    if rng is None:
+        full_text = frames._main.store.string()
+        rng = (0, len(full_text))
+
+    lines = []
+    for frag in Vandercook.lineFragmentsInRange_withLayout_(rng, frames._main.layout):
+        frame = frames[frag['frame']]
+        txt_range = frag['range'].rangeValue()
+        info = {
+            "line":frame._from_px(frag['line'].rectValue()),
+            "bounds":frame._from_px(frag['bounds'].rectValue()),
+            "baseline":frame._from_px(frag['baseline'].pointValue()),
+            "span":(txt_range.location, txt_range.location+txt_range.length),
+            "text":frag['text'],
+        }
+        info['baseline'] += frame.offset + txt_offset
+        info['line'].origin += frame.offset + txt_offset
+        info['bounds'].origin += frame.offset + txt_offset
+        lines.append(LineFragment(**info))
+
+    return lines
 
 def aat_attrs(spec):
     """Converts a validated features spec to a dict suitable for NSFontDescriptor"""
     settings = []
     for k,v in spec.items():
-        if k not in _aat_features: continue
+        if k not in aat_options: continue
         for vv in (v,) if not isinstance(v, tuple) else v:
-            settings += _aat_features[k][vv]
-    return {settings_attr:settings}
-
+            settings += aat_options[k][vv]
+    return Vandercook.aatAttributes_(settings)
 
 # sausage gets made below:
 
