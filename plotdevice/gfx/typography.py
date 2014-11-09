@@ -174,6 +174,12 @@ class Font(object):
     def align(self):
         return self._metrics['align']
 
+    ### OpenType features ###
+
+    @property
+    def features(self):
+        return dict(self._features)
+
     ### internals ###
 
     @property
