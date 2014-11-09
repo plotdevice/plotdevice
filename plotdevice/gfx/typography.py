@@ -11,7 +11,7 @@ from ..util import _copy_attrs
 from ..lib.foundry import *
 
 _ctx = None
-__all__ = ("Family", "Font", "Stylesheet", "fonts",
+__all__ = ("Family", "Font", "Stylesheet",
            "LEFT", "RIGHT", "CENTER", "JUSTIFY",)
 
 # text alignments
@@ -25,16 +25,6 @@ _TEXT=dict(
     center = NSCenterTextAlignment,
     justify = NSJustifiedTextAlignment
 )
-
-def fonts(like=None, encoding='western'):
-    """Returns a list of all fonts installed on the system (with filtering capabilities)
-
-    If `like` is a string, only fonts whose names contain those characters will be returned.
-
-    If `encoding` is "western" (the default), fonts with non-western character sets will
-    be omitted. Setting it to another writing system like "korean" or "cyrillic".
-    """
-    return Family.find(like, encoding)
 
 class Font(object):
     def __init__(self, *args, **kwargs):
@@ -271,6 +261,9 @@ class Family(object):
         all_fams = family_names()
         if like:
             all_fams = [name for name in all_fams if sanitized(like) in sanitized(name)]
+
+        if encoding is all:
+            return all_fams
 
         regions = {}
         for fam in all_fams:

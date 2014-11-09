@@ -1010,6 +1010,16 @@ class Context(object):
 
     ### Typography ###
 
+    def fonts(self, like=None, encoding='western'):
+        """Returns a list of all fonts installed on the system (with filtering capabilities)
+
+        If `like` is a string, only fonts whose names contain those characters will be returned.
+
+        If `encoding` is "western" (the default), fonts with non-western character sets will
+        be omitted. Setting it to another writing system like "korean" or "cyrillic".
+        """
+        return Family.find(like, encoding)
+
     def font(self, *args, **kwargs):
         """Set the current font to be used in subsequent calls to text()"""
         newfont = Font(*args, **kwargs)
