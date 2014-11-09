@@ -265,7 +265,7 @@ class TransformMixin(Grob):
 
 class PenMixin(Grob):
     """Mixin class for linestyle support.
-    Adds the _capstyle, _joinstyle, _dashstyle, and _strokewidth attributes to the class."""
+    Adds the nib, cap, join, and dash attributes to the class."""
     ctxAttrs = ('_penstyle', )
     opts = ('nib','cap','join','dash','strokewidth','capstyle','joinstyle','dashstyle',)
 
@@ -315,9 +315,8 @@ class PenMixin(Grob):
 
 class StyleMixin(Grob):
     """Mixin class for text-styling support.
-    Adds the stylesheet, fill, and style attributes to the class."""
+    Adds the stylesheet, fill, and font attributes to the class."""
     ctxAttrs = ('_font', '_stylesheet', '_fillcolor')
-    stateAttrs = ('_style', )
     opts = ('face','family','size','weight','width','variant','italic', # font selection
             'lig','sc','osf','tab','vpos','frac', 'ss', # aat features
             'leading', 'tracking', 'align', 'hyphenate', # layout
@@ -334,13 +333,17 @@ class StyleMixin(Grob):
             del kwargs['width']
 
         # combine inherited ctx state and kwargs to create a baseline style
-        self._style = dict(fill=self._fillcolor)      # use the ctx's current fill by default
-        self._style.update(self._font._spec)          # start with the current font, then
-        self._style.update(self._parse_style(kwargs)) # merge in any modifications from the text() call
+        spec = self._font._spec                # start with the current font
+        spec.update(fill=self._fillcolor)      # use the ctx's current fill by default
+        spec.update(self._parse_style(kwargs)) # merge in any modifications from the text() call
+
+        # update the font & fill references to reflect kwarg styling (if any)
+        self._font = self._font.__class__(**spec)
+        self._fillcolor = spec.get('fill', self._fillcolor)
 
     def _parse_style(self, opts):
         fontopts = {k:v for k,v in opts.items() if k in StyleMixin.opts}
-        fontargs = opts.get('font',[])
+        fontargs = opts.get('font', [])
         if not isinstance(fontargs, (list,tuple)):
             fontargs = [fontargs]
 
@@ -351,9 +354,22 @@ class StyleMixin(Grob):
         return spec
 
     @property
+    def _style(self):
+        spec = self._font._spec
+        spec.update(fill=self._fillcolor)
+        return spec
+
+    @property
+    def font(self):
+        return self._font
+
+    @property
     def stylesheet(self):
         return self._stylesheet
 
+    @property
+    def fill(self):
+        return self._fillcolor
 
 class Variable(object):
     def __init__(self, name, type, default=None, min=0, max=100, value=None):

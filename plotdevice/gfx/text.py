@@ -17,7 +17,7 @@ from . import _ns_context
 _ctx = None
 __all__ = ("Text",)
 
-class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
+class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     # from TransformMixin: transform transformmode translate() rotate() scale() skew() reset()
     # from EffectsMixin:   alpha blend shadow
     # from BoundsMixin:    x y width height
@@ -97,7 +97,7 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
             decoded = txt if isinstance(txt, unicode) else txt.decode('utf-8')
 
             # use the inherited baseline style but allow one-off overrides from kwargs
-            merged_style = dict(self._style)
+            merged_style = self._style
             merged_style.update(self._parse_style(kwargs))
 
             # if the text is xml, parse it an overlay any stylesheet entries that map to
@@ -147,10 +147,6 @@ class Text(TransformMixin, EffectsMixin, BoundsMixin, StyleMixin, Grob):
     @property
     def text(self):
         return unicode(self._frameset)
-
-    @property
-    def font(self):
-        return Font(**self._style)
 
     @property
     def frames(self):
