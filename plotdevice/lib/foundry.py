@@ -3,22 +3,22 @@ import os
 import re
 import objc
 import difflib
-from pprint import pprint, pformat
 from operator import itemgetter, attrgetter
-from collections import namedtuple, Counter, OrderedDict as odict, defaultdict as ddict
+from collections import namedtuple, OrderedDict as odict, defaultdict as ddict
 from .cocoa import *
 from ..util import numlike
+import cFoundry
 
 from plotdevice import DeviceError
 
-__all__ = ["standardized", "sanitized", "fammy", "facey", "widthy", "weighty",
-           "font_exists", "font_family", "font_encoding", "font_face",
-           "family_names", "family_name", "family_members", "Face",
-           "aat_attrs", "aat_features", "line_metrics", "fontspec", "best_face",
+__all__ = ["font_family", "font_encoding", "font_face", "best_face",
+           "family_names", "family_members", "standardized", "sanitized",
+           "fontspec", "line_metrics", "aat_attrs", "aat_features",
            ]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic',])
 LineFragment = namedtuple("LineFragment", ["bounds", "line", "baseline", "span", "text"])
+Vandercook = objc.lookUpClass('Vandercook')
 
 # introspection methods for postscript names/nsfonts
 
@@ -408,9 +408,6 @@ aat_options = {
 
 
 # objc-bridged methods for generating beziers from glyphs, measuring text runs, and AAT-styling
-
-import cFoundry
-Vandercook = objc.lookUpClass('Vandercook')
 
 def trace_text(frame):
     """Returns an NSBezierPath with the glyphs contained by a TextFrame object"""
