@@ -582,5 +582,5 @@ class LineSetter(object):
         return iter(foundry.line_fragments(self._frames, offset))
 
     def __len__(self):
-        return len(list(self))
+        return len(list(iter(self)))
 
