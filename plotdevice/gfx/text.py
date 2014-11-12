@@ -10,7 +10,7 @@ from .geometry import Transform, Region, Size, Point
 from .colors import Color
 from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, BoundsMixin, Grob
-from ..util import _copy_attrs, numlike, ordered, XMLParser, read
+from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, read
 from ..lib import foundry
 from . import _ns_context
 
@@ -156,59 +156,6 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             next_pg = self.copy()
             next_pg._store.deleteCharactersInRange_([0, len(seen)])
             return next_pg
-
-    @property
-    def text(self):
-        return unicode(self._store.string())
-
-    @property
-    def frames(self):
-        """Returns a list of one or more TextFrames defining the bounding box for layout"""
-        return list(self._frames)
-
-    @property
-    def glyphs(self):
-        return LineSetter(self)
-
-    @property
-    def lines(self):
-        return list(LineSetter(self))
-
-    # @property
-    # def words(self):
-    #     words = []
-    #     for w in self._frameset._store.words():
-    #         start, n = w.range()
-    #         words.append(LineSetter(self)[start:start+n])
-    #     return words
-
-    def _seek(self, stream, limit):
-        found = []
-        for m in stream:
-            match = TextMatch(m)
-            fragments = self.glyphs[match.start:match.end]
-            if not fragments and limit is not all:
-                break
-            match.layout = fragments
-            found.append(match)
-            if len(found) == limit:
-                break
-        return found
-
-    def find(self, regex, matches=0):
-        if isinstance(regex, str):
-            regex = regex.decode('utf-8')
-        if isinstance(regex, basestring):
-            regex = re.compile(regex, re.S)
-        if not hasattr(regex, 'pattern'):
-            nonregex = "Text.find() must be called with an re.compile'd pattern object or a regular expression string"
-            raise DeviceError(nonregex)
-        return self._seek(regex.finditer(self.text), matches)
-
-    def select(self, tag_name, matches=0):
-        if isinstance(tag_name, str):
-            tag_name = tag_name.decode('utf-8')
-        return self._seek(self._nodes.get(tag_name, []), matches)
 
     def flow(self, layout=None):
         """Add as many text frames as necessary to fully lay out the string
@@ -372,7 +319,133 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         baseline = self.baseline
         path._fulcrum = Point(dx + self.x + w/2.0,
                               dy + self.y - baseline + h/2.0 )
+
+        # flip the assembled path and slide it into the proper x/y position
         return trans.apply(path)
+
+
+    def __getitem__(self, index):
+        match = TextMatch(self)
+        match.text = self.text[index]
+        if isinstance(index, slice):
+            match.start, match.end, _ = index.indices(len(self))
+        else:
+            if index < 0:
+                index += len(self)
+            if not 0 <= index < len(self):
+                raise IndexError
+            match.start, match.end = index, index+1
+        return match
+
+    def __len__(self):
+        return len(self.text)
+
+    def _seek(self, stream, limit):
+        found = []
+        for m in stream:
+            match = TextMatch(self, m)
+            if not match.layout and limit is not all:
+                break
+            found.append(match)
+            if len(found) == limit:
+                break
+        return found
+
+    def find(self, regex, matches=0):
+        if isinstance(regex, str):
+            regex = regex.decode('utf-8')
+        if isinstance(regex, basestring):
+            regex = re.compile(regex, re.S)
+        if not hasattr(regex, 'pattern'):
+            nonregex = "Text.find() must be called with an re.compile'd pattern object or a regular expression string"
+            raise DeviceError(nonregex)
+        return self._seek(regex.finditer(self.text), matches)
+
+    def select(self, tag_name, matches=0):
+        if isinstance(tag_name, str):
+            tag_name = tag_name.decode('utf-8')
+        return self._seek(self._nodes.get(tag_name, []), matches)
+
+    @property
+    def text(self):
+        return unicode(self._store.string())
+
+    @property
+    def words(self):
+        return [TextMatch(self, w) for w in self._store.words()]
+
+    @property
+    def paragraphs(self):
+        return [TextMatch(self, w) for w in self._store.paragraphs()]
+
+    @property
+    def frames(self):
+        """Returns a list of one or more TextFrames defining the bounding box for layout"""
+        return list(self._frames)
+
+    @property
+    def lines(self):
+        return foundry.line_fragments(self)
+
+
+class TextMatch(object):
+    """Represents a substring region within a Text object (via its `find` or `select` method)
+
+    Properties:
+      `start` and `end` - the character range of the match
+      `text` - the matched substring
+      `layout` - a list of one or more LineFragments describing glyph geometry
+
+    Additional properties when .find'ing a regular expression:
+      `m` - a regular expression Match object
+
+    Additional properties when .select'ing an xml element:
+      `tag` - a string with the matched element's name
+      `attrs` - a dictionary with the element's attributes (if any)
+      `parents` - a tuple with the parent, grandparent, etc. tag names
+    """
+    def __init__(self, parent, match=None):
+        self._parent = parent
+        self.tag, self.attrs, self.parents = None, {}, ()
+        self.m = None
+
+        if hasattr(match, 'range'): # NSSubText
+            self.start, n = match.range()
+            self.end = self.start + n
+            self.text = match.string()
+        elif hasattr(match, 'span'): # re.Match
+            self.start, self.end = match.span()
+            self.text = match.group()
+            self.m = match
+        elif hasattr(match, '_asdict'): # xml Element
+            for k,v in match._asdict().items():
+                setattr(self, k, v)
+
+    def __len__(self):
+        return self.end-self.start
+
+    def __repr__(self):
+        msg = []
+        try:
+            pat = self.m.re.pattern
+            if len(pat)>18:
+                pat = "%s..." % (pat[:15])
+            msg.append("r'%s'" % pat)
+        except:
+            if self.tag:
+                msg.append("<%s>" % self.tag)
+            if self.attrs:
+                msg.append("attrs=%i" % len(self.attrs))
+        msg.append("start=%i" % self.start)
+        msg.append("len=%i" % (self.end-self.start))
+        return 'TextMatch(%s)' % (", ".join(msg))
+
+    @property
+    def layout(self):
+        if not hasattr(self, '_layout'):
+            rng = (self.start, self.end-self.start)
+            self._layout = foundry.line_fragments(self._parent, rng)
+        return self._layout
 
 class TextFrame(object):
     def __init__(self, parent):
@@ -395,8 +468,9 @@ class TextFrame(object):
         # add ourselves to the layout flow
         self._parent._layout.addTextContainer_(self.block)
 
+    @trim_zeroes
     def __repr__(self):
-        return "TextFrame(offset=%r, size=%r)"%(tuple(self.offset), tuple(self.size))
+        return "TextFrame(%r, %r)"%(tuple(self.offset), tuple(self.size))
 
     @property
     def idx(self):
@@ -491,77 +565,4 @@ class TextFrame(object):
     @property
     def _nsBezierPath(self):
         return foundry.trace_text(frame=self)
-
-class TextMatch(object):
-    """Represents a substring region within a Text object (via its `find` or `select` method)
-
-    Properties:
-      `start` and `end` - the character range of the match
-      `text` - the matched substring
-      `layout` - a list of one or more LineFragments describing glyph geometry
-
-    Additional properties when .find'ing a regular expression:
-      `m` - a regular expression Match object
-
-    Additional properties when .select'ing an xml element:
-      `tag` - a string with the matched element's name
-      `attrs` - a dictionary with the element's attributes (if any)
-      `parents` - a tuple with the parent, grandparent, etc. tag names
-    """
-    def __init__(self, match):
-        self.layout = []
-        try:
-            # handle xml Element objects
-            for k,v in match._asdict().items():
-                setattr(self, k, v)
-        except AttributeError:
-            # handle SRE_Match objects
-            self.tag, self.attrs, self.parents = None, {}, ()
-            self.start, self.end = match.span()
-            self.text = match.group()
-            self.m = match
-
-    def __repr__(self):
-        lines, chars = map(len, [self.layout, self.text])
-        try:
-            pat = self.m.re.pattern
-            if len(pat)>18:
-                pat = "%s..."%(pat[:15])
-            tag = "r'%s'"%pat
-        except:
-            tag = "<%s>"%self.tag
-            if self.attrs:
-                tag = "%s, attrs=%i"%(tag, len(self.attrs))
-        return 'TextMatch(%s, lines=%i, characters=%i)' % (tag, lines, chars)
-
-class LineSetter(object):
-    def __init__(self, text_obj):
-        self._text = text_obj
-
-    def __repr__(self):
-        lens = len(self._text._frames), len(self), len(self._text.text)
-        return "LineSetter(frames=%i, lines=%i, characters=%i)" % lens
-
-    def __getitem__(self, index):
-        num_chars = len(self)
-
-        if not isinstance(index, slice):
-            while index < 0:
-                index += num_chars
-            if index>=num_chars:
-                raise IndexError
-            rng = (index, 1)
-        else:
-            start, stop, step = index.indices(num_chars)
-            rng = (start, stop-start)
-
-        offset = Point(self._text.x, self._text.y - self._text.baseline)
-        return foundry.line_fragments(self._text, offset, rng)
-
-    def __iter__(self):
-        offset = Point(self._text.x, self._text.y - self._text.baseline)
-        return iter(foundry.line_fragments(self._text, offset))
-
-    def __len__(self):
-        return len(list(iter(self)))
 
