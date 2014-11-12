@@ -447,6 +447,23 @@ class TextMatch(object):
             self._layout = foundry.line_fragments(self._parent, rng)
         return self._layout
 
+    @property
+    def frames(self):
+        mgr = self._parent._layout
+        containers = list(mgr.textContainers())
+        start_g = mgr.glyphIndexForCharacterAtIndex_(self.start)
+        end_g = mgr.glyphIndexForCharacterAtIndex_(self.end - 1)
+
+        try:
+            first, _ = mgr.textContainerForGlyphAtIndex_effectiveRange_(start_g, None)
+            last, _ = mgr.textContainerForGlyphAtIndex_effectiveRange_(end_g, None)
+        except IndexError:
+            return []
+        if not last:
+            return self._parent._frames[containers.index(first):]
+        return self._parent._frames[containers.index(first):containers.index(last)+1]
+
+
 class TextFrame(object):
     def __init__(self, parent):
         # stash the canvas unit for offset/size calculations
