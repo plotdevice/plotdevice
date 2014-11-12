@@ -490,6 +490,11 @@ class TextFrame(object):
         _, block_size = self._parent._layout.usedRectForTextContainer_(self.block)
         return self._from_px(block_size)
 
+    @property
+    def lines(self):
+        rng, _ = self._parent._layout.characterRangeForGlyphRange_actualGlyphRange_(self._glyphs, None)
+        return foundry.line_fragments(self._parent, rng)
+
     def _eject(self):
         idx = self._parent._layout.textContainers().index(self.block)
         self._parent._layout.removeTextContainerAtIndex_(idx)
