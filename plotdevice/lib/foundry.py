@@ -17,7 +17,7 @@ __all__ = ["font_family", "font_encoding", "font_face", "best_face",
            ]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic',])
-LineFragment = namedtuple("LineFragment", ["bounds", "line", "baseline", "span", "text"])
+LineFragment = namedtuple("LineFragment", ["bounds", "line", "baseline", "span", "text", "frame"])
 Vandercook = objc.lookUpClass('Vandercook')
 
 # introspection methods for postscript names/nsfonts
@@ -417,7 +417,7 @@ def trace_text(frame):
     nspath = Vandercook.traceGlyphs_atOffset_withLayout_(frame._glyphs, offset, frame._parent._layout)
     return frame._from_px(nspath)
 
-def line_fragments(txt_obj, txt_offset, rng=None):
+def line_fragments(txt_obj, rng=None):
     """Returns a list of dictionaries describing the line fragments in the entire Text object
     or a sub-range of it based on character indices"""
     if rng is None:
@@ -434,9 +434,12 @@ def line_fragments(txt_obj, txt_offset, rng=None):
             "span":(txt_range.location, txt_range.location+txt_range.length),
             "text":frag['text'],
         }
+
+        txt_offset = (txt_obj.x, txt_obj.y-txt_obj.baseline)
         info['baseline'] += frame.offset + txt_offset
         info['line'].origin += frame.offset + txt_offset
         info['bounds'].origin += frame.offset + txt_offset
+        info['frame'] = frame
         lines.append(LineFragment(**info))
 
     return lines
