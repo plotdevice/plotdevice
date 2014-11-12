@@ -414,19 +414,18 @@ def trace_text(frame):
     # assemble the glyphs in px units then transform them back to screen units
     # (since whatever Bezier it's appended to will handle screen->px conversion)
     offset = frame._to_px(frame.offset)
-    nspath = Vandercook.traceGlyphs_atOffset_withLayout_(frame._glyphs, offset, frame.layout)
+    nspath = Vandercook.traceGlyphs_atOffset_withLayout_(frame._glyphs, offset, frame._parent._layout)
     return frame._from_px(nspath)
 
-def line_fragments(frames, txt_offset, rng=None):
+def line_fragments(txt_obj, txt_offset, rng=None):
     """Returns a list of dictionaries describing the line fragments in the entire Text object
     or a sub-range of it based on character indices"""
     if rng is None:
-        full_text = frames._main.store.string()
-        rng = (0, len(full_text))
+        rng = (0, len(txt_obj.text))
 
     lines = []
-    for frag in Vandercook.lineFragmentsInRange_withLayout_(rng, frames._main.layout):
-        frame = frames[frag['frame']]
+    for frag in Vandercook.lineFragmentsInRange_withLayout_(rng, txt_obj._layout):
+        frame = txt_obj._frames[frag['frame']]
         txt_range = frag['range'].rangeValue()
         info = {
             "line":frame._from_px(frag['line'].rectValue()),
