@@ -317,7 +317,10 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             path._nsBezierPath.appendBezierPath_(frame._nsBezierPath)
         path.inherit(self)
 
-        (dx, dy), (w, h) = self.bounds
+        bounds = Region()
+        for frame in self._frames:
+            bounds = bounds.union(frame.offset, frame.size)
+        (dx, dy), (w, h) = bounds
         baseline = self.baseline
         path._fulcrum = Point(dx + self.x + w/2.0,
                               dy + self.y - baseline + h/2.0 )
