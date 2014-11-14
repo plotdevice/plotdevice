@@ -227,6 +227,11 @@ def family_members(famname, names=False):
 def best_face(spec):
     """Returns the PostScript name of the best match for a given fontspec"""
 
+    _canon = ('family','weight','italic','width','variant')
+    q = hash(tuple(spec[k] for k in _canon))
+    if q in _FAMILIES.face:
+        return font_face(_FAMILIES.face[q])
+
     # the candidates
     faces = family_members(spec['family'])
 
@@ -262,7 +267,8 @@ def best_face(spec):
     candidates = [dict(score=s, face=f, ps=f.psname) for f,s in scores.items()]
     candidates.sort(key=itemgetter('score'), reverse=True)
 
-    return font_face(candidates[0]['ps'])
+    _FAMILIES.face[q] = candidates[0]['ps']
+    return font_face(_FAMILIES.face[q])
 
 # typography arg validators/standardizers
 
@@ -639,6 +645,7 @@ class FontLibrary(object):
         self._hash = _fm.availableFonts()
         self.names = sorted(_fm.availableFontFamilies())
         self.query = {}
+        self.face = {}
 
     def __contains__(self, key):
         self.refresh()
