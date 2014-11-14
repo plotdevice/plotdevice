@@ -8,6 +8,7 @@ app/deps/Sparkle*
 related/
 todo.txt
 test.py
+speedtrials.py
 
 # Xcode user files
 project.xcworkspace
