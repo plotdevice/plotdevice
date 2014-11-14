@@ -18,10 +18,11 @@ DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
 # named tuples for grouping state attrs
 PenStyle = namedtuple('PenStyle', ['nib', 'cap', 'join', 'dash'])
+GridUnits = namedtuple('GridUnits', ['unit', 'dpx', 'to_px', 'from_px'])
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_transform', '_transformmode', '_thetamode', '_transformstack', '_oldvars', '_vars'
+    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_oldvars', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -58,6 +59,9 @@ class Context(object):
         self.canvas.reset()
         self.canvas.background = Color(1.0)
         self.canvas.speed = None
+
+        # keep track of non-px canvas units
+        self._grid = GridUnits(px, 1, Transform(), Transform())
 
         # default output colorspace
         self._outputmode = RGB
@@ -99,7 +103,6 @@ class Context(object):
 
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context._state_vars]
-        cached.append(self.canvas.unit)
         self._statestack.insert(0, cached)
         self.clear(all)
 
@@ -111,7 +114,7 @@ class Context(object):
 
         for attr, val in zip(Context._state_vars, cached):
             setattr(self, attr, val)
-        self.canvas.unit = cached[-1]
+        self.canvas.unit = self._grid.unit
 
     def ximport(self, libName):
         lib = __import__(libName)
@@ -139,6 +142,8 @@ class Context(object):
             self.canvas.width = width
             self.canvas.height = height
         if unit is not None:
+            dpx = unit.basis
+            self._grid = GridUnits(unit, dpx, Transform().scale(dpx), Transform().scale(1/dpx))
             self.canvas.unit = unit
         return self.canvas.size
 

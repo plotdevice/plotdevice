@@ -6,7 +6,7 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from .typography import *
-from .geometry import Transform, Region, Size, Point
+from .geometry import Transform, Region, Size, Point, Pair
 from .colors import Color
 from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, BoundsMixin, Grob
@@ -472,7 +472,7 @@ class TextMatch(object):
 class TextFrame(object):
     def __init__(self, parent):
         # stash the canvas unit for offset/size calculations
-        self._dpx = _ctx.canvas.unit.basis
+        self._grid = _ctx._grid._replace()
 
         # create a new container
         self.block = NSTextContainer.alloc().init()
@@ -523,15 +523,15 @@ class TextFrame(object):
 
     def _to_px(self, unit):
         """Convert from canvas units to postscript points"""
-        if numlike(unit):
-            return unit * self._dpx
-        return Transform().scale(self._dpx).apply(unit)
+        if numlike(unit) or isinstance(unit, Pair):
+            return unit * self._grid.dpx
+        return self._grid.to_px.apply(unit)
 
     def _from_px(self, px):
         """Convert from postscript points to canvas units"""
-        if numlike(px):
-            return px / self._dpx
-        return Transform().scale(1.0/self._dpx).apply(px)
+        if numlike(px) or isinstance(px, Pair):
+            return px / self._grid.dpx
+        return self._grid.from_px.apply(px)
 
     def _get_x(self):
         return self.offset.x

@@ -8,7 +8,7 @@ from plotdevice import DeviceError
 from ..lib.foundry import fontspec
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
-from .geometry import Transform, Dimension, Region
+from .geometry import Transform, Dimension, Region, Pair
 
 _ctx = None
 __all__ = [
@@ -208,24 +208,22 @@ class ColorMixin(Grob):
 class TransformMixin(Grob):
     """Mixin class for transformation support.
     Adds the _transform and _transformmode attributes to the class."""
-    ctxAttrs = ('_transform', '_transformmode')
-    stateAttrs = ('_dpx',)
+    ctxAttrs = ('_transform', '_transformmode', '_grid')
 
     def __init__(self, **kwargs):
         super(TransformMixin, self).__init__(**kwargs)
-        self._dpx = _ctx.canvas.unit.basis # dots per canvas unit
 
     def _to_px(self, unit):
         """Convert from canvas units to postscript points"""
-        if numlike(unit):
-            return unit * self._dpx
-        return Transform().scale(self._dpx).apply(unit)
+        if numlike(unit) or isinstance(unit, Pair):
+            return unit * self._grid.dpx
+        return self._grid.to_px.apply(unit)
 
     def _from_px(self, px):
         """Convert from postscript points to canvas units"""
-        if numlike(px):
-            return px / self._dpx
-        return Transform().scale(1.0/self._dpx).apply(px)
+        if numlike(px) or isinstance(px, Pair):
+            return px / self._grid.dpx
+        return self._grid.from_px.apply(px)
 
     def _get_transformmode(self):
         return self._transformmode

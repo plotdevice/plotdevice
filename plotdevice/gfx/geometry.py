@@ -443,14 +443,14 @@ class Unit(MagicNumber):
         self.name = name
 
     def __repr__(self):
-        if self==_ctx.canvas.unit:
+        if self.basis==_ctx._grid.dpx:
             return '<one %s>' % self.name
         return '<one %s (%0.3f canvas units)>'%(self.name, self.value)
 
     @property
     def value(self):
         """Size of this unit in terms of the current canvas unit"""
-        return self.basis/_ctx.canvas.unit.basis
+        return self.basis/_ctx._grid.dpx
 
     @property
     def basis(self):
