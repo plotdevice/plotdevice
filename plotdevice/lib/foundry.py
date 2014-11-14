@@ -61,13 +61,20 @@ def font_face(font):
 
 def family_names():
     """A list of all families installed on the machine"""
-    return sorted(_fm.availableFontFamilies())
+    return _FAMILIES.names
 
 def family_name(word):
     """Returns a valid family name if the arg fuzzy matches any existing families"""
     all_fams = family_names()
     word = re.sub(r'  +',' ',word.strip())
     q = sanitized(word)
+
+    # use cached data if possible...
+    if q in _FAMILIES.query:
+        cached = _FAMILIES.query[q]
+        if isinstance(cached, Exception):
+            raise cached
+        return cached
 
     # first try for an exact match
     if word in all_fams:
@@ -88,23 +95,25 @@ def family_name(word):
     if q in sanitized(corpus):
         return all_fams[sanitized(corpus).index(q)]
 
-    # otherwise look for near matches above a reasonable cutoff
-    q, corpus = word.lower(), [f.lower() for f in corpus]
-    in_corpus = difflib.get_close_matches(q, corpus, cutoff=0.6)
-    matches = [all_fams[corpus.index(m)] for m in in_corpus]
+    # # otherwise look for near matches above a reasonable cutoff
+    # q, corpus = word.lower(), [f.lower() for f in corpus]
+    # in_corpus = difflib.get_close_matches(q, corpus, cutoff=0.6)
+    # matches = [all_fams[corpus.index(m)] for m in in_corpus]
 
-    for m in matches:
-        # look for whole substring
-        if sanitized(q) in sanitized(m):
-            return m
-        # bug: this means 'univers' will match 'Univers LT Std' even though "Univers Next" is comparable....
-        #      should only accept it if it's not `really' ambiguous (i.e. len(q in matches)==1)
+    # for m in matches:
+    #     # look for whole substring
+    #     if sanitized(q) in sanitized(m):
+    #         _NAMES[q] = m
+    #         return m
+    #     # bug: this means 'univers' will match 'Univers LT Std' even though "Univers Next" is comparable....
+    #     #      should only accept it if it's not `really' ambiguous (i.e. len(q in matches)==1)
 
-    word_bits = set(word.lower().split(' '))
-    for m in matches:
-        # look for all the individual words (ignoring order)
-        if word_bits.issubset(m.lower().split(' ')):
-            return m
+    # word_bits = set(word.lower().split(' '))
+    # for m in matches:
+    #     # look for all the individual words (ignoring order)
+    #     if word_bits.issubset(m.lower().split(' ')):
+    #         _NAMES[q] = m
+    #         return m
 
     # give up but first do a broad search and suggest other names in the exception
     in_corpus = difflib.get_close_matches(q, corpus, 4, cutoff=0)
@@ -112,7 +121,8 @@ def family_name(word):
     nomatch = "ambiguous family name \"%s\""%word
     if matches:
         nomatch += '.\nDid you mean: %s'%[m.encode('utf-8') for m in matches]
-    raise DeviceError(nomatch)
+    _FAMILIES.query[q] = DeviceError(nomatch)
+    raise _FAMILIES.query[q]
 
 def family_members(famname, names=False):
     """Returns a sorted list of Face tuples for the fonts in a family"""
@@ -627,6 +637,8 @@ class FontLibrary(object):
     def __init__(self):
         self._lib = {}
         self._hash = _fm.availableFonts()
+        self.names = sorted(_fm.availableFontFamilies())
+        self.query = {}
 
     def __contains__(self, key):
         self.refresh()
