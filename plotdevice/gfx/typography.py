@@ -36,9 +36,6 @@ class Font(object):
             self._features = {}
             return
 
-        # check for invalid kwarg names
-        StyleMixin.validate(kwargs)
-
         # accept Font objects or spec dicts as first positional arg
         first = args[0] if args else None
         if isinstance(first, Font):
@@ -49,6 +46,9 @@ class Font(object):
             # treat dict as output of a prior call to fontspec()
             new_spec = dict(first)
         else:
+            # check for invalid kwarg names
+            StyleMixin.validate(kwargs)
+
             # validate & standardize the kwargs first
             new_spec = fontspec(*args, **kwargs)
 

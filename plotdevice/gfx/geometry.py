@@ -40,7 +40,7 @@ def paired(func):
             return self.__class__(func(self))
         if numlike(other):
             other = self.__class__(other, other)
-        else:
+        elif not isinstance(other, self.__class__):
             other = self.__class__(other)
         return self.__class__(func(self, other))
     return to_pair
@@ -49,7 +49,6 @@ class Pair(object):
     """Base class for Point & Size objects (with basic arithmetic support)"""
     def __init__(self, *vals, **kwargs):
         attrs = self._coords
-        kwargs = {k[0]:v for k,v in kwargs.items()}
 
         if len(vals) == 2:
             # handle Point(x, y) or Size(w, h)
@@ -68,6 +67,7 @@ class Pair(object):
             raise DeviceError(baddims)
         else:
             # kwargs will only be used if there are no positional args
+            kwargs = {k[0]:v for k,v in kwargs.items()}
             for attr in attrs:
                 setattr(self, attr, kwargs.get(attr, 0.0))
 

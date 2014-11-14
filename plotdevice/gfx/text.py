@@ -301,9 +301,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
                     frame._draw()
 
                     # debug: draw a grey background for the text's bounds
-                    # with _ns_context():
-                    #     NSColor.colorWithDeviceWhite_alpha_(0,.2).set()
-                    #     NSBezierPath.fillRect_(Region(frame.offset, frame.bounds.size))
+                    # NSColor.colorWithDeviceWhite_alpha_(0,.2).set()
+                    # NSBezierPath.fillRect_(Region(frame.offset, frame.size))
 
     @property
     def path(self):
