@@ -9,6 +9,7 @@ from ..lib.foundry import fontspec
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
 from .geometry import Transform, Dimension, Region, Pair
+from .effects import Effect
 
 _ctx = None
 __all__ = [
@@ -112,7 +113,6 @@ class EffectsMixin(Grob):
     opts = ('alpha','blend','shadow')
 
     def __init__(self, **kwargs):
-        from .effects import Effect
         super(EffectsMixin, self).__init__(**kwargs)
         for attr in EffectsMixin.opts:
             if attr in kwargs:
