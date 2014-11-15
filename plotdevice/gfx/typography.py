@@ -280,7 +280,7 @@ class Family(object):
         try:
             return regions[encoding.title()]
         except:
-            nosuchzone = "Couldn't find any fonts with an encoding of %r, choose from: %r" % (encoding, regions.keys())
+            nosuchzone = "Couldn't find any matching fonts with an encoding of %r, choose from: %r" % (encoding, regions.keys())
             raise DeviceError(nosuchzone)
 
 

@@ -645,9 +645,7 @@ class FontLibrary(object):
         self._lib[key] = val
 
     def refresh(self):
-        _fm._reactToFontSetChange() # ugh, private api...
         if self._hash != _fm.availableFonts():
-            print "RESET"
             self.__init__()
 
 _FAMILIES = FontLibrary()
