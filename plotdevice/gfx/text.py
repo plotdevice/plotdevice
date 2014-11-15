@@ -317,13 +317,9 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             path._nsBezierPath.appendBezierPath_(frame._nsBezierPath)
         path.inherit(self)
 
-        bounds = Region()
-        for frame in self._frames:
-            bounds = bounds.union(frame.offset, frame.size)
-        (dx, dy), (w, h) = bounds
-        baseline = self.baseline
-        path._fulcrum = Point(dx + self.x + w/2.0,
-                              dy + self.y - baseline + h/2.0 )
+        # set its center-rotation fulcrum based on the frames' bounds rect
+        origin, size = self.bounds
+        path._fulcrum = origin + size/2.0
 
         # flip the assembled path and slide it into the proper x/y position
         return trans.apply(path)
