@@ -70,59 +70,38 @@ def family_name(word):
     q = sanitized(word)
 
     # use cached data if possible...
-    if q in _FAMILIES.query:
-        cached = _FAMILIES.query[q]
-        if isinstance(cached, Exception):
-            raise cached
-        return cached
+    if q not in _FAMILIES.query:
 
-    # first try for an exact match
-    if word in all_fams:
-        return word
+        # first try for an exact match
+        if word in all_fams:
+            return word
 
-    # next do a case-insensitive, no-whitespace comparison
-    corpus = sanitized(all_fams)
-    if q in corpus:
-        return all_fams[corpus.index(q)]
+        # next do a case-insensitive, no-whitespace comparison
+        corpus = sanitized(all_fams)
+        if q in corpus:
+            _FAMILIES.query[q] = all_fams[corpus.index(q)]
+        elif q:
+            # if still no match, compare against a list of names with all the noise words taken out
+            corpus = debranded(all_fams, keep=branding(word))
+            if word in corpus:
+                _FAMILIES.query[q] = all_fams[corpus.index(word)]
+            elif q in sanitized(corpus):
+                # case-insensitive with the de-noised names
+                _FAMILIES.query[q] = all_fams[sanitized(corpus).index(q)]
 
-    # if still no match, compare against a list of names with all the noise words taken out
-    corpus = debranded(all_fams, keep=branding(word))
-    if word in corpus:
-        return all_fams[corpus.index(word)]
+        if q not in _FAMILIES.query:
+            # give up but first do a broad search and suggest other names in the exception
+            in_corpus = difflib.get_close_matches(q, corpus, 4, cutoff=0)
+            matches = [all_fams[corpus.index(m)] for m in in_corpus]
+            nomatch = "ambiguous font family name \"%s\""%word
+            if matches:
+                nomatch += '.\nDid you mean: %s'%[m.encode('utf-8') for m in matches]
+            _FAMILIES.query[q] = DeviceError(nomatch)
 
-    # case-insensitive with the de-noised names
-    # corpus = sanitized(corpus)
-    if q in sanitized(corpus):
-        return all_fams[sanitized(corpus).index(q)]
-
-    # # otherwise look for near matches above a reasonable cutoff
-    # q, corpus = word.lower(), [f.lower() for f in corpus]
-    # in_corpus = difflib.get_close_matches(q, corpus, cutoff=0.6)
-    # matches = [all_fams[corpus.index(m)] for m in in_corpus]
-
-    # for m in matches:
-    #     # look for whole substring
-    #     if sanitized(q) in sanitized(m):
-    #         _NAMES[q] = m
-    #         return m
-    #     # bug: this means 'univers' will match 'Univers LT Std' even though "Univers Next" is comparable....
-    #     #      should only accept it if it's not `really' ambiguous (i.e. len(q in matches)==1)
-
-    # word_bits = set(word.lower().split(' '))
-    # for m in matches:
-    #     # look for all the individual words (ignoring order)
-    #     if word_bits.issubset(m.lower().split(' ')):
-    #         _NAMES[q] = m
-    #         return m
-
-    # give up but first do a broad search and suggest other names in the exception
-    in_corpus = difflib.get_close_matches(q, corpus, 4, cutoff=0)
-    matches = [all_fams[corpus.index(m)] for m in in_corpus]
-    nomatch = "ambiguous family name \"%s\""%word
-    if matches:
-        nomatch += '.\nDid you mean: %s'%[m.encode('utf-8') for m in matches]
-    _FAMILIES.query[q] = DeviceError(nomatch)
-    raise _FAMILIES.query[q]
+    matched = _FAMILIES.query[q]
+    if isinstance(matched, Exception):
+        raise matched
+    return matched
 
 def family_members(famname, names=False):
     """Returns a sorted list of Face tuples for the fonts in a family"""
@@ -324,7 +303,7 @@ def fontspec(*args, **kwargs):
             elif weighty(item):
                 spec.setdefault('weight', item)
             else:
-                print 'Font: unrecognized weight or family name "%s"'%item
+                family_name(item) # raise an exception suggesting family names
         elif numlike(item) and 'size' not in kwargs:
             spec['size'] = float(item)
 
@@ -482,6 +461,9 @@ std_weights = [
    ["extra", "extrabold"], ["heavy", "heavyface"], ["black", "super", "superbold"],
    ["extrablack", "ultra", "ultrabold", "fat"], ["ultrablack", "obese", "nord"]
 ]
+wgt_mods = ["demi","semi","extra","super","ultra"]
+wgt_corpus = [w for group in std_weights for w in group]
+
 
 wid_mods = ['semi', None, 'extra','super','ultra']
 wid_steps = ['compressed','narrow','condensed', None, 'extended','expanded','wide']
@@ -489,17 +471,16 @@ wid_abbrevs = dict(cond='Condensed', comp='Compressed', compr='Compressed', ext=
 wid_corpus  = [(prefix or '')+w for w in wid_steps[:wid_steps.index(None)] for prefix in reversed(wid_mods)]
 wid_corpus += [(prefix or '')+w for w in wid_steps[wid_steps.index(None)+1:] for prefix in wid_mods]
 
-wgt_mods = ["demi","semi","extra","super","ultra"]
-wgt_corpus = [w for group in std_weights for w in group]
+def _sanitize(s):
+    return s.strip().lower().replace('-','').replace(' ','') if s else None
 
-_sanitize = lambda s:s.strip().lower().replace('-','').replace(' ','') if s else None
 def sanitized(unclean):
     if isinstance(unclean, dict):
         return {_sanitize(k):v for k,v in unclean.items()}
-    single = not isinstance(unclean, (list,tuple))
-    lst = [unclean] if single else unclean
-    cleaned = [_sanitize(s) for s in lst]
-    return cleaned[0] if single else cleaned
+    elif isinstance(unclean, (list,tuple)):
+        return [_sanitize(s) for s in unclean]
+    else:
+        return _sanitize(unclean)
 
 def fammy(word):
     try:
@@ -643,9 +624,14 @@ class FontLibrary(object):
     def __init__(self):
         self._lib = {}
         self._hash = _fm.availableFonts()
-        self.names = sorted(_fm.availableFontFamilies())
+        self._names = sorted(_fm.availableFontFamilies())
         self.query = {}
         self.face = {}
+
+    @property
+    def names(self):
+        self.refresh()
+        return self._names[:]
 
     def __contains__(self, key):
         self.refresh()
@@ -659,6 +645,9 @@ class FontLibrary(object):
         self._lib[key] = val
 
     def refresh(self):
+        _fm._reactToFontSetChange() # ugh, private api...
         if self._hash != _fm.availableFonts():
+            print "RESET"
             self.__init__()
+
 _FAMILIES = FontLibrary()
