@@ -47,29 +47,8 @@ def paired(func):
 
 class Pair(object):
     """Base class for Point & Size objects (with basic arithmetic support)"""
-    def __init__(self, *vals, **kwargs):
-        attrs = self._coords
-
-        if len(vals) == 2:
-            # handle Point(x, y) or Size(w, h)
-            for attr, val in zip(attrs, vals):
-                setattr(self, attr, val)
-        elif len(vals) == 1 and isinstance(vals[0], Pair):
-            # handle things like Point(Point())
-            for attr, val in zip(attrs, vals[0]):
-                setattr(self, attr, val)
-        elif len(vals) == 1 and hasattr(vals[0], '__getitem__'):
-            # handle Point(NSPoint()) and the like
-            for attr, val in zip(attrs, vals[0]):
-                setattr(self, attr, val)
-        elif vals:
-            baddims = '%s requires a single coordinate pair' % self.__class__.__name__
-            raise DeviceError(baddims)
-        else:
-            # kwargs will only be used if there are no positional args
-            kwargs = {k[0]:v for k,v in kwargs.items()}
-            for attr in attrs:
-                setattr(self, attr, kwargs.get(attr, 0.0))
+    __slots__ = '_a', '_b'
+    __hash__ = None
 
     @trim_zeroes
     def __repr__(self):
@@ -78,7 +57,8 @@ class Pair(object):
 
     def __iter__(self):
         # allow for assignments like: x,y = Point()
-        return iter([getattr(self, attr) for attr in self._coords])
+        yield self._a
+        yield self._b
 
     def __eq__(self, other):
         try:
@@ -123,9 +103,31 @@ class Pair(object):
 class Point(Pair):
     """Represents a 2D location with `x` and `y` properties"""
     _coords = ('x','y')
+    __slots__ = ()
 
-    def __init__(self, *args, **kwargs):
-        super(Point, self).__init__(*args, **kwargs)
+    def __init__(self, *vals, **kwargs):
+        attrs = self._coords
+
+        if len(vals) == 2:
+            # handle Point(x, y)
+            for attr, val in zip(attrs, vals):
+                setattr(self, attr, val)
+        elif len(vals) == 1 and isinstance(vals[0], Pair):
+            # handle things like Point(Point())
+            for attr, val in zip(attrs, vals[0]):
+                setattr(self, attr, val)
+        elif len(vals) == 1 and hasattr(vals[0], '__getitem__'):
+            # handle Point(NSPoint()) and the like
+            for attr, val in zip(attrs, vals[0]):
+                setattr(self, attr, val)
+        elif vals:
+            baddims = '%s requires a single coordinate pair' % self.__class__.__name__
+            raise DeviceError(baddims)
+        else:
+            # kwargs will only be used if there are no positional args
+            kwargs = {k[0]:v for k,v in kwargs.items()}
+            for attr in attrs:
+                setattr(self, attr, kwargs.get(attr, 0.0))
 
     # lib.pathmatics methods (accept either x,y pairs or Point args)
 
@@ -159,47 +161,69 @@ class Point(Pair):
         return Point(pathmatics.coordinates(self.x, self.y, distance, angle))
 
     def _get_x(self):
-        return self._x
+        return self._a
     def _set_x(self, x):
         if not numlike(x):
             raise DeviceError('Point: x coordinate must be int or float (not %r)'%type(x))
-        self._x = float(x)
+        self._a = float(x)
     x = property(_get_x, _set_x)
 
     def _get_y(self):
-        return self._y
+        return self._b
     def _set_y(self, y):
         if not numlike(y):
             raise DeviceError('Point: y coordinate must be int or float (not %r)'%type(y))
-        self._y = float(y)
+        self._b = float(y)
     y = property(_get_y, _set_y)
 
 
 class Size(Pair):
     """Represents a 2D area with `width` and `height` properties"""
     _coords = ('w','h')
+    __slots__ = ()
 
-    def __init__(self, *args, **kwargs):
-        super(Size, self).__init__(*args, **kwargs)
+    def __init__(self, *vals, **kwargs):
+        attrs = self._coords
+
+        if len(vals) == 2:
+            # handle Size(w, h)
+            for attr, val in zip(attrs, vals):
+                setattr(self, attr, val)
+        elif len(vals) == 1 and isinstance(vals[0], Pair):
+            # handle things like Size(Size())
+            for attr, val in zip(attrs, vals[0]):
+                setattr(self, attr, val)
+        elif len(vals) == 1 and hasattr(vals[0], '__getitem__'):
+            # handle Size(NSSize()) and the like
+            for attr, val in zip(attrs, vals[0]):
+                setattr(self, attr, val)
+        elif vals:
+            baddims = '%s requires a single coordinate pair' % self.__class__.__name__
+            raise DeviceError(baddims)
+        else:
+            # kwargs will only be used if there are no positional args
+            kwargs = {k[0]:v for k,v in kwargs.items()}
+            for attr in attrs:
+                setattr(self, attr, kwargs.get(attr, 0.0))
 
     def _get_w(self):
-        return self._w
+        return self._a
     def _set_w(self, w):
         if not numlike(w) and w is not None:
             raise DeviceError('Size: width must be an int or float (not %r)'%type(w))
         elif w:
             w = float(w)
-        self._w = w
+        self._a = w
     w = width = property(_get_w, _set_w)
 
     def _get_h(self):
-        return self._h
+        return self._b
     def _set_h(self, h):
         if not numlike(h) and h is not None:
             raise DeviceError('Size: height must be an int or float (not %r)'%type(h))
         elif h:
             h = float(h)
-        self._h = h
+        self._b = h
     h = height = property(_get_h, _set_h)
 
 
@@ -212,6 +236,7 @@ class Region(object):
         Region(Point, x, y)
         Region(Point, Size)
     """
+    __slots__ = ('_origin', '_size')
     opts = ('x','y','w','h','width','height')
 
     def __init__(self, *args, **kwargs):
