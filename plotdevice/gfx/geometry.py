@@ -102,32 +102,21 @@ class Pair(object):
 
 class Point(Pair):
     """Represents a 2D location with `x` and `y` properties"""
-    _coords = ('x','y')
     __slots__ = ()
 
     def __init__(self, *vals, **kwargs):
-        attrs = self._coords
-
         if len(vals) == 2:
-            # handle Point(x, y)
-            for attr, val in zip(attrs, vals):
-                setattr(self, attr, val)
-        elif len(vals) == 1 and isinstance(vals[0], Pair):
-            # handle things like Point(Point())
-            for attr, val in zip(attrs, vals[0]):
-                setattr(self, attr, val)
-        elif len(vals) == 1 and hasattr(vals[0], '__getitem__'):
-            # handle Point(NSPoint()) and the like
-            for attr, val in zip(attrs, vals[0]):
-                setattr(self, attr, val)
+            self.x, self.y = vals
         elif vals:
-            baddims = '%s requires a single coordinate pair' % self.__class__.__name__
-            raise DeviceError(baddims)
+            try:
+                self.x, self.y = vals[0]
+            except:
+                baddims = 'Point requires a single coordinate pair'
+                raise DeviceError(baddims)
         else:
             # kwargs will only be used if there are no positional args
-            kwargs = {k[0]:v for k,v in kwargs.items()}
-            for attr in attrs:
-                setattr(self, attr, kwargs.get(attr, 0.0))
+            self.x = kwargs.get('x', 0)
+            self.y = kwargs.get('y', 0)
 
     # lib.pathmatics methods (accept either x,y pairs or Point args)
 
@@ -179,32 +168,22 @@ class Point(Pair):
 
 class Size(Pair):
     """Represents a 2D area with `width` and `height` properties"""
-    _coords = ('w','h')
     __slots__ = ()
 
     def __init__(self, *vals, **kwargs):
-        attrs = self._coords
-
         if len(vals) == 2:
-            # handle Size(w, h)
-            for attr, val in zip(attrs, vals):
-                setattr(self, attr, val)
-        elif len(vals) == 1 and isinstance(vals[0], Pair):
-            # handle things like Size(Size())
-            for attr, val in zip(attrs, vals[0]):
-                setattr(self, attr, val)
-        elif len(vals) == 1 and hasattr(vals[0], '__getitem__'):
-            # handle Size(NSSize()) and the like
-            for attr, val in zip(attrs, vals[0]):
-                setattr(self, attr, val)
+            self.w, self.h = vals
         elif vals:
-            baddims = '%s requires a single coordinate pair' % self.__class__.__name__
-            raise DeviceError(baddims)
+            try:
+                self.w, self.h = vals[0]
+            except:
+                baddims = 'Size requires a single coordinate pair'
+                raise DeviceError(baddims)
         else:
             # kwargs will only be used if there are no positional args
             kwargs = {k[0]:v for k,v in kwargs.items()}
-            for attr in attrs:
-                setattr(self, attr, kwargs.get(attr, 0.0))
+            self.w = kwargs.get('w', 0)
+            self.h = kwargs.get('h', 0)
 
     def _get_w(self):
         return self._a
@@ -359,6 +338,12 @@ class Region(object):
 
 ### argument destructuring madness (a.k.a. wouldn't multimethods be nice...) ###
 
+def _abort(stream, coords, types):
+    needed = [t.__name__ for t in types]
+    got = [o.__class__.__name__ for o in objs] + [arg.__class__.__name__ for arg in stream]
+    invalid = 'Invalid coordinates (looking for %r, got %r)' % (needed, got)
+    raise DeviceError(invalid)
+
 def parse_coords(coords, types):
     """Unpacks (and validates) *args tuples representing sets of geometric or numeric types
 
@@ -372,12 +357,6 @@ def parse_coords(coords, types):
     stream = list(coords)
     objs = []
 
-    def abort():
-        needed = [t.__name__ for t in types]
-        got = [o.__class__.__name__ for o in objs] + [arg.__class__.__name__ for arg in stream]
-        invalid = 'Invalid coordinates (looking for %r, got %r)' % (needed, got)
-        raise DeviceError(invalid)
-
     # splice in a Point + Size for any Regions passed in the args
     for i in xrange(len(stream)-1,-1,-1):
         if isinstance(stream[i], Region):
@@ -386,24 +365,24 @@ def parse_coords(coords, types):
     for cls in types:
         # crash on insufficient args
         if not stream:
-            abort()
+            _abort(stream, coords, types)
 
         # unpack the next 1 or 2 args into a Point/Size/float (or die trying)
         try:
-            obj = cls(stream[0])
-            del stream[0]
+            obj = cls(stream[0], stream[1])
+            del stream[:2]
         except:
             try:
-                obj = cls(stream[0], stream[1])
-                del stream[:2]
+                obj = cls(stream[0])
+                del stream[0]
             except:
-                abort()
+                _abort(stream, coords, types)
 
         objs.append(obj)
 
     # crash on extraneous args
     if stream:
-        abort()
+        _abort(stream, coords, types)
 
     # exclude the container list if only one arg is returned
     if len(types) == 1:
