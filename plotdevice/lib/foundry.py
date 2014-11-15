@@ -22,37 +22,30 @@ Vandercook = objc.lookUpClass('Vandercook')
 
 # introspection methods for postscript names/nsfonts
 
-def nsfont(func):
-    return lambda font:func(font if isinstance(font, NSFont) else NSFont.fontWithName_size_(font, 12))
-
-def psfont(func):
-    return lambda font:func(font.fontName() if isinstance(font, NSFont) else font)
-
 def font_names():
     return _fm.availableFonts()
 
-@psfont
 def font_exists(fontname):
     """Return whether a font exists based on psname"""
-    f = NSFont.fontWithName_size_(fontname, 12)
-    return f is not None
+    return fontname in _FAMILIES._hash
 
-@nsfont
-def font_family(font):
-    """Return family name given a psname or nsfont"""
-    return font.familyName()
+def font_family(psname):
+    """Return family name given a psname"""
+    if psname not in _FAMILIES._leafnodes:
+        font = NSFont.fontWithName_size_(psname, 12)
+        _FAMILIES._leafnodes[psname] = font.familyName()
+    return _FAMILIES._leafnodes[psname]
 
-@nsfont
-def font_encoding(font):
-    """Return encoding name given a psname or nsfont"""
+def font_encoding(psname):
+    """Return encoding name given a psname"""
+    font = NSFont.fontWithName_size_(psname, 12)
     enc = font.mostCompatibleStringEncoding()
     enc_name = NSString.localizedNameOfStringEncoding_(enc)
     return re.sub(r' \(Mac OS.*?\)$', '', enc_name)
 
-@nsfont
-def font_face(font):
-    for face in family_members(font.familyName()):
-        if face.psname == font.fontName():
+def font_face(psname):
+    for face in family_members(font_family(psname)):
+        if face.psname == psname:
             return face
     notfound = 'Font: no matches for Postscript name "%s"'%basis
     raise DeviceError(notfound)
@@ -625,8 +618,10 @@ class FontLibrary(object):
         self._lib = {}
         self._hash = _fm.availableFonts()
         self._names = sorted(_fm.availableFontFamilies())
-        self.query = {}
-        self.face = {}
+        self._leafnodes = {} # map psnames to family names
+        self._encodings = {} # map psnames to localized encoding strings
+        self.query = {} # map fammy names to canonical family names
+        self.face = {} # map fontspecs to psnames
 
     @property
     def names(self):
