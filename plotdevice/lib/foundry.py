@@ -245,32 +245,31 @@ def best_face(spec):
 # typography arg validators/standardizers
 
 def fontspec(*args, **kwargs):
-    # convert any bytestrings to unicode (presuming utf8 everywhere)
-    for k,v in kwargs.items():
-        if isinstance(v, str):
-            kwargs[k] = v.decode('utf-8')
-    args = [v.decode('utf-8') if isinstance(v,str) else v for v in args]
 
     # start with kwarg values as the canonical settings
     _canon = ('family','size','weight','italic','width','variant')
-    spec = {k:v for k,v in kwargs.items() if k in _canon}
+    spec = {k:v.decode('utf-8') if isinstance(v,str) else v for k,v in kwargs.items() if k in _canon}
+    basis = kwargs.get('face', kwargs.get('fontname'))
 
     # be backward compatible with the old arg names
     if 'fontsize' in kwargs:
         spec.setdefault('size', kwargs['fontsize'])
-    if 'italic' in spec:
-        spec['italic'] = bool(spec['italic'])
-    if 'family' in spec:
-        spec['family'] = family_name(spec['family'])
 
-    # validate the weight and width args (if any)
-    if not weighty(spec.get('weight','regular')):
-        print 'Font: unknown weight "%s"' % spec.pop('weight')
-    if not widthy(spec.get('width','condensed')) and spec.get('width') is not None:
-        print 'Font: unknown width "%s"' % spec.pop('width')
+    # validate the nsfont-specific spec valuce
+    if spec:
+        if 'italic' in spec:
+            spec['italic'] = bool(spec['italic'])
+        if 'family' in spec:
+            spec['family'] = family_name(spec['family'])
+
+        # validate the weight and width args (if any)
+        if 'weight' in spec and not weighty(spec['weight']):
+            print 'Font: unknown weight "%s"' % spec.pop('weight')
+
+        if spec.get('width') is not None and not widthy(spec['width']):
+            print 'Font: unknown width "%s"' % spec.pop('width')
 
     # look for a postscript name passed as `face` or `fontname` and validate it
-    basis = kwargs.get('face', kwargs.get('fontname'))
     if basis and not font_exists(basis):
         notfound = 'Font: no matches for Postscript name "%s"'%basis
         raise DeviceError(notfound)
@@ -287,8 +286,9 @@ def fontspec(*args, **kwargs):
             # existing Font object
             for k,v in item._spec.items():
                 spec.setdefault(k,v)
-        elif isinstance(item, unicode):
+        elif isinstance(item, basestring):
             # name-like values
+            item = item.decode('utf-8') if isinstance(item,str) else item
             if fammy(item):
                 spec.setdefault('family', family_name(item))
             elif widthy(item):
