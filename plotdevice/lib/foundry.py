@@ -357,9 +357,9 @@ def aat_features(spec):
 
 aat_options = {
     "lig":{
-        0:[("Ligatures", "CommonOff"), ("Ligatures", "RareOff")],
-        1:[("Ligatures", "CommonOn")],
-        all:[("Ligatures", "CommonOn"), ("Ligatures", "RareOn")],
+        0:[("Ligatures", "CommonOff"), ("Ligatures", "ContextualOff")],
+        1:[("Ligatures", "CommonOn"), ("Ligatures", "ContextualOn")],
+        all:[("Ligatures", "CommonOn"), ("Ligatures", "ContextualOn"), ("Ligatures", "RareOn"), ("Ligatures", "HistoricalOn")],
     },
 
     "sc":{

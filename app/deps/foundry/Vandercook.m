@@ -19,8 +19,12 @@ static NSDictionary *AAT;
       @"Ligatures":@(kLigaturesType),
       @"CommonOn":@(kCommonLigaturesOnSelector),
       @"CommonOff":@(kCommonLigaturesOffSelector),
+      @"ContextualOn":@(kContextualLigaturesOnSelector),
+      @"ContextualOff":@(kContextualLigaturesOffSelector),
       @"RareOn":@(kRareLigaturesOnSelector),
       @"RareOff":@(kRareLigaturesOffSelector),
+      @"HistoricalOn":@(kHistoricalLigaturesOnSelector),
+      @"HistoricalOff":@(kHistoricalLigaturesOffSelector),
 
       // sc (both cases share the same selector values)
       @"LowerCase":@(kLowerCaseType), @"UpperCase":@(kUpperCaseType),
