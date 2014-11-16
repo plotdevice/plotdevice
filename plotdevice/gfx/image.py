@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
-from ..util import _copy_attrs
+from ..util import _copy_attrs, autorelease
 from ..util.http import GET
 from ..lib.io import MovieExportSession, ImageExportSession
 from .geometry import Region, Size, Point, Transform, CENTER
@@ -262,6 +262,7 @@ class ImageWriter(object):
         self.session = None
 
     def __enter__(self):
+        self._pool = NSAutoreleasePool.alloc().init()
         _ctx._saveContext()
         _ctx._outputmode = self.mode
         return self
@@ -276,6 +277,7 @@ class ImageWriter(object):
             self.add()
         _ctx._restoreContext()
         self.finish()
+        del self._pool
 
 
     def __del__(self):
@@ -352,10 +354,11 @@ class ImageWriter(object):
                     with seq.frame:
                         ... # draw the next image in the sequence
         """
-        _ctx._saveContext()
-        yield
-        self.add()
-        _ctx._restoreContext()
+        with autorelease():
+            _ctx._saveContext()
+            yield
+            self.add()
+            _ctx._restoreContext()
 
     def add(self):
         """Add a new frame or page with the current contents of the canvas."""

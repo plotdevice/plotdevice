@@ -2,11 +2,12 @@ import os
 import re
 import json
 import csv
+from contextlib import contextmanager
 from collections import namedtuple
 from codecs import open
 from xml.parsers import expat
 from collections import OrderedDict, defaultdict
-from AppKit import NSFontManager, NSFont, NSMacOSRomanStringEncoding, NSItalicFontMask
+from Foundation import NSAutoreleasePool
 from os.path import abspath, dirname, exists, join
 from random import choice, shuffle
 from plotdevice import DeviceError, INTERNAL
@@ -263,6 +264,14 @@ class adict(BetterRepr, dict):
         except KeyError, k:
             raise AttributeError, k
 
+
+### autorelease pool manager ###
+
+@contextmanager
+def autorelease():
+    pool = NSAutoreleasePool.alloc().init()
+    yield
+    del pool
 
 ### datafile unpackers ###
 Element = namedtuple('Element', ['tag', 'attrs', 'parents', 'start', 'end', 'text'])

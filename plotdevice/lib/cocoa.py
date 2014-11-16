@@ -44,7 +44,7 @@ from AppKit import NSAlert, NSApp, NSApplication, NSApplicationActivationPolicyA
                    NSWindowBackingLocationVideoMemory, NSWindowController, NSWorkspace, NSKernAttributeName
 from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, \
                    CIVector, Foundation, NO, NSAffineTransform, NSAffineTransformStruct, \
-                   NSAttributedString, NSBundle, NSData, NSDate, NSDateFormatter, \
+                   NSAttributedString, NSAutoreleasePool, NSBundle, NSData, NSDate, NSDateFormatter, \
                    NSFileCoordinator, NSFileHandle, NSFileHandleDataAvailableNotification, \
                    NSHeight, NSInsetRect, NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, \
                    NSMakeRange, NSMidX, NSMidY, NSMutableAttributedString, NSNotificationCenter, NSObject,\

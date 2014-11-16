@@ -6,7 +6,7 @@ from os.path import exists, expanduser
 
 from .lib.cocoa import *
 from .lib import pathmatics
-from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike
+from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
 from .gfx.geometry import Dimension, parse_coords
 from .gfx import *
 from . import gfx, lib, util, Halted, DeviceError
@@ -1617,8 +1617,10 @@ class Canvas(object):
             else:
                 self.background.set()
                 NSRectFillUsingOperation(rect, NSCompositeSourceOver)
-        for grob in self._grobs:
-            grob._draw()
+
+        with autorelease():
+            for grob in self._grobs:
+                grob._draw()
         # import cProfile
         # cProfile.runctx('[grob._draw() for grob in self._grobs*10]', globals(), {"self":self}, sort='cumulative')
 
