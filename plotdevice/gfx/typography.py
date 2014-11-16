@@ -198,49 +198,13 @@ class Font(object):
 
 
 class Family(object):
-    def __init__(self, famname=None, of=None):
-        if of:
-            famname = font_family(of)
-        elif not famname:
-            badarg = 'Family: requires either a name or a Font object'%famname
-            raise DeviceError(badarg)
+    def __init__(self, famname):
+        if isinstance(famname, Font):
+            famname = famname.family
 
-        q = famname.strip().lower().replace(' ','')
-        matches = [fam for fam in family_names() if q==fam.lower().replace(' ','')]
-        if not matches:
-            notfound = 'Unknown font family "%s"'%famname
-            raise DeviceError(notfound)
-        self._name = matches[0]
-
-        faces = family_members(self._name)
-        self.encoding = font_encoding(faces[0].psname)
-        self._faces = odict( (f.psname,f) for f in faces )
-
-        fam = {"weights":[], "widths":[], "variants":[]}
-        has_italic = False
-        for f in sorted(faces, key=attrgetter('wgt')):
-            for axis in ('weights','variants'):
-                old, new = fam[axis], getattr(f,axis[:-1])
-                if new not in old:
-                    fam[axis].append(new)
-            # has_italic = has_italic or 'italic' in f.traits
-            has_italic = has_italic or f.italic
-        self.has_italic = has_italic
-
-        for f in sorted(faces, key=attrgetter('wid')):
-            if f.width in fam['widths']: continue
-            fam['widths'].append(f.width)
-
-        for axis, vals in fam.items():
-            if axis in ('widths','variants') and any(vals) and None in vals:
-                if axis=='widths':
-                    pass # for widths, the default should be preserved in sort order
-                else:
-                    # for variants, default should be first
-                    fam[axis] = [None] + filter(None,vals)
-            else:
-                fam[axis] = filter(None,vals) # otherwise wipe out the sole None
-            setattr(self, axis, tuple(fam[axis]))
+        self._name = family_name(famname)
+        self._faces = odict( (f.psname,f) for f in family_members(self._name) )
+        self.encoding = font_encoding(self._faces.keys()[0])
 
     def __repr__(self):
         contents = ['"%s"'%self._name, ]
@@ -262,6 +226,41 @@ class Family(object):
     def fonts(self):
         return odict( (k,Font(face=v.psname)) for k,v in self._faces.items())
 
+    @property
+    def has_italic(self):
+        for f in self._faces.values():
+            if f.italic:
+                return True
+        return False
+
+    @property
+    def weights(self):
+        w_names = []
+        for f in sorted(self._faces.values(), key=attrgetter('wgt')):
+            if f.weight not in w_names:
+                w_names.append(f.weight)
+        return tuple(w_names)
+
+    @property
+    def variants(self):
+        v_names = []
+        for f in sorted(self._faces.values(), key=attrgetter('wgt')):
+            if f.variant not in v_names:
+                v_names.append(f.variant)
+        if any(v_names) and None in v_names:
+            return tuple([None] + filter(None,v_names))
+        return tuple(v_names)
+
+    @property
+    def widths(self):
+        w_names = []
+        for f in sorted(self._faces.values(), key=attrgetter('wid')):
+            if f.width not in w_names:
+                w_names.append(f.width)
+        if w_names==[None]:
+            return ()
+        return tuple(w_names)
+
     @classmethod
     def find(cls, like=None, encoding="western"):
         all_fams = family_names()
@@ -280,7 +279,10 @@ class Family(object):
         try:
             return regions[encoding.title()]
         except:
-            nosuchzone = "Couldn't find any matching fonts with an encoding of %r, choose from: %r" % (encoding, regions.keys())
+            if like:
+                nosuchzone = "Couldn't find any fonts matching %r with an encoding of %r" % (like, encoding)
+            else:
+                nosuchzone = "Couldn't find any fonts with an encoding of %r, choose from: %r" % (encoding, regions.keys())
             raise DeviceError(nosuchzone)
 
 
