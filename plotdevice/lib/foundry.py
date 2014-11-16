@@ -67,7 +67,14 @@ def best_face(spec):
 # typography arg validators/standardizers
 
 def fontspec(*args, **kwargs):
+    """Validate a set of font/stylesheet/text args and return a canonicalized
+    font-specification dictionary (which can then be passed to best_face)"""
+    spec = font_axes(*args, **kwargs) # parse nsfont-related args & kwargs
+    spec.update(line_metrics(kwargs)) # incorporate spacing & alignment kwargs
+    spec.update(aat_features(kwargs)) # support AAT/OpenType features
+    return spec
 
+def font_axes(*args, **kwargs):
     # start with kwarg values as the canonical settings
     _canon = ('family','size','weight','italic','width','variant')
     spec = {k:v.decode('utf-8') if isinstance(v,str) else v for k,v in kwargs.items() if k in _canon}
@@ -121,10 +128,6 @@ def fontspec(*args, **kwargs):
                 family_name(item) # raise an exception suggesting family names
         elif numlike(item) and 'size' not in kwargs:
             spec['size'] = float(item)
-
-    # incorporate line- and character-typesetting features
-    spec.update(line_metrics(kwargs))
-    spec.update(aat_features(kwargs))
     return spec
 
 def line_metrics(spec):
