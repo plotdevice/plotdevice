@@ -12,7 +12,7 @@ import cFoundry
 from plotdevice import DeviceError
 
 __all__ = ["font_family", "font_encoding", "font_face", "best_face",
-           "family_names", "family_members", "standardized", "sanitized",
+           "family_names", "family_members", "family_name", "standardized", "sanitized",
            "fontspec", "line_metrics", "aat_attrs", "aat_features",
            ]
 
@@ -20,227 +20,49 @@ Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'v
 LineFragment = namedtuple("LineFragment", ["bounds", "line", "baseline", "span", "text", "frame"])
 Vandercook = objc.lookUpClass('Vandercook')
 
-# introspection methods for postscript names/nsfonts
+# introspection methods for postscript names & families
 
-def font_names():
-    return _fm.availableFonts()
-
-def font_exists(fontname):
+def font_exists(psname):
     """Return whether a font exists based on psname"""
-    return fontname in _FAMILIES._hash
+    return psname in LIBRARY.font_names
 
 def font_family(psname):
     """Return family name given a psname"""
-    if psname not in _FAMILIES._leafnodes:
-        font = NSFont.fontWithName_size_(psname, 12)
-        _FAMILIES._leafnodes[psname] = font.familyName()
-    return _FAMILIES._leafnodes[psname]
+    return LIBRARY.parent_fam(psname)
 
 def font_encoding(psname):
     """Return encoding name given a psname"""
-    font = NSFont.fontWithName_size_(psname, 12)
-    enc = font.mostCompatibleStringEncoding()
-    enc_name = NSString.localizedNameOfStringEncoding_(enc)
-    return re.sub(r' \(Mac OS.*?\)$', '', enc_name)
+    return LIBRARY.encoding(psname)
 
 def font_face(psname):
-    for face in family_members(font_family(psname)):
+    """Return a Face tuple given a psname"""
+    fam = LIBRARY.parent_fam(psname)
+    for face in LIBRARY.list_fam(fam):
         if face.psname == psname:
             return face
     notfound = 'Font: no matches for Postscript name "%s"'%basis
     raise DeviceError(notfound)
 
-# introspection methods for family names
-
 def family_names():
     """A list of all families installed on the machine"""
-    return _FAMILIES.names
+    return LIBRARY.fam_names
+
+def family_members(famname, names=False):
+    """Returns a sorted list of Face tuples for the fonts in a family"""
+    return LIBRARY.list_fam(famname, names)
+
+# fuzzy matchers
 
 def family_name(word):
     """Returns a valid family name if the arg fuzzy matches any existing families"""
-    all_fams = family_names()
-    word = re.sub(r'  +',' ',word.strip())
-    q = sanitized(word)
-
-    # use cached data if possible...
-    if q not in _FAMILIES.query:
-
-        # first try for an exact match
-        if word in all_fams:
-            return word
-
-        # next do a case-insensitive, no-whitespace comparison
-        corpus = sanitized(all_fams)
-        if q in corpus:
-            _FAMILIES.query[q] = all_fams[corpus.index(q)]
-        elif q:
-            # if still no match, compare against a list of names with all the noise words taken out
-            corpus = debranded(all_fams, keep=branding(word))
-            if word in corpus:
-                _FAMILIES.query[q] = all_fams[corpus.index(word)]
-            elif q in sanitized(corpus):
-                # case-insensitive with the de-noised names
-                _FAMILIES.query[q] = all_fams[sanitized(corpus).index(q)]
-
-        if q not in _FAMILIES.query:
-            # give up but first do a broad search and suggest other names in the exception
-            in_corpus = difflib.get_close_matches(q, corpus, 4, cutoff=0)
-            matches = [all_fams[corpus.index(m)] for m in in_corpus]
-            nomatch = "ambiguous font family name \"%s\""%word
-            if matches:
-                nomatch += '.\nDid you mean: %s'%[m.encode('utf-8') for m in matches]
-            _FAMILIES.query[q] = DeviceError(nomatch)
-
-    matched = _FAMILIES.query[q]
+    matched = LIBRARY.best_fam(word)
     if isinstance(matched, Exception):
         raise matched
     return matched
 
-def family_members(famname, names=False):
-    """Returns a sorted list of Face tuples for the fonts in a family"""
-
-    # use cached data if possible...
-    if famname in _FAMILIES:
-        if names:
-            return [f[0] for f in _FAMILIES[famname]]
-        else:
-            return _FAMILIES[famname]
-
-    # ...otherwise build the list of faces
-    all_members = _fm.availableMembersOfFontFamily_(famname)
-    if names:
-        return [f[0] for f in all_members]
-
-    # merge the apple-data and parsed-string info for each face
-    fam = []
-    for psname, dname, questionable_wgt, traits in all_members:
-        weight, wgt, width, wid, var = parse_display_name(dname)
-        traits = tuple([k for k,v in ns_traits.items() if v&traits])
-        slanted = 'italic' in traits
-        fam.append(Face(famname, psname, weight, wgt, width, wid, var, slanted))
-
-    # if the font is totally nuts and doesn't have anything recognizable as a weight in
-    # its name, pick one from the standard list based on the wgt value (because surely
-    # that's set to something sane...)
-    if not any(set(f.weight for f in fam)):
-        fam = [f._replace(weight=std_weights[f.wgt][0].title()) for f in fam]
-
-
-    # if something that looks like a weight pops up as a variant in a face, wipe it out
-    seen_weights = filter(None, set(f.weight for f in fam))
-    seen_vars = filter(None, set(f.variant for f in fam))
-    iffy_vars = [v for v in seen_vars if v in seen_weights]
-    for i,f in enumerate(fam):
-        if f.variant in iffy_vars:
-            fam[i] = f._replace(variant=None)
-
-    # lots of times an italic in the ‘default’ weight will leave that out of its name.
-    # fill this info back in by trying to match its wgt against other weights with
-    # more verbose naming.
-    same_slant = lambda x,y: x.italic==y.italic
-    weightless = lambda: (f for f in fam if f.weight is None)
-    weighted = lambda: (f for f in fam if f.weight is not None)
-
-    if weightless():
-        # built a wgt-val to weight-str lookup table
-        wgt_map = ddict(set)
-        for f in weighted():
-            wgt_map[f.wgt].add(f.weight)
-        wgt_map = {k:list(v) for k,v in wgt_map.items()}
-
-        # if there's only one weight name for this wgt value, it's easy
-        for i,f in enumerate(fam):
-            if f not in weightless(): continue
-            match = wgt_map.get(f.wgt,[])
-            if len(match)==1:
-                fam[i] = f._replace(weight=match[0])
-
-        # otherwise try looking for open slots
-        for i,f in enumerate(fam):
-            if f not in weightless(): continue
-
-            # start with the set of all faces with a named weight
-            candidates = wgt_map.get(f.wgt,[])
-            if not candidates:
-                # if the wgt doesn't match any of them, go through them in
-                # order of distance from the actual value
-                for wgt in sorted(wgt_map.keys(), key=lambda x:abs(x-f.wgt)):
-                    candidates.extend(wgt_map[wgt])
-            others = [o for o in weighted() if o.weight in candidates]
-
-            # try a strict comparison (vs italic) based on weightless face's width
-            sibs = [o.weight for o in others if same_slant(o,f) and o.wid==f.wid]
-            diff = [o.weight for o in others if not same_slant(o,f) and o.wid==f.wid]
-            for candidate in candidates:
-                if candidate in diff and candidate not in sibs:
-                    fam[i] = f._replace(weight=candidate)
-                    break
-            else:
-                # look outside of the current width, but try again to plug an italic/roman
-                # hole in the lineup
-                sibs = [o.weight for o in others if same_slant(o,f)]
-                diff = [o.weight for o in others if not same_slant(o,f)]
-                for candidate in candidates:
-                    if candidate in diff and candidate not in sibs:
-                        fam[i] = f._replace(weight=candidate)
-                        break
-                else:
-                    if candidates:
-                        # otherwise just use the weight that was closest to the wgt number
-                        fam[i] = f._replace(weight=candidates[0])
-                    else:
-                        # or give up utterly
-                        fam[i] = f._replace(weight='Regular')
-
-    # save the collection to the cache before returning it
-    _FAMILIES[famname] = sorted(fam, key=attrgetter('italic','wid','wgt'))
-    return _FAMILIES[famname]
-
 def best_face(spec):
     """Returns the PostScript name of the best match for a given fontspec"""
-
-    _canon = ('family','weight','italic','width','variant')
-    q = hash(tuple(spec[k] for k in _canon))
-    if q in _FAMILIES.face:
-        return font_face(_FAMILIES.face[q])
-
-    # the candidates
-    faces = family_members(spec['family'])
-
-    # map the requested weight/width onto what's available in the family
-    w_spans = {"wgt":[1,14], "wid":[-15,15]}
-    for axis, num_axis in dict(weight='wgt', width='wid').items():
-        w_vals = [getattr(f, num_axis) for f in faces]
-        w_min, w_max = min(w_vals), max(w_vals)
-        spec[num_axis] = max(w_min, min(w_max, spec[num_axis]))
-        w_spans[num_axis] = [w_min, w_max]
-
-    # wipe out any inherited variants that don't exist in this family
-    if spec.get('variant'):
-        if sanitized(spec['variant']) not in [sanitized(f.variant) for f in faces]:
-            spec['variant'] = None
-
-    def score(axis, f):
-        val = spec[axis]
-        vs = getattr(f,axis)
-        if axis in ('wgt','wid'):
-            w_min, w_max = w_spans[axis]
-            agree = 1 if val==vs else -abs(val-vs) / float(max(w_max-w_min, 1))
-        elif axis == 'variant':
-            agree = 1 if sanitized(val) == sanitized(vs) else 0
-        else:
-            agree = 1 if (val or None) == (vs or None) else -1
-        return agree
-
-    scores = {}
-    for f in faces:
-        scores[f] = sum([score(axis,f) for axis in 'italic', 'wgt', 'wid', 'variant'])
-
-    candidates = [dict(score=s, face=f, ps=f.psname) for f,s in scores.items()]
-    candidates.sort(key=itemgetter('score'), reverse=True)
-
-    _FAMILIES.face[q] = candidates[0]['ps']
-    return font_face(_FAMILIES.face[q])
+    return LIBRARY.best_face(spec)
 
 # typography arg validators/standardizers
 
@@ -612,35 +434,231 @@ def parse_display_name(dname):
 
     return weight, wgt_val, width, wid_val, variant
 
-class FontLibrary(object):
-    """Caches any families assembled by familiy_members. Watches NSFontManager for invalidation."""
+class Librarian(object):
     def __init__(self):
-        self._lib = {}
-        self._hash = _fm.availableFonts()
-        self._names = sorted(_fm.availableFontFamilies())
-        self._leafnodes = {} # map psnames to family names
-        self._encodings = {} # map psnames to localized encoding strings
-        self.query = {} # map fammy names to canonical family names
-        self.face = {} # map fontspecs to psnames
-
-    @property
-    def names(self):
-        self.refresh()
-        return self._names[:]
-
-    def __contains__(self, key):
-        self.refresh()
-        return key in self._lib
-
-    def __getitem__(self, key):
-        self.refresh()
-        return self._lib[key]
-
-    def __setitem__(self, key, val):
-        self._lib[key] = val
+        self._fonts = _fm.availableFonts()
+        self._fams = sorted(_fm.availableFontFamilies())
+        self._members = {} # famname -> [Face(), Face(), ...]
+        self._parents = {} # psname -> famname
+        self._enc = {}     # psname -> encoding
+        self._specs = {}   # spec_dict -> psname
+        self._fuzzy = {}   # fammy name -> famname
 
     def refresh(self):
-        if self._hash != _fm.availableFonts():
+        if self._fonts != _fm.availableFonts():
             self.__init__()
 
-_FAMILIES = FontLibrary()
+    @property
+    def heft(self):
+        import sys
+        size = sys.getsizeof(self)
+        for obj in self._fonts, self._fams, self._members, self._parents, self._enc, self._specs, self._fuzzy:
+            size += sys.getsizeof(obj)
+        return size
+
+    @property
+    def font_names(self):
+        self.refresh()
+        return list(self._fonts)
+
+    @property
+    def fam_names(self):
+        self.refresh()
+        return self._fams[:]
+
+    def parent_fam(self, psname):
+        self.refresh()
+        if psname not in self._parents:
+            font = NSFont.fontWithName_size_(psname, 12)
+            self._parents[psname] = font.familyName()
+        return self._parents[psname]
+
+    def encoding(self, psname):
+        """Return encoding name given a psname"""
+        self.refresh()
+        if psname not in self._enc:
+            font = NSFont.fontWithName_size_(psname, 12)
+            enc = font.mostCompatibleStringEncoding()
+            enc_name = NSString.localizedNameOfStringEncoding_(enc)
+            self._enc[psname] = re.sub(r' \(Mac OS.*?\)$', '', enc_name)
+        return self._enc[psname]
+
+    def best_face(self, spec):
+        """Returns the PostScript name of the best match for a given fontspec"""
+
+        _canon = ('family','weight','italic','width','variant')
+        q = hash(tuple(spec[k] for k in _canon))
+
+        self.refresh()
+        if q not in self._specs:
+            # the candidates
+            faces = family_members(spec['family'])
+
+            # map the requested weight/width onto what's available in the family
+            w_spans = {"wgt":[1,14], "wid":[-15,15]}
+            for axis, num_axis in dict(weight='wgt', width='wid').items():
+                w_vals = [getattr(f, num_axis) for f in faces]
+                w_min, w_max = min(w_vals), max(w_vals)
+                spec[num_axis] = max(w_min, min(w_max, spec[num_axis]))
+                w_spans[num_axis] = [w_min, w_max]
+
+            # wipe out any inherited variants that don't exist in this family
+            if spec.get('variant'):
+                if sanitized(spec['variant']) not in [sanitized(f.variant) for f in faces]:
+                    spec['variant'] = None
+
+            def score(axis, f):
+                val = spec[axis]
+                vs = getattr(f,axis)
+                if axis in ('wgt','wid'):
+                    w_min, w_max = w_spans[axis]
+                    agree = 1 if val==vs else -abs(val-vs) / float(max(w_max-w_min, 1))
+                elif axis == 'variant':
+                    agree = 1 if sanitized(val) == sanitized(vs) else 0
+                else:
+                    agree = 1 if (val or None) == (vs or None) else -1
+                return agree
+
+            scores = {}
+            for f in faces:
+                scores[f] = sum([score(axis,f) for axis in 'italic', 'wgt', 'wid', 'variant'])
+
+            candidates = [dict(score=s, face=f, ps=f.psname) for f,s in scores.items()]
+            candidates.sort(key=itemgetter('score'), reverse=True)
+            self._specs[q] = candidates[0]['ps']
+
+        return font_face(self._specs[q])
+
+    def best_fam(self, word):
+        """Returns a valid family name if the arg fuzzy matches any existing families"""
+        self.refresh()
+
+        # first try for an exact match
+        word = re.sub(r'  +',' ',word.strip())
+        if word in self._fams:
+            return word
+
+        if word not in self._fuzzy:
+            # do a case-insensitive, no-whitespace comparison
+            q = sanitized(word)
+            corpus = sanitized(self._fams)
+            if q in corpus:
+                self._fuzzy[word] = self._fams[corpus.index(q)]
+            elif q:
+                # if still no match, compare against a list of names with all the noise words taken out
+                corpus = debranded(self._fams, keep=branding(word))
+                if word in corpus:
+                    self._fuzzy[word] = self._fams[corpus.index(word)]
+                elif q in sanitized(corpus):
+                    # case-insensitive with the de-noised names
+                    self._fuzzy[word] = self._fams[sanitized(corpus).index(q)]
+
+            if q not in self._fuzzy:
+                # give up but first do a broad search and suggest other names in the exception
+                in_corpus = difflib.get_close_matches(q, corpus, 4, cutoff=0)
+                matches = [self._fams[corpus.index(m)] for m in in_corpus]
+                nomatch = "ambiguous font family name \"%s\""%word
+                if matches:
+                    nomatch += '.\nDid you mean: %s'%[m.encode('utf-8') for m in matches]
+                self._fuzzy[word] = DeviceError(nomatch)
+
+        return self._fuzzy[word]
+
+    def list_fam(self, famname, names=False):
+        """Returns a sorted list of Face tuples for the fonts in a family"""
+
+        # use cached data if possible...
+        if famname not in self._members:
+
+            # ...otherwise build the list of faces
+            all_members = _fm.availableMembersOfFontFamily_(famname)
+
+            # merge the apple-data and parsed-string info for each face
+            fam = []
+            for psname, dname, questionable_wgt, traits in all_members:
+                weight, wgt, width, wid, var = parse_display_name(dname)
+                traits = tuple([k for k,v in ns_traits.items() if v&traits])
+                slanted = 'italic' in traits
+                fam.append(Face(famname, psname, weight, wgt, width, wid, var, slanted))
+
+            # if the font is totally nuts and doesn't have anything recognizable as a weight in
+            # its name, pick one from the standard list based on the wgt value (because surely
+            # that's set to something sane...)
+            if not any(set(f.weight for f in fam)):
+                fam = [f._replace(weight=std_weights[f.wgt][0].title()) for f in fam]
+
+
+            # if something that looks like a weight pops up as a variant in a face, wipe it out
+            seen_weights = filter(None, set(f.weight for f in fam))
+            seen_vars = filter(None, set(f.variant for f in fam))
+            iffy_vars = [v for v in seen_vars if v in seen_weights]
+            for i,f in enumerate(fam):
+                if f.variant in iffy_vars:
+                    fam[i] = f._replace(variant=None)
+
+            # lots of times an italic in the ‘default’ weight will leave that out of its name.
+            # fill this info back in by trying to match its wgt against other weights with
+            # more verbose naming.
+            same_slant = lambda x,y: x.italic==y.italic
+            weightless = lambda: (f for f in fam if f.weight is None)
+            weighted = lambda: (f for f in fam if f.weight is not None)
+
+            if weightless():
+                # built a wgt-val to weight-str lookup table
+                wgt_map = ddict(set)
+                for f in weighted():
+                    wgt_map[f.wgt].add(f.weight)
+                wgt_map = {k:list(v) for k,v in wgt_map.items()}
+
+                # if there's only one weight name for this wgt value, it's easy
+                for i,f in enumerate(fam):
+                    if f not in weightless(): continue
+                    match = wgt_map.get(f.wgt,[])
+                    if len(match)==1:
+                        fam[i] = f._replace(weight=match[0])
+
+                # otherwise try looking for open slots
+                for i,f in enumerate(fam):
+                    if f not in weightless(): continue
+
+                    # start with the set of all faces with a named weight
+                    candidates = wgt_map.get(f.wgt,[])
+                    if not candidates:
+                        # if the wgt doesn't match any of them, go through them in
+                        # order of distance from the actual value
+                        for wgt in sorted(wgt_map.keys(), key=lambda x:abs(x-f.wgt)):
+                            candidates.extend(wgt_map[wgt])
+                    others = [o for o in weighted() if o.weight in candidates]
+
+                    # try a strict comparison (vs italic) based on weightless face's width
+                    sibs = [o.weight for o in others if same_slant(o,f) and o.wid==f.wid]
+                    diff = [o.weight for o in others if not same_slant(o,f) and o.wid==f.wid]
+                    for candidate in candidates:
+                        if candidate in diff and candidate not in sibs:
+                            fam[i] = f._replace(weight=candidate)
+                            break
+                    else:
+                        # look outside of the current width, but try again to plug an italic/roman
+                        # hole in the lineup
+                        sibs = [o.weight for o in others if same_slant(o,f)]
+                        diff = [o.weight for o in others if not same_slant(o,f)]
+                        for candidate in candidates:
+                            if candidate in diff and candidate not in sibs:
+                                fam[i] = f._replace(weight=candidate)
+                                break
+                        else:
+                            if candidates:
+                                # otherwise just use the weight that was closest to the wgt number
+                                fam[i] = f._replace(weight=candidates[0])
+                            else:
+                                # or give up utterly
+                                fam[i] = f._replace(weight='Regular')
+
+            # save the collection to the cache before returning it
+            self._members[famname] = sorted(fam, key=attrgetter('italic','wid','wgt'))
+
+        if names:
+            return [f[0] for f in self._members[famname]]
+        return self._members[famname]
+
+LIBRARY = Librarian()
