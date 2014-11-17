@@ -278,11 +278,9 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
         if self._transformmode == CENTER:
             # calculate the (reversible) translation offset for centering (in px)
-            bounds = Region()
-            for frame in self._frames:
-                bounds = bounds.union(frame.offset, frame.size)
-            (dx, dy), (w, h) = self._to_px(bounds)
-            nudge = Transform().translate(dx+w/2.0, dy+h/2.0)
+            bounds = self._to_px(self.bounds)
+            shift = bounds.origin + bounds.size/2.0 - (x, y-baseline)
+            nudge = Transform().translate(*shift)
 
             xf.translate(x, y-baseline) # set the position before applying transforms
             xf.prepend(nudge)           # nudge the block to its center
