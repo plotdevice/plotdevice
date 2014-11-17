@@ -17,7 +17,7 @@ __all__ = ["font_family", "font_encoding", "font_face", "best_face",
            ]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic',])
-LineFragment = namedtuple("LineFragment", ["bounds", "line", "baseline", "span", "text", "frame"])
+LineFragment = namedtuple("LineFragment", ["bounds", "slug", "baseline", "span", "text", "frame"])
 Vandercook = objc.lookUpClass('Vandercook')
 
 # introspection methods for postscript names & families
@@ -241,7 +241,7 @@ def line_fragments(txt_obj, rng=None):
         frame = txt_obj._frames[frag['frame']]
         txt_range = frag['range'].rangeValue()
         info = {
-            "line":frame._from_px(frag['line'].rectValue()),
+            "slug":frame._from_px(frag['line'].rectValue()),
             "bounds":frame._from_px(frag['bounds'].rectValue()),
             "baseline":frame._from_px(frag['baseline'].pointValue()),
             "span":(txt_range.location, txt_range.location+txt_range.length),
@@ -250,7 +250,7 @@ def line_fragments(txt_obj, rng=None):
 
         txt_offset = (txt_obj.x, txt_obj.y-txt_obj.baseline)
         info['baseline'] += frame.offset + txt_offset
-        info['line'].origin += frame.offset + txt_offset
+        info['slug'].origin += frame.offset + txt_offset
         info['bounds'].origin += frame.offset + txt_offset
         info['frame'] = frame
         lines.append(LineFragment(**info))
