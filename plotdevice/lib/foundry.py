@@ -556,7 +556,7 @@ class Librarian(object):
                     # case-insensitive with the de-noised names
                     self._fuzzy[word] = self._fams[sanitized(corpus).index(q)]
 
-            if q not in self._fuzzy:
+            if word not in self._fuzzy:
                 # give up but first do a broad search and suggest other names in the exception
                 in_corpus = difflib.get_close_matches(q, corpus, 4, cutoff=0)
                 matches = [self._fams[corpus.index(m)] for m in in_corpus]
