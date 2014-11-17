@@ -50,11 +50,6 @@ class Pair(object):
     __slots__ = '_a', '_b'
     __hash__ = None
 
-    @trim_zeroes
-    def __repr__(self):
-        dims = ["%s=%.3f"%(attr,d) if numlike(d) else repr(d) for attr, d in zip(self._coords, self)]
-        return self.__class__.__name__ + "(%s, %s)" % tuple(dims)
-
     def __iter__(self):
         # allow for assignments like: x,y = Point()
         yield self._a
@@ -117,6 +112,10 @@ class Point(Pair):
             # kwargs will only be used if there are no positional args
             self.x = kwargs.get('x', 0)
             self.y = kwargs.get('y', 0)
+
+    @trim_zeroes
+    def __repr__(self):
+        return "Point(%.3f, %.3f)" % (self.x, self.y)
 
     # lib.pathmatics methods (accept either x,y pairs or Point args)
 
@@ -184,6 +183,10 @@ class Size(Pair):
             kwargs = {k[0]:v for k,v in kwargs.items()}
             self.w = kwargs.get('w', 0)
             self.h = kwargs.get('h', 0)
+
+    @trim_zeroes
+    def __repr__(self):
+        return "Size(%.3f, %.3f)" % (self.w, self.h)
 
     def _get_w(self):
         return self._a
