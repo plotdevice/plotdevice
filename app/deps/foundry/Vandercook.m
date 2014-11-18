@@ -138,7 +138,7 @@ static NSDictionary *AAT;
 
         // package the measurements
         [fragments addObject:@{
-            @"line": [NSValue valueWithRect:line_rect],
+            @"slug": [NSValue valueWithRect:line_rect],
             @"bounds": [NSValue valueWithRect:glyph_rect],
             @"text": [text substringWithRange:char_range],
             @"range": [NSValue valueWithRange:char_range],
@@ -146,8 +146,7 @@ static NSDictionary *AAT;
             @"baseline": [NSValue valueWithPoint:baseline]
         }];
 
-        // move to the first glyph of the next line fragment
-        cursor += line_range.length;
+        cursor = NSMaxRange(line_range);
     }
     return fragments;
 }

@@ -241,7 +241,7 @@ def line_fragments(txt_obj, rng=None):
         frame = txt_obj._frames[frag['frame']]
         txt_range = frag['range'].rangeValue()
         info = {
-            "slug":frame._from_px(frag['line'].rectValue()),
+            "slug":frame._from_px(frag['slug'].rectValue()),
             "bounds":frame._from_px(frag['bounds'].rectValue()),
             "baseline":frame._from_px(frag['baseline'].pointValue()),
             "span":(txt_range.location, txt_range.location+txt_range.length),
