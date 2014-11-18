@@ -469,8 +469,8 @@ class TextFrame(object):
         self._grid = _ctx._grid._replace()
 
         # create a new container
-        self.block = NSTextContainer.alloc().init()
-        self.block.setLineFragmentPadding_(0)
+        self._block = NSTextContainer.alloc().init()
+        self._block.setLineFragmentPadding_(0)
 
         if isinstance(parent, TextFrame):
             # either piggyback on an existing frame...
@@ -482,7 +482,7 @@ class TextFrame(object):
             self.offset = Point(parent.x, parent.y)
 
         # add ourselves to the layout flow
-        self._parent._layout.addTextContainer_(self.block)
+        self._parent._layout.addTextContainer_(self._block)
 
     @trim_zeroes
     def __repr__(self):
@@ -491,7 +491,7 @@ class TextFrame(object):
     @property
     def idx(self):
         """An integer marking this frame's place in the flow sequence"""
-        return self._parent._layout.textContainers().index(self.block)
+        return self._parent._layout.textContainers().index(self._block)
 
     @property
     def text(self):
@@ -502,8 +502,8 @@ class TextFrame(object):
     @property
     def metrics(self):
         """The size of the rendered text"""
-        self._parent._layout.glyphRangeForTextContainer_(self.block) # force layout & glyph gen
-        _, block_size = self._parent._layout.usedRectForTextContainer_(self.block)
+        self._parent._layout.glyphRangeForTextContainer_(self._block) # force layout & glyph gen
+        _, block_size = self._parent._layout.usedRectForTextContainer_(self._block)
         return self._from_px(block_size)
 
     @property
@@ -512,7 +512,7 @@ class TextFrame(object):
         return foundry.line_fragments(self._parent, rng)
 
     def _eject(self):
-        idx = self._parent._layout.textContainers().index(self.block)
+        idx = self._parent._layout.textContainers().index(self._block)
         self._parent._layout.removeTextContainerAtIndex_(idx)
 
     def _to_px(self, unit):
@@ -548,11 +548,11 @@ class TextFrame(object):
     offset = property(_get_offset, _set_offset)
 
     def _get_size(self):
-        return self._from_px(self.block.containerSize())
+        return self._from_px(self._block.containerSize())
     def _set_size(self, dims):
         new_size = [d or self._from_px(10000000) for d in dims]
         if new_size != self.size:
-            self.block.setContainerSize_([self._to_px(d) for d in new_size])
+            self._block.setContainerSize_([self._to_px(d) for d in new_size])
     size = property(_get_size, _set_size)
 
     def _get_width(self):
@@ -577,7 +577,7 @@ class TextFrame(object):
 
     @property
     def _glyphs(self):
-        return self._parent._layout.glyphRangeForTextContainer_(self.block)
+        return self._parent._layout.glyphRangeForTextContainer_(self._block)
 
     def _draw(self):
         px_offset = self._to_px(self.offset)
