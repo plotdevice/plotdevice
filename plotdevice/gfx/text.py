@@ -493,7 +493,7 @@ class TextMatch(object):
         rng = (self.start, self.end-self.start)
         return foundry.text_frames(self._parent, rng)
 
-class TextFrame(object):
+class TextFrame(BoundsMixin, Grob):
     """Defines a layout region for a Text object's typesetter.
 
     Most Text objects have a single TextFrame which holds the width
@@ -518,8 +518,8 @@ class TextFrame(object):
         `lines` - a list of LineFragments contained in the frame
     """
     def __init__(self, parent):
-        # stash the canvas unit for offset/size calculations
-        self._grid = _ctx._grid._replace()
+        # inherit the canvas-unit methods and a _bounds
+        super(TextFrame, self).__init__()
 
         # create a new container
         self._block = NSTextContainer.alloc().init()
@@ -532,7 +532,6 @@ class TextFrame(object):
         else:
             # ... or become the first frame of a parent Text object
             self._parent = parent
-            self.offset = Point(0,0)
 
         # add ourselves to the layout flow
         self._parent._layout.addTextContainer_(self._block)
@@ -576,58 +575,28 @@ class TextFrame(object):
     def _eject(self):
         idx = self._parent._layout.textContainers().index(self._block)
         self._parent._layout.removeTextContainerAtIndex_(idx)
+        self._parent = None
 
-    def _to_px(self, unit):
-        """Convert from canvas units to postscript points"""
-        if numlike(unit) or isinstance(unit, Pair):
-            return unit * self._grid.dpx
-        return self._grid.to_px.apply(unit)
-
-    def _from_px(self, px):
-        """Convert from postscript points to canvas units"""
-        if numlike(px) or isinstance(px, Pair):
-            return px / self._grid.dpx
-        return self._grid.from_px.apply(px)
-
-    def _get_x(self):
-        return self.offset.x
-    def _set_x(self, x):
-        self.offset = (x, self.y)
-    x = property(_get_x, _set_x)
-
-    def _get_y(self):
-        return self.offset.y
-    def _set_y(self, y):
-        self.offset = (self.x, y)
-    y = property(_get_y, _set_y)
+    def _resized(self):
+        # called by the BoundsMixin when the w or h changed
+        dims = [d or self._from_px(10000000) for d in self._bounds.size]
+        self._block.setContainerSize_(self._to_px(Size(*dims)))
 
     def _get_offset(self):
-        return Point(self._offset)
+        return Point(self._bounds.origin)
     def _set_offset(self, dims):
         if numlike(dims):
             dims = [dims]*2
-        self._offset = Point(*dims)
+        self._bounds.origin = dims
     offset = property(_get_offset, _set_offset)
 
     def _get_size(self):
         return self._from_px(self._block.containerSize())
     def _set_size(self, dims):
-        new_size = [d or self._from_px(10000000) for d in dims]
-        if new_size != self.size:
-            self._block.setContainerSize_([self._to_px(d) for d in new_size])
+        if dims != self._bounds.size:
+            self._bounds.size = dims
+            self._resized()
     size = property(_get_size, _set_size)
-
-    def _get_width(self):
-        return self.size.width
-    def _set_width(self, width):
-        self.size = (width, self.height)
-    w = width = property(_get_width, _set_width)
-
-    def _get_height(self):
-        return self.size.height
-    def _set_height(self, height):
-        self.size = (self.width, height)
-    h = height = property(_get_height, _set_height)
 
     @property
     def alignment(self):
@@ -641,7 +610,13 @@ class TextFrame(object):
     def _glyphs(self):
         return self._parent._layout.glyphRangeForTextContainer_(self._block)
 
+    def draw(self):
+        # we inherit from Grob for the methods, not drawability
+        codependent = "TextFrames can't be drawn directly; plot() the parent Text object instead"
+        raise DeviceError(codependent)
+
     def _draw(self):
+        # called from the parent Text's _draw method
         px_offset = self._to_px(self.offset)
         self._parent._layout.drawGlyphsForGlyphRange_atPoint_(self._glyphs, px_offset)
 
