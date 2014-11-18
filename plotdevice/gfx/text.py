@@ -353,8 +353,9 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     def find(self, regex, matches=0):
         if isinstance(regex, str):
             regex = regex.decode('utf-8')
-        if isinstance(regex, basestring):
-            regex = re.compile(regex, re.S)
+        if isinstance(regex, unicode):
+            flags = (re.I|re.S) if regex.lower()==regex else (re.S)
+            regex = re.compile(regex, flags)
         if not hasattr(regex, 'pattern'):
             nonregex = "Text.find() must be called with an re.compile'd pattern object or a regular expression string"
             raise DeviceError(nonregex)
