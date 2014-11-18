@@ -362,6 +362,14 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
                 frame.height = min_h
 
     @property
+    def _flipped_transform(self):
+        """Returns a Transform object that positions unflipped beziers returned by trace_text"""
+        xf = Transform()
+        xf.translate(self.x, self.y - self.baseline)
+        xf.scale(1.0,-1.0)
+        return xf
+
+    @property
     def _screen_transform(self):
         """Returns the Transform object that will be used to draw the text block.
 
@@ -397,7 +405,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             self._screen_transform.concat()  # transform so text can be drawn at the origin
             with self.effects.applied():     # apply any blend/alpha/shadow effects
                 for frame in self._frames:
-                    frame._draw()
+                    px_offset = self._to_px(frame.offset)
+                    self._layout.drawGlyphsForGlyphRange_atPoint_(frame._glyphs, px_offset)
 
                     # debug: draw a grey background for the text's bounds
                     # NSColor.colorWithDeviceWhite_alpha_(0,.2).set()
@@ -407,15 +416,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     def path(self):
         """Traces the laid-out glyphs and returns them as a single Bezier object"""
 
-        # calculate the proper transform for alignment and flippedness
-        trans = Transform()
-        trans.translate(self.x, self.y - self.baseline)
-        trans.scale(1.0,-1.0)
-
         # generate an unflipped bezier with all the glyphs
-        path = Bezier()
-        for frame in self._frames:
-            path._nsBezierPath.appendBezierPath_(frame._nsBezierPath)
+        path = Bezier(foundry.trace_text(self))
         path.inherit(self)
 
         # set its center-rotation fulcrum based on the frames' bounds rect
@@ -423,7 +425,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         path._fulcrum = origin + size/2.0
 
         # flip the assembled path and slide it into the proper x/y position
-        return trans.apply(path)
+        return self._flipped_transform.apply(path)
 
 
 
@@ -493,6 +495,21 @@ class TextMatch(object):
         rng = (self.start, self.end-self.start)
         return foundry.text_frames(self._parent, rng)
 
+    @property
+    def path(self):
+        """Traces the laid-out glyphs and returns them as a single Bezier object"""
+
+        # generate an unflipped bezier with all the glyphs
+        path = Bezier(foundry.trace_text(self._parent, (self.start, len(self))))
+        path.inherit(self._parent)
+
+        # set its center-rotation fulcrum based on the frames' bounds rect
+        origin, size = self._parent.bounds
+        path._fulcrum = origin + size/2.0
+
+        # flip the assembled path and slide it into the proper x/y position
+        return self._parent._flipped_transform.apply(path)
+
 class TextFrame(BoundsMixin, Grob):
     """Defines a layout region for a Text object's typesetter.
 
@@ -519,7 +536,8 @@ class TextFrame(BoundsMixin, Grob):
     """
     def __init__(self, parent):
         # inherit the canvas-unit methods and a _bounds
-        super(TextFrame, self).__init__()
+        self._bounds = Region((0,0), (None,None))
+        self.inherit()
 
         # create a new container
         self._block = NSTextContainer.alloc().init()
@@ -610,17 +628,27 @@ class TextFrame(BoundsMixin, Grob):
     def _glyphs(self):
         return self._parent._layout.glyphRangeForTextContainer_(self._block)
 
+    @property
+    def _chars(self):
+        rng, _ = self._parent._layout.characterRangeForGlyphRange_actualGlyphRange_(self._glyphs, None)
+        return rng
+
     def draw(self):
         # we inherit from Grob for the methods, not drawability
         codependent = "TextFrames can't be drawn directly; plot() the parent Text object instead"
         raise DeviceError(codependent)
 
-    def _draw(self):
-        # called from the parent Text's _draw method
-        px_offset = self._to_px(self.offset)
-        self._parent._layout.drawGlyphsForGlyphRange_atPoint_(self._glyphs, px_offset)
-
     @property
-    def _nsBezierPath(self):
-        return foundry.trace_text(frame=self)
+    def path(self):
+        """Traces the laid-out glyphs and returns them as a single Bezier object"""
 
+        # generate an unflipped bezier with all the glyphs
+        path = Bezier(foundry.trace_text(self._parent, self._chars))
+        path.inherit(self._parent)
+
+        # set its center-rotation fulcrum based on the frames' bounds rect
+        origin, size = self._parent.bounds
+        path._fulcrum = origin + size/2.0
+
+        # flip the assembled path and slide it into the proper x/y position
+        return self._parent._flipped_transform.apply(path)
