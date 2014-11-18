@@ -466,9 +466,9 @@ class TextFrame(object):
             self._parent = parent._parent
             self.offset, self.size = parent.offset, parent.size
         else:
-            # ... or a parent Text object
+            # ... or become the first frame of a parent Text object
             self._parent = parent
-            self.offset = Point(parent.x, parent.y)
+            self.offset = Point(0,0)
 
         # add ourselves to the layout flow
         self._parent._layout.addTextContainer_(self._block)
