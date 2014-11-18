@@ -45,7 +45,7 @@ from AppKit import NSAlert, NSApp, NSApplication, NSApplicationActivationPolicyA
 from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, \
                    CIVector, Foundation, NO, NSAffineTransform, NSAffineTransformStruct, \
                    NSAttributedString, NSAutoreleasePool, NSBundle, NSData, NSDate, NSDateFormatter, \
-                   NSFileCoordinator, NSFileHandle, NSFileHandleDataAvailableNotification, \
+                   NSFileCoordinator, NSFileHandle, NSFileHandleDataAvailableNotification, NSIntersectionRange, \
                    NSHeight, NSInsetRect, NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, \
                    NSMakeRange, NSMidX, NSMidY, NSMutableAttributedString, NSNotificationCenter, NSObject,\
                    NSOffsetRect, NSOperationQueue, NSPoint, NSRect, NSRectFromString, NSSelectorFromString, \
