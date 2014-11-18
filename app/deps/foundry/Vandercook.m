@@ -77,7 +77,9 @@ static NSDictionary *AAT;
 }
 
 
-+ (NSBezierPath *)traceGlyphs:(NSRange)glyph_range atOffset:(NSPoint)offset withLayout:(NSLayoutManager *)layout{
++ (NSBezierPath *)traceGlyphs:(NSRange)rng atOffset:(NSPoint)offset withLayout:(NSLayoutManager *)layout{
+    NSRange glyph_range = [layout glyphRangeForCharacterRange:rng actualCharacterRange:NULL];
+
     NSBezierPath *path = [NSBezierPath bezierPath];
     NSTextStorage *store = layout.textStorage;
     NSUInteger start = glyph_range.location;

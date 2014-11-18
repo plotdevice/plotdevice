@@ -222,13 +222,21 @@ aat_options = {
 
 # objc-bridged methods for generating beziers from glyphs, measuring text runs, and AAT-styling
 
-def trace_text(frame):
+def trace_text(txt_obj, rng=None):
     """Returns an NSBezierPath with the glyphs contained by a TextFrame object"""
+    if rng is None:
+        rng = (0, len(txt_obj.text))
+
     # assemble the glyphs in px units then transform them back to screen units
     # (since whatever Bezier it's appended to will handle screen->px conversion)
-    offset = frame._to_px(frame.offset)
-    nspath = Vandercook.traceGlyphs_atOffset_withLayout_(frame._glyphs, offset, frame._parent._layout)
-    return frame._from_px(nspath)
+    nspath = NSBezierPath.bezierPath()
+    for frame in txt_obj.frames:
+        offset = frame._to_px(frame.offset)
+        frame_rng = NSIntersectionRange(rng, frame._chars)
+        if frame_rng.length:
+            subpath = Vandercook.traceGlyphs_atOffset_withLayout_(frame_rng, offset, txt_obj._layout)
+            nspath.appendBezierPath_(subpath)
+    return txt_obj._from_px(nspath)
 
 def line_fragments(txt_obj, rng=None):
     """Returns a list of dictionaries describing the line fragments in the entire Text object
