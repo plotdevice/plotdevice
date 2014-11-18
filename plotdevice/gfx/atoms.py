@@ -173,13 +173,18 @@ class BoundsMixin(Grob):
         return self._bounds.width
     def _set_width(self, w):
         self._bounds.width = w
+        self._resized()
     w = width = property(_get_width, _set_width)
 
     def _get_height(self):
         return self._bounds.height
     def _set_height(self, h):
         self._bounds.height = h
+        self._resized()
     h = height = property(_get_height, _set_height)
+
+    def _resized(self):
+        pass # overridden by Text
 
 class ColorMixin(Grob):
     """Mixin class for color support.

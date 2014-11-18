@@ -145,7 +145,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         if attrib_txt:
             # only bother the typesetter if there's text to display
             self._store.appendAttributedString_(attrib_txt)
-            self._autosize()
+            self._resized()
+
 
     def overleaf(self):
         """Returns a Text object containing any characters that did not fit within this object's bounds.
@@ -207,33 +208,13 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             return 0
         return self._frames[0]._from_px(self._layout.locationForGlyphAtIndex_(0).y)
 
-    def _get_x(self):
-        return self._bounds.x
-    def _set_x(self, x):
-        self._bounds.x = x
-    x = property(_get_x, _set_x)
 
-    def _get_y(self):
-        return self._bounds.y
-    def _set_y(self, y):
-        self._bounds.y = y
-    y = property(_get_y, _set_y)
 
-    def _get_width(self):
-        return self._bounds.w
-    def _set_width(self, w):
-        self._bounds.width = w
-        self._autosize()
-    w = width = property(_get_width, _set_width)
 
-    def _get_height(self):
-        return self._bounds.h
-    def _set_height(self, h):
-        self._bounds.height = h
-        self._autosize()
-    h = height = property(_get_height, _set_height)
+    def _resized(self):
+        """Ensure that the first TextFrame's bounds are kept in sync with the Text's. 
+        Called by the BoundsMixin when the width or size is reassigned."""
 
-    def _autosize(self):
         # start with the max w/h passed by the Text object
         dims = self._bounds.size
         frame = self._frames[0]
