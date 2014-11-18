@@ -62,6 +62,7 @@ class Bequest(type):
 class Grob(object):
     """A GRaphic OBject is the base class for all drawing primitives."""
     __metaclass__ = Bequest
+    ctxAttrs = ('_grid',)
 
     def __init__(self, **kwargs):
         self.inherit() # copy over every _ctx attribute we're interested in
@@ -105,6 +106,19 @@ class Grob(object):
         if remaining:
             unknown = "Unknown %s argument%s '%s'" % (cls.__name__, '' if len(remaining)==1 else 's', ", ".join(remaining))
             raise DeviceError(unknown)
+
+    def _to_px(self, unit):
+        """Convert from canvas units to postscript points"""
+        if numlike(unit) or isinstance(unit, Pair):
+            return unit * self._grid.dpx
+        return self._grid.to_px.apply(unit)
+
+    def _from_px(self, px):
+        """Convert from postscript points to canvas units"""
+        if numlike(px) or isinstance(px, Pair):
+            return px / self._grid.dpx
+        return self._grid.from_px.apply(px)
+
 
 class EffectsMixin(Grob):
     """Mixin class for transparency layer support.
@@ -172,19 +186,23 @@ class BoundsMixin(Grob):
     def _get_width(self):
         return self._bounds.width
     def _set_width(self, w):
+        changed = self._bounds.width != w
         self._bounds.width = w
-        self._resized()
+        if changed:
+            self._resized()
     w = width = property(_get_width, _set_width)
 
     def _get_height(self):
         return self._bounds.height
     def _set_height(self, h):
+        changed = self._bounds.height != h
         self._bounds.height = h
-        self._resized()
+        if changed:
+            self._resized()
     h = height = property(_get_height, _set_height)
 
     def _resized(self):
-        pass # overridden by Text
+        pass # overridden by Text & TextFrame
 
 class ColorMixin(Grob):
     """Mixin class for color support.
@@ -213,22 +231,10 @@ class ColorMixin(Grob):
 class TransformMixin(Grob):
     """Mixin class for transformation support.
     Adds the _transform and _transformmode attributes to the class."""
-    ctxAttrs = ('_transform', '_transformmode', '_grid')
+    ctxAttrs = ('_transform', '_transformmode',)
 
     def __init__(self, **kwargs):
         super(TransformMixin, self).__init__(**kwargs)
-
-    def _to_px(self, unit):
-        """Convert from canvas units to postscript points"""
-        if numlike(unit) or isinstance(unit, Pair):
-            return unit * self._grid.dpx
-        return self._grid.to_px.apply(unit)
-
-    def _from_px(self, px):
-        """Convert from postscript points to canvas units"""
-        if numlike(px) or isinstance(px, Pair):
-            return px / self._grid.dpx
-        return self._grid.from_px.apply(px)
 
     def _get_transformmode(self):
         return self._transformmode
