@@ -350,7 +350,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             min_w += frame._from_px(1)
 
             # shift the offset if not left-aligned and drawing to a point
-            nudge = {RIGHT:min_w, CENTER:min_w/2.0}.get(frame.alignment)
+            nudge = {RIGHT:min_w, CENTER:min_w/2.0}.get(frame._alignment)
             if nudge and dims.w is None:
                 frame.x -= nudge
 
@@ -571,8 +571,7 @@ class TextFrame(BoundsMixin, Grob):
     @property
     def text(self):
         """The portion of the parent Text object's string that is visible in this frame"""
-        rng, _ = self._parent._layout.characterRangeForGlyphRange_actualGlyphRange_(self._glyphs, None)
-        return self._parent._store.string().substringWithRange_(rng)
+        return self._parent._store.string().substringWithRange_(self._chars)
 
     @property
     def metrics(self):
@@ -592,8 +591,12 @@ class TextFrame(BoundsMixin, Grob):
     @property
     def lines(self):
         """A list of LineFragments describing the layout within the frame"""
-        rng, _ = self._parent._layout.characterRangeForGlyphRange_actualGlyphRange_(self._glyphs, None)
-        return foundry.line_fragments(self._parent, rng)
+        return foundry.line_fragments(self._parent, self._chars)
+
+    @property
+    def path(self):
+        """Traces the laid-out glyphs and returns them as a single Bezier object"""
+        return TextMatch(self._parent, self).path
 
     def _eject(self):
         idx = self._parent._layout.textContainers().index(self._block)
@@ -622,7 +625,7 @@ class TextFrame(BoundsMixin, Grob):
     size = property(_get_size, _set_size)
 
     @property
-    def alignment(self):
+    def _alignment(self):
         from .typography import _TEXT
         if not self._parent._store.string():
             return LEFT
@@ -631,10 +634,12 @@ class TextFrame(BoundsMixin, Grob):
 
     @property
     def _glyphs(self):
+        # NSRange of glyphs in the frame
         return self._parent._layout.glyphRangeForTextContainer_(self._block)
 
     @property
     def _chars(self):
+        # NSRange of chars in the frame
         rng, _ = self._parent._layout.characterRangeForGlyphRange_actualGlyphRange_(self._glyphs, None)
         return rng
 
@@ -643,7 +648,3 @@ class TextFrame(BoundsMixin, Grob):
         codependent = "TextFrames can't be drawn directly; plot() the parent Text object instead"
         raise DeviceError(codependent)
 
-    @property
-    def path(self):
-        """Traces the laid-out glyphs and returns them as a single Bezier object"""
-        return TextMatch(self._parent, self).path
