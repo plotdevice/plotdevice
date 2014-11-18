@@ -414,7 +414,7 @@ class TextMatch(object):
             self.end = self.start + n
             self.text = match.string()
         elif hasattr(match, 'span'): # re.Match
-            self.start, self.end = match.span()
+            self.start, self.end = match.regs[1] if match.re.groups>0 else match.span()
             self.text = match.group()
             self.m = match
         elif hasattr(match, '_asdict'): # xml Element
