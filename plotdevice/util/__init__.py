@@ -274,7 +274,7 @@ def autorelease():
     del pool
 
 ### datafile unpackers ###
-Element = namedtuple('Element', ['tag', 'attrs', 'parents', 'start', 'end', 'text'])
+Element = namedtuple('Element', ['tag', 'attrs', 'parents', 'start', 'end'])
 class XMLParser(object):
     _log = 0
 
@@ -356,7 +356,7 @@ class XMLParser(object):
 
     def _enter(self, name, attrs):
         parents = tuple(reversed([e.tag for e in self.stack[1:]]))
-        elt = Element(name, attrs, parents, self.cursor, end=None, text=None)
+        elt = Element(name, attrs, parents, self.cursor, end=None)
         self.stack.append(elt)
         self.log(u'<%s>'%(name), indent=1)
 
@@ -369,8 +369,7 @@ class XMLParser(object):
 
     def _leave(self, name):
         node = self.stack.pop()._replace(end=self.cursor)
-        contents = self.text[node.start-self._offset:node.end-self._offset]
-        self.nodes[name].append(node._replace(text=contents))
+        self.nodes[name].append(node)
         self.log(u'</%s>'%(name), indent=-1)
         if name == INTERNAL:
             del self.nodes[INTERNAL]
