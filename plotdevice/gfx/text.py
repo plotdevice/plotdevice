@@ -343,7 +343,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         found = []
         for m in stream:
             match = TextMatch(self, m)
-            if not match.layout and limit is not all:
+            if not match.frames and limit is not all:
                 break
             found.append(match)
             if len(found) == limit:
@@ -441,28 +441,16 @@ class TextMatch(object):
         return 'TextMatch(%s)' % (", ".join(msg))
 
     @property
-    def layout(self):
-        if not hasattr(self, '_layout'):
+    def lines(self):
+        if not hasattr(self, '_lines'):
             rng = (self.start, self.end-self.start)
-            self._layout = foundry.line_fragments(self._parent, rng)
-        return self._layout
+            self._lines = foundry.line_fragments(self._parent, rng)
+        return self._lines
 
     @property
     def frames(self):
-        mgr = self._parent._layout
-        containers = list(mgr.textContainers())
-        start_g = mgr.glyphIndexForCharacterAtIndex_(self.start)
-        end_g = mgr.glyphIndexForCharacterAtIndex_(self.end - 1)
-
-        try:
-            first, _ = mgr.textContainerForGlyphAtIndex_effectiveRange_(start_g, None)
-            last, _ = mgr.textContainerForGlyphAtIndex_effectiveRange_(end_g, None)
-        except IndexError:
-            return []
-        if not last:
-            return self._parent._frames[containers.index(first):]
-        return self._parent._frames[containers.index(first):containers.index(last)+1]
-
+        rng = (self.start, self.end-self.start)
+        return foundry.text_frames(self._parent, rng)
 
 class TextFrame(object):
     def __init__(self, parent):
