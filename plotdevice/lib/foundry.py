@@ -257,6 +257,12 @@ def line_fragments(txt_obj, rng=None):
 
     return lines
 
+def text_frames(txt_obj, rng=None):
+    if rng is None:
+        rng = (0, len(txt_obj.text))
+    containers = Vandercook.textContainersInRange_withLayout_(rng, txt_obj._layout)
+    return [txt_obj._frames[i] for i in containers]
+
 def aat_attrs(spec):
     """Converts a validated features spec to a dict suitable for NSFontDescriptor"""
     settings = []

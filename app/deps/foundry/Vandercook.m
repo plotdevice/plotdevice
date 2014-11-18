@@ -151,4 +151,17 @@ static NSDictionary *AAT;
     return fragments;
 }
 
++ (NSArray *)textContainersInRange:(NSRange)rng withLayout:(NSLayoutManager *)layout{
+  NSRange full_range = [layout glyphRangeForCharacterRange:rng actualCharacterRange:NULL];
+  NSMutableArray *frame_idxs = [NSMutableArray array];
+
+  NSArray *containers = [layout textContainers];
+  for (NSTextContainer *container in containers){
+    NSRange frame_range = [layout glyphRangeForTextContainer:container];
+    if (NSIntersectionRange(frame_range, full_range).length>0){
+      [frame_idxs addObject:@([containers indexOfObject:container])];
+    }
+  }
+  return frame_idxs;
+}
 @end
