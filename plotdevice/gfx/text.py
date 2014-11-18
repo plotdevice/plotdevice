@@ -218,7 +218,6 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     def __getitem__(self, index):
         """Subscripting a Text using indices into its .text string returns a TextMatch"""
         match = TextMatch(self)
-        match.text = self.text[index]
         if isinstance(index, slice):
             match.start, match.end, _ = index.indices(len(self))
         else:
@@ -428,14 +427,14 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         return self._flipped_transform.apply(path)
 
 
-
 class TextMatch(object):
     """Represents a substring region within a Text object (via its `find` or `select` method)
 
     Properties:
       `start` and `end` - the character range of the match
       `text` - the matched substring
-      `layout` - a list of one or more LineFragments describing glyph geometry
+      `lines` - a list of one or more LineFragments describing glyph geometry
+      `path` - a Bezier object with the glyphs from the matched range
 
     Additional properties when .find'ing a regular expression:
       `m` - a regular expression Match object
@@ -453,10 +452,8 @@ class TextMatch(object):
         if hasattr(match, 'range'): # NSSubText
             self.start, n = match.range()
             self.end = self.start + n
-            self.text = match.string()
         elif hasattr(match, 'span'): # re.Match
             self.start, self.end = match.regs[1] if match.re.groups>0 else match.span()
-            self.text = match.group()
             self.m = match
         elif hasattr(match, '_asdict'): # xml Element
             for k,v in match._asdict().items():
@@ -483,6 +480,10 @@ class TextMatch(object):
         msg.append("start=%i" % self.start)
         msg.append("len=%i" % (self.end-self.start))
         return 'TextMatch(%s)' % (", ".join(msg))
+
+    @property
+    def text(self):
+        return self._parent.text[self.start:self.end]
 
     @property
     def lines(self):
@@ -536,6 +537,7 @@ class TextFrame(BoundsMixin, Grob):
         `idx` - a counter marking the frame's place in the sequence
         `metrics` - the size of the used portion of the frame's w & h
         `lines` - a list of LineFragments contained in the frame
+        `path` - a Bezier object with all the visible glyphs in the frame
     """
     def __init__(self, parent):
         # inherit the canvas-unit methods and a _bounds
