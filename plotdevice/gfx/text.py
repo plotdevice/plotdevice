@@ -243,14 +243,14 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
         Args:
           `regex` can be a pattern string or a regex object. Pattern strings without
-          any uppercase characters will be case-insensitively matched. Patterns with 
+          any uppercase characters will be case-insensitively matched. Patterns with
           mixed case will be case-sensitive. In addition, the re.DOTALL flag will be
           passed by default (meaning r'.' will match any character, including newlines).
           Compiled regexes can define their own flags.
 
-          `matches` optionally set the maximum number of results to be returned. If 
-          omitted, find() will return a TextMatch object for every match that's 
-          visible in one of the Text object's TextFrames. Matches that lie in the 
+          `matches` optionally set the maximum number of results to be returned. If
+          omitted, find() will return a TextMatch object for every match that's
+          visible in one of the Text object's TextFrames. Matches that lie in the
           overflow beyond the Text's bounds can be included however: pass the `all`
           keyword as the `matches` arg.
 
@@ -277,12 +277,12 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         Args:
           `tag_name` is a string that corresponds to one of the element names you
           used when calling text() or txt.append() with an `xml` argument. Note that
-          any tag-attributes you defined in the xml will be available through the 
+          any tag-attributes you defined in the xml will be available through the
           resulting TextMatch object's `attrs` property.
 
-          `matches` optionally set the maximum number of results to be returned. If 
-          omitted, select() will return a TextMatch object for every match that's 
-          visible in one of the Text object's TextFrames. Matches that lie in the 
+          `matches` optionally set the maximum number of results to be returned. If
+          omitted, select() will return a TextMatch object for every match that's
+          visible in one of the Text object's TextFrames. Matches that lie in the
           overflow beyond the Text's bounds can be included however: pass the `all`
           keyword as the `matches` arg.
 
@@ -332,7 +332,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     ### Calculating dimensions & rendering ###
 
     def _resized(self):
-        """Ensure that the first TextFrame's bounds are kept in sync with the Text's. 
+        """Ensure that the first TextFrame's bounds are kept in sync with the Text's.
         Called by the BoundsMixin when the width or size is reassigned."""
 
         # start with the max w/h passed by the Text object
@@ -501,16 +501,16 @@ class TextFrame(BoundsMixin, Grob):
     directly since you can just set the x/y/w/h attributes on the Text
     object itself.
 
-    You can create a multi-column layout by iterating over a Text 
+    You can create a multi-column layout by iterating over a Text
     object's .flow() method and manipulating the TextFrames it returns.
     You can also inspect the existing TextFrames without adding new ones
     through the Text object's `frames` property.
 
     Read/Write Properties:
-        `offset` - a Point with the frame's position relative to the parent Text's. 
+        `offset` - a Point with the frame's position relative to the parent Text's.
         `size` - a Size with the maximum width & height of the layout region
         `x`,`y`,`w`,`h` - shorthand accessors for offset & size components
-        
+
     Readable Properties:
         `text` - the substring that is visible in the frame
         `idx` - a counter marking the frame's place in the sequence
