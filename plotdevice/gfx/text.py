@@ -461,6 +461,9 @@ class TextMatch(object):
         elif hasattr(match, '_asdict'): # xml Element
             for k,v in match._asdict().items():
                 setattr(self, k, v)
+        elif hasattr(match, '_chars'): # TextFrame
+            self.start, n = match._chars
+            self.end = self.start + n
 
     def __len__(self):
         return self.end-self.start
@@ -641,14 +644,4 @@ class TextFrame(BoundsMixin, Grob):
     @property
     def path(self):
         """Traces the laid-out glyphs and returns them as a single Bezier object"""
-
-        # generate an unflipped bezier with all the glyphs
-        path = Bezier(foundry.trace_text(self._parent, self._chars))
-        path.inherit(self._parent)
-
-        # set its center-rotation fulcrum based on the frames' bounds rect
-        origin, size = self._parent.bounds
-        path._fulcrum = origin + size/2.0
-
-        # flip the assembled path and slide it into the proper x/y position
-        return self._parent._flipped_transform.apply(path)
+        return TextMatch(self._parent, self).path
