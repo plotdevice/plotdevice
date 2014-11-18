@@ -148,6 +148,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             self._resized()
 
 
+    ### flowing text into new Text objects or subsidiary TextFrames ###
+
     def overleaf(self):
         """Returns a Text object containing any characters that did not fit within this object's bounds.
         If the entire string fits within the current object, returns None."""
@@ -185,13 +187,15 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             self._frames.append(frame)
             yield frame
 
+    ### Layout geometry ###
+
     @property
     def metrics(self):
         """Returns the size of the actual text (typically a subset of the bounds)"""
-        bbox = Region()
+        mbox = Region()
         for frame in self._frames:
-            bbox = bbox.union(frame.offset, frame.metrics)
-        return bbox.size
+            mbox = mbox.union(frame.offset, frame.metrics)
+        return mbox.size
 
     @property
     def bounds(self):
@@ -209,7 +213,123 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         return self._frames[0]._from_px(self._layout.locationForGlyphAtIndex_(0).y)
 
 
+    ### Searching for substrings (and their layout geometry) ###
 
+    def __getitem__(self, index):
+        """Subscripting a Text using indices into its .text string returns a TextMatch"""
+        match = TextMatch(self)
+        match.text = self.text[index]
+        if isinstance(index, slice):
+            match.start, match.end, _ = index.indices(len(self))
+        else:
+            if index < 0:
+                index += len(self)
+            if not 0 <= index < len(self):
+                raise IndexError
+            match.start, match.end = index, index+1
+        return match
+
+    def __len__(self):
+        return len(self.text)
+
+    def find(self, regex, matches=0):
+        """Find all matching portions of the text string using regular expressions
+
+        Syntax:
+          txt.find(re.compile(r'...', re.I)) # match a regex object
+          txt.find(r'antidisest.*?ism') # match a pattern string
+          txt.find(r'foo (.*?) baz') # match the parenthesized group
+          txt.find(r'the', 10) # find the first 10 occurrences of `the'
+
+        Args:
+          `regex` can be a pattern string or a regex object. Pattern strings without
+          any uppercase characters will be case-insensitively matched. Patterns with 
+          mixed case will be case-sensitive. In addition, the re.DOTALL flag will be
+          passed by default (meaning r'.' will match any character, including newlines).
+          Compiled regexes can define their own flags.
+
+          `matches` optionally set the maximum number of results to be returned. If 
+          omitted, find() will return a TextMatch object for every match that's 
+          visible in one of the Text object's TextFrames. Matches that lie in the 
+          overflow beyond the Text's bounds can be included however: pass the `all`
+          keyword as the `matches` arg.
+
+        Returns:
+          a list of TextMatch objects
+        """
+        if isinstance(regex, str):
+            regex = regex.decode('utf-8')
+        if isinstance(regex, unicode):
+            flags = (re.I|re.S) if regex.lower()==regex else (re.S)
+            regex = re.compile(regex, flags)
+        if not hasattr(regex, 'pattern'):
+            nonregex = "Text.find() must be called with an re.compile'd pattern object or a regular expression string"
+            raise DeviceError(nonregex)
+        return self._seek(regex.finditer(self.text), matches)
+
+    def select(self, tag_name, matches=0):
+        """Find all matching portions of the text string using regular expressions
+
+        Syntax:
+          txt.select('em')) # find all visible `em' tag regions
+          txt.select('p', all) # find every `p' tag, even in the overflow
+
+        Args:
+          `tag_name` is a string that corresponds to one of the element names you
+          used when calling text() or txt.append() with an `xml` argument. Note that
+          any tag-attributes you defined in the xml will be available through the 
+          resulting TextMatch object's `attrs` property.
+
+          `matches` optionally set the maximum number of results to be returned. If 
+          omitted, select() will return a TextMatch object for every match that's 
+          visible in one of the Text object's TextFrames. Matches that lie in the 
+          overflow beyond the Text's bounds can be included however: pass the `all`
+          keyword as the `matches` arg.
+
+        Returns:
+          a list of TextMatch objects
+        """
+        if isinstance(tag_name, str):
+            tag_name = tag_name.decode('utf-8')
+        return self._seek(self._nodes.get(tag_name, []), matches)
+
+    def _seek(self, stream, limit):
+        found = []
+        for m in stream:
+            match = TextMatch(self, m)
+            if not match.frames and limit is not all:
+                break
+            found.append(match)
+            if len(found) == limit:
+                break
+        return found
+
+    @property
+    def text(self):
+        """Returns the unicode string being typeset"""
+        return unicode(self._store.string())
+
+    @property
+    def words(self):
+        """Returns a TextMatch for each word in the text string (whitespace separated)"""
+        return [TextMatch(self, w) for w in self._store.words()]
+
+    @property
+    def paragraphs(self):
+        """Returns a TextMatch for each `line' in the text string (newline separated)"""
+        return [TextMatch(self, w) for w in self._store.paragraphs()]
+
+    @property
+    def frames(self):
+        """Returns a list of one or more TextFrames defining the bounding box for layout"""
+        return list(self._frames)
+
+    @property
+    def lines(self):
+        """Returns a list of LineFragments, one for each line in all of the TextFrames"""
+        return foundry.line_fragments(self)
+
+    ### Calculating dimensions & rendering ###
 
     def _resized(self):
         """Ensure that the first TextFrame's bounds are kept in sync with the Text's. 
@@ -285,6 +405,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
     @property
     def path(self):
+        """Traces the laid-out glyphs and returns them as a single Bezier object"""
+
         # calculate the proper transform for alignment and flippedness
         trans = Transform()
         trans.translate(self.x, self.y - self.baseline)
@@ -303,70 +425,6 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         # flip the assembled path and slide it into the proper x/y position
         return trans.apply(path)
 
-
-    def __getitem__(self, index):
-        match = TextMatch(self)
-        match.text = self.text[index]
-        if isinstance(index, slice):
-            match.start, match.end, _ = index.indices(len(self))
-        else:
-            if index < 0:
-                index += len(self)
-            if not 0 <= index < len(self):
-                raise IndexError
-            match.start, match.end = index, index+1
-        return match
-
-    def __len__(self):
-        return len(self.text)
-
-    def _seek(self, stream, limit):
-        found = []
-        for m in stream:
-            match = TextMatch(self, m)
-            if not match.frames and limit is not all:
-                break
-            found.append(match)
-            if len(found) == limit:
-                break
-        return found
-
-    def find(self, regex, matches=0):
-        if isinstance(regex, str):
-            regex = regex.decode('utf-8')
-        if isinstance(regex, unicode):
-            flags = (re.I|re.S) if regex.lower()==regex else (re.S)
-            regex = re.compile(regex, flags)
-        if not hasattr(regex, 'pattern'):
-            nonregex = "Text.find() must be called with an re.compile'd pattern object or a regular expression string"
-            raise DeviceError(nonregex)
-        return self._seek(regex.finditer(self.text), matches)
-
-    def select(self, tag_name, matches=0):
-        if isinstance(tag_name, str):
-            tag_name = tag_name.decode('utf-8')
-        return self._seek(self._nodes.get(tag_name, []), matches)
-
-    @property
-    def text(self):
-        return unicode(self._store.string())
-
-    @property
-    def words(self):
-        return [TextMatch(self, w) for w in self._store.words()]
-
-    @property
-    def paragraphs(self):
-        return [TextMatch(self, w) for w in self._store.paragraphs()]
-
-    @property
-    def frames(self):
-        """Returns a list of one or more TextFrames defining the bounding box for layout"""
-        return list(self._frames)
-
-    @property
-    def lines(self):
-        return foundry.line_fragments(self)
 
 
 class TextMatch(object):
@@ -423,6 +481,7 @@ class TextMatch(object):
 
     @property
     def lines(self):
+        """A list of one or more LineFragments describing text layout within the match"""
         if not hasattr(self, '_lines'):
             rng = (self.start, self.end-self.start)
             self._lines = foundry.line_fragments(self._parent, rng)
@@ -430,10 +489,34 @@ class TextMatch(object):
 
     @property
     def frames(self):
+        """The list of TextFrame objects that the match spans"""
         rng = (self.start, self.end-self.start)
         return foundry.text_frames(self._parent, rng)
 
 class TextFrame(object):
+    """Defines a layout region for a Text object's typesetter.
+
+    Most Text objects have a single TextFrame which holds the width
+    and height of the layout region. You don't need to deal with it
+    directly since you can just set the x/y/w/h attributes on the Text
+    object itself.
+
+    You can create a multi-column layout by iterating over a Text 
+    object's .flow() method and manipulating the TextFrames it returns.
+    You can also inspect the existing TextFrames without adding new ones
+    through the Text object's `frames` property.
+
+    Read/Write Properties:
+        `offset` - a Point with the frame's position relative to the parent Text's. 
+        `size` - a Size with the maximum width & height of the layout region
+        `x`,`y`,`w`,`h` - shorthand accessors for offset & size components
+        
+    Readable Properties:
+        `text` - the substring that is visible in the frame
+        `idx` - a counter marking the frame's place in the sequence
+        `metrics` - the size of the used portion of the frame's w & h
+        `lines` - a list of LineFragments contained in the frame
+    """
     def __init__(self, parent):
         # stash the canvas unit for offset/size calculations
         self._grid = _ctx._grid._replace()
@@ -477,7 +560,16 @@ class TextFrame(object):
         return self._from_px(block_size)
 
     @property
+    def bounds(self):
+        """The position & size of the frame in canvas coordinates"""
+        txt = self._parent
+        bbox = Region(self.offset, self.size)
+        bbox.origin += Point(txt.x, txt.y-txt.baseline)
+        return bbox
+
+    @property
     def lines(self):
+        """A list of LineFragments describing the layout within the frame"""
         rng, _ = self._parent._layout.characterRangeForGlyphRange_actualGlyphRange_(self._glyphs, None)
         return foundry.line_fragments(self._parent, rng)
 
