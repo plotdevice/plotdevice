@@ -500,6 +500,14 @@ class TextMatch(object):
         return foundry.text_frames(self._parent, rng)
 
     @property
+    def bounds(self):
+        """Returns the bounding box in which the text will be laid out"""
+        bbox = Region()
+        for slug in self.lines:
+            bbox = bbox.union(slug.bounds)
+        return bbox
+
+    @property
     def path(self):
         """Traces the laid-out glyphs and returns them as a single Bezier object"""
 
