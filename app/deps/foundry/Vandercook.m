@@ -140,7 +140,7 @@ static NSDictionary *AAT;
 
         // package the measurements
         [fragments addObject:@{
-            @"slug": [NSValue valueWithRect:line_rect],
+            @"layout": [NSValue valueWithRect:line_rect],
             @"bounds": [NSValue valueWithRect:glyph_rect],
             @"text": [text substringWithRange:char_range],
             @"range": [NSValue valueWithRange:char_range],
