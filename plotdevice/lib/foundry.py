@@ -16,7 +16,7 @@ __all__ = ["font_family", "font_encoding", "font_face", "best_face",
            "fontspec", "line_metrics", "aat_attrs", "aat_features",
            ]
 
-Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic',])
+Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic', 'ascent', 'descent'])
 LineFragment = namedtuple("LineFragment", ["bounds", "layout", "baseline", "span", "text", "frame"])
 Vandercook = objc.lookUpClass('Vandercook')
 
@@ -452,6 +452,8 @@ def parse_display_name(dname):
     return weight, wgt_val, width, wid_val, variant
 
 class Librarian(object):
+    _mgr = NSLayoutManager.alloc().init()
+
     def __init__(self):
         self._fonts = _fm.availableFonts()
         self._fams = sorted(_fm.availableFontFamilies())
@@ -460,6 +462,7 @@ class Librarian(object):
         self._enc = {}     # psname -> encoding
         self._specs = {}   # spec_dict -> psname
         self._fuzzy = {}   # fammy name -> famname
+        self._mgr.setUsesFontLeading_(False)
 
     def refresh(self):
         if self._fonts != _fm.availableFonts():
@@ -596,7 +599,11 @@ class Librarian(object):
                 weight, wgt, width, wid, var = parse_display_name(dname)
                 traits = tuple([k for k,v in ns_traits.items() if v&traits])
                 slanted = 'italic' in traits
-                fam.append(Face(famname, psname, weight, wgt, width, wid, var, slanted))
+
+                fnt = NSFont.fontWithName_size_(psname,1000.0)
+                ascent = fnt.ascender()
+                descent = fnt.descender()
+                fam.append(Face(famname, psname, weight, wgt, width, wid, var, slanted, ascent, descent))
 
             # if the font is totally nuts and doesn't have anything recognizable as a weight in
             # its name, pick one from the standard list based on the wgt value (because surely
