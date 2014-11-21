@@ -59,6 +59,7 @@ class Context(object):
         self.canvas.reset()
         self.canvas.background = Color(1.0)
         self.canvas.speed = None
+        self.canvas.unit = px
 
         # keep track of non-px canvas units
         self._grid = GridUnits(px, 1, Transform(), Transform())
