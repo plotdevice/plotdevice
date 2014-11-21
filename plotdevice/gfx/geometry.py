@@ -314,11 +314,25 @@ class Region(object):
         self._origin.x = x
     x = property(_get_x, _set_x)
 
+    def _get_left(self):
+        return self._origin.x
+    def _set_left(self, left):
+        self._origin.x = left
+        self._size.w += self._origin.x - left
+    l = left = property(_get_left, _set_left)
+
     def _get_y(self):
         return self._origin.y
     def _set_y(self, y):
         self._origin.y = y
     y = property(_get_y, _set_y)
+
+    def _get_top(self):
+        return self._origin.y
+    def _set_top(self, top):
+        self._origin.y = top
+        self._size.h += self._origin.y - top
+    t = top = property(_get_top, _set_top)
 
     def _get_size(self):
         return self._size
@@ -332,12 +346,23 @@ class Region(object):
         self._size.w = w
     w = width = property(_get_w, _set_w)
 
+    def _get_right(self):
+        return self._origin.x + self._size.w
+    def _set_right(self, right):
+        self._size.w = right - self._origin.x
+    r = right = property(_get_right, _set_right)
+
     def _get_h(self):
         return self._size.h
     def _set_h(self, h):
         self._size.h = h
     h = height = property(_get_h, _set_h)
 
+    def _get_bottom(self):
+        return self._origin.y + self._size.h
+    def _set_bottom(self, bottom):
+        self._size.h = bottom - self._origin.y
+    b = bottom = property(_get_bottom, _set_bottom)
 
 ### argument destructuring madness (a.k.a. wouldn't multimethods be nice...) ###
 
