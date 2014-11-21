@@ -360,11 +360,12 @@ class Stylesheet(object):
         graf = NSMutableParagraphStyle.alloc().init()
         graf.setLineBreakMode_(NSLineBreakByWordWrapping)
         graf.setAlignment_(_TEXT[spec['align']])
-        graf.setLineHeightMultiple_(spec['leading'])
         graf.setHyphenationFactor_(spec['hyphenate'])
-        # graf.setLineSpacing_(extra_px_of_lead)
-        # graf.setParagraphSpacing_(1em?)
-        # graf.setMinimumLineHeight_(self._lineheight)
+
+        # force the typesetter to deal with real leading rather than `lineheight'
+        face_height = font.size * (font._face.ascent - font._face.descent) / 1000.0
+        graf.setLineHeightMultiple_(spec['leading'] * font.size / face_height)
+        graf.setMaximumLineHeight_(font.size*spec['leading'])
 
         if not spec['tracking']:
             # None means `kerning off entirely', 0 means `default letterspacing'
