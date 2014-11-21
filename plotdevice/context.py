@@ -1028,10 +1028,11 @@ class Context(object):
 
     def font(self, *args, **kwargs):
         """Set the current font to be used in subsequent calls to text()"""
-        newfont = Font(*args, **kwargs)
-        newfont._rollback = self._font
-        self._font = newfont
-        return newfont
+        if args or kwargs:
+            newfont = Font(*args, **kwargs)
+            newfont._rollback = self._font
+            self._font = newfont
+        return self._font
 
     def fontsize(self, fontsize=None):
         """Legacy command. Equivalent to: font(size=fontsize)"""
