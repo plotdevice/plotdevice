@@ -191,14 +191,6 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     ### Layout geometry ###
 
     @property
-    def metrics(self):
-        """Returns the size of the actual text (typically a subset of the bounds)"""
-        mbox = Region()
-        for frame in self._frames:
-            mbox = mbox.union(frame.offset, frame.metrics)
-        return mbox.size
-
-    @property
     def bounds(self):
         """Returns the bounding box in which the text will be laid out"""
         bbox = Region()
@@ -207,10 +199,24 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         return bbox
 
     @property
-    def baseline(self):
-        if not self._store.length():
-            return 0
-        return self._frames[0]._from_px(self._layout.locationForGlyphAtIndex_(0).y)
+    def layout(self):
+        """Returns the size & position of the actual text (typically a subset of the bounds)"""
+        lbox = Region()
+        for frame in self._frames:
+            lbox = lbox.union(frame.layout)
+        return lbox
+
+    @property
+    def metrics(self):
+        """Returns the size of the actual text (shorthand for Text.layout.size)"""
+        return self.layout.size
+
+    def _get_baseline(self):
+        """Returns the Text object's baseline `origin point'"""
+        return Point(self.x, self.y)
+    def _set_baseline(self, baseline):
+        self.x, self.y = baseline
+    baseline = property(_get_baseline, _set_baseline)
 
 
     ### Searching for substrings (and their layout geometry) ###
@@ -361,10 +367,17 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
                 frame.height = min_h
 
     @property
+    def _headroom(self):
+        """Returns the distance between the Text's origin and the top of its bounds box"""
+        if not self._store.length():
+            return 0
+        return self._frames[0]._from_px(self._layout.locationForGlyphAtIndex_(0).y)
+
+    @property
     def _flipped_transform(self):
         """Returns a Transform object that positions unflipped beziers returned by trace_text"""
         xf = Transform()
-        xf.translate(self.x, self.y - self.baseline)
+        xf.translate(self.x, self.y - self._headroom)
         xf.scale(1.0,-1.0)
         return xf
 
@@ -379,7 +392,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
         # gather the relevant text metrics (and convert them from canvas- to pixel-units)
         x, y = self._to_px(Point(self.x, self.y))
-        baseline = self._to_px(self.baseline)
+        baseline = self._to_px(self._headroom)
 
         # accumulate transformations in a fresh matrix
         xf = Transform()
@@ -501,10 +514,18 @@ class TextMatch(object):
 
     @property
     def bounds(self):
-        """Returns the bounding box in which the text will be laid out"""
+        """Returns the bounding box for the lines containing the match"""
         bbox = Region()
         for slug in self.lines:
             bbox = bbox.union(slug.bounds)
+        return bbox
+
+    @property
+    def layout(self):
+        """Returns the bounding box of the matched characters"""
+        bbox = Region()
+        for slug in self.lines:
+            bbox = bbox.union(slug.layout)
         return bbox
 
     @property
@@ -582,21 +603,25 @@ class TextFrame(BoundsMixin, Grob):
         return self._parent._store.string().substringWithRange_(self._chars)
 
     @property
-    def metrics(self):
-        """The size of the rendered text"""
-        self._parent._layout.glyphRangeForTextContainer_(self._block) # force layout & glyph gen
-        _, block_size = self._parent._layout.usedRectForTextContainer_(self._block)
-        return self._from_px(block_size)
-
-    @property
     def bounds(self):
         """The position & size of the frame in canvas coordinates"""
-        txt = self._parent
-        fnt, _ = txt._store.attribute_atIndex_effectiveRange_("NSFont", self._chars.location, None);
-
         bbox = Region(self.offset, self.size)
-        bbox.origin += Point(txt.x, txt.y-self._from_px(fnt.ascender()))
+        bbox.origin += self._parent.baseline - (0, self._from_px(self._headroom))
         return bbox
+
+    @property
+    def layout(self):
+        """The position & size of the frame's text in canvas coordinates"""
+        self._parent._layout.glyphRangeForTextContainer_(self._block) # force layout & glyph gen
+        origin, size = self._parent._layout.usedRectForTextContainer_(self._block)
+        origin.y -= self._headroom # adjust for the ascent above baseline
+        origin += self.offset + self._parent.baseline
+        return self._from_px(Region(origin, size))
+
+    @property
+    def metrics(self):
+        """The size of the rendered text"""
+        return self.layout.size
 
     @property
     def lines(self):
@@ -607,6 +632,11 @@ class TextFrame(BoundsMixin, Grob):
     def path(self):
         """Traces the laid-out glyphs and returns them as a single Bezier object"""
         return TextMatch(self._parent, self).path
+
+    @property
+    def _headroom(self):
+        fnt, _ = self._parent._store.attribute_atIndex_effectiveRange_("NSFont", self._chars.location, None);
+        return fnt.ascender()
 
     def _eject(self):
         idx = self._parent._layout.textContainers().index(self._block)

@@ -257,7 +257,7 @@ def line_fragments(txt_obj, rng=None):
             "frame":frame,
         }
 
-        offset = frame.offset + (txt_obj.x, txt_obj.y)
+        offset = frame.offset + txt_obj.baseline
         info['baseline'] += offset
         info['layout'].origin += offset
         info['bounds'].origin += offset
