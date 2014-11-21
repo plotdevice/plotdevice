@@ -171,29 +171,38 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             next_pg._store.deleteCharactersInRange_([0, len(seen)])
             return next_pg
 
-    def flow(self, layout=None):
+    def flow(self, columns=all, layout=None):
         """Add as many text frames as necessary to fully lay out the string
 
         When called without arguments, returns a generator that you can iterate through to
         set the position and size of each frame in turn (starting with the second). Each frame
         is initialized with the same dimensions as the previous frame in the sequence.
 
-        The optional layout argument can be a reference to a function which takes a single
+        The optional `columns` argument allows you to specify the maximum number of frames
+        you'd like to have at the end of the process. Note that this count *includes* the
+        Text object's original frame, so you'll iterate over columns-1 frames during the flow.
+
+        The optional `layout` argument can be a reference to a function which takes a single
         TextFrame argument. If present, your layout function will be called once for each
         frame added to the stream.
         """
-        if not layout:
-            return self._reflow   # return the generator for iteration
-        map(layout, self._reflow) # apply the layout function to each frame in sequence
+        # sanity-check the columns arg
+        columns = 1e4 if columns is all else int(columns or 1)
+        if columns <= 1:
+            # no iteration necessary in the single-frame case
+            return list(self._reflow(columns))
 
-    @property
-    def _reflow(self):
+        if not layout:
+            return self._reflow(columns)   # return the generator for iteration
+        map(layout, self._reflow(columns)) # apply the layout function to each frame in sequence
+
+    def _reflow(self, count):
         # wipe out any previously set frames then keep adding new ones until
         # the glyphs are fully laid out
         while self._frames[1:]:
             self._frames.pop()._eject()
         frame = self._frames[0]
-        while sum(frame._glyphs) < self._layout.numberOfGlyphs():
+        while len(self._frames) < count and sum(frame._glyphs) < self._layout.numberOfGlyphs():
             frame = TextFrame(frame)
             self._frames.append(frame)
             yield frame
