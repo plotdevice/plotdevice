@@ -65,6 +65,16 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         # fontify the str/xml/src arg and store it in the TextFrame
         self.append(**{k:v for k,v in kwargs.items() if k in self.opts})
 
+    def __repr__(self):
+        total = len(self.text)
+        displayed = sum(self.frames[-1]._chars)
+        msg = "%i character%s" % (total, '' if total==1 else 's')
+        if displayed < total:
+            msg = '%i/%s'%(displayed, msg)
+        if self.frames[1:]:
+            msg += ' in %i frames' % len(self.frames)
+        return "Text(%s)" % msg
+
     def append(self, txt=None, **kwargs):
         """Add a string to the end of the text run (with optional styling)
 
