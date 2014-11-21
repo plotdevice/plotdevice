@@ -548,6 +548,11 @@ class TextMatch(object):
         return bbox
 
     @property
+    def metrics(self):
+        """The size of the rendered text"""
+        return self.layout.size
+
+    @property
     def path(self):
         """Traces the laid-out glyphs and returns them as a single Bezier object"""
 

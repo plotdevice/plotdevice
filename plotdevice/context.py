@@ -1434,9 +1434,9 @@ class Context(object):
         return its pixel dimensions.
         """
         if isinstance(obj, basestring):
-            txt = Text(obj, 0, 0, width, height, **kwargs)
-            return txt.metrics
-        elif isinstance(obj, Text):
+            obj = Text(obj, 0, 0, width, height, **kwargs)
+
+        if hasattr(obj, 'metrics'):
             return obj.metrics
         elif isinstance(obj, file):
             return Image(obj.name).size
