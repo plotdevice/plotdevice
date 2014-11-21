@@ -257,10 +257,10 @@ def line_fragments(txt_obj, rng=None):
             "frame":frame,
         }
 
-        txt_offset = (txt_obj.x, txt_obj.y-txt_obj.baseline)
-        info['baseline'] += frame.offset + txt_offset
-        info['layout'].origin += frame.offset + txt_offset
-        info['bounds'].origin += frame.offset + txt_offset
+        offset = frame.offset + (txt_obj.x, txt_obj.y)
+        info['baseline'] += offset
+        info['layout'].origin += offset
+        info['bounds'].origin += offset
         lines.append(LineFragment(**info))
 
     return lines

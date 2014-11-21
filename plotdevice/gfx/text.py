@@ -30,6 +30,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         # assemble the NSMachinery
         self._layout = NSLayoutManager.alloc().init()
         self._layout.setUsesScreenFonts_(False)
+        self._layout.setUsesFontLeading_(False)
         self._store = NSTextStorage.alloc().init()
         self._store.addLayoutManager_(self._layout)
 
@@ -202,8 +203,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         """Returns the bounding box in which the text will be laid out"""
         bbox = Region()
         for frame in self._frames:
-            bbox = bbox.union(frame.offset, frame.size)
-        bbox.origin += Point(self.x, self.y-self.baseline)
+            bbox = bbox.union(frame.bounds)
         return bbox
 
     @property
@@ -592,8 +592,10 @@ class TextFrame(BoundsMixin, Grob):
     def bounds(self):
         """The position & size of the frame in canvas coordinates"""
         txt = self._parent
+        fnt, _ = txt._store.attribute_atIndex_effectiveRange_("NSFont", self._chars.location, None);
+
         bbox = Region(self.offset, self.size)
-        bbox.origin += Point(txt.x, txt.y-txt.baseline)
+        bbox.origin += Point(txt.x, txt.y-self._from_px(fnt.ascender()))
         return bbox
 
     @property

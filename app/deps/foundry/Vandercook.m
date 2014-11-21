@@ -112,6 +112,7 @@ static NSDictionary *AAT;
     NSRange full_range = [layout glyphRangeForCharacterRange:rng actualCharacterRange:NULL];
     NSArray *frames = [layout textContainers];
     NSString *text = [[layout textStorage] string];
+    NSTextStorage *store = [layout textStorage];
     NSMutableArray *fragments = [NSMutableArray array];
 
     NSUInteger cursor = full_range.location;
@@ -135,8 +136,16 @@ static NSDictionary *AAT;
         NSRect glyph_rect = NSIntersectionRect(bounds_rect, used_rect);
 
         // calculate the baseline origin for the first glyph in the line
-        NSPoint glyph_pt = [layout locationForGlyphAtIndex:cursor];
-        NSPoint baseline = NSOffsetRect(line_rect, glyph_pt.x, glyph_pt.y).origin;
+        // NSPoint glyph_pt = [layout locationForGlyphAtIndex:cursor];
+        NSPoint baseline = NSMakePoint(glyph_rect.origin.x, line_rect.origin.y);
+
+        // adjust the rects to reflect the baseline offset
+        NSFont *glyph_font = [store attribute:@"NSFont" atIndex:char_range.location effectiveRange:nil];
+        line_rect.origin.y -= [glyph_font ascender];
+        glyph_rect.origin.y -= [glyph_font ascender];
+
+        // have the glyph bounds-rect exclude any extra lead
+        glyph_rect.size.height = [glyph_font ascender] - [glyph_font descender];
 
         // package the measurements
         [fragments addObject:@{
