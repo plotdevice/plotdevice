@@ -469,7 +469,7 @@ class Dimension(MagicNumber):
 # the px, inch, pica, cm, & mm globals are Unit objects
 class Unit(MagicNumber):
     """A standard unit of measurement."""
-    _dpx = {"px":1.0, "inch":72.0, "pica":12.0, "cm":72/2.54, "mm":72/.254}
+    _dpx = {"px":1.0, "inch":72.0, "pica":12.0, "cm":72/2.54, "mm":72/25.4}
 
     def __init__(self, name):
         self.name = name
