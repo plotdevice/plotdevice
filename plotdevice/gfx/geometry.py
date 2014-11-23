@@ -598,6 +598,8 @@ class Transform(object):
         return xf
 
     def translate(self, x=0, y=0, **opt):
+        if isinstance(x, (Pair, list, tuple)):
+            x, y = x
         xf = Transform()
         xf._nsAffineTransform.translateXBy_yBy_(x, y)
         if opt.get('rollback'):
@@ -606,7 +608,9 @@ class Transform(object):
         return xf
 
     def scale(self, x=1, y=None, **opt):
-        if y is None:
+        if isinstance(x, (Pair, list, tuple)):
+            x, y = x
+        elif y is None:
             y = x
         xf = Transform()
         xf._nsAffineTransform.scaleXBy_yBy_(x, y)
