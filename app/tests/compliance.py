@@ -59,7 +59,7 @@ def textblock(x, y):
         align(alignment)
         stroke(.5)
         nofill()
-        rect(x, y-12, 50, 50, dash=3)
+        rect(x, y-font().ascender, 50, 50, dash=3)
         fill(0)
         text("Lorem ipsum dolor sit amet, consectetuer adipiscing elit.", x, y, width=50, height=50)
         x += 80
