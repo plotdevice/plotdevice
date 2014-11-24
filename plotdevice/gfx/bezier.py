@@ -7,7 +7,7 @@ from plotdevice import DeviceError
 from . import _cg_context
 from .atoms import PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .colors import Color, Gradient, Pattern
-from .geometry import CENTER, Transform, Region, Size, Point, DEGREES
+from .geometry import CENTER, DEGREES, Transform, Region, Point
 from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten, numlike
 from ..lib import pathmatics
 
@@ -348,7 +348,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     @property
     def bounds(self):
         try:
-            return Region(*self._nsBezierPath.bounds())
+            return Region(self._nsBezierPath.bounds())
         except:
             # Path is empty -- no bounds
             return Region()

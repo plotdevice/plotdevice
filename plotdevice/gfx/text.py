@@ -630,7 +630,8 @@ class TextFrame(BoundsMixin, Grob):
     def bounds(self):
         """The position & size of the frame in canvas coordinates"""
         bbox = Region(self.offset, self.size)
-        bbox.origin += self._parent.baseline - (0, self._from_px(self._headroom))
+        bbox.origin += self._parent.baseline
+        bbox.y -= self._from_px(self._headroom)
         return bbox
 
     @property
