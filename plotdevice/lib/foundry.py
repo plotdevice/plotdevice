@@ -132,7 +132,7 @@ def font_axes(*args, **kwargs):
 
 def line_metrics(spec):
     # start with kwarg values as the canonical settings
-    _canon = ('size','align','leading','tracking','hyphenate')
+    _canon = ('size','align','leading','tracking','indent','hyphenate')
     spec = {k:v for k,v in spec.items() if k in _canon}
 
     # validate alignment
@@ -141,7 +141,7 @@ def line_metrics(spec):
         raise DeviceError(chaoticneutral)
 
     # floatify dimensions and hyphenation (mapping bools to 0/1)
-    for attr in 'size', 'leading', 'tracking', 'hyphenate':
+    for attr in 'size', 'leading', 'tracking', 'indent', 'hyphenate':
         if attr in spec:
             spec[attr] = float(spec[attr])
 

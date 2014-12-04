@@ -1,5 +1,6 @@
 # encoding: utf-8
 import sys
+import re
 from operator import attrgetter
 from plotdevice.util import odict
 from ..lib.cocoa import *
@@ -32,7 +33,7 @@ class Font(object):
         # handle the bootstrap case where we're initializing the ctx's font
         if args==(None,):
             self._face = font_face("HelveticaNeue")
-            self._metrics = dict(size=24.0, leading=1.2, tracking=0, align=LEFT, hyphenate=0)
+            self._metrics = dict(size=24.0, leading=1.2, tracking=0, indent=0, align=LEFT, hyphenate=0)
             self._features = {}
             return
 
@@ -342,6 +343,23 @@ class Stylesheet(object):
             self._styles[name] = spec
         return self[name]
 
+    def _dedent(self, attr_str, first=False):
+        """Ensure that any paragraph that has more than one leading newline is un-indented.
+
+        Destructively modifies the attributed-string, zapping indentation on the initial line
+        as well if the `first` flag is True.
+        """
+        zap = [0] if first else [] # `first` means this is the leading char of a Text grob
+        for m in re.finditer(r'\n\n+[^\n]', attr_str.string()):
+            zap.append(m.end()-1)
+
+        for idx in zap:
+            old_graf, _ = attr_str.attribute_atIndex_effectiveRange_("NSParagraphStyle", idx, None);
+            graf = old_graf.mutableCopy()
+            graf.setFirstLineHeadIndent_(0)
+            attr_str.addAttribute_value_range_("NSParagraphStyle", graf, (idx, 1))
+        return attr_str
+
     def _cascade(self, defaults, *styles):
         """Apply the listed styles in order and return nsattibutedstring attrs"""
 
@@ -366,6 +384,12 @@ class Stylesheet(object):
         face_height = font.size * (font._face.ascent - font._face.descent) / 1000.0
         graf.setLineHeightMultiple_(spec['leading'] * font.size / face_height)
         graf.setMaximumLineHeight_(font.size*spec['leading'])
+
+        indent = spec.get('indent', 0)
+        if indent > 0:
+            graf.setFirstLineHeadIndent_(font.size*indent)
+        elif indent < 0:
+            graf.setHeadIndent_(font.size*abs(indent))
 
         if not spec['tracking']:
             # None means `kerning off entirely', 0 means `default letterspacing'

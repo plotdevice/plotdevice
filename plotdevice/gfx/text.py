@@ -151,10 +151,14 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             else:
                 # don't parse as xml, just apply the current font(), align(), and fill()
                 attrs = _cascade(merged_style)
-                attrib_txt = NSAttributedString.alloc().initWithString_attributes_(decoded, attrs)
+                attrib_txt = NSMutableAttributedString.alloc().initWithString_attributes_(decoded, attrs)
 
         if attrib_txt:
-            # only bother the typesetter if there's text to display
+            # make sure initial paragraphs aren't indented
+            is_beginning = self._store.length()==0
+            self.stylesheet._dedent(attrib_txt, is_beginning)
+
+            # let the typesetter deal with the new substring
             self._store.appendAttributedString_(attrib_txt)
             self._resized()
 
