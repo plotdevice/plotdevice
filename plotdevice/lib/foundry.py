@@ -469,14 +469,6 @@ class Librarian(object):
             self.__init__()
 
     @property
-    def heft(self):
-        import sys
-        size = sys.getsizeof(self)
-        for obj in self._fonts, self._fams, self._members, self._parents, self._enc, self._specs, self._fuzzy:
-            size += sys.getsizeof(obj)
-        return size
-
-    @property
     def font_names(self):
         self.refresh()
         return list(self._fonts)
