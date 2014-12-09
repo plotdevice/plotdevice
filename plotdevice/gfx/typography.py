@@ -205,7 +205,7 @@ class Font(object):
         known = StyleMixin.fontOpts + StyleMixin.aatOpts
         remaining = [arg for arg in kwargs.keys() if arg not in known]
         if remaining:
-            unknown = "Unknown %s argument%s: %s" % (cls.__name__, '' if len(remaining)==1 else 's', ", ".join(remaining))
+            unknown = "Unknown Font argument%s: %s" % ('' if len(remaining)==1 else 's', ", ".join(remaining))
             raise DeviceError(unknown)
 
 
@@ -229,7 +229,7 @@ class Layout(LineLayout):
         known = LineLayout._fields + ('lineheight',)
         remaining = [arg for arg in kwargs.keys() if arg not in known]
         if remaining:
-            unknown = "Unknown %s argument%s: %s" % (cls.__name__, '' if len(remaining)==1 else 's', ", ".join(remaining))
+            unknown = "Unknown Layout argument%s: %s" % ('' if len(remaining)==1 else 's', ", ".join(remaining))
             raise DeviceError(unknown)
 
 
