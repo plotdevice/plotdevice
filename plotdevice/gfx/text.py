@@ -15,7 +15,20 @@ from ..lib import foundry
 from . import _ns_context
 
 _ctx = None
-__all__ = ("Text",)
+__all__ = ("Text", "LEFT", "RIGHT", "CENTER", "JUSTIFY",)
+
+# text alignments
+LEFT = "left"
+RIGHT = "right"
+CENTER = "center"
+JUSTIFY = "justify"
+_TEXT=dict(
+    left = NSLeftTextAlignment,
+    right = NSRightTextAlignment,
+    center = NSCenterTextAlignment,
+    justify = NSJustifiedTextAlignment
+)
+
 
 class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     # from TransformMixin: transform transformmode translate() rotate() scale() skew() reset()
@@ -102,7 +115,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
             # try building an attributed string out of the contents
             txt_bytes = txt.encode('utf-8')
-            decoded, info, err = NSAttributedString.alloc().initWithData_options_documentAttributes_error_(
+            decoded, info, err = NSMutableAttributedString.alloc().initWithData_options_documentAttributes_error_(
                 NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes)), None, None, None
             )
 
@@ -126,7 +139,6 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
             # if the text is xml, parse it an overlay any stylesheet entries that map to
             # its tag names. otherwise apply the merged style to the entire string
-            _cascade = self.stylesheet._cascade
             if is_xml:
                 # find any tagged regions that need styling
                 parser = XMLParser(decoded, offset=len(self.text))
@@ -140,28 +152,81 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
                 attrib_txt = NSMutableAttributedString.alloc().initWithString_(parser.text)
 
                 # generate the proper `ns' font attrs for each unique cascade of xml tags
-                attrs = {seq:_cascade(merged_style, *seq) for seq in sorted(parser.regions)}
+                attrs = {seq:self._fontify(merged_style, *seq) for seq in sorted(parser.regions)}
 
                 # apply the attributes to the runs found by the parser
                 for cascade, runs in parser.regions.items():
                     style = attrs[cascade]
                     for rng in runs:
                         attrib_txt.setAttributes_range_(style, rng)
-
             else:
                 # don't parse as xml, just apply the current font(), align(), and fill()
-                attrs = _cascade(merged_style)
+                attrs = self._fontify(merged_style)
                 attrib_txt = NSMutableAttributedString.alloc().initWithString_attributes_(decoded, attrs)
 
-        if attrib_txt:
-            # make sure initial paragraphs aren't indented
-            is_beginning = self._store.length()==0
-            self.stylesheet._dedent(attrib_txt, is_beginning)
+            # ensure that any paragraph with more than one leading newline is un-indented.
+            zap = [0] if self._store.length()==0 else [] # also avoid indenting the very first line
+            zap += [m.end()-1 for m in re.finditer(r'\n\n+[^\n]', attrib_txt.string())]
+            for idx in zap:
+                old_graf, _ = attrib_txt.attribute_atIndex_effectiveRange_("NSParagraphStyle", idx, None);
+                real_margin, _ = attrib_txt.attribute_atIndex_effectiveRange_("head", idx, None);
+                graf = old_graf.mutableCopy()
+                graf.setFirstLineHeadIndent_(real_margin)
+                attrib_txt.addAttribute_value_range_("NSParagraphStyle", graf, (idx, 1))
 
+        if attrib_txt:
             # let the typesetter deal with the new substring
             self._store.appendAttributedString_(attrib_txt)
             self._resized()
 
+    def _fontify(self, defaults, *styles):
+        """Merge the named-styles and defaults in order and return nsattibutedstring attrs"""
+
+        # use the inherited context settings as a baseline spec
+        spec = dict(defaults)
+
+        # layer the styles to generate a final font and color
+        for tag in styles:
+            spec.update(self.stylesheet._styles.get(tag,{}))
+
+        # assign a font and color based on the coalesced spec
+        font = Font({k:v for k,v in spec.items() if k in Stylesheet.kwargs})
+        color = Color(spec.pop('fill')).nsColor
+
+        # factor the relevant attrs into a paragraph style
+        graf = NSMutableParagraphStyle.alloc().init()
+        graf.setLineBreakMode_(NSLineBreakByWordWrapping)
+        graf.setAlignment_(_TEXT[spec['align']])
+        graf.setHyphenationFactor_(spec['hyphenate'])
+
+        # force the typesetter to deal with real leading rather than `lineheight'
+        face_height = font.size * (font._face.ascent - font._face.descent) / 1000.0
+        graf.setLineHeightMultiple_(spec['leading'] * font.size / face_height)
+        graf.setMaximumLineHeight_(font.size*spec['leading'])
+
+        # handle indentation, horizontal margins, and vertical graf spacing
+        indent = font.size * spec['indent']
+        head, tail = map(self._to_px, spec['margin'])
+        top, bot = [font.size*font.leading*d for d in spec['spacing']]
+        graf.setParagraphSpacingBefore_(top)
+        graf.setParagraphSpacing_(bot)
+        graf.setTailIndent_(-tail)
+        if indent > 0:
+            graf.setFirstLineHeadIndent_(indent + head)
+            graf.setHeadIndent_(head)
+        else:
+            graf.setFirstLineHeadIndent_(head)
+            graf.setHeadIndent_(abs(indent) + head)
+
+        if not spec['tracking']:
+            # None means `kerning off entirely', 0 means `default letterspacing'
+            kern = 0 if spec['tracking'] is None else sys.float_info.epsilon
+        else:
+            # convert the em-based tracking val to a point-based kerning val
+            kern = (spec['tracking'] * font.size)/1000.0
+
+        # build the dict of features for this combination of styles
+        return dict(NSFont=font._nsFont, NSColor=color, NSParagraphStyle=graf, NSKern=kern, head=head)
 
     ### flowing text into new Text objects or subsidiary TextFrames ###
 
@@ -695,7 +760,6 @@ class TextFrame(BoundsMixin, Grob):
 
     @property
     def _alignment(self):
-        from .typography import _TEXT
         if not self._parent._store.string():
             return LEFT
         graf, _ = self._parent._store.attribute_atIndex_effectiveRange_("NSParagraphStyle", 0, None)

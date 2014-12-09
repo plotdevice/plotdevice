@@ -12,20 +12,8 @@ from ..util import _copy_attrs
 from ..lib.foundry import *
 
 _ctx = None
-__all__ = ("Family", "Font", "Stylesheet",
-           "LEFT", "RIGHT", "CENTER", "JUSTIFY",)
+__all__ = ("Family", "Font", "Stylesheet", )
 
-# text alignments
-LEFT = "left"
-RIGHT = "right"
-CENTER = "center"
-JUSTIFY = "justify"
-_TEXT=dict(
-    left = NSLeftTextAlignment,
-    right = NSRightTextAlignment,
-    center = NSCenterTextAlignment,
-    justify = NSJustifiedTextAlignment
-)
 
 class Font(object):
     def __init__(self, *args, **kwargs):
@@ -33,7 +21,9 @@ class Font(object):
         # handle the bootstrap case where we're initializing the ctx's font
         if args==(None,):
             self._face = font_face("HelveticaNeue")
-            self._metrics = dict(size=24.0, leading=1.2, tracking=0, indent=0, align=LEFT, hyphenate=0)
+            self._metrics = dict(size=24.0, leading=1.2, tracking=0,
+                                 indent=0, margin=(0,0), spacing=(0,0),
+                                 hyphenate=0, align="left")
             self._features = {}
             return
 
@@ -172,8 +162,20 @@ class Font(object):
         return self._metrics['hyphenate']
 
     @property
+    def indent(self):
+        return self._metrics['indent']
+
+    @property
     def align(self):
         return self._metrics['align']
+
+    @property
+    def margin(self):
+        return self._metrics['margin']
+
+    @property
+    def spacing(self):
+        return self._metrics['spacing']
 
     ### OpenType features ###
 
@@ -342,61 +344,3 @@ class Stylesheet(object):
                 spec['fill'] = color
             self._styles[name] = spec
         return self[name]
-
-    def _dedent(self, attr_str, first=False):
-        """Ensure that any paragraph that has more than one leading newline is un-indented.
-
-        Destructively modifies the attributed-string, zapping indentation on the initial line
-        as well if the `first` flag is True.
-        """
-        zap = [0] if first else [] # `first` means this is the leading char of a Text grob
-        for m in re.finditer(r'\n\n+[^\n]', attr_str.string()):
-            zap.append(m.end()-1)
-
-        for idx in zap:
-            old_graf, _ = attr_str.attribute_atIndex_effectiveRange_("NSParagraphStyle", idx, None);
-            graf = old_graf.mutableCopy()
-            graf.setFirstLineHeadIndent_(0)
-            attr_str.addAttribute_value_range_("NSParagraphStyle", graf, (idx, 1))
-        return attr_str
-
-    def _cascade(self, defaults, *styles):
-        """Apply the listed styles in order and return nsattibutedstring attrs"""
-
-        # use the inherited context settings as a baseline spec
-        spec = dict(defaults)
-
-        # layer the styles to generate a final font and color
-        for tag in styles:
-            spec.update(self._styles.get(tag,{}))
-
-        # assign a font and color based on the coalesced spec
-        font = Font({k:v for k,v in spec.items() if k in Stylesheet.kwargs})
-        color = Color(spec.pop('fill')).nsColor
-
-        # factor the relevant attrs into a paragraph style
-        graf = NSMutableParagraphStyle.alloc().init()
-        graf.setLineBreakMode_(NSLineBreakByWordWrapping)
-        graf.setAlignment_(_TEXT[spec['align']])
-        graf.setHyphenationFactor_(spec['hyphenate'])
-
-        # force the typesetter to deal with real leading rather than `lineheight'
-        face_height = font.size * (font._face.ascent - font._face.descent) / 1000.0
-        graf.setLineHeightMultiple_(spec['leading'] * font.size / face_height)
-        graf.setMaximumLineHeight_(font.size*spec['leading'])
-
-        indent = spec.get('indent', 0)
-        if indent > 0:
-            graf.setFirstLineHeadIndent_(font.size*indent)
-        elif indent < 0:
-            graf.setHeadIndent_(font.size*abs(indent))
-
-        if not spec['tracking']:
-            # None means `kerning off entirely', 0 means `default letterspacing'
-            kern = 0 if spec['tracking'] is None else sys.float_info.epsilon
-        else:
-            # convert the em-based tracking val to a point-based kerning val
-            kern = (spec['tracking'] * font.size)/1000.0
-
-        # build the dict of features for this combination of styles
-        return dict(NSFont=font._nsFont, NSColor=color, NSParagraphStyle=graf, NSKern=kern)

@@ -13,7 +13,7 @@ from plotdevice import DeviceError
 
 __all__ = ["font_family", "font_encoding", "font_face", "best_face",
            "family_names", "family_members", "family_name", "standardized", "sanitized",
-           "fontspec", "line_metrics", "aat_attrs", "aat_features",
+           "fontspec", "line_metrics", "layout_metrics", "aat_attrs", "aat_features"
            ]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic', 'ascent', 'descent'])
@@ -76,13 +76,13 @@ def fontspec(*args, **kwargs):
 
 def font_axes(*args, **kwargs):
     # start with kwarg values as the canonical settings
-    _canon = ('family','size','weight','italic','width','variant')
+    _canon = ('family','size','weight','italic','width','variant','fontsize')
     spec = {k:v.decode('utf-8') if isinstance(v,str) else v for k,v in kwargs.items() if k in _canon}
     basis = kwargs.get('face', kwargs.get('fontname'))
 
     # be backward compatible with the old arg names
-    if 'fontsize' in kwargs:
-        spec.setdefault('size', kwargs['fontsize'])
+    if 'fontsize' in spec:
+        spec.setdefault('size', spec.pop('fontsize'))
 
     # validate the nsfont-specific spec valuce
     if spec:
@@ -130,9 +130,38 @@ def font_axes(*args, **kwargs):
             spec['size'] = float(item)
     return spec
 
+def layout_metrics(spec):
+    # start with kwarg values as the canonical settings
+    _canon = ('align','leading','indent','margin','spacing','hyphenate','lineheight')
+    spec = {k:v for k,v in spec.items() if k in _canon}
+
+    # validate alignment
+    if spec.get('align','left') not in ('left','right','center','justify'):
+        chaoticneutral = 'Text alignment must be LEFT, RIGHT, CENTER, or JUSTIFY'
+        raise DeviceError(chaoticneutral)
+
+    # floatify dimensions and hyphenation (mapping bools to 0/1)
+    for attr in 'leading', 'indent', 'hyphenate':
+        if attr in spec:
+            spec[attr] = float(spec[attr])
+
+    for attr in 'margin', 'spacing':
+        if attr in spec:
+            a,b = 0,0
+            if isinstance(spec[attr], (list, tuple)):
+                a, b = spec[attr]
+            elif spec[attr] is not None:
+                a = float(spec[attr])
+            spec[attr] = (a, b)
+
+    # be backward compatible with the old arg names
+    if 'lineheight' in spec:
+        spec.setdefault('leading', spec.pop('lineheight'))
+    return spec
+
 def line_metrics(spec):
     # start with kwarg values as the canonical settings
-    _canon = ('size','align','leading','tracking','indent','hyphenate')
+    _canon = ('size','align','leading','tracking','indent','margin','spacing','hyphenate')
     spec = {k:v for k,v in spec.items() if k in _canon}
 
     # validate alignment
@@ -144,6 +173,15 @@ def line_metrics(spec):
     for attr in 'size', 'leading', 'tracking', 'indent', 'hyphenate':
         if attr in spec:
             spec[attr] = float(spec[attr])
+
+    for attr in 'margin', 'spacing':
+        if attr in spec:
+            a,b = 0,0
+            if isinstance(spec[attr], (list, tuple)):
+                a, b = spec[attr]
+            elif spec[attr] is not None:
+                a = float(spec[attr])
+            spec[attr] = (a, b)
 
     # be backward compatible with the old arg names
     if 'lineheight' in spec:
