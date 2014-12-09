@@ -326,13 +326,10 @@ class StyleMixin(Grob):
     """Mixin class for text-styling support.
     Adds the stylesheet, fill, and font attributes to the class."""
     ctxAttrs = ('_font', '_stylesheet', '_fillcolor')
-    opts = ('face','family','size','weight','width','variant','italic', # font selection
-            'lig','sc','osf','tab','vpos','frac', 'ss', # aat features
-            'leading', 'tracking', 'indent', 'align', 'hyphenate', # layout
-            'fontname','fontsize','lineheight','font', # nodebox compat
-            'style', # use named style as baseline
-            'fill', # color override
-            )
+    layoutOpts = ('leading','spacing','margin','indent','align','hyphenate','lineheight')
+    fontOpts = ('face','family','size','weight','width','variant','italic','tracking','fontname','fontsize','font')
+    aatOpts = ('lig','sc','osf','tab','vpos','frac', 'ss')
+    opts = fontOpts + layoutOpts + aatOpts + ('style', 'fill')
 
     def __init__(self, **kwargs):
         super(StyleMixin, self).__init__(**kwargs)
