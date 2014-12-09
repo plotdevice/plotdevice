@@ -1028,7 +1028,39 @@ class Context(object):
         return Family.find(like, encoding)
 
     def font(self, *args, **kwargs):
-        """Set the current font to be used in subsequent calls to text()"""
+        """Set the typeface & character-style to be used in subsequent calls to text()
+
+        All font() arguments are optional and any un-specified values will be inherited
+        from the canvas's current font. Calling font() with no arguments simply returns
+        the current Font object (which exposes metrics, layout-settings, and more).
+
+        Positional Args:
+          `family` is a case insensitive font family name
+          `weight` is the name of the desired weight (`regular` by default)
+          `size` is a number with the point-size for the font
+
+        Character-style Keyword Args:
+          `width` is the name of a condensed- or extended-style font width
+          `variant` selects between fonts with names like "display", "subhead", etc.
+          `tracking` is the amount of letter-spacing to add (1000 = 1em)
+          `italic` is a boolean specifying whether to use a slanted face
+
+        OpenType Keyword Args (set flags if supported by current typeface):
+          `sc` small-capitals (0, 1, -1, or all)
+          `ss` numbered stylistic sets (1-20 or a tuple of sets to enable)
+          `lig` ligatures (0, 1, or all)
+          `osf` old-style-figures (0 or 1)
+          `tab` tabular numerals (0 or 1)
+          `vpos` superscript/subscript (-1, 0, 1, or ord)
+          `frac` automatic fractions (0 or 1)
+
+        Returns:
+          a Font object with a number of inspectable attributes
+
+        Context Manager
+            font() can be used as part of a `with` statement in which case the character
+            style will be reset to its previous value once the block completes
+        """
         Font.validate(kwargs)
         if args or kwargs:
             newfont = Font(*args, **kwargs)
@@ -1037,12 +1069,45 @@ class Context(object):
         return self._font
 
     def layout(self, **kwargs):
+        """Set the paragraph-style to be used in subsequent calls to text()
+
+        All keyword arguments are optional and any unspecified values will remain
+        unchanged. Calling layout() without any arguments returns the current
+        layout settings.
+
+        Line-layout Args:
+          `align` the text-alignment (LEFT, RIGHT, CENTER, or JUSTIFY)
+          `hyphenate` how hyphen-happy to be when breaking lines. Set to 0 or False to only
+                      wrap lines on whitespace, or to 1.0 to add as many hyphens as possible
+                      (the best values usually lie in the 0.9-1 range).
+
+        Vertical-spacing Args:
+          `leading` the baseline-to-baseline distance (measured in em's)
+          `spacing` the amount of extra space to add above and below paragraphs. Pass a
+                    single number to set the top margin or a list of two to set the
+                    top and bottom respectively (in em's).
+
+        Horizontal-spacing Args:
+          `indent` the indentation distance for the first lines of paragraphs (in em's)
+          `margin` the amount of space on the sides of the text block to leave empty. Pass
+                   a single number to set the left margin, or a pair to set the left
+                   and right respectively. Margins measurements should be in *canvas units*.
+                   N.B. unpredictable things will happen if you set margins that are larger
+                   than the `width` of the Text object.
+
+        Returns:
+          a Layout object with attributes corresponding to each of the keyword arguments
+
+        Context Manager
+            layout() can be used as part of a `with` statement in which case the paragraph
+            style will be reset to its previous value once the block completes
+        """
         Layout.validate(kwargs)
         if kwargs:
-            font = Font(**kwargs)
-            layout = Layout(font)
+            newfont = Font(**kwargs)
+            layout = Layout(newfont)
             layout._rollback = self._font
-            self._font = font
+            self._font = newfont
         else:
             layout = Layout(self._font)
         return layout
