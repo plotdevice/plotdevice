@@ -216,23 +216,23 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     @property
     def bounds(self):
         """Returns the bounding box in which the text will be laid out"""
-        bbox = Region()
+        box = Region()
         for frame in self._frames:
-            bbox = bbox.union(frame.bounds)
-        return bbox
+            box = box.union(frame.bounds)
+        return box
 
     @property
-    def layout(self):
+    def used(self):
         """Returns the size & position of the actual text (typically a subset of the bounds)"""
-        lbox = Region()
+        box = Region()
         for frame in self._frames:
-            lbox = lbox.union(frame.layout)
-        return lbox
+            box = box.union(frame.used)
+        return box
 
     @property
     def metrics(self):
-        """Returns the size of the actual text (shorthand for Text.layout.size)"""
-        return self.layout.size
+        """Returns the size of the actual text (shorthand for Text.used.size)"""
+        return self.used.size
 
     def _get_baseline(self):
         """Returns the Text object's baseline `origin point'"""
@@ -538,23 +538,23 @@ class TextMatch(object):
     @property
     def bounds(self):
         """Returns the bounding box for the lines containing the match"""
-        bbox = Region()
+        box = Region()
         for slug in self.lines:
-            bbox = bbox.union(slug.bounds)
-        return bbox
+            box = box.union(slug.bounds)
+        return box
 
     @property
-    def layout(self):
+    def used(self):
         """Returns the bounding box of the matched characters"""
-        bbox = Region()
+        box = Region()
         for slug in self.lines:
-            bbox = bbox.union(slug.layout)
-        return bbox
+            box = box.union(slug.used)
+        return box
 
     @property
     def metrics(self):
         """The size of the rendered text"""
-        return self.layout.size
+        return self.used.size
 
     @property
     def path(self):
@@ -639,10 +639,10 @@ class TextFrame(BoundsMixin, Grob):
         return bbox
 
     @property
-    def layout(self):
+    def used(self):
         """The position & size of the frame's text in canvas coordinates"""
-        self._parent._layout.glyphRangeForTextContainer_(self._block) # force layout & glyph gen
-        origin, size = self._parent._layout.usedRectForTextContainer_(self._block)
+        self._parent._engine.glyphRangeForTextContainer_(self._block) # force layout & glyph gen
+        origin, size = self._parent._engine.usedRectForTextContainer_(self._block)
         origin.y -= self._headroom # adjust for the ascent above baseline
         origin += self.offset + self._parent.baseline
         return self._from_px(Region(origin, size))
@@ -650,7 +650,7 @@ class TextFrame(BoundsMixin, Grob):
     @property
     def metrics(self):
         """The size of the rendered text"""
-        return self.layout.size
+        return self.used.size
 
     @property
     def lines(self):
