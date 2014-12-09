@@ -28,11 +28,11 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     def __init__(self, *args, **kwargs):
 
         # assemble the NSMachinery
-        self._layout = NSLayoutManager.alloc().init()
-        self._layout.setUsesScreenFonts_(False)
-        self._layout.setUsesFontLeading_(False)
+        self._engine = NSLayoutManager.alloc().init()
+        self._engine.setUsesScreenFonts_(False)
+        self._engine.setUsesFontLeading_(False)
         self._store = NSTextStorage.alloc().init()
-        self._store.addLayoutManager_(self._layout)
+        self._store.addLayoutManager_(self._engine)
 
         if args and isinstance(args[0], Text):
             # create a parallel set of nstext objects when copying an existing Text
@@ -206,7 +206,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         while self._frames[1:]:
             self._frames.pop()._eject()
         frame = self._frames[0]
-        while len(self._frames) < count and sum(frame._glyphs) < self._layout.numberOfGlyphs():
+        while len(self._frames) < count and sum(frame._glyphs) < self._engine.numberOfGlyphs():
             frame = TextFrame(frame)
             self._frames.append(frame)
             yield frame
@@ -394,7 +394,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         """Returns the distance between the Text's origin and the top of its bounds box"""
         if not self._store.length():
             return 0
-        return self._frames[0]._from_px(self._layout.locationForGlyphAtIndex_(0).y)
+        return self._frames[0]._from_px(self._engine.locationForGlyphAtIndex_(0).y)
 
     @property
     def _flipped_transform(self):
@@ -441,7 +441,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             with self.effects.applied():     # apply any blend/alpha/shadow effects
                 for frame in self._frames:
                     px_offset = self._to_px(frame.offset)
-                    self._layout.drawGlyphsForGlyphRange_atPoint_(frame._glyphs, px_offset)
+                    self._engine.drawGlyphsForGlyphRange_atPoint_(frame._glyphs, px_offset)
 
                     # debug: draw a grey background for the text's bounds
                     # NSColor.colorWithDeviceWhite_alpha_(0,.2).set()
@@ -614,7 +614,7 @@ class TextFrame(BoundsMixin, Grob):
             self._parent = parent
 
         # add ourselves to the layout flow
-        self._parent._layout.addTextContainer_(self._block)
+        self._parent._engine.addTextContainer_(self._block)
 
     @trim_zeroes
     def __repr__(self):
@@ -623,7 +623,7 @@ class TextFrame(BoundsMixin, Grob):
     @property
     def idx(self):
         """An integer marking this frame's place in the flow sequence"""
-        return self._parent._layout.textContainers().index(self._block)
+        return self._parent._engine.textContainers().index(self._block)
 
     @property
     def text(self):
@@ -668,8 +668,8 @@ class TextFrame(BoundsMixin, Grob):
         return fnt.ascender()
 
     def _eject(self):
-        idx = self._parent._layout.textContainers().index(self._block)
-        self._parent._layout.removeTextContainerAtIndex_(idx)
+        idx = self._parent._engine.textContainers().index(self._block)
+        self._parent._engine.removeTextContainerAtIndex_(idx)
         self._parent = None
 
     def _resized(self):
@@ -704,12 +704,12 @@ class TextFrame(BoundsMixin, Grob):
     @property
     def _glyphs(self):
         # NSRange of glyphs in the frame
-        return self._parent._layout.glyphRangeForTextContainer_(self._block)
+        return self._parent._engine.glyphRangeForTextContainer_(self._block)
 
     @property
     def _chars(self):
         # NSRange of chars in the frame
-        rng, _ = self._parent._layout.characterRangeForGlyphRange_actualGlyphRange_(self._glyphs, None)
+        rng, _ = self._parent._engine.characterRangeForGlyphRange_actualGlyphRange_(self._glyphs, None)
         return rng
 
     def draw(self):

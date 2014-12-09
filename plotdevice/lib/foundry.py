@@ -234,7 +234,7 @@ def trace_text(txt_obj, rng=None):
         offset = frame._to_px(frame.offset)
         frame_rng = NSIntersectionRange(rng, frame._chars)
         if frame_rng.length:
-            subpath = Vandercook.traceGlyphs_atOffset_withLayout_(frame_rng, offset, txt_obj._layout)
+            subpath = Vandercook.traceGlyphs_atOffset_withLayout_(frame_rng, offset, txt_obj._engine)
             nspath.appendBezierPath_(subpath)
     return txt_obj._from_px(nspath)
 
@@ -245,7 +245,7 @@ def line_fragments(txt_obj, rng=None):
         rng = (0, len(txt_obj.text))
 
     lines = []
-    for frag in Vandercook.lineFragmentsInRange_withLayout_(rng, txt_obj._layout):
+    for frag in Vandercook.lineFragmentsInRange_withLayout_(rng, txt_obj._engine):
         frame = txt_obj._frames[frag['frame']]
         txt_range = frag['range'].rangeValue()
         info = {
@@ -268,7 +268,7 @@ def line_fragments(txt_obj, rng=None):
 def text_frames(txt_obj, rng=None):
     if rng is None:
         rng = (0, len(txt_obj.text))
-    containers = Vandercook.textContainersInRange_withLayout_(rng, txt_obj._layout)
+    containers = Vandercook.textContainersInRange_withLayout_(rng, txt_obj._engine)
     return [txt_obj._frames[i] for i in containers]
 
 def aat_attrs(spec):
