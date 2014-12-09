@@ -8,6 +8,7 @@ from .lib.cocoa import *
 from .lib import pathmatics
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
 from .gfx.geometry import Dimension, parse_coords
+from .gfx.typography import Layout
 from .gfx import *
 from . import gfx, lib, util, Halted, DeviceError
 
@@ -91,6 +92,7 @@ class Context(object):
         # type styles
         self._stylesheet = Stylesheet()
         self._font = Font(None)
+        self._layout = Layout(None)
 
         # bezier construction internals
         self._path = None
@@ -1028,11 +1030,21 @@ class Context(object):
 
     def font(self, *args, **kwargs):
         """Set the current font to be used in subsequent calls to text()"""
+        Font.validate(kwargs)
         if args or kwargs:
             newfont = Font(*args, **kwargs)
             newfont._rollback = self._font
             self._font = newfont
         return self._font
+
+    def layout(self, **kwargs):
+        Layout.validate(kwargs)
+        if kwargs:
+            metrics = Layout(**kwargs)
+            metrics._rollback = [self._layout, self._font]
+            font = Font(**metrics._asdict())
+            self._font, self._layout = font, metrics
+        return self._layout
 
     def fontsize(self, fontsize=None):
         """Legacy command. Equivalent to: font(size=fontsize)"""
@@ -1041,15 +1053,15 @@ class Context(object):
         return self._font.size
 
     def lineheight(self, lineheight=None):
-        """Legacy command. Equivalent to: font(leading=lineheight)"""
+        """Legacy command. Equivalent to: layout(leading=lineheight)"""
         if lineheight is not None:
-            self.font(leading=lineheight)
+            self.layout(leading=lineheight)
         return self._font.leading
 
     def align(self, align=None):
         """Set the text alignment (to LEFT, RIGHT, CENTER, or JUSTIFY)"""
         if align is not None:
-            self.font(align=align)
+            self.layout(align=align)
         return self._font.align
 
     def stylesheet(self, name=None, *args, **kwargs):
