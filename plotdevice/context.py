@@ -92,7 +92,6 @@ class Context(object):
         # type styles
         self._stylesheet = Stylesheet()
         self._font = Font(None)
-        self._layout = Layout(None)
 
         # bezier construction internals
         self._path = None
@@ -1040,11 +1039,13 @@ class Context(object):
     def layout(self, **kwargs):
         Layout.validate(kwargs)
         if kwargs:
-            metrics = Layout(**kwargs)
-            metrics._rollback = [self._layout, self._font]
-            font = Font(**metrics._asdict())
-            self._font, self._layout = font, metrics
-        return self._layout
+            font = Font(**kwargs)
+            layout = Layout(font)
+            layout._rollback = self._font
+            self._font = font
+        else:
+            layout = Layout(self._font)
+        return layout
 
     def fontsize(self, fontsize=None):
         """Legacy command. Equivalent to: font(size=fontsize)"""
