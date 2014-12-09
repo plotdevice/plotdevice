@@ -1,6 +1,7 @@
 # encoding: utf-8
 import sys
 import re
+from collections import namedtuple
 from operator import attrgetter
 from plotdevice.util import odict
 from ..lib.cocoa import *
@@ -198,6 +199,34 @@ class Font(object):
         spec.update(self._features)
         spec.update(self._metrics)
         return spec
+
+    @classmethod
+    def validate(cls, kwargs):
+        known = StyleMixin.fontOpts + StyleMixin.aatOpts
+        remaining = [arg for arg in kwargs.keys() if arg not in known]
+        if remaining:
+            unknown = "Unknown %s argument%s: %s" % (cls.__name__, '' if len(remaining)==1 else 's', ", ".join(remaining))
+            raise DeviceError(unknown)
+
+LineLayout = namedtuple('Layout', ['align','leading','hyphenate','indent','margin','spacing'])
+class Layout(LineLayout):
+    def __new__(cls, *args, **kwargs):
+        if args==(None,):
+            self = super(Layout, cls).__new__(cls, "left", 1.2, 0, 0, (0,0), (0,0))
+        else:
+            metrics = layout_metrics(kwargs)
+            self = _ctx._layout._replace(**metrics)
+        return self
+
+    def __enter__(self):
+        if not hasattr(self, '_rollback'):
+            self._rollback = [_ctx._layout, _ctx._font]
+        _ctx._layout = self
+        return self
+
+    def __exit__(self, type, value, tb):
+        _ctx._layout, _ctx._font = self._rollback
+        del self._rollback
 
 
 class Family(object):
