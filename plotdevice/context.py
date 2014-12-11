@@ -151,10 +151,12 @@ class Context(object):
 
     @property
     def WIDTH(self):
+        """The current canvas width (read-only)"""
         return Dimension('width')
 
     @property
     def HEIGHT(self):
+        """The current canvas height (read-only)"""
         return Dimension('height')
 
     def speed(self, fps):
@@ -718,6 +720,7 @@ class Context(object):
         return Color(*args, **kwargs)
 
     def colormode(self, mode=None, range=None):
+        """Legacy command. Equivalent to: color(mode=...)"""
         if mode is not None:
             self._colormode = mode
         if range is not None:
@@ -725,6 +728,7 @@ class Context(object):
         return self._colormode
 
     def colorrange(self, range=None):
+        """Legacy command. Equivalent to: color(range=...)"""
         if range is not None:
             self._colorrange = float(range)
         return self._colorrange
@@ -1244,11 +1248,11 @@ class Context(object):
         return txt.metrics
 
     def textwidth(self, txt, width=None, **kwargs):
-        """Calculates the width of a single-line string."""
+        """Legacy command. Equivalent to: measure(txt, width).width"""
         return self.textmetrics(txt, width, **kwargs)[0]
 
     def textheight(self, txt, width=None, **kwargs):
-        """Calculates the height of a (probably) multi-line string."""
+        """Legacy command. Equivalent to: measure(txt, width).height"""
         return self.textmetrics(txt, width, **kwargs)[1]
 
     def paginate(self, *args, **kwargs):
