@@ -199,10 +199,12 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         graf.setAlignment_(_TEXT[spec['align']])
         graf.setHyphenationFactor_(spec['hyphenate'])
 
+        eps = sys.float_info.epsilon
+
         # force the typesetter to deal with real leading rather than `lineheight'
-        face_height = font.size * (font._face.ascent - font._face.descent) / 1000.0
+        face_height = eps + font.size * (font._face.ascent - font._face.descent) / 1000.0
         graf.setLineHeightMultiple_(spec['leading'] * font.size / face_height)
-        graf.setMaximumLineHeight_(font.size*spec['leading'])
+        graf.setMaximumLineHeight_(font.size*spec['leading'] + eps)
 
         # handle indentation, horizontal margins, and vertical graf spacing
         indent = font.size * spec['indent']
@@ -220,7 +222,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
         if not spec['tracking']:
             # None means `kerning off entirely', 0 means `default letterspacing'
-            kern = 0 if spec['tracking'] is None else sys.float_info.epsilon
+            kern = 0 if spec['tracking'] is None else eps
         else:
             # convert the em-based tracking val to a point-based kerning val
             kern = (spec['tracking'] * font.size)/1000.0
