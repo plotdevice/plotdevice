@@ -296,30 +296,38 @@ class XMLParser(object):
         self.nodes = ddict(list)
         self.body = []
 
+        # wrap everything in a root node (just in case)
+        wrap = "<%s>" % ">%s</".join([INTERNAL]*2)
+        if isinstance(txt, unicode):
+            txt = txt.encode('utf-8')
+        self._xml = wrap%txt
+
+        # parse the input xml string
         try:
-            # parse the input xml string
-            if isinstance(txt, unicode):
-                txt = txt.encode('utf-8')
-            wrap = "<%s>" % ">%s</".join([INTERNAL]*2)
-            self._expat.Parse(wrap%txt, True)
+            self._expat.Parse(self._xml, True)
         except expat.ExpatError, e:
-            # go a little overboard providing context for syntax errors
-            line = (wrap%txt).split('\n')[e.lineno-1]
-            self._expat_error(e, line)
+            self._expat_error(e)
 
     @property
     def text(self):
         # returns the processed string (with all markup removed)
         return "".join(self.body)
 
-    def _expat_error(self, e, line):
-        measure = 80
+    def _expat_error(self, e):
+        # correct the column and line-string for our wrapper element
         col = e.offset
-        start, end = len('<%s>'%INTERNAL), -len('</%s>'%INTERNAL)
-        line = line[start:end]
-        col -= start
+        err = "\n".join(e.args)
+        head, tail = '<%s>'%INTERNAL, '</%s>'%INTERNAL
+        line = self._xml.split("\n")[e.lineno-1]
+        if line.startswith(head):
+            line = line[len(head):]
+            col -= len(head)
+            err = re.sub(r'column \d+', 'column %i'%col, err)
+        if line.endswith(tail):
+            line = line[:-len(tail)]
 
         # move the column range with the typo into `measure` chars
+        measure = 80
         snippet = line
         if col>measure:
             snippet = snippet[col-measure:]
@@ -334,11 +342,11 @@ class XMLParser(object):
         if not line.startswith(snippet):
             clipped.insert(0, '...')
             col+=3
-        caret = ' '*col + '^'
+        caret = ' '*(col-1) + '^'
 
         # raise the exception
-        msg = 'Text: ' + "\n".join(e.args)
-        stack = 'stack: ' + " ".join(['<%s>'%tag for tag in self.stack[1:]]) + ' ...'
+        msg = 'Text: ' + err
+        stack = 'stack: ' + " ".join(['<%s>'%elt.tag for elt in self.stack[1:]]) + ' ...'
         xmlfail = "\n".join([msg, "".join(clipped), caret, stack])
         raise DeviceError(xmlfail)
 
@@ -350,7 +358,7 @@ class XMLParser(object):
             return
         if not self._log: return
         if indent<0: self._log-=1
-        msg = (u'  '*self._log)+(s if s.startswith('<') else repr(s))
+        msg = (u'  '*self._log)+(s if s.startswith('<') else repr(s)[1:])
         print msg.encode('utf-8')
         if indent>0: self._log+=1
 
@@ -365,7 +373,7 @@ class XMLParser(object):
         self.regions[selector].append(tuple([self.cursor-self._offset, len(data)]))
         self.cursor += len(data)
         self.body.append(data)
-        self.log(u'"%s"'%(data))
+        self.log(data)
 
     def _leave(self, name):
         node = self.stack.pop()._replace(end=self.cursor)
