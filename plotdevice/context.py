@@ -1249,11 +1249,11 @@ class Context(object):
 
     def textwidth(self, txt, width=None, **kwargs):
         """Legacy command. Equivalent to: measure(txt, width).width"""
-        return self.textmetrics(txt, width, **kwargs)[0]
+        return self.textmetrics(txt, width, **kwargs).width
 
     def textheight(self, txt, width=None, **kwargs):
         """Legacy command. Equivalent to: measure(txt, width).height"""
-        return self.textmetrics(txt, width, **kwargs)[1]
+        return self.textmetrics(txt, width, **kwargs).height
 
     def paginate(self, *args, **kwargs):
         """Return a list of Text objects (as many as needed to fully lay out the string)
