@@ -336,20 +336,14 @@ class StyleMixin(Grob):
 
         # ignore `width` if it's a column-width rather than typeface width
         if not isinstance(kwargs.get('width', ''), basestring):
+            kwargs = dict(kwargs)
             del kwargs['width']
 
-        # combine inherited ctx state and kwargs to create a baseline style
-        spec = self._font._spec                # start with the current font
-        spec.update(fill=self._fillcolor)      # use the ctx's current fill by default
-        spec.update(self._parse_style(kwargs)) # merge in any modifications from the text() call
+        self._update_style(**kwargs)
 
-        # update the font & fill references to reflect kwarg styling (if any)
-        self._font = self._font.__class__(**spec)
-        self._fillcolor = spec.get('fill', self._fillcolor)
-
-    def _parse_style(self, opts):
+    def _parse_style(self, *args, **opts):
         fontopts = {k:v for k,v in opts.items() if k in StyleMixin.opts}
-        fontargs = opts.get('font', [])
+        fontargs = opts.get('font', args)
         if not isinstance(fontargs, (list,tuple)):
             fontargs = [fontargs]
 
@@ -359,15 +353,29 @@ class StyleMixin(Grob):
             spec['fill'] = Color(opts['fill'])
         return spec
 
-    @property
-    def _style(self):
-        spec = self._font._spec
-        spec.update(fill=self._fillcolor)
-        return spec
+    def _update_style(self, *args, **kwargs):
+        # combine inherited ctx state and kwargs to create a baseline style
+        spec = self._font._spec                         # start with the current font
+        spec.update(fill=self._fillcolor)               # use the ctx's current fill by default
+        spec.update(self._parse_style(*args, **kwargs)) # merge in any modifications from the text() call
 
-    @property
-    def font(self):
+        # update the font & fill references to reflect kwarg styling (if any)
+        self._font = self._font.__class__(**spec)
+        self._fillcolor = spec.get('fill', self._fillcolor)
+
+    def font(self, *args, **kwargs):
+        from .typography import Font
+        if args or kwargs:
+            Font.validate(kwargs)
+            self._update_style(*args, **kwargs)
         return self._font
+
+    def layout(self, **kwargs):
+        from .typography import Layout
+        if kwargs:
+            Layout.validate(kwargs)
+            self._update_style(**kwargs)
+        return Layout(self._font)
 
     @property
     def stylesheet(self):

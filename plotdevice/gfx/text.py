@@ -134,8 +134,9 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             decoded = txt if isinstance(txt, unicode) else txt.decode('utf-8')
 
             # use the inherited baseline style but allow one-off overrides from kwargs
-            merged_style = self._style
-            merged_style.update(self._parse_style(kwargs))
+            merged_style = self._font._spec
+            merged_style.update(fill=self._fillcolor)
+            merged_style.update(self._parse_style(**kwargs))
 
             # if the text is xml, parse it an overlay any stylesheet entries that map to
             # its tag names. otherwise apply the merged style to the entire string
