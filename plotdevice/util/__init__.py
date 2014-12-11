@@ -370,6 +370,13 @@ class XMLParser(object):
 
     def _chars(self, data):
         selector = tuple([e.tag for e in self.stack])
+
+        # handle special case where a self-closed tag precedes a '\n'
+        if hasattr(self, '_crlf'):
+            if data == "\n":
+                selector = selector + (self._crlf.tag,)
+            del self._crlf
+
         self.regions[selector].append(tuple([self.cursor-self._offset, len(data)]))
         self.cursor += len(data)
         self.body.append(data)
@@ -377,8 +384,18 @@ class XMLParser(object):
 
     def _leave(self, name):
         node = self.stack.pop()._replace(end=self.cursor)
+
+        # hang onto line-ending self-closed tags so they can be applied to the next '\n' in _chars
+        if node.start==node.end:
+            at = self._expat.CurrentByteIndex
+            if self._xml[at-2:at]=='/>' and self._xml[at:at+1]=="\n":
+                node = node._replace(end=node.start+1)
+                self._crlf = node
+
         self.nodes[name].append(node)
         self.log(u'</%s>'%(name), indent=-1)
+
+        # if we've exited the root node, clean up the parsed elements
         if name == INTERNAL:
             del self.nodes[INTERNAL]
             self.nodes = {tag:ordered(elts, 'start') for tag,elts in self.nodes.items()}
