@@ -113,16 +113,18 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             txt = read(src, format='txt')
             is_xml = src.lower().endswith('.xml')
 
-            # try building an attributed string out of the contents
-            txt_bytes = txt.encode('utf-8')
-            decoded, info, err = NSMutableAttributedString.alloc().initWithData_options_documentAttributes_error_(
-                NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes)), None, None, None
-            )
+            # try using the nsmagic parsing of HTML to build an attributed string
+            if src.lower().endswith('html'):
+                txt_bytes = txt.encode('utf-8')
+                txt_data = NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes))
+                decoded, info, err = NSMutableAttributedString.alloc().initWithData_options_documentAttributes_error_(
+                    txt_data, None, None, None
+                )
 
-            # if the data got unpacked into anything more interesting than plain text,
-            # preserve its styling. otherwise fall through and style the txt val
-            if info.get('UTI') != "public.plain-text":
-                attrib_txt = decoded
+                # if the data got unpacked into anything more interesting than plain text,
+                # preserve its styling. otherwise fall through and style the txt val
+                if info.get('UTI') != "public.plain-text":
+                    attrib_txt = decoded
 
         if txt and not attrib_txt:
             # convert non-textual `str` args to strings
