@@ -170,17 +170,20 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             # ensure that any paragraph with more than one leading newline is un-indented.
             zap = [0] if self._store.length()==0 else [] # also avoid indenting the very first line
             zap += [m.end()-1 for m in re.finditer(r'\n\n+[^\n]', attrib_txt.string())]
-            for idx in zap:
-                old_graf, _ = attrib_txt.attribute_atIndex_effectiveRange_("NSParagraphStyle", idx, None);
-                real_margin, _ = attrib_txt.attribute_atIndex_effectiveRange_("head", idx, None);
-                graf = old_graf.mutableCopy()
-                graf.setFirstLineHeadIndent_(real_margin)
-                attrib_txt.addAttribute_value_range_("NSParagraphStyle", graf, (idx, 1))
+            self._dedent(attrib_txt, *zap)
 
         if attrib_txt:
             # let the typesetter deal with the new substring
             self._store.appendAttributedString_(attrib_txt)
             self._resized()
+
+    def _dedent(self, attrib_txt, *indices):
+        for idx in indices:
+            old_graf, _ = attrib_txt.attribute_atIndex_effectiveRange_("NSParagraphStyle", idx, None);
+            real_margin, _ = attrib_txt.attribute_atIndex_effectiveRange_("head", idx, None);
+            graf = old_graf.mutableCopy()
+            graf.setFirstLineHeadIndent_(real_margin)
+            attrib_txt.addAttribute_value_range_("NSParagraphStyle", graf, (idx, 1))
 
     def _fontify(self, defaults, *styles):
         """Merge the named-styles and defaults in order and return nsattibutedstring attrs"""
@@ -243,6 +246,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         if full not in seen:
             next_pg = self.copy()
             next_pg._store.deleteCharactersInRange_([0, len(seen)])
+            if not seen.endswith('\n'):
+                next_pg._dedent(next_pg._store, 0)
             return next_pg
 
     def flow(self, columns=all, layout=None):
