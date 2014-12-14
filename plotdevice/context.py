@@ -1256,7 +1256,7 @@ class Context(object):
         return self.textmetrics(txt, width, **kwargs).height
 
     def paginate(self, *args, **kwargs):
-        """Return a list of Text objects (as many as needed to fully lay out the string)
+        """Return a generator which yields Text objects (as many as needed to fully lay out the string)
 
         Usage:
           paginate(str, x, y, width, height, **kwargs)
@@ -1272,11 +1272,10 @@ class Context(object):
         paginate() accepts some optional keyword arguments to control the counters and
         odd/even layout (see below).
 
-        The objects returned are standard Text objects with three additional `counter'
+        The objects returned are standard Text objects with two additional `counter'
         attributes attached to them:
           txt.folio - the "page number" of the object (typically counting from one)
           txt.pg - the index of the object in the series (counting from zero)
-          txt.pp - the total number of pages in the series
 
         Additional Keyword Args:
           - `folio` sets the "page number" of the first page in the sequence – accessible
@@ -1289,20 +1288,17 @@ class Context(object):
         verso = kwargs.pop('verso', None)
 
         # create the sequence of Text objects
-        txt = Text(*args, **kwargs)
-        pages = []
-        while txt:
-            pages.append(txt)
-            txt = txt.overleaf()
-
-        # decorate them with counter attrs
-        for i, page in enumerate(pages):
-            page.pg = i
-            page.pp = len(pages)
-            page.folio = i + folio
-            if i%2 and verso:
+        page = Text(*args, **kwargs)
+        pg = 0
+        while page:
+            page.pg = pg
+            page.folio = folio
+            if pg%2 and verso:
                 page.x, page.y = verso
-        return pages
+            yield page
+            pg += 1
+            folio += 1
+            page = page.overleaf()
 
     ### Image commands ###
 
