@@ -106,7 +106,7 @@ class Context(object):
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context._state_vars]
         self._statestack.insert(0, cached)
-        self.clear(all)
+        self.clear()
 
     def _restoreContext(self):
         try:
