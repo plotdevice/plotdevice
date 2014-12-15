@@ -167,23 +167,23 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
                 attrs = self._fontify(merged_style)
                 attrib_txt = NSMutableAttributedString.alloc().initWithString_attributes_(decoded, attrs)
 
-            # ensure that any paragraph with more than one leading newline is un-indented.
-            zap = [0] if self._store.length()==0 else [] # also avoid indenting the very first line
-            zap += [m.end()-1 for m in re.finditer(r'\n\n+[^\n]', attrib_txt.string())]
-            self._dedent(attrib_txt, *zap)
+            # ensure the very-first character of a Text is indented flush left. also watch for
+            # double-newlines at the edge of the existing string and the appended chars
+            if self._store.length()==0 or self._store.string().endswith('\n\n'):
+                Text._dedent(attrib_txt)
+            elif self._store.string().endswith('\n') and re.match(r'\n[^\n]', attrib_txt.string()):
+                Text._dedent(attrib_txt, 1)
+
+            # ensure that any paragraph with more than one leading newline is indented flush-left
+            for m in re.finditer(r'\n\n+[^\n]', attrib_txt.string()):
+                Text._dedent(attrib_txt, m.end()-1)
 
         if attrib_txt:
             # let the typesetter deal with the new substring
             self._store.appendAttributedString_(attrib_txt)
             self._resized()
 
-    def _dedent(self, attrib_txt, *indices):
-        for idx in indices:
-            old_graf, _ = attrib_txt.attribute_atIndex_effectiveRange_("NSParagraphStyle", idx, None);
-            real_margin, _ = attrib_txt.attribute_atIndex_effectiveRange_("head", idx, None);
-            graf = old_graf.mutableCopy()
-            graf.setFirstLineHeadIndent_(real_margin)
-            attrib_txt.addAttribute_value_range_("NSParagraphStyle", graf, (idx, 1))
+    ### NSAttributedString de/manglers ###
 
     def _fontify(self, defaults, *styles):
         """Merge the named-styles and defaults in order and return nsattibutedstring attrs"""
@@ -234,7 +234,26 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             kern = (spec['tracking'] * font.size)/1000.0
 
         # build the dict of features for this combination of styles
-        return dict(NSFont=font._nsFont, NSColor=color, NSParagraphStyle=graf, NSKern=kern, head=head)
+        return dict(NSFont=font._nsFont, NSColor=color, NSParagraphStyle=graf, NSKern=kern)
+
+    @classmethod
+    def _dedent(cls, attrib_txt, idx=0, inherit=False):
+        """Removes first-line paragraph indentation of at the given attributed-string index.
+
+        Sets the first-line indent equal to the subsequent-lines value (unless the first line
+        is outdented; in which leave it alone).
+
+        Passing inherit=True will override this logic and set the first-indent equal to the
+        subsequent-indent without regard for its indent/outdent status.
+
+        Note that this method *modifies* the attrib_txt reference rather than returning a value.
+        """
+        old_graf, _ = attrib_txt.attribute_atIndex_effectiveRange_("NSParagraphStyle", idx, None);
+        graf = old_graf.mutableCopy()
+        first, rest = graf.firstLineHeadIndent(), graf.headIndent()
+        if first > rest or inherit: # leave negative-indentations alone
+            graf.setFirstLineHeadIndent_(rest)
+        attrib_txt.addAttribute_value_range_("NSParagraphStyle", graf, (idx, 1))
 
     ### flowing text into new Text objects or subsidiary TextFrames ###
 
@@ -245,9 +264,19 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         full = self.text
         if full not in seen:
             next_pg = self.copy()
-            next_pg._store.deleteCharactersInRange_([0, len(seen)])
+
+            # delete the first page's-worth of chars and update indices
+            nc = len(seen)
+            next_pg._store.deleteCharactersInRange_([0, nc])
+            nodes = {}
+            for tag, elts in self._nodes.items():
+                nodes[tag] = [e._replace(start=e.start-nc, end=e.end-nc) for e in elts if e.end-nc > 0]
+            next_pg._nodes = nodes
+
+            # if the page-break is in the middle of a paragraph, preserve the first character's initial
+            # indentation (since otherwise it'll be treated as a `first' line of a new paragraph)
             if not seen.endswith('\n'):
-                next_pg._dedent(next_pg._store, 0)
+                Text._dedent(next_pg._store, inherit=True)
             return next_pg
 
     def flow(self, columns=all, layout=None):
