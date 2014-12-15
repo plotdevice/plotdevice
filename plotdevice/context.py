@@ -1289,10 +1289,12 @@ class Context(object):
 
         # create the sequence of Text objects
         page = Text(*args, **kwargs)
+        dims = page.width, page.height
         pg = 0
         while page:
             page.pg = pg
             page.folio = folio
+            page.width, page.height = dims
             if pg%2 and verso:
                 page.x, page.y = verso
             yield page
