@@ -279,8 +279,18 @@ def trace_text(txt_obj, rng=None):
 def line_fragments(txt_obj, rng=None):
     """Returns a list of dictionaries describing the line fragments in the entire Text object
     or a sub-range of it based on character indices"""
+    flatten = None # flag ranges with a zero-width
+
     if rng is None:
         rng = (0, len(txt_obj.text))
+    elif rng[1]==0:
+        # expand zero-width ranges to 1 char before measuring
+        flatten = max;
+        start = rng[0]
+        if start == len(txt_obj.text)-1:
+            start -= 1
+            flatten = min
+        rng = (start, 1)
 
     lines = []
     for frag in Vandercook.lineFragmentsInRange_withLayout_(rng, txt_obj._engine):
@@ -299,6 +309,17 @@ def line_fragments(txt_obj, rng=None):
         info['baseline'] += offset
         info['used'].origin += offset
         info['bounds'].origin += offset
+
+        # re-contract ranges that were expanded from zero
+        if flatten:
+            loc = txt_range.location
+            if flatten is min:
+              info['baseline'].x += info['used'].width
+              loc += 1
+            info['text'] = u''
+            info['used'].width = 0
+            info['span'] = (loc, 0)
+
         lines.append(LineFragment(**info))
 
     return lines
@@ -306,6 +327,11 @@ def line_fragments(txt_obj, rng=None):
 def text_frames(txt_obj, rng=None):
     if rng is None:
         rng = (0, len(txt_obj.text))
+    elif rng[1]==0:
+        start = rng[0]
+        if start == len(txt_obj.text)-1:
+            start -= 1
+        rng = (start, 1)
     containers = Vandercook.textContainersInRange_withLayout_(rng, txt_obj._engine)
     return [txt_obj._frames[i] for i in containers]
 
