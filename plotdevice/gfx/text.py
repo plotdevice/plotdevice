@@ -113,8 +113,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             txt = read(src, format='txt')
             is_xml = src.lower().endswith('.xml')
 
-            # try using the nsmagic parsing of HTML to build an attributed string
-            if src.lower().endswith('html'):
+            # try using the nsmagic parsing of HTML/RTF to build an attributed string
+            if re.search(r'\.(html|rtf)$', src.lower()):
                 txt_bytes = txt.encode('utf-8')
                 txt_data = NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes))
                 decoded, info, err = NSMutableAttributedString.alloc().initWithData_options_documentAttributes_error_(
