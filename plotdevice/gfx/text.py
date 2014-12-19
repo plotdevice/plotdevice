@@ -578,6 +578,7 @@ class TextMatch(object):
 
     Additional properties when .find'ing a regular expression:
       `m` - a regular expression Match object
+      `groups` - a list of TextMatch objects corresponding to captures in the regex
 
     Additional properties when .select'ing an xml element:
       `tag` - a string with the matched element's name
@@ -593,8 +594,14 @@ class TextMatch(object):
             self.start, n = match.range()
             self.end = self.start + n
         elif hasattr(match, 'span'): # re.Match
-            self.start, self.end = match.regs[1] if match.re.groups>0 else match.span()
+            # self.start, self.end = match.regs[1] if match.re.groups>0 else match.span()
+            self.start, self.end = match.span()
             self.m = match
+            self.groups = []
+            for start, end in match.regs:
+                g = TextMatch(parent)
+                g.start, g.end = start, end
+                self.groups.append(g)
         elif hasattr(match, '_asdict'): # xml Element
             for k,v in match._asdict().items():
                 setattr(self, k, v)
