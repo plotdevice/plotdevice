@@ -370,7 +370,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         Syntax:
           txt.find(re.compile(r'...', re.I)) # match a regex object
           txt.find(r'antidisest.*?ism') # match a pattern string
-          txt.find(r'foo (.*?) baz') # match the parenthesized group
+          txt.find(r'foo (.*?) baz') # match the pattern and capture a sub-group
           txt.find(r'the', 10) # find the first 10 occurrences of `the'
 
         Args:
@@ -576,14 +576,18 @@ class TextMatch(object):
       `lines` - a list of one or more LineFragments describing glyph geometry
       `path` - a Bezier object with the glyphs from the matched range
 
-    Additional properties when .find'ing a regular expression:
-      `m` - a regular expression Match object
-      `groups` - a list of TextMatch objects corresponding to captures in the regex
-
     Additional properties when .select'ing an xml element:
       `tag` - a string with the matched element's name
       `attrs` - a dictionary with the element's attributes (if any)
       `parents` - a tuple with the parent, grandparent, etc. tag names
+
+    Additional properties when .find'ing a regular expression:
+      `m` - a regular expression Match object
+
+    Additional methods when .find'ing a regular expression with 'captured' sub-groups
+      `group(idx)` - returns a TextMatch corresponding to the numbered or named group
+      `groups()` - returns a list of TextMatch objects corresponding to captures in the regex
+      `groupdict()` - returns a dictionary mapping captured group names to TextMatch objects
     """
     def __init__(self, parent, match=None):
         self._parent = parent
@@ -593,27 +597,26 @@ class TextMatch(object):
         if hasattr(match, 'range'): # NSSubText
             self.start, n = match.range()
             self.end = self.start + n
-        elif hasattr(match, 'span'): # re.Match
-            # self.start, self.end = match.regs[1] if match.re.groups>0 else match.span()
-            self.start, self.end = match.span()
-            self.m = match
-            self.groups = []
-            for start, end in match.regs:
-                g = TextMatch(parent)
-                g.start, g.end = start, end
-                self.groups.append(g)
         elif hasattr(match, '_asdict'): # xml Element
             for k,v in match._asdict().items():
                 setattr(self, k, v)
         elif hasattr(match, '_chars'): # TextFrame
             self.start, n = match._chars
             self.end = self.start + n
+        elif hasattr(match, 'span'): # re.Match
+            self.start, self.end = match.span()
+            self.m = match
+        elif isinstance(match, tuple): # regex sub-match
+            self.start, self.end, self._group = match
 
     def __len__(self):
         return self.end-self.start
 
     def __repr__(self):
         msg = []
+        if hasattr(self, '_group'):
+            fmt = "r'\\%i'" if numlike(self._group) else "r'P<%s>'"
+            msg.append(fmt % self._group)
         try:
             pat = self.m.re.pattern
             if len(pat)>18:
@@ -628,9 +631,58 @@ class TextMatch(object):
         msg.append("len=%i" % (self.end-self.start))
         return 'TextMatch(%s)' % (", ".join(msg))
 
+    ### Contents ###
+
     @property
     def text(self):
         return self._parent.text[self.start:self.end]
+
+    def group(self, index=0, *others):
+        """Return subgroup(s) of the match by indices or names. Index 0 returns the entire match.
+
+        Works just like https://docs.python.org/2/library/re.html#re.MatchObject.group
+        but returns TextMatch objects rather than character strings
+        """
+        self._is_regex('group')
+        subs = []
+        for idx in (index,) + others:
+            rng = self.m.span(idx) + (idx,)
+            subs.append(TextMatch(self._parent, rng) if rng[0]!=-1 else None)
+        return tuple(subs) if len(subs)>1 else subs[0]
+
+    def groups(self, default=None):
+        """Return a tuple containing all the subgroups of the match, from 1.
+        The default argument is used for groups that did not participate in the match
+
+        Works just like https://docs.python.org/2/library/re.html#re.MatchObject.groups
+        but returns TextMatch objects rather than character strings
+        """
+        self._is_regex('groups')
+        indices = range(1,len(self.m.regs))
+        if not indices:
+            return ()
+        return tuple(m if m else default for m in self.group(*indices))
+
+    def groupdict(self, default=None):
+        """Return a dictionary containing all the named subgroups of the match,
+        keyed by the subgroup name. The default argument is used for groups
+        that did not participate in the match
+
+        Works just like https://docs.python.org/2/library/re.html#re.MatchObject.groupdict
+        but returns TextMatch objects rather than character strings
+        """
+        self._is_regex('groupdict')
+        indices = self.m.groupdict().keys()
+        subs = [self.group(nm) for nm in indices]
+        return {nm:sub if sub else default for nm, sub in zip(indices, subs)}
+
+    def _is_regex(self, method):
+        # an assert to ensure the match supports the group* methods
+        if not self.m:
+            badmatch = '%s() can only be used with regex-based TextMatch objects (see Text.find)'
+            raise DeviceError(badmatch % method)
+
+    ### Geometry ###
 
     @property
     def lines(self):
