@@ -62,7 +62,7 @@ class Font(object):
         self._features = aat_features(spec)
 
     def __repr__(self):
-        spec = [self.family, self.weight, self.face]
+        spec = [self.family, self.weight]
         if self._face.variant:
             spec.insert(2, self._face.variant)
         spec.insert(1, '/' if self._face.italic else '|')
