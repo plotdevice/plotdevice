@@ -216,8 +216,11 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
         # handle indentation, horizontal margins, and vertical graf spacing
         indent = font.size * spec['indent']
+        tabs = abs(indent or font.size)
         head, tail = map(self._to_px, spec['margin'])
         top, bot = [font.size*font.leading*d for d in spec['spacing']]
+        graf.setTabStops_([])
+        graf.setDefaultTabInterval_(tabs)
         graf.setParagraphSpacingBefore_(top)
         graf.setParagraphSpacing_(bot)
         graf.setTailIndent_(-tail)
