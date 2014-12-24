@@ -180,7 +180,9 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
         if attrib_txt:
             # let the typesetter deal with the new substring
+            self._store.beginEditing()
             self._store.appendAttributedString_(attrib_txt)
+            self._store.endEditing()
             self._resized()
 
     ### NSAttributedString de/manglers ###
@@ -248,12 +250,14 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
         Note that this method *modifies* the attrib_txt reference rather than returning a value.
         """
+        attrib_txt.beginEditing()
         old_graf, _ = attrib_txt.attribute_atIndex_effectiveRange_("NSParagraphStyle", idx, None);
         graf = old_graf.mutableCopy()
         first, rest = graf.firstLineHeadIndent(), graf.headIndent()
         if first > rest or inherit: # leave negative-indentations alone
             graf.setFirstLineHeadIndent_(rest)
         attrib_txt.addAttribute_value_range_("NSParagraphStyle", graf, (idx, 1))
+        attrib_txt.endEditing()
 
     ### flowing text into new Text objects or subsidiary TextFrames ###
 
@@ -267,7 +271,9 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
             # delete the first page's-worth of chars and update indices
             nc = len(seen)
+            next_pg._store.beginEditing()
             next_pg._store.deleteCharactersInRange_([0, nc])
+            next_pg._store.endEditing()
             nodes = {}
             for tag, elts in self._nodes.items():
                 nodes[tag] = [e._replace(start=e.start-nc, end=e.end-nc) for e in elts if e.end-nc > 0]
