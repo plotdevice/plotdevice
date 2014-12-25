@@ -836,6 +836,8 @@ class TextFrame(BoundsMixin, Grob):
 
     @property
     def _headroom(self):
+        if not self._parent.text:
+            return self._parent._font.ascender
         fnt, _ = self._parent._store.attribute_atIndex_effectiveRange_("NSFont", self._chars.location, None);
         return fnt.ascender()
 
