@@ -278,8 +278,8 @@ def autorelease():
 Element = namedtuple('Element', ['tag', 'attrs', 'parents', 'start', 'end'])
 escapes = [('break','0C'), ('indent', '09'), ('flush', '08')]
 doctype = '<!DOCTYPE plod [ %s ]>' % "".join(['<!ENTITY %s "&#xE0%s;" >'%e for e in escapes])
-HEAD = u"%s<%s>" % (doctype, INTERNAL)
-TAIL = u"</%s>" % INTERNAL
+HEAD = "%s<%s>" % (doctype, INTERNAL)
+TAIL = "</%s>" % INTERNAL
 class XMLParser(object):
     _log = 0
 
@@ -303,6 +303,8 @@ class XMLParser(object):
 
         # wrap everything in a root node (and include the whitespace entities which shift
         # the tty escapes into the unicode PUA for the duration)
+        if isinstance(txt, unicode):
+            txt = txt.encode('utf-8')
         self._xml = HEAD+txt+TAIL
 
         # parse the input xml string
