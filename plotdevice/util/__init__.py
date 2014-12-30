@@ -274,7 +274,12 @@ def autorelease():
     del pool
 
 ### datafile unpackers ###
+
 Element = namedtuple('Element', ['tag', 'attrs', 'parents', 'start', 'end'])
+escapes = [('break','0C'), ('indent', '09'), ('flush', '08')]
+doctype = '<!DOCTYPE plod [ %s ]>' % "".join(['<!ENTITY %s "&#xE0%s;" >'%e for e in escapes])
+HEAD = u"%s<%s>" % (doctype, INTERNAL)
+TAIL = u"</%s>" % INTERNAL
 class XMLParser(object):
     _log = 0
 
@@ -296,11 +301,9 @@ class XMLParser(object):
         self.nodes = ddict(list)
         self.body = []
 
-        # wrap everything in a root node (just in case)
-        wrap = "<%s>" % ">%s</".join([INTERNAL]*2)
-        if isinstance(txt, unicode):
-            txt = txt.encode('utf-8')
-        self._xml = wrap%txt
+        # wrap everything in a root node (and include the whitespace entities which shift
+        # the tty escapes into the unicode PUA for the duration)
+        self._xml = HEAD+txt+TAIL
 
         # parse the input xml string
         try:
@@ -310,21 +313,20 @@ class XMLParser(object):
 
     @property
     def text(self):
-        # returns the processed string (with all markup removed)
-        return "".join(self.body)
+        # returns the processed string (with all markup removed and tty-escapes un-shifted)
+        return u"".join(self.body).translate({0xE000+v:v for v in (8,9,12)})
 
     def _expat_error(self, e):
         # correct the column and line-string for our wrapper element
         col = e.offset
         err = "\n".join(e.args)
-        head, tail = '<%s>'%INTERNAL, '</%s>'%INTERNAL
         line = self._xml.split("\n")[e.lineno-1]
-        if line.startswith(head):
-            line = line[len(head):]
-            col -= len(head)
+        if line.startswith(HEAD):
+            line = line[len(HEAD):]
+            col -= len(HEAD)
             err = re.sub(r'column \d+', 'column %i'%col, err)
-        if line.endswith(tail):
-            line = line[:-len(tail)]
+        if line.endswith(TAIL):
+            line = line[:-len(TAIL)]
 
         # move the column range with the typo into `measure` chars
         measure = 80
@@ -399,6 +401,7 @@ class XMLParser(object):
         if name == INTERNAL:
             del self.nodes[INTERNAL]
             self.nodes = {tag:ordered(elts, 'start') for tag,elts in self.nodes.items()}
+
 
 def csv_reader(pth, encoding, dialect=csv.excel, **kwargs):
     # csv.py doesn't do Unicode; encode temporarily as UTF-8:

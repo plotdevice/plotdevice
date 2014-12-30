@@ -168,14 +168,21 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
                 attrib_txt = NSMutableAttributedString.alloc().initWithString_attributes_(decoded, attrs)
 
             # ensure the very-first character of a Text is indented flush left. also watch for
-            # double-newlines at the edge of the existing string and the appended chars
-            if self._store.length()==0 or self._store.string().endswith('\n\n'):
+            # double-newlines at the edge of the existing string and the appended chars. grafs
+            # can suppress their indentation with a \b (a.k.a. \x08) at the beginning of the
+            # line and un-indented lead-grafs can force indentation by beginning with \t
+            pre_txt = self._store.string()
+            if not pre_txt or re.search(r'\n[\n\x08]$', pre_txt):
                 Text._dedent(attrib_txt)
-            elif self._store.string().endswith('\n') and re.match(r'\n[^\n]', attrib_txt.string()):
-                Text._dedent(attrib_txt, 1)
+            elif pre_txt.endswith('\n'):
+                if re.match(r'\n[^\n]', attrib_txt.string()):
+                    Text._dedent(attrib_txt, 1)
+                elif re.match(r'\x08', attrib_txt.string()):
+                    Text._dedent(attrib_txt)
 
             # ensure that any paragraph with more than one leading newline is indented flush-left
-            for m in re.finditer(r'\n\n+[^\n]', attrib_txt.string()):
+            # (and let `\n\b` override auto-indentation)
+            for m in re.finditer(r'\n\x08|\n\n+[^\n]', attrib_txt.string()):
                 Text._dedent(attrib_txt, m.end()-1)
 
         if attrib_txt:
@@ -630,7 +637,7 @@ class TextMatch(object):
             pat = self.m.re.pattern
             if len(pat)>18:
                 pat = "%s..." % (pat[:15])
-            msg.append("r'%s'" % pat)
+            msg.append("r%s" % repr(pat)[1:])
         except:
             if self.tag:
                 msg.append("<%s>" % self.tag)
