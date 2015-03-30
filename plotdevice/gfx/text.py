@@ -636,7 +636,7 @@ class TextMatch(object):
             pat = self.m.re.pattern
             if len(pat)>18:
                 pat = "%s..." % (pat[:15])
-            msg.append("r%s" % repr(pat)[1:])
+            msg.append("r%s" % repr(pat).lstrip("u"))
         except:
             if self.tag:
                 msg.append("<%s>" % self.tag)
@@ -845,6 +845,8 @@ class TextFrame(BoundsMixin, Grob):
         if not self._parent.text:
             return self._parent._font.ascender
         fnt, _ = self._parent._store.attribute_atIndex_effectiveRange_("NSFont", self._chars.location, None);
+        if not fnt:
+            return self._parent._font.ascender
         return fnt.ascender()
 
     def _eject(self):
@@ -878,7 +880,7 @@ class TextFrame(BoundsMixin, Grob):
         if not self._parent._store.string():
             return LEFT
         graf, _ = self._parent._store.attribute_atIndex_effectiveRange_("NSParagraphStyle", 0, None)
-        return {_TEXT[a]:a for a in _TEXT}[graf.alignment()]
+        return {_TEXT[a]:a for a in _TEXT}.get(graf.alignment(), LEFT)
 
     @property
     def _glyphs(self):
