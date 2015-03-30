@@ -114,16 +114,15 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             is_xml = src.lower().endswith('.xml')
 
             # try using the nsmagic parsing of HTML/RTF to build an attributed string
-            if re.search(r'\.(html|rtf)$', src.lower()):
+            if not is_xml:
                 txt_bytes = txt.encode('utf-8')
-                txt_data = NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes))
                 decoded, info, err = NSMutableAttributedString.alloc().initWithData_options_documentAttributes_error_(
-                    txt_data, None, None, None
+                    NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes)), None, None, None
                 )
 
                 # if the data got unpacked into anything more interesting than plain text,
                 # preserve its styling. otherwise fall through and style the txt val
-                if info.get('UTI') != "public.plain-text":
+                if re.search(r'(html|rtf)$', info.get('UTI')):
                     attrib_txt = decoded
 
         if txt and not attrib_txt:
