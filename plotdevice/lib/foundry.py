@@ -614,31 +614,30 @@ class Librarian(object):
         if word in self._fams:
             return word
 
+        # do a case-insensitive, no-whitespace comparison
         if word not in self._fuzzy:
-            # do a case-insensitive, no-whitespace comparison
             q = sanitized(word)
             corpus = sanitized(self._fams)
             if q in corpus:
+                # full-name match
                 self._fuzzy[word] = self._fams[corpus.index(q)]
-            elif q:
-                # if still no match, compare against a list of names with all the noise words taken out
-                corpus = debranded(self._fams, keep=branding(word))
-                if word in corpus:
-                    self._fuzzy[word] = self._fams[corpus.index(word)]
-                elif q in sanitized(corpus):
-                    # case-insensitive with the de-noised names
-                    self._fuzzy[word] = self._fams[sanitized(corpus).index(q)]
+            else:
+                # accept substrings that unambiguously identify a single family
+                contains = [fam for fam in corpus if q in fam]
+                if len(contains)==1:
+                    self._fuzzy[word] = self._fams[corpus.index(contains[0])]
 
-            if word not in self._fuzzy:
-                # give up but first do a broad search and suggest other names in the exception
-                in_corpus = difflib.get_close_matches(q, corpus, 4, cutoff=0)
-                matches = [self._fams[corpus.index(m)] for m in in_corpus]
-                nomatch = "ambiguous font family name \"%s\""%word
-                if matches:
-                    nomatch += '.\nDid you mean: %s'%[m.encode('utf-8') for m in matches]
-                self._fuzzy[word] = DeviceError(nomatch)
+        try:
+            return self._fuzzy[word]
+        except KeyError:
+            # give up but first do a broad search and suggest other names in the exception
+            in_corpus = difflib.get_close_matches(q, corpus, 4, cutoff=0)
+            matches = [self._fams[corpus.index(m)] for m in in_corpus]
+            nomatch = "ambiguous font family name \"%s\""%word
+            if matches:
+                nomatch += '.\nDid you mean: %s'%[m.encode('utf-8') for m in matches]
+            return DeviceError(nomatch)
 
-        return self._fuzzy[word]
 
     def list_fam(self, famname, names=False):
         """Returns a sorted list of Face tuples for the fonts in a family"""
