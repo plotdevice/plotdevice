@@ -77,7 +77,7 @@ class ScriptAppDelegate(NSObject):
             # self.script.setWindowFrameAutosaveName_('plotdevice:%s'%self.opts['file'])
 
             # foreground the window (if -b wasn't passed) and run the script
-            if opts['activate']:
+            if self.opts['activate']:
                 NSApp().activateIgnoringOtherApps_(True)
             self.script.showWindow_(self)
             AppHelper.callAfter(self.script.scriptedRun)
