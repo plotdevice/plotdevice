@@ -24,7 +24,7 @@ class PlotDeviceDocument(NSDocument):
         self.source = None # string read in from file
         self.source_enc = 'utf-8' # or the contents of a coding: comment
         self.script = None # window controller
-        return super(PlotDeviceDocument,self).init()
+        return objc.super(PlotDeviceDocument,self).init()
 
     def makeWindowControllers(self):
         self.script = ScriptController.alloc().initWithWindowNibName_("PlotDeviceDocument")
@@ -49,7 +49,7 @@ class PlotDeviceDocument(NSDocument):
     #
     def setFileURL_(self, url):
         self.stationery = None
-        super(PlotDeviceDocument, self).setFileURL_(url)
+        objc.super(PlotDeviceDocument, self).setFileURL_(url)
 
     def writeToURL_ofType_error_(self, url, tp, err):
         path = url.fileSystemRepresentation()
@@ -73,7 +73,7 @@ class PlotDeviceDocument(NSDocument):
     def updateChangeCount_(self, chg):
         # changes = {0:"NSChangeDone", 1:"NSChangeUndone", 2:"NSChangeCleared", 3:"NSChangeReadOtherContents", 4:"NSChangeAutosaved", 5:"NSChangeRedone", 256:"NSChangeDiscardable", }
         # print changes[chg]
-        super(PlotDeviceDocument, self).updateChangeCount_(chg)
+        objc.super(PlotDeviceDocument, self).updateChangeCount_(chg)
 
     ## Autosave & restoration on re-launch
 
@@ -81,12 +81,12 @@ class PlotDeviceDocument(NSDocument):
         return True
 
     def encodeRestorableStateWithCoder_(self, coder):
-        super(PlotDeviceDocument, self).encodeRestorableStateWithCoder_(coder)
+        objc.super(PlotDeviceDocument, self).encodeRestorableStateWithCoder_(coder)
         if self.stationery and not self.undoManager().canUndo():
             coder.encodeObject_forKey_(self.stationery, "plotdevice:stationery")
 
     def restoreStateWithCoder_(self, coder):
-        super(PlotDeviceDocument, self).restoreStateWithCoder_(coder)
+        objc.super(PlotDeviceDocument, self).restoreStateWithCoder_(coder)
         self.stationery = coder.decodeObjectForKey_("plotdevice:stationery")
         if self.stationery:
             self.script.setStationery_(self.stationery)
@@ -142,7 +142,7 @@ class ScriptController(NSWindowController):
 
     def initWithWindowNibName_(self, nib):
         self._init_state()
-        return super(ScriptController, self).initWithWindowNibName_(nib)
+        return objc.super(ScriptController, self).initWithWindowNibName_(nib)
 
     def _init_state(self):
         self.vm = Sandbox(self)
@@ -222,7 +222,7 @@ class ScriptController(NSWindowController):
                         break
                 it = it.superview()
             coder.encodeObject_forKey_(split_frames, "plotdevice:split_rects")
-        super(ScriptController, self).encodeRestorableStateWithCoder_(coder)
+        objc.super(ScriptController, self).encodeRestorableStateWithCoder_(coder)
 
 
     def restoreStateWithCoder_(self, coder):
@@ -238,7 +238,7 @@ class ScriptController(NSWindowController):
                     if not split_frames:
                         break
                 it = it.superview()
-        super(ScriptController, self).restoreStateWithCoder_(coder)
+        objc.super(ScriptController, self).restoreStateWithCoder_(coder)
 
     ## Window behavior
 

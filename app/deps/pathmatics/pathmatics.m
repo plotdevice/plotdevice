@@ -715,16 +715,42 @@ static PyMethodDef PathmaticsMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef PathmaticsModuleDef = {
+	PyModuleDef_HEAD_INIT,
+	"cPathmatics",
+	"This is the cPathmatics module",
+	-1,
+	PathmaticsMethods,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+};
+#endif
+
 PyMODINIT_FUNC
+#if PY_MAJOR_VERSION >= 3
+PyInit_cPathmatics(void)
+#else
 initcPathmatics(void)
+#endif
 {
     PyObject *m;
 
+#if PY_MAJOR_VERSION >= 3
+    m = PyModule_Create(&PathmaticsModuleDef);
+#else
     m = Py_InitModule("cPathmatics", PathmaticsMethods);
+#endif
 
     PathmaticsError = PyErr_NewException("cPathmatics.error", NULL, NULL);
     Py_INCREF(PathmaticsError);
     PyModule_AddObject(m, "error", PathmaticsError);
+
+#if PY_MAJOR_VERSION >= 3
+	return m;
+#endif
 }
 
 int
@@ -737,7 +763,11 @@ main(int argc, char *argv[])
     Py_Initialize();
 
     /* Add a static module */
+#if PY_MAJOR_VERSION >= 3
+	PyInit_cPathmatics();
+#else
     initcPathmatics();
+#endif
 
     return 0;
 }

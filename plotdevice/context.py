@@ -1,6 +1,8 @@
 # encoding: utf-8
-import os, re, types
-from contextlib import contextmanager, nested
+import sys, os, re, types
+from contextlib import contextmanager
+if sys.version_info < (3,0):
+    from contextlib import nested
 from collections import namedtuple
 from os.path import exists, expanduser
 
@@ -1596,7 +1598,7 @@ class _PDFRenderView(NSView):
     # the PDF data.
 
     def initWithCanvas_(self, canvas):
-        super(_PDFRenderView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
+        objc.super(_PDFRenderView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
         self.canvas = canvas
         return self
 

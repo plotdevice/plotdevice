@@ -3,6 +3,7 @@ import os
 import re
 import json
 import cgi
+import objc
 from pprint import pprint
 from time import time
 from bisect import bisect
@@ -28,7 +29,7 @@ class DraggyWebView(WebView):
         rewrite = u"\n".join([u'"%s"'%u.path() for u in urls] + strs) + u"\n"
         pb.declareTypes_owner_([NSStringPboardType], self)
         pb.setString_forType_(rewrite, NSStringPboardType)
-        return super(DraggyWebView, self).draggingEntered_(sender)
+        return objc.super(DraggyWebView, self).draggingEntered_(sender)
 
     def performDragOperation_(self, sender):
         pb = sender.draggingPasteboard()
@@ -95,7 +96,7 @@ class EditorView(NSView):
             bgcolor = editor_info('colors')['background']
             bgcolor.setFill()
             NSRectFillUsingOperation(rect, NSCompositeCopy)
-        super(EditorView, self).drawRect_(rect)
+        objc.super(EditorView, self).drawRect_(rect)
 
 
     def _jostle(self):
@@ -462,7 +463,7 @@ class OutputTextView(NSTextView):
         # first responder. the `solution' here is to monitor the find bar's field
         # editor and notice when it is detached from the view hierarchy. it then
         # re-sets itself as first responder
-        super(OutputTextView, self).performFindPanelAction_(sender)
+        objc.super(OutputTextView, self).performFindPanelAction_(sender)
         if self._findTimer:
             self._findTimer.invalidate()
         self._findEditor = self.window().firstResponder().superview().superview()

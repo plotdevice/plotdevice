@@ -1,5 +1,6 @@
 import linecache, re
 from sys import exc_info
+from sys import version_info
 from os.path import abspath, dirname, relpath
 from traceback import format_list, format_exception_only
 from AppKit import NSBundle
