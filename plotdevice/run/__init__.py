@@ -7,11 +7,6 @@ from AppKit import NSBundle
 
 def encoding(src):
     """Searches the first two lines of a string looking for an `# encoding: ???` comment."""
-
-    if version_info >= (3, 0):
-        # src consists of bytes. for the analysis here, we assume ascii for the moment.
-        src = src.decode('ascii')
-
     re_enc = re.compile(r'coding[=:]\s*([-\w.]+)')
     for line in src.split('\n')[:2]:
         if not line.strip().startswith('#'):
@@ -24,9 +19,6 @@ def encoding(src):
 
 def uncoded(src):
     """Strips out any `# encoding: ???` lines found at the head of the source listing"""
-    if version_info >= (3, 0):
-        # src consists of bytes. for the analysis here, we assume ascii for the moment.
-        src = src.decode('ascii')
     lines = src.split("\n")
     for i in range(min(len(lines), 2)):
         lines[i] = re.sub(r'#.*coding[=:]\s*([-\w.]+)', '#', lines[i])

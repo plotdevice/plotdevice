@@ -359,7 +359,9 @@ class StdIO(object):
             self.isErr = streamname=='stderr'
 
         def write(self, data):
-            if isinstance(data, str):
+            if sys.version_info >= (3, 0):
+                pass # encoding should not happen here, I guess
+            elif isinstance(data, str):
                 try:
                     data = unicode(data, "utf_8", "replace")
                 except UnicodeDecodeError:

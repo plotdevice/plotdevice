@@ -168,9 +168,16 @@ class ConsoleScript(ScriptController):
     @property
     def unicode_src(self):
         """Read in our script file's contents (honoring its `# encoding: ...` if present)"""
-        src = open(self.path).read()
-        enc = encoding(src) or 'utf-8'
-        return src.decode(enc)
+        if sys.version_info >= (3, 0):
+            src = open(self.path, encoding = 'utf-8').read()
+            enc = encoding(src) or 'utf-8'
+            if enc != 'utf-8':
+                src = open(self.path, encoding = enc).read()
+            return src
+        else:
+            src = open(self.path).read()
+            enc = encoding(src) or 'utf-8'
+            return src.decode(enc)
 
     def scriptedRun(self):
         # this is the first run that gets triggered at invocation
