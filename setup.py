@@ -163,14 +163,17 @@ class BuildDistCommand(sdist):
         remove_tree('plotdevice.egg-info')
         os.unlink('MANIFEST.in')
 
-from distutils.command.build_py import build_py
+if sys.version_info >= (3,0):
+    from distutils.command.build_py import build_py_2to3 as build_py
+else:
+    from distutils.command.build_py import build_py
 class BuildCommand(build_py):
     def run(self):
         # first let the real build_py routine do its thing
         build_py.run(self)
 
         # then compile the extensions into the just-built module
-        self.spawn(['/usr/bin/python', 'app/deps/build.py', abspath(self.build_lib)])
+        self.spawn([sys.executable, 'app/deps/build.py', abspath(self.build_lib)])
 
         # include some ui resources for running a script from the command line
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
@@ -189,7 +192,7 @@ class BuildAppCommand(Command):
     def run(self):
         self.spawn(['xcodebuild'])
         remove_tree('dist/PlotDevice.app.dSYM')
-        print "done building PlotDevice.app in ./dist"
+        print("done building PlotDevice.app in ./dist")
 
 try:
     import py2app
@@ -231,16 +234,16 @@ try:
             self.copy_file("app/plotdevice", BIN)
 
             # success!
-            print "done building PlotDevice.app in ./dist"
+            print("done building PlotDevice.app in ./dist")
 
 except DistributionNotFound:
     # virtualenv doesn't include pyobjc, py2app, etc. in the sys.path for some reason.
     # not being able to access py2app isn't a big deal for 'build', 'app', 'dist', or 'clean'
     # so only abort the build if the 'py2app' command was given
     if 'py2app' in sys.argv:
-        print """setup.py: py2app build failed
+        print("""setup.py: py2app build failed
           Couldn't find the py2app module (perhaps because you've called setup.py from a virtualenv).
-          Make sure you're using the system's /usr/bin/python interpreter for py2app builds."""
+          Make sure you're using the system's /usr/bin/python interpreter for py2app builds.""")
         sys.exit(1)
 
 
@@ -276,7 +279,7 @@ class DistCommand(Command):
         ORIG = 'app/deps/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
         SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
         if not exists(ORIG):
-            print "Downloading Sparkle.framework"
+            print("Downloading Sparkle.framework")
             self.mkpath('app/deps')
             os.system('curl -L %s | bunzip2 -c | tar xf - -C app/deps'%SPARKLE_URL)
         self.mkpath(dirname(SPARKLE))
@@ -297,7 +300,7 @@ class DistCommand(Command):
                            timestamp=timestamp())
             json.dump(release, f)
 
-        print "\nBuilt PlotDevice.app, %s, and release.json in ./dist" % basename(ZIP)
+        print("\nBuilt PlotDevice.app, %s, and release.json in ./dist" % basename(ZIP))
 
 ## Run Build ##
 
