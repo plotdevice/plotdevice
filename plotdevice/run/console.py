@@ -168,7 +168,7 @@ class ConsoleScript(ScriptController):
     @property
     def unicode_src(self):
         """Read in our script file's contents (honoring its `# encoding: ...` if present)"""
-        src = file(self.path).read()
+        src = open(self.path).read()
         enc = encoding(src) or 'utf-8'
         return src.decode(enc)
 

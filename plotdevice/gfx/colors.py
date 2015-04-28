@@ -17,7 +17,7 @@ HSV = HSB = "hsv"
 CMYK = "cmyk"
 GREY = "greyscale"
 
-_CSS_COLORS = json.load(file(rsrc_path('colors.json')))
+_CSS_COLORS = json.load(open(rsrc_path('colors.json')))
 
 class Color(object):
 
