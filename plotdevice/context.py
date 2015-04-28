@@ -1,6 +1,8 @@
 # encoding: utf-8
-import os, re, types
-from contextlib import contextmanager, nested
+import sys, os, re, types
+from contextlib import contextmanager
+if sys.version_info < (3,0):
+    from contextlib import nested
 from collections import namedtuple
 from os.path import exists, expanduser
 
