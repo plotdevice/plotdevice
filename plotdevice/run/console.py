@@ -156,7 +156,7 @@ class ConsoleScript(ScriptController):
     def init(self):
         self._init_state()
         self._buf = '' # cache the export progress message between stdout writes
-        return super(ScriptController, self).init()
+        return objc.super(ScriptController, self).init()
 
     def setScript_options_(self, path, opts):
         self.vm.path = path
@@ -189,12 +189,12 @@ class ConsoleScript(ScriptController):
     def runScript(self):
         if self.watcher.stale():
             self.vm.source = self.unicode_src
-        super(ConsoleScript, self).runScript()
+        objc.super(ConsoleScript, self).runScript()
 
     def runFullscreen_(self, sender):
         if self.watcher.stale():
             self.vm.source = self.unicode_src
-        super(ConsoleScript, self).runFullscreen_(sender)
+        objc.super(ConsoleScript, self).runFullscreen_(sender)
 
     def windowWillClose_(self, note):
         NSApp().terminate_(self)
@@ -210,12 +210,12 @@ class ConsoleScript(ScriptController):
             STDERR.flush()
 
     def exportFrame(self, status, canvas=None):
-        super(ConsoleScript, self).exportFrame(status, canvas)
+        objc.super(ConsoleScript, self).exportFrame(status, canvas)
         if not status.ok:
             NSApp().delegate().done()
 
     def exportStatus(self, event):
-        super(ConsoleScript, self).exportStatus(event)
+        objc.super(ConsoleScript, self).exportStatus(event)
 
         if event == 'cancelled':
             msg = 'Halted after %i frames. Finishing file I/O...\n' % self.vm.session.added
@@ -230,7 +230,7 @@ class ConsoleScript(ScriptController):
             NSApp().delegate().done()
 
     def exportProgress(self, written, total, cancelled):
-        super(ConsoleScript, self).exportProgress(written, total, cancelled)
+        objc.super(ConsoleScript, self).exportProgress(written, total, cancelled)
 
         if cancelled:
             msg = "%i frames to go..."%(total-written)

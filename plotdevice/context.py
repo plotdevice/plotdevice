@@ -1598,7 +1598,7 @@ class _PDFRenderView(NSView):
     # the PDF data.
 
     def initWithCanvas_(self, canvas):
-        super(_PDFRenderView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
+        objc.super(_PDFRenderView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
         self.canvas = canvas
         return self
 

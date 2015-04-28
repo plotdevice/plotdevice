@@ -2,6 +2,7 @@
 import sys
 import os
 import traceback
+import objc
 
 from ..lib.cocoa import *
 from ..gfx import Color
@@ -34,7 +35,7 @@ class GraphicsBackdrop(NSView):
             frame.size.height = max(visible.size.height, minsize.height)
             scrollview.horizontalScroller().setControlSize_(1) #NSSmallControlSize
             scrollview.verticalScroller().setControlSize_(1)
-        self = super(GraphicsBackdrop, self).setFrame_(frame)
+        self = objc.super(GraphicsBackdrop, self).setFrame_(frame)
 
     def didAddSubview_(self, subview):
         if isinstance(subview, GraphicsView):
@@ -54,7 +55,7 @@ class GraphicsBackdrop(NSView):
     def drawRect_(self, rect):
         DARK_GREY.setFill()
         NSRectFillUsingOperation(rect, NSCompositeCopy)
-        super(GraphicsBackdrop, self).drawRect_(rect)
+        objc.super(GraphicsBackdrop, self).drawRect_(rect)
 
     def viewFrameDidChange_(self, note):
         self.setFrame_(self.frame())
@@ -247,7 +248,7 @@ class GraphicsView(NSView):
 class FullscreenWindow(NSWindow):
 
     def initWithRect_(self, fullRect):
-        super(FullscreenWindow, self).initWithContentRect_styleMask_backing_defer_(fullRect, NSBorderlessWindowMask, NSBackingStoreBuffered, True)
+        objc.super(FullscreenWindow, self).initWithContentRect_styleMask_backing_defer_(fullRect, NSBorderlessWindowMask, NSBackingStoreBuffered, True)
         return self
 
     def canBecomeKeyWindow(self):
@@ -256,7 +257,7 @@ class FullscreenWindow(NSWindow):
 class FullscreenView(NSView):
 
     def init(self):
-        super(FullscreenView, self).init()
+        objc.super(FullscreenView, self).init()
         self.mousedown = False
         self.keydown = False
         self.key = None
