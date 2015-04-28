@@ -763,7 +763,11 @@ main(int argc, char *argv[])
     Py_Initialize();
 
     /* Add a static module */
+#if PY_MAJOR_VERSION >= 3
+	PyInit_cPathmatics();
+#else
     initcPathmatics();
+#endif
 
     return 0;
 }

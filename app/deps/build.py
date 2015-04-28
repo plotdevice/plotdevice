@@ -24,7 +24,7 @@ def build_libraries(dst_root):
         lib_name = basename(dirname(setup_script))
         print("Building %s..."% lib_name)
         os.chdir(dirname(setup_script))
-        result = os.system('python2.7 setup.py -q build') # call the lib's setup.py
+        result = os.system(sys.executable + ' setup.py -q build') # call the lib's setup.py
         if result > 0:
             raise OSError("Could not build %s" % lib_name)
         os.chdir(libs_root)
