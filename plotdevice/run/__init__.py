@@ -1,8 +1,25 @@
-import linecache, re
-from sys import exc_info
-from os.path import abspath, dirname, relpath
+import re, sys, site, linecache
+from os.path import abspath, dirname, relpath, exists, join
 from traceback import format_list, format_exception_only
-from AppKit import NSBundle
+
+# add our embedded PyObjC site-dir to the sys.path
+dist_root = abspath(join(dirname(__file__), '../..'))
+if exists(join(dist_root, 'app/PlotDevice-Info.plist')):
+    # if run from the sdist, look in the build dir...
+    objc_dir = join(dist_root, 'build/lib/plotdevice/lib/PyObjC')
+else:
+    # ...otherwise find the modules in .lib
+    objc_dir = abspath(join(dirname(__file__), '../lib/PyObjC'))
+map(sys.path.remove, filter(lambda p:p.endswith('PyObjC'), sys.path))
+site.addsitedir(objc_dir)
+
+# test the sys.path by attempting to load a PyObjC submodule
+try:
+    import objc
+except:
+    unbuilt = 'Build the plotdevice module with `python setup.py build\' before attempting import it.'
+    raise RuntimeError(unbuilt)
+
 
 def encoding(src):
     """Searches the first two lines of a string looking for an `# encoding: ???` comment."""
@@ -51,7 +68,7 @@ def stacktrace(script=None, src=None):
 def coredump(script=None, src=None, syntax=True):
     """Get a clean stacktrace with absolute paths and source pulled from the editor rather than disk"""
     # use the most recently caught exception
-    etype, value, tb = exc_info()
+    etype, value, tb = sys.exc_info()
     script = script or '<Untitled>' if src else None
     frames = extract_tb(tb, script, src)
 
@@ -85,6 +102,7 @@ def extract_tb(tb, script=None, src=None):
         tb = tb.tb_next
 
     # omit the internal plotdevice stack frames in `dist` builds
+    from AppKit import NSBundle
     debug = 'flux' in NSBundle.mainBundle().infoDictionary().get('CFBundleVersion','')
     if not debug:
         moduledir = abspath(dirname(dirname(__file__)))

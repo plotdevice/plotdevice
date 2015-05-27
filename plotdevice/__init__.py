@@ -18,46 +18,35 @@ A derivative of http://nodebox.net/code by Frederik De Bleser & Tom De Smedt
 All rights reserved.
 MIT Licensed (see README file for details)
 """
+import sys, re, os, site
 
 __version__ = '0.9.4'
 __author__  = 'Christian Swinehart'
-__email__   = "drafting@samizdat.cc"
+__email__   = 'drafting@samizdat.cc'
 __credits__ = 'Frederik De Bleser, Tom De Smedt, Just van Rossum, & Marcos Ojeda'
 __license__ = 'MIT'
 
-
-# add the shared directory (for Libraries) to the path
-import sys, re, os
-sys.path.append(os.path.join(os.getenv('HOME'), 'Library', 'Application Support', 'PlotDevice'))
-
-# add the Extras directory to sys.path since every module depends on PyObjC and friends
-try:
-    import objc
-except ImportError:
-    extras = '/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python'
-    sys.path.extend([extras, '%s/PyObjC'%extras])
-    import objc
-
-# print python exceptions to the console rather than silently failing
-objc.setVerbose(True)
-
-# the global non-conflicting token (fingers crossed)
-INTERNAL = '_p_l_o_t_d_e_v_i_c_e_'
-
-# please excuse our technical difficulties
-class DeviceError(Exception):
-    pass
-
-# special exception to cleanly exit animations
-class Halted(Exception):
-    pass
+INTERNAL = '_p_l_o_t_d_e_v_i_c_e_' # the global non-conflicting token (fingers crossed)
+class DeviceError(Exception): pass # please excuse our technical difficulties
+class Halted(Exception): pass      # special exception to cleanly exit animations
 
 # note whether the module is being used within the .app, via console.py, or from the repl
 called_from = getattr(sys.modules['__main__'], '__file__', '<interactive>')
 is_windowed = bool(re.search(r'plotdevice(-app|/run/console)\.py$', called_from))
 in_setup = bool(called_from.endswith('setup.py')) # (for builds)
 
-# populate the namespace (or don't) accordingly
+# don't mess with sys.path during builds
+if not in_setup:
+    # use the bundled copy of PyObjC rather than the system version
+    from .run import objc
+
+    # add the shared directory (for Libraries) to the path
+    sys.path.append(os.path.join(os.getenv('HOME'), 'Library', 'Application Support', 'PlotDevice'))
+
+    # print python exceptions to the console rather than silently failing
+    objc.setVerbose(True)
+
+# populate the namespace (or don't) depending on the context
 if is_windowed or in_setup:
     # if a script imports * from within the app/tool, nothing should be (re-)added to the
     # global namespace. we'll let the Sandbox handle populating the namespace instead.

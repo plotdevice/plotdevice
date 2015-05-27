@@ -4,12 +4,12 @@ from os.path import join, abspath, dirname, exists
 # do some special-case handling when the module is imported from within the source dist
 # (determined by checking the existence project files at a known path). if we're in the
 # source dist, add the build dir to the path so we can pick up the .so files,
-module_root = abspath(join(abspath(dirname(__file__)), '../..'))
-if exists(join(module_root, 'app/PlotDevice-Info.plist')):
-    so_dir = join(module_root, 'build/lib/plotdevice/lib')
+dist_root = abspath(join(abspath(dirname(__file__)), '../..'))
+if exists(join(dist_root, 'app/PlotDevice-Info.plist')):
+    so_dir = join(dist_root, 'build/lib/plotdevice/lib')
     sys.path.append(so_dir)
     if not exists(so_dir):
-        unbuilt = 'Build the plotdevice module with `python setup.pt build\' before attempting import it.'
+        unbuilt = 'Build the plotdevice module with `python setup.py build\' before attempting import it.'
         raise RuntimeError(unbuilt)
 
 # test the sys.path by attempting to load the c-extensions
