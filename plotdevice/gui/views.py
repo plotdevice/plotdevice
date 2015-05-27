@@ -6,6 +6,7 @@ import traceback
 from ..lib.cocoa import *
 from ..gfx import Color
 from PyObjCTools import AppHelper
+from objc import super
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
 

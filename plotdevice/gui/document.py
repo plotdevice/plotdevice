@@ -5,7 +5,7 @@ import re
 import traceback
 import random
 import time
-import objc
+from objc import super
 
 from ..lib.cocoa import *
 
