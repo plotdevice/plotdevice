@@ -3,6 +3,7 @@
 build/
 dist/
 app/deps/Sparkle*
+app/deps/PyObjC/*.tar.gz
 
 # cds garbage
 related/

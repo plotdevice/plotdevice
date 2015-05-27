@@ -233,7 +233,7 @@ try:
             # success!
             print "done building PlotDevice.app in ./dist"
 
-except DistributionNotFound:
+except (DistributionNotFound, ImportError):
     # virtualenv doesn't include pyobjc, py2app, etc. in the sys.path for some reason.
     # not being able to access py2app isn't a big deal for 'build', 'app', 'dist', or 'clean'
     # so only abort the build if the 'py2app' command was given

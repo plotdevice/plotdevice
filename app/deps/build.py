@@ -1,7 +1,7 @@
 import os
 import errno
 from glob import glob
-from os.path import dirname, basename, abspath, isdir, join
+from os.path import dirname, basename, abspath, isdir, join, exists
 
 libs_root = dirname(abspath(__file__))
 
@@ -13,9 +13,8 @@ def mkdirs(newdir, mode=0777):
             raise
 
 def build_libraries(dst_root):
-    print "Compiling required c-extensions"
+    print "\nCompiling required c-extensions"
 
-    # Store the current working directory for later.
     # Find all setup.py files in the current folder
     setup_scripts = glob('%s/*/setup.py'%libs_root)
     for setup_script in setup_scripts:
@@ -27,6 +26,11 @@ def build_libraries(dst_root):
             raise OSError("Could not build %s" % lib_name)
         os.chdir(libs_root)
 
+    print "Building PyObjC..."
+    result = os.system('bash "%s/PyObjC/setup.sh"'%libs_root)
+    if result > 0:
+        raise OSError("Failed to unpack PyObjC wheels")
+
     # Make sure the destination folder exists.
     mkdirs(dst_root)
 
@@ -34,12 +38,12 @@ def build_libraries(dst_root):
     build_dirs = glob("%s/*/build/lib*"%libs_root)
     for build_dir in build_dirs:
         lib_name = dirname(dirname(build_dir))
-        # print "Copying", lib_name
         cmd = 'cp -R -p %s/* %s' % (build_dir, dst_root)
         print cmd
         result = os.system(cmd)
         if result > 0:
             raise OSError("Could not copy %s" % lib_name)
+    print
 
 def clean_build_files():
     print "Cleaning all library build files..."
