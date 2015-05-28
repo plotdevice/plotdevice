@@ -5,7 +5,6 @@ import traceback
 
 from ..lib.cocoa import *
 from ..gfx import Color
-from PyObjCTools import AppHelper
 from objc import super
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
@@ -207,7 +206,7 @@ class GraphicsView(NSView):
     ### pasteboard delegate method ###
 
     def pasteboard_provideDataForType_(self, pboard, type):
-        formats = {NSPDFPboardType:"pdf", 
+        formats = {NSPDFPboardType:"pdf",
                    NSPostScriptPboardType:"eps",
                    NSTIFFPboardType:"tiff"}
         if self.canvas and type in formats:

@@ -1,6 +1,5 @@
 # encoding: utf-8
 import os
-from PyObjCTools import AppHelper
 from ..lib.cocoa import *
 import objc
 
