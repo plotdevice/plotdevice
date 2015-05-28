@@ -18,7 +18,7 @@ A derivative of http://nodebox.net/code by Frederik De Bleser & Tom De Smedt
 All rights reserved.
 MIT Licensed (see README file for details)
 """
-import sys, re, os, site
+import sys, re, os
 
 __version__ = '0.9.4'
 __author__  = 'Christian Swinehart'
@@ -37,11 +37,11 @@ in_setup = bool(called_from.endswith('setup.py')) # (for builds)
 
 # don't mess with sys.path during builds
 if not in_setup:
-    # use the bundled copy of PyObjC rather than the system version
-    from .run import objc
-
     # add the shared directory (for Libraries) to the path
     sys.path.append(os.path.join(os.getenv('HOME'), 'Library', 'Application Support', 'PlotDevice'))
+
+    # use the bundled copy of PyObjC rather than the system version
+    from .run import objc
 
     # print python exceptions to the console rather than silently failing
     objc.setVerbose(True)

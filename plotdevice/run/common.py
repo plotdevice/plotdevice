@@ -1,29 +1,8 @@
-import re, sys, site, linecache
-from os.path import abspath, dirname, relpath, exists, join
+import re, sys, linecache
+from os.path import abspath, dirname, relpath
 from traceback import format_list, format_exception_only
 
-try:
-    # under normal circumstances the PyObjC site-dir is in the .lib directory...
-    objc_dir = abspath(join(dirname(__file__), '../lib/PyObjC'))
-
-    # ...but if run from the sdist, the binaries will be in setup.py's build directory
-    if not exists(objc_dir):
-        objc_dir = abspath(join(dirname(__file__), '../../build/lib/plotdevice/lib/PyObjC'))
-
-    # add our embedded PyObjC site-dir to the sys.path (and remove any conflicts)
-    map(sys.path.remove, filter(lambda p:p.endswith('PyObjC'), sys.path))
-    if exists(objc_dir):
-        site.addsitedir(objc_dir)
-
-    # test the sys.path by attempting to load a PyObjC submodule
-    import objc
-except ImportError:
-    from pprint import pformat
-    missing = "Searched for PyObjC libraries in:\n%s\nto no avail..."%pformat(sys.path)
-    if exists('%s/../../app/PlotDevice-Info.plist'%dirname(__file__)):
-        missing += '\n\nBuild the plotdevice module with `python setup.py build\' before attempting import it.'
-    raise RuntimeError(missing)
-
+### encoding-pragma helpers ###
 
 def encoding(src):
     """Searches the first two lines of a string looking for an `# encoding: ???` comment."""
@@ -43,6 +22,8 @@ def uncoded(src):
     for i in range(min(len(lines), 2)):
         lines[i] = re.sub(r'#.*coding[=:]\s*([-\w.]+)', '#', lines[i])
     return "\n".join(lines)
+
+### crash reporting helpers ###
 
 def stacktrace(script=None, src=None):
     """print a clean traceback and optionally rewrite the paths relative to a script path"""
@@ -112,6 +93,3 @@ def extract_tb(tb, script=None, src=None):
         moduledir = abspath(dirname(dirname(__file__)))
         return [frame for frame in list if moduledir not in frame[0]]
     return list
-
-# expose the script-runner object
-from .sandbox import Sandbox

@@ -23,13 +23,11 @@ from math import floor, ceil
 from os.path import dirname, abspath, exists, join
 from codecs import open
 
-import plotdevice # adds pyobjc to sys.path as a side effect...
-import objc # ...otherwise this would fail
-from PyObjCTools import AppHelper
+from plotdevice.run import objc, encoding # loads pyobjc as a side effect...
 from plotdevice.lib.cocoa import *
-from plotdevice.gui import ScriptController
 from plotdevice.util import rsrc_path
-from plotdevice.run import encoding
+from plotdevice.gui import ScriptController
+from PyObjCTools import AppHelper
 
 STDOUT = sys.stdout
 STDERR = sys.stderr

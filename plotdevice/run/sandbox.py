@@ -6,8 +6,8 @@ from collections import namedtuple
 from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
-from ..run import stacktrace, coredump, uncoded, encoding
 from ..lib.io import MovieExportSession, ImageExportSession
+from .common import stacktrace, coredump, uncoded, encoding
 from plotdevice import util, context, gfx, Halted, DeviceError
 
 __all__ = ['Sandbox']
