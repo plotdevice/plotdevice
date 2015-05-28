@@ -1,6 +1,6 @@
 # encoding: utf-8
 import os, re, types
-from contextlib import contextmanager, nested
+from contextlib import contextmanager
 from collections import namedtuple
 from os.path import exists, expanduser
 
