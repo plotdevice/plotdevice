@@ -60,7 +60,8 @@ class ScriptAppDelegate(NSObject):
         return self
 
     def applicationDidFinishLaunching_(self, note):
-        pth = self.opts['file']
+        opts = self.opts
+        pth = opts['file']
 
         if self.mode=='windowed':
             # load the viewer ui from the nib in plotdevice/rsrc
@@ -70,9 +71,9 @@ class ScriptAppDelegate(NSObject):
             NSApp().setMainMenu_(self.menu)
 
             # configure the window script-controller, and update-watcher
-            self.script.setScript_options_(pth, self.opts)
+            self.script.setScript_options_(pth, opts)
             self.window.setTitleWithRepresentedFilename_(pth)
-            # self.script.setWindowFrameAutosaveName_('plotdevice:%s'%self.opts['file'])
+            # self.script.setWindowFrameAutosaveName_('plotdevice:%s'%opts['file'])
 
             # foreground the window (if -b wasn't passed) and run the script
             if opts['activate']:
@@ -82,7 +83,7 @@ class ScriptAppDelegate(NSObject):
         elif self.mode=='headless':
             # create a window-less WindowController
             self.script = ConsoleScript.alloc().init()
-            self.script.setScript_options_(pth, self.opts)
+            self.script.setScript_options_(pth, opts)
 
             # BUG? FEATURE? (it's a mystery!)
             # exports will stall if `last` isn't an int. this should probably
@@ -91,9 +92,9 @@ class ScriptAppDelegate(NSObject):
                 opts['last'] = opts.get('first', 1)
 
             # kick off an export session
-            format = self.opts['export'].rsplit('.',1)[1]
+            format = opts['export'].rsplit('.',1)[1]
             kind = 'movie' if format in ('mov','gif') else 'image'
-            self.script.exportInit(kind, self.opts['export'], self.opts)
+            self.script.exportInit(kind, opts['export'], opts)
 
     def catchInterrupts_(self, sender):
         read, write, timeout = select.select([sys.stdin.fileno()], [], [], 0)
@@ -250,14 +251,14 @@ def progress(written, total, width=20):
 
 if __name__ == '__main__':
     try:
-        opts = json.loads(sys.stdin.readline())
-        mode = 'headless' if opts['export'] else 'windowed'
+        OPTS = json.loads(sys.stdin.readline())
+        MODE = 'headless' if OPTS['export'] else 'windowed'
     except ValueError:
         print "bad args"
         sys.exit(1)
 
-    app = ScriptApp.sharedApplicationForMode_(mode)
-    delegate = ScriptAppDelegate.alloc().initWithOpts_forMode_(opts, mode)
+    app = ScriptApp.sharedApplicationForMode_(MODE)
+    delegate = ScriptAppDelegate.alloc().initWithOpts_forMode_(OPTS, MODE)
     app.setDelegate_(delegate)
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     AppHelper.runEventLoop(installInterrupt=False)
