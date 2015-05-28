@@ -1,24 +1,16 @@
 import sys
-from os.path import join, abspath, dirname, exists
+from os.path import abspath, dirname, exists
+from glob import glob
 
-# do some special-case handling when the module is imported from within the source dist
-# (determined by checking the existence project files at a known path). if we're in the
-# source dist, add the build dir to the path so we can pick up the .so files,
-dist_root = abspath(join(abspath(dirname(__file__)), '../..'))
-if exists(join(dist_root, 'app/PlotDevice-Info.plist')):
-    so_dir = join(dist_root, 'build/lib/plotdevice/lib')
-    sys.path.append(so_dir)
-    if not exists(so_dir):
-        unbuilt = 'Build the plotdevice module with `python setup.py build\' before attempting import it.'
-        raise RuntimeError(unbuilt)
-
-# test the sys.path by attempting to load the c-extensions
 try:
-    import io, pathmatics, foundry
+    # if the lib files are missing, presume we're in the source dist and look in its build dir
+    if not glob('%s/*.so'%dirname(__file__)):
+        sys.path.append(abspath('%s/../../build/lib/plotdevice/lib'%dirname(__file__)))
+    import io, pathmatics, foundry # make sure the c-extensions are accessible
 except ImportError:
-    from pprint import pformat
-    notfound = "Couldn't locate C extensions (cIO.so, & cPathmatics.so).\nSearched in:\n%s\nto no avail..."%pformat(sys.path)
-    raise RuntimeError(notfound)
+    missing = "Missing C extensions (cPathmatics.so & friends) in %s" % abspath(dirname(__file__))
+    raise RuntimeError(missing)
+
 
 # allow Libraries to request a _ctx reference
 def register(module):
