@@ -22,20 +22,26 @@ VIRTUALENV = $(PYTHON) $(VENV_CMD) -q
 # ---------------------------------------------------------------------------------------- #
 
 # create the sitedir at build/lib/PyObjC using the wheelhouse tarfile
-# (whether downloaded from plotdevie.io or build locally using `make pyobjc`)
+# (whether downloaded from plotdevie.io or build locally using `make wheels`)
 all: $(SITEDIR)
 
 # retrieve the current PyObjC sources from PyPI and build wheels from them. the resulting
 # wheelhouse dir is then tarred up (and will be used in subsequent `make all` runs)
-pyobjc: $(VENV_CMD)
+wheels: $(VENV_CMD)
 	rm -rf $(ENV) $(WHEELHOUSE)
 
 	$(VIRTUALENV) $(ENV)
 	$(PIP) install pyobjc-core==$(OBJC_VERSION)
-	$(PIP) wheel pyobjc==$(OBJC_VERSION) -w "${WHEELHOUSE}"
+	$(PIP) wheel pyobjc==$(OBJC_VERSION) -w ${WHEELHOUSE}
 
 	tar czf wheelhouse-pyobjc-$(OBJC_VERSION).tar.gz -C build wheelhouse
 	rm -rf build
+
+clean:
+	rm -rf build
+
+distclean:
+	rm -rf build $(VENV_TAR) $(OBJC_TAR)
 
 # ---------------------------------------------------------------------------------------- #
 
@@ -54,7 +60,7 @@ $(ENV): $(VENV_CMD)
 	$(VIRTUALENV) $@
 
 # fetch the cached wheelhouse archive from plotdevice.io
-# (presuming it wasn't build locally via `make pyobjc`)
+# (presuming it wasn't build locally via `make wheels`)
 $(OBJC_TAR):
 	@echo $(OBJC_URL)
 	$(CURL) $(OBJC_URL) -o $@
