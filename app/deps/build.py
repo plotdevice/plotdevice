@@ -20,11 +20,6 @@ def build_libraries(dst_root):
             raise OSError("Could not build %s" % lib_name)
         os.chdir(libs_root)
 
-    print "Building PyObjC..."
-    result = os.system('bash "%s/PyObjC/setup.sh" "%s"'%(libs_root, sys.executable))
-    if result > 0:
-        raise OSError("Failed to unpack PyObjC wheels")
-
     # Make sure the destination folder exists.
     if not isdir(dst_root):
         os.makedirs(dst_root)
