@@ -170,7 +170,7 @@ class BuildCommand(build_py):
         build_py.run(self)
 
         # then compile the extensions into the just-built module
-        self.spawn(['/usr/bin/python', 'app/deps/build.py', abspath(self.build_lib)])
+        self.spawn([sys.executable, 'app/deps/build.py', abspath(self.build_lib)])
 
         # include some ui resources for running a script from the command line
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib

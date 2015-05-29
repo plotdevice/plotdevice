@@ -3,10 +3,13 @@
 # Build a new set of wheels from the current PyObjC sources on PyPI
 #  - creates a tarball called wheelhouse-pyobjc-VERSION.tar.gz for use by setup.py
 #  - the tarball can also be moved to plotdevice.io for use in typical installs
+#  - the interpreter will be /usr/bin/python by defualt, but an alternate path
+#    can be specified as the first command line arg when invoking the script
 #
 set -e
 
 TOP=$(dirname "$0")
+PYTHON=${1:-/usr/bin/python}
 BUILD_DIR="${TOP}/build"
 
 VENV_VERSION="13.0.1"
@@ -17,7 +20,7 @@ VENV_DIR="${BUILD_DIR}/${VENV_PKG}"
 
 ENV="${BUILD_DIR}/env"
 PIP="${ENV}/bin/pip"
-VIRTUALENV="python2.7 ${VENV_DIR}/virtualenv.py -q"
+VIRTUALENV="${PYTHON} ${VENV_DIR}/virtualenv.py -q"
 PYOBJC_DIR="${BUILD_DIR}/wheelhouse"
 
 #--

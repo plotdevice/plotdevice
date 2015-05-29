@@ -1,16 +1,10 @@
 import os
+import sys
 import errno
 from glob import glob
 from os.path import dirname, basename, abspath, isdir, join, exists
 
 libs_root = dirname(abspath(__file__))
-
-def mkdirs(newdir, mode=0777):
-    try: os.makedirs(newdir, mode)
-    except OSError, err:
-        # Reraise the error unless it's about an already existing directory
-        if err.errno != errno.EEXIST or not isdir(newdir):
-            raise
 
 def build_libraries(dst_root):
     print "\nCompiling required c-extensions"
@@ -21,18 +15,19 @@ def build_libraries(dst_root):
         lib_name = basename(dirname(setup_script))
         print "Building %s..."% lib_name
         os.chdir(dirname(setup_script))
-        result = os.system('python2.7 setup.py -q build') # call the lib's setup.py
+        result = os.system(sys.executable+' setup.py -q build') # call the lib's setup.py
         if result > 0:
             raise OSError("Could not build %s" % lib_name)
         os.chdir(libs_root)
 
     print "Building PyObjC..."
-    result = os.system('bash "%s/PyObjC/setup.sh"'%libs_root)
+    result = os.system('bash "%s/PyObjC/setup.sh" "%s"'%(libs_root, sys.executable))
     if result > 0:
         raise OSError("Failed to unpack PyObjC wheels")
 
     # Make sure the destination folder exists.
-    mkdirs(dst_root)
+    if not isdir(dst_root):
+        os.makedirs(dst_root)
 
     # Copy all build results to the ../../build/deps folder.
     build_dirs = glob("%s/*/build/lib*"%libs_root)
@@ -52,17 +47,17 @@ def clean_build_files():
     for build_dir in build_dirs:
         lib_name = dirname(build_dir)
         print "Cleaning", lib_name
-        os.system('rm -r %s' % build_dir)
+        os.system('rm -r "%s"' % build_dir)
 
 if __name__=='__main__':
     import sys
 
     if len(sys.argv)>1:
         arg = sys.argv[1]
-        if os.path.exists(arg):
+        if arg=='clean':
+            clean_build_files()
+        else:
             dst_root = join(arg, 'plotdevice/lib')
             build_libraries(dst_root)
-        elif arg=='clean':
-            clean_build_files()
     else:
         print "usage: python build.py <destination-path>"

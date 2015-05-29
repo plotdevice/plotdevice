@@ -7,10 +7,13 @@
 #    the current source distribution on PyPI and fill the wheelhouse subdir
 #  - the subsequent call to setup.sh will populate the sitedir using these
 #    fresh copies
+#  - the interpreter will be /usr/bin/python by defualt, but an alternate path
+#    can be specified as the first command line arg when invoking the script
 #
 set -e
 
 TOP=$(dirname "$0")
+PYTHON=${1:-/usr/bin/python}
 BUILD_DIR="${TOP}/build"
 DEST_DIR="${BUILD_DIR}/lib/PyObjC"
 
@@ -28,7 +31,7 @@ PYOBJC_DIR="${BUILD_DIR}/wheelhouse"
 
 ENV="${BUILD_DIR}/env"
 PIP="${ENV}/bin/pip -q --isolated"
-VIRTUALENV="python2.7 ${VENV_DIR}/virtualenv.py -q"
+VIRTUALENV="${PYTHON} ${VENV_DIR}/virtualenv.py -q"
 
 #--
 
