@@ -3,6 +3,7 @@ import os, re, types
 from contextlib import contextmanager
 from collections import namedtuple
 from os.path import exists, expanduser
+from objc import super
 
 from .lib.cocoa import *
 from .lib import pathmatics
