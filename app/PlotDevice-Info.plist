@@ -74,7 +74,7 @@
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>© 2014 Samizdat Drafting Co.</string>
+	<string>© 2014–15 Samizdat Drafting Co.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>UTExportedTypeDeclarations</key>
