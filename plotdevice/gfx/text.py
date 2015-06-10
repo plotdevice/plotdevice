@@ -473,8 +473,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
     @property
     def lines(self):
-        """Returns a list of LineFragments, one for each line in all of the TextFrames"""
-        return foundry.line_fragments(self)
+        """Returns a list of TextMatches, one for each line across all child TextFrames"""
+        return [TextMatch(self, slug) for slug in foundry.line_fragments(self)]
 
     ### Calculating dimensions & rendering ###
 
@@ -588,8 +588,9 @@ class TextMatch(object):
     Properties:
       `start` and `end` - the character range of the match
       `text` - the matched substring
-      `lines` - a list of one or more LineFragments describing glyph geometry
       `path` - a Bezier object with the glyphs from the matched range
+      `lines` - a list of one or more TextMatches describing line-breaking within the Match
+      `frames` - a list of one or more TextFrames that fully contain the Match
 
     Additional properties when .select'ing an xml element:
       `tag` - a string with the matched element's name
@@ -609,7 +610,10 @@ class TextMatch(object):
         self.tag, self.attrs, self.parents = None, {}, ()
         self.m = None
 
-        if hasattr(match, 'range'): # NSSubText
+        if isinstance(match, foundry.LineFragment):
+            self.start, self.end = match.span
+            self._slugs = [match]
+        elif hasattr(match, 'range'): # NSSubText
             self.start, n = match.range()
             self.end = self.start + n
         elif hasattr(match, '_asdict'): # xml Element
@@ -700,12 +704,17 @@ class TextMatch(object):
     ### Geometry ###
 
     @property
-    def lines(self):
+    def slugs(self):
         """A list of one or more LineFragments describing text layout within the match"""
-        if not hasattr(self, '_lines'):
+        if not hasattr(self, '_slugs'):
             rng = (self.start, self.end-self.start)
-            self._lines = foundry.line_fragments(self._parent, rng)
-        return self._lines
+            self._slugs = foundry.line_fragments(self._parent, rng)
+        return self._slugs
+
+    @property
+    def lines(self):
+        """A list of one or more TextMatches splitting the current object across line-breaks"""
+        return [TextMatch(self._parent, lf) for lf in self.slugs]
 
     @property
     def frames(self):
@@ -717,7 +726,7 @@ class TextMatch(object):
     def bounds(self):
         """Returns the bounding box for the lines containing the match"""
         box = Region()
-        for slug in self.lines:
+        for slug in self.slugs:
             box = box.union(slug.bounds)
         return box
 
@@ -725,7 +734,7 @@ class TextMatch(object):
     def used(self):
         """Returns the bounding box of the matched characters"""
         box = Region()
-        for slug in self.lines:
+        for slug in self.slugs:
             box = box.union(slug.used)
         return box
 
@@ -733,6 +742,13 @@ class TextMatch(object):
     def metrics(self):
         """The size of the rendered text"""
         return self.used.size
+
+    @property
+    def baseline(self):
+        """The origin Point of the first glyph in the match (or None if empty)"""
+        for slug in self.slugs:
+            return slug.baseline
+        return None
 
     @property
     def path(self):
@@ -832,8 +848,9 @@ class TextFrame(BoundsMixin, Grob):
 
     @property
     def lines(self):
-        """A list of LineFragments describing the layout within the frame"""
-        return foundry.line_fragments(self._parent, self._chars)
+        """A list of TextMatches describing the line-layout within the frame"""
+        slugs = foundry.line_fragments(self._parent, self._chars)
+        return [TextMatch(self._parent, slug) for slug in slugs]
 
     @property
     def path(self):

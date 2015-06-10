@@ -136,7 +136,6 @@ static NSDictionary *AAT;
         NSRect glyph_rect = NSIntersectionRect(bounds_rect, used_rect);
 
         // calculate the baseline origin for the first glyph in the line
-        // NSPoint glyph_pt = [layout locationForGlyphAtIndex:cursor];
         NSPoint baseline = NSMakePoint(glyph_rect.origin.x, line_rect.origin.y);
 
         // adjust the rects to reflect the baseline offset

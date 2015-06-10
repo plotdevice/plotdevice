@@ -17,7 +17,7 @@ __all__ = ["font_family", "font_encoding", "font_face", "best_face",
            ]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic', 'ascent', 'descent'])
-LineFragment = namedtuple("LineFragment", ["bounds", "used", "baseline", "span", "text", "frame"])
+LineFragment = namedtuple("LineFragment", ["bounds", "used", "baseline", "span"])
 Vandercook = objc.lookUpClass('Vandercook')
 
 # introspection methods for postscript names & families
@@ -301,8 +301,6 @@ def line_fragments(txt_obj, rng=None):
             "bounds":frame._from_px(frag['bounds'].rectValue()),
             "baseline":frame._from_px(frag['baseline'].pointValue()),
             "span":(txt_range.location, txt_range.location+txt_range.length),
-            "text":frag['text'],
-            "frame":frame,
         }
 
         offset = frame.offset + txt_obj.baseline
@@ -316,7 +314,6 @@ def line_fragments(txt_obj, rng=None):
             if flatten is min:
               info['baseline'].x += info['used'].width
               loc += 1
-            info['text'] = u''
             info['used'].width = 0
             info['span'] = (loc, 0)
 
