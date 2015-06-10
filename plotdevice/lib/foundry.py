@@ -17,7 +17,7 @@ __all__ = ["font_family", "font_encoding", "font_face", "best_face",
            ]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic', 'ascent', 'descent'])
-LineFragment = namedtuple("LineFragment", ["bounds", "used", "baseline", "span"])
+Slug = namedtuple("Slug", ["bounds", "used", "baseline", "span"])
 Vandercook = objc.lookUpClass('Vandercook')
 
 # introspection methods for postscript names & families
@@ -276,8 +276,8 @@ def trace_text(txt_obj, rng=None):
             nspath.appendBezierPath_(subpath)
     return txt_obj._from_px(nspath)
 
-def line_fragments(txt_obj, rng=None):
-    """Returns a list of dictionaries describing the line fragments in the entire Text object
+def line_slugs(txt_obj, rng=None):
+    """Returns a list of Slugs describing the line fragments in the entire Text object
     or a sub-range of it based on character indices"""
     flatten = None # flag ranges with a zero-width
 
@@ -317,7 +317,7 @@ def line_fragments(txt_obj, rng=None):
             info['used'].width = 0
             info['span'] = (loc, 0)
 
-        lines.append(LineFragment(**info))
+        lines.append(Slug(**info))
 
     return lines
 

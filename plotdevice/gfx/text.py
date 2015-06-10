@@ -610,7 +610,7 @@ class TextFragment(object):
         self.tag, self.attrs, self.parents = None, {}, ()
         self.m = None
 
-        if isinstance(match, foundry.LineFragment):
+        if isinstance(match, foundry.Slug):
             self.start, self.end = match.span
             self._slugs = [match]
         elif hasattr(match, 'range'): # NSSubText
@@ -705,10 +705,10 @@ class TextFragment(object):
 
     @property
     def slugs(self):
-        """A list of one or more LineFragments describing text layout within the match"""
+        """A list of one or more line-fragment Slugs describing text layout within the match"""
         if not hasattr(self, '_slugs'):
             rng = (self.start, self.end-self.start)
-            self._slugs = foundry.line_fragments(self._parent, rng)
+            self._slugs = foundry.line_slugs(self._parent, rng)
         return self._slugs
 
     @property
@@ -848,8 +848,8 @@ class TextFrame(BoundsMixin, Grob):
 
     @property
     def lines(self):
-        slugs = foundry.line_fragments(self._parent, self._chars)
         """A list of TextFragments describing the line-layout within the frame"""
+        slugs = foundry.line_slugs(self._parent, self._chars)
         return [TextFragment(self._parent, slug) for slug in slugs]
 
     @property
