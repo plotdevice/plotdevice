@@ -364,8 +364,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     ### Searching for substrings (and their layout geometry) ###
 
     def __getitem__(self, index):
-        """Subscripting a Text using indices into its .text string returns a TextMatch"""
-        match = TextMatch(self)
+        """Subscripting a Text using indices into its .text string returns a TextFragment"""
+        match = TextFragment(self)
         if isinstance(index, slice):
             match.start, match.end, _ = index.indices(len(self))
         else:
@@ -396,13 +396,13 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
           Compiled regexes can define their own flags.
 
           `matches` optionally set the maximum number of results to be returned. If
-          omitted, find() will return a TextMatch object for every match that's
+          omitted, find() will return a TextFragment object for every match that's
           visible in one of the Text object's TextFrames. Matches that lie in the
           overflow beyond the Text's bounds can be included however: pass the `all`
           keyword as the `matches` arg.
 
         Returns:
-          a list of TextMatch objects
+          a list of TextFragment objects
         """
         if isinstance(regex, str):
             regex = regex.decode('utf-8')
@@ -425,16 +425,16 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
           `tag_name` is a string that corresponds to one of the element names you
           used when calling text() or txt.append() with an `xml` argument. Note that
           any tag-attributes you defined in the xml will be available through the
-          resulting TextMatch object's `attrs` property.
+          resulting TextFragment object's `attrs` property.
 
           `matches` optionally set the maximum number of results to be returned. If
-          omitted, select() will return a TextMatch object for every match that's
+          omitted, select() will return a TextFragment object for every match that's
           visible in one of the Text object's TextFrames. Matches that lie in the
           overflow beyond the Text's bounds can be included however: pass the `all`
           keyword as the `matches` arg.
 
         Returns:
-          a list of TextMatch objects
+          a list of TextFragment objects
         """
         if isinstance(tag_name, str):
             tag_name = tag_name.decode('utf-8')
@@ -443,7 +443,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     def _seek(self, stream, limit):
         found = []
         for m in stream:
-            match = TextMatch(self, m)
+            match = TextFragment(self, m)
             if not match.frames and limit is not all:
                 break
             found.append(match)
@@ -458,13 +458,13 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
     @property
     def words(self):
-        """Returns a TextMatch for each word in the text string (whitespace separated)"""
-        return [TextMatch(self, w) for w in self._store.words()]
+        """Returns a TextFragment for each word in the text string (whitespace separated)"""
+        return [TextFragment(self, w) for w in self._store.words()]
 
     @property
     def paragraphs(self):
-        """Returns a TextMatch for each `line' in the text string (newline separated)"""
-        return [TextMatch(self, w) for w in self._store.paragraphs()]
+        """Returns a TextFragment for each `line' in the text string (newline separated)"""
+        return [TextFragment(self, w) for w in self._store.paragraphs()]
 
     @property
     def frames(self):
@@ -473,8 +473,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
     @property
     def lines(self):
-        """Returns a list of TextMatches, one for each line across all child TextFrames"""
-        return [TextMatch(self, slug) for slug in foundry.line_fragments(self)]
+        """Returns a list of TextFragments, one for each line across all child TextFrames"""
+        return [TextFragment(self, slug) for slug in foundry.line_slugs(self)]
 
     ### Calculating dimensions & rendering ###
 
@@ -582,14 +582,14 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         return self._flipped_transform.apply(path)
 
 
-class TextMatch(object):
+class TextFragment(object):
     """Represents a substring region within a Text object (via its `find` or `select` method)
 
     Properties:
       `start` and `end` - the character range of the match
       `text` - the matched substring
       `path` - a Bezier object with the glyphs from the matched range
-      `lines` - a list of one or more TextMatches describing line-breaking within the Match
+      `lines` - a list of one or more TextFragments describing line-breaking within the Match
       `frames` - a list of one or more TextFrames that fully contain the Match
 
     Additional properties when .select'ing an xml element:
@@ -601,9 +601,9 @@ class TextMatch(object):
       `m` - a regular expression Match object
 
     Additional methods when .find'ing a regular expression with 'captured' sub-groups
-      `group(idx)` - returns a TextMatch corresponding to the numbered or named group
-      `groups()` - returns a list of TextMatch objects corresponding to captures in the regex
-      `groupdict()` - returns a dictionary mapping captured group names to TextMatch objects
+      `group(idx)` - returns a TextFragment corresponding to the numbered or named group
+      `groups()` - returns a list of TextFragment objects corresponding to captures in the regex
+      `groupdict()` - returns a dictionary mapping captured group names to TextFragment objects
     """
     def __init__(self, parent, match=None):
         self._parent = parent
@@ -648,7 +648,7 @@ class TextMatch(object):
                 msg.append("attrs=%i" % len(self.attrs))
         msg.append("start=%i" % self.start)
         msg.append("len=%i" % (self.end-self.start))
-        return 'TextMatch(%s)' % (", ".join(msg))
+        return 'TextFragment(%s)' % (", ".join(msg))
 
     ### Contents ###
 
@@ -660,13 +660,13 @@ class TextMatch(object):
         """Return subgroup(s) of the match by indices or names. Index 0 returns the entire match.
 
         Works just like https://docs.python.org/2/library/re.html#re.MatchObject.group
-        but returns TextMatch objects rather than character strings
+        but returns TextFragment objects rather than character strings
         """
         self._is_regex('group')
         subs = []
         for idx in (index,) + others:
             rng = self.m.span(idx) + (idx,)
-            subs.append(TextMatch(self._parent, rng) if rng[0]!=-1 else None)
+            subs.append(TextFragment(self._parent, rng) if rng[0]!=-1 else None)
         return tuple(subs) if len(subs)>1 else subs[0]
 
     def groups(self, default=None):
@@ -674,7 +674,7 @@ class TextMatch(object):
         The default argument is used for groups that did not participate in the match
 
         Works just like https://docs.python.org/2/library/re.html#re.MatchObject.groups
-        but returns TextMatch objects rather than character strings
+        but returns TextFragment objects rather than character strings
         """
         self._is_regex('groups')
         indices = range(1,len(self.m.regs))
@@ -688,7 +688,7 @@ class TextMatch(object):
         that did not participate in the match
 
         Works just like https://docs.python.org/2/library/re.html#re.MatchObject.groupdict
-        but returns TextMatch objects rather than character strings
+        but returns TextFragment objects rather than character strings
         """
         self._is_regex('groupdict')
         indices = self.m.groupdict().keys()
@@ -698,7 +698,7 @@ class TextMatch(object):
     def _is_regex(self, method):
         # an assert to ensure the match supports the group* methods
         if not self.m:
-            badmatch = '%s() can only be used with regex-based TextMatch objects (see Text.find)'
+            badmatch = '%s() can only be used with regex-based TextFragment objects (see Text.find)'
             raise DeviceError(badmatch % method)
 
     ### Geometry ###
@@ -713,8 +713,8 @@ class TextMatch(object):
 
     @property
     def lines(self):
-        """A list of one or more TextMatches splitting the current object across line-breaks"""
-        return [TextMatch(self._parent, lf) for lf in self.slugs]
+        """A list of one or more TextFragments splitting the current object across line-breaks"""
+        return [TextFragment(self._parent, lf) for lf in self.slugs]
 
     @property
     def frames(self):
@@ -848,14 +848,14 @@ class TextFrame(BoundsMixin, Grob):
 
     @property
     def lines(self):
-        """A list of TextMatches describing the line-layout within the frame"""
         slugs = foundry.line_fragments(self._parent, self._chars)
-        return [TextMatch(self._parent, slug) for slug in slugs]
+        """A list of TextFragments describing the line-layout within the frame"""
+        return [TextFragment(self._parent, slug) for slug in slugs]
 
     @property
     def path(self):
         """Traces the laid-out glyphs and returns them as a single Bezier object"""
-        return TextMatch(self._parent, self).path
+        return TextFragment(self._parent, self).path
 
     @property
     def _headroom(self):
