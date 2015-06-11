@@ -111,7 +111,6 @@ static NSDictionary *AAT;
 + (NSArray *)lineFragmentsInRange:(NSRange)rng withLayout:(NSLayoutManager *)layout{
     NSRange full_range = [layout glyphRangeForCharacterRange:rng actualCharacterRange:NULL];
     NSArray *frames = [layout textContainers];
-    NSString *text = [[layout textStorage] string];
     NSTextStorage *store = [layout textStorage];
     NSMutableArray *fragments = [NSMutableArray array];
 
@@ -150,7 +149,6 @@ static NSDictionary *AAT;
         [fragments addObject:@{
             @"used": [NSValue valueWithRect:glyph_rect],
             @"bounds": [NSValue valueWithRect:line_rect],
-            @"text": [text substringWithRange:char_range],
             @"range": [NSValue valueWithRange:char_range],
             @"frame": [NSNumber numberWithUnsignedLong:[frames indexOfObject:frame_ref]],
             @"baseline": [NSValue valueWithPoint:baseline]
