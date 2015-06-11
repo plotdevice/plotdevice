@@ -1,6 +1,7 @@
 # encoding: utf-8
 import os
 import re
+import sys
 import objc
 import difflib
 from operator import itemgetter, attrgetter
@@ -285,41 +286,40 @@ def line_slugs(txt_obj, rng=None):
         rng = (0, len(txt_obj.text))
     elif rng[1]==0:
         # expand zero-width ranges to 1 char before measuring
-        flatten = max;
+        flatten = min;
         start = rng[0]
-        if start == len(txt_obj.text)-1:
+        if start == len(txt_obj.text):
+            # also allow zero-width slices of the len+1'th char
             start -= 1
-            flatten = min
+            flatten = max
         rng = (start, 1)
 
-    lines = []
+    slugs = []
     for frag in Vandercook.lineFragmentsInRange_withLayout_(rng, txt_obj._engine):
+        # convert to local units & types
         frame = txt_obj._frames[frag['frame']]
-        txt_range = frag['range'].rangeValue()
-        info = {
-            "used":frame._from_px(frag['used'].rectValue()),
-            "bounds":frame._from_px(frag['bounds'].rectValue()),
-            "baseline":frame._from_px(frag['baseline'].pointValue()),
-            "span":(txt_range.location, txt_range.location+txt_range.length),
-        }
+        used = frame._from_px(frag['used'].rectValue())
+        bounds = frame._from_px(frag['bounds'].rectValue())
+        baseline = frame._from_px(frag['baseline'].pointValue())
 
-        offset = frame.offset + txt_obj.baseline
-        info['baseline'] += offset
-        info['used'].origin += offset
-        info['bounds'].origin += offset
+        # shift from container- to canvas-relative coords
+        for pt in (baseline, used.origin, bounds.origin):
+            pt += frame.offset + txt_obj.baseline
 
-        # re-contract ranges that were expanded from zero
+        # calculate glyph range within the line fragment
+        loc, count = frag['range'].rangeValue()
         if flatten:
-            loc = txt_range.location
-            if flatten is min:
-              info['baseline'].x += info['used'].width
-              loc += 1
-            info['used'].width = 0
-            info['span'] = (loc, 0)
+            # re-contract ranges that were expanded from zero
+            if flatten is max:
+                baseline.x += used.width
+                used.x += used.width
+                loc += 1
+            used.width = sys.float_info.epsilon # avoid 0 so .union works properly
+            count = 0
 
-        lines.append(Slug(**info))
+        slugs.append(Slug(bounds, used, baseline, span=(loc, count)))
 
-    return lines
+    return slugs
 
 def text_frames(txt_obj, rng=None):
     if rng is None:

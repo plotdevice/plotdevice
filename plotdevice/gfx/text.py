@@ -610,7 +610,7 @@ class TextFragment(object):
         self.tag, self.attrs, self.parents = None, {}, ()
         self.m = None
 
-        if isinstance(match, foundry.Slug):
+        if isinstance(match, foundry.Slug): # via line_slugs()
             self.start, self.end = match.span
             self._slugs = [match]
         elif hasattr(match, 'range'): # NSSubText
