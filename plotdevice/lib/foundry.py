@@ -303,8 +303,10 @@ def line_slugs(txt_obj, rng=None):
         baseline = frame._from_px(frag['baseline'].pointValue())
 
         # shift from container- to canvas-relative coords
-        for pt in (baseline, used.origin, bounds.origin):
-            pt += frame.offset + txt_obj.baseline
+        offset = frame.offset + txt_obj.baseline
+        baseline += offset
+        used.origin += offset
+        bounds.origin += offset
 
         # calculate glyph range within the line fragment
         loc, count = frag['range'].rangeValue()
