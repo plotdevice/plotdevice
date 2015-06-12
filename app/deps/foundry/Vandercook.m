@@ -122,33 +122,41 @@ static NSDictionary *AAT;
 
         // measure the line fragment's bounds
         NSRange line_range;
-        NSRect line_rect = [layout lineFragmentRectForGlyphAtIndex:cursor effectiveRange:&line_range];
+        NSRect bounds_rect = [layout lineFragmentRectForGlyphAtIndex:cursor effectiveRange:&line_range];
 
         // update the ranges based on what's actually displayed in the bounds
         NSRange glyph_range = NSIntersectionRange(line_range, full_range);
         NSRange char_range = [layout characterRangeForGlyphRange:glyph_range actualGlyphRange:NULL];
 
-        // measure the portion of the line that's included in the glyph range (clipped against the
-        // line fragment's `used` rect to prevent \n from gobbling the entire column width)
-        NSRect bounds_rect = [layout boundingRectForGlyphRange:glyph_range inTextContainer:frame_ref];
+        // measure the portion of the line that's `used' by glyphs, then adjust its left and right
+        // edges if the glyph range under consideration is narrower than the full line
         NSRect used_rect = [layout lineFragmentUsedRectForGlyphAtIndex:cursor effectiveRange:NULL];
-        NSRect glyph_rect = NSIntersectionRect(bounds_rect, used_rect);
+        if (NSLocationInRange(full_range.location, line_range)){
+          NSPoint head = [layout locationForGlyphAtIndex:cursor];
+          used_rect.size.width -= head.x - used_rect.origin.x;
+          used_rect.origin.x = head.x;
+        }
+        if (NSLocationInRange(NSMaxRange(full_range), line_range)){
+          NSPoint tail = [layout locationForGlyphAtIndex:NSMaxRange(full_range)];
+          used_rect.size.width = tail.x - used_rect.origin.x;
+        }
 
-        // calculate the baseline origin for the first glyph in the line
-        NSPoint baseline = NSMakePoint(glyph_rect.origin.x, line_rect.origin.y);
+        // grab the baseline origin for the first glyph *before* shifting the bounds rects
+        NSPoint baseline = NSMakePoint(used_rect.origin.x, bounds_rect.origin.y);
 
-        // adjust the rects to reflect the baseline offset
+        // adjust the rects to reflect the baseline offset; note that since this relies on the font's
+        // metrics rather than optical glyph bounds it could be way off if the designer was sloppy...
         NSFont *glyph_font = [store attribute:@"NSFont" atIndex:char_range.location effectiveRange:nil];
-        line_rect.origin.y -= [glyph_font ascender];
-        glyph_rect.origin.y -= [glyph_font ascender];
+        bounds_rect.origin.y -= [glyph_font ascender];
+        used_rect.origin.y -= [glyph_font ascender];
 
-        // have the glyph bounds-rect exclude any extra lead
-        glyph_rect.size.height = [glyph_font ascender] - [glyph_font descender];
+        // have the glyph-bounds rect exclude any extra lead
+        used_rect.size.height = [glyph_font ascender] - [glyph_font descender];
 
         // package the measurements
         [fragments addObject:@{
-            @"used": [NSValue valueWithRect:glyph_rect],
-            @"bounds": [NSValue valueWithRect:line_rect],
+            @"used": [NSValue valueWithRect:used_rect],
+            @"bounds": [NSValue valueWithRect:bounds_rect],
             @"range": [NSValue valueWithRange:char_range],
             @"frame": [NSNumber numberWithUnsignedLong:[frames indexOfObject:frame_ref]],
             @"baseline": [NSValue valueWithPoint:baseline]
