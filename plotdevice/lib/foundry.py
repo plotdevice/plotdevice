@@ -269,11 +269,11 @@ def trace_text(txt_obj, rng=None):
     # assemble the glyphs in px units then transform them back to screen units
     # (since whatever Bezier it's appended to will handle screen->px conversion)
     nspath = NSBezierPath.bezierPath()
-    for frame in txt_obj.frames:
-        offset = frame._to_px(frame.offset)
-        frame_rng = NSIntersectionRange(rng, frame._chars)
-        if frame_rng.length:
-            subpath = Vandercook.traceGlyphs_atOffset_withLayout_(frame_rng, offset, txt_obj._engine)
+    for block in txt_obj.blocks:
+        offset = block._to_px(block.offset)
+        block_rng = NSIntersectionRange(rng, block._chars)
+        if block_rng.length:
+            subpath = Vandercook.traceGlyphs_atOffset_withLayout_(block_rng, offset, txt_obj._engine)
             nspath.appendBezierPath_(subpath)
     return txt_obj._from_px(nspath)
 
@@ -297,13 +297,13 @@ def line_slugs(txt_obj, rng=None):
     slugs = []
     for frag in Vandercook.lineFragmentsInRange_withLayout_(rng, txt_obj._engine):
         # convert to local units & types
-        frame = txt_obj._frames[frag['frame']]
-        used = frame._from_px(frag['used'].rectValue())
-        bounds = frame._from_px(frag['bounds'].rectValue())
-        baseline = frame._from_px(frag['baseline'].pointValue())
+        block = txt_obj._blocks[frag['frame']]
+        used = block._from_px(frag['used'].rectValue())
+        bounds = block._from_px(frag['bounds'].rectValue())
+        baseline = block._from_px(frag['baseline'].pointValue())
 
         # shift from container- to canvas-relative coords
-        offset = frame.offset + txt_obj.baseline
+        offset = block.offset + txt_obj.baseline
         baseline += offset
         used.origin += offset
         bounds.origin += offset
@@ -323,7 +323,7 @@ def line_slugs(txt_obj, rng=None):
 
     return slugs
 
-def text_frames(txt_obj, rng=None):
+def text_blocks(txt_obj, rng=None):
     if rng is None:
         rng = (0, len(txt_obj.text))
     elif rng[1]==0:
@@ -332,7 +332,7 @@ def text_frames(txt_obj, rng=None):
             start -= 1
         rng = (start, 1)
     containers = Vandercook.textContainersInRange_withLayout_(rng, txt_obj._engine)
-    return [txt_obj._frames[i] for i in containers]
+    return [txt_obj._blocks[i] for i in containers]
 
 def aat_attrs(spec):
     """Converts a validated features spec to a dict suitable for NSFontDescriptor"""

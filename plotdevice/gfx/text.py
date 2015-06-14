@@ -52,8 +52,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             # then bail out immediately (ignoring any other args)
             orig = args[0]
             self.inherit(orig)
-            self._frames = [TextBlock(self) for f in orig._frames]
-            for src, dst in zip(orig._frames, self._frames):
+            self._blocks = [TextBlock(self) for f in orig._blocks]
+            for src, dst in zip(orig._blocks, self._blocks):
                 dst.offset, dst.size = src.offset, src.size
             self._store.appendAttributedString_(orig._store)
             return
@@ -61,8 +61,8 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         # let the various mixins have a crack at the kwargs
         super(Text, self).__init__(**kwargs)
 
-        # create a text frame to manage layout and glyph-drawing
-        self._frames = [TextBlock(self)]
+        # create a text block to manage layout and glyph-drawing
+        self._blocks = [TextBlock(self)]
 
         # maintain a lookup table of nodes within xml input
         self._nodes = {}
@@ -80,12 +80,12 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
     def __repr__(self):
         total = len(self.text)
-        displayed = sum(self.frames[-1]._chars)
+        displayed = sum(self.blocks[-1]._chars)
         msg = "%i character%s" % (total, '' if total==1 else 's')
         if displayed < total:
             msg = '%i/%s'%(displayed, msg)
-        if self.frames[1:]:
-            msg += ' in %i frames' % len(self.frames)
+        if self.blocks[1:]:
+            msg += ' in %i block(s)' % len(self.blocks)
         return "Text(%s)" % msg
 
     def append(self, txt=None, **kwargs):
@@ -273,7 +273,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     def overleaf(self):
         """Returns a Text object containing any characters that did not fit within this object's bounds.
         If the entire string fits within the current object, returns None."""
-        seen = u"".join(getattr(f, 'text') for f in self._frames)
+        seen = u"".join(getattr(f, 'text') for f in self._blocks)
         full = self.text
         if full not in seen:
             next_pg = self.copy()
@@ -295,40 +295,40 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             return next_pg
 
     def flow(self, columns=all, layout=None):
-        """Add as many text frames as necessary to fully lay out the string
+        """Add as many text blocks as necessary to fully lay out the string
 
         When called without arguments, returns a generator that you can iterate through to
-        set the position and size of each frame in turn (starting with the second). Each frame
-        is initialized with the same dimensions as the previous frame in the sequence.
+        set the position and size of each block in turn (starting with the second). Each block
+        is initialized with the same dimensions as the previous block in the sequence.
 
-        The optional `columns` argument allows you to specify the maximum number of frames
+        The optional `columns` argument allows you to specify the maximum number of blocks
         you'd like to have at the end of the process. Note that this count *includes* the
-        Text object's original frame, so you'll iterate over columns-1 frames during the flow.
+        Text object's original block, so you'll iterate over columns-1 blocks during the flow.
 
         The optional `layout` argument can be a reference to a function which takes a single
         TextBlock argument. If present, your layout function will be called once for each
-        frame added to the stream.
+        block added to the stream.
         """
         # sanity-check the columns arg
         columns = 1e4 if columns is all else int(columns or 1)
         if columns <= 1:
-            # no iteration necessary in the single-frame case
+            # no iteration necessary in the single-block case
             return list(self._reflow(columns))
 
         if not layout:
             return self._reflow(columns)   # return the generator for iteration
-        map(layout, self._reflow(columns)) # apply the layout function to each frame in sequence
+        map(layout, self._reflow(columns)) # apply the layout function to each block in sequence
 
     def _reflow(self, count):
-        # wipe out any previously set frames then keep adding new ones until
+        # wipe out any previously set blocks then keep adding new ones until
         # the glyphs are fully laid out
-        while self._frames[1:]:
-            self._frames.pop()._eject()
-        frame = self._frames[0]
-        while len(self._frames) < count and sum(frame._glyphs) < self._engine.numberOfGlyphs():
-            frame = TextBlock(frame)
-            self._frames.append(frame)
-            yield frame
+        while self._blocks[1:]:
+            self._blocks.pop()._eject()
+        block = self._blocks[0]
+        while len(self._blocks) < count and sum(block._glyphs) < self._engine.numberOfGlyphs():
+            block = TextBlock(block)
+            self._blocks.append(block)
+            yield block
 
     ### Layout geometry ###
 
@@ -336,16 +336,16 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
     def bounds(self):
         """Returns the bounding box in which the text will be laid out"""
         box = Region()
-        for frame in self._frames:
-            box = box.union(frame.bounds)
+        for block in self._blocks:
+            box = box.union(block.bounds)
         return box
 
     @property
     def used(self):
         """Returns the size & position of the actual text (typically a subset of the bounds)"""
         box = Region()
-        for frame in self._frames:
-            box = box.union(frame.used)
+        for block in self._blocks:
+            box = box.union(block.used)
         return box
 
     @property
@@ -444,7 +444,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         found = []
         for m in stream:
             match = TextFragment(self, m)
-            if not match.frames and limit is not all:
+            if not match.blocks and limit is not all:
                 break
             found.append(match)
             if len(found) == limit:
@@ -467,9 +467,9 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         return [TextFragment(self, w) for w in self._store.paragraphs()]
 
     @property
-    def frames(self):
+    def blocks(self):
         """Returns a list of one or more TextBlocks defining the bounding box for layout"""
-        return list(self._frames)
+        return list(self._blocks)
 
     @property
     def lines(self):
@@ -484,36 +484,36 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
         # start with the max w/h passed by the Text object
         dims = self._bounds.size
-        frame = self._frames[0]
+        block = self._blocks[0]
 
         # start at the maximal size before shrinking-to-fit
-        frame.offset = (0,0)
-        frame.size = (dims.w, dims.h)
+        block.offset = (0,0)
+        block.size = (dims.w, dims.h)
 
         # if the rect isn't fully specified, size it to fit
         if not (dims.w and dims.h):
             # compute the portion that's actually filled and add 1px of extra padding to the
             # calculated width (b/c believe it or not usedRectForTextContainer is buggy...)
-            min_w, min_h = frame.metrics
-            min_w += frame._from_px(1)
+            min_w, min_h = block.metrics
+            min_w += block._from_px(1)
 
             # shift the offset if not left-aligned and drawing to a point
-            nudge = {RIGHT:min_w, CENTER:min_w/2.0}.get(frame._alignment)
+            nudge = {RIGHT:min_w, CENTER:min_w/2.0}.get(block._alignment)
             if nudge and dims.w is None:
-                frame.x -= nudge
+                block.x -= nudge
 
             # shrink-to-fit any dims that were previously undefined
             if not dims.w:
-                frame.width = min_w
+                block.width = min_w
             if not dims.h:
-                frame.height = min_h
+                block.height = min_h
 
     @property
     def _headroom(self):
         """Returns the distance between the Text's origin and the top of its bounds box"""
         if not self._store.length():
             return 0
-        return self._frames[0]._from_px(self._engine.locationForGlyphAtIndex_(0).y)
+        return self._blocks[0]._from_px(self._engine.locationForGlyphAtIndex_(0).y)
 
     @property
     def _flipped_transform(self):
@@ -529,7 +529,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
         The transform incorporates the global context state but also accounts for
         the column-width/height constraints set in the constructor. If the text
-        has been flowed to multiple textframes, dimensions are calculated based on
+        has been flowed to multiple TextBlocks, dimensions are calculated based on
         the union of the various bounds boxes."""
 
         # gather the relevant text metrics (and convert them from canvas- to pixel-units)
@@ -558,13 +558,13 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         with _ns_context():                  # save and restore the gstate
             self._screen_transform.concat()  # transform so text can be drawn at the origin
             with self.effects.applied():     # apply any blend/alpha/shadow effects
-                for frame in self._frames:
-                    px_offset = self._to_px(frame.offset)
-                    self._engine.drawGlyphsForGlyphRange_atPoint_(frame._glyphs, px_offset)
+                for block in self._blocks:
+                    px_offset = self._to_px(block.offset)
+                    self._engine.drawGlyphsForGlyphRange_atPoint_(block._glyphs, px_offset)
 
                     # debug: draw a grey background for the text's bounds
                     # NSColor.colorWithDeviceWhite_alpha_(0,.2).set()
-                    # NSBezierPath.fillRect_(Region(frame.offset, frame.size))
+                    # NSBezierPath.fillRect_(Region(block.offset, block.size))
 
     @property
     def path(self):
@@ -574,7 +574,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         path = Bezier(foundry.trace_text(self))
         path.inherit(self)
 
-        # set its center-rotation fulcrum based on the frames' bounds rect
+        # set its center-rotation fulcrum based on the blocks' bounds rect
         origin, size = self.bounds
         path._fulcrum = origin + size/2.0
 
@@ -590,7 +590,7 @@ class TextFragment(object):
       `text` - the matched substring
       `path` - a Bezier object with the glyphs from the matched range
       `lines` - a list of one or more TextFragments describing line-breaking within the Match
-      `frames` - a list of one or more TextBlocks that fully contain the Match
+      `blocks` - a list of one or more TextBlocks that fully contain the Match
 
     Additional properties when .select'ing an xml element:
       `tag` - a string with the matched element's name
@@ -717,10 +717,10 @@ class TextFragment(object):
         return [TextFragment(self._parent, lf) for lf in self.slugs]
 
     @property
-    def frames(self):
+    def blocks(self):
         """The list of TextBlock objects that the match spans"""
         rng = (self.start, self.end-self.start)
-        return foundry.text_frames(self._parent, rng)
+        return foundry.text_blocks(self._parent, rng)
 
     @property
     def bounds(self):
@@ -758,7 +758,7 @@ class TextFragment(object):
         path = Bezier(foundry.trace_text(self._parent, (self.start, len(self))))
         path.inherit(self._parent)
 
-        # set its center-rotation fulcrum based on the frames' bounds rect
+        # set its center-rotation fulcrum based on the blocks' bounds rect
         origin, size = self._parent.bounds
         path._fulcrum = origin + size/2.0
 
@@ -776,19 +776,19 @@ class TextBlock(BoundsMixin, Grob):
     You can create a multi-column layout by iterating over a Text
     object's .flow() method and manipulating the TextBlocks it returns.
     You can also inspect the existing TextBlocks without adding new ones
-    through the Text object's `frames` property.
+    through the Text object's `blocks` property.
 
     Read/Write Properties:
-        `offset` - a Point with the frame's position relative to the parent Text's.
+        `offset` - a Point with the block's position relative to the parent Text's.
         `size` - a Size with the maximum width & height of the layout region
         `x`,`y`,`w`,`h` - shorthand accessors for offset & size components
 
     Readable Properties:
-        `text` - the substring that is visible in the frame
-        `idx` - a counter marking the frame's place in the sequence
-        `metrics` - the size of the used portion of the frame's w & h
-        `lines` - a list of LineFragments contained in the frame
-        `path` - a Bezier object with all the visible glyphs in the frame
+        `text` - the substring that is visible in the block
+        `idx` - a counter marking the block's place in the sequence
+        `metrics` - the size of the used portion of the block's w & h
+        `lines` - a list of LineFragments contained in the block
+        `path` - a Bezier object with all the visible glyphs in the block
     """
     def __init__(self, parent):
         # inherit the canvas-unit methods and a _bounds
@@ -800,11 +800,11 @@ class TextBlock(BoundsMixin, Grob):
         self._block.setLineFragmentPadding_(0)
 
         if isinstance(parent, TextBlock):
-            # either piggyback on an existing frame...
+            # either piggyback on an existing block...
             self._parent = parent._parent
             self.offset, self.size = parent.offset, parent.size
         else:
-            # ... or become the first frame of a parent Text object
+            # ... or become the first block of a parent Text object
             self._parent = parent
 
         # add ourselves to the layout flow
@@ -816,17 +816,17 @@ class TextBlock(BoundsMixin, Grob):
 
     @property
     def idx(self):
-        """An integer marking this frame's place in the flow sequence"""
+        """An integer marking this block's place in the flow sequence"""
         return self._parent._engine.textContainers().index(self._block)
 
     @property
     def text(self):
-        """The portion of the parent Text object's string that is visible in this frame"""
+        """The portion of the parent Text object's string that is visible in this block"""
         return self._parent._store.string().substringWithRange_(self._chars)
 
     @property
     def bounds(self):
-        """The position & size of the frame in canvas coordinates"""
+        """The position & size of the block in canvas coordinates"""
         bbox = Region(self.offset, self.size)
         bbox.origin += self._parent.baseline
         bbox.y -= self._from_px(self._headroom)
@@ -834,7 +834,7 @@ class TextBlock(BoundsMixin, Grob):
 
     @property
     def used(self):
-        """The position & size of the frame's text in canvas coordinates"""
+        """The position & size of the block's text in canvas coordinates"""
         self._parent._engine.glyphRangeForTextContainer_(self._block) # force layout & glyph gen
         origin, size = self._parent._engine.usedRectForTextContainer_(self._block)
         origin.y -= self._headroom # adjust for the ascent above baseline
@@ -848,7 +848,7 @@ class TextBlock(BoundsMixin, Grob):
 
     @property
     def lines(self):
-        """A list of TextFragments describing the line-layout within the frame"""
+        """A list of TextFragments describing the line-layout within the block"""
         slugs = foundry.line_slugs(self._parent, self._chars)
         return [TextFragment(self._parent, slug) for slug in slugs]
 
@@ -901,12 +901,12 @@ class TextBlock(BoundsMixin, Grob):
 
     @property
     def _glyphs(self):
-        # NSRange of glyphs in the frame
+        # NSRange of glyphs in the block
         return self._parent._engine.glyphRangeForTextContainer_(self._block)
 
     @property
     def _chars(self):
-        # NSRange of chars in the frame
+        # NSRange of chars in the block
         rng, _ = self._parent._engine.characterRangeForGlyphRange_actualGlyphRange_(self._glyphs, None)
         return rng
 
