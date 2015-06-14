@@ -287,7 +287,7 @@ class Region(object):
         other = Region(*args)
         return Region(NSIntersectionRect(self, other))
 
-    def offset(self, dx, dy=None):
+    def shift(self, dx, dy=None):
         """Return a new Region whose origin is shifted by dx/dy or a Point object"""
         try: dx, dy = dx # accept an x/y tuple as 1st arg
         except: dy = dx if dy is None else dy # also accept a single float and copy it
