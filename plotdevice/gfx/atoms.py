@@ -155,48 +155,48 @@ class EffectsMixin(Grob):
         self._effects.shadow = spec
     shadow = property(_get_shadow, _set_shadow)
 
-class BoundsMixin(Grob):
+class FrameMixin(Grob):
     """Mixin class for dimensions.
     Adds x, y, width, & height properties to the class."""
-    stateAttrs = ('_bounds',)
+    stateAttrs = ('_frame',)
     opts = ('x','y','w','h','width','height')
 
     def __init__(self, **kwargs):
-        super(BoundsMixin, self).__init__(**kwargs)
+        super(FrameMixin, self).__init__(**kwargs)
 
         x, y = kwargs.get('x',0), kwargs.get('y',0)
         h = kwargs.get('h',kwargs.get('height',None))
         w = kwargs.get('w',kwargs.get('width',None))
         if isinstance(w, basestring):
             w = None # ignore width if it's passing a font style
-        self._bounds = Region(x,y,w,h)
+        self._frame = Region(x,y,w,h)
 
     def _get_x(self):
-        return self._bounds.x
+        return self._frame.x
     def _set_x(self, x):
-        self._bounds.x = x
+        self._frame.x = x
     x = property(_get_x, _set_x)
 
     def _get_y(self):
-        return self._bounds.y
+        return self._frame.y
     def _set_y(self, y):
-        self._bounds.y = y
+        self._frame.y = y
     y = property(_get_y, _set_y)
 
     def _get_width(self):
-        return self._bounds.width
+        return self._frame.width
     def _set_width(self, w):
-        changed = self._bounds.width != w
-        self._bounds.width = w
+        changed = self._frame.width != w
+        self._frame.width = w
         if changed:
             self._resized()
     w = width = property(_get_width, _set_width)
 
     def _get_height(self):
-        return self._bounds.height
+        return self._frame.height
     def _set_height(self, h):
-        changed = self._bounds.height != h
-        self._bounds.height = h
+        changed = self._frame.height != h
+        self._frame.height = h
         if changed:
             self._resized()
     h = height = property(_get_height, _set_height)

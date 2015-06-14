@@ -9,7 +9,7 @@ from .typography import *
 from .geometry import Transform, Region, Size, Point, Pair
 from .colors import Color
 from .bezier import Bezier
-from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, BoundsMixin, Grob
+from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, FrameMixin, Grob
 from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, read
 from ..lib import foundry
 from . import _ns_context
@@ -30,10 +30,10 @@ _TEXT=dict(
 )
 
 
-class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
+class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     # from TransformMixin: transform transformmode translate() rotate() scale() skew() reset()
     # from EffectsMixin:   alpha blend shadow
-    # from BoundsMixin:    x y width height
+    # from FrameMixin:    x y width height
     # from StyleMixin:     stylesheet fill _parse_style()
     stateAttrs = ('_nodes', )
     opts = ('str', 'xml', 'src')
@@ -73,7 +73,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
         # merge in any numlike positional args to define bounds
         if args:
-            self._bounds._parse(args)
+            self._frame._parse(args)
 
         # fontify the str/xml/src arg and store it in the TextBlock
         self.append(**{k:v for k,v in kwargs.items() if k in self.opts})
@@ -480,10 +480,10 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
     def _resized(self):
         """Ensure that the first TextBlock's bounds are kept in sync with the Text's.
-        Called by the BoundsMixin when the width or size is reassigned."""
+        Called by the FrameMixin when the width or size is reassigned."""
 
         # start with the max w/h passed by the Text object
-        dims = self._bounds.size
+        dims = self._frame.size
         block = self._blocks[0]
 
         # start at the maximal size before shrinking-to-fit
@@ -765,7 +765,7 @@ class TextFragment(object):
         # flip the assembled path and slide it into the proper x/y position
         return self._parent._flipped_transform.apply(path)
 
-class TextBlock(BoundsMixin, Grob):
+class TextBlock(FrameMixin, Grob):
     """Defines a layout region for a Text object's typesetter.
 
     Most Text objects have a single TextBlock which holds the width
@@ -791,8 +791,8 @@ class TextBlock(BoundsMixin, Grob):
         `path` - a Bezier object with all the visible glyphs in the block
     """
     def __init__(self, parent):
-        # inherit the canvas-unit methods and a _bounds
-        self._bounds = Region((0,0), (None,None))
+        # inherit the canvas-unit methods and a _frame
+        self._frame = Region((0,0), (None,None))
         self.inherit()
 
         # create a new container
@@ -872,23 +872,23 @@ class TextBlock(BoundsMixin, Grob):
         self._parent = None
 
     def _resized(self):
-        # called by the BoundsMixin when the w or h changed
-        dims = [d or self._from_px(10000000) for d in self._bounds.size]
+        # called by the FrameMixin when the w or h changed
+        dims = [d or self._from_px(10000000) for d in self._frame.size]
         self._block.setContainerSize_(self._to_px(Size(*dims)))
 
     def _get_offset(self):
-        return Point(self._bounds.origin)
+        return Point(self._frame.origin)
     def _set_offset(self, dims):
         if numlike(dims):
             dims = [dims]*2
-        self._bounds.origin = dims
+        self._frame.origin = dims
     offset = property(_get_offset, _set_offset)
 
     def _get_size(self):
         return self._from_px(self._block.containerSize())
     def _set_size(self, dims):
-        if dims != self._bounds.size:
-            self._bounds.size = dims
+        if dims != self._frame.size:
+            self._frame.size = dims
             self._resized()
     size = property(_get_size, _set_size)
 

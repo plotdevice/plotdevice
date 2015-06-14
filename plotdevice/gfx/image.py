@@ -12,7 +12,7 @@ from ..util import _copy_attrs, autorelease
 from ..util.http import GET
 from ..lib.io import MovieExportSession, ImageExportSession
 from .geometry import Region, Size, Point, Transform, CENTER
-from .atoms import TransformMixin, EffectsMixin, BoundsMixin, Grob
+from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
 from . import _ns_context
 
 _ctx = None
@@ -20,7 +20,7 @@ __all__ = ("Image", 'ImageWriter')
 
 ### The bitmap/vector image-container (a.k.a. NSImage proxy) ###
 
-class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
+class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
     stateAttrs = ('_nsImage',)
     opts = ('data',)
 
@@ -83,11 +83,11 @@ class Image(EffectsMixin, TransformMixin, BoundsMixin, Grob):
                 setattr(self, attr, getattr(src, attr))
         if args:
             # override defaults with positional bounds args (if any)
-            self._bounds._parse(args)
+            self._frame._parse(args)
         if kwargs:
             # finally, let keyword args override the inherited & positional bounds
             for k,v in kwargs.items():
-                if k in BoundsMixin.opts:
+                if k in FrameMixin.opts:
                     setattr(self, k, v)
 
     def _lazyload(self, path=None, data=None):
