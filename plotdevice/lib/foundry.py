@@ -262,7 +262,7 @@ aat_options = {
 # objc-bridged methods for generating beziers from glyphs, measuring text runs, and AAT-styling
 
 def trace_text(txt_obj, rng=None):
-    """Returns an NSBezierPath with the glyphs contained by a TextFrame object"""
+    """Returns an NSBezierPath with the glyphs contained by a TextBlock object"""
     if rng is None:
         rng = (0, len(txt_obj.text))
 

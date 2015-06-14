@@ -52,7 +52,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             # then bail out immediately (ignoring any other args)
             orig = args[0]
             self.inherit(orig)
-            self._frames = [TextFrame(self) for f in orig._frames]
+            self._frames = [TextBlock(self) for f in orig._frames]
             for src, dst in zip(orig._frames, self._frames):
                 dst.offset, dst.size = src.offset, src.size
             self._store.appendAttributedString_(orig._store)
@@ -62,7 +62,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         super(Text, self).__init__(**kwargs)
 
         # create a text frame to manage layout and glyph-drawing
-        self._frames = [TextFrame(self)]
+        self._frames = [TextBlock(self)]
 
         # maintain a lookup table of nodes within xml input
         self._nodes = {}
@@ -75,7 +75,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         if args:
             self._bounds._parse(args)
 
-        # fontify the str/xml/src arg and store it in the TextFrame
+        # fontify the str/xml/src arg and store it in the TextBlock
         self.append(**{k:v for k,v in kwargs.items() if k in self.opts})
 
     def __repr__(self):
@@ -268,7 +268,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         attrib_txt.addAttribute_value_range_("NSParagraphStyle", graf, (idx, 1))
         attrib_txt.endEditing()
 
-    ### flowing text into new Text objects or subsidiary TextFrames ###
+    ### flowing text into new Text objects or subsidiary TextBlocks ###
 
     def overleaf(self):
         """Returns a Text object containing any characters that did not fit within this object's bounds.
@@ -306,7 +306,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
         Text object's original frame, so you'll iterate over columns-1 frames during the flow.
 
         The optional `layout` argument can be a reference to a function which takes a single
-        TextFrame argument. If present, your layout function will be called once for each
+        TextBlock argument. If present, your layout function will be called once for each
         frame added to the stream.
         """
         # sanity-check the columns arg
@@ -326,7 +326,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
             self._frames.pop()._eject()
         frame = self._frames[0]
         while len(self._frames) < count and sum(frame._glyphs) < self._engine.numberOfGlyphs():
-            frame = TextFrame(frame)
+            frame = TextBlock(frame)
             self._frames.append(frame)
             yield frame
 
@@ -397,7 +397,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
           `matches` optionally set the maximum number of results to be returned. If
           omitted, find() will return a TextFragment object for every match that's
-          visible in one of the Text object's TextFrames. Matches that lie in the
+          visible in one of the Text object's TextBlocks. Matches that lie in the
           overflow beyond the Text's bounds can be included however: pass the `all`
           keyword as the `matches` arg.
 
@@ -429,7 +429,7 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
           `matches` optionally set the maximum number of results to be returned. If
           omitted, select() will return a TextFragment object for every match that's
-          visible in one of the Text object's TextFrames. Matches that lie in the
+          visible in one of the Text object's TextBlocks. Matches that lie in the
           overflow beyond the Text's bounds can be included however: pass the `all`
           keyword as the `matches` arg.
 
@@ -468,18 +468,18 @@ class Text(EffectsMixin, TransformMixin, BoundsMixin, StyleMixin, Grob):
 
     @property
     def frames(self):
-        """Returns a list of one or more TextFrames defining the bounding box for layout"""
+        """Returns a list of one or more TextBlocks defining the bounding box for layout"""
         return list(self._frames)
 
     @property
     def lines(self):
-        """Returns a list of TextFragments, one for each line across all child TextFrames"""
+        """Returns a list of TextFragments, one for each line across all child TextBlocks"""
         return [TextFragment(self, slug) for slug in foundry.line_slugs(self)]
 
     ### Calculating dimensions & rendering ###
 
     def _resized(self):
-        """Ensure that the first TextFrame's bounds are kept in sync with the Text's.
+        """Ensure that the first TextBlock's bounds are kept in sync with the Text's.
         Called by the BoundsMixin when the width or size is reassigned."""
 
         # start with the max w/h passed by the Text object
@@ -590,7 +590,7 @@ class TextFragment(object):
       `text` - the matched substring
       `path` - a Bezier object with the glyphs from the matched range
       `lines` - a list of one or more TextFragments describing line-breaking within the Match
-      `frames` - a list of one or more TextFrames that fully contain the Match
+      `frames` - a list of one or more TextBlocks that fully contain the Match
 
     Additional properties when .select'ing an xml element:
       `tag` - a string with the matched element's name
@@ -619,7 +619,7 @@ class TextFragment(object):
         elif hasattr(match, '_asdict'): # xml Element
             for k,v in match._asdict().items():
                 setattr(self, k, v)
-        elif hasattr(match, '_chars'): # TextFrame
+        elif hasattr(match, '_chars'): # TextBlock
             self.start, n = match._chars
             self.end = self.start + n
         elif hasattr(match, 'span'): # re.Match
@@ -718,7 +718,7 @@ class TextFragment(object):
 
     @property
     def frames(self):
-        """The list of TextFrame objects that the match spans"""
+        """The list of TextBlock objects that the match spans"""
         rng = (self.start, self.end-self.start)
         return foundry.text_frames(self._parent, rng)
 
@@ -765,17 +765,17 @@ class TextFragment(object):
         # flip the assembled path and slide it into the proper x/y position
         return self._parent._flipped_transform.apply(path)
 
-class TextFrame(BoundsMixin, Grob):
+class TextBlock(BoundsMixin, Grob):
     """Defines a layout region for a Text object's typesetter.
 
-    Most Text objects have a single TextFrame which holds the width
+    Most Text objects have a single TextBlock which holds the width
     and height of the layout region. You don't need to deal with it
     directly since you can just set the x/y/w/h attributes on the Text
     object itself.
 
     You can create a multi-column layout by iterating over a Text
-    object's .flow() method and manipulating the TextFrames it returns.
-    You can also inspect the existing TextFrames without adding new ones
+    object's .flow() method and manipulating the TextBlocks it returns.
+    You can also inspect the existing TextBlocks without adding new ones
     through the Text object's `frames` property.
 
     Read/Write Properties:
@@ -799,7 +799,7 @@ class TextFrame(BoundsMixin, Grob):
         self._block = NSTextContainer.alloc().init()
         self._block.setLineFragmentPadding_(0)
 
-        if isinstance(parent, TextFrame):
+        if isinstance(parent, TextBlock):
             # either piggyback on an existing frame...
             self._parent = parent._parent
             self.offset, self.size = parent.offset, parent.size
@@ -812,7 +812,7 @@ class TextFrame(BoundsMixin, Grob):
 
     @trim_zeroes
     def __repr__(self):
-        return "TextFrame(%r, %r)"%(tuple(self.offset), tuple(self.size))
+        return "TextBlock(%r, %r)"%(tuple(self.offset), tuple(self.size))
 
     @property
     def idx(self):
@@ -912,6 +912,6 @@ class TextFrame(BoundsMixin, Grob):
 
     def draw(self):
         # we inherit from Grob for the methods, not drawability
-        codependent = "TextFrames can't be drawn directly; plot() the parent Text object instead"
+        codependent = "TextBlocks can't be drawn directly; plot() the parent Text object instead"
         raise DeviceError(codependent)
 

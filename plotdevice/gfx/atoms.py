@@ -202,7 +202,7 @@ class BoundsMixin(Grob):
     h = height = property(_get_height, _set_height)
 
     def _resized(self):
-        pass # overridden by Text & TextFrame
+        pass # overridden by Text & TextBlock
 
 class ColorMixin(Grob):
     """Mixin class for color support.
