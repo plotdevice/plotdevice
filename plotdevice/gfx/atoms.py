@@ -171,6 +171,10 @@ class FrameMixin(Grob):
             w = None # ignore width if it's passing a font style
         self._frame = Region(x,y,w,h)
 
+    @property
+    def frame(self):
+        return Region(self._frame)
+
     def _get_x(self):
         return self._frame.x
     def _set_x(self, x):

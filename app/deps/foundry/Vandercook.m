@@ -89,7 +89,7 @@ static NSDictionary *AAT;
         // don't draw tabs, newlines, etc.
         if([layout notShownAttributeForGlyphAtIndex:glyph_idx]) continue;
 
-        // shift the glyph's location by the line- and frame-offsets
+        // shift the glyph's location by the line- and block-offsets
         NSRect line_rect = [layout lineFragmentRectForGlyphAtIndex:glyph_idx effectiveRange:nil];
         NSPoint glyph_pt = [layout locationForGlyphAtIndex:glyph_idx];
         glyph_pt.x += line_rect.origin.x + offset.x;
@@ -110,15 +110,15 @@ static NSDictionary *AAT;
 
 + (NSArray *)lineFragmentsInRange:(NSRange)rng withLayout:(NSLayoutManager *)layout{
     NSRange full_range = [layout glyphRangeForCharacterRange:rng actualCharacterRange:NULL];
-    NSArray *frames = [layout textContainers];
+    NSArray *blocks = [layout textContainers];
     NSTextStorage *store = [layout textStorage];
     NSMutableArray *fragments = [NSMutableArray array];
 
     NSUInteger cursor = full_range.location;
     while(cursor<NSMaxRange(full_range)){
         // bail out if we've reached text that overflows the available containers
-        NSTextContainer *frame_ref = [layout textContainerForGlyphAtIndex:cursor effectiveRange:NULL];
-        if (!frame_ref) break;
+        NSTextContainer *block_ref = [layout textContainerForGlyphAtIndex:cursor effectiveRange:NULL];
+        if (!block_ref) break;
 
         // measure the line fragment's bounds
         NSRange line_range;
@@ -155,10 +155,10 @@ static NSDictionary *AAT;
 
         // package the measurements
         [fragments addObject:@{
-            @"used": [NSValue valueWithRect:used_rect],
-            @"bounds": [NSValue valueWithRect:bounds_rect],
+            @"bounds": [NSValue valueWithRect:used_rect],
+            @"frame": [NSValue valueWithRect:bounds_rect],
             @"range": [NSValue valueWithRange:char_range],
-            @"frame": [NSNumber numberWithUnsignedLong:[frames indexOfObject:frame_ref]],
+            @"block": [NSNumber numberWithUnsignedLong:[blocks indexOfObject:block_ref]],
             @"baseline": [NSValue valueWithPoint:baseline]
         }];
 
@@ -169,15 +169,15 @@ static NSDictionary *AAT;
 
 + (NSArray *)textContainersInRange:(NSRange)rng withLayout:(NSLayoutManager *)layout{
   NSRange full_range = [layout glyphRangeForCharacterRange:rng actualCharacterRange:NULL];
-  NSMutableArray *frame_idxs = [NSMutableArray array];
+  NSMutableArray *block_idxs = [NSMutableArray array];
 
   NSArray *containers = [layout textContainers];
   for (NSTextContainer *container in containers){
-    NSRange frame_range = [layout glyphRangeForTextContainer:container];
-    if (NSIntersectionRange(frame_range, full_range).length>0){
-      [frame_idxs addObject:@([containers indexOfObject:container])];
+    NSRange block_range = [layout glyphRangeForTextContainer:container];
+    if (NSIntersectionRange(block_range, full_range).length>0){
+      [block_idxs addObject:@([containers indexOfObject:container])];
     }
   }
-  return frame_idxs;
+  return block_idxs;
 }
 @end

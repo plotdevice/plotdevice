@@ -333,25 +333,25 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     ### Layout geometry ###
 
     @property
-    def bounds(self):
+    def frame(self):
         """Returns the bounding box in which the text will be laid out"""
+        box = Region()
+        for block in self._blocks:
+            box = box.union(block.frame)
+        return box
+
+    @property
+    def bounds(self):
+        """Returns the size & position of the actual text (typically a subset of the bounds)"""
         box = Region()
         for block in self._blocks:
             box = box.union(block.bounds)
         return box
 
     @property
-    def used(self):
-        """Returns the size & position of the actual text (typically a subset of the bounds)"""
-        box = Region()
-        for block in self._blocks:
-            box = box.union(block.used)
-        return box
-
-    @property
     def metrics(self):
-        """Returns the size of the actual text (shorthand for Text.used.size)"""
-        return self.used.size
+        """Returns the size of the actual text (shorthand for Text.bounds.size)"""
+        return self.bounds.size
 
     def _get_baseline(self):
         """Returns the Text object's baseline `origin point'"""
@@ -541,7 +541,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         if self._transformmode == CENTER:
             # calculate the (reversible) translation offset for centering (in px)
-            bounds = self._to_px(self.bounds)
+            bounds = self._to_px(self.frame)
             shift = bounds.origin + bounds.size/2.0 - (x, y-baseline)
             nudge = Transform().translate(*shift)
 
@@ -575,7 +575,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         path.inherit(self)
 
         # set its center-rotation fulcrum based on the blocks' bounds rect
-        origin, size = self.bounds
+        origin, size = self.frame
         path._fulcrum = origin + size/2.0
 
         # flip the assembled path and slide it into the proper x/y position
@@ -723,25 +723,25 @@ class TextFragment(object):
         return foundry.text_blocks(self._parent, rng)
 
     @property
-    def bounds(self):
+    def frame(self):
         """Returns the bounding box for the lines containing the match"""
+        box = Region()
+        for slug in self.slugs:
+            box = box.union(slug.frame)
+        return box
+
+    @property
+    def bounds(self):
+        """Returns the bounding box of the matched characters"""
         box = Region()
         for slug in self.slugs:
             box = box.union(slug.bounds)
         return box
 
     @property
-    def used(self):
-        """Returns the bounding box of the matched characters"""
-        box = Region()
-        for slug in self.slugs:
-            box = box.union(slug.used)
-        return box
-
-    @property
     def metrics(self):
         """The size of the rendered text"""
-        return self.used.size
+        return self.bounds.size
 
     @property
     def baseline(self):
@@ -759,7 +759,7 @@ class TextFragment(object):
         path.inherit(self._parent)
 
         # set its center-rotation fulcrum based on the blocks' bounds rect
-        origin, size = self._parent.bounds
+        origin, size = self._parent.frame
         path._fulcrum = origin + size/2.0
 
         # flip the assembled path and slide it into the proper x/y position
@@ -825,7 +825,7 @@ class TextBlock(FrameMixin, Grob):
         return self._parent._store.string().substringWithRange_(self._chars)
 
     @property
-    def bounds(self):
+    def frame(self):
         """The position & size of the block in canvas coordinates"""
         bbox = Region(self.offset, self.size)
         bbox.origin += self._parent.baseline
@@ -833,7 +833,7 @@ class TextBlock(FrameMixin, Grob):
         return bbox
 
     @property
-    def used(self):
+    def bounds(self):
         """The position & size of the block's text in canvas coordinates"""
         self._parent._engine.glyphRangeForTextContainer_(self._block) # force layout & glyph gen
         origin, size = self._parent._engine.usedRectForTextContainer_(self._block)
@@ -844,7 +844,7 @@ class TextBlock(FrameMixin, Grob):
     @property
     def metrics(self):
         """The size of the rendered text"""
-        return self.used.size
+        return self.bounds.size
 
     @property
     def lines(self):

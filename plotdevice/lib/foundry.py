@@ -18,7 +18,7 @@ __all__ = ["font_family", "font_encoding", "font_face", "best_face",
            ]
 
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic', 'ascent', 'descent'])
-Slug = namedtuple("Slug", ["bounds", "used", "baseline", "span"])
+Slug = namedtuple("Slug", ["frame", "bounds", "baseline", "span"])
 Vandercook = objc.lookUpClass('Vandercook')
 
 # introspection methods for postscript names & families
@@ -297,29 +297,29 @@ def line_slugs(txt_obj, rng=None):
     slugs = []
     for frag in Vandercook.lineFragmentsInRange_withLayout_(rng, txt_obj._engine):
         # convert to local units & types
-        block = txt_obj._blocks[frag['frame']]
-        used = block._from_px(frag['used'].rectValue())
+        block = txt_obj._blocks[frag['block']]
+        frame = block._from_px(frag['frame'].rectValue())
         bounds = block._from_px(frag['bounds'].rectValue())
         baseline = block._from_px(frag['baseline'].pointValue())
 
         # shift from container- to canvas-relative coords
         offset = block.offset + txt_obj.baseline
         baseline += offset
-        used.origin += offset
         bounds.origin += offset
+        frame.origin += offset
 
         # calculate glyph range within the line fragment
         loc, count = frag['range'].rangeValue()
         if flatten:
             # re-contract ranges that were expanded from zero
             if flatten is max:
-                baseline.x += used.width
-                used.x += used.width
+                baseline.x += bounds.width
+                bounds.x += bounds.width
                 loc += 1
-            used.width = sys.float_info.epsilon # avoid 0 so .union works properly
+            bounds.width = sys.float_info.epsilon # avoid 0 so .union works properly
             count = 0
 
-        slugs.append(Slug(bounds, used, baseline, span=(loc, count)))
+        slugs.append(Slug(frame, bounds, baseline, span=(loc, count)))
 
     return slugs
 
