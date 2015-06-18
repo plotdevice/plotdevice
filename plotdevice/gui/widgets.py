@@ -246,7 +246,7 @@ class ExportSheet(NSObject):
         self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'gif'))
         self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0)
         self.image = dict(format='pdf', first=1, last=1, cmyk=False, single=True)
-        self.cwd = None
+        self.last = None
 
 
     def beginExport(self, kind):
@@ -288,9 +288,9 @@ class ExportSheet(NSObject):
         else:
             dirName, fileName = None, "Untitled.%s"%format
 
-        # If a file was already exported, use that folder as the default.
-        if self.cwd is not None:
-            dirName = self.cwd
+        # If a file was already exported, use that folder/filename as the default.
+        if self.last is not None:
+            dirName, fileName = self.last
 
         # create the sheet
         exportPanel = NSSavePanel.savePanel()
@@ -320,8 +320,8 @@ class ExportSheet(NSObject):
                 kind, opts = 'movie', self.movieState()
             else:
                 kind, opts = 'image', self.imageState()
-            setattr(self, kind, dict(opts))    # save the options for next time
-            self.cwd = os.path.split(fname)[0] # save the directory we exported to
+            setattr(self, kind, dict(opts))  # save the options for next time
+            self.last = os.path.split(fname) # save the path we exported to
             self.script.exportInit(kind, fname, opts)
 
     def movieState(self, key=None):
