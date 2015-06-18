@@ -49,6 +49,7 @@ from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CI
                    NSHeight, NSInsetRect, NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, \
                    NSMakeRange, NSMidX, NSMidY, NSMutableAttributedString, NSNotificationCenter, NSObject,\
                    NSOffsetRect, NSOperationQueue, NSPoint, NSRect, NSRectFromString, NSSelectorFromString, \
-                   NSSize, NSString, NSStringFromRect, NSTimeZone, NSTimer, NSURL, NSUserDefaults, NSWidth
+                   NSSize, NSString, NSStringFromRect, NSTimeZone, NSTimer, NSURL, NSUserDefaults, \
+                   NSUTF8StringEncoding, NSWidth
 from WebKit import WebView
 from objc import IBOutlet, IBAction

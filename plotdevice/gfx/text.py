@@ -116,8 +116,9 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             # try using the nsmagic parsing of HTML/RTF to build an attributed string
             if not is_xml:
                 txt_bytes = txt.encode('utf-8')
+                txt_opts = {u'CharacterEncoding': NSUTF8StringEncoding}
                 decoded, info, err = NSMutableAttributedString.alloc().initWithData_options_documentAttributes_error_(
-                    NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes)), None, None, None
+                    NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes)), txt_opts, None, None
                 )
 
                 # if the data got unpacked into anything more interesting than plain text,
