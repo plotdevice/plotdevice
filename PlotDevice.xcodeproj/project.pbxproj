@@ -463,6 +463,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# let the setup script handle updating\n/usr/bin/python setup.py build\n\n# copy the up-to-date module contents into the app bundle\nEXT_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python/\"\nmkdir -p $EXT_DIR\nditto build/lib/plotdevice \"$EXT_DIR/plotdevice\"\n\n# make sure everything has a .pyc (so code-signing doesn't break on first run)\n/usr/bin/python -m compileall \"$EXT_DIR/plotdevice\"";
+			showEnvVarsInLog = 0;
 		};
 		2AF8981419953CA1005A49A5 /* Manually Update Examples */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -477,6 +478,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "examples=\"$CONFIGURATION_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\"\nditto Examples $examples";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -620,6 +622,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = PlotDevice;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -628,6 +631,7 @@
 			buildSettings = {
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = PlotDevice;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
