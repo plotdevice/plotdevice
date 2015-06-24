@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # encoding: utf-8
 """
 plotdevice.py
@@ -60,6 +60,28 @@ import signal
 from subprocess import Popen, PIPE
 from os.path import exists, islink, dirname, abspath, realpath, join
 
+def module_root():
+  parent = dirname(realpath(__file__)) if islink(__file__) else abspath(dirname(__file__))
+
+  # if running from a virtualenv or site-packages dir
+  for root in sys.path:
+    if exists(join(root, 'plotdevice/__init__.py')):
+      return root
+
+  # if running from an app bundle
+  appname = 'PlotDevice.app'
+  if appname in parent:
+    bundle = parent[:parent.index(appname)+len(appname)]
+    return join(bundle, 'Contents/Resources/python')
+
+  # if running from ./app/plotdevice in the source dist
+  if exists(join(parent, 'PlotDevice-Info.plist')):
+    return join(parent, '..')
+
+  # ???
+  print "Couldn't find the plotdevice module"
+  sys.exit(1)
+
 def parse_args():
   parser = argparse.ArgumentParser(description=main.__doc__, add_help=False)
   o = parser.add_argument_group("Options", None)
@@ -77,6 +99,7 @@ def parse_args():
   o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='arguments to be passed to the script as sys.argv')
   i = parser.add_argument_group("PlotDevice Script File", None)
   i.add_argument('file', help='the python script to be rendered')
+
   opts = parser.parse_args()
 
   if opts.virtualenv:
@@ -128,31 +151,8 @@ def parse_args():
     # it's a `single' doc or a sequence of numbered pdf files
     opts.single = bool(opts.first<opts.last and ext=='pdf' and not re.search('{\d+}', opts.export))
 
-
-
+  opts.site = module_root()
   return opts
-
-def module_root():
-  parent = dirname(realpath(__file__)) if islink(__file__) else abspath(dirname(__file__))
-
-  # if running from a virtualenv or site-packages dir
-  for root in sys.path:
-    if exists(join(root, 'plotdevice/__init__.py')):
-      return root
-
-  # if running from an app bundle
-  appname = 'PlotDevice.app'
-  if appname in parent:
-    bundle = parent[:parent.index(appname)+len(appname)]
-    return join(bundle, 'Contents/Resources/python')
-
-  # if running from ./app/plotdevice in the source dist
-  if exists(join(parent, 'PlotDevice-Info.plist')):
-    return join(parent, '..')
-
-  # ???
-  print "Couldn't find the plotdevice module"
-  sys.exit(1)
 
 def main():
   """Run python scripts in a window/PlotDevice.app or export graphics to a
@@ -160,8 +160,6 @@ def main():
 
   # determine parameter values and command path
   opts = parse_args()
-  root = module_root()
-  env = dict(os.environ)
 
   # install a signal handler to catch ^c
   def cancel(*args):
@@ -170,11 +168,9 @@ def main():
   signal.signal(signal.SIGINT, cancel)
 
   # launch the back-end of the console-runner and pipe in our params
-  py_path = filter(None, env.get('PYTHONPATH','').split(':')) # BUG: should it be unfiltered?
-  py_path.append(root)
-  env['PYTHONPATH'] = ":".join(py_path)
-  script = join(root, 'plotdevice/run/console.py')
-  p = Popen(['/usr/bin/python', script], env=env, stdin=PIPE)
+  python_cmd = '%s/bin/python' % getattr(sys, 'real_prefix', getattr(sys, 'base_prefix', '/usr'))
+  console_py = join(opts.site, 'plotdevice/run/console.py')
+  p = Popen([python_cmd, console_py], stdin=PIPE)
   p.stdin.write(json.dumps(vars(opts))+"\n")
   p.wait()
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # encoding: utf-8
 """
 console.py
@@ -14,24 +13,28 @@ once disk i/o completes. Otherwise a window will open to display the script's ou
 until dismissed by quitting the app or sending a ctrl-c from the console.
 """
 
-import sys
 import os
+import sys
 import json
 import select
 import signal
+from site import addsitedir
 from math import floor, ceil
 from os.path import dirname, abspath, exists, join
 from codecs import open
 
+STDOUT = sys.stdout
+STDERR = sys.stderr
+ERASER = '\r%s\r'%(' '*80)
+OPTS = json.loads(sys.stdin.readline())
+MODE = 'headless' if OPTS['export'] else 'windowed'
+
+addsitedir(OPTS['site']) # make sure the plotdevice module is accessible
 from plotdevice.run import objc, encoding # loads pyobjc as a side effect...
 from plotdevice.lib.cocoa import *
 from plotdevice.util import rsrc_path
 from plotdevice.gui import ScriptController
 from PyObjCTools import AppHelper
-
-STDOUT = sys.stdout
-STDERR = sys.stderr
-ERASER = '\r%s\r'%(' '*80)
 
 class ScriptApp(NSApplication):
     @classmethod
@@ -250,13 +253,6 @@ def progress(written, total, width=20):
 
 
 if __name__ == '__main__':
-    try:
-        OPTS = json.loads(sys.stdin.readline())
-        MODE = 'headless' if OPTS['export'] else 'windowed'
-    except ValueError:
-        print "bad args"
-        sys.exit(1)
-
     app = ScriptApp.sharedApplicationForMode_(MODE)
     delegate = ScriptAppDelegate.alloc().initWithOpts_forMode_(OPTS, MODE)
     app.setDelegate_(delegate)
