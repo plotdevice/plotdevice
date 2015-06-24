@@ -1,10 +1,9 @@
 # encoding:utf-8
 
-# This is your standard setup.py, so to install the module & command line tool, use:
-#     python setup.py install
+# To install the module & command line tool in site-packages, use:
+#    python setup.py install
 #
 # In addition to the `install' command, there are a few other variants:
-#
 #    app:    builds ./dist/PlotDevice.app using Xcode
 #    py2app: builds the application using py2app
 #    clean:  discard anything already built and start fresh
@@ -14,10 +13,10 @@
 #            check your setup
 #
 # We require some dependencies:
-# - Mac OS X 10.9+
-# - py2app or xcode or just pip
-# - PyObjC (should be in /System/Library/Frameworks/Python.framework/Versions/2.7/Extras)
-# - cPathMatics, cGeo, cIO, cEvent, & polymagic (included in the "app/deps" folder)
+# - Mac OS X 10.9+ and xcode command line tools
+# - the system-provided /usr/bin/python2.7 (to build the app)
+#   or a homebrew-built python interpreter (for just the module & `plotdevice` command)
+# - cFoundry, cPathmatics, cIO, & PyObjC (included in the "app/deps" folder)
 # - Sparkle.framework (auto-downloaded only for `dist` builds)
 
 import sys,os,json
@@ -46,7 +45,8 @@ CLASSIFIERS = (
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS :: MacOS X",
-    "Programming Language :: Python",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 2 :: Only",
     "Topic :: Artistic Software",
     "Topic :: Multimedia :: Graphics",
     "Topic :: Multimedia :: Graphics :: Editors :: Vector-Based",
