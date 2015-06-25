@@ -1,3 +1,4 @@
+#import <Cocoa/Cocoa.h>
 #import <Python.h>
 
 int main(int argc, char *argv[])
