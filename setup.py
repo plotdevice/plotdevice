@@ -93,7 +93,7 @@ SPARKLE_URL = 'https://github.com/sparkle-project/Sparkle/releases/download/%(v)
 
 # helpers for dealing with plists & git (spiritual cousins if ever there were)
 import plistlib
-def info_plist(pth='app/PlotDevice-Info.plist'):
+def info_plist(pth='app/info.plist'):
     info = plistlib.readPlist(pth)
     # overwrite the xcode placeholder vars
     info['CFBundleExecutable'] = info['CFBundleName'] = APP_NAME

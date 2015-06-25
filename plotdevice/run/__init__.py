@@ -19,7 +19,7 @@ try:
 except ImportError:
     from pprint import pformat
     missing = "Searched for PyObjC libraries in:\n%s\nto no avail..."%pformat(sys.path)
-    if exists('%s/../../app/PlotDevice-Info.plist'%dirname(__file__)):
+    if exists('%s/../../app/info.plist'%dirname(__file__)):
         missing += '\n\nBuild the plotdevice module with `python setup.py build\' before attempting import it.'
     raise RuntimeError(missing)
 

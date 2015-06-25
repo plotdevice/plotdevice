@@ -116,8 +116,7 @@
 		2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		2ABDB7671867D8160069EFC3 /* plotdevice-app.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "plotdevice-app.py"; path = "app/plotdevice-app.py"; sourceTree = "<group>"; };
 		2ABDB7681867D8160069EFC3 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = app/main.m; sourceTree = "<group>"; };
-		2ABDB7691867D8160069EFC3 /* PlotDevice_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PlotDevice_Prefix.pch; path = app/PlotDevice_Prefix.pch; sourceTree = "<group>"; };
-		2ABDB76C1867D8210069EFC3 /* PlotDevice-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "PlotDevice-Info.plist"; sourceTree = "<group>"; };
+		2ABDB76C1867D8210069EFC3 /* info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = info.plist; sourceTree = "<group>"; };
 		2ABDB7721867D9920069EFC3 /* plotdevice */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = plotdevice; path = app/plotdevice; sourceTree = "<group>"; };
 		2ABDB7751867EB520069EFC3 /* app.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = app.py; sourceTree = "<group>"; };
 		2ABDB7761867EB520069EFC3 /* views.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = views.py; sourceTree = "<group>"; };
@@ -275,7 +274,7 @@
 				611CC49310BA8B9E00B55455 /* PlotDevice.icns */,
 				611CC49410BA8B9E00B55455 /* PlotDeviceFile.icns */,
 				2A93AE731903326E00C6144D /* placeholder.pdf */,
-				2ABDB76C1867D8210069EFC3 /* PlotDevice-Info.plist */,
+				2ABDB76C1867D8210069EFC3 /* info.plist */,
 			);
 			name = Resources;
 			path = app;
@@ -580,7 +579,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7,
 				);
-				INFOPLIST_FILE = "app/PlotDevice-Info.plist";
+				INFOPLIST_FILE = app/info.plist;
 				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
@@ -606,7 +605,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7,
 				);
-				INFOPLIST_FILE = "app/PlotDevice-Info.plist";
+				INFOPLIST_FILE = app/info.plist;
 				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
