@@ -75,7 +75,7 @@ def module_root():
     return join(bundle, 'Contents/Resources/python')
 
   # if running from ./app/plotdevice in the source dist
-  if exists(join(parent, 'PlotDevice-Info.plist')):
+  if exists(join(parent, 'info.plist')):
     return join(parent, '..')
 
   # ???
@@ -168,8 +168,10 @@ def main():
   signal.signal(signal.SIGINT, cancel)
 
   # launch the back-end of the console-runner and pipe in our params
-  python_cmd = '%s/bin/python' % getattr(sys, 'real_prefix', getattr(sys, 'base_prefix', '/usr'))
+  prefix = getattr(sys, 'real_prefix', getattr(sys, 'base_prefix', None))
+  python_cmd = '%s/bin/python'%prefix if prefix else sys.executable
   console_py = join(opts.site, 'plotdevice/run/console.py')
+
   p = Popen([python_cmd, console_py], stdin=PIPE)
   p.stdin.write(json.dumps(vars(opts))+"\n")
   p.wait()

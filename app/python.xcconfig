@@ -1,8 +1,4 @@
-// sysconfig.get_config_var('INCLUDEPY')
-HEADER_SEARCH_PATHS = $(inherited) /System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7
-
-// sysconfig.get_config_var('LIBPL')
+PYTHON = /usr/bin/python
 LIBRARY_SEARCH_PATHS = $(inherited) /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config
-
-// '-lpython%i.%i' % sys.version_info[:2]
+HEADER_SEARCH_PATHS = $(inherited) /System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7
 OTHER_LDFLAGS = $(inherited) -lpython2.7

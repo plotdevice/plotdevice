@@ -14,8 +14,7 @@
 #
 # We require some dependencies:
 # - Mac OS X 10.9+ and xcode command line tools
-# - the system-provided /usr/bin/python2.7 (to build the app)
-#   or a homebrew-built python interpreter (for just the module & `plotdevice` command)
+# - the system-provided /usr/bin/python2.7 or a homebrew-built python interpreter
 # - cFoundry, cPathmatics, cIO, & PyObjC (included in the "app/deps" folder)
 # - Sparkle.framework (auto-downloaded only for `dist` builds)
 
@@ -184,11 +183,27 @@ class BuildAppCommand(Command):
     user_options = []
     def initialize_options(self):
         pass
+
     def finalize_options(self):
-        pass
+        from sysconfig import get_config_var
+        py_conf = {
+            "HEADER_SEARCH_PATHS":get_config_var('INCLUDEPY'),
+            "LIBRARY_SEARCH_PATHS":get_config_var('LIBPL'),
+            "OTHER_LDFLAGS":'-lpython%i.%i' % sys.version_info[:2],
+        }
+        with file('app/python.xcconfig','w') as f:
+            f.write('PYTHON = %s\n'%sys.executable)
+            for k,v in py_conf.items():
+                f.write('%s = $(inherited) %s\n' % (k,v))
+
     def run(self):
         self.spawn(['xcodebuild'])
         remove_tree('dist/PlotDevice.app.dSYM')
+        plod_cmd = 'dist/PlotDevice.app/Contents/SharedSupport/plotdevice'
+        plod_lines = open(plod_cmd).readlines()[1:]
+        with open(plod_cmd, 'w') as f:
+            f.write('#!%s\n'%sys.executable)
+            f.write("".join(plod_lines))
         print "done building PlotDevice.app in ./dist"
 
 try:
@@ -202,7 +217,6 @@ try:
             self.verbose=0
             build_py2app.finalize_options(self)
         def run(self):
-            assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
             build_py2app.run(self)
             if self.dry_run:
                 return
