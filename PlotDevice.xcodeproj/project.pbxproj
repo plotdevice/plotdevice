@@ -19,7 +19,6 @@
 		2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */; };
 		2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = 2A7AF5C718D2AFAA00F8FFC2 /* examples */; };
 		2A93AE751903326E00C6144D /* placeholder.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A93AE731903326E00C6144D /* placeholder.pdf */; };
-		2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */; };
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
 		2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FB18540246001C4E0A /* CoreVideo.framework */; };
 		2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */; };
@@ -110,6 +109,7 @@
 		2A7AF5C718D2AFAA00F8FFC2 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		2A827CC91859E9FE00A126BA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		2A93AE741903326E00C6144D /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = English; path = Resources/English.lproj/placeholder.pdf; sourceTree = "<group>"; };
+		2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = python.xcconfig; path = app/python.xcconfig; sourceTree = "<group>"; };
 		2AA40EBE184BF9CB00981ADC /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = ../../../../../../usr/lib/libpython2.7.dylib; sourceTree = "<group>"; };
 		2ABBB2F91854018B001C4E0A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		2ABBB2FB18540246001C4E0A /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
@@ -160,7 +160,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2AA40EBF184BF9CB00981ADC /* libpython2.7.dylib in Frameworks */,
 				2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */,
 				2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */,
 				2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */,
@@ -254,7 +253,7 @@
 			children = (
 				2ABDB7671867D8160069EFC3 /* plotdevice-app.py */,
 				2ABDB7681867D8160069EFC3 /* main.m */,
-				2ABDB7691867D8160069EFC3 /* PlotDevice_Prefix.pch */,
+				2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */,
 				2ABDB7721867D9920069EFC3 /* plotdevice */,
 			);
 			name = "Other Sources";
@@ -577,14 +576,13 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7,
 				);
 				INFOPLIST_FILE = app/info.plist;
 				INSTALL_PATH = /Applications;
-				LIBRARY_SEARCH_PATHS = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config;
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_NAME = PlotDevice;
 				SDKROOT = macosx;
 			};
@@ -603,13 +601,12 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7,
 				);
 				INFOPLIST_FILE = app/info.plist;
 				INSTALL_PATH = /Applications;
-				LIBRARY_SEARCH_PATHS = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config;
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_NAME = PlotDevice;
 				SDKROOT = macosx;
 			};
@@ -617,6 +614,7 @@
 		};
 		C05733CC08A9546B00998B17 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */;
 			buildSettings = {
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
@@ -627,6 +625,7 @@
 		};
 		C05733CD08A9546B00998B17 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */;
 			buildSettings = {
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = PlotDevice;
