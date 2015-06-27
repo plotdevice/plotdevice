@@ -18,7 +18,8 @@
 # - cFoundry, cPathmatics, cIO, & PyObjC (included in the "app/deps" folder)
 # - Sparkle.framework (auto-downloaded only for `dist` builds)
 
-import sys,os,json
+from __future__ import print_function
+import os, sys, json
 from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
 from pkg_resources import DistributionNotFound
@@ -107,6 +108,12 @@ def update_plist(pth, **modifications):
             info[key] = val
     plistlib.writePlist(info, pth)
 
+def update_shebang(pth, interpreter):
+    body = open(pth).readlines()[1:]
+    body.insert(0,'#!%s\n'%interpreter)
+    with open(pth, 'w') as f:
+        f.writelines(body)
+
 def last_commit():
     commit_count, _, _ = gosub('git log --oneline | wc -l')
     return 'r%s' % commit_count.strip()
@@ -114,14 +121,13 @@ def last_commit():
 def gosub(cmd, on_err=True):
     """Run a shell command and return the output"""
     from subprocess import Popen, PIPE
-    shell = isinstance(cmd, basestring)
+    shell = isinstance(cmd, str)
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=shell)
     out, err = proc.communicate()
     ret = proc.returncode
     if on_err:
-        msg = '%s:\n' % on_err if isinstance(on_err, basestring) else ''
+        msg = '%s:\n' % on_err if isinstance(on_err, str) else ''
         assert ret==0, msg + (err or out)
-
     return out, err, ret
 
 def timestamp():
@@ -129,6 +135,7 @@ def timestamp():
     from pytz import timezone, utc
     now = utc.localize(datetime.utcnow()).astimezone(timezone('US/Eastern'))
     return now.strftime("%a, %d %b %Y %H:%M:%S %z")
+
 
 ## Build Commands ##
 
@@ -185,26 +192,19 @@ class BuildAppCommand(Command):
         pass
 
     def finalize_options(self):
+        # customize the libpython paths based on the currently running interpreter
         from sysconfig import get_config_var
-        py_conf = {
-            "HEADER_SEARCH_PATHS":get_config_var('INCLUDEPY'),
-            "LIBRARY_SEARCH_PATHS":get_config_var('LIBPL'),
-            "OTHER_LDFLAGS":'-lpython%i.%i' % sys.version_info[:2],
-        }
-        with file('app/python.xcconfig','w') as f:
-            f.write('PYTHON = %s\n'%sys.executable)
-            for k,v in py_conf.items():
-                f.write('%s = $(inherited) %s\n' % (k,v))
+        with file('app/python.xcconfig', 'w') as f:
+            f.writelines([ "PYTHON = %s\n" % sys.executable,
+                           "LIBRARY_SEARCH_PATHS = $(inherited) %s\n" % get_config_var('LIBPL'),
+                           "HEADER_SEARCH_PATHS = $(inherited) %s\n" % get_config_var('INCLUDEPY'),
+                           "OTHER_LDFLAGS = $(inherited) -lpython%i.%i\n" % sys.version_info[:2] ])
 
     def run(self):
         self.spawn(['xcodebuild'])
+        update_shebang('dist/PlotDevice.app/Contents/SharedSupport/plotdevice', interpreter=sys.executable)
         remove_tree('dist/PlotDevice.app.dSYM')
-        plod_cmd = 'dist/PlotDevice.app/Contents/SharedSupport/plotdevice'
-        plod_lines = open(plod_cmd).readlines()[1:]
-        with open(plod_cmd, 'w') as f:
-            f.write('#!%s\n'%sys.executable)
-            f.write("".join(plod_lines))
-        print "done building PlotDevice.app in ./dist"
+        print("done building PlotDevice.app in ./dist")
 
 try:
     import py2app
@@ -245,16 +245,16 @@ try:
             self.copy_file("app/plotdevice", BIN)
 
             # success!
-            print "done building PlotDevice.app in ./dist"
+            print("done building PlotDevice.app in ./dist")
 
 except (DistributionNotFound, ImportError):
     # virtualenv doesn't include pyobjc, py2app, etc. in the sys.path for some reason.
     # not being able to access py2app isn't a big deal for 'build', 'app', 'dist', or 'clean'
     # so only abort the build if the 'py2app' command was given
     if 'py2app' in sys.argv:
-        print """setup.py: py2app build failed
+        print("""setup.py: py2app build failed
           Couldn't find the py2app module (perhaps because you've called setup.py from a virtualenv).
-          Make sure you're using the system's /usr/bin/python interpreter for py2app builds."""
+          Make sure you're using the system's /usr/bin/python interpreter for py2app builds.""")
         sys.exit(1)
 
 
@@ -291,7 +291,7 @@ class DistCommand(Command):
         SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
         if not exists(ORIG):
             self.mkpath(dirname(ORIG))
-            print "Downloading Sparkle.framework"
+            print("Downloading Sparkle.framework")
             os.system('curl -L -# %s | bunzip2 -c | tar xf - -C %s'%(SPARKLE_URL, dirname(ORIG)))
         self.mkpath(dirname(SPARKLE))
         self.spawn(['ditto', ORIG, SPARKLE])
@@ -311,7 +311,8 @@ class DistCommand(Command):
                            timestamp=timestamp())
             json.dump(release, f)
 
-        print "\nBuilt PlotDevice.app, %s, and release.json in ./dist" % basename(ZIP)
+        print("\nBuilt PlotDevice.app, %s, and release.json in ./dist" % basename(ZIP))
+
 
 ## Run Build ##
 
