@@ -191,6 +191,7 @@ class BuildCommand(build_py):
         self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "app/Resources/English.lproj/PlotDeviceScript.xib"])
         self.copy_file("app/Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
 
+
 class BuildAppCommand(Command):
     description = "Build PlotDevice.app with xcode"
     user_options = []
@@ -231,6 +232,8 @@ try:
         def finalize_options(self):
             self.verbose=0
             build_py2app.finalize_options(self)
+            os.environ['ACTION'] = 'build' # flag for app/deps/build.py
+
         def run(self):
             build_py2app.run(self)
             if self.dry_run:
@@ -243,13 +246,11 @@ try:
             # set up internal paths and ensure destination dirs exist
             RSRC = self.resdir
             BIN = join(dirname(RSRC), 'SharedSupport')
-            MODULE = join(self.bdist_base, 'lib/plotdevice')
-            PY = join(RSRC, 'python')
-            for pth in BIN, PY:
-                self.mkpath(pth)
+            LIB = join(RSRC, 'python')
+            MODULES = join(self.bdist_base, 'lib')
 
             # install the module in Resources/python
-            self.spawn(['/usr/bin/ditto', MODULE, join(PY, 'plotdevice')])
+            self.spawn(['/usr/bin/ditto', MODULES, LIB])
 
             # discard the eggery-pokery
             remove_tree(join(RSRC,'lib'), dry_run=self.dry_run)
@@ -257,6 +258,7 @@ try:
             os.unlink(join(RSRC,'site.pyc'))
 
             # place the command line tool in SharedSupport
+            self.mkpath(BIN)
             self.copy_file("app/plotdevice", BIN)
 
             # success!
@@ -302,7 +304,7 @@ class DistCommand(Command):
         )
 
         # Download Sparkle (if necessary) and copy it into the bundle
-        ORIG = 'app/deps/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
+        ORIG = 'app/deps/vendor/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
         SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
         if not exists(ORIG):
             self.mkpath(dirname(ORIG))
@@ -385,7 +387,8 @@ if __name__=='__main__':
             cmdclass={
                 'build_py': BuildCommand,
                 'py2app': BuildPy2AppCommand,
-            }
+            },
+            install_requires=[]
         ))
 
     # begin the build process

@@ -2,6 +2,9 @@
 PYTHON ?= /usr/bin/python
 PY_VERSION = $(shell $(PYTHON) -c 'import sys; print("py%i%i"%sys.version_info[:2])')
 
+# dependencies to be fetched
+HTTP_MODULES = requests cachecontrol
+
 VENV_VERSION = 13.0.3
 VENV_SRC = virtualenv-$(VENV_VERSION).tar.gz
 VENV_URL = https://pypi.python.org/packages/source/v/virtualenv/$(VENV_SRC)
@@ -15,6 +18,7 @@ BUILD = build
 ENV = $(BUILD)/env
 WHEELHOUSE = $(BUILD)/wheelhouse
 PYOBJC = $(BUILD)/lib/PyObjC
+DSTROOT ?= $(BUILD)/HTTP
 
 # commands
 CURL = @curl -L --progress-bar -f
@@ -41,6 +45,11 @@ wheels: clean $(ENV)
 	$(PIP) install "pyobjc-core"==$(OBJC_VERSION)
 	$(PIP) wheel "pyobjc"==$(OBJC_VERSION) -w ${WHEELHOUSE}
 	tar czfv $(OBJC_SRC) -C $(BUILD) $(notdir ${WHEELHOUSE})
+
+# fetch the current versions of our helper modules
+http: $(ENV)
+	$(ENV)/bin/pip -q install --target=$(DSTROOT) $(HTTP_MODULES)
+	rm -rf $(DSTROOT)/*.dist-info
 
 # ---------------------------------------------------------------------------------------- #
 
