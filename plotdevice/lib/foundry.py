@@ -67,6 +67,12 @@ def best_face(spec):
 
 # typography arg validators/standardizers
 
+PY2 = sys.version_info[0] == 2
+if not PY2:
+    char_type = bytes
+else:
+    char_type = str
+
 def fontspec(*args, **kwargs):
     """Validate a set of font/stylesheet/text args and return a canonicalized
     font-specification dictionary (which can then be passed to best_face)"""
@@ -78,7 +84,7 @@ def fontspec(*args, **kwargs):
 def font_axes(*args, **kwargs):
     # start with kwarg values as the canonical settings
     _canon = ('family','size','weight','italic','width','variant','fontsize')
-    spec = {k:v.decode('utf-8') if isinstance(v,str) else v for k,v in kwargs.items() if k in _canon}
+    spec = {k:v.decode('utf-8') if isinstance(v,char_type) else v for k,v in kwargs.items() if k in _canon}
     basis = kwargs.get('face', kwargs.get('fontname'))
 
     # be backward compatible with the old arg names
@@ -118,7 +124,7 @@ def font_axes(*args, **kwargs):
                 spec.setdefault(k,v)
         elif isinstance(item, basestring):
             # name-like values
-            item = item.decode('utf-8') if isinstance(item,str) else item
+            item = item.decode('utf-8') if isinstance(item,char_type) else item
             if fammy(item):
                 spec.setdefault('family', family_name(item))
             elif widthy(item):

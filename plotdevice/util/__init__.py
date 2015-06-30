@@ -1,11 +1,12 @@
 # encoding: utf-8
 import os
+import sys
 import re
 import json
 import csv
 from contextlib import contextmanager
 from collections import namedtuple
-from codecs import open
+from io import open
 from xml.parsers import expat
 from collections import OrderedDict, defaultdict
 from Foundation import NSAutoreleasePool
@@ -276,6 +277,14 @@ def autorelease():
 
 ### datafile unpackers ###
 
+PY2 = sys.version_info[0] == 2
+if not PY2:
+    char_type = bytes
+    text_type = str
+else:
+    char_type = str
+    text_type = unicode
+
 Element = namedtuple('Element', ['tag', 'attrs', 'parents', 'start', 'end'])
 escapes = [('break','0C'), ('indent', '09'), ('flush', '08')]
 doctype = '<!DOCTYPE plod [ %s ]>' % "".join(['<!ENTITY %s "&#xE0%s;" >'%e for e in escapes])
@@ -304,7 +313,7 @@ class XMLParser(object):
 
         # wrap everything in a root node (and include the whitespace entities which shift
         # the tty escapes into the unicode PUA for the duration)
-        if isinstance(txt, unicode):
+        if isinstance(txt, text_type):
             txt = txt.encode('utf-8')
         self._xml = HEAD+txt+TAIL
 

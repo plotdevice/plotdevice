@@ -351,6 +351,11 @@ class Sandbox(object):
         # self.session = None
         self.delegate = None
 
+PY2 = sys.version_info[0] == 2
+if not PY2:
+    char_type = bytes
+else:
+    char_type = str
 
 class StdIO(object):
     class OutputFile(object):
@@ -359,7 +364,7 @@ class StdIO(object):
             self.isErr = streamname=='stderr'
 
         def write(self, data):
-            if isinstance(data, str):
+            if isinstance(data, char_type):
                 try:
                     data = unicode(data, "utf_8", "replace")
                 except UnicodeDecodeError:
