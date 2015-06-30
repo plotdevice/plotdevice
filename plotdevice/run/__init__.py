@@ -25,7 +25,7 @@ except ImportError:
 
 
 # pull in the encoding-pragma detector
-from .common import encoding
+from .common import encoded
 
 # expose the script-runner object
 from .sandbox import Sandbox

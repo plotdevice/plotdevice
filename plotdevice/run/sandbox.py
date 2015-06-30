@@ -7,7 +7,7 @@ from PyObjCTools import AppHelper
 from Foundation import *
 from AppKit import *
 from ..lib.io import MovieExportSession, ImageExportSession
-from .common import stacktrace, coredump, uncoded, encoding
+from .common import stacktrace, coredump, uncoded
 from plotdevice import util, context, gfx, Halted, DeviceError
 
 __all__ = ['Sandbox']

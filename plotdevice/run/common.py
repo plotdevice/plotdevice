@@ -1,20 +1,22 @@
 import re, sys, linecache
+from io import open
 from os.path import abspath, dirname, relpath
 from traceback import format_list, format_exception_only
 
 ### encoding-pragma helpers ###
 
-def encoding(src):
+def encoded(pth):
     """Searches the first two lines of a string looking for an `# encoding: ???` comment."""
     re_enc = re.compile(r'coding[=:]\s*([-\w.]+)')
-    for line in src.split('\n')[:2]:
+    lines = open(pth, encoding='ascii', errors='ignore').readlines()
+    for line in lines[:2]:
         if not line.strip().startswith('#'):
             continue
         m = re_enc.search(line)
         if not m:
             continue
         return m.group(1)
-    return None
+    return "utf-8"
 
 def uncoded(src):
     """Strips out any `# encoding: ???` lines found at the head of the source listing"""

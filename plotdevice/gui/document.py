@@ -13,7 +13,7 @@ from ..lib.cocoa import *
 from .editor import OutputTextView, EditorView
 from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
-from ..run import Sandbox, encoding
+from ..run import Sandbox, encoded
 from .. import DeviceError
 from . import set_timeout
 
@@ -54,18 +54,15 @@ class PlotDeviceDocument(NSDocument):
 
     def writeToURL_ofType_error_(self, url, tp, err):
         path = url.fileSystemRepresentation()
-        src = self.script._get_source()
         # always use the same encoding we were read in with
-        text = src.encode(self.source_enc)
-        with file(path, 'w', 0) as f:
-            f.write(text)
+        with open(path, 'w', encoding=self.source_enc) as f:
+            f.write(self.script._get_source())
         return True, err
 
     def readFromURL_ofType_error_(self, url, tp, err):
         path = url.fileSystemRepresentation()
-        src = file(path).read()
-        self.source_enc = encoding(src) or 'utf-8'
-        self.source = src.decode(self.source_enc)
+        self.source_enc = encoded(path)
+        self.source = open(path, encoding=self.source_enc).read()
         if self.script:
             self.script.setPath_source_(self.path, self.source)
         return True, err
@@ -162,7 +159,8 @@ class ScriptController(NSWindowController):
         is_untitled = tmpl.startswith('TMPL:')
         is_example = os.path.exists(tmpl) and not is_untitled
         if is_example:
-            self.source = file(tmpl).read().decode("utf-8")
+            # self.source = file(tmpl).read().decode("utf-8")
+            self.source = open(tmpl, encoding='utf-8').read()
             if self.document():
                 # when an example script is opened, setStatioenry is called before the
                 # ScriptController gets a reference to the document and the doc handles
