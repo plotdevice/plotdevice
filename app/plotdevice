@@ -52,7 +52,7 @@ Options:
 PlotDevice Script File:
   file                the python script to be rendered
 """
-
+from __future__ import print_function
 import sys, os, re
 import argparse
 import json
@@ -79,7 +79,7 @@ def module_root():
     return join(parent, '..')
 
   # ???
-  print "Couldn't find the plotdevice module"
+  print("Couldn't find the plotdevice module")
   sys.exit(1)
 
 def parse_args():
@@ -163,17 +163,20 @@ def main():
 
   # install a signal handler to catch ^c
   def cancel(*args):
-    p.stdin.write("CANCEL\n")
+    p.stdin.write("CANCEL\n".encode('utf-8'))
     p.stdin.flush()
   signal.signal(signal.SIGINT, cancel)
 
   # launch the back-end of the console-runner and pipe in our params
   prefix = getattr(sys, 'real_prefix', getattr(sys, 'base_prefix', None))
-  python_cmd = '%s/bin/python'%prefix if prefix else sys.executable
+  suffix = '/bin/python' + '3' if sys.version_info >= (3,) else ''
+  python_cmd = prefix+suffix if prefix else sys.executable
   console_py = join(opts.site, 'plotdevice/run/console.py')
 
   p = Popen([python_cmd, console_py], stdin=PIPE)
-  p.stdin.write(json.dumps(vars(opts))+"\n")
+  opts = (json.dumps(vars(opts))+"\n").encode('utf-8')
+  p.stdin.write(opts)
+  p.stdin.flush()
   p.wait()
 
 if __name__ == "__main__":
