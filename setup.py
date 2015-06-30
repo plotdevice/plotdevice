@@ -18,7 +18,8 @@
 # - cFoundry, cPathmatics, cIO, & PyObjC (included in the "app/deps" folder)
 # - Sparkle.framework (auto-downloaded only for `dist` builds)
 
-import sys,os,json
+from __future__ import print_function
+import os, sys, json, re
 from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
 from pkg_resources import DistributionNotFound
@@ -107,6 +108,12 @@ def update_plist(pth, **modifications):
             info[key] = val
     plistlib.writePlist(info, pth)
 
+def update_shebang(pth, interpreter):
+    body = open(pth).readlines()[1:]
+    body.insert(0,'#!%s\n'%interpreter)
+    with open(pth, 'w') as f:
+        f.writelines(body)
+
 def last_commit():
     commit_count, _, _ = gosub('git log --oneline | wc -l')
     return 'r%s' % commit_count.strip()
@@ -114,14 +121,13 @@ def last_commit():
 def gosub(cmd, on_err=True):
     """Run a shell command and return the output"""
     from subprocess import Popen, PIPE
-    shell = isinstance(cmd, basestring)
+    shell = isinstance(cmd, str)
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=shell)
     out, err = proc.communicate()
     ret = proc.returncode
     if on_err:
-        msg = '%s:\n' % on_err if isinstance(on_err, basestring) else ''
+        msg = '%s:\n' % on_err if isinstance(on_err, str) else ''
         assert ret==0, msg + (err or out)
-
     return out, err, ret
 
 def timestamp():
@@ -129,6 +135,7 @@ def timestamp():
     from pytz import timezone, utc
     now = utc.localize(datetime.utcnow()).astimezone(timezone('US/Eastern'))
     return now.strftime("%a, %d %b %Y %H:%M:%S %z")
+
 
 ## Build Commands ##
 
@@ -144,11 +151,14 @@ class CleanCommand(Command):
         os.system('rm -rf ./build ./dist')
         os.system('rm -rf ./app/deps/*/build')
         os.system('rm -rf plotdevice.egg-info MANIFEST.in PKG')
+        os.system('find plotdevice -name .DS_Store -exec rm {} \;')
+        os.system('find plotdevice -name \*.pyc -exec rm {} \;')
+        os.system('find plotdevice -name __pycache__ -type d -prune -exec rmdir {} \;')
 
 from setuptools.command.sdist import sdist
 class BuildDistCommand(sdist):
     def finalize_options(self):
-        with file('MANIFEST.in','w') as f:
+        with open('MANIFEST.in','w') as f:
             tracked, _, _ = gosub('git ls-tree --full-tree --name-only -r HEAD')
             for line in tracked.splitlines()[1:]:
                 f.write("include %s\n"%line)
@@ -162,7 +172,10 @@ class BuildDistCommand(sdist):
         remove_tree('plotdevice.egg-info')
         os.unlink('MANIFEST.in')
 
-from distutils.command.build_py import build_py
+try:
+    from distutils.command.build_py import build_py_2to3 as build_py
+except ImportError:
+    from distutils.command.build_py import build_py
 class BuildCommand(build_py):
     def run(self):
         # first let the real build_py routine do its thing
@@ -185,26 +198,28 @@ class BuildAppCommand(Command):
         pass
 
     def finalize_options(self):
+        # customize the libpython paths based on the currently running interpreter
         from sysconfig import get_config_var
-        py_conf = {
-            "HEADER_SEARCH_PATHS":get_config_var('INCLUDEPY'),
-            "LIBRARY_SEARCH_PATHS":get_config_var('LIBPL'),
-            "OTHER_LDFLAGS":'-lpython%i.%i' % sys.version_info[:2],
-        }
-        with file('app/python.xcconfig','w') as f:
-            f.write('PYTHON = %s\n'%sys.executable)
-            for k,v in py_conf.items():
-                f.write('%s = $(inherited) %s\n' % (k,v))
+
+        macros = ['PYTHON_BIN="%s"'%sys.executable, 'PY3K=1' if sys.version_info[0] >=3 else '']
+        py_version = "GCC_PREPROCESSOR_DEFINITIONS = $(inherited) PY3K=1\n" if sys.version_info[0] >=3 else ''
+
+        re_cellarpath = re.compile(r'(.*)/Cellar/(python3?)/[^\/]+(.*)')
+        py_lib = re_cellarpath.sub(r'\1/opt/\2\3', get_config_var('LIBPL'))
+        py_inc = re_cellarpath.sub(r'\1/opt/\2\3', get_config_var('INCLUDEPY'))
+
+        with open('app/python.xcconfig', 'w') as f:
+            f.writelines([ "PYTHON = %s\n" % sys.executable,
+                           "LIBRARY_SEARCH_PATHS = $(inherited) %s\n" % py_lib,
+                           "HEADER_SEARCH_PATHS = $(inherited) %s\n" % py_inc,
+                           "OTHER_LDFLAGS = $(inherited) -lpython%i.%i\n" % sys.version_info[:2],
+                           "GCC_PREPROCESSOR_DEFINITIONS = $(inherited) %s\n" % " ".join(macros).strip() ])
 
     def run(self):
         self.spawn(['xcodebuild'])
+        update_shebang('dist/PlotDevice.app/Contents/SharedSupport/plotdevice', interpreter=sys.executable)
         remove_tree('dist/PlotDevice.app.dSYM')
-        plod_cmd = 'dist/PlotDevice.app/Contents/SharedSupport/plotdevice'
-        plod_lines = open(plod_cmd).readlines()[1:]
-        with open(plod_cmd, 'w') as f:
-            f.write('#!%s\n'%sys.executable)
-            f.write("".join(plod_lines))
-        print "done building PlotDevice.app in ./dist"
+        print("done building PlotDevice.app in ./dist")
 
 try:
     import py2app
@@ -245,16 +260,16 @@ try:
             self.copy_file("app/plotdevice", BIN)
 
             # success!
-            print "done building PlotDevice.app in ./dist"
+            print("done building PlotDevice.app in ./dist")
 
 except (DistributionNotFound, ImportError):
     # virtualenv doesn't include pyobjc, py2app, etc. in the sys.path for some reason.
     # not being able to access py2app isn't a big deal for 'build', 'app', 'dist', or 'clean'
     # so only abort the build if the 'py2app' command was given
     if 'py2app' in sys.argv:
-        print """setup.py: py2app build failed
+        print("""setup.py: py2app build failed
           Couldn't find the py2app module (perhaps because you've called setup.py from a virtualenv).
-          Make sure you're using the system's /usr/bin/python interpreter for py2app builds."""
+          Make sure you're using the system's /usr/bin/python interpreter for py2app builds.""")
         sys.exit(1)
 
 
@@ -291,7 +306,7 @@ class DistCommand(Command):
         SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
         if not exists(ORIG):
             self.mkpath(dirname(ORIG))
-            print "Downloading Sparkle.framework"
+            print("Downloading Sparkle.framework")
             os.system('curl -L -# %s | bunzip2 -c | tar xf - -C %s'%(SPARKLE_URL, dirname(ORIG)))
         self.mkpath(dirname(SPARKLE))
         self.spawn(['ditto', ORIG, SPARKLE])
@@ -305,13 +320,14 @@ class DistCommand(Command):
         self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
 
         # write out the release metadata for plotdevice-site to consume/merge
-        with file('dist/release.json','w') as f:
+        with open('dist/release.json','w') as f:
             release = dict(zipfile=basename(ZIP), bytes=os.path.getsize(ZIP),
                            version=VERSION, revision=last_commit(),
                            timestamp=timestamp())
             json.dump(release, f)
 
-        print "\nBuilt PlotDevice.app, %s, and release.json in ./dist" % basename(ZIP)
+        print("\nBuilt PlotDevice.app, %s, and release.json in ./dist" % basename(ZIP))
+
 
 ## Run Build ##
 
@@ -332,6 +348,7 @@ if __name__=='__main__':
         license = LICENSE,
         classifiers = CLASSIFIERS,
         packages = find_packages(),
+        install_requires = ['requests', 'cachecontrol'],
         scripts = ["app/plotdevice"],
         zip_safe=False,
         cmdclass={

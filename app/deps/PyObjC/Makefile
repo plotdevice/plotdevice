@@ -1,10 +1,14 @@
+# interpretter info gathered from $PYTHON environment variable
+PYTHON ?= /usr/bin/python
+PY_VERSION = $(shell $(PYTHON) -c 'import sys; print("py%i%i"%sys.version_info[:2])')
+
 # dependencies to be fetched
 VENV_VERSION = 13.0.3
 VENV_SRC = virtualenv-$(VENV_VERSION).tar.gz
 VENV_URL = https://pypi.python.org/packages/source/v/virtualenv/$(VENV_SRC)
 
 OBJC_VERSION = 3.0.4
-OBJC_SRC = wheelhouse-pyobjc-$(OBJC_VERSION).tar.gz
+OBJC_SRC = wheelhouse-pyobjc-$(OBJC_VERSION)-$(PY_VERSION).tar.gz
 OBJC_URL = http://plotdevice.io/$(OBJC_SRC)
 
 # paths
@@ -14,8 +18,7 @@ WHEELHOUSE = $(BUILD)/wheelhouse
 PYOBJC = $(BUILD)/lib/PyObjC
 
 # commands
-CURL = @curl -L --progress-bar
-PYTHON ?= /usr/bin/python
+CURL = @curl -L --progress-bar -f
 VIRTUALENV = $(BUILD)/virtualenv-$(VENV_VERSION)/virtualenv.py
 PIP = $(ENV)/bin/pip --isolated
 
@@ -31,15 +34,14 @@ clean:
 
 # delete generated files *and* cached archives
 distclean:
-	rm -rf $(BUILD) $(VENV_SRC) $(OBJC_SRC)
+	rm -rf $(BUILD) $(VENV_SRC) wheelhouse-pyobjc-*.tar.gz
 
 # retrieve the current PyObjC sources from PyPI and build wheels from them. the resulting
 # wheelhouse dir is then tar'd up and will be used in subsequent `make all` runs
 wheels: clean $(ENV)
 	$(PIP) install "pyobjc-core"==$(OBJC_VERSION)
 	$(PIP) wheel "pyobjc"==$(OBJC_VERSION) -w ${WHEELHOUSE}
-	tar czf $(OBJC_SRC) -C $(BUILD) $(notdir ${WHEELHOUSE})
-	$(MAKE) clean
+	tar czfv $(OBJC_SRC) -C $(BUILD) $(notdir ${WHEELHOUSE})
 
 # ---------------------------------------------------------------------------------------- #
 
@@ -48,10 +50,10 @@ $(VENV_SRC):
 	@echo $(VENV_URL)
 	$(CURL) $(VENV_URL) -o $@
 
-# fetch the cached wheelhouse archive from plotdevice.io
+# fetch the cached wheelhouse archive from plotdevice.io (or build it if necessary)
 $(OBJC_SRC):
 	@echo $(OBJC_URL)
-	$(CURL) $(OBJC_URL) -o $@
+	-$(CURL) $(OBJC_URL) -o $@ || $(MAKE) wheels
 
 # unpack the virtualenv sdist in the build dir
 $(VIRTUALENV): | $(VENV_SRC)
@@ -68,5 +70,5 @@ $(ENV): $(VIRTUALENV)
 	$(PYTHON) $(VIRTUALENV) -q $@
 
 # create a sitedir from the contents of build/wheelhouse
-$(PYOBJC): | $(WHEELHOUSE) $(ENV)
+$(PYOBJC): | clean $(WHEELHOUSE) $(ENV)
 	$(PIP) -q install --target=$@ --no-index --find-links=$(WHEELHOUSE) "pyobjc"

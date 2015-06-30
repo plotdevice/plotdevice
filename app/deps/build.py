@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import errno
@@ -7,13 +8,13 @@ from os.path import dirname, basename, abspath, isdir, join, exists
 libs_root = dirname(abspath(__file__))
 
 def build_libraries(dst_root):
-    print "\nCompiling required c-extensions"
+    print("\nCompiling required c-extensions")
 
     # Find all setup.py files in the current folder
     setup_scripts = glob('%s/*/setup.py'%libs_root)
     for setup_script in setup_scripts:
         lib_name = basename(dirname(setup_script))
-        print "Building %s..."% lib_name
+        print("Building %s..."% lib_name)
         os.chdir(dirname(setup_script))
         result = os.system(sys.executable+' setup.py -q build') # call the lib's setup.py
         if result > 0:
@@ -29,19 +30,19 @@ def build_libraries(dst_root):
     for build_dir in build_dirs:
         lib_name = dirname(dirname(build_dir))
         cmd = 'cp -R -p %s/* %s' % (build_dir, dst_root)
-        print cmd
+        print(cmd)
         result = os.system(cmd)
         if result > 0:
             raise OSError("Could not copy %s" % lib_name)
-    print
+    print()
 
 def clean_build_files():
-    print "Cleaning all library build files..."
+    print("Cleaning all library build files...")
 
     build_dirs = glob('%s/*/build'%libs_root)
     for build_dir in build_dirs:
         lib_name = dirname(build_dir)
-        print "Cleaning", lib_name
+        print("Cleaning", lib_name)
         os.system('rm -r "%s"' % build_dir)
 
 if __name__=='__main__':
@@ -55,4 +56,4 @@ if __name__=='__main__':
             dst_root = join(arg, 'plotdevice/lib')
             build_libraries(dst_root)
     else:
-        print "usage: python build.py <destination-path>"
+        print("usage: python build.py <destination-path>")

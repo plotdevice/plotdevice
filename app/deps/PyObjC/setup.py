@@ -11,5 +11,9 @@ Copyright (c) 2015 Samizdat Drafting Co All rights reserved.
 # main deps build.py script. it passes the current interpreter path to
 # make and lets it take over from there...
 
-import os, sys
-os.system('PYTHON="%s" make -s'%sys.executable)
+import os, sys, subprocess
+
+env = {"PYTHON":sys.executable, "PATH":os.environ['PATH']}
+subprocess.Popen('make', env=env, shell=True).communicate()
+
+
