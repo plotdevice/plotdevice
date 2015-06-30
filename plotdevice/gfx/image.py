@@ -202,7 +202,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         elif all([self.width, self.height]):
             factor = min(self.width/src.width, self.height/src.height)
         else:
-            dim, src_dim = max((self.width, src.width), (self.height, src.height))
+            dim, src_dim = max((self.width or 0, src.width), (self.height or 0, src.height))
             factor = dim/src_dim
         return factor
 
