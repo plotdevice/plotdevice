@@ -1,7 +1,7 @@
 import objc
 from collections import namedtuple
 from .cocoa import CGPathRelease
-import cPathmatics
+from . import cPathmatics
 
 
 # Quartz loop speedups
@@ -51,9 +51,9 @@ def reflect(x0, y0, x1, y1, d=1.0, a=180):
 
 # Ye olde polymagic
 
-from cPathmatics import intersects, union, intersect, difference, xor
+from .cPathmatics import intersects, union, intersect, difference, xor
 try:
-    from cPathmatics import linepoint, linelength, curvepoint, curvelength
+    from .cPathmatics import linepoint, linelength, curvepoint, curvelength
 except ImportError:
     from math import sqrt, pow
 

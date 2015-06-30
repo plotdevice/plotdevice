@@ -1,5 +1,5 @@
 import objc, os, re
-import cIO
+from . import cIO
 for cls in ["AnimatedGif", "Pages", "SysAdmin", "Video"]:
     globals()[cls] = objc.lookUpClass(cls)
 
