@@ -2,9 +2,10 @@ import re
 import os
 import json
 import objc
-from ..lib.cocoa import *
-
+from io import open
 from subprocess import Popen, PIPE
+
+from ..lib.cocoa import *
 from plotdevice.gui import bundle_path, set_timeout
 
 def get_default(label):
@@ -42,7 +43,7 @@ def editor_info(name=None):
     if not _editor_info:
         global THEMES
         if THEMES is None:
-            THEMES = json.load(file(bundle_path(rsrc='ui/themes.json')))
+            THEMES = json.load(open(bundle_path(rsrc='ui/themes.json')))
         info = dict(family=get_default('font-name'), px=get_default('font-size'))
         info.update(THEMES.get(get_default('theme')))
         info['colors'] = {k:_hex_to_nscolor(v) for k,v in info['colors'].items()}
