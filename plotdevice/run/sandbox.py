@@ -16,7 +16,7 @@ Outcome = namedtuple('Outcome', ['ok', 'output'])
 Output = namedtuple('Output', ['isErr', 'data'])
 
 class Metadata(object):
-    __slots__ = 'args', 'virtualenv', 'first', 'next', 'last', 'loop'
+    __slots__ = 'args', 'virtualenv', 'first', 'frame', 'last', 'loop'
     def __init__(self, **opts):
         for k,v in opts.items(): setattr(self,k,v)
     def update(self, changes):
@@ -60,7 +60,7 @@ class Sandbox(object):
 
         # control params used during exports and console-based runs
         self._meta = Metadata(args=[], virtualenv=None, # environmant
-                              first=1, next=1, last=None, # runtime
+                              first=1, frame=1, last=None, # runtime
                               loop=False) # export opts
 
     # .script
@@ -127,7 +127,7 @@ class Sandbox(object):
         # start off with all systems nominal (fingers crossed)
         self.crashed = False
         result = Outcome(True, [])
-        self._meta.next = self._meta.first
+        self._meta.frame = self._meta.first
         self._anim = None
 
         # if our .source attr has been changed since the last run, compile it now
@@ -161,7 +161,7 @@ class Sandbox(object):
         self.context._resetContext()
 
         # Set the frame/pagenum
-        self.namespace['PAGENUM'] = self.namespace['FRAME'] = self._meta.next
+        self.namespace['PAGENUM'] = self.namespace['FRAME'] = self._meta.frame
 
         # Run the specified method (or script's top-level if None)
         result = self.call(method)
@@ -188,9 +188,9 @@ class Sandbox(object):
 
             elif method=='draw':
                 # tick the frame ahead after each draw call
-                self._meta.next+=1
-                if self._meta.next > self._meta.last and self._meta.loop:
-                    self._meta.next = self._meta.first
+                self._meta.frame+=1
+                if self._meta.frame > self._meta.last and self._meta.loop:
+                    self._meta.frame = self._meta.first
 
         return result
 
@@ -261,7 +261,7 @@ class Sandbox(object):
 
     def stop(self):
         """Called when an animated run is halted (voluntarily or otherwise)"""
-        # print "stopping at", self._meta.next-1, "of", self._meta.last
+        # print "stopping at", self._meta.frame-1, "of", self._meta.last
         result = Outcome(True, [])
         if not self.crashed:
             result = self.call("stop")
@@ -320,7 +320,7 @@ class Sandbox(object):
     def _exportFrame(self):
         if self.session.next():
             # step to the proper FRAME value
-            self._meta.next = self.session.next()
+            self._meta.frame = self.session.next()
 
             # run the draw() function if it exists (or the whole top-level if not)
             result = self.run(method="draw" if self.animated else None)

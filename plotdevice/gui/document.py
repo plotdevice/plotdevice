@@ -495,8 +495,8 @@ class ScriptController(NSWindowController):
             # print any console messages
             self.echo(status.output)
 
-        if canvas and self.window() and self.vm._meta.next % 2:
-            # blit the canvas to the graphics view           ^ (but only every other frame)
+        if canvas and self.window() and self.vm._meta.frame % 2:
+            # blit the canvas to the graphics view            ^ (but only every other frame)
             self.currentView.setCanvas(canvas)
 
     def exportProgress(self, written, total, cancelled):
