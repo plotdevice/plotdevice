@@ -6,14 +6,14 @@ import json
 import csv
 from contextlib import contextmanager
 from collections import namedtuple
-from io import open
+from io import open, StringIO, BytesIO
 from xml.parsers import expat
 from collections import OrderedDict, defaultdict
-from Foundation import NSAutoreleasePool
-from os.path import abspath, dirname, exists, join
+from os.path import abspath, dirname, exists, join, splitext
 from random import choice, shuffle
+
+from Foundation import NSAutoreleasePool
 from plotdevice import DeviceError, INTERNAL
-from .http import GET
 
 __all__ = ('grid', 'random', 'shuffled', 'choice', 'ordered', 'order', 'files', 'read', 'autotext', '_copy_attr', '_copy_attrs', 'odict', 'ddict', 'adict')
 
@@ -415,39 +415,62 @@ class XMLParser(object):
             self.nodes = {tag:ordered(elts, 'start') for tag,elts in self.nodes.items()}
 
 
-def csv_reader(pth, encoding, dialect=csv.excel, **kwargs):
-    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
-    with open(pth, 'Urb', encoding) as unicode_csv_data:
-        csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
-                                dialect=dialect, **kwargs)
-        for row in csv_reader:
-            # decode UTF-8 back to Unicode, cell by cell:
-            yield [unicode(cell, 'utf-8') for cell in row]
+from codecs import iterencode, iterdecode
 
-def csv_dictreader(pth, encoding, dialect=csv.excel, cols=None, dict=dict, **kwargs):
+def csv_rows(file_obj, dialect=csv.excel, **kwargs):
+    csvfile = iterencode(file_obj, 'utf-8') if PY2 else file_obj
+    csvreader = csv.reader(csvfile, dialect=dialect, **kwargs)
+    csvreader = (list(iterdecode(i, 'utf-8')) for i in csvreader) if PY2 else csvreader
+    for row in csvreader:
+        yield row
+
+def csv_dict(file_obj, dialect=csv.excel, cols=None, dict=dict, **kwargs):
     if not isinstance(cols, (list, tuple)):
         cols=None
-    with open(pth, 'Urb', encoding) as unicode_csv_data:
-        csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
-                                dialect=dialect, **kwargs)
+    for row in csv_rows(file_obj, dialect, **kwargs):
+        if not cols:
+          cols = row
+          continue
+        yield dict(zip(cols,row))
 
-        for row in csv_reader:
-            if not cols:
-              cols = [unicode(cell, 'utf-8') for cell in row]
-              continue
-            # decode UTF-8 back to Unicode, cell by cell:
-            yield dict( (col, unicode(cell, 'utf-8')) for (col,cell) in zip(cols,row) )
+def csv_tuple(file_obj, dialect=csv.excel, cols=None, **kwargs):
+    if not isinstance(cols, (list, tuple)):
+        cols=None
+    elif cols:
+        RowType = namedtuple('Row', cols)
+    for row in csv_rows(file_obj, dialect, **kwargs):
+        if not cols:
+            cols = row
+            RowType = namedtuple('Row', cols)
+            continue
+        yield RowType(**dict(zip(cols, row)))
 
 def csv_dialect(fd):
-    dialect = csv.Sniffer().sniff(fd.read(1024))
+    snippet = fd.read(1024).encode('utf-8') if PY2 else fd.read(1024)
     fd.seek(0)
-    return dialect
+    return csv.Sniffer().sniff(snippet)
 
-def utf_8_encoder(unicode_csv_data):
-    for line in unicode_csv_data:
-        yield line.encode('utf-8')
 
-def read(pth, format=None, encoding='utf-8', cols=None, **kwargs):
+
+import requests
+from cachecontrol import CacheControl, CacheControlAdapter
+from cachecontrol.caches import FileCache
+from cachecontrol.heuristics import LastModified
+from urlparse import urlparse
+
+cache_dir = '%s/Library/Caches/PlotDevice'%os.environ['HOME']
+HTTP = CacheControl(requests.Session(), cache=FileCache(cache_dir), heuristic=LastModified())
+
+def binaryish(content, format):
+    bin_types = ['pdf','eps','png','jpg','jpeg','gif','tiff','tif','zip','tar','gz']
+    bin_formats = ['raw','bytes','img','image']
+    if any(b in content for b in bin_types):
+        return True
+    if format:
+        return any(b in format for b in bin_types+bin_formats)
+    return False
+
+def read(pth, format=None, encoding=None, cols=None, **kwargs):
     """Returns the contents of a file into a string or format-dependent data
     type (with special handling for json and csv files).
 
@@ -462,27 +485,57 @@ def read(pth, format=None, encoding='utf-8', cols=None, **kwargs):
 
     CSV files will return a list of rows. By default each row will be an ordered
     list of column values. If the first line of the file defines column names,
-    you can call read() with cols=True in which case each row will be a dictionary
+    you can call read() with cols=True in which case each row will be a namedtuple
     using those names as keys. If the file doesn't define its own column names,
-    you can pass a list of strings as the `cols` parameter.
+    you can pass a list of strings as the `cols` parameter. Rows can be formatted
+    as column-keyed dictionaries by passing True as the `dict` parameter.
     """
-    if re.match(r'https?:', pth):
-        fd, _ = GET(pth)
-    else:
-        fd = file(os.path.expanduser(pth), 'Urb')
 
-    format = format.lstrip('.') if format else pth.rsplit('.',1)[-1]
+    if re.match(r'https?:', pth):
+        resp = HTTP.get(pth)
+        resp.raise_for_status()
+
+        enc = encoding or resp.encoding
+        extension_type = splitext(urlparse(pth).path)[-1]
+        content_type = resp.headers.get('content-type', extension_type).lower()
+
+        for data_t in ['json', 'csv']:
+            if data_t in content_type:
+                extension_type = data_t
+
+        if binaryish(content_type, format):
+            fd = BytesIO(resp.content)
+        else:
+            resp.encoding = enc
+            fd = StringIO(resp.text)
+    else:
+        enc = encoding or 'utf-8'
+        extension_type = splitext(pth)[-1].lower()
+
+        if binaryish(extension_type, format):
+            fd = open(os.path.expanduser(pth), 'rb')
+        else:
+            fd = open(os.path.expanduser(pth), 'rt', encoding=enc)
+
+    if kwargs.get('dict') is True:
+        kwargs['dict'] = dict
+    elif kwargs.get('dict') is False:
+        del kwargs['dict']
     dict_type = kwargs.get('dict', dict)
+    format = (format or extension_type).lstrip('.')
 
     if format=='json':
-        return json.load(fd, object_pairs_hook=dict_type, encoding=encoding)
-    elif format=='csv' and not re.match(r'https?:', pth):
-        dialect = csv_dialect(pth)
+        return json.load(fd, object_pairs_hook=dict_type)
+    elif format=='csv':
+        dialect = csv_dialect(fd)
         if cols:
-            return list(csv_dictreader(pth, encoding, dialect=dialect, cols=cols, dict=dict_type))
-        return list(csv_reader(pth, encoding, dialect=dialect))
+            if kwargs.get('dict'):
+                return list(csv_dict(fd, dialect=dialect, cols=cols, dict=dict_type))
+            else:
+                return list(csv_tuple(fd, dialect=dialect, cols=cols))
+        return list(csv_rows(fd, dialect=dialect))
     else:
-        return fd.read().decode(encoding)
+        return fd.read()
 
 ### module data dir ###
 
