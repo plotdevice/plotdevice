@@ -1,5 +1,6 @@
 # encoding: utf-8
 import os, sys, re
+from operator import attrgetter
 
 # files & io
 from io import open, StringIO, BytesIO
@@ -8,22 +9,39 @@ from plotdevice import DeviceError, INTERNAL
 
 # data formats
 import json, csv
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from codecs import iterencode, iterdecode
 from xml.parsers import expat
 
 # http
 import requests
+from urlparse import urlparse
+from Foundation import NSDateFormatter, NSLocale, NSTimeZone, NSDate
 from cachecontrol import CacheControl, CacheControlAdapter
 from cachecontrol.caches import FileCache
 from cachecontrol.heuristics import LastModified
-from urlparse import urlparse
+
+PY2 = sys.version_info[0] == 2
+text_type = str if not PY2 else unicode
+
+### HTTP utils ###
 
 cache_dir = '%s/Library/Caches/PlotDevice'%os.environ['HOME']
 HTTP = CacheControl(requests.Session(), cache=FileCache(cache_dir), heuristic=LastModified())
 
-PY2 = sys.version_info[0] == 2
-text_type = str if not PY2 else unicode
+_nsdf = NSDateFormatter.alloc().init()
+_nsdf.setLocale_(NSLocale.alloc().initWithLocaleIdentifier_("en_US_POSIX"))
+_nsdf.setDateFormat_("EEE',' dd' 'MMM' 'yyyy HH':'mm':'ss zzz")
+_nsdf.setTimeZone_(NSTimeZone.timeZoneForSecondsFromGMT_(0))
+
+def last_modified(resp):
+    """Return the last modified date as a unix time_t"""
+    last_mod = _nsdf.dateFromString_(resp.headers.get('Last-Modified'))
+    if not last_mod:
+        last_mod = NSDate.date()
+    return last_mod.timeIntervalSince1970()
+
+
 
 ### XML handling ###
 
@@ -49,8 +67,8 @@ class XMLParser(object):
         # set up state attrs to record the parse results
         self.stack = []
         self.cursor = offset
-        self.regions = ddict(list)
-        self.nodes = ddict(list)
+        self.regions = defaultdict(list)
+        self.nodes = defaultdict(list)
         self.body = []
 
         # wrap everything in a root node (and include the whitespace entities which shift
@@ -154,7 +172,7 @@ class XMLParser(object):
         # if we've exited the root node, clean up the parsed elements
         if name == INTERNAL:
             del self.nodes[INTERNAL]
-            self.nodes = {tag:ordered(elts, 'start') for tag,elts in self.nodes.items()}
+            self.nodes = {tag:sorted(elts, key=attrgetter('start')) for tag,elts in self.nodes.items()}
 
 
 ### CSV unpacking ###

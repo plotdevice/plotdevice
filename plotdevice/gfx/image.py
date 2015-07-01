@@ -9,7 +9,7 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attrs, autorelease
-from ..util.http import GET
+from ..util.readers import HTTP, last_modified
 from ..lib.io import MovieExportSession, ImageExportSession
 from .geometry import Region, Size, Point, Transform, CENTER
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
@@ -115,12 +115,13 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             if re.match(r'https?:', path):
                 # load from url
                 key = err_info = path
-                resp, mtime = GET(path)
+                resp = HTTP.get(path)
+                mtime = last_modified(resp)
                 # return a cached image if possible...
                 if path in _cache and _cache[path][1] >= mtime:
                     return _cache[path][0]
                 # ...or load from the data
-                bytes = resp.read()
+                bytes = resp.content
                 data = NSData.dataWithBytes_length_(bytes, len(bytes))
                 image = NSImage.alloc().initWithData_(data)
             else:
