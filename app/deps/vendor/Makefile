@@ -3,7 +3,7 @@ PYTHON ?= /usr/bin/python
 PY_VERSION = $(shell $(PYTHON) -c 'import sys; print("py%i%i"%sys.version_info[:2])')
 
 # dependencies to be fetched
-HTTP_MODULES = requests cachecontrol
+HTTP_MODULES = requests cachecontrol lockfile
 
 VENV_VERSION = 13.0.3
 VENV_SRC = virtualenv-$(VENV_VERSION).tar.gz

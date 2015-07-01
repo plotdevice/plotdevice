@@ -361,7 +361,7 @@ if __name__=='__main__':
         license = LICENSE,
         classifiers = CLASSIFIERS,
         packages = find_packages(),
-        install_requires = ['requests', 'cachecontrol'],
+        install_requires = ['requests', 'cachecontrol', 'lockfile'],
         scripts = ["app/plotdevice"],
         zip_safe=False,
         cmdclass={
