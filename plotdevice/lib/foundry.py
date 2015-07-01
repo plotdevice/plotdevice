@@ -8,7 +8,7 @@ from operator import itemgetter, attrgetter
 from collections import namedtuple, OrderedDict as odict, defaultdict as ddict
 from .cocoa import *
 from ..util import numlike
-from . import cFoundry
+import cFoundry
 
 from plotdevice import DeviceError
 

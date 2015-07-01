@@ -178,11 +178,11 @@ except ImportError:
     from distutils.command.build_py import build_py
 class BuildCommand(build_py):
     def run(self):
-        # first let the real build_py routine do its thing
-        build_py.run(self)
-
-        # then compile the extensions into the just-built module
+        # compile the dependencies into build/lib/plotdevice/lib...
         self.spawn([sys.executable, 'app/deps/build.py', abspath(self.build_lib)])
+
+        # ...then let the real build_py routine do its thing
+        build_py.run(self)
 
         # include some ui resources for running a script from the command line
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
