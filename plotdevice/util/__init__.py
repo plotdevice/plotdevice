@@ -288,8 +288,8 @@ else:
 Element = namedtuple('Element', ['tag', 'attrs', 'parents', 'start', 'end'])
 escapes = [('break','0C'), ('indent', '09'), ('flush', '08')]
 doctype = '<!DOCTYPE plod [ %s ]>' % "".join(['<!ENTITY %s "&#xE0%s;" >'%e for e in escapes])
-HEAD = "%s<%s>" % (doctype, INTERNAL)
-TAIL = "</%s>" % INTERNAL
+HEAD = u"%s<%s>" % (doctype, INTERNAL)
+TAIL = u"</%s>" % INTERNAL
 class XMLParser(object):
     _log = 0
 
@@ -315,7 +315,7 @@ class XMLParser(object):
         # the tty escapes into the unicode PUA for the duration)
         if isinstance(txt, text_type):
             txt = txt.encode('utf-8')
-        self._xml = HEAD+txt+TAIL
+        self._xml = HEAD.encode('utf-8') + txt + TAIL.encode('utf-8')
 
         # parse the input xml string
         try:
@@ -331,12 +331,12 @@ class XMLParser(object):
     def _expat_error(self, e):
         # correct the column and line-string for our wrapper element
         col = e.offset
-        err = "\n".join(e.args)
-        line = self._xml.split("\n")[e.lineno-1]
+        err = u"\n".join(e.args)
+        line = self._xml.decode('utf-8').split("\n")[e.lineno-1]
         if line.startswith(HEAD):
             line = line[len(HEAD):]
             col -= len(HEAD)
-            err = re.sub(r'column \d+', 'column %i'%col, err)
+            err = re.sub(ur'column \d+', 'column %i'%col, err)
         if line.endswith(TAIL):
             line = line[:-len(TAIL)]
 
@@ -352,16 +352,16 @@ class XMLParser(object):
         # show which ends of the line are truncated
         clipped = [snippet]
         if not line.endswith(snippet):
-            clipped.append('...')
+            clipped.append(u'...')
         if not line.startswith(snippet):
-            clipped.insert(0, '...')
+            clipped.insert(0, u'...')
             col+=3
-        caret = ' '*(col-1) + '^'
+        caret = u' '*(col-1) + u'^'
 
         # raise the exception
-        msg = 'Text: ' + err
-        stack = 'stack: ' + " ".join(['<%s>'%elt.tag for elt in self.stack[1:]]) + ' ...'
-        xmlfail = "\n".join([msg, "".join(clipped), caret, stack])
+        msg = u'Text: ' + err
+        stack = u'stack: ' + u" ".join(['<%s>'%elt.tag for elt in self.stack[1:]]) + u' ...'
+        xmlfail = u"\n".join([msg, u"".join(clipped), caret, stack])
         raise DeviceError(xmlfail)
 
     def log(self, s=None, indent=0):
