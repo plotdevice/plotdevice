@@ -50,6 +50,11 @@ def build_extensions():
     print("Building pyobjc...")
     make('pyobjc')
 
+def install_http_libs(mod_root):
+    """Install the http modules into the Resources/python subdir"""
+    print("Bundling requests module...")
+    make('http', DSTROOT=mod_root) # makefile uses DSTROOT to target install
+
 def install_extensions(ext_root):
     """Install the c-extensions and PyObjC site dir within the plotdevice module"""
     # Make sure the destination folder exists.
@@ -65,16 +70,6 @@ def install_extensions(ext_root):
             raise OSError("Could not copy %s" % lib_name)
     print()
 
-def install_http_libs(mod_root):
-    """Install the http modules into the Resources/python subdir"""
-    if 'ACTION' not in os.environ:
-        # the ACTION env var will be defined for app and py2app builds, in which
-        # case we should install the http libs into Resources/python (for non-GUI
-        # builds, setup.py's install_requires will pull in dependencies automatically)
-        return
-    print("Bundling requests module...")
-    make('http', DSTROOT=mod_root) # makefile uses DSTROOT to target install
-
 if __name__=='__main__':
     if len(sys.argv)>1:
         arg = sys.argv[1]
@@ -85,7 +80,11 @@ if __name__=='__main__':
             mod_root = arg
             ext_root = join(mod_root, 'plotdevice/lib')
             build_extensions()
-            install_http_libs(mod_root)
+            if 'ACTION' in os.environ:
+                # the ACTION env var will be defined for app and py2app builds, in which
+                # case we should install the http libs into Resources/python (for non-GUI
+                # builds, setup.py's install_requires will pull in dependencies automatically)
+                install_http_libs(mod_root)
             install_extensions(ext_root)
     else:
         print("usage: python build.py <destination-path>")

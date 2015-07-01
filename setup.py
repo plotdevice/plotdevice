@@ -7,7 +7,8 @@
 #    app:    builds ./dist/PlotDevice.app using Xcode
 #    py2app: builds the application using py2app
 #    clean:  discard anything already built and start fresh
-#    build:  puts the module in a usable state. after building, you should be able
+#    build:  readies the module for installation
+#    dev:    puts the module in a usable state. after building, you should be able
 #            to run the ./app/plotdevice command line tool within the source distribution.
 #            If you're having trouble building the app, this can be a good way to sanity
 #            check your setup
@@ -191,6 +192,16 @@ class BuildCommand(build_py):
         self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "app/Resources/English.lproj/PlotDeviceScript.xib"])
         self.copy_file("app/Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
 
+class DevCommand(Command):
+    description = "Build plotdevice module and dependencies in build/lib"
+    user_options = []
+    def initialize_options(self):
+        self.cwd = dirname(abspath(__file__))
+    def finalize_options(self):
+        sys.path.append('%s/app/deps'%self.cwd)
+    def run(self):
+        os.environ['ACTION'] = 'build'
+        self.run_command('build_py')
 
 class BuildAppCommand(Command):
     description = "Build PlotDevice.app with xcode"
@@ -359,6 +370,7 @@ if __name__=='__main__':
             'build_py': BuildCommand,
             'dist': DistCommand,
             'sdist': BuildDistCommand,
+            'dev': DevCommand,
         },
     )
 

@@ -11,7 +11,7 @@ VENV_URL = https://pypi.python.org/packages/source/v/virtualenv/$(VENV_SRC)
 
 OBJC_VERSION = 3.0.4
 OBJC_SRC = pyobjc-$(OBJC_VERSION)-$(PY_VERSION).tar.gz
-OBJC_URL = http://plotdevice.io/$(OBJC_SRC)
+OBJC_URL = http://plotdevice.io/wheelhouse/$(OBJC_SRC)
 
 # paths
 BUILD = build
