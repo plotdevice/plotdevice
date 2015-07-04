@@ -43,7 +43,7 @@ FORTYFIVE = "fortyfive"
 class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     """A Bezier provides a wrapper around NSBezierPath."""
     stateAttrs = ('_nsBezierPath', '_fulcrum')
-    opts = ('close',)
+    opts = ('close', 'smooth')
 
     def __init__(self, path=None, **kwargs):
         super(Bezier, self).__init__(**kwargs)
