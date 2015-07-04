@@ -43,7 +43,7 @@ FORTYFIVE = "fortyfive"
 class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     """A Bezier provides a wrapper around NSBezierPath."""
     stateAttrs = ('_nsBezierPath', '_fulcrum')
-    opts = ('close',)
+    opts = ('close', 'smooth')
 
     def __init__(self, path=None, **kwargs):
         super(Bezier, self).__init__(**kwargs)
@@ -197,7 +197,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def poly(self, x, y, radius, sides=4, points=None):
         # if `points` is defined, draw a regularized star, otherwise draw
         # a regular polygon with the given number of `sides`.
-        if points>4:
+        if points and points>4:
             inner = radius * cos(pi*2/points)/cos(pi/points)
             return self.star(x, y, points, inner, radius)
         elif points is not None:

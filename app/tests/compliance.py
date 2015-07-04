@@ -146,7 +146,7 @@ def hsbColors(x, y):
 
 def images(x, y):
     zoom = 0.5
-    w, h = measure(file("icon.png"))
+    w, h = measure(image="icon.png")
     y -= h/2.0*zoom
     bmp = image("icon.png", x,y, width=w/2, plot=False) # half size
     plot(bmp)

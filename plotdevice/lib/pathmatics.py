@@ -18,7 +18,7 @@ def convert_path(ns_path):
 
 try:
     # Faster C versions.
-    from pathmatics import fast_inverse_sqrt, angle, distance, coordinates
+    from cPathmatics import fast_inverse_sqrt, angle, distance, coordinates
     isqrt = inverse_sqrt = fast_inverse_sqrt
 except ImportError:
     from math import degrees, atan2

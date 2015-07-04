@@ -1,18 +1,17 @@
 # encoding: utf-8
 import os
+import sys
 import re
 import json
 import csv
 from contextlib import contextmanager
-from collections import namedtuple
-from codecs import open
-from xml.parsers import expat
 from collections import OrderedDict, defaultdict
-from Foundation import NSAutoreleasePool
-from os.path import abspath, dirname, exists, join
+from os.path import abspath, dirname, exists, join, splitext
 from random import choice, shuffle
-from plotdevice import DeviceError, INTERNAL
-from .http import GET
+
+from Foundation import NSAutoreleasePool
+from plotdevice import DeviceError
+from .readers import read, XMLParser
 
 __all__ = ('grid', 'random', 'shuffled', 'choice', 'ordered', 'order', 'files', 'read', 'autotext', '_copy_attr', '_copy_attrs', 'odict', 'ddict', 'adict')
 
@@ -274,206 +273,6 @@ def autorelease():
     yield
     del pool
 
-### datafile unpackers ###
-
-Element = namedtuple('Element', ['tag', 'attrs', 'parents', 'start', 'end'])
-escapes = [('break','0C'), ('indent', '09'), ('flush', '08')]
-doctype = '<!DOCTYPE plod [ %s ]>' % "".join(['<!ENTITY %s "&#xE0%s;" >'%e for e in escapes])
-HEAD = "%s<%s>" % (doctype, INTERNAL)
-TAIL = "</%s>" % INTERNAL
-class XMLParser(object):
-    _log = 0
-
-    def __init__(self, txt, offset=0):
-        # configure the parsing machinery/callbacks
-        p = expat.ParserCreate()
-        p.StartElementHandler = self._enter
-        p.EndElementHandler = self._leave
-        p.CharacterDataHandler = self._chars
-        self._expat = p
-
-        # shift the range values in .nodes by offset (in case we're appending)
-        self._offset = offset
-
-        # set up state attrs to record the parse results
-        self.stack = []
-        self.cursor = offset
-        self.regions = ddict(list)
-        self.nodes = ddict(list)
-        self.body = []
-
-        # wrap everything in a root node (and include the whitespace entities which shift
-        # the tty escapes into the unicode PUA for the duration)
-        if isinstance(txt, unicode):
-            txt = txt.encode('utf-8')
-        self._xml = HEAD+txt+TAIL
-
-        # parse the input xml string
-        try:
-            self._expat.Parse(self._xml, True)
-        except expat.ExpatError, e:
-            self._expat_error(e)
-
-    @property
-    def text(self):
-        # returns the processed string (with all markup removed and tty-escapes un-shifted)
-        return u"".join(self.body).translate({0xE000+v:v for v in (8,9,12)})
-
-    def _expat_error(self, e):
-        # correct the column and line-string for our wrapper element
-        col = e.offset
-        err = "\n".join(e.args)
-        line = self._xml.split("\n")[e.lineno-1]
-        if line.startswith(HEAD):
-            line = line[len(HEAD):]
-            col -= len(HEAD)
-            err = re.sub(r'column \d+', 'column %i'%col, err)
-        if line.endswith(TAIL):
-            line = line[:-len(TAIL)]
-
-        # move the column range with the typo into `measure` chars
-        measure = 80
-        snippet = line
-        if col>measure:
-            snippet = snippet[col-measure:]
-            col -= col-measure
-        snippet = snippet[:max(col+12, measure-col)]
-        col = min(col, len(snippet))
-
-        # show which ends of the line are truncated
-        clipped = [snippet]
-        if not line.endswith(snippet):
-            clipped.append('...')
-        if not line.startswith(snippet):
-            clipped.insert(0, '...')
-            col+=3
-        caret = ' '*(col-1) + '^'
-
-        # raise the exception
-        msg = 'Text: ' + err
-        stack = 'stack: ' + " ".join(['<%s>'%elt.tag for elt in self.stack[1:]]) + ' ...'
-        xmlfail = "\n".join([msg, "".join(clipped), caret, stack])
-        raise DeviceError(xmlfail)
-
-    def log(self, s=None, indent=0):
-        if not isinstance(s, basestring):
-            if s is None:
-                return self._log
-            self._log = int(s)
-            return
-        if not self._log: return
-        if indent<0: self._log-=1
-        msg = (u'  '*self._log)+(s if s.startswith('<') else repr(s)[1:])
-        print msg.encode('utf-8')
-        if indent>0: self._log+=1
-
-    def _enter(self, name, attrs):
-        parents = tuple(reversed([e.tag for e in self.stack[1:]]))
-        elt = Element(name, attrs, parents, self.cursor, end=None)
-        self.stack.append(elt)
-        self.log(u'<%s>'%(name), indent=1)
-
-    def _chars(self, data):
-        selector = tuple([e.tag for e in self.stack])
-
-        # handle special case where a self-closed tag precedes a '\n'
-        if hasattr(self, '_crlf'):
-            if data == "\n":
-                selector = selector + (self._crlf.tag,)
-            del self._crlf
-
-        self.regions[selector].append(tuple([self.cursor-self._offset, len(data)]))
-        self.cursor += len(data)
-        self.body.append(data)
-        self.log(data)
-
-    def _leave(self, name):
-        node = self.stack.pop()._replace(end=self.cursor)
-
-        # hang onto line-ending self-closed tags so they can be applied to the next '\n' in _chars
-        if node.start==node.end:
-            at = self._expat.CurrentByteIndex
-            if self._xml[at-2:at]=='/>' and self._xml[at:at+1]=="\n":
-                node = node._replace(end=node.start+1)
-                self._crlf = node
-
-        self.nodes[name].append(node)
-        self.log(u'</%s>'%(name), indent=-1)
-
-        # if we've exited the root node, clean up the parsed elements
-        if name == INTERNAL:
-            del self.nodes[INTERNAL]
-            self.nodes = {tag:ordered(elts, 'start') for tag,elts in self.nodes.items()}
-
-
-def csv_reader(pth, encoding, dialect=csv.excel, **kwargs):
-    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
-    with open(pth, 'Urb', encoding) as unicode_csv_data:
-        csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
-                                dialect=dialect, **kwargs)
-        for row in csv_reader:
-            # decode UTF-8 back to Unicode, cell by cell:
-            yield [unicode(cell, 'utf-8') for cell in row]
-
-def csv_dictreader(pth, encoding, dialect=csv.excel, cols=None, dict=dict, **kwargs):
-    if not isinstance(cols, (list, tuple)):
-        cols=None
-    with open(pth, 'Urb', encoding) as unicode_csv_data:
-        csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
-                                dialect=dialect, **kwargs)
-
-        for row in csv_reader:
-            if not cols:
-              cols = [unicode(cell, 'utf-8') for cell in row]
-              continue
-            # decode UTF-8 back to Unicode, cell by cell:
-            yield dict( (col, unicode(cell, 'utf-8')) for (col,cell) in zip(cols,row) )
-
-def csv_dialect(fd):
-    dialect = csv.Sniffer().sniff(fd.read(1024))
-    fd.seek(0)
-    return dialect
-
-def utf_8_encoder(unicode_csv_data):
-    for line in unicode_csv_data:
-        yield line.encode('utf-8')
-
-def read(pth, format=None, encoding='utf-8', cols=None, **kwargs):
-    """Returns the contents of a file into a string or format-dependent data
-    type (with special handling for json and csv files).
-
-    The format will either be inferred from the file extension or can be set
-    explicitly using the `format` arg. Text will be read using the specified
-    `encoding` or default to UTF-8.
-
-    JSON files will be parsed and an appropriate python type will be selected
-    based on the top-level object defined in the file. The optional keyword
-    argument `dict` can be set to `adict` or `odict` if you'd prefer not to use
-    the standard python dictionary for decoded objects.
-
-    CSV files will return a list of rows. By default each row will be an ordered
-    list of column values. If the first line of the file defines column names,
-    you can call read() with cols=True in which case each row will be a dictionary
-    using those names as keys. If the file doesn't define its own column names,
-    you can pass a list of strings as the `cols` parameter.
-    """
-    if re.match(r'https?:', pth):
-        fd, _ = GET(pth)
-    else:
-        fd = file(os.path.expanduser(pth), 'Urb')
-
-    format = format.lstrip('.') if format else pth.rsplit('.',1)[-1]
-    dict_type = kwargs.get('dict', dict)
-
-    if format=='json':
-        return json.load(fd, object_pairs_hook=dict_type, encoding=encoding)
-    elif format=='csv' and not re.match(r'https?:', pth):
-        dialect = csv_dialect(pth)
-        if cols:
-            return list(csv_dictreader(pth, encoding, dialect=dialect, cols=cols, dict=dict_type))
-        return list(csv_reader(pth, encoding, dialect=dialect))
-    else:
-        return fd.read().decode(encoding)
 
 ### module data dir ###
 

@@ -21,7 +21,7 @@ import signal
 from site import addsitedir
 from math import floor, ceil
 from os.path import dirname, abspath, exists, join
-from codecs import open
+from io import open
 
 STDOUT = sys.stdout
 STDERR = sys.stderr
@@ -30,7 +30,7 @@ OPTS = json.loads(sys.stdin.readline())
 MODE = 'headless' if OPTS['export'] else 'windowed'
 
 addsitedir(OPTS['site']) # make sure the plotdevice module is accessible
-from plotdevice.run import objc, encoding # loads pyobjc as a side effect...
+from plotdevice.run import objc, encoded # loads pyobjc as a side effect...
 from plotdevice.lib.cocoa import *
 from plotdevice.util import rsrc_path
 from plotdevice.gui import ScriptController
@@ -170,9 +170,8 @@ class ConsoleScript(ScriptController):
     @property
     def unicode_src(self):
         """Read in our script file's contents (honoring its `# encoding: ...` if present)"""
-        src = file(self.path).read()
-        enc = encoding(src) or 'utf-8'
-        return src.decode(enc)
+        enc = encoded(self.path)
+        return open(self.path, encoding=enc).read()
 
     def scriptedRun(self):
         # this is the first run that gets triggered at invocation

@@ -7,7 +7,9 @@
 #    app:    builds ./dist/PlotDevice.app using Xcode
 #    py2app: builds the application using py2app
 #    clean:  discard anything already built and start fresh
-#    build:  puts the module in a usable state. after building, you should be able
+#    build:  readies the module for installation
+#    test:   run unit tests and generate the file "details.html" with the test output
+#    dev:    puts the module in a usable state. after building, you should be able
 #            to run the ./app/plotdevice command line tool within the source distribution.
 #            If you're having trouble building the app, this can be a good way to sanity
 #            check your setup
@@ -19,11 +21,11 @@
 # - Sparkle.framework (auto-downloaded only for `dist` builds)
 
 from __future__ import print_function
-import os, sys, json
+import os, sys, json, re
 from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
 from pkg_resources import DistributionNotFound
-from os.path import join, exists, dirname, basename, abspath
+from os.path import join, exists, dirname, basename, abspath, getmtime
 import plotdevice
 
 
@@ -136,6 +138,9 @@ def timestamp():
     now = utc.localize(datetime.utcnow()).astimezone(timezone('US/Eastern'))
     return now.strftime("%a, %d %b %Y %H:%M:%S %z")
 
+def stale(dst, src):
+  if not exists(dst) or getmtime(dst) < getmtime(src):
+    yield dst, src
 
 ## Build Commands ##
 
@@ -151,11 +156,14 @@ class CleanCommand(Command):
         os.system('rm -rf ./build ./dist')
         os.system('rm -rf ./app/deps/*/build')
         os.system('rm -rf plotdevice.egg-info MANIFEST.in PKG')
+        os.system('find plotdevice -name .DS_Store -exec rm {} \;')
+        os.system('find plotdevice -name \*.pyc -exec rm {} \;')
+        os.system('find plotdevice -name __pycache__ -type d -prune -exec rmdir {} \;')
 
 from setuptools.command.sdist import sdist
 class BuildDistCommand(sdist):
     def finalize_options(self):
-        with file('MANIFEST.in','w') as f:
+        with open('MANIFEST.in','w') as f:
             tracked, _, _ = gosub('git ls-tree --full-tree --name-only -r HEAD')
             for line in tracked.splitlines()[1:]:
                 f.write("include %s\n"%line)
@@ -169,21 +177,52 @@ class BuildDistCommand(sdist):
         remove_tree('plotdevice.egg-info')
         os.unlink('MANIFEST.in')
 
-from distutils.command.build_py import build_py
+try:
+    from distutils.command.build_py import build_py_2to3 as build_py
+except ImportError:
+    from distutils.command.build_py import build_py
 class BuildCommand(build_py):
     def run(self):
-        # first let the real build_py routine do its thing
-        build_py.run(self)
-
-        # then compile the extensions into the just-built module
+        # compile the dependencies into build/lib/plotdevice/lib...
         self.spawn([sys.executable, 'app/deps/build.py', abspath(self.build_lib)])
+
+        # ...then let the real build_py routine do its thing
+        build_py.run(self)
 
         # include some ui resources for running a script from the command line
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
         self.mkpath(rsrc_dir)
+
         self.copy_file("app/Resources/colors.json", '%s/colors.json'%rsrc_dir)
-        self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "app/Resources/English.lproj/PlotDeviceScript.xib"])
         self.copy_file("app/Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
+        for dst, src in stale('%s/viewer.nib'%rsrc_dir, src="app/Resources/English.lproj/PlotDeviceScript.xib"):
+            self.spawn(['/usr/bin/ibtool','--compile', dst, src])
+
+class DevCommand(Command):
+    description = "Build plotdevice module and dependencies in build/lib"
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+        os.environ['ACTION'] = 'build'
+        self.run_command('build_py')
+
+class TestCommand(Command):
+    description = "Run unit tests"
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+        try:
+            import plotdevice.lib
+        except ImportError:
+            unbuilt = 'Build the c-extensions with "python setup.py dev" before running tests.'
+            raise ImportError(unbuilt)
+        self.spawn([sys.executable, '-m', 'tests'])
 
 class BuildAppCommand(Command):
     description = "Build PlotDevice.app with xcode"
@@ -194,11 +233,20 @@ class BuildAppCommand(Command):
     def finalize_options(self):
         # customize the libpython paths based on the currently running interpreter
         from sysconfig import get_config_var
-        with file('app/python.xcconfig', 'w') as f:
+
+        macros = ['PYTHON_BIN="%s"'%sys.executable, 'PY3K=1' if sys.version_info[0] >=3 else '']
+        py_version = "GCC_PREPROCESSOR_DEFINITIONS = $(inherited) PY3K=1\n" if sys.version_info[0] >=3 else ''
+
+        re_cellarpath = re.compile(r'(.*)/Cellar/(python3?)/[^\/]+(.*)')
+        py_lib = re_cellarpath.sub(r'\1/opt/\2\3', get_config_var('LIBPL'))
+        py_inc = re_cellarpath.sub(r'\1/opt/\2\3', get_config_var('INCLUDEPY'))
+
+        with open('app/python.xcconfig', 'w') as f:
             f.writelines([ "PYTHON = %s\n" % sys.executable,
-                           "LIBRARY_SEARCH_PATHS = $(inherited) %s\n" % get_config_var('LIBPL'),
-                           "HEADER_SEARCH_PATHS = $(inherited) %s\n" % get_config_var('INCLUDEPY'),
-                           "OTHER_LDFLAGS = $(inherited) -lpython%i.%i\n" % sys.version_info[:2] ])
+                           "LIBRARY_SEARCH_PATHS = $(inherited) %s\n" % py_lib,
+                           "HEADER_SEARCH_PATHS = $(inherited) %s\n" % py_inc,
+                           "OTHER_LDFLAGS = $(inherited) -lpython%i.%i\n" % sys.version_info[:2],
+                           "GCC_PREPROCESSOR_DEFINITIONS = $(inherited) %s\n" % " ".join(macros).strip() ])
 
     def run(self):
         self.spawn(['xcodebuild'])
@@ -216,6 +264,8 @@ try:
         def finalize_options(self):
             self.verbose=0
             build_py2app.finalize_options(self)
+            os.environ['ACTION'] = 'build' # flag for app/deps/build.py
+
         def run(self):
             build_py2app.run(self)
             if self.dry_run:
@@ -228,13 +278,11 @@ try:
             # set up internal paths and ensure destination dirs exist
             RSRC = self.resdir
             BIN = join(dirname(RSRC), 'SharedSupport')
-            MODULE = join(self.bdist_base, 'lib/plotdevice')
-            PY = join(RSRC, 'python')
-            for pth in BIN, PY:
-                self.mkpath(pth)
+            LIB = join(RSRC, 'python')
+            MODULES = join(self.bdist_base, 'lib')
 
             # install the module in Resources/python
-            self.spawn(['/usr/bin/ditto', MODULE, join(PY, 'plotdevice')])
+            self.spawn(['/usr/bin/ditto', MODULES, LIB])
 
             # discard the eggery-pokery
             remove_tree(join(RSRC,'lib'), dry_run=self.dry_run)
@@ -242,6 +290,7 @@ try:
             os.unlink(join(RSRC,'site.pyc'))
 
             # place the command line tool in SharedSupport
+            self.mkpath(BIN)
             self.copy_file("app/plotdevice", BIN)
 
             # success!
@@ -287,7 +336,7 @@ class DistCommand(Command):
         )
 
         # Download Sparkle (if necessary) and copy it into the bundle
-        ORIG = 'app/deps/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
+        ORIG = 'app/deps/vendor/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
         SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
         if not exists(ORIG):
             self.mkpath(dirname(ORIG))
@@ -305,7 +354,7 @@ class DistCommand(Command):
         self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
 
         # write out the release metadata for plotdevice-site to consume/merge
-        with file('dist/release.json','w') as f:
+        with open('dist/release.json','w') as f:
             release = dict(zipfile=basename(ZIP), bytes=os.path.getsize(ZIP),
                            version=VERSION, revision=last_commit(),
                            timestamp=timestamp())
@@ -332,7 +381,8 @@ if __name__=='__main__':
         url = URL,
         license = LICENSE,
         classifiers = CLASSIFIERS,
-        packages = find_packages(),
+        packages = find_packages(exclude=['tests']),
+        install_requires = ['requests', 'cachecontrol', 'lockfile'],
         scripts = ["app/plotdevice"],
         zip_safe=False,
         cmdclass={
@@ -341,6 +391,8 @@ if __name__=='__main__':
             'build_py': BuildCommand,
             'dist': DistCommand,
             'sdist': BuildDistCommand,
+            'dev': DevCommand,
+            'test': TestCommand,
         },
     )
 
@@ -369,7 +421,8 @@ if __name__=='__main__':
             cmdclass={
                 'build_py': BuildCommand,
                 'py2app': BuildPy2AppCommand,
-            }
+            },
+            install_requires=[]
         ))
 
     # begin the build process

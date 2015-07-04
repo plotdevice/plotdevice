@@ -3,6 +3,7 @@ import os
 import re
 import json
 import cgi
+from io import open
 from objc import super
 from pprint import pprint
 from time import time
@@ -59,7 +60,7 @@ class EditorView(NSView):
         self.webview.setHidden_(True)
 
         html = bundle_path(rsrc='ui/editor.html')
-        ui = file(html).read().decode('utf-8')
+        ui = open(html, encoding='utf-8').read()
         baseurl = NSURL.fileURLWithPath_(os.path.dirname(html))
         self.webview.mainFrame().loadHTMLString_baseURL_(ui, baseurl)
 

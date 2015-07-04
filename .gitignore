@@ -2,8 +2,8 @@
 *.pyc
 build/
 dist/
-app/deps/Sparkle*
-app/deps/PyObjC/*.tar.gz
+app/deps/vendor/Sparkle*
+app/deps/vendor/*.tar.gz
 
 # cds garbage
 related/
@@ -14,3 +14,8 @@ speedtrials.py
 # Xcode user files
 project.xcworkspace
 xcuserdata
+
+# unit tests
+tests/_out
+tests/_diff
+details.html

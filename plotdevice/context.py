@@ -1506,7 +1506,7 @@ class Context(object):
             self._thetamode = mode
         return self._thetamode
 
-    def measure(self, obj, width=None, height=None, **kwargs):
+    def measure(self, obj=None, width=None, height=None, **kwargs):
         """Returns a Size tuple for graphics objects, strings, or file objects
 
         When called with a string, the size will reflect the current font() settings
@@ -1520,8 +1520,8 @@ class Context(object):
 
         if hasattr(obj, 'metrics'):
             return obj.metrics
-        elif isinstance(obj, file):
-            return Image(obj.name).size
+        elif kwargs.get('image'):
+            return Image(kwargs['image'], width=width, height=height).size
         elif isinstance(obj, (Bezier, Image)):
             return obj.bounds.size
         elif isinstance(obj, Canvas):

@@ -90,6 +90,10 @@ class Pair(object):
     def __floordiv__(self, other): return [a // b for a,b in zip(self, other)]
     @paired
     def __rfloordiv__(self, other): return [b // a for a,b in zip(self, other)]
+    @paired
+    def __truediv__(self, other):  return [a / b for a,b in zip(self, other)]
+    @paired
+    def __rtruediv__(self, other):  return [a / b for a,b in zip(self, other)]
 
     def copy(self):
         return self.__class__(self)

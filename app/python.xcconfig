@@ -2,3 +2,4 @@ PYTHON = /usr/bin/python
 LIBRARY_SEARCH_PATHS = $(inherited) /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config
 HEADER_SEARCH_PATHS = $(inherited) /System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7
 OTHER_LDFLAGS = $(inherited) -lpython2.7
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) PYTHON_BIN="/usr/bin/python"

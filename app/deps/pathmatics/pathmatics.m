@@ -715,29 +715,15 @@ static PyMethodDef PathmaticsMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-PyMODINIT_FUNC
-initcPathmatics(void)
-{
+#include "../compat.h"
+MOD_INIT(cPathmatics){
     PyObject *m;
 
-    m = Py_InitModule("cPathmatics", PathmaticsMethods);
+    MOD_DEF(m, "cPathmatics", "Fast bezier math routines", PathmaticsMethods)
 
     PathmaticsError = PyErr_NewException("cPathmatics.error", NULL, NULL);
     Py_INCREF(PathmaticsError);
     PyModule_AddObject(m, "error", PathmaticsError);
-}
 
-int
-main(int argc, char *argv[])
-{
-    /* Pass argv[0] to the Python interpreter */
-    Py_SetProgramName(argv[0]);
-
-    /* Initialize the Python interpreter.  Required. */
-    Py_Initialize();
-
-    /* Add a static module */
-    initcPathmatics();
-
-    return 0;
+    return MOD_SUCCESS_VAL(m);
 }
