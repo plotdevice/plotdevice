@@ -8,6 +8,7 @@
 #    py2app: builds the application using py2app
 #    clean:  discard anything already built and start fresh
 #    build:  readies the module for installation
+#    test:   run unit tests and generate the file "details.html" with the test output
 #    dev:    puts the module in a usable state. after building, you should be able
 #            to run the ./app/plotdevice command line tool within the source distribution.
 #            If you're having trouble building the app, this can be a good way to sanity
@@ -24,7 +25,7 @@ import os, sys, json, re
 from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
 from pkg_resources import DistributionNotFound
-from os.path import join, exists, dirname, basename, abspath
+from os.path import join, exists, dirname, basename, abspath, getmtime
 import plotdevice
 
 
@@ -137,6 +138,9 @@ def timestamp():
     now = utc.localize(datetime.utcnow()).astimezone(timezone('US/Eastern'))
     return now.strftime("%a, %d %b %Y %H:%M:%S %z")
 
+def stale(dst, src):
+  if not exists(dst) or getmtime(dst) < getmtime(src):
+    yield dst, src
 
 ## Build Commands ##
 
@@ -188,20 +192,37 @@ class BuildCommand(build_py):
         # include some ui resources for running a script from the command line
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
         self.mkpath(rsrc_dir)
+
         self.copy_file("app/Resources/colors.json", '%s/colors.json'%rsrc_dir)
-        self.spawn(['/usr/bin/ibtool','--compile', '%s/viewer.nib'%rsrc_dir, "app/Resources/English.lproj/PlotDeviceScript.xib"])
         self.copy_file("app/Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
+        for dst, src in stale('%s/viewer.nib'%rsrc_dir, src="app/Resources/English.lproj/PlotDeviceScript.xib"):
+            self.spawn(['/usr/bin/ibtool','--compile', dst, src])
 
 class DevCommand(Command):
     description = "Build plotdevice module and dependencies in build/lib"
     user_options = []
     def initialize_options(self):
-        self.cwd = dirname(abspath(__file__))
+        pass
     def finalize_options(self):
-        sys.path.append('%s/app/deps'%self.cwd)
+        pass
     def run(self):
         os.environ['ACTION'] = 'build'
         self.run_command('build_py')
+
+class TestCommand(Command):
+    description = "Run unit tests"
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+        try:
+            import plotdevice.lib
+        except ImportError:
+            unbuilt = 'Build the c-extensions with "python setup.py dev" before running tests.'
+            raise ImportError(unbuilt)
+        self.spawn([sys.executable, '-m', 'tests'])
 
 class BuildAppCommand(Command):
     description = "Build PlotDevice.app with xcode"
@@ -360,7 +381,7 @@ if __name__=='__main__':
         url = URL,
         license = LICENSE,
         classifiers = CLASSIFIERS,
-        packages = find_packages(),
+        packages = find_packages(exclude=['tests']),
         install_requires = ['requests', 'cachecontrol', 'lockfile'],
         scripts = ["app/plotdevice"],
         zip_safe=False,
@@ -371,6 +392,7 @@ if __name__=='__main__':
             'dist': DistCommand,
             'sdist': BuildDistCommand,
             'dev': DevCommand,
+            'test': TestCommand,
         },
     )
 
