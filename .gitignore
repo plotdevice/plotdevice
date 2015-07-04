@@ -14,3 +14,8 @@ speedtrials.py
 # Xcode user files
 project.xcworkspace
 xcuserdata
+
+# unit tests
+tests/_out
+tests/_diff
+details.html
