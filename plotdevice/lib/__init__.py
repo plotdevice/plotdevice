@@ -10,7 +10,7 @@ try:
     import io, pathmatics, foundry # make sure the c-extensions are accessible
 except ImportError:
     missing = "Missing C extensions (cPathmatics.so & friends) in %s" % abspath(dirname(__file__))
-    raise RuntimeError(missing)
+    raise ImportError(missing)
 
 # allow Libraries to request a _ctx reference
 def register(module):
