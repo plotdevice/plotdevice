@@ -7,7 +7,7 @@ from . import render_diffs
 try:
   import plotdevice.lib
 except (ImportError, RuntimeError) as e:
-    unbuilt = 'Build the c-extensions with "python setup.py dev" before running tests.'
+    unbuilt = 'Build the c-extensions with "python setup.py build" before running tests.'
     raise ImportError(unbuilt)
 
 

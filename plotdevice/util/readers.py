@@ -201,7 +201,7 @@ try:
 except ImportError:
     class Decoy(object):
         def get(self, url):
-            unsupported = 'could not find the "requests" library (try running "python setup.py dev" first)'
+            unsupported = 'could not find the "requests" library (try running "python setup.py build" first)'
             raise RuntimeError(unsupported)
     HTTP = Decoy()
 

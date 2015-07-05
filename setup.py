@@ -7,9 +7,8 @@
 #    app:    builds ./dist/PlotDevice.app using Xcode
 #    py2app: builds the application using py2app
 #    clean:  discard anything already built and start fresh
-#    build:  readies the module for installation
 #    test:   run unit tests and generate the file "details.html" with the test output
-#    dev:    puts the module in a usable state. after building, you should be able
+#    build:  puts the module in a usable state. after building, you should be able
 #            to run the ./app/plotdevice command line tool within the source distribution.
 #            If you're having trouble building the app, this can be a good way to sanity
 #            check your setup
@@ -185,6 +184,10 @@ except ImportError:
     from distutils.command.build_py import build_py
 class BuildCommand(build_py):
     def run(self):
+        # if 'build' was called explicitly, flag that requests etc. should be fetched
+        if 'install' not in sys.argv:
+            os.environ['ACTION'] = 'build'
+
         # compile the dependencies into build/lib/plotdevice/lib...
         self.spawn([sys.executable, 'app/deps/build.py', abspath(self.build_lib)])
 
@@ -199,17 +202,6 @@ class BuildCommand(build_py):
         self.copy_file("app/Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
         for dst, src in stale('%s/viewer.nib'%rsrc_dir, src="app/Resources/English.lproj/PlotDeviceScript.xib"):
             self.spawn(['/usr/bin/ibtool','--compile', dst, src])
-
-class DevCommand(Command):
-    description = "Build plotdevice module and dependencies in build/lib"
-    user_options = []
-    def initialize_options(self):
-        pass
-    def finalize_options(self):
-        pass
-    def run(self):
-        os.environ['ACTION'] = 'build'
-        self.run_command('build_py')
 
 class TestCommand(Command):
     description = "Run unit tests"
@@ -391,7 +383,6 @@ if __name__=='__main__':
             'build_py': BuildCommand,
             'dist': DistCommand,
             'sdist': BuildDistCommand,
-            'dev': DevCommand,
             'test': TestCommand,
         },
     )
