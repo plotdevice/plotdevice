@@ -355,7 +355,7 @@ class TypographyTests(PlotDeviceTestCase):
         markup = "<it>Bip <bf>Blip</bf></it>"
         stylesheet("it", italic=True)
         stylesheet("bf", weight='black')
-        with font("Georgia", 22):
+        with font("Baskerville", 22):
             text(20,40, xml=markup)
         with font("Avenir", 18), fill('red'):
             text(20,80, xml=markup)

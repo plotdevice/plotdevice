@@ -41,7 +41,7 @@ class DrawingTests(PlotDeviceTestCase):
         # tut/Bezier_Paths (4)
         size(334, 87)
         font("Dolly", "bold", 100)
-        path = textpath("broken", 200,200)
+        path = textpath("broken", 0,80)
         
         curves = []
         for curve in path:
@@ -51,7 +51,8 @@ class DrawingTests(PlotDeviceTestCase):
                 curve.y += 5
             curves.append(curve)
         
-        bezier(curves)
+        with stroke(0), nofill():
+            bezier(curves)
 
     @reference('drawing/pathmatics-contours.png')
     def test_pathmatics_contours(self):
@@ -199,7 +200,16 @@ class DrawingTests(PlotDeviceTestCase):
         # ref/Canvas/commands/background()
         size(125, 125)
         background(.5)
-        rect(10, 10, 50, 50)
+        rect(10,10, 50,50)
+
+    @reference('drawing/clear.png')
+    def test_clear(self):
+        # ref/Canvas/commands/clear()
+        size(125, 125)
+        r = rect(0,0, 100,10) # add a rectangle
+        t = poly(50,50, 25)   # add a square
+        c = arc(125,125, 50)  # add a circle
+        clear(r, c) # remove the rectangle & circle
 
     @reference('drawing/plot-delay.png')
     def test_plot_delay(self):
@@ -342,7 +352,7 @@ class DrawingTests(PlotDeviceTestCase):
         path = findpath(points)
         drawpath(path)
 
-    @reference('drawing/fill.jpg')
+    @reference('drawing/fill.png')
     def test_fill(self):
         # ref/Line+Color/commands/fill()
         size(125, 125)
