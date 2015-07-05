@@ -4,6 +4,13 @@ from glob import glob
 from pdb import set_trace as tron
 from . import render_diffs
 
+try:
+  import plotdevice.lib
+except (ImportError, RuntimeError) as e:
+    unbuilt = 'Build the c-extensions with "python setup.py dev" before running tests.'
+    raise ImportError(unbuilt)
+
+
 cats = [basename(m).replace('.py','') for m in glob('%s/[a-z]*py'%dirname(__file__))]
 mods = [__import__(c, globals(), locals(), ['suite']) for c in cats]
 
