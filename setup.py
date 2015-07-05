@@ -47,8 +47,10 @@ CLASSIFIERS = (
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python :: 2",
     "Programming Language :: Python :: 2.7",
-    "Programming Language :: Python :: 2 :: Only",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.4",
     "Topic :: Artistic Software",
     "Topic :: Multimedia :: Graphics",
     "Topic :: Multimedia :: Graphics :: Editors :: Vector-Based",
@@ -217,12 +219,10 @@ class TestCommand(Command):
     def finalize_options(self):
         pass
     def run(self):
-        try:
-            import plotdevice.lib
-        except ImportError:
-            unbuilt = 'Build the c-extensions with "python setup.py dev" before running tests.'
-            raise ImportError(unbuilt)
-        self.spawn([sys.executable, '-m', 'tests'])
+        from subprocess import call
+        test_cmd = [sys.executable, '-m', 'tests']
+        print(" ".join(test_cmd))
+        call(test_cmd)
 
 class BuildAppCommand(Command):
     description = "Build PlotDevice.app with xcode"

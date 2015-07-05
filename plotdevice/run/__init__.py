@@ -11,8 +11,7 @@ try:
 
     # add our embedded PyObjC site-dir to the sys.path (and remove any conflicts)
     map(sys.path.remove, filter(lambda p:p.endswith('PyObjC'), sys.path))
-    if exists(objc_dir):
-        site.addsitedir(objc_dir)
+    site.addsitedir(objc_dir)
 
     # test the sys.path by attempting to load a PyObjC submodule
     import objc

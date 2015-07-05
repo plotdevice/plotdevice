@@ -1,11 +1,13 @@
 # encoding: utf-8
 import os, sys, re
 from operator import attrgetter
+PY2 = sys.version_info[0] == 2
 
 # files & io
 from io import open, StringIO, BytesIO
 from os.path import abspath, dirname, exists, join, splitext
 from plotdevice import DeviceError, INTERNAL
+text_type = str if not PY2 else unicode
 
 # data formats
 import json, csv
@@ -14,33 +16,8 @@ from codecs import iterencode, iterdecode
 from xml.parsers import expat
 
 # http
-import requests
 from urlparse import urlparse
 from Foundation import NSDateFormatter, NSLocale, NSTimeZone, NSDate
-from cachecontrol import CacheControl, CacheControlAdapter
-from cachecontrol.caches import FileCache
-from cachecontrol.heuristics import LastModified
-
-PY2 = sys.version_info[0] == 2
-text_type = str if not PY2 else unicode
-
-### HTTP utils ###
-
-cache_dir = '%s/Library/Caches/PlotDevice'%os.environ['HOME']
-HTTP = CacheControl(requests.Session(), cache=FileCache(cache_dir), heuristic=LastModified())
-
-_nsdf = NSDateFormatter.alloc().init()
-_nsdf.setLocale_(NSLocale.alloc().initWithLocaleIdentifier_("en_US_POSIX"))
-_nsdf.setDateFormat_("EEE',' dd' 'MMM' 'yyyy HH':'mm':'ss zzz")
-_nsdf.setTimeZone_(NSTimeZone.timeZoneForSecondsFromGMT_(0))
-
-def last_modified(resp):
-    """Return the last modified date as a unix time_t"""
-    last_mod = _nsdf.dateFromString_(resp.headers.get('Last-Modified'))
-    if not last_mod:
-        last_mod = NSDate.date()
-    return last_mod.timeIntervalSince1970()
-
 
 
 ### XML handling ###
@@ -211,6 +188,45 @@ def csv_dialect(fd):
     return csv.Sniffer().sniff(snippet)
 
 
+### HTTP utils ###
+
+try:
+    import requests
+    from cachecontrol import CacheControl, CacheControlAdapter
+    from cachecontrol.caches import FileCache
+    from cachecontrol.heuristics import LastModified
+
+    cache_dir = '%s/Library/Caches/PlotDevice'%os.environ['HOME']
+    HTTP = CacheControl(requests.Session(), cache=FileCache(cache_dir), heuristic=LastModified())
+except ImportError:
+    class Decoy(object):
+        def get(self, url):
+            unsupported = 'could not find the "requests" library (try running "python setup.py dev" first)'
+            raise RuntimeError(unsupported)
+    HTTP = Decoy()
+
+def binaryish(content, format):
+    bin_types = ('pdf','eps','png','jpg','jpeg','gif','tiff','tif','zip','tar','gz')
+    bin_formats = ('raw','bytes','img','image')
+    if any(b in content for b in bin_types):
+        return True
+    if format:
+        return any(b in format for b in bin_types+bin_formats)
+    return False
+
+_nsdf = NSDateFormatter.alloc().init()
+_nsdf.setLocale_(NSLocale.alloc().initWithLocaleIdentifier_("en_US_POSIX"))
+_nsdf.setDateFormat_("EEE',' dd' 'MMM' 'yyyy HH':'mm':'ss zzz")
+_nsdf.setTimeZone_(NSTimeZone.timeZoneForSecondsFromGMT_(0))
+
+def last_modified(resp):
+    """Return the last modified date as a unix time_t"""
+    last_mod = _nsdf.dateFromString_(resp.headers.get('Last-Modified'))
+    if not last_mod:
+        last_mod = NSDate.date()
+    return last_mod.timeIntervalSince1970()
+
+
 ### File/URL Reader ###
 
 def read(pth, format=None, encoding=None, cols=None, **kwargs):
@@ -279,13 +295,4 @@ def read(pth, format=None, encoding=None, cols=None, **kwargs):
         return list(csv_rows(fd, dialect=dialect))
     else:
         return fd.read()
-
-def binaryish(content, format):
-    bin_types = ('pdf','eps','png','jpg','jpeg','gif','tiff','tif','zip','tar','gz')
-    bin_formats = ('raw','bytes','img','image')
-    if any(b in content for b in bin_types):
-        return True
-    if format:
-        return any(b in format for b in bin_types+bin_formats)
-    return False
 
