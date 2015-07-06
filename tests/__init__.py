@@ -40,7 +40,7 @@ def render_images(ctx, dst):
 
   # make sure the diff & output dirs exist
   for subdir in out, diff:
-    img_dir = dirname(out)
+    img_dir = dirname(subdir)
     if not isdir(img_dir): os.makedirs(img_dir)
 
   # write the generated image to the output dir
