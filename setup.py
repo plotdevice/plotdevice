@@ -157,6 +157,7 @@ class CleanCommand(Command):
         os.system('rm -rf ./build ./dist')
         os.system('rm -rf ./app/deps/*/build')
         os.system('rm -rf plotdevice.egg-info MANIFEST.in PKG')
+        os.system('rm -rf ./tests/_out ./tests/_diff ./details.html')
         os.system('find plotdevice -name .DS_Store -exec rm {} \;')
         os.system('find plotdevice -name \*.pyc -exec rm {} \;')
         os.system('find plotdevice -name __pycache__ -type d -prune -exec rmdir {} \;')
