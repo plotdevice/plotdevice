@@ -51,6 +51,9 @@ class PlotDeviceDocument(NSDocument):
     def setFileURL_(self, url):
         self.stationery = None
         super(PlotDeviceDocument, self).setFileURL_(url)
+        # make sure the vm knows about saved/renamed files
+        if self.script and self.path:
+            self.script.path = self.path
 
     def writeToURL_ofType_error_(self, url, tp, err):
         path = url.fileSystemRepresentation()
@@ -122,10 +125,12 @@ class ScriptController(NSWindowController):
 
     ## Properties
 
-    @property
-    def path(self):
-        # the export widgets really want this...
+    # .path
+    def _get_path(self):
         return self.vm.path
+    def _set_path(self, pth):
+        self.vm.path = pth
+    path = property(_get_path, _set_path)
 
     # .source
     def _get_source(self):

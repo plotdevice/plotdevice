@@ -124,6 +124,10 @@ class Sandbox(object):
         # Initialize the namespace
         self.context._resetEnvironment()
 
+        # add a pathname (if the script exists on the filesystem)
+        if self._path:
+            self.namespace['__file__'] = self._path
+
         # start off with all systems nominal (fingers crossed)
         self.crashed = False
         result = Outcome(True, [])
