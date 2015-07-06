@@ -447,6 +447,8 @@ class Context(object):
         """
         sides = kwargs.pop('sides', 4)
         points = kwargs.pop('points', None)
+        if 'radius' in kwargs:
+            coords = coords + (kwargs.pop('radius'),)
         (x,y), radius = parse_coords(coords, [Point,float])
 
         with self._active_path(kwargs) as p:
@@ -468,6 +470,8 @@ class Context(object):
         rng = kwargs.pop('range', None)
         ccw = kwargs.pop('ccw', False)
         close = kwargs.pop('close', False)
+        if 'radius' in kwargs:
+            coords = coords + (kwargs.pop('radius'),)
         (x,y), radius = parse_coords(coords, [Point,float])
 
         with self._active_path(kwargs) as p:
