@@ -561,7 +561,7 @@ class Context(object):
         except IndexError, e:
             raise DeviceError, "pop: too many pops!"
 
-    def transform(self, mode=None):
+    def transform(self, mode=None, matrix=None):
         """Change the transform mode or begin a `with`-statement-scoped set of transformations
 
         Transformation Modes
@@ -582,24 +582,42 @@ class Context(object):
         Note that changing the mode does *not* affect the transformation matrix itself, just
         the origin-point that subsequently drawn objects will use when applying it.
 
+        Transformation Matrices
+
+        In addition to changing the mode, the transform() command also allows you to
+        overwrite the underlying transformation matrix with a new set of values. Pass a
+        6-element list or tuple of the form [m11, m21, m12, m22, tX, tY] as the `matrix`
+        argument to update the current transform. Note that you can omit the `mode` arg
+        when setting a new matrix if you don't want the transformation origin to change.
+
+        See Apple's docs for all the math-y details:
+            http://tinyurl.com/cocoa-drawing-guide-transforms
+
         Transformation Context Manager
 
         When used as part of a `with` statement, the transform() command will ensure the
         mode and transformations applied during the indented code-block are reverted to their
         previous state once the block completes.
         """
+        if matrix is None and isinstance(mode, (list, tuple, NSAffineTransformStruct)):
+            mode, matrix = None, mode
 
         if mode not in (CORNER, CENTER, None):
             badmode = "transform: mode must be CORNER or CENTER"
             raise DeviceError(badmode)
-        rollback = {"_transform":self._transform.copy(),
-                    "_transformmode":self._transformmode}
+
+        rollback = {"_transformmode":self._transformmode,
+                    "_transform":self._transform.copy()}
+
         if mode:
             self._transformmode = mode
 
-        gworld = self._transform.copy()
-        gworld._rollback = rollback
-        return gworld
+        if matrix:
+            self._transform = Transform(matrix)
+
+        xf = self._transform.copy()
+        xf._rollback = rollback
+        return xf
 
     def reset(self):
         """Discard any accumulated transformations from prior calls to translate, scale, rotate, or skew"""
