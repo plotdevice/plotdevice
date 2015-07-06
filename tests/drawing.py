@@ -9,22 +9,22 @@ class DrawingTests(PlotDeviceTestCase):
         # tut/Bezier_Paths (1)
         size(180, 180)
         font("Dolly", "bold", 300)
-        path = textpath("e", 200, 200)
-        bezier(path)
+        path = textpath("e", 10, 150)
+        bezier(path, stroke='black', fill=None)
 
     @reference('drawing/paths-transform-post.png')
     def test_paths_transform_post(self):
         # tut/Bezier_Paths (2)
         size(180, 180)
         font("Dolly", "bold", 300)
-        path = textpath("e", 200, 200)
+        path = textpath("e", 10, 150)
         curves = []
         for curve in path:
             curve.y += 20 # nudge the point downward
             curves.append(curve)
         
         # draw a new bezier (built from our list of Curve objects)
-        bezier(curves)
+        bezier(curves, stroke='black', fill=None)
 
     @reference('drawing/paths-broken.jpg')
     def test_paths_broken(self):
@@ -91,8 +91,8 @@ class DrawingTests(PlotDeviceTestCase):
     def test_paths_flat_union(self):
         # tut/Bezier_Paths (7)
         size(175, 109)
-        path1 = oval(40, 40, 80, 80, plot=False)
-        path2 = oval(90, 40, 80, 80, plot=False)
+        path1 = arc( 50,50, 40, plot=False)
+        path2 = arc(100,50, 40, plot=False)
         compound = path1.union(path2)
         with stroke(0), nofill():
             bezier(compound)
@@ -101,8 +101,8 @@ class DrawingTests(PlotDeviceTestCase):
     def test_paths_flat_intersect(self):
         # tut/Bezier_Paths (8)
         size(175, 109)
-        path1 = oval(40, 40, 80, 80, plot=False)
-        path2 = oval(90, 40, 80, 80, plot=False)
+        path1 = arc( 50,50, 40, plot=False)
+        path2 = arc(100,50, 40, plot=False)
         compound = path1.intersect(path2)
         with stroke(0), nofill():
             bezier(compound)
@@ -111,8 +111,8 @@ class DrawingTests(PlotDeviceTestCase):
     def test_paths_flat_difference(self):
         # tut/Bezier_Paths (9)
         size(175, 109)
-        path1 = oval(40, 40, 80, 80, plot=False)
-        path2 = oval(90, 40, 80, 80, plot=False)
+        path1 = arc( 50,50, 40, plot=False)
+        path2 = arc(100,50, 40, plot=False)
         compound = path1.difference(path2)
         with stroke(0), nofill():
             bezier(compound)
@@ -121,8 +121,8 @@ class DrawingTests(PlotDeviceTestCase):
     def test_paths_flat_xor(self):
         # tut/Bezier_Paths (10)
         size(175, 109)
-        path1 = oval(40, 40, 80, 80, plot=False)
-        path2 = oval(90, 40, 80, 80, plot=False)
+        path1 = arc( 50,50, 40, plot=False)
+        path2 = arc(100,50, 40, plot=False)
         compound = path1.xor(path2)
         with stroke(0), fill(0.8):
             bezier(compound)
@@ -247,7 +247,7 @@ class DrawingTests(PlotDeviceTestCase):
         with bezier(30, 50, stroke=0.2, fill=None):
             arcto(55,100, 80,50, 10)
 
-    @reference('drawing/beginpath.jpg')
+    @reference('drawing/beginpath.png')
     def test_beginpath(self):
         # ref/Drawing/commands/bezier()
         size(125, 125)
@@ -255,7 +255,7 @@ class DrawingTests(PlotDeviceTestCase):
         with bezier(10, 10, stroke=0.2) as path:
             lineto(40, 10)
 
-    @reference('drawing/bezier.jpg')
+    @reference('drawing/bezier.png')
     def test_bezier(self):
         # ref/Drawing/commands/bezier()
         size(125, 125)
@@ -299,7 +299,7 @@ class DrawingTests(PlotDeviceTestCase):
             moveto(60, 100)
             lineto(100, 100)
 
-    @reference('drawing/beginpath.jpg')
+    @reference('drawing/beginpath.png')
     def test_beginpath(self):
         # ref/Drawing/compat/beginpath()
         size(125, 125)
@@ -318,7 +318,7 @@ class DrawingTests(PlotDeviceTestCase):
         p = endpath(plot=False)
         drawpath(p)
 
-    @reference('drawing/endpath.jpg')
+    @reference('drawing/endpath.png')
     def test_endpath(self):
         # ref/Drawing/compat/endpath()
         size(125, 125)
@@ -328,7 +328,7 @@ class DrawingTests(PlotDeviceTestCase):
         p = endpath(plot=False)
         drawpath(p)
 
-    @reference('drawing/findpath.jpg')
+    @reference('drawing/findpath.png')
     def test_findpath(self):
         # ref/Drawing/compat/findpath()
         size(125, 125)
@@ -452,7 +452,7 @@ class DrawingTests(PlotDeviceTestCase):
         nofill()
         rect(40, 10, 20, 40)
 
-    @reference('drawing/nostroke.jpg')
+    @reference('drawing/nostroke.png')
     def test_nostroke(self):
         # ref/Line+Color/compat/nostroke()
         size(125, 125)

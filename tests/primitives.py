@@ -68,7 +68,7 @@ class PrimitivesTests(PlotDeviceTestCase):
         fill(.2)
         arc(40,40, 20)
 
-    @reference('primitives/arc.jpg')
+    @reference('primitives/arc.png')
     def test_arc(self):
         # ref/Primitives/commands/arc()
         size(125, 125)

@@ -204,7 +204,7 @@ class GeometryTests(PlotDeviceTestCase):
         skew(10.0)
         rect(20, 10, 40, 40)
 
-    @reference('geometry/pop.jpg')
+    @reference('geometry/pop.png')
     def test_pop(self):
         # ref/Transform/commands/transform()
         size(125, 125)
@@ -228,7 +228,7 @@ class GeometryTests(PlotDeviceTestCase):
         translate(50, 50)
         arc(10,10, 20)
 
-    @reference('geometry/push.jpg')
+    @reference('geometry/push.png')
     def test_push(self):
         # ref/Transform/compat/push()
         size(125, 125)

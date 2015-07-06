@@ -30,7 +30,7 @@ try:
     def setUp(self):
       _ctx.clear(all)
       _ctx._resetEnvironment()
-      random.seed(123456)
+      random.seed(123456790)
 except (ImportError, RuntimeError) as e:
   pass
 

@@ -267,7 +267,7 @@ class TypographyTests(PlotDeviceTestCase):
     def test_typography_layout_flow(self):
         # tut/Typography (21)
         size(300, 150)
-        kafka = 'Someone must have been telling lies about Josef K., he knew he had done nothing wrong but, one morning, he was arrested. Every day at eight in the morning he was brought his breakfast by Mrs. Grubach’s cook Mrs. Grubach was his landlady but today she didn’t come. That had never happened before. K. waited a little while, looked from his pillow at the old woman who lived opposite and who was watching him with an inquisitiveness quite unusual for her, and finally, both hungry and disconcerted, rang the bell. There was immediately a knock at the door and a man entered.'
+        kafka = 'Someone must have been telling lies about Josef K., he knew he had done nothing wrong but, one morning, he was arrested. Every day at eight in the morning he was brought his breakfast by Mrs. Grubach’s cook. Mrs. Gru-bach was his landlady but today she didn’t come. That had never happened before. K. waited a little while, looked from his pillow at the old woman who lived opposite and who was watching him with an inquisitiveness quite unusual for her, and finally, both hungry and disconcerted, rang the bell. There was immediately a knock at the door and a man entered.'
         
         font('Adobe Garamond', size=10)
         layout(align=JUSTIFY, hyphenate=True)
@@ -360,7 +360,7 @@ class TypographyTests(PlotDeviceTestCase):
         with font("Avenir", 18), fill('red'):
             text(20,80, xml=markup)
 
-    @reference('typography/textpath.jpg')
+    @reference('typography/textpath.png')
     def test_textpath(self):
         # ref/Typography/commands/textpath()
         size(125, 125)
@@ -391,11 +391,10 @@ class TypographyTests(PlotDeviceTestCase):
         x,y = 10,55
         font(16)
         align(RIGHT)
-        text(quip, x,y, width=90)
-        with stroke(.7), nofill():
-            rect(x,y-font().ascender, 90, 70, dash=3)
+        t = text(quip, x,y, width=95, height=65)
+        rect(t.frame, dash=3, stroke=.7, fill=None)
 
-    @reference('typography/fontsize.jpg')
+    @reference('typography/fontsize.png')
     def test_fontsize(self):
         # ref/Typography/compat/fontsize()
         size(125, 125)
@@ -404,7 +403,7 @@ class TypographyTests(PlotDeviceTestCase):
         fontsize(35)
         text("hello", 10, 50)
 
-    @reference('typography/lineheight.jpg')
+    @reference('typography/lineheight.png')
     def test_lineheight(self):
         # ref/Typography/compat/lineheight()
         size(125, 125)
