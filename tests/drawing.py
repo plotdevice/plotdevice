@@ -4,19 +4,9 @@ from . import PlotDeviceTestCase, reference
 from plotdevice import *
 
 class DrawingTests(PlotDeviceTestCase):
-    @reference('drawing/paths-ctrl1.png')
-    def test_paths_ctrl1(self):
-        # tut/Bezier_Paths (1)
-        size(280, 256)
-        fill(None)
-        stroke(1)
-        with bezier(100,100) as path:
-            curveto(150, 100, 200, 200, 150, 200)
-            curveto(100, 200, 200, 350, 300, 300)
-
     @reference('drawing/paths-transform-pre.png')
     def test_paths_transform_pre(self):
-        # tut/Bezier_Paths (2)
+        # tut/Bezier_Paths (1)
         size(180, 180)
         font("Dolly", "bold", 300)
         path = textpath("e", 200, 200)
@@ -24,7 +14,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/paths-transform-post.png')
     def test_paths_transform_post(self):
-        # tut/Bezier_Paths (3)
+        # tut/Bezier_Paths (2)
         size(180, 180)
         font("Dolly", "bold", 300)
         path = textpath("e", 200, 200)
@@ -38,7 +28,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/paths-broken.jpg')
     def test_paths_broken(self):
-        # tut/Bezier_Paths (4)
+        # tut/Bezier_Paths (3)
         size(334, 87)
         font("Dolly", "bold", 100)
         path = textpath("broken", 0,80)
@@ -56,7 +46,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/pathmatics-contours.png')
     def test_pathmatics_contours(self):
-        # tut/Bezier_Paths (5)
+        # tut/Bezier_Paths (4)
         size(181, 70)
         font("Dolly", "bold", 50)
         with pen(2), nofill():
@@ -67,7 +57,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/paths-compound1.png')
     def test_paths_compound1(self):
-        # tut/Bezier_Paths (6)
+        # tut/Bezier_Paths (5)
         size(200, 270)
         stroke(0, .3) # use a translucent black
         pen(4, cap=ROUND)
@@ -85,7 +75,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/paths-compound2.png')
     def test_paths_compound2(self):
-        # tut/Bezier_Paths (7)
+        # tut/Bezier_Paths (6)
         size(200, 200)
         # capture the bezier into the `path` variable
         with bezier(plot=False) as path:
@@ -99,7 +89,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/paths-flat-union.png')
     def test_paths_flat_union(self):
-        # tut/Bezier_Paths (8)
+        # tut/Bezier_Paths (7)
         size(175, 109)
         path1 = oval(40, 40, 80, 80, plot=False)
         path2 = oval(90, 40, 80, 80, plot=False)
@@ -109,7 +99,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/paths-flat-intersect.png')
     def test_paths_flat_intersect(self):
-        # tut/Bezier_Paths (9)
+        # tut/Bezier_Paths (8)
         size(175, 109)
         path1 = oval(40, 40, 80, 80, plot=False)
         path2 = oval(90, 40, 80, 80, plot=False)
@@ -119,7 +109,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/paths-flat-difference.png')
     def test_paths_flat_difference(self):
-        # tut/Bezier_Paths (10)
+        # tut/Bezier_Paths (9)
         size(175, 109)
         path1 = oval(40, 40, 80, 80, plot=False)
         path2 = oval(90, 40, 80, 80, plot=False)
@@ -129,7 +119,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/paths-flat-xor.png')
     def test_paths_flat_xor(self):
-        # tut/Bezier_Paths (11)
+        # tut/Bezier_Paths (10)
         size(175, 109)
         path1 = oval(40, 40, 80, 80, plot=False)
         path2 = oval(90, 40, 80, 80, plot=False)
@@ -139,7 +129,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/color-gradients1.png')
     def test_color_gradients1(self):
-        # tut/Color (12)
+        # tut/Color (11)
         size(99, 275)
         stroke('#aaa')
         
@@ -154,7 +144,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/color-gradients2.png')
     def test_color_gradients2(self):
-        # tut/Color (13)
+        # tut/Color (12)
         size(97, 277)
         stroke('#aaa')
         
@@ -169,7 +159,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/color-gradients3.png')
     def test_color_gradients3(self):
-        # tut/Color (14)
+        # tut/Color (13)
         size(200, 200)
         background(None)
         
@@ -187,7 +177,7 @@ class DrawingTests(PlotDeviceTestCase):
 
     @reference('drawing/color-pattern.png')
     def test_color_pattern(self):
-        # tut/Color (15)
+        # tut/Color (14)
         size(150, 90)
         background('tests/_in/macpaint-dark.png')
         with fill('http://plotdevice.io/data/macpaint-tile.png'):
@@ -280,7 +270,7 @@ class DrawingTests(PlotDeviceTestCase):
         
         # draw red dots at the point coordinates
         for x, y in points:
-            arc(x, y, 3, fill='red')
+            arc(x, y, radius=3, fill='red')
 
     @reference('drawing/curveto.png')
     def test_curveto(self):
