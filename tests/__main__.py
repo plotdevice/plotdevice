@@ -2,14 +2,13 @@ import unittest
 from os.path import basename, dirname
 from glob import glob
 from pdb import set_trace as tron
-from . import render_diffs
+from . import report
 
 try:
-  import plotdevice.lib
+  import plotdevice
 except (ImportError, RuntimeError) as e:
-    unbuilt = 'Build the c-extensions with "python setup.py build" before running tests.'
-    raise ImportError(unbuilt)
-
+  unbuilt = 'Build the c-extensions with "python setup.py build" before running tests.'
+  raise ImportError(unbuilt)
 
 cats = [basename(m).replace('.py','') for m in glob('%s/[a-ln-z]*.py'%dirname(__file__))]
 cats += [basename(m).replace('.py','') for m in glob('%s/m*.py'%dirname(__file__))]
@@ -20,4 +19,4 @@ for category, mod in zip(cats, mods):
   suitefn = getattr(mod, 'suite')
   suite.addTest(suitefn())
 unittest.TextTestRunner(verbosity=1).run(suite)
-render_diffs(suite)
+report(suite)
