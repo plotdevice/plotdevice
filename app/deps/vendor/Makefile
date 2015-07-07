@@ -19,17 +19,21 @@ ENV = $(BUILD)/env
 WHEELHOUSE = $(BUILD)/wheelhouse
 PYOBJC = $(BUILD)/lib/PyObjC
 DSTROOT ?= $(BUILD)/HTTP
+HTTP = $(DSTROOT)/$(firstword $(HTTP_MODULES))
 
 # commands
 CURL = @curl -L --progress-bar -f
 VIRTUALENV = $(BUILD)/virtualenv-$(VENV_VERSION)/virtualenv.py
-PIP = $(ENV)/bin/pip --isolated
+PIP = $(ENV)/bin/pip --isolated -q install
 
 # ---------------------------------------------------------------------------------------- #
 
 # create the sitedir at build/lib/PyObjC using the wheelhouse tarfile
 # (whether downloaded from plotdevice.io or built locally using `make wheels`)
 all, pyobjc: $(PYOBJC)
+
+# install the http libs in $DSTROOT
+http: $(HTTP)
 
 # delete generated files
 clean:
@@ -46,11 +50,6 @@ wheels: clean $(ENV)
 	$(PIP) wheel "pyobjc"==$(OBJC_VERSION) -w ${WHEELHOUSE}
 	tar czfv $(OBJC_SRC) -C $(BUILD) $(notdir ${WHEELHOUSE})
 
-# fetch the current versions of our helper modules
-http: $(ENV)
-	$(ENV)/bin/pip -q install --target=$(DSTROOT) $(HTTP_MODULES)
-	rm -rf $(DSTROOT)/*.dist-info
-
 # ---------------------------------------------------------------------------------------- #
 
 # fetch the current version of virtualenv (which we mostly use for its copy of pip)
@@ -64,14 +63,16 @@ $(OBJC_SRC):
 	-$(CURL) $(OBJC_URL) -o $@ || $(MAKE) wheels
 
 # unpack the virtualenv sdist in the build dir
-$(VIRTUALENV): | $(VENV_SRC)
+$(VIRTUALENV): $(VENV_SRC)
 	@mkdir -p $(BUILD)
 	tar xzf $(VENV_SRC) -C $(BUILD)
+	touch $@
 
 # unpack the archived wheels in the build dir
-$(WHEELHOUSE): | $(OBJC_SRC)
+$(WHEELHOUSE): $(OBJC_SRC)
 	@mkdir -p $(BUILD)
 	tar xzf $(OBJC_SRC) -C $(BUILD)
+	touch $@
 
 # create a virtual environment at build/env
 $(ENV): $(VIRTUALENV)
@@ -79,4 +80,9 @@ $(ENV): $(VIRTUALENV)
 
 # create a sitedir from the contents of build/wheelhouse
 $(PYOBJC): $(WHEELHOUSE) $(ENV)
-	$(PIP) -q install --target=$@ --no-index --find-links=$(WHEELHOUSE) "pyobjc"
+	$(PIP) --target=$@ --no-index --find-links=$(WHEELHOUSE) "pyobjc"
+
+# fetch the current versions of our helper modules
+$(HTTP): $(ENV)
+	$(PIP) --target=$(DSTROOT) $(HTTP_MODULES)
+	rm -rf $(DSTROOT)/*.dist-info
