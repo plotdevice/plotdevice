@@ -14,7 +14,7 @@ sys.path.append(sdist_root)
 sys.path.append(join(sdist_root, 'build/lib'))
 
 try:
-  from plotdevice import _ctx
+  from plotdevice import _ctx, measure
 
   def reference(image_path):
     """Write the canvas out to disk and compare the output with a reference image"""
@@ -34,7 +34,7 @@ try:
 except (ImportError, RuntimeError) as e:
   pass
 
-def render_images(ctx, dst):
+def render_images(ctx, dst, save_output=True):
   """Write the current canvas image to _out/$(dst) and generate a diff image at _diff/$(dst)"""
   ref, out, diff = [join(tests_root, subdir, dst) for subdir in ('_ref','_out','_diff')]
 
@@ -44,18 +44,18 @@ def render_images(ctx, dst):
     if not isdir(img_dir): os.makedirs(img_dir)
 
   # write the generated image to the output dir
-  bg = ctx.canvas.background
-  if 'Pattern' in str(type(bg)) or getattr(bg, 'alpha', 0) > 0:
-    ctx.background(bg)
-  else:
-    bg = ctx.background(join(tests_root, '_in/transparency-grid.png'))
-  ctx.canvas.save(out)
-  w, h = ctx.canvas.size
+  if save_output:
+    bg = ctx.canvas.background
+    if 'Pattern' in str(type(bg)) or getattr(bg, 'alpha', 0) > 0:
+      ctx.background(bg)
+    else:
+      bg = ctx.background(join(tests_root, '_in/transparency-grid.png'))
+    ctx.canvas.save(out)
 
   # compare the 'out' vs 'ref' image and write a 'diff' image
   ctx.clear(all)
   ctx._resetEnvironment()
-  ctx.size(w,h)
+  ctx.size(*measure(image=ref))
   # ctx.background(bg)
   ctx.image(ref)
   ctx.blend('difference')
@@ -98,10 +98,13 @@ html_head = """
     float:left;
     margin-right:1em;
     border:1px solid #444;
+    max-width:30%;
+    position:relative;
   }
   .result img{
     display:block;
     background:white;
+    max-width:100%;
   }
   </style>
 </head>

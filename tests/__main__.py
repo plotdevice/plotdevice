@@ -11,7 +11,8 @@ except (ImportError, RuntimeError) as e:
     raise ImportError(unbuilt)
 
 
-cats = [basename(m).replace('.py','') for m in glob('%s/[a-z]*py'%dirname(__file__))]
+cats = [basename(m).replace('.py','') for m in glob('%s/[a-ln-z]*.py'%dirname(__file__))]
+cats += [basename(m).replace('.py','') for m in glob('%s/m*.py'%dirname(__file__))]
 mods = [__import__(c, globals(), locals(), ['suite']) for c in cats]
 
 suite = unittest.TestSuite()

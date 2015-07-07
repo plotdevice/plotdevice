@@ -1,21 +1,37 @@
 import os
 import unittest
+from . import PlotDeviceTestCase, reference, render_images
+from subprocess import check_output, STDOUT
+from plotdevice import *
 
 sdist_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-class TestModule(unittest.TestCase):
-    def test_module_import(self):
-        import plotdevice
-        self.assertTrue(hasattr(plotdevice,'_ctx'))
-
+class TestModule(PlotDeviceTestCase):
     def test_pyobjc(self):
-        import plotdevice
         import objc
         self.assertIn(sdist_path, objc.__file__)
 
-    def test_c_extensions(self):
-        from plotdevice.lib import io, pathmatics, foundry
-        self.assertIn('io', locals())
+    @reference('module/nodebox-compat.png')
+    def test_nodebox_compat(self):
+        code = open('%s/tests/_in/compliance/nodebox.py'%sdist_path).read()
+        os.chdir('%s/tests/_in/compliance'%sdist_path)
+        exec code in _ctx._ns.copy()
+        os.chdir(sdist_path)
+
+    @reference('module/compliance.png')
+    def test_compliance(self):
+        code = open('%s/tests/_in/compliance/plotdevice.py'%sdist_path).read()
+        os.chdir('%s/tests/_in/compliance'%sdist_path)
+        exec code in _ctx._ns.copy()
+        os.chdir(sdist_path)
+
+    def test_cli(self):
+        plod_bin = '%s/app/plotdevice'%sdist_path
+        script = '%s/tests/_in/cli.pv'%sdist_path
+        output = '%s/tests/_out/module/cli.png'%sdist_path
+        check_output([plod_bin, script, '--export', output], stderr=STDOUT, cwd=sdist_path)
+        render_images(_ctx, 'module/cli.png', save_output=False)
+
 
 def suite():
     from unittest import TestSuite, makeSuite
