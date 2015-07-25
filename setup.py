@@ -213,7 +213,7 @@ class TestCommand(Command):
         pass
     def run(self):
         from subprocess import call
-        test_cmd = [sys.executable, '-m', 'tests']
+        test_cmd = [sys.executable, '-m', 'tests'] + sys.argv[2:]
         print(" ".join(test_cmd))
         call(test_cmd)
 

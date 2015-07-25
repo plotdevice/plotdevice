@@ -1,3 +1,4 @@
+import sys
 import unittest
 from os.path import basename, dirname
 from glob import glob
@@ -18,5 +19,6 @@ suite = unittest.TestSuite()
 for category, mod in zip(cats, mods):
   suitefn = getattr(mod, 'suite')
   suite.addTest(suitefn())
-unittest.TextTestRunner(verbosity=1).run(suite)
+verb = 2 if '-v' in sys.argv else 1
+unittest.TextTestRunner(verbosity=verb).run(suite)
 report(suite)
