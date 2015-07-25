@@ -189,7 +189,8 @@ class DrawingTests(PlotDeviceTestCase):
     def test_background(self):
         # ref/Canvas/commands/background()
         size(125, 125)
-        background(.5)
+        background(.2)
+        fill(1)
         rect(10,10, 50,50)
 
     @reference('drawing/clear.png')
