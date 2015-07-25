@@ -637,8 +637,12 @@ class Librarian(object):
         except KeyError:
             # give up but first do a broad search and suggest other names in the exception
             in_corpus = difflib.get_close_matches(q, corpus, 4, cutoff=0)
+            if len([m for m in in_corpus if q in m]) > 1:
+                nomatch = "ambiguous font family name \"%s\""%word
+            else:
+                nomatch = "no such font family \"%s\""%word
+
             matches = [self._fams[corpus.index(m)] for m in in_corpus]
-            nomatch = "ambiguous font family name \"%s\""%word
             if matches:
                 nomatch += '.\nDid you mean: %s'%[m.encode('utf-8') for m in matches]
             return DeviceError(nomatch)
