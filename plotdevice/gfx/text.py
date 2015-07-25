@@ -81,11 +81,13 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     def __repr__(self):
         total = len(self.text)
         displayed = sum(self.blocks[-1]._chars)
-        msg = "%i character%s" % (total, '' if total==1 else 's')
+        msg = 'chars=%i'%displayed
         if displayed < total:
-            msg = '%i/%s'%(displayed, msg)
+            msg += ' overflow=%i'%(total-displayed)
         if self.blocks[1:]:
-            msg += ' in %i block(s)' % len(self.blocks)
+            msg += ' blocks=%i' % len(self.blocks)
+        if hasattr(self, 'folio'):
+            msg += ' idx=%i folio=%i'%(self.idx, self.folio)
         return "Text(%s)" % msg
 
     def append(self, txt=None, **kwargs):
@@ -126,7 +128,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
                 if re.search(r'(html|rtf)$', info.get('UTI')):
                     attrib_txt = decoded
 
-        if txt and not attrib_txt:
+        if txt is not None and not attrib_txt:
             # convert non-textual `str` args to strings
             if not isinstance(txt, basestring) and not is_xml:
                 txt = repr(txt)
@@ -252,8 +254,8 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     def _dedent(cls, attrib_txt, idx=0, inherit=False):
         """Removes first-line paragraph indentation of at the given attributed-string index.
 
-        Sets the first-line indent equal to the subsequent-lines value (unless the first line
-        is outdented; in which leave it alone).
+        Sets the first-line indent equal to the subsequent-line's value (unless the first line
+        is outdented; in which case leave it alone).
 
         Passing inherit=True will override this logic and set the first-indent equal to the
         subsequent-indent without regard for its indent/outdent status.

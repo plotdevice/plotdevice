@@ -1312,16 +1312,16 @@ class Context(object):
 
         # create the sequence of Text objects
         page = Text(*args, **kwargs)
+        recto = page.x, page.y
         dims = page.width, page.height
-        pg = 0
+        idx = 0
         while page:
-            page.pg = pg
+            page.idx = idx
             page.folio = folio
             page.width, page.height = dims
-            if pg%2 and verso:
-                page.x, page.y = verso
+            page.x, page.y = verso if idx%2 and verso else recto
             yield page
-            pg += 1
+            idx += 1
             folio += 1
             page = page.overleaf()
 
