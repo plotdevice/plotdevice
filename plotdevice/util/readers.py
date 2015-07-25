@@ -254,7 +254,6 @@ def read(pth, format=None, encoding=None, cols=None, **kwargs):
         resp = HTTP.get(pth)
         resp.raise_for_status()
 
-        enc = encoding or resp.encoding
         extension_type = splitext(urlparse(pth).path)[-1]
         content_type = resp.headers.get('content-type', extension_type).lower()
 
@@ -265,7 +264,10 @@ def read(pth, format=None, encoding=None, cols=None, **kwargs):
         if binaryish(content_type, format):
             fd = BytesIO(resp.content)
         else:
-            resp.encoding = enc
+            if encoding:
+                resp.encoding = encoding
+            elif 'charset' not in content_type:
+                resp.encoding = resp.apparent_encoding
             fd = StringIO(resp.text)
     else:
         enc = encoding or 'utf-8'
