@@ -263,29 +263,9 @@ class TypographyTests(PlotDeviceTestCase):
             note.append(fn.text, vpos=1)
             note.append(' '+fn.attrs['note'])
 
-    @reference('typography/typography-advanced-indent.png')
-    def test_typography_advanced_indent(self):
-        # tut/Typography (21)
-        size(300, 320)
-        txt="The first paragraph extends to the first carriage return character and will never be indented by default.\nThe second paragraph follows the first and will be indented according to the current layout settings.\nThe third paragraph is just like the second. It is also indented.\n\nA final paragraph, preceded by a blank line, represents the beginning of a new ‘section’ and suppresses any indentation.\n"
-        
-        layout(indent=1.4)
-        font('Georgia', 16)
-        text(30,40, width=250, str=txt)
-
-    @reference('typography/typography-advanced-outdent.png')
-    def test_typography_advanced_outdent(self):
-        # tut/Typography (22)
-        size(300, 300)
-        txt="The first paragraph extends to the first carriage return character and will be outdented by the negative indentation value.\nThe second paragraph follows the first and will be outdented too.\nThe third paragraph is outdented just like the prior two.\n\nA final paragraph, preceded by a blank line, represents the beginning of a new ‘section’ but is outdented all the same.\n"
-        
-        layout(indent=-1.4)
-        font('Georgia', 16)
-        text(30,40, width=250, str=txt)
-
     @reference('typography/typography-advanced-margin.png')
     def test_typography_advanced_margin(self):
-        # tut/Typography (23)
+        # tut/Typography (21)
         size(300, 300)
         dickens = "London. Michaelmas term lately over, and the Lord Chancellor sitting in Lincoln's Inn Hall. Implacable November weather. As much mud in the streets as if the waters had but newly retired from the face of the earth, and it would not be wonderful to meet a Megalosaurus, forty feet long or so, waddling like an elephantine lizard up Holborn Hill. Smoke lowering down from chimney-pots, making a soft black drizzle, with flakes of soot in it as big as full-grown snowflakes—gone into mourning, one might imagine, for the death of the sun. Dogs, undistinguishable in mire. Horses, scarcely better; splashed to their very blinkers. Foot passengers, jostling one another's umbrellas in a general infection of ill temper, and losing their foot-hold at street-corners, where tens of thousands of other foot passengers have been slipping and sliding since the day broke (if this day ever broke), adding new deposits to the crust upon crust of mud, sticking at those points tenaciously to the pavement, and accumulating at compound interest."
         
@@ -306,7 +286,7 @@ class TypographyTests(PlotDeviceTestCase):
 
     @reference('typography/typography-advanced-spacing.png')
     def test_typography_advanced_spacing(self):
-        # tut/Typography (24)
+        # tut/Typography (22)
         size(300, 200)
         txt = "Paragraph one has five words.\nParagraph two is shorter.\nParagraph three is followed by a snowman.\n☃ "
         font(13)
@@ -316,6 +296,26 @@ class TypographyTests(PlotDeviceTestCase):
         
         layout(spacing=1) # add 1 lineheight of extra space
         text(150,30, 120, str=txt)
+
+    @reference('typography/typography-advanced-indent.png')
+    def test_typography_advanced_indent(self):
+        # tut/Typography (23)
+        size(300, 320)
+        txt="The first paragraph extends to the first carriage return character and will never be indented by default.\nThe second paragraph follows the first and will be indented according to the current layout settings.\nThe third paragraph is just like the second. It is also indented.\n\nA final paragraph, preceded by a blank line, represents the beginning of a new ‘section’ and suppresses any indentation.\n"
+        
+        layout(indent=1.4)
+        font('Georgia', 16)
+        text(30,40, width=250, str=txt)
+
+    @reference('typography/typography-advanced-outdent.png')
+    def test_typography_advanced_outdent(self):
+        # tut/Typography (24)
+        size(300, 300)
+        txt="The first paragraph extends to the first carriage return character and will be outdented by the negative indentation value.\nThe second paragraph follows the first and will be outdented too.\nThe third paragraph is outdented just like the prior two.\n\nA final paragraph, preceded by a blank line, represents the beginning of a new ‘section’ but is outdented all the same.\n"
+        
+        layout(indent=-1.4)
+        font('Georgia', 16)
+        text(30,40, width=250, str=txt)
 
     @reference('typography/typography-advanced-flow.png')
     def test_typography_advanced_flow(self):
@@ -391,16 +391,12 @@ class TypographyTests(PlotDeviceTestCase):
             text("cruel", 10, 69)
         text("world", 10, 95)
 
-    @reference('typography/font.png')
-    def test_font(self):
+    @reference('typography/layout.png')
+    def test_layout(self):
         # ref/Typography/commands/layout()
         size(125, 125)
-        fill(0.2)
-        font("Helvetica", 35)
-        text("hello", 10, 50)
-        with font("bold", 16, italic=True):
-            text("cruel", 10, 69)
-        text("world", 10, 95)
+        layout(align=RIGHT, leading=2)
+        text(10,22, 100, str="Hide and/or Seek")
 
     @reference('typography/stylesheet-cascade.png')
     def test_stylesheet_cascade(self):
