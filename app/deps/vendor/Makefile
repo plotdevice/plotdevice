@@ -5,7 +5,7 @@ PY_VERSION = $(shell $(PYTHON) -c 'import sys; print("py%i%i"%sys.version_info[:
 # dependencies to be fetched
 HTTP_MODULES = requests cachecontrol lockfile
 
-VENV_VERSION = 13.0.3
+VENV_VERSION = 13.1.0
 VENV_SRC = virtualenv-$(VENV_VERSION).tar.gz
 VENV_URL = https://pypi.python.org/packages/source/v/virtualenv/$(VENV_SRC)
 
