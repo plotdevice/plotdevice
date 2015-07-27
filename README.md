@@ -29,19 +29,18 @@ and movies for use elsewhere. To that end it provides functionality to
 efficiently export script output as vector documents (`pdf`,`eps`),
 bitmap images (`png`,`gif`,`jpg`,`tiff`), or animations (`mov`,`gif`).
 
-#### Latest changes (Sept 2014)
+#### Latest changes (July 2015)
 
-* Enhanced command line interface.
-* Simplified api with broad support for the Python `with` statement
-* New text editor with tab completion, syntax color themes, and emacs/vi bindings.
-* Video export in H.264 or animated gif formats (with [GCD](http://en.wikipedia.org/wiki/Grand_Central_Dispatch)-based i/o).
-* Core Graphics support for gradients, shadows, blend modes, and alpha channels
-* Enhanced typography with inline styles, OpenType features, and simpler font selection.
-* Added support for external editors by reloading the source when changed.
-* Build system now works with Xcode or `py2app` for the application and `pip` for the module.
-* Virtualenv support (for both installation of the module and running scripts with dependencies).
-* External scripts can use `from plotdevice import *` to create a drawing environment.
-* Now uses the system's Python 2.7 interpreter.
+* Python 3 compatible
+* Can now be built with system Python or [Homebrew](http://brew.sh) versions of the interpreter
+* Much faster import times on Yosemite thanks to a bundled copy of PyObjC 3.0.4
+* HTTP is now handled by the `requests` module and caches responses locally
+* Totally revamped [typography](http://plotdevice.io/tut/Typography) system with
+  support for OpenType features, pagination, multi-column text, character geometry, and more
+* Added 130+ unit tests (run them with `python setup.py test`) plus bugfixes for
+  for `measure()`, `textpath()`, `Bezier.fit()`, `read()`, and the Preferences dialog
+* Miscellaneous enhancements to existing commands (see 
+  [`CHANGES.md`](https://github.com/plotdevice/plotdevice/blob/master/CHANGES.md) for details)
 
 Installation
 ------------

@@ -1,14 +1,40 @@
-PlotDevice 0.9.5
-----------------
+PlotDevice 0.10.0
+-----------------
+
+##### CORE
+* Much faster import times on 10.10+ thanks to a bundled copy of PyObjC 3.0.4
+* Support for Python 3 and Homebrew builds of the interpreter
 * Now using core animation layers to (hopefully) speed up graphics rendering
+* `plot()` command can now override grob attributes like `x`, `y`, `width`, or `fill` when a
+  new value is passed as a keyword arg
+* HTTP is now handled by the requests module and caches responses locally
+* Primitives can now accept Point, Size, and Region types as arguments
+  (e.g., `rect(text("foo",20,20).bounds)`)
+* `transform()` now accepts a `matrix` keyword arg to fully specify an affine transform
+
+##### TYPOGRAPHY
 * Enhanced `font()` command with support for OpenType/AAT features (currently
   supporting `lig`, `sc`, `osf`, `tab`, `vpos`, and `frac` args).
-* In addition to the `align()` command, you can now pass an `align` arg to 
-  `font()` and `text()`
-* Letterspacing can now be set (in terms of thousandths of an em) via the 
+* New `layout()` command handles ‘paragraph styles’ including: `align`,
+  `hyphenate`, `leading`, `spacing`, `indent`, and `margin` (replacing the
+  `align()` and `lineheight()` commands).
+* `text()` supports all `font()` and `layout()` keyword args for one-off styling
+* `text()` can now read text from file paths or urls passed as its `src` keyword arg
+* Letterspacing can now be set (in terms of thousandths of an em) via the
   `tracking` arg to font/text/stylesheet
-* Bugfixes for `measure()`, `textpath().fit()`, and `read()` (which was crashing on
+* New `paginate()` command will break a long string into as many Text objects as
+  necessary to fully lay out long runs of type
+* New `Text.flow()` method will break long text runs into multiple columns
+* New [Tutorial](http://plotdevice.io/tut/Typography) in the user manual documenting
+  the changes
+
+##### BUGFIXES
+* Added 130+ unit tests (run them with `python setup.py test`)
+* Fixes for `measure()`, `textpath()`, `Bezier.fit()`, and `read()` (which was crashing on
   URLs that didn't provide a Last-Modified header)
+* `__file__` global variable now defined for .pv scripts
+* The `Preferences` dialog box now works on systems with non-standard homedir locations
+
 
 PlotDevice 0.9.4
 ----------------
@@ -24,7 +50,7 @@ PlotDevice 0.9.4
 * The `font()` command accepts separate family and weight strings (not just PostScript Names)
 * In addition to `rect()` and `oval()` you can now use `poly()` and `arc()`
 * Grobs can be manually added/removed from the canvas with `plot()` and `clear()`
-* New `halt()` command to "gracefully" bail out of an animation 
+* New `halt()` command to "gracefully" bail out of an animation
 * Libraries no longer require `ximport()` (since they now use `plotdevice.lib.register`)
 * Quitting the app and re-launching will restore all open (auto-saved) documents
 * Integrated the Sparkle framework for auto-updating of official builds

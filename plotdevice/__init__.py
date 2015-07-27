@@ -12,7 +12,7 @@
 
 """Quartz-powered vector machine
 
-Copyright (C) 2014 Samizdat Drafting Co.
+Copyright (C) 2015 Samizdat Drafting Co.
 A derivative of http://nodebox.net/code by Frederik De Bleser & Tom De Smedt
 
 All rights reserved.
@@ -20,7 +20,7 @@ MIT Licensed (see README file for details)
 """
 import sys, re, os
 
-__version__ = '0.9.4'
+__version__ = '0.10.0'
 __author__  = 'Christian Swinehart'
 __email__   = 'drafting@samizdat.cc'
 __credits__ = 'Frederik De Bleser, Tom De Smedt, Just van Rossum, & Marcos Ojeda'

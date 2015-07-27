@@ -70,6 +70,17 @@ Python and Mac OS.
 
 The new version features:
 
+* Python 3 compatible
+* Can now be built with system Python or Homebrew versions of the interpreter
+* Much faster import times on Yosemite thanks to a bundled copy of PyObjC 3.0.4
+* HTTP is now handled by the ``requests`` module and caches responses locally
+* Totally revamped typography system with support for OpenType features,
+  pagination, multi-column text, character geometry, and more
+* Added 130+ unit tests (run them with ``python setup.py test``) plus bugfixes for
+  for ``measure()``, ``textpath()``, ``Bezier.fit()``, ``read()``, and the Preferences dialog
+
+Version 0.9.4 added:
+
 * Enhanced command line interface.
 * New text editor with tab completion, syntax color themes, and emacs/vi bindings.
 * Video export in H.264 or animated gif formats (with GCD-based i/o).
@@ -82,9 +93,11 @@ The new version features:
 * Simplified typography commands with stylesheet-based character styles
 * Now uses the system's Python 2.7 interpreter.
 
-Requires:
+Requirements:
 
 * Mac OS X 10.9+
+* Python 2.7 or 3.4+
+* the requests, cachecontrol, and lockfile modules
 """
 
 
