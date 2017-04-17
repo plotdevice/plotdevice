@@ -71,16 +71,18 @@ def possibleToolLocations():
 
     # try launching a shell to extract the user's path
     if shell:
-        out, _ = Popen([shell,"-l"], stdout=PIPE, stderr=PIPE, stdin=PIPE).communicate("echo $PATH")
-        for path in out.strip().split(':'):
-            path += '/plotdevice'
-            if '/sbin' in path: continue
-            if path.startswith('/bin'): continue
-            if path.startswith('/usr/bin'): continue
-            if path in locations: continue
-            locations.append(path)
+        try:
+            out, _ = Popen([shell,"-l"], stdout=PIPE, stderr=PIPE, stdin=PIPE).communicate("echo $PATH")
+            for path in out.strip().split(':'):
+                path += '/plotdevice'
+                if '/sbin' in path: continue
+                if path.startswith('/bin'): continue
+                if path.startswith('/usr/bin'): continue
+                if path in locations: continue
+                locations.append(path)
+        except:
+            pass
     return locations
-
 
 
 # class defined in PlotDevicePreferences.xib
