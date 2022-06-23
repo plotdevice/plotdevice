@@ -47,6 +47,7 @@ class DraggyWebView(WebView):
         return True
 
 class EditorView(NSView):
+    document = IBOutlet()
     jumpPanel = IBOutlet()
     jumpLine = IBOutlet()
 
@@ -118,7 +119,7 @@ class EditorView(NSView):
 
     # def webView_didFinishLoadForFrame_(self, sender, frame):
     def webView_didClearWindowObject_forFrame_(self, sender, win, frame):
-        self.webview.windowScriptObject().setValue_forKey_(self,'app')
+        self.webview.windowScriptObject().setValue_forKey_(self, 'app')
 
     def webView_contextMenuItemsForElement_defaultMenuItems_(self, sender, elt, menu):
         items = [
@@ -182,9 +183,9 @@ class EditorView(NSView):
 
     # App-initiated actions
 
+    @objc.python_method
     def _get_source(self):
         return self.webview.stringByEvaluatingJavaScriptFromString_('editor.source();')
-
     @objc.python_method
     def _set_source(self, src):
         self.js(u'editor.source', args(src))
@@ -303,8 +304,7 @@ class EditorView(NSView):
         menu = mm.itemWithTitle_("Python")
         menu.submenu().performActionForItemAtIndex_(3)
 
-    @objc.python_method
-    def edits(self, count):
+    def edits_(self, count):
         # inform the undo manager of the changes
         um = self._undo_mgr
         c = int(count)
@@ -329,10 +329,9 @@ class EditorView(NSView):
         pb = NSPasteboard.pasteboardWithName_(NSFindPboard)
         pb.declareTypes_owner_([NSStringPboardType],None)
         pb.setString_forType_(query, NSStringPboardType)
-        self.flash("Edit")
+        self.flash_("Edit")
 
-    @objc.python_method
-    def flash(self, menuname):
+    def flash_(self, menuname):
         # when a menu item's key command was entered in the editor, flash the menu
         # bar to give a hint of where the command lives
         mm=NSApp().mainMenu()

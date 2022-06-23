@@ -1,5 +1,5 @@
-PYTHON = /usr/bin/python
-LIBRARY_SEARCH_PATHS = $(inherited) /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config
-HEADER_SEARCH_PATHS = $(inherited) /System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7
-OTHER_LDFLAGS = $(inherited) -lpython2.7
-GCC_PREPROCESSOR_DEFINITIONS = $(inherited) PYTHON_BIN="/usr/bin/python"
+PYTHON = /Applications/Xcode.app/Contents/Developer/usr/bin/python3
+LIBRARY_SEARCH_PATHS = $(inherited) /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.8/lib/python3.8/config-3.8-darwin
+HEADER_SEARCH_PATHS = $(inherited) /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.8/Headers
+OTHER_LDFLAGS = $(inherited) -lpython3.8
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) PYTHON_BIN="/Applications/Xcode.app/Contents/Developer/usr/bin/python3" PY3K=1

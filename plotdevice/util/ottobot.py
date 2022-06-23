@@ -240,7 +240,7 @@ speed(30)
 def setup():
     size(500, 500)
     background(1)
-    print "start"
+    print("start")
 
 # runs repeatedly until you cancel with ⌘.
 def draw():
@@ -248,10 +248,10 @@ def draw():
 
 # runs once after the animation was cancelled
 def stop():
-    print "done"
+    print("done")
 """
     elif kind=='ottobot':
         return genProgram()
 
 if __name__ == '__main__':
-    print genProgram()
+    print(genProgram())

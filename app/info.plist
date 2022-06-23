@@ -63,18 +63,20 @@
 	<string>${PRODUCT_NAME}</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
-	<key>CFBundleVersion</key>
-	<string>in flux</string>
 	<key>CFBundleSignature</key>
 	<string>Plod</string>
+	<key>CFBundleVersion</key>
+	<string>in flux</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.graphics-design</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.9</string>
-	<key>NSMainNibFile</key>
-	<string>MainMenu</string>
+	<string>10.14</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2014–15 Samizdat Drafting Co.</string>
+	<key>NSMainNibFile</key>
+	<string>MainMenu</string>
+	<key>NSSystemAdministrationUsageDescription</key>
+	<string>PlotDevice would like to be able to write to your hard disk</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>UTExportedTypeDeclarations</key>

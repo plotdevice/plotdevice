@@ -221,6 +221,11 @@ class PlotDevicePreferencesController(NSWindowController):
 
     @property
     def _tool(self):
+
+        # WORKAROUND: don't anger the permissions beast
+        return False, False, 'install'
+
+
         broken = []
         for path in possibleToolLocations():
             if os.path.islink(path):

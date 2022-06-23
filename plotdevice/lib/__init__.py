@@ -7,6 +7,8 @@ try:
     if not glob('%s/*.so'%dirname(__file__)):
         sys.path.append(abspath('%s/../../build/lib/'%dirname(__file__)))
         sys.path.append(abspath('%s/plotdevice/lib'%sys.path[-1]))
+    else:
+        sys.path.append(abspath(dirname(__file__)))
     from . import io, pathmatics, foundry # make sure the c-extensions are accessible
 except ImportError:
     missing = "Missing C extensions (cPathmatics.so & friends) in %s" % abspath(dirname(__file__))

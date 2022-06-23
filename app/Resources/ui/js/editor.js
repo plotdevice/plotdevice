@@ -22,7 +22,7 @@ var UndoMgr = function() { this.reset(); };
         if (this.changeCount < 0) this.changeCount = NaN;
 
         this.changeCount++;
-        app.edits(this.changeCount)
+        app.edits_(this.changeCount)
     };
 
      // [Perform an undo operation on the document, reverting the last change.]{: #UndoManager.undo}
@@ -36,7 +36,7 @@ var UndoMgr = function() { this.reset(); };
                 this.$doc.undoChanges(deltas, dontSelect);
             this.$redoStack.push(deltas);
             this.changeCount--;
-            app.edits(this.changeCount)
+            app.edits_(this.changeCount)
         }
 
         return undoSelectionRange;
@@ -52,7 +52,7 @@ var UndoMgr = function() { this.reset(); };
                 this.$doc.redoChanges(deltas, dontSelect);
             this.$undoStack.push(deltas);
             this.changeCount++;
-            app.edits(this.changeCount)
+            app.edits_(this.changeCount)
         }
 
         return redoSelectionRange;
@@ -63,7 +63,8 @@ var UndoMgr = function() { this.reset(); };
         this.$undoStack = [];
         this.$redoStack = [];
         this.changeCount = 0;
-        app.edits(this.changeCount)
+        console.log({app})
+        app.edits_(this.changeCount)
     };
 
     // state accessors
@@ -130,7 +131,7 @@ var Editor = function(elt){
             // objc side of things when one of them is entered
             var cmd = e.command.name
             _.each(_menu_cmds, function(cmds, menu){
-                if (_.contains(cmds, cmd)) app.flash(menu)
+                if (_.contains(cmds, cmd)) app.flash_(menu)
             })
         },
         _scroll_h:function(x){

@@ -54,7 +54,8 @@ class Font(object):
                 new_spec.update({axis:name, num_axis:val})
 
         # merge in changes from the new spec
-        spec = dict(cur_spec.items() + new_spec.items()) # our criteria
+        spec = cur_spec.copy()
+        spec.update(new_spec) # our criteria
 
         # use the combined spec to pick a face then break it into attributes
         self._face = best_face(spec)

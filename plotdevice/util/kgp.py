@@ -131,7 +131,7 @@ class KantGenerator:
         xrefs = xrefs.keys()
         standaloneXrefs = [e for e in self.refs.keys() if e not in xrefs]
         if not standaloneXrefs:
-            raise NoSourceError, "can't guess source, and no source specified"
+            raise NoSourceError("can't guess source, and no source specified")
         return '<xref id="%s"/>' % random.choice(standaloneXrefs)
 
     def reset(self):
@@ -269,7 +269,7 @@ class KantGenerator:
         self.parse(self.randomChildElement(node))
 
 def usage():
-    print __doc__
+    print(__doc__)
 
 def main(argv):
     grammar = "kant.xml"
@@ -290,7 +290,7 @@ def main(argv):
 
     source = "".join(args)
     k = KantGenerator(grammar, source)
-    print k.output()
+    print(k.output())
 
 if __name__ == "__main__":
     main(sys.argv[1:])

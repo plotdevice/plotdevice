@@ -254,7 +254,7 @@ class adict(BetterRepr, dict):
 
     def __setattr__(self, key, value):
         # this test allows attributes to be set in the __init__ method
-        if not self.__dict__.has_key('_adict__initialised'):
+        if '_adict__initialised' not in self.__dict__:
             return dict.__setattr__(self, key, value)
         self[key] = value
 

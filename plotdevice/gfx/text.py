@@ -135,7 +135,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
             # try to insulate people from the need to use a unicode constant for any text
             # with high-ascii characters (while waiting for the other shoe to drop)
-            decoded = txt if isinstance(txt, unicode) else txt.decode('utf-8')
+            decoded = txt #if isinstance(txt, unicode) else txt.decode('utf-8')
 
             # use the inherited baseline style but allow one-off overrides from kwargs
             merged_style = self._font._spec
@@ -407,9 +407,9 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         Returns:
           a list of TextFragment objects
         """
+        # if isinstance(regex, str):
+        #     regex = regex.decode('utf-8')
         if isinstance(regex, str):
-            regex = regex.decode('utf-8')
-        if isinstance(regex, unicode):
             flags = (re.I|re.S) if regex.lower()==regex else (re.S)
             regex = re.compile(regex, flags)
         if not hasattr(regex, 'pattern'):
@@ -457,7 +457,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     @property
     def text(self):
         """Returns the unicode string being typeset"""
-        return unicode(self._store.string())
+        return self._store.string()
 
     @property
     def words(self):

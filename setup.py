@@ -210,7 +210,7 @@ class BuildCommand(build_py):
 
         self.copy_file("app/Resources/colors.json", '%s/colors.json'%rsrc_dir)
         self.copy_file("app/Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
-        for dst, src in stale('%s/viewer.nib'%rsrc_dir, src="app/Resources/English.lproj/PlotDeviceScript.xib"):
+        for dst, src in stale('%s/viewer.nib'%rsrc_dir, src="app/Resources/en.lproj/PlotDeviceScript.xib"):
             self.spawn(['/usr/bin/ibtool','--compile', dst, src])
 
 class TestCommand(Command):
@@ -406,7 +406,7 @@ if __name__=='__main__':
             }],
             data_files = [
                 "app/Resources/ui",
-                "app/Resources/English.lproj",
+                "app/Resources/en.lproj",
                 "app/Resources/PlotDevice.icns",
                 "app/Resources/PlotDeviceFile.icns",
                 "examples",

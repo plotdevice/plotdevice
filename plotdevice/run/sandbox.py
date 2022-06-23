@@ -193,7 +193,7 @@ class Sandbox(object):
             elif method=='draw':
                 # tick the frame ahead after each draw call
                 self._meta.frame+=1
-                if self._meta.frame > self._meta.last and self._meta.loop:
+                if self._meta.last and self._meta.frame > self._meta.last and self._meta.loop:
                     self._meta.frame = self._meta.first
 
         return result

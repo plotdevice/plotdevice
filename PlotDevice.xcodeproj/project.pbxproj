@@ -17,6 +17,8 @@
 		2A66ECED18A99328002903DE /* jquery-2.1.0.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE018A992BD002903DE /* jquery-2.1.0.js */; };
 		2A66ECEE18A99328002903DE /* keybindings.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE118A992BD002903DE /* keybindings.js */; };
 		2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */; };
+		2A79B146286508220074E96A /* Python3.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A79B144286507000074E96A /* Python3.framework */; };
+		2A79B147286508220074E96A /* Python3.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2A79B144286507000074E96A /* Python3.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = 2A7AF5C718D2AFAA00F8FFC2 /* examples */; };
 		2A93AE751903326E00C6144D /* placeholder.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A93AE731903326E00C6144D /* placeholder.pdf */; };
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
@@ -67,6 +69,17 @@
 			name = "Copy Editor Scripts";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2A79B148286508220074E96A /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				2A79B147286508220074E96A /* Python3.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2ABDB76F1867D9560069EFC3 /* Copy 'plotdevice' Tool */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -93,8 +106,6 @@
 		2A294467185E575F00E9F650 /* document.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = document.py; sourceTree = "<group>"; };
 		2A294468185E575F00E9F650 /* preferences.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = preferences.py; sourceTree = "<group>"; };
 		2A32957218C59D0A00EEDD1C /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		2A32957418C59D0A00EEDD1C /* fsevents.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = fsevents.py; sourceTree = "<group>"; };
-		2A32957518C59D0A00EEDD1C /* geometry.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = geometry.py; sourceTree = "<group>"; };
 		2A32957718C59D0A00EEDD1C /* io.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = io.py; sourceTree = "<group>"; };
 		2A32957918C59D0A00EEDD1C /* pathmatics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = pathmatics.py; sourceTree = "<group>"; };
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -106,9 +117,17 @@
 		2A66ECE018A992BD002903DE /* jquery-2.1.0.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "jquery-2.1.0.js"; path = "Resources/ui/js/jquery-2.1.0.js"; sourceTree = "<group>"; };
 		2A66ECE118A992BD002903DE /* keybindings.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = keybindings.js; path = Resources/ui/js/keybindings.js; sourceTree = "<group>"; };
 		2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "underscore-1.5.2.min.js"; path = "Resources/ui/js/underscore-1.5.2.min.js"; sourceTree = "<group>"; };
+		2A79B1392864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = Resources/en.lproj/AskString.xib; sourceTree = "<group>"; };
+		2A79B13A2864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
+		2A79B13B2864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		2A79B13C2864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = Resources/en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		2A79B13D2864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = Resources/en.lproj/PlotDeviceDocument.xib; sourceTree = "<group>"; };
+		2A79B13E2864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = Resources/en.lproj/PlotDevicePreferences.xib; sourceTree = "<group>"; };
+		2A79B13F2864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = Resources/en.lproj/PlotDeviceScript.xib; sourceTree = "<group>"; };
+		2A79B1402864FDAF0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = en; path = Resources/en.lproj/placeholder.pdf; sourceTree = "<group>"; };
+		2A79B144286507000074E96A /* Python3.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python3.framework; path = Library/Frameworks/Python3.framework; sourceTree = DEVELOPER_DIR; };
 		2A7AF5C718D2AFAA00F8FFC2 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		2A827CC91859E9FE00A126BA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
-		2A93AE741903326E00C6144D /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = English; path = Resources/English.lproj/placeholder.pdf; sourceTree = "<group>"; };
 		2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = python.xcconfig; path = app/python.xcconfig; sourceTree = "<group>"; };
 		2ABBB2F91854018B001C4E0A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		2ABBB2FB18540246001C4E0A /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
@@ -124,31 +143,20 @@
 		2AC07CBA18EF8E7D00B75879 /* colors.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = colors.py; sourceTree = "<group>"; };
 		2AC07CBD18EF8E7D00B75879 /* effects.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = effects.py; sourceTree = "<group>"; };
 		2AC07CC118EF8E7D00B75879 /* image.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = image.py; sourceTree = "<group>"; };
-		2AC07CC318EF8E7D00B75879 /* transform.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = transform.py; sourceTree = "<group>"; };
 		2AC07CC518EF8E7D00B75879 /* typography.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = typography.py; sourceTree = "<group>"; };
 		2AC07CD818EF8EC500B75879 /* context.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = context.py; sourceTree = "<group>"; };
 		2AC07CE218EF9B2400B75879 /* atoms.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = atoms.py; sourceTree = "<group>"; };
 		2AC5187F18636C9F007FB066 /* sandbox.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sandbox.py; sourceTree = "<group>"; };
-		2AD0A9B6186E552700D1F6DE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/PlotDeviceScript.xib; sourceTree = "<group>"; };
 		2AE5AD291862366300CCDD45 /* editor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = editor.py; sourceTree = "<group>"; };
 		2AE5AD2C1862386400CCDD45 /* widgets.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = widgets.py; sourceTree = "<group>"; };
-		2AEE843A18B3285600CF91D4 /* foundry.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = foundry.py; sourceTree = "<group>"; };
 		2AEE843D18B5603900CF91D4 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		2AEE846318BEC25B00CF91D4 /* iglob.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iglob.py; sourceTree = "<group>"; };
-		611CC48210BA8B9E00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = English; path = English.lproj/Credits.rtf; sourceTree = "<group>"; };
-		611CC48A10BA8B9E00B55455 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		611CC49310BA8B9E00B55455 /* PlotDevice.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = PlotDevice.icns; path = Resources/PlotDevice.icns; sourceTree = "<group>"; };
 		611CC49410BA8B9E00B55455 /* PlotDeviceFile.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = PlotDeviceFile.icns; path = Resources/PlotDeviceFile.icns; sourceTree = "<group>"; };
 		611CC4AF10BA8C1B00B55455 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		611CC4BB10BA8C1B00B55455 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		611CC4BC10BA8C1B00B55455 /* pathmatics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = pathmatics.py; sourceTree = "<group>"; };
 		611CC4D710BA8C1B00B55455 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		611CC4D910BA8C1B00B55455 /* kgp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = kgp.py; sourceTree = "<group>"; };
 		611CC4DA10BA8C1B00B55455 /* ottobot.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ottobot.py; sourceTree = "<group>"; };
-		611CC59F10BA908C00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/PlotDeviceDocument.xib; sourceTree = "<group>"; };
-		611CC5A710BA919A00B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/PlotDevicePreferences.xib; sourceTree = "<group>"; };
-		611CC67F10BAA08300B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/MainMenu.xib; sourceTree = "<group>"; };
-		611CC68610BAA0A600B55455 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Resources/English.lproj/AskString.xib; sourceTree = "<group>"; };
 		6155D9F213E2B79E00675A92 /* CHANGES.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGES.md; sourceTree = "<group>"; };
 		6155D9F313E2B79E00675A92 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		8D15AC370486D014006FF6A4 /* PlotDevice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlotDevice.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -163,6 +171,7 @@
 				2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */,
 				2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */,
 				2A15C42D18A1FA14006BDFF0 /* WebKit.framework in Frameworks */,
+				2A79B146286508220074E96A /* Python3.framework in Frameworks */,
 				2A591FF0185C17D200D1833D /* Security.framework in Frameworks */,
 				8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */,
 			);
@@ -222,8 +231,6 @@
 			isa = PBXGroup;
 			children = (
 				2A32957218C59D0A00EEDD1C /* __init__.py */,
-				2A32957418C59D0A00EEDD1C /* fsevents.py */,
-				2A32957518C59D0A00EEDD1C /* geometry.py */,
 				2A32957718C59D0A00EEDD1C /* io.py */,
 				2A32957918C59D0A00EEDD1C /* pathmatics.py */,
 			);
@@ -280,6 +287,7 @@
 		2A37F4C3FDCFA73011CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2A79B144286507000074E96A /* Python3.framework */,
 				2AEE843D18B5603900CF91D4 /* CoreText.framework */,
 				2A15C42C18A1FA14006BDFF0 /* WebKit.framework */,
 				2A591FEF185C17D200D1833D /* Security.framework */,
@@ -314,7 +322,6 @@
 				2AC07CBA18EF8E7D00B75879 /* colors.py */,
 				2AC07CBD18EF8E7D00B75879 /* effects.py */,
 				2AC07CC118EF8E7D00B75879 /* image.py */,
-				2AC07CC318EF8E7D00B75879 /* transform.py */,
 				2AC07CC518EF8E7D00B75879 /* typography.py */,
 			);
 			path = gfx;
@@ -327,21 +334,11 @@
 				2AC07CD818EF8EC500B75879 /* context.py */,
 				2AC07CB518EF8E7D00B75879 /* gfx */,
 				2A32957118C59D0A00EEDD1C /* lib */,
-				611CC4BA10BA8C1B00B55455 /* geo */,
 				611CC4C410BA8C1B00B55455 /* gui */,
 				2A294457185E539400E9F650 /* run */,
 				611CC4D610BA8C1B00B55455 /* util */,
 			);
 			path = plotdevice;
-			sourceTree = "<group>";
-		};
-		611CC4BA10BA8C1B00B55455 /* geo */ = {
-			isa = PBXGroup;
-			children = (
-				611CC4BB10BA8C1B00B55455 /* __init__.py */,
-				611CC4BC10BA8C1B00B55455 /* pathmatics.py */,
-			);
-			path = geo;
 			sourceTree = "<group>";
 		};
 		611CC4C410BA8C1B00B55455 /* gui */ = {
@@ -363,7 +360,6 @@
 			children = (
 				611CC4D710BA8C1B00B55455 /* __init__.py */,
 				2AEE846318BEC25B00CF91D4 /* iglob.py */,
-				2AEE843A18B3285600CF91D4 /* foundry.py */,
 				611CC4D910BA8C1B00B55455 /* kgp.py */,
 				611CC4DA10BA8C1B00B55455 /* ottobot.py */,
 			);
@@ -385,6 +381,7 @@
 				2AF8981419953CA1005A49A5 /* Manually Update Examples */,
 				8D15AC300486D014006FF6A4 /* Sources */,
 				8D15AC330486D014006FF6A4 /* Frameworks */,
+				2A79B148286508220074E96A /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -402,16 +399,15 @@
 		2A37F4A9FDCFA73011CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0510;
+				LastUpgradeCheck = 1340;
 			};
 			buildConfigurationList = C05733CB08A9546B00998B17 /* Build configuration list for PBXProject "PlotDevice" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				en,
 				Base,
-				English,
 			);
 			mainGroup = 2A37F4AAFDCFA73011CA2CEA /* PlotDevice */;
 			projectDirPath = "";
@@ -493,7 +489,7 @@
 		2A93AE731903326E00C6144D /* placeholder.pdf */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2A93AE741903326E00C6144D /* English */,
+				2A79B1402864FDAF0074E96A /* en */,
 			);
 			name = placeholder.pdf;
 			sourceTree = "<group>";
@@ -501,7 +497,7 @@
 		2AD0A9B5186E552700D1F6DE /* PlotDeviceScript.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2AD0A9B6186E552700D1F6DE /* English */,
+				2A79B13F2864FDAE0074E96A /* en */,
 			);
 			name = PlotDeviceScript.xib;
 			sourceTree = "<group>";
@@ -509,7 +505,7 @@
 		611CC48110BA8B9E00B55455 /* Credits.rtf */ = {
 			isa = PBXVariantGroup;
 			children = (
-				611CC48210BA8B9E00B55455 /* English */,
+				2A79B13A2864FDAE0074E96A /* en */,
 			);
 			name = Credits.rtf;
 			path = Resources;
@@ -518,7 +514,7 @@
 		611CC48910BA8B9E00B55455 /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				611CC48A10BA8B9E00B55455 /* English */,
+				2A79B13B2864FDAE0074E96A /* en */,
 			);
 			name = InfoPlist.strings;
 			path = Resources;
@@ -527,7 +523,7 @@
 		611CC59E10BA908C00B55455 /* PlotDeviceDocument.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				611CC59F10BA908C00B55455 /* English */,
+				2A79B13D2864FDAE0074E96A /* en */,
 			);
 			name = PlotDeviceDocument.xib;
 			sourceTree = "<group>";
@@ -535,7 +531,7 @@
 		611CC5A610BA919A00B55455 /* PlotDevicePreferences.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				611CC5A710BA919A00B55455 /* English */,
+				2A79B13E2864FDAE0074E96A /* en */,
 			);
 			name = PlotDevicePreferences.xib;
 			sourceTree = "<group>";
@@ -543,7 +539,7 @@
 		611CC67E10BAA08300B55455 /* MainMenu.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				611CC67F10BAA08300B55455 /* English */,
+				2A79B13C2864FDAE0074E96A /* en */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";
@@ -551,7 +547,7 @@
 		611CC68510BAA0A600B55455 /* AskString.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				611CC68610BAA0A600B55455 /* English */,
+				2A79B1392864FDAE0074E96A /* en */,
 			);
 			name = AskString.xib;
 			sourceTree = "<group>";
@@ -563,24 +559,24 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)";
 				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/**";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "";
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-				);
 				INFOPLIST_FILE = app/info.plist;
 				INSTALL_PATH = /Applications;
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = io.plotdevice.PlotDevice;
 				PRODUCT_NAME = PlotDevice;
 				SDKROOT = macosx;
 			};
@@ -590,21 +586,21 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = dist;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/**";
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "";
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-				);
 				INFOPLIST_FILE = app/info.plist;
 				INSTALL_PATH = /Applications;
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = io.plotdevice.PlotDevice;
 				PRODUCT_NAME = PlotDevice;
 				SDKROOT = macosx;
 			};
@@ -614,7 +610,35 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */;
 			buildSettings = {
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = PlotDevice;
 				SDKROOT = macosx;
@@ -625,7 +649,34 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */;
 			buildSettings = {
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				PRODUCT_NAME = PlotDevice;
 				SDKROOT = macosx;
 			};

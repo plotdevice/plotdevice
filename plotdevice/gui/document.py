@@ -127,6 +127,7 @@ class ScriptController(NSWindowController):
     ## Properties
 
     # .path
+    @objc.python_method
     def _get_path(self):
         return self.vm.path
     @objc.python_method
