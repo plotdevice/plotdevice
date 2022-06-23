@@ -68,7 +68,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         self._nodes = {}
 
         # look for a string as the first positional arg or an xml/str kwarg
-        if args and isinstance(args[0], basestring):
+        if args and isinstance(args[0], str):
             kwargs['str'], args = args[0], args[1:]
 
         # merge in any numlike positional args to define bounds
@@ -130,7 +130,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         if txt is not None and not attrib_txt:
             # convert non-textual `str` args to strings
-            if not isinstance(txt, basestring) and not is_xml:
+            if not isinstance(txt, str) and not is_xml:
                 txt = repr(txt)
 
             # try to insulate people from the need to use a unicode constant for any text

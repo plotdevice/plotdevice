@@ -110,6 +110,7 @@ class PlotDevicePreferencesController(NSWindowController):
         self.checkBindings()
         self.checkUpdater()
 
+    @objc.python_method
     def _notify(self, notification):
         nc = NSNotificationCenter.defaultCenter()
         nc.postNotificationName_object_(notification, None)

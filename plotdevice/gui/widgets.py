@@ -109,11 +109,12 @@ class DashboardController(NSObject):
         self.script.runScript()
 
     def buttonClicked_(self, sender):
-        print "out of service"
+        print("out of service")
         # var = self.script.vm.vars[sender.tag()]
         # self.script.vm.call(var.name)
         # self.script.runScript()
 
+    @objc.python_method
     def buildInterface(self, vars):
         self.vars = vars
         self.clearInterface()
@@ -149,6 +150,7 @@ class DashboardController(NSObject):
             cnt += 1
         self.panel.setFrame_display_animate_( ((px,py),(pw,ph)), True, True )
 
+    @objc.python_method
     def _addLabel(self, v, y, cnt):
         control = NSTextField.alloc().init()
         control.setFrame_(((0,y),(100,13)))
@@ -161,6 +163,7 @@ class DashboardController(NSObject):
         control.setTextColor_(NSColor.whiteColor())
         self.panel.contentView().addSubview_(control)
 
+    @objc.python_method
     def _addSlider(self, v, y, cnt):
         control = NSSlider.alloc().init()
         control.setMaxValue_(v.max)
@@ -175,6 +178,7 @@ class DashboardController(NSObject):
         control.setAction_(objc.selector(self.numberChanged_, signature="v@:@@"))
         self.panel.contentView().addSubview_(control)
 
+    @objc.python_method
     def _addTextField(self, v, y, cnt):
         control = NSTextField.alloc().init()
         control.setStringValue_(v.value)
@@ -187,6 +191,7 @@ class DashboardController(NSObject):
         control.setAction_(objc.selector(self.textChanged_, signature="v@:@@"))
         self.panel.contentView().addSubview_(control)
 
+    @objc.python_method
     def _addSwitch(self, v, y, cnt):
         control = NSButton.alloc().init()
         control.setButtonType_(NSSwitchButton)
@@ -209,6 +214,7 @@ class DashboardController(NSObject):
         control.setAction_(objc.selector(self.booleanChanged_, signature="v@:@@"))
         self.panel.contentView().addSubview_(control)
 
+    @objc.python_method
     def _addButton(self, v, y, cnt):
         control = NSButton.alloc().init()
         control.setFrame_(((108, y-2),(172,16)))
@@ -249,6 +255,7 @@ class ExportSheet(NSObject):
         self.last = None
 
 
+    @objc.python_method
     def beginExport(self, kind):
         # configure the accessory controls
         if kind=='image':

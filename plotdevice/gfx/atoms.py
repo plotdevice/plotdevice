@@ -59,9 +59,8 @@ class Bequest(type):
             for attr, val in info.items():
                 setattr(cls, attr, val)
 
-class Grob(object):
+class Grob(object, metaclass=Bequest):
     """A GRaphic OBject is the base class for all drawing primitives."""
-    __metaclass__ = Bequest
     ctxAttrs = ('_grid',)
 
     def __init__(self, **kwargs):
@@ -167,7 +166,7 @@ class FrameMixin(Grob):
         x, y = kwargs.get('x',0), kwargs.get('y',0)
         h = kwargs.get('h',kwargs.get('height',None))
         w = kwargs.get('w',kwargs.get('width',None))
-        if isinstance(w, basestring):
+        if isinstance(w, str):
             w = None # ignore width if it's passing a font style
         self._frame = Region(x,y,w,h)
 
@@ -339,7 +338,7 @@ class StyleMixin(Grob):
         super(StyleMixin, self).__init__(**kwargs)
 
         # ignore `width` if it's a column-width rather than typeface width
-        if not isinstance(kwargs.get('width', ''), basestring):
+        if not isinstance(kwargs.get('width', ''), str):
             kwargs = dict(kwargs)
             del kwargs['width']
 

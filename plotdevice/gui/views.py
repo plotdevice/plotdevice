@@ -2,6 +2,7 @@
 import sys
 import os
 import traceback
+import objc
 
 from ..lib.cocoa import *
 from ..gfx import Color
@@ -102,6 +103,7 @@ class GraphicsView(NSView):
             self.setFrameSize_(self.placeholder.size())
             self.layer().setContents_(self.placeholder)
 
+    @objc.python_method
     def setCanvas(self, canvas):
         # set the scroller color based on the background
         bg = canvas.background
@@ -143,11 +145,14 @@ class GraphicsView(NSView):
 
     def _get_zoom(self):
         return self._zoom
+
+    @objc.python_method
     def _set_zoom(self, zoom):
         self._zoom = zoom
         self.setCanvas(self.canvas)
     zoom = property(_get_zoom, _set_zoom)
 
+    @objc.python_method
     def findNearestZoomIndex(self, zoom):
         """Returns the nearest zoom level, and whether we found a direct, exact
         match or a fuzzy match."""
@@ -265,6 +270,7 @@ class FullscreenView(NSView):
         # self.wheeldelta = 0.0
         return self
 
+    @objc.python_method
     def setCanvas(self, canvas):
         self.canvas = canvas
         self.setNeedsDisplay_(True)

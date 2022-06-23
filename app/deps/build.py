@@ -63,7 +63,7 @@ def install_extensions(ext_root):
 
     # Copy all build results to plotdevice/lib dir
     for extension in glob("%s/*/build/lib*"%DEPS):
-        cmd = 'cp -R -p %s/* %s' % (extension, ext_root)
+        cmd = 'cp -pR %s/* %s' % (extension, ext_root)
         result = call(cmd, shell=True)
         if result > 0:
             lib_name = dirname(dirname(extension))

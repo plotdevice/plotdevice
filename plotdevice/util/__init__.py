@@ -25,8 +25,8 @@ def grid(cols, rows, colSize=1, rowSize=1, shuffled=False):
             rect(x,y, 10,10)
     """
     # Prefer using generators.
-    rowRange = xrange(int(rows))
-    colRange = xrange(int(cols))
+    rowRange = range(int(rows))
+    colRange = range(int(cols))
     # Shuffled needs a real list, though.
     if (shuffled):
         rowRange = list(rowRange)
@@ -78,8 +78,8 @@ def files(path="*", case=True):
     For a case insensitive search, call files() with case=False
     """
     from iglob import iglob
-    if type(path)==unicode:
-        path.encode('utf-8')
+    # if type(path)==unicode:
+    #     path.encode('utf-8')
     path = os.path.expanduser(path)
 
     return list(iglob(path.decode('utf-8'), case=case))
@@ -98,7 +98,7 @@ def _as_sequence(seq):
     return list(seq)
 
 def _as_before(orig, lst):
-    return "".join(lst) if isinstance(orig, basestring) else list(lst)
+    return "".join(lst) if isinstance(orig, str) else list(lst)
 
 def _getter(seq, names):
     from operator import itemgetter, attrgetter
@@ -154,17 +154,17 @@ def _copy_attr(v):
         return tuple(v)
     elif isinstance(v, list):
         return list(v)
-    elif isinstance(v, (int, str, unicode, float, bool, long)):
+    elif isinstance(v, (int, str, float, bool)):
         return v
     else:
-        raise DeviceError, "Don't know how to copy '%s'." % v
+        raise DeviceError("Don't know how to copy '%s'." % v)
 
 def _copy_attrs(source, target, attrs):
     for attr in attrs:
         try:
             setattr(target, attr, _copy_attr(getattr(source, attr)))
-        except AttributeError, e:
-            print "missing attr: %r"% attr, hasattr(source, attr), hasattr(target, attr)
+        except AttributeError as e:
+            print("missing attr: %r"% attr, hasattr(source, attr), hasattr(target, attr))
             raise e
 
 ### tuple/list de-nester ###
@@ -249,8 +249,8 @@ class adict(BetterRepr, dict):
     def __getattr__(self, key):
         try:
             return self[key]
-        except KeyError, k:
-            raise AttributeError, k
+        except KeyError as k:
+            raise AttributeError(k)
 
     def __setattr__(self, key, value):
         # this test allows attributes to be set in the __init__ method
@@ -261,8 +261,8 @@ class adict(BetterRepr, dict):
     def __delattr__(self, key):
         try:
             del self[key]
-        except KeyError, k:
-            raise AttributeError, k
+        except KeyError as k:
+            raise AttributeError(k)
 
 
 ### autorelease pool manager ###

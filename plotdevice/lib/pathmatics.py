@@ -1,6 +1,6 @@
 import objc
 from collections import namedtuple
-from .cocoa import CGPathRelease
+from cocoa import CGPathRelease
 import cPathmatics
 
 
@@ -18,7 +18,7 @@ def convert_path(ns_path):
 
 try:
     # Faster C versions.
-    from cPathmatics import fast_inverse_sqrt, angle, distance, coordinates
+    from .cPathmatics import fast_inverse_sqrt, angle, distance, coordinates
     isqrt = inverse_sqrt = fast_inverse_sqrt
 except ImportError:
     from math import degrees, atan2
@@ -303,7 +303,7 @@ def _locate(path, t, segments=None):
         segments = path.segmentlengths(relative=True)
 
     if len(segments) == 0:
-        raise DeviceError, "The given path is empty"
+        raise DeviceError("The given path is empty")
 
     for i, el in enumerate(path):
         if i == 0 or el.cmd == MOVETO:
@@ -353,7 +353,7 @@ def point(path, t, segments=None):
     from ..gfx.bezier import Curve
 
     if len(path) == 0:
-        raise DeviceError, "The given path is empty"
+        raise DeviceError("The given path is empty")
 
     i, t, closeto = _locate(path, t, segments=segments)
 
@@ -372,7 +372,7 @@ def point(path, t, segments=None):
         x, y, c1x, c1y, c2x, c2y = curvepoint(t, x0, y0, x1, y1, x2, y2, x3, y3)
         return Curve(CURVETO, ((c1x, c1y), (c2x, c2y), (x, y)))
     else:
-        raise DeviceError, "Unknown cmd for p1 %s" % p1
+        raise DeviceError("Unknown cmd for p1 %s" % p1)
 
 def points(path, amount=100):
     """Returns an iterator with a list of calculated points for the path.
@@ -395,7 +395,7 @@ def points(path, amount=100):
     """
 
     if len(path) == 0:
-        raise DeviceError, "The given path is empty"
+        raise DeviceError("The given path is empty")
 
     # The delta value is divided by amount - 1, because we also want the last point (t=1.0)
     # If I wouldn't use amount - 1, I fall one point short of the end.
@@ -590,7 +590,7 @@ def insert_point(path, t):
         pt_x, pt_y, pt_c1x, pt_c1y, pt_c2x, pt_c2y, pt_h1x, pt_h1y, pt_h2x, pt_h2y = \
             curvepoint(t, x0, y0, x1, y1, x2, y2, x3, y3, True)
     else:
-        raise DeviceError, "Locate should not return a MOVETO"
+        raise DeviceError("Locate should not return a MOVETO")
 
     new_path = Bezier(None)
     new_path.moveto(path[0].x, path[0].y)
@@ -610,7 +610,7 @@ def insert_point(path, t):
                 else:
                     new_path.closepath()
             else:
-                raise DeviceError, "Didn't expect pt_cmd %s here" % pt_cmd
+                raise DeviceError("Didn't expect pt_cmd %s here" % pt_cmd)
 
         else:
             if path[j].cmd == MOVETO:

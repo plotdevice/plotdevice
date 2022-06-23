@@ -68,9 +68,9 @@ class ScriptAppDelegate(NSObject):
 
         if self.mode=='windowed':
             # load the viewer ui from the nib in plotdevice/rsrc
-            nib = NSData.dataWithContentsOfFile_(rsrc_path('viewer.nib'))
-            ui = NSNib.alloc().initWithNibData_bundle_(nib, None)
-            ok, objs = ui.instantiateNibWithOwner_topLevelObjects_(self, None)
+            bundle = NSBundle.bundleWithPath_(rsrc_path())
+            ui = NSNib.alloc().initWithNibNamed_bundle_("viewer", bundle)
+            ok, objs = ui.instantiateWithOwner_topLevelObjects_(self, None)
             NSApp().setMainMenu_(self.menu)
 
             # configure the window script-controller, and update-watcher
@@ -200,6 +200,7 @@ class ConsoleScript(ScriptController):
     def windowWillClose_(self, note):
         NSApp().terminate_(self)
 
+    @objc.python_method
     def echo(self, output):
         STDERR.write(ERASER)
         for isErr, data in output:
@@ -210,11 +211,13 @@ class ConsoleScript(ScriptController):
             STDERR.write(self._buf)
             STDERR.flush()
 
+    @objc.python_method
     def exportFrame(self, status, canvas=None):
         super(ConsoleScript, self).exportFrame(status, canvas)
         if not status.ok:
             NSApp().delegate().done()
 
+    @objc.python_method
     def exportStatus(self, event):
         super(ConsoleScript, self).exportStatus(event)
 
@@ -230,6 +233,7 @@ class ConsoleScript(ScriptController):
             self._buf = ''
             NSApp().delegate().done()
 
+    @objc.python_method
     def exportProgress(self, written, total, cancelled):
         super(ConsoleScript, self).exportProgress(written, total, cancelled)
 

@@ -54,7 +54,7 @@ class Color(object):
             return
         elif params == 1 and isinstance(args[0], NSColor):  # NSColor object
             clr = args[0]
-        elif params>=1 and isinstance(args[0], basestring):
+        elif params>=1 and isinstance(args[0], str):
             r, g, b, a = Color._parse(args[0])              # Hex string or named color
             if args[1:]:
                 a = args[1]
@@ -300,7 +300,7 @@ class Color(object):
         if isinstance(blob, Color):
             return True
 
-        valid_str = lambda s: isinstance(s, basestring) and (s.strip() in _CSS_COLORS or \
+        valid_str = lambda s: isinstance(s, str) and (s.strip() in _CSS_COLORS or \
                                                              re.match(r'#?[a-z0-9]{3,8}$', s.strip()) )
         if isinstance(blob, (tuple, list)):
             demoded = [b for b in blob if b not in (RGB,HSV,CMYK,GREY)]
@@ -312,7 +312,7 @@ class Color(object):
                     return True
                 if len(demoded)==2 and numlike(demoded[1]):
                     return True
-        elif isinstance(blob, basestring):
+        elif isinstance(blob, str):
             return valid_str(blob)
 
     @classmethod
@@ -351,7 +351,7 @@ class Pattern(object):
             self._nsColor = img._nsColor
         else:
             from .image import Image
-            img = Image(img) if isinstance(img, basestring) else img
+            img = Image(img) if isinstance(img, str) else img
             self._nsColor = NSColor.colorWithPatternImage_(img._nsImage)
 
     # fill() and stroke() both cache the previous canvas state by creating a _rollback attr.

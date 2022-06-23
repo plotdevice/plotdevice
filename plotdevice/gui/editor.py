@@ -3,6 +3,7 @@ import os
 import re
 import json
 import cgi
+import objc
 from io import open
 from objc import super
 from pprint import pprint
@@ -183,6 +184,8 @@ class EditorView(NSView):
 
     def _get_source(self):
         return self.webview.stringByEvaluatingJavaScriptFromString_('editor.source();')
+
+    @objc.python_method
     def _set_source(self, src):
         self.js(u'editor.source', args(src))
     source = property(_get_source, _set_source)
@@ -209,6 +212,7 @@ class EditorView(NSView):
     def clearErrors(self):
         self.js('editor.mark', args(None))
 
+    @objc.python_method
     def report(self, crashed, script):
         if not crashed:
             self.js('editor.mark', args(None))
@@ -217,6 +221,7 @@ class EditorView(NSView):
             err_lines = [line-1 for fn, line, env, src in reversed(traceback) if fn==script]
             self.js('editor.mark', args("\n".join(exc), err_lines))
 
+    @objc.python_method
     def js(self, cmd, args=''):
         op = '%s(%s);'%(cmd,args)
         if self._wakeup:
@@ -298,6 +303,7 @@ class EditorView(NSView):
         menu = mm.itemWithTitle_("Python")
         menu.submenu().performActionForItemAtIndex_(3)
 
+    @objc.python_method
     def edits(self, count):
         # inform the undo manager of the changes
         um = self._undo_mgr
@@ -316,6 +322,7 @@ class EditorView(NSView):
     def syncUndoState_(self, count):
         pass # this would be useful if only it got called for redo as well as undo...
 
+    @objc.python_method
     def setSearchPasteboard(self, query):
         if not query: return
 
@@ -324,6 +331,7 @@ class EditorView(NSView):
         pb.setString_forType_(query, NSStringPboardType)
         self.flash("Edit")
 
+    @objc.python_method
     def flash(self, menuname):
         # when a menu item's key command was entered in the editor, flash the menu
         # bar to give a hint of where the command lives
@@ -407,6 +415,7 @@ class OutputTextView(NSTextView):
     def changeColor_(self, clr):
         pass # ignore system color panel
 
+    @objc.python_method
     def append(self, txt, stream='message'):
         if not txt: return
         defer_endl = txt.endswith(u'\n')
@@ -428,6 +437,7 @@ class OutputTextView(NSTextView):
             timestamp = NSDate.date().descriptionWithCalendarFormat_timeZone_locale_("%Y-%m-%d %H:%M:%S", None, locale)
             self.append(timestamp+"\n", 'info')
 
+    @objc.python_method
     def report(self, crashed, frames):
         if not hasattr(self, '_begin'):
             return

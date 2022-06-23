@@ -70,7 +70,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                 self._nsImage.setFlipped_(True)
             elif hasattr(src, '_nsImage'):
                 self._nsImage = src._nsImage
-            elif isinstance(src, basestring):
+            elif isinstance(src, str):
                 self._nsImage = self._lazyload(path=src)
             else:
                 invalid = "Not a valid image source: %r" % type(src)
@@ -342,7 +342,7 @@ class ImageWriter(object):
         files. For example, to generate 'output-0001.png' through 'output-0100.png':
 
             with export('output.png') as seq:
-                for i in xrange(100):
+                for i in range(100):
                     with seq.frame:
                         ... # draw the next image in the sequence
 
@@ -351,7 +351,7 @@ class ImageWriter(object):
         generate files named '01-output.png' through '100-output.png':
 
             with export('{2}-output.png') as seq:
-                for i in xrange(100):
+                for i in range(100):
                     with seq.frame:
                         ... # draw the next image in the sequence
         """

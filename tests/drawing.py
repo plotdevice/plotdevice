@@ -64,13 +64,13 @@ class DrawingTests(PlotDeviceTestCase):
         
         # draw twelve overlapping lines separately
         translate(5,5)
-        for i in xrange(12):
+        for i in range(12):
             line(0, i*10, i*15, 120)
         
         # draw them as a single compound-path
         translate(0, 140)
         with bezier():
-            for i in xrange(12):
+            for i in range(12):
                 line(0, i*10, i*15, 120)
 
     @reference('drawing/paths-compound2.png')

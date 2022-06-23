@@ -215,7 +215,7 @@ class Sandbox(object):
         # default to running the script itself if a method (e.g., compile) isn't specified.
         if not method:
             def execScript():
-                exec self._code in self.namespace
+                exec(self._code, self.namespace)
             method = execScript
         elif callable(self.namespace.get(method, None)):
             method = self.namespace[method]

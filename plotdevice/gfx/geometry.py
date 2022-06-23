@@ -254,7 +254,7 @@ class Region(object):
             # try to unpack a full rect or at least an origin from the args
             try:
                 self.origin, self.size = parse_coords(coords, [Point,Size])
-            except Exception, e_orig:
+            except Exception as e_orig:
                 try:
                     self.origin, self.width = parse_coords(coords, [Point,float])
                 except:
@@ -265,7 +265,7 @@ class Region(object):
 
     @trim_zeroes
     def __repr__(self):
-        vals = [getattr(self, attr) for attr in 'x','y','w','h']
+        vals = [getattr(self, attr) for attr in ('x','y','w','h')]
         dims = ["%.3f"%d if numlike(d) else repr(d) for d in vals]
         return 'Region(x=%s, y=%s, w=%s, h=%s)' % tuple(dims)
 
@@ -390,7 +390,7 @@ def parse_coords(coords, types):
     objs = []
 
     # splice in a Point + Size for any Regions passed in the args
-    for i in xrange(len(stream)-1,-1,-1):
+    for i in range(len(stream)-1,-1,-1):
         if isinstance(stream[i], Region):
             stream[i:i+1] = [stream[i].origin, stream[i].size]
 

@@ -216,7 +216,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
         # rotate the origin slightly so the polygon sits on an edge
         theta = pi/2 + (0 if sides%2 else 1*pi/sides)
-        angles = [2*pi * i/sides - theta for i in xrange(sides)]
+        angles = [2*pi * i/sides - theta for i in range(sides)]
 
         # walk around the circle adding points with proper scale/origin
         points = [ [radius*cos(theta)+x, radius*sin(theta)+y] for theta in angles]
@@ -298,7 +298,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def __getitem__(self, index):
         if isinstance(index, slice):
             # slice-based access
-            pts = [self._nsBezierPath.elementAtIndex_associatedPoints_(i) for i in xrange(*index.indices(len(self)))]
+            pts = [self._nsBezierPath.elementAtIndex_associatedPoints_(i) for i in range(*index.indices(len(self)))]
             return [Curve(cmd, el) for cmd,el in pts]
         else:
             # index-based access
@@ -498,7 +498,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
         count = int(amount) # make sure we don't choke on a float
         delta = 1.0/max(1, count-1) # div by count-1 so the last point is at t=1.0
-        for i in xrange(count):
+        for i in range(count):
             yield pathmatics.point(self, delta*i)
 
     def addpoint(self, t):

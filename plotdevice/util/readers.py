@@ -16,7 +16,7 @@ from codecs import iterencode, iterdecode
 from xml.parsers import expat
 
 # http
-from urlparse import urlparse
+from urllib.parse import urlparse
 from Foundation import NSDateFormatter, NSLocale, NSTimeZone, NSDate
 
 
@@ -57,7 +57,7 @@ class XMLParser(object):
         # parse the input xml string
         try:
             self._expat.Parse(self._xml, True)
-        except expat.ExpatError, e:
+        except expat.ExpatError as e:
             self._expat_error(e)
 
     @property
@@ -73,7 +73,7 @@ class XMLParser(object):
         if line.startswith(HEAD):
             line = line[len(HEAD):]
             col -= len(HEAD)
-            err = re.sub(ur'column \d+', 'column %i'%col, err)
+            err = re.sub(r'column \d+', 'column %i'%col, err)
         if line.endswith(TAIL):
             line = line[:-len(TAIL)]
 
@@ -102,7 +102,7 @@ class XMLParser(object):
         raise DeviceError(xmlfail)
 
     def log(self, s=None, indent=0):
-        if not isinstance(s, basestring):
+        if not isinstance(s, str):
             if s is None:
                 return self._log
             self._log = int(s)
@@ -110,7 +110,7 @@ class XMLParser(object):
         if not self._log: return
         if indent<0: self._log-=1
         msg = (u'  '*self._log)+(s if s.startswith('<') else repr(s)[1:])
-        print msg.encode('utf-8')
+        print(msg.encode('utf-8'))
         if indent>0: self._log+=1
 
     def _enter(self, name, attrs):

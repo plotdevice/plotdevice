@@ -5,6 +5,7 @@ import re
 import traceback
 import random
 import time
+import objc
 from io import open
 from objc import super
 
@@ -128,6 +129,7 @@ class ScriptController(NSWindowController):
     # .path
     def _get_path(self):
         return self.vm.path
+    @objc.python_method
     def _set_path(self, pth):
         self.vm.path = pth
     path = property(_get_path, _set_path)
@@ -135,6 +137,7 @@ class ScriptController(NSWindowController):
     # .source
     def _get_source(self):
         return self.editorView.source if self.editorView else self.vm.source
+    @objc.python_method
     def _set_source(self, src):
         self.vm.source = src
         if self.editorView:
@@ -187,7 +190,8 @@ class ScriptController(NSWindowController):
 
         # place the statusView in the title bar
         frame = win.frame()
-        win.contentView().superview().addSubview_(self.statusView)
+        # win.contentView().superview().addSubview_(self.statusView)
+        win.contentView().addSubview_(self.statusView)
         self.statusView.setFrame_( ((frame.size.width-104,frame.size.height-22), (100,22)) )
 
         # sign up for autoresume on quit-and-relaunch (but only if this isn't console.py)
@@ -393,6 +397,7 @@ class ScriptController(NSWindowController):
         if not ok:
             self.stopScript()
 
+    @objc.python_method
     def invoke(self, method):
         """Call a method defined in the script's global namespace and update the ui appropriately
 
@@ -416,7 +421,7 @@ class ScriptController(NSWindowController):
         if result.ok and redraw:
             try:
                 self.currentView.setCanvas(self.vm.canvas)
-            except DeviceError, e:
+            except DeviceError as e:
                 return self.crash()
         if not result.ok and method in (None, "setup"):
             self.stopScript()
@@ -425,6 +430,7 @@ class ScriptController(NSWindowController):
 
         return result.ok
 
+    @objc.python_method
     def echo(self, output):
         """Pass a list of (isStdErr, txt) tuples to the output window"""
         for isErr, data in output:
@@ -470,6 +476,7 @@ class ScriptController(NSWindowController):
             return NSBeep()
         self.exportSheet.beginExport('movie')
 
+    @objc.python_method
     def exportInit(self, kind, fname, opts):
         """Begin actual export (invoked by self.exportSheet unless sheet was cancelled)"""
         if self.animationTimer is not None:
@@ -493,6 +500,7 @@ class ScriptController(NSWindowController):
         self.vm.source = self.source
         self.vm.export(kind, fname, opts)
 
+    @objc.python_method
     def exportFrame(self, status, canvas=None):
         """Handle a newly rendered frame (and any console output it generated)"""
         if status.output:
@@ -503,11 +511,13 @@ class ScriptController(NSWindowController):
             # blit the canvas to the graphics view            ^ (but only every other frame)
             self.currentView.setCanvas(canvas)
 
+    @objc.python_method
     def exportProgress(self, written, total, cancelled):
         """Update the progress meter in the StatusView (invoked by self.vm.session)"""
         if self.statusView:
             self.statusView.updateExport_total_(written, total)
 
+    @objc.python_method
     def exportStatus(self, event):
         """Handle an export-lifecycle event (invoked by self.vm.session)"""
 

@@ -20,7 +20,7 @@ MIT Licensed (see README file for details)
 """
 import sys, re, os
 
-__version__ = '0.10.0'
+__version__ = '0.10.1'
 __author__  = 'Christian Swinehart'
 __email__   = 'drafting@samizdat.cc'
 __credits__ = 'Frederik De Bleser, Tom De Smedt, Just van Rossum, & Marcos Ojeda'
@@ -63,6 +63,6 @@ else:
     # set up the standard plotdevice global namespace by exposing the module-level
     # context/canvas's internal ns
     globals().update(ctx._ns)
-    __all__ = ctx._ns.keys()
+    __all__ = list(ctx._ns.keys())
 
 

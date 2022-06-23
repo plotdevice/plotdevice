@@ -370,7 +370,7 @@ class Stylesheet(object):
             spec.update(fontspec(*args, **kwargs))
             color = kwargs.get('fill')
             if color and not isinstance(color, Color):
-                if isinstance(color, (basestring, int, float, long)):
+                if isinstance(color, (str, int, float, long)):
                     color = (color,)
                 color = Color(*color)
             if color:

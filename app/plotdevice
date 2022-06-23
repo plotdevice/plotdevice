@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 """
 plotdevice.py
@@ -149,7 +149,7 @@ def parse_args():
 
     # if it's a multiframe pdf, check for a telltale "{n}" to determine whether
     # it's a `single' doc or a sequence of numbered pdf files
-    opts.single = bool(opts.first<opts.last and ext=='pdf' and not re.search('{\d+}', opts.export))
+    opts.single = bool(ext=='pdf' and not re.search('{\d+}', opts.export) and opts.last and opts.first < opts.last)
 
   opts.site = module_root()
   return opts

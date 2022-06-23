@@ -1,15 +1,11 @@
 # interpretter info gathered from $PYTHON environment variable
-PYTHON ?= /usr/bin/python
+PYTHON ?= python3
 PY_VERSION = $(shell $(PYTHON) -c 'import sys; print("py%i%i"%sys.version_info[:2])')
 
 # dependencies to be fetched
 HTTP_MODULES = requests cachecontrol lockfile
 
-VENV_VERSION = 13.1.0
-VENV_SRC = virtualenv-$(VENV_VERSION).tar.gz
-VENV_URL = https://pypi.python.org/packages/source/v/virtualenv/$(VENV_SRC)
-
-OBJC_VERSION = 3.0.4
+OBJC_VERSION = 8.5
 OBJC_SRC = pyobjc-$(OBJC_VERSION)-$(PY_VERSION).tar.gz
 OBJC_URL = http://plotdevice.io/wheelhouse/$(OBJC_SRC)
 
@@ -23,8 +19,8 @@ HTTP = $(DSTROOT)/$(firstword $(HTTP_MODULES))
 
 # commands
 CURL = @curl -L --progress-bar -f
-VIRTUALENV = $(BUILD)/virtualenv-$(VENV_VERSION)/virtualenv.py
-PIP = $(ENV)/bin/pip --isolated -q install
+# VIRTUALENV = $(BUILD)/virtualenv-$(VENV_VERSION)/virtualenv.py
+PIP = $(ENV)/bin/pip3 --isolated
 
 # ---------------------------------------------------------------------------------------- #
 
@@ -52,21 +48,10 @@ wheels: clean $(ENV)
 
 # ---------------------------------------------------------------------------------------- #
 
-# fetch the current version of virtualenv (which we mostly use for its copy of pip)
-$(VENV_SRC):
-	@echo $(VENV_URL)
-	$(CURL) $(VENV_URL) -o $@
-
 # fetch the cached wheelhouse archive from plotdevice.io (or build it if necessary)
 $(OBJC_SRC):
 	@echo $(OBJC_URL)
 	-$(CURL) $(OBJC_URL) -o $@ || $(MAKE) wheels
-
-# unpack the virtualenv sdist in the build dir
-$(VIRTUALENV): $(VENV_SRC)
-	@mkdir -p $(BUILD)
-	tar xzf $(VENV_SRC) -C $(BUILD)
-	touch $@
 
 # unpack the archived wheels in the build dir
 $(WHEELHOUSE): $(OBJC_SRC)
@@ -75,14 +60,15 @@ $(WHEELHOUSE): $(OBJC_SRC)
 	touch $@
 
 # create a virtual environment at build/env
-$(ENV): $(VIRTUALENV)
-	$(PYTHON) $(VIRTUALENV) -q $@
+$(ENV):
+	$(PYTHON) -m venv $@
+	$(PIP) install --upgrade pip
 
 # create a sitedir from the contents of build/wheelhouse
 $(PYOBJC): $(WHEELHOUSE) $(ENV)
-	$(PIP) --target=$@ --no-index --find-links=$(WHEELHOUSE) "pyobjc"
+	$(PIP) install --target=$@ --no-index --find-links=$(WHEELHOUSE) "pyobjc"
 
 # fetch the current versions of our helper modules
 $(HTTP): $(ENV)
-	$(PIP) --target=$(DSTROOT) $(HTTP_MODULES)
+	$(PIP) install --target=$(DSTROOT) $(HTTP_MODULES)
 	rm -rf $(DSTROOT)/*.dist-info

@@ -19,10 +19,10 @@
 # - cFoundry, cPathmatics, cIO, & PyObjC (included in the "app/deps" folder)
 # - Sparkle.framework (auto-downloaded only for `dist` builds)
 
-from __future__ import print_function
 import os, sys, json, re
-from distutils.dir_util import remove_tree
 from setuptools import setup, find_packages
+from distutils.dir_util import remove_tree
+from distutils.command.build_py import build_py
 from pkg_resources import DistributionNotFound
 from os.path import join, exists, dirname, basename, abspath, getmtime
 import plotdevice
@@ -192,10 +192,6 @@ class BuildDistCommand(sdist):
         remove_tree('plotdevice.egg-info')
         os.unlink('MANIFEST.in')
 
-try:
-    from distutils.command.build_py import build_py_2to3 as build_py
-except ImportError:
-    from distutils.command.build_py import build_py
 class BuildCommand(build_py):
     def run(self):
         # if 'build' was called explicitly, flag that requests etc. should be fetched

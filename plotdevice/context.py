@@ -113,7 +113,7 @@ class Context(object):
         try:
             cached = self._statestack.pop(0)
         except IndexError:
-            raise DeviceError, "Too many Context._restoreContext calls."
+            raise DeviceError("Too many Context._restoreContext calls.")
 
         for attr, val in zip(Context._state_vars, cached):
             setattr(self, attr, val)
@@ -204,7 +204,7 @@ class Context(object):
             elif isinstance(args[0], Image):
                 bg = Pattern(args[0])
                 self.canvas.clear(args[0])
-            elif isinstance(args[0],basestring) and (args[0].startswith('http') or exists(expanduser(args[0]))):
+            elif isinstance(args[0],str) and (args[0].startswith('http') or exists(expanduser(args[0]))):
                 bg = Pattern(args[0])
             elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
                 bg = Gradient(*args, **kwargs)
@@ -274,7 +274,7 @@ class Context(object):
         """
         (x,y) = parse_coords(coords, [Point])
         if self._path is None:
-            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+            raise DeviceError("No active path. Use bezier() or beginpath() first.")
         self._path.moveto(x,y)
 
     def lineto(self, *coords, **kwargs):
@@ -288,7 +288,7 @@ class Context(object):
         close = kwargs.pop('close', False)
         (x,y) = parse_coords(coords, [Point])
         if self._path is None:
-            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+            raise DeviceError("No active path. Use bezier() or beginpath() first.")
         self._path.lineto(x, y)
         if close:
             self._path.closepath()
@@ -308,7 +308,7 @@ class Context(object):
         (x1,y1), (x2,y2), (x3,y3) = parse_coords(coords, [Point,Point,Point])
 
         if self._path is None:
-            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+            raise DeviceError("No active path. Use bezier() or beginpath() first.")
         self._path.curveto(x1, y1, x2, y2, x3, y3)
         if close:
             self._path.closepath()
@@ -346,7 +346,7 @@ class Context(object):
                 (x1,y1) = parse_coords(coords, [Point])
 
         if self._path is None:
-            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+            raise DeviceError("No active path. Use bezier() or beginpath() first.")
         self._path.arcto(x1, y1, x2, y2, radius, ccw)
         if close:
             self._path.closepath()
@@ -509,14 +509,14 @@ class Context(object):
 
     def closepath(self):
         if self._path is None:
-            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+            raise DeviceError("No active path. Use bezier() or beginpath() first.")
         if not self._pathclosed:
             self._path.closepath()
             self._pathclosed = True
 
     def endpath(self, **kwargs):
         if self._path is None:
-            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+            raise DeviceError("No active path. Use bezier() or beginpath() first.")
         if self._autoclosepath:
             self.closepath()
         p = self._path
@@ -558,8 +558,8 @@ class Context(object):
         try:
             self._transform = Transform(self._transformstack[0])
             del self._transformstack[0]
-        except IndexError, e:
-            raise DeviceError, "pop: too many pops!"
+        except IndexError as e:
+            raise DeviceError("pop: too many pops!")
 
     def transform(self, mode=None, matrix=None):
         """Change the transform mode or begin a `with`-statement-scoped set of transformations
@@ -797,7 +797,7 @@ class Context(object):
             if isinstance(args[0], Image):
                 clr = Pattern(args[0])
                 self.canvas.clear(args[0])
-            elif isinstance(args[0],basestring) and (args[0].startswith('http') or exists(expanduser(args[0]))):
+            elif isinstance(args[0],str) and (args[0].startswith('http') or exists(expanduser(args[0]))):
                 clr = Pattern(args[0])
             elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
                 clr = Gradient(*args, **kwargs)
@@ -882,7 +882,7 @@ class Context(object):
         """Legacy command. Equivalent to: pen(caps=style)"""
         if style is not None:
             if style not in (BUTT, ROUND, SQUARE):
-                raise DeviceError, 'Line cap style should be BUTT, ROUND or SQUARE.'
+                raise DeviceError('Line cap style should be BUTT, ROUND or SQUARE.')
             self._penstyle = self._penstyle._replace(cap=style)
         return self._penstyle.cap
 
@@ -890,7 +890,7 @@ class Context(object):
         """Legacy command. Equivalent to: pen(joins=style)"""
         if style is not None:
             if style not in (MITER, ROUND, BEVEL):
-                raise DeviceError, 'Line join style should be MITER, ROUND or BEVEL.'
+                raise DeviceError('Line join style should be MITER, ROUND or BEVEL.')
             self._penstyle = self._penstyle._replace(join=style)
         return self._penstyle.join
 
@@ -1478,7 +1478,7 @@ class Context(object):
 
         To export a movie:
             with export('anim.mov', fps=30, bitrate=1.8) as movie:
-                for i in xrange(100):
+                for i in range(100):
                     with movie.frame:
                         ... # draw the next frame
 
@@ -1537,7 +1537,7 @@ class Context(object):
         If `obj` if a file() object, PlotDevice will treat it as an image file and
         return its pixel dimensions.
         """
-        if isinstance(obj, basestring):
+        if isinstance(obj, str):
             obj = Text(obj, 0, 0, width, height, **kwargs)
 
         if hasattr(obj, 'metrics'):
@@ -1711,8 +1711,8 @@ class Canvas(object):
         try:
             del self._stack[0]
             self._container = self._stack[0]
-        except IndexError, e:
-            raise DeviceError, "pop: too many canvas pops!"
+        except IndexError as e:
+            raise DeviceError("pop: too many canvas pops!")
 
     def draw(self):
         if self.background is not None:
