@@ -31,12 +31,9 @@
 -(void) main{
     @autoreleasepool{
         if (self.isCancelled || !frame){
-            __unsafe_unretained FrameWriter *welf = self;
-
-            // close the file
             [videoWriterInput markAsFinished];
             [videoWriter finishWritingWithCompletionHandler:^{
-                [welf.delegate wroteLast];
+                [self.delegate wroteLast];
             }];
             return;
         }
