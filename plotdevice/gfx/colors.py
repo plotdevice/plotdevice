@@ -300,8 +300,10 @@ class Color(object):
         if isinstance(blob, Color):
             return True
 
-        valid_str = lambda s: isinstance(s, str) and (s.strip() in _CSS_COLORS or \
-                                                             re.match(r'#?[a-z0-9]{3,8}$', s.strip()) )
+        def valid_str(s):
+            s = s.strip() if isinstance(s, str) else ''
+            return s in _CSS_COLORS or re.match(r'#?[A-Fa-f0-9]{3,8}$', s)
+
         if isinstance(blob, (tuple, list)):
             demoded = [b for b in blob if b not in (RGB,HSV,CMYK,GREY)]
             if all(numlike(n) and len(demoded)<=5 for n in blob):
@@ -331,7 +333,7 @@ class Color(object):
         if clrstr in _CSS_COLORS: # handle css color names
             clrstr = _CSS_COLORS[clrstr]
 
-        if re.search(r'#?[0-9a-f]{3,8}', clrstr): # rgb & rgba hex strings
+        if re.search(r'#?[0-9a-fA-F]{3,8}', clrstr): # rgb & rgba hex strings
             hexclr = clrstr.lstrip('#')
             if len(hexclr) in (3,4):
                 hexclr = "".join(map("".join, zip(hexclr,hexclr)))
