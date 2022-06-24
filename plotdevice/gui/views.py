@@ -6,6 +6,7 @@ import objc
 
 from ..lib.cocoa import *
 from ..gfx import Color
+from ..gfx.atoms import KEY_ESC
 from objc import super
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
@@ -229,7 +230,7 @@ class GraphicsView(NSView):
         self.key = event.characters()
         self.keycode = event.keyCode()
 
-        if self.keycode==53: # stop animating on ESC
+        if self.keycode==KEY_ESC: # stop animating on ESC
             NSApp.sendAction_to_from_('stopScript:', None, self)
 
     def keyUp_(self, event):
@@ -312,7 +313,7 @@ class FullscreenView(NSView):
         self.key = event.characters()
         self.keycode = event.keyCode()
 
-        if self.keycode==53: # stop animating on ESC
+        if self.keycode==KEY_ESC: # stop animating on ESC
             NSApp().sendAction_to_from_('stopScript:', None, self)
 
     def keyUp_(self, event):
