@@ -7,7 +7,7 @@ PY2 = sys.version_info[0] == 2
 from io import open, StringIO, BytesIO
 from os.path import abspath, dirname, exists, join, splitext
 from plotdevice import DeviceError, INTERNAL
-text_type = str if not PY2 else unicode
+text_type = str if not PY2 else str
 
 # data formats
 import json, csv
@@ -25,8 +25,8 @@ from Foundation import NSDateFormatter, NSLocale, NSTimeZone, NSDate
 Element = namedtuple('Element', ['tag', 'attrs', 'parents', 'start', 'end'])
 escapes = [('break','0C'), ('indent', '09'), ('flush', '08')]
 doctype = '<!DOCTYPE plod [ %s ]>' % "".join(['<!ENTITY %s "&#xE0%s;" >'%e for e in escapes])
-HEAD = u"%s<%s>" % (doctype, INTERNAL)
-TAIL = u"</%s>" % INTERNAL
+HEAD = "%s<%s>" % (doctype, INTERNAL)
+TAIL = "</%s>" % INTERNAL
 class XMLParser(object):
     _log = 0
 
@@ -63,12 +63,12 @@ class XMLParser(object):
     @property
     def text(self):
         # returns the processed string (with all markup removed and tty-escapes un-shifted)
-        return u"".join(self.body).translate({0xE000+v:v for v in (8,9,12)})
+        return "".join(self.body).translate({0xE000+v:v for v in (8,9,12)})
 
     def _expat_error(self, e):
         # correct the column and line-string for our wrapper element
         col = e.offset
-        err = u"\n".join(e.args)
+        err = "\n".join(e.args)
         line = self._xml.decode('utf-8').split("\n")[e.lineno-1]
         if line.startswith(HEAD):
             line = line[len(HEAD):]
@@ -89,16 +89,16 @@ class XMLParser(object):
         # show which ends of the line are truncated
         clipped = [snippet]
         if not line.endswith(snippet):
-            clipped.append(u'...')
+            clipped.append('...')
         if not line.startswith(snippet):
-            clipped.insert(0, u'...')
+            clipped.insert(0, '...')
             col+=3
-        caret = u' '*(col-1) + u'^'
+        caret = ' '*(col-1) + '^'
 
         # raise the exception
-        msg = u'Text: ' + err
-        stack = u'stack: ' + u" ".join(['<%s>'%elt.tag for elt in self.stack[1:]]) + u' ...'
-        xmlfail = u"\n".join([msg, u"".join(clipped), caret, stack])
+        msg = 'Text: ' + err
+        stack = 'stack: ' + " ".join(['<%s>'%elt.tag for elt in self.stack[1:]]) + ' ...'
+        xmlfail = "\n".join([msg, "".join(clipped), caret, stack])
         raise DeviceError(xmlfail)
 
     def log(self, s=None, indent=0):
@@ -109,15 +109,15 @@ class XMLParser(object):
             return
         if not self._log: return
         if indent<0: self._log-=1
-        msg = (u'  '*self._log)+(s if s.startswith('<') else repr(s)[1:])
-        print(msg.encode('utf-8'))
+        msg = ('  '*self._log)+(s if s.startswith('<') else repr(s)[1:])
+        print((msg.encode('utf-8')))
         if indent>0: self._log+=1
 
     def _enter(self, name, attrs):
         parents = tuple(reversed([e.tag for e in self.stack[1:]]))
         elt = Element(name, attrs, parents, self.cursor, end=None)
         self.stack.append(elt)
-        self.log(u'<%s>'%(name), indent=1)
+        self.log('<%s>'%(name), indent=1)
 
     def _chars(self, data):
         selector = tuple([e.tag for e in self.stack])
@@ -144,7 +144,7 @@ class XMLParser(object):
                 self._crlf = node
 
         self.nodes[name].append(node)
-        self.log(u'</%s>'%(name), indent=-1)
+        self.log('</%s>'%(name), indent=-1)
 
         # if we've exited the root node, clean up the parsed elements
         if name == INTERNAL:
@@ -168,7 +168,7 @@ def csv_dict(file_obj, dialect=csv.excel, cols=None, dict=dict, **kwargs):
         if not cols:
           cols = row
           continue
-        yield dict(zip(cols,row))
+        yield dict(list(zip(cols,row)))
 
 def csv_tuple(file_obj, dialect=csv.excel, cols=None, **kwargs):
     if not isinstance(cols, (list, tuple)):
@@ -180,7 +180,7 @@ def csv_tuple(file_obj, dialect=csv.excel, cols=None, **kwargs):
             cols = row
             RowType = namedtuple('Row', cols)
             continue
-        yield RowType(**dict(zip(cols, row)))
+        yield RowType(**dict(list(zip(cols, row))))
 
 def csv_dialect(fd):
     snippet = fd.read(1024).encode('utf-8') if PY2 else fd.read(1024)

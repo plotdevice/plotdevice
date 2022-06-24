@@ -6,7 +6,7 @@ import objc
 import difflib
 from operator import itemgetter, attrgetter
 from collections import namedtuple, OrderedDict as odict, defaultdict as ddict
-from cocoa import *
+from .cocoa import *
 from ..util import numlike
 import cFoundry
 
@@ -447,7 +447,7 @@ def standardized(axis, val):
 def parse_display_name(dname):
     """Try to extract style attributes from the font's display name"""
     # break the string on spaces and on lc/uc transitions
-    elts = list(filter(None, re.sub(r'(?<=[^ ])([A-Z][a-z]+)',r' \1',dname).split(' ')))
+    elts = list([s for s in re.sub(r'(?<=[^ ])([A-Z][a-z]+)',r' \1',dname).split(' ') if s])
 
     # disregard the first italic-y word in the name (if any)
     for i in range(len(elts)-1,-1,-1):
@@ -677,8 +677,8 @@ class Librarian(object):
 
 
             # if something that looks like a weight pops up as a variant in a face, wipe it out
-            seen_weights = filter(None, set(f.weight for f in fam))
-            seen_vars = filter(None, set(f.variant for f in fam))
+            seen_weights = [w for w in set(f.weight for f in fam) if w]
+            seen_vars = [v for v in set(f.variant for f in fam) if v]
             iffy_vars = [v for v in seen_vars if v in seen_weights]
             for i,f in enumerate(fam):
                 if f.variant in iffy_vars:

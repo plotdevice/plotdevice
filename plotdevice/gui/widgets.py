@@ -48,7 +48,7 @@ class StatusView(NSView):
     def updateExport_total_(self, written, total):
         self.spinner.setMaxValue_(total)
         self.spinner.setDoubleValue_(written)
-        msg = "Frame %i/%i"%(written, total) if written<total else u"Finishing…"
+        msg = "Frame %i/%i"%(written, total) if written<total else "Finishing…"
         self.counter.setStringValue_(msg)
 
     def finishExport(self):
@@ -305,7 +305,7 @@ class ExportSheet(NSObject):
         exportPanel.setPrompt_("Export")
         exportPanel.setCanSelectHiddenExtension_(True)
         exportPanel.setShowsTagField_(False)
-        exportPanel.setAllowedFileTypes_(filter(None, self.formats[kind]))
+        exportPanel.setAllowedFileTypes_(list(filter(None, self.formats[kind])))
         exportPanel.setRequiredFileType_(format)
         exportPanel.setAccessoryView_(accessory)
 

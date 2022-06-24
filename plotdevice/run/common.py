@@ -50,7 +50,7 @@ def stacktrace(script=None, src=None):
         # we only want to prepend the Traceback text for syntax errs
         if 'SyntaxError' not in msg: return msg
 
-    return u"Traceback (most recent call last):\n%s" % msg
+    return "Traceback (most recent call last):\n%s" % msg
 
 def coredump(script=None, src=None, syntax=True):
     """Get a clean stacktrace with absolute paths and source pulled from the editor rather than disk"""

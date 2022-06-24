@@ -118,7 +118,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             # try using the nsmagic parsing of HTML/RTF to build an attributed string
             if not is_xml:
                 txt_bytes = txt.encode('utf-8')
-                txt_opts = {u'CharacterEncoding': NSUTF8StringEncoding}
+                txt_opts = {'CharacterEncoding': NSUTF8StringEncoding}
                 decoded, info, err = NSMutableAttributedString.alloc().initWithData_options_documentAttributes_error_(
                     NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes)), txt_opts, None, None
                 )
@@ -276,7 +276,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     def overleaf(self):
         """Returns a Text object containing any characters that did not fit within this object's bounds.
         If the entire string fits within the current object, returns None."""
-        seen = u"".join(getattr(f, 'text') for f in self._blocks)
+        seen = "".join(getattr(f, 'text') for f in self._blocks)
         full = self.text
         if full not in seen:
             next_pg = self.copy()
@@ -680,7 +680,7 @@ class TextFragment(object):
         but returns TextFragment objects rather than character strings
         """
         self._is_regex('groups')
-        indices = range(1,len(self.m.regs))
+        indices = list(range(1, len(self.m.regs)))
         if not indices:
             return ()
         return tuple(m if m else default for m in self.group(*indices))

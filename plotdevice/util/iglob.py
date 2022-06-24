@@ -45,15 +45,15 @@ def iglob(pathname, case=True):
 def glob1(dirname, pattern, case):
     if not dirname:
         dirname = os.curdir
-    if isinstance(pattern, unicode) and not isinstance(dirname, unicode):
-        dirname = unicode(dirname, sys.getfilesystemencoding() or
+    if isinstance(pattern, str) and not isinstance(dirname, str):
+        dirname = str(dirname, sys.getfilesystemencoding() or
                                    sys.getdefaultencoding())
     try:
         names = os.listdir(dirname)
     except os.error:
         return []
     if pattern[0] != '.':
-        names = filter(lambda x: x[0] != '.', names)
+        names = [n for n in names if n[0] != '.']
 
     pat = re.compile(fnmatch.translate(pattern), re.I if not case else 0)
     return [n for n in names if pat.search(n)]

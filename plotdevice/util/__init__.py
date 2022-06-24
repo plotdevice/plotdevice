@@ -77,7 +77,7 @@ def files(path="*", case=True):
 
     For a case insensitive search, call files() with case=False
     """
-    from iglob import iglob
+    from .iglob import iglob
     # if type(path)==unicode:
     #     path.encode('utf-8')
     path = os.path.expanduser(path)

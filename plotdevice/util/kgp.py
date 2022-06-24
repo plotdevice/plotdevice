@@ -64,9 +64,9 @@ def openAnything(source):
         return sys.stdin
 
     # try to open with urllib (if source is http, ftp, or file URL)
-    import urllib
+    import urllib.request
     try:
-        return urllib.urlopen(source)
+        return urllib.request.urlopen(source)
     except (IOError, OSError):
         pass
 
@@ -77,8 +77,8 @@ def openAnything(source):
         pass
 
     # treat source as string
-    import StringIO
-    return StringIO.StringIO(str(source))
+    import io
+    return io.StringIO(str(source))
 
 class NoSourceError(Exception): pass
 

@@ -28,7 +28,7 @@ class DraggyWebView(WebView):
                     NSPasteboardURLReadingContentsConformToTypesKey:NSImage.imageTypes() }
         urls = pb.readObjectsForClasses_options_([NSURL], options)
         strs = pb.readObjectsForClasses_options_([NSString], {})
-        rewrite = u"\n".join([u'"%s"'%u.path() for u in urls] + strs) + u"\n"
+        rewrite = "\n".join(['"%s"'%u.path() for u in urls] + strs) + "\n"
         pb.declareTypes_owner_([NSStringPboardType], self)
         pb.setString_forType_(rewrite, NSStringPboardType)
         return super(DraggyWebView, self).draggingEntered_(sender)
@@ -123,9 +123,9 @@ class EditorView(NSView):
 
     def webView_contextMenuItemsForElement_defaultMenuItems_(self, sender, elt, menu):
         items = [
-            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u"Cut", "cut:", ""),
-            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u"Copy", "copy:", ""),
-            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u"Paste", "paste:", ""),
+            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Cut", "cut:", ""),
+            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Copy", "copy:", ""),
+            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Paste", "paste:", ""),
             NSMenuItem.separatorItem(),
         ]
 
@@ -188,7 +188,7 @@ class EditorView(NSView):
         return self.webview.stringByEvaluatingJavaScriptFromString_('editor.source();')
     @objc.python_method
     def _set_source(self, src):
-        self.js(u'editor.source', args(src))
+        self.js('editor.source', args(src))
     source = property(_get_source, _set_source)
 
     def fontChanged(self, note=None):
@@ -417,8 +417,8 @@ class OutputTextView(NSTextView):
     @objc.python_method
     def append(self, txt, stream='message'):
         if not txt: return
-        defer_endl = txt.endswith(u'\n')
-        txt = (u"\n" if self.endl else u"") + (txt[:-1 if defer_endl else None])
+        defer_endl = txt.endswith('\n')
+        txt = ("\n" if self.endl else "") + (txt[:-1 if defer_endl else None])
         atxt = NSAttributedString.alloc().initWithString_attributes_(txt, self._attrs(stream))
         self.ts.beginEditing()
         self.ts.appendAttributedString_(atxt)

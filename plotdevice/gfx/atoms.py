@@ -296,7 +296,7 @@ class PenMixin(Grob):
     def _get_capstyle(self):
         return self._penstyle.cap
     def _set_capstyle(self, style):
-        from bezier import BUTT, ROUND, SQUARE
+        from .bezier import BUTT, ROUND, SQUARE
         if style not in (BUTT, ROUND, SQUARE):
             badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
             raise DeviceError(badstyle)
@@ -306,7 +306,7 @@ class PenMixin(Grob):
     def _get_joinstyle(self):
         return self._penstyle.join
     def _set_joinstyle(self, style):
-        from bezier import MITER, ROUND, BEVEL
+        from .bezier import MITER, ROUND, BEVEL
         if style not in (MITER, ROUND, BEVEL):
             badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
             raise DeviceError(badstyle)
@@ -319,7 +319,7 @@ class PenMixin(Grob):
         if None in segments:
             steps = None
         else:
-            steps = map(int, _flatten(segments))
+            steps = list(map(int, _flatten(segments)))
             if len(steps)%2:
                 steps += steps[-1:] # assume even spacing for omitted skip sizes
         self._penstyle = self._penstyle._replace(dash=steps)
@@ -421,13 +421,9 @@ class Variable(object):
             except ValueError:
                 return 0.0
         elif self.type == TEXT:
-            return unicode(str(val), "utf_8", "replace")
-            try:
-                return unicode(str(val), "utf_8", "replace")
-            except:
-                return ""
+            return str(val)
         elif self.type == BOOLEAN:
-            if unicode(val).lower() in ("true", "1", "yes"):
+            if str(val).lower() in ("true", "1", "yes"):
                 return True
             else:
                 return False

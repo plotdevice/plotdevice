@@ -65,19 +65,19 @@ class Pair(object):
         return not self.__eq__(other)
 
     @paired
-    def __abs__(self): return map(abs, self)
+    def __abs__(self): return list(map(abs, self))
     @paired
     def __pos__(self): return self
     @paired
-    def __neg__(self): return map(neg, self)
+    def __neg__(self): return list(map(neg, self))
     @paired
-    def __add__(self, other):  return map(sum, zip(self, other))
+    def __add__(self, other):  return list(map(sum, list(zip(self, other))))
     @paired
-    def __radd__(self, other): return map(sum, zip(self, other))
+    def __radd__(self, other): return list(map(sum, list(zip(self, other))))
     @paired
-    def __sub__(self, other):  return map(sum, zip(self, -other))
+    def __sub__(self, other):  return list(map(sum, list(zip(self, -other))))
     @paired
-    def __rsub__(self, other): return map(sum, zip(other, -self))
+    def __rsub__(self, other): return list(map(sum, list(zip(other, -self))))
     @paired
     def __mul__(self, other):  return [a * b for a,b in zip(self, other)]
     @paired
@@ -427,7 +427,6 @@ def parse_coords(coords, types):
 class MagicNumber(object):
     # be a well-behaved pseudo-number (based on the float in self.value)
     def __int__(self): return int(self.value)
-    def __long__(self): return long(self.value)
     def __float__(self): return float(self.value)
     def __cmp__(self, n): return cmp(self.value, n)
 

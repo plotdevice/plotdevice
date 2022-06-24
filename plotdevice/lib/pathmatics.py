@@ -1,6 +1,6 @@
 import objc
 from collections import namedtuple
-from cocoa import CGPathRelease
+from .cocoa import CGPathRelease
 import cPathmatics
 
 
@@ -215,7 +215,7 @@ def segment_lengths(path, relative=False, n=20):
     if relative:
         length = sum(lengths)
         try:
-            return map(lambda l: l / length, lengths)
+            return [l / length for l in lengths]
         except ZeroDivisionError: # If the length is zero, just return zero for all segments
             return [0.0] * len(lengths)
     else:
@@ -406,7 +406,7 @@ def points(path, amount=100):
     except ZeroDivisionError:
         delta = 1.0
 
-    for i in xrange(amount):
+    for i in range(amount):
         yield point(path, delta*i)
 
 def contours(path):
@@ -524,9 +524,7 @@ def findpath(points, curvature=1.0):
         ax[i] = -(points[i+1].x-points[i-1].x-ax[i-1]) * bi[i]
         ay[i] = -(points[i+1].y-points[i-1].y-ay[i-1]) * bi[i]
 
-    r = range(1, len(points)-1)
-    r.reverse()
-    for i in r:
+    for i in reversed(range(1, len(points)-1)):
         dx[i] = ax[i] + dx[i+1] * bi[i]
         dy[i] = ay[i] + dy[i+1] * bi[i]
 
