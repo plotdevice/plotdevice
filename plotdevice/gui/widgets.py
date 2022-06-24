@@ -306,8 +306,8 @@ class ExportSheet(NSObject):
         exportPanel.setCanSelectHiddenExtension_(True)
         exportPanel.setShowsTagField_(False)
         exportPanel.setAllowedFileTypes_(list(filter(None, self.formats[kind])))
-        exportPanel.setRequiredFileType_(format)
         exportPanel.setAccessoryView_(accessory)
+        self.exportPanel = exportPanel
 
         # present the dialog
         callback = "exportPanelDidEnd:returnCode:contextInfo:"
@@ -370,17 +370,15 @@ class ExportSheet(NSObject):
 
     @IBAction
     def imageFormatChanged_(self, sender):
-        panel = sender.window()
         format = self.formats['image'][sender.indexOfSelectedItem()]
-        panel.setRequiredFileType_(format)
+        self.exportPanel.setAllowedFileTypes_([format])
         self.updateColorMode()
         self.updatePagination()
 
     @IBAction
     def movieFormatChanged_(self, sender):
-        panel = sender.window()
         format = self.formats['movie'][sender.indexOfSelectedItem()]
-        panel.setRequiredFileType_(format)
+        self.exportPanel.setAllowedFileTypes_([format])
         is_gif = format=='gif'
         self.movieLoop.setState_(NSOnState if is_gif else NSOffState)
         self.movieLoop.setEnabled_(is_gif)
