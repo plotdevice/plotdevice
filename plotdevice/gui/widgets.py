@@ -305,7 +305,7 @@ class ExportSheet(NSObject):
         exportPanel.setPrompt_("Export")
         exportPanel.setCanSelectHiddenExtension_(True)
         exportPanel.setShowsTagField_(False)
-        exportPanel.setAllowedFileTypes_(list(filter(None, self.formats[kind])))
+        exportPanel.setAllowedFileTypes_([format])
         exportPanel.setAccessoryView_(accessory)
         self.exportPanel = exportPanel
 
