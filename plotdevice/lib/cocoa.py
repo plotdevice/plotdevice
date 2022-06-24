@@ -10,6 +10,9 @@ from Quartz import CALayer, CGColorCreate, CGContextAddPath, CGContextAddRect, C
                    CGImageGetBytesPerRow, CGImageGetDataProvider, CGImageGetHeight, CGImageGetWidth, \
                    CGImageMaskCreate, CGPathAddCurveToPoint, CGPathAddLineToPoint, CGPathCloseSubpath, \
                    CGPathCreateCopy, CGPathCreateMutable, CGPathRelease, CGPathMoveToPoint, kCGBlendModeClear, \
+                   CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpaceCreateDeviceRGB, \
+                   CGImageDestinationCreateWithData, CGImageDestinationAddImage, CGImageDestinationFinalize, \
+                   CGImageDestinationSetProperties, CGContextClearRect, CGSizeMake, CGRectMake, \
                    kCGBlendModeColor, kCGBlendModeColorBurn, kCGBlendModeColorDodge, kCGBlendModeCopy, \
                    kCGBlendModeDarken, kCGBlendModeDestinationAtop, kCGBlendModeDestinationIn, \
                    kCGBlendModeDestinationOut, kCGBlendModeDestinationOver, kCGBlendModeDifference, \
@@ -19,7 +22,8 @@ from Quartz import CALayer, CGColorCreate, CGContextAddPath, CGContextAddRect, C
                    kCGBlendModeScreen, kCGBlendModeSoftLight, kCGBlendModeSourceAtop, kCGBlendModeSourceIn, \
                    kCGBlendModeSourceOut, kCGBlendModeXOR, kCGLineCapButt, kCGLineCapRound, kCGLineCapSquare, \
                    kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, kCGPathFill, kCGPathFillStroke, \
-                   kCGPathStroke, kCIInputImageKey
+                   kCGPathStroke, kCIInputImageKey, kCGImageDestinationLossyCompressionQuality, \
+                   kCGImageAlphaPremultipliedFirst, kCGBitmapByteOrder32Host, kCGImageAlphaNoneSkipFirst
 from AppKit import NSAlert, NSApp, NSApplication, NSApplicationActivationPolicyAccessory, \
                    NSBackingStoreBuffered, NSBeep, NSBezierPath, NSBitmapImageRep, NSBorderlessWindowMask, \
                    NSButton, NSCenterTextAlignment, NSChangeAutosaved, NSChangeCleared, NSChangeDone, \
@@ -47,9 +51,11 @@ from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CI
                    NSAttributedString, NSAutoreleasePool, NSBundle, NSData, NSDate, NSDateFormatter, \
                    NSFileCoordinator, NSFileHandle, NSFileHandleDataAvailableNotification, NSIntersectionRange, \
                    NSHeight, NSInsetRect, NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, \
-                   NSMakeRange, NSMidX, NSMidY, NSMutableAttributedString, NSNotificationCenter, NSObject,\
+                   NSMakeRange, NSMidX, NSMidY, NSMutableAttributedString, NSMutableData, NSNotificationCenter, NSObject,\
                    NSOffsetRect, NSOperationQueue, NSPoint, NSRect, NSRectFromString, NSSelectorFromString, \
                    NSSize, NSString, NSStringFromRect, NSTimeZone, NSTimer, NSURL, NSUserDefaults, \
                    NSUTF8StringEncoding, NSWidth
+from LaunchServices import kUTTypePNG, kUTTypeJPEG, kUTTypeGIF, kUTTypeTIFF
 from WebKit import WebView
 from objc import IBOutlet, IBAction
+

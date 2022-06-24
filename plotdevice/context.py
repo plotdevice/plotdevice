@@ -1735,9 +1735,6 @@ class Canvas(object):
 
     def _cg_image(self, zoom=1.0):
         """Return a CGImage with the canvas dimensions scaled to the specified zoom level"""
-        from Quartz import CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpaceCreateDeviceRGB, CGContextClearRect
-        from Quartz import CGSizeMake, CGRectMake
-        from Quartz import kCGImageAlphaPremultipliedFirst, kCGBitmapByteOrder32Host, kCGImageAlphaNoneSkipFirst
         w,h = self.pagesize
         # size = Size(int(w*zoom), int(h*zoom))
         size = Size(*[int(dim*zoom) for dim in self.pagesize])
@@ -1748,7 +1745,7 @@ class Canvas(object):
                                               CGColorSpaceCreateDeviceRGB(),
                                               kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
 
-        ns_ctx = NSGraphicsContext.graphicsContextWithGraphicsPort_flipped_(bitmapContext, True)
+        ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmapContext, True)
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.setCurrentContext_(ns_ctx)
         trans = NSAffineTransform.transform()
@@ -1787,8 +1784,7 @@ class Canvas(object):
         """Return an NSImage with the canvas dimensions scaled to the specified zoom level"""
         w,h = self.pagesize
         img = NSImage.alloc().initWithSize_((w*zoom, h*zoom))
-        img.setFlipped_(True)
-        img.lockFocus()
+        img.lockFocusFlipped_(True)
         trans = NSAffineTransform.transform()
         trans.scaleBy_(zoom)
         trans.concat()
@@ -1804,22 +1800,20 @@ class Canvas(object):
             view = _PDFRenderView.alloc().initWithCanvas_(self)
             return view.dataWithEPSInsideRect_(view.bounds())
         else:
-            imgTypes = {"gif":  NSGIFFileType,
-                        "jpg":  NSJPEGFileType,
-                        "jpeg": NSJPEGFileType,
-                        "png":  NSPNGFileType,
-                        "tiff": NSTIFFFileType}
-            if format not in imgTypes:
-                badformat = "Filename should end in .pdf, .eps, .tiff, .gif, .jpg or .png"
-                raise DeviceError(badformat)
-            data = self.rasterize().TIFFRepresentation()
-            if format != 'tiff':
-                imgType = imgTypes[format]
-                rep = NSBitmapImageRep.imageRepWithData_(data)
-                props = {NSImageCompressionFactor:1.0} if format in ('jpg','jpeg') else None
-                return rep.representationUsingType_properties_(imgType, props)
-            else:
-                return data
+            cgTypes = {"gif":  kUTTypeGIF,
+                       "jpg":  kUTTypeJPEG,
+                       "jpeg": kUTTypeJPEG,
+                       "png":  kUTTypePNG,
+                       "tiff": kUTTypeTIFF}
+
+            cgData = NSMutableData.data()
+            cgImage = self._cg_image()
+            cgDest = CGImageDestinationCreateWithData(cgData, cgTypes[format], 1, None)
+            if format in ('jpg','jpeg'):
+                CGImageDestinationSetProperties(cgDest, {kCGImageDestinationLossyCompressionQuality:1.0})
+            CGImageDestinationAddImage(cgDest, cgImage, None)
+            CGImageDestinationFinalize(cgDest)
+            return cgData
 
     def save(self, fname, format=None):
         """Write the current graphics objects to an image file"""
