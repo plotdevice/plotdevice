@@ -41,7 +41,7 @@
 
 		// have CG render the frame and extract the gif89 data
 		NSBitmapImageRep *imRep = [NSBitmapImageRep imageRepWithData:[self.frame TIFFRepresentation]];
-		NSData *gifData = [imRep representationUsingType:NSGIFFileType properties:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:NSImageDitherTransparency]];
+		NSData *gifData = [imRep representationUsingType:NSBitmapImageFileTypeGIF properties:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:NSImageDitherTransparency]];
 		UInt8 *gif = (UInt8 *)[gifData bytes];
 		GifMap map = [self _getOffsets:gifData]; // find the offsets for the important data blocks in the gif
 

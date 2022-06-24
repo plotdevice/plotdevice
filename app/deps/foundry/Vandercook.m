@@ -101,7 +101,7 @@ static NSDictionary *AAT;
         NSUInteger txt_idx = [layout characterIndexForGlyphAtIndex:glyph_idx];
         NSFont *font = [store attribute:@"NSFont" atIndex:txt_idx effectiveRange:nil];
         NSGlyph glyph = [layout glyphAtIndex:glyph_idx];
-        [path appendBezierPathWithGlyph:glyph inFont:font];
+        [path appendBezierPathWithCGGlyph:glyph inFont:font];
         [path closePath];
     }
 

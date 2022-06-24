@@ -85,10 +85,10 @@
     CGContextRef context = CGBitmapContextCreate(baseAddress, [image size].width, [image size].height, 8, bytesPerRow, colorSpace, (CGBitmapInfo)kCGImageAlphaNoneSkipFirst);
 
     // draw
-    NSGraphicsContext* imageContext = [NSGraphicsContext graphicsContextWithGraphicsPort:context flipped:NO];
+    NSGraphicsContext* imageContext = [NSGraphicsContext graphicsContextWithCGContext:context flipped:NO];
     [NSGraphicsContext saveGraphicsState];
     [NSGraphicsContext setCurrentContext:imageContext];
-    [image drawAtPoint:NSMakePoint(0.0, 0.0) fromRect:NSZeroRect operation:NSCompositeCopy fraction:1.0];
+    [image drawAtPoint:NSMakePoint(0.0, 0.0) fromRect:NSZeroRect operation:NSCompositingOperationCopy fraction:1.0];
     [NSGraphicsContext restoreGraphicsState];
     CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
 
@@ -115,7 +115,7 @@
 
         videoWriter = [[AVAssetWriter alloc] initWithURL: [NSURL fileURLWithPath:fileName] fileType:AVFileTypeQuickTimeMovie error:&error];
         NSParameterAssert(videoWriter);
-        NSDictionary *videoSettings = @{ AVVideoCodecKey: AVVideoCodecH264,
+        NSDictionary *videoSettings = @{ AVVideoCodecKey: AVVideoCodecTypeH264,
                                          AVVideoWidthKey: @(aSize.width),
                                          AVVideoHeightKey: [NSNumber numberWithInt:aSize.height],
                                          AVVideoCompressionPropertiesKey: @{
