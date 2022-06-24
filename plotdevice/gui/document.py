@@ -190,11 +190,9 @@ class ScriptController(NSWindowController):
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
         win.useOptimizedDrawing_(True)
 
-        # place the statusView in the title bar
-        frame = win.frame()
-        # win.contentView().superview().addSubview_(self.statusView)
-        win.contentView().addSubview_(self.statusView)
-        self.statusView.setFrame_( ((frame.size.width-104,frame.size.height-22), (100,22)) )
+        # wire up the statusView in the title bar
+        statusItem = win.toolbar().items()[0]
+        statusItem.setView_(self.statusView)
 
         # sign up for autoresume on quit-and-relaunch (but only if this isn't console.py)
         if self.editorView:
@@ -470,6 +468,7 @@ class ScriptController(NSWindowController):
     #
     @IBAction
     def exportAsImage_(self, sender):
+        print('my sheet', self.exportSheet)
         if self.vm.session:
             return NSBeep()
         self.exportSheet.beginExport('image')

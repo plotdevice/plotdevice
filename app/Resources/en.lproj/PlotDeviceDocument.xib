@@ -19,7 +19,7 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" visibleAtLaunch="NO" animationBehavior="documentWindow" frameAutosaveName="" id="5" userLabel="Window">
+        <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" visibleAtLaunch="NO" animationBehavior="documentWindow" frameAutosaveName="" toolbarStyle="compact" id="5" userLabel="Window">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="283" y="378" width="722" height="485"/>
@@ -118,6 +118,53 @@
                     </splitView>
                 </subviews>
             </view>
+            <toolbar key="toolbar" implicitIdentifier="46B074B4-EE8C-4F09-9547-E60CB5854BF6" autosavesConfiguration="NO" displayMode="iconAndLabel" sizeMode="regular" id="1Ye-0t-gpR">
+                <allowedToolbarItems>
+                    <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="ByI-gB-2LU"/>
+                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="1vH-nG-f9L"/>
+                    <toolbarItem implicitItemIdentifier="5089AF19-F362-4D9B-8F29-55B0FAA5865D" label="Custom View" paletteLabel="Custom View" tag="-1" sizingBehavior="auto" id="t02-8K-CYR">
+                        <nil key="toolTip"/>
+                        <customView key="view" id="NAS-Uo-kIt" customClass="StatusView">
+                            <rect key="frame" x="0.0" y="14" width="100" height="22"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                            <subviews>
+                                <progressIndicator fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="OJ6-ac-5EU">
+                                    <rect key="frame" x="83" y="3" width="16" height="16"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                </progressIndicator>
+                                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4lL-EC-Lny">
+                                    <rect key="frame" x="85" y="5" width="12" height="12"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="NSStopProgressFreestandingTemplate" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="ano-B7-bzc">
+                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="stopScript:" target="-2" id="e6L-20-IFv"/>
+                                    </connections>
+                                </button>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jHA-5Y-kZ4">
+                                    <rect key="frame" x="3" y="6" width="76" height="11"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="101/500" id="Ehs-N6-3Qw">
+                                        <font key="font" metaFont="miniSystem"/>
+                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                            </subviews>
+                            <connections>
+                                <outlet property="cancel" destination="4lL-EC-Lny" id="vfQ-Ew-JYJ"/>
+                                <outlet property="counter" destination="jHA-5Y-kZ4" id="hYX-Iw-PZM"/>
+                                <outlet property="spinner" destination="OJ6-ac-5EU" id="LnL-OM-xFa"/>
+                            </connections>
+                        </customView>
+                    </toolbarItem>
+                </allowedToolbarItems>
+                <defaultToolbarItems>
+                    <toolbarItem reference="t02-8K-CYR"/>
+                </defaultToolbarItems>
+            </toolbar>
             <connections>
                 <outlet property="delegate" destination="-2" id="9"/>
             </connections>
@@ -519,42 +566,6 @@ DQ
             </connections>
             <point key="canvasLocation" x="112" y="-415"/>
         </window>
-        <customView id="NAS-Uo-kIt" customClass="StatusView">
-            <rect key="frame" x="0.0" y="0.0" width="100" height="22"/>
-            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-            <subviews>
-                <progressIndicator fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="OJ6-ac-5EU">
-                    <rect key="frame" x="83" y="3" width="16" height="16"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                </progressIndicator>
-                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4lL-EC-Lny">
-                    <rect key="frame" x="85" y="5" width="12" height="12"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                    <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="NSStopProgressFreestandingTemplate" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="ano-B7-bzc">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" metaFont="system"/>
-                    </buttonCell>
-                    <connections>
-                        <action selector="stopScript:" target="-2" id="e6L-20-IFv"/>
-                    </connections>
-                </button>
-                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jHA-5Y-kZ4">
-                    <rect key="frame" x="3" y="6" width="76" height="11"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="101/500" id="Ehs-N6-3Qw">
-                        <font key="font" metaFont="miniSystem"/>
-                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                    </textFieldCell>
-                </textField>
-            </subviews>
-            <connections>
-                <outlet property="cancel" destination="4lL-EC-Lny" id="vfQ-Ew-JYJ"/>
-                <outlet property="counter" destination="jHA-5Y-kZ4" id="hYX-Iw-PZM"/>
-                <outlet property="spinner" destination="OJ6-ac-5EU" id="LnL-OM-xFa"/>
-            </connections>
-            <point key="canvasLocation" x="-108" y="-255"/>
-        </customView>
     </objects>
     <resources>
         <image name="NSStopProgressFreestandingTemplate" width="15" height="15"/>

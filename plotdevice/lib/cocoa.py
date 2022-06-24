@@ -43,9 +43,9 @@ from AppKit import NSAlert, NSApp, NSApplication, NSApplicationActivationPolicyA
                    NSRectFillUsingOperation, NSResponder, NSRightTextAlignment, NSSavePanel, NSScreen, NSShadow, \
                    NSSlider, NSSmallControlSize, NSSplitView, NSStringPboardType, NSSwitchButton, NSTIFFFileType, \
                    NSTIFFPboardType, NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, NSTextView, \
-                   NSTrackingActiveInActiveApp, NSTrackingArea, NSTrackingMouseEnteredAndExited, NSUnboldFontMask, \
-                   NSUnitalicFontMask, NSUnionRect, NSView, NSViewFrameDidChangeNotification, NSWindow, \
-                   NSWindowBackingLocationVideoMemory, NSWindowController, NSWorkspace, NSKernAttributeName
+                   NSToolbarItem, NSTrackingActiveInActiveApp, NSTrackingArea, NSTrackingMouseEnteredAndExited, \
+                   NSUnboldFontMask, NSUnitalicFontMask, NSUnionRect, NSView, NSViewFrameDidChangeNotification, \
+                   NSWindow, NSWindowBackingLocationVideoMemory, NSWindowController, NSWorkspace, NSKernAttributeName
 from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, \
                    CIVector, Foundation, NO, NSAffineTransform, NSAffineTransformStruct, \
                    NSAttributedString, NSAutoreleasePool, NSBundle, NSData, NSDate, NSDateFormatter, \
