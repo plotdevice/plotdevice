@@ -439,7 +439,7 @@ class MagicNumber(object):
     def __add__(self, n): return self.value + n
     def __sub__(self, n): return self.value - n
     def __mul__(self, n): return self.value * n
-    def __div__(self, n): return self.value/n
+    def __truediv__(self, n): return self.value/n
     def __floordiv__(self, n): return self.value // n
     def __mod__(self, n): return self.value % n
     def __pow__(self, n): return self.value ** n
