@@ -154,6 +154,7 @@ class ScriptController(NSWindowController):
     def _init_state(self):
         self.vm = Sandbox(self)
         self.animationTimer = None
+        self.offscreen = None
         self.fullScreen = None
         self.currentView = None
         self.stationery = None
@@ -324,7 +325,9 @@ class ScriptController(NSWindowController):
             self.currentView = FullscreenView.alloc().init()
             self.currentView.canvas = None
             fullRect = NSScreen.mainScreen().frame()
-            self.fullScreen = FullscreenWindow.alloc().initWithRect_(fullRect)
+            if not self.offscreen:
+                self.offscreen = FullscreenWindow.alloc().initWithRect_(fullRect)
+            self.fullScreen = self.offscreen
             self.fullScreen.setContentView_(self.currentView)
             self.fullScreen.makeKeyAndOrderFront_(self)
             self.fullScreen.makeFirstResponder_(self.currentView)
@@ -573,7 +576,7 @@ class ScriptController(NSWindowController):
 
             # close the fullscreen window
             NSMenu.setMenuBarVisible_(True)
-            self.fullScreen.performClose_(self)
+            self.fullScreen.orderOut_(self)
             self.fullScreen = None
             NSCursor.unhide()
 
