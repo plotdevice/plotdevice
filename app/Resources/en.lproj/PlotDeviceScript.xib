@@ -400,7 +400,7 @@
                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tLr-cj-F0l">
                     <rect key="frame" x="86" y="43" width="157" height="26"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" autoenablesItems="NO" id="FqU-gu-WpX">
+                    <popUpButtonCell key="cell" type="push" title="Multiple Pages" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" autoenablesItems="NO" selectedItem="5dB-cs-VtR" id="FqU-gu-WpX">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="menu"/>
                         <menu key="menu" title="OtherViews" autoenablesItems="NO" id="Uoh-CD-vTi">
@@ -420,9 +420,25 @@
                                     <modifierMask key="keyEquivalentModifierMask"/>
                                 </menuItem>
                                 <menuItem isSeparatorItem="YES" id="F37-3j-rAd"/>
-                                <menuItem title="Sequential Files" enabled="NO" id="2kA-Ju-qo8">
+                                <menuItem title="Raster Files" enabled="NO" id="2kA-Ju-qo8">
                                     <attributedString key="attributedTitle">
-                                        <fragment content="Sequential Files">
+                                        <fragment content="Sequential Files (Raster)">
+                                            <attributes>
+                                                <font key="NSFont" usesAppearanceFont="YES"/>
+                                                <paragraphStyle key="NSParagraphStyle" alignment="natural" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
+                                            </attributes>
+                                        </fragment>
+                                    </attributedString>
+                                    <modifierMask key="keyEquivalentModifierMask"/>
+                                </menuItem>
+                                <menuItem title="PNG" id="LBs-qa-LUR"/>
+                                <menuItem title="JPEG" id="wNf-fL-FtY"/>
+                                <menuItem title="TIFF" id="7gb-Gd-hRL"/>
+                                <menuItem title="GIF" id="eWh-AD-84d"/>
+                                <menuItem isSeparatorItem="YES" id="ZAt-za-7Zy"/>
+                                <menuItem title="Vector Files" enabled="NO" id="2Pa-Yp-LNk">
+                                    <attributedString key="attributedTitle">
+                                        <fragment content="Sequential Files (Vector)">
                                             <attributes>
                                                 <font key="NSFont" usesAppearanceFont="YES"/>
                                                 <paragraphStyle key="NSParagraphStyle" alignment="natural" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
@@ -435,13 +451,12 @@
                                     <modifierMask key="keyEquivalentModifierMask"/>
                                 </menuItem>
                                 <menuItem title="EPS" id="eKI-l9-MAC"/>
-                                <menuItem title="PNG" id="LBs-qa-LUR"/>
-                                <menuItem title="TIFF" id="7gb-Gd-hRL"/>
-                                <menuItem title="JPEG" id="wNf-fL-FtY"/>
-                                <menuItem title="GIF" id="eWh-AD-84d"/>
                             </items>
                         </menu>
                     </popUpButtonCell>
+                    <connections>
+                        <action selector="imageFormatChanged:" target="NPn-1j-FnS" id="ad-hoc-1"/>
+                    </connections>
                 </popUpButton>
                 <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="57" translatesAutoresizingMaskIntoConstraints="NO" id="J7I-IL-aeY">
                     <rect key="frame" x="19" y="20" width="61" height="17"/>
