@@ -264,7 +264,7 @@
                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="E8Q-mV-qkm">
                     <rect key="frame" x="86" y="43" width="157" height="26"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" autoenablesItems="NO" id="ejg-Vh-EUZ">
+                    <popUpButtonCell key="cell" type="push" title="Multiple Pages" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" autoenablesItems="NO" selectedItem="PoA-80-u3N" id="ejg-Vh-EUZ">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="menu"/>
                         <menu key="menu" title="OtherViews" autoenablesItems="NO" id="S0K-lx-Xdg">
@@ -297,6 +297,7 @@
                                 </menuItem>
                                 <menuItem title="PNG" id="4W6-bu-kaR"/>
                                 <menuItem title="JPEG" id="0qw-ua-TC9"/>
+                                <menuItem title="HEIC" id="wL6-JK-c9S"/>
                                 <menuItem title="TIFF" id="mwT-zZ-3Ey"/>
                                 <menuItem title="GIF" id="a7B-K1-13X"/>
                                 <menuItem isSeparatorItem="YES" id="Qfu-ho-ZMc"/>
@@ -361,7 +362,7 @@
                     </textFieldCell>
                 </textField>
             </subviews>
-            <point key="canvasLocation" x="139" y="-240"/>
+            <point key="canvasLocation" x="-387" y="492"/>
         </customView>
         <customView id="Kjz-ld-Gx7" userLabel="View">
             <rect key="frame" x="0.0" y="0.0" width="281" height="147"/>

@@ -1804,12 +1804,13 @@ class Canvas(object):
                        "jpg":  kUTTypeJPEG,
                        "jpeg": kUTTypeJPEG,
                        "png":  kUTTypePNG,
-                       "tiff": kUTTypeTIFF}
+                       "tiff": kUTTypeTIFF,
+                       "heic": 'public.heic'}
 
             cgData = NSMutableData.data()
             cgImage = self._cg_image()
             cgDest = CGImageDestinationCreateWithData(cgData, cgTypes[format], 1, None)
-            if format in ('jpg','jpeg'):
+            if format in ('jpg', 'jpeg'):
                 CGImageDestinationSetProperties(cgDest, {kCGImageDestinationLossyCompressionQuality:1.0})
             CGImageDestinationAddImage(cgDest, cgImage, None)
             CGImageDestinationFinalize(cgDest)
