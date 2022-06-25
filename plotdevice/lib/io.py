@@ -109,7 +109,7 @@ class ImageExportSession(ExportSession):
         self.added += 1
 
 class MovieExportSession(ExportSession):
-    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=1, loop=0, **rest):
+    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=1, loop=0, codec=0, **rest):
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
@@ -122,6 +122,7 @@ class MovieExportSession(ExportSession):
         self.fps = fps
         self.loop = loop
         self.bitrate = bitrate
+        self.codec = codec
 
     def add(self, canvas):
         image = canvas.rasterize()
@@ -129,7 +130,7 @@ class MovieExportSession(ExportSession):
             dims = image.size()
             if self.format == 'mov':
                 self.writer = Video.alloc()
-                self.writer.initWithFile_size_fps_bitrate_(self.fname, dims, self.fps, self.bitrate)
+                self.writer.initWithFile_size_fps_bitrate_codec_(self.fname, dims, self.fps, self.bitrate, self.codec)
             elif self.format == 'gif':
                 self.writer = AnimatedGif.alloc()
                 self.writer.initWithFile_size_fps_loop_(self.fname, dims, self.fps, self.loop)

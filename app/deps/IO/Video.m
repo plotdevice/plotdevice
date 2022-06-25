@@ -100,7 +100,7 @@
 
 @implementation Video
 @synthesize framesWritten, doneWriting;
-- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps{
+- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec{
 	if ((self = [super init])) {
 
         NSError *error = nil;
@@ -109,10 +109,9 @@
         frames = [[NSOperationQueue alloc] init];
         frames.maxConcurrentOperationCount = 1;
 
-
         videoWriter = [[AVAssetWriter alloc] initWithURL: [NSURL fileURLWithPath:fileName] fileType:AVFileTypeQuickTimeMovie error:&error];
         NSParameterAssert(videoWriter);
-        NSDictionary *videoSettings = @{ AVVideoCodecKey: AVVideoCodecTypeH264,
+        NSDictionary *videoSettings = @{ AVVideoCodecKey: (codec == 0) ? AVVideoCodecTypeHEVC : AVVideoCodecTypeH264,
                                          AVVideoWidthKey: @(aSize.width),
                                          AVVideoHeightKey: [NSNumber numberWithInt:aSize.height],
                                          AVVideoCompressionPropertiesKey: @{

@@ -24,7 +24,7 @@
 @property NSInteger framesWritten;
 @property BOOL doneWriting;
 
-- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps;
+- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec;
 - (void)addFrame:(NSImage *)frame;
 - (void)closeFile;
 

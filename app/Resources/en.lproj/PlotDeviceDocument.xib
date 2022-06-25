@@ -411,12 +411,13 @@
                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bLs-eY-UUK">
                     <rect key="frame" x="86" y="105" width="178" height="26"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="OsZ-kx-6Dp">
+                    <popUpButtonCell key="cell" type="push" title="Video (H.265)" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="Cvh-QF-iVX" id="OsZ-kx-6Dp">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="menu"/>
                         <menu key="menu" title="OtherViews" id="va3-SP-NrG">
                             <items>
-                                <menuItem title="Video (H.264)" id="Cvh-QF-iVX"/>
+                                <menuItem title="Video (H.265)" id="Cvh-QF-iVX"/>
+                                <menuItem title="Video (H.264)" id="GC8-34-yqY"/>
                                 <menuItem title="Animated Gif" id="dWa-X7-Ox4"/>
                             </items>
                         </menu>
@@ -501,7 +502,7 @@
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                 </box>
             </subviews>
-            <point key="canvasLocation" x="140" y="350"/>
+            <point key="canvasLocation" x="-68" y="521"/>
         </customView>
         <window title="Go to Line" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="s95-6p-5Oy" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES"/>

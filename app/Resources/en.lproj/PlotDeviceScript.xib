@@ -532,12 +532,13 @@
                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Zbz-px-7RN">
                     <rect key="frame" x="86" y="105" width="178" height="26"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="gth-cM-oZ1">
+                    <popUpButtonCell key="cell" type="push" title="Video (H.265)" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="ofq-JF-Wzg" id="gth-cM-oZ1">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="menu"/>
                         <menu key="menu" title="OtherViews" id="sc1-3q-gzX">
                             <items>
-                                <menuItem title="Video (H.264)" id="ofq-JF-Wzg"/>
+                                <menuItem title="Video (H.265)" id="ofq-JF-Wzg"/>
+                                <menuItem title="Video (H.264)" id="q9U-La-zRq"/>
                                 <menuItem title="Animated Gif" id="Ya9-Yg-AYB"/>
                             </items>
                         </menu>

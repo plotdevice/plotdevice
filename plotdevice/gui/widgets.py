@@ -249,8 +249,8 @@ class ExportSheet(NSObject):
     movieBitrate = IBOutlet()
 
     def awakeFromNib(self):
-        self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'gif'))
-        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0)
+        self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'mov', 'gif'))
+        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, codec=0)
         self.image = dict(format='pdf', first=1, last=1, cmyk=False, single=True)
         self.last = None
 
@@ -340,7 +340,8 @@ class ExportSheet(NSObject):
                      last=self.movieFrames.intValue(),
                      fps=self.movieFps.floatValue(),
                      loop=-1 if self.movieLoop.state()==NSOnState else 0,
-                     bitrate=self.movieBitrate.selectedItem().tag() )
+                     bitrate=self.movieBitrate.selectedItem().tag(),
+                     codec=fmt_idx ) # 0=h265 1=h264
         if key:
             return state[key]
         return state
