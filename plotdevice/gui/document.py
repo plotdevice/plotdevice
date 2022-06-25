@@ -468,7 +468,6 @@ class ScriptController(NSWindowController):
     #
     @IBAction
     def exportAsImage_(self, sender):
-        print('my sheet', self.exportSheet)
         if self.vm.session:
             return NSBeep()
         self.exportSheet.beginExport('image')

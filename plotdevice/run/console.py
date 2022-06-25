@@ -68,9 +68,10 @@ class ScriptAppDelegate(NSObject):
 
         if self.mode=='windowed':
             # load the viewer ui from the nib in plotdevice/rsrc
-            bundle = NSBundle.bundleWithPath_(rsrc_path())
-            ui = NSNib.alloc().initWithNibNamed_bundle_("viewer", bundle)
-            ok, objs = ui.instantiateWithOwner_topLevelObjects_(self, None)
+            nib = NSData.dataWithContentsOfFile_(rsrc_path('viewer.nib'))
+            ui = NSNib.alloc().initWithNibData_bundle_(nib, None)
+            ok, objs = ui.instantiateNibWithOwner_topLevelObjects_(self, None)
+
             NSApp().setMainMenu_(self.menu)
 
             # configure the window script-controller, and update-watcher
