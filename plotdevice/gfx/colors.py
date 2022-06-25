@@ -281,8 +281,8 @@ class Color(object):
         """
         if hasattr(otherColor, "color"):
             otherColor = otherColor._rgb
-        return self.__class__(color=self._rgb.blendedColorWithFraction_ofColor_(
-                factor, otherColor))
+        return self.__class__(self._rgb.blendedColorWithFraction_ofColor_(
+                factor, otherColor._rgb))
 
     def _normalize(self, v, rng=None):
         """Bring the color into the 0-1 scale for the current colorrange"""
