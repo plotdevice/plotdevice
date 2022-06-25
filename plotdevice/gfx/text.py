@@ -262,6 +262,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         Note that this method *modifies* the attrib_txt reference rather than returning a value.
         """
+        if not attrib_txt.length(): return
         attrib_txt.beginEditing()
         old_graf, _ = attrib_txt.attribute_atIndex_effectiveRange_("NSParagraphStyle", idx, None);
         graf = old_graf.mutableCopy()
