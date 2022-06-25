@@ -61,22 +61,23 @@ def editor_info(name=None):
     return dict(_editor_info)
 
 def possibleToolLocations():
-    homebin = '%s/bin/plotdevice'%os.environ['HOME']
-    localbin = '/usr/local/bin/plotdevice'
+    homebin = b'%s/bin/plotdevice'%os.environ['HOME'].encode('utf-8')
+    localbin = b'/usr/local/bin/plotdevice'
     locations = [homebin, localbin]
 
     # find the user's login shell
-    out, _ = Popen(['dscl','.','-read','/Users/'+os.environ['USER'],'UserShell'], stdout=PIPE).communicate()
-    shell = out.replace('UserShell:','').strip()
+    userdir = ('/Users/'+os.environ['USER']).encode('utf8')
+    out, _ = Popen([b'dscl', b'.', b'-read', userdir, b'UserShell'], stdout=PIPE).communicate()
+    shell = out.replace(b'UserShell:', b'').strip()
 
     # try launching a shell to extract the user's path
     if shell:
-        out, _ = Popen([shell,"-l"], stdout=PIPE, stderr=PIPE, stdin=PIPE).communicate("echo $PATH")
-        for path in out.strip().split(':'):
-            path += '/plotdevice'
-            if '/sbin' in path: continue
-            if path.startswith('/bin'): continue
-            if path.startswith('/usr/bin'): continue
+        out, _ = Popen([shell, b"-l"], stdout=PIPE, stderr=PIPE, stdin=PIPE).communicate(b"echo $PATH")
+        for path in out.strip().split(b':'):
+            path += b'/plotdevice'
+            if b'/sbin' in path: continue
+            if path.startswith(b'/bin'): continue
+            if path.startswith(b'/usr/bin'): continue
             if path in locations: continue
             locations.append(path)
     return locations
@@ -214,23 +215,18 @@ class PlotDevicePreferencesController(NSWindowController):
 
         self.toolAction.setTitle_(action.title())
         self.toolPath.setSelectable_(found is not None)
-        self.toolPath.setStringValue_(found if found else '')
+        self.toolPath.setStringValue_(found.decode('utf8') if found else '')
         self.toolPath.setTextColor_(OK_COL if valid else ERR_COL)
         self.toolBoilerplate.setHidden_(found is not None)
         self.toolPath.setHidden_(found is None)
 
     @property
     def _tool(self):
-
-        # WORKAROUND: don't anger the permissions beast
-        return False, False, 'install'
-
-
         broken = []
         for path in possibleToolLocations():
             if os.path.islink(path):
                 # if it's a symlink, make sure it points to this bundle
-                tool_path = os.path.realpath(path)
+                tool_path = os.path.realpath(path).decode('utf8')
                 found = path
                 valid = tool_path.startswith(bundle_path())
                 if valid:
@@ -253,9 +249,9 @@ class PlotDevicePreferencesController(NSWindowController):
         found, _, action = self._tool
 
         if action == 'reveal':
-            os.system('open --reveal "%s"'%found)
+            os.system(b'open --reveal "%s"'%found)
         elif action in ('install', 'repair'):
-            locs = [loc.replace(os.environ['HOME'],'~') for loc in possibleToolLocations()]
+            locs = [loc.decode('utf8').replace(os.environ['HOME'], '~') for loc in possibleToolLocations()]
             self.toolInstallMenu.removeAllItems()
             self.toolInstallMenu.addItemsWithTitles_(locs)
             NSApp().beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.toolInstallSheet, self.window(), self, None, 0)
@@ -265,7 +261,7 @@ class PlotDevicePreferencesController(NSWindowController):
         should_install = sender.tag()
         if should_install:
             console_py = bundle_path('Contents/SharedSupport/plotdevice')
-            pth = self.toolInstallMenu.selectedItem().title().replace('~',os.environ['HOME'])
+            pth = self.toolInstallMenu.selectedItem().title().replace('~', os.environ['HOME'])
             dirname = os.path.dirname(pth)
             try:
                 if os.path.exists(pth) or os.path.islink(pth):
