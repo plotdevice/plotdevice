@@ -126,7 +126,7 @@
                         <nil key="toolTip"/>
                         <customView key="view" id="NAS-Uo-kIt" customClass="StatusView">
                             <rect key="frame" x="0.0" y="14" width="100" height="22"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                            <autoresizingMask key="autoresizingMask"/>
                             <subviews>
                                 <progressIndicator fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="OJ6-ac-5EU">
                                     <rect key="frame" x="83" y="3" width="16" height="16"/>
@@ -273,7 +273,7 @@
                                     <attributedString key="attributedTitle">
                                         <fragment content="Multiple Pages">
                                             <attributes>
-                                                <font key="NSFont" metaFont="toolTip"/>
+                                                <font key="NSFont" usesAppearanceFont="YES"/>
                                                 <paragraphStyle key="NSParagraphStyle" alignment="natural" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
                                             </attributes>
                                         </fragment>
@@ -288,7 +288,7 @@
                                     <attributedString key="attributedTitle">
                                         <fragment content="Raster Files">
                                             <attributes>
-                                                <font key="NSFont" metaFont="toolTip"/>
+                                                <font key="NSFont" usesAppearanceFont="YES"/>
                                                 <paragraphStyle key="NSParagraphStyle" alignment="natural" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
                                             </attributes>
                                         </fragment>
@@ -304,7 +304,7 @@
                                     <attributedString key="attributedTitle">
                                         <fragment content="Vector Files">
                                             <attributes>
-                                                <font key="NSFont" metaFont="toolTip"/>
+                                                <font key="NSFont" usesAppearanceFont="YES"/>
                                                 <paragraphStyle key="NSParagraphStyle" alignment="natural" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
                                             </attributes>
                                         </fragment>
