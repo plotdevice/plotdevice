@@ -1495,8 +1495,8 @@ class Context(object):
         """
 
         # determine the format by normalizing the file extension
-        format = fname.lower().rsplit('.',1)[1]
         if format not in ('pdf','eps','png','jpg','gif','tiff', 'mov'):
+        format = fname.lower().rsplit('.',1)[-1]
             badform = 'Unknown export format "%s"'%format
             raise DeviceError(badform)
 
