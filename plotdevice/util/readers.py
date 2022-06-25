@@ -1,17 +1,16 @@
 # encoding: utf-8
 import os, sys, re
 from operator import attrgetter
-PY2 = sys.version_info[0] == 2
 
 # files & io
 from io import open, StringIO, BytesIO
 from os.path import abspath, dirname, exists, join, splitext
 from plotdevice import DeviceError, INTERNAL
-text_type = str if not PY2 else str
 
 # data formats
 import json, csv
-from collections import namedtuple, defaultdict
+from collections import defaultdict
+from dataclasses import make_dataclass
 from codecs import iterencode, iterdecode
 from xml.parsers import expat
 
@@ -22,7 +21,7 @@ from Foundation import NSDateFormatter, NSLocale, NSTimeZone, NSDate
 
 ### XML handling ###
 
-Element = namedtuple('Element', ['tag', 'attrs', 'parents', 'start', 'end'])
+Element = make_dataclass('Element', ['tag', 'attrs', 'parents', 'start', 'end'])
 escapes = [('break','0C'), ('indent', '09'), ('flush', '08')]
 doctype = '<!DOCTYPE plod [ %s ]>' % "".join(['<!ENTITY %s "&#xE0%s;" >'%e for e in escapes])
 HEAD = "%s<%s>" % (doctype, INTERNAL)
@@ -50,7 +49,7 @@ class XMLParser(object):
 
         # wrap everything in a root node (and include the whitespace entities which shift
         # the tty escapes into the unicode PUA for the duration)
-        if isinstance(txt, text_type):
+        if isinstance(txt, str):
             txt = txt.encode('utf-8')
         self._xml = HEAD.encode('utf-8') + txt + TAIL.encode('utf-8')
 
@@ -155,9 +154,7 @@ class XMLParser(object):
 ### CSV unpacking ###
 
 def csv_rows(file_obj, dialect=csv.excel, **kwargs):
-    csvfile = iterencode(file_obj, 'utf-8') if PY2 else file_obj
-    csvreader = csv.reader(csvfile, dialect=dialect, **kwargs)
-    csvreader = (list(iterdecode(i, 'utf-8')) for i in csvreader) if PY2 else csvreader
+    csvreader = csv.reader(file_obj, dialect=dialect, **kwargs)
     for row in csvreader:
         yield row
 
@@ -171,19 +168,22 @@ def csv_dict(file_obj, dialect=csv.excel, cols=None, dict=dict, **kwargs):
         yield dict(list(zip(cols,row)))
 
 def csv_tuple(file_obj, dialect=csv.excel, cols=None, **kwargs):
-    if not isinstance(cols, (list, tuple)):
-        cols=None
-    elif cols:
-        RowType = namedtuple('Row', cols)
+    spaced = lambda a: [s.strip().replace(' ', '_') for s in a] if a else a
+
+    if isinstance(cols, (list, tuple)):
+        Row = make_dataclass('Row', spaced(cols))
+    else:
+        cols = None
+
     for row in csv_rows(file_obj, dialect, **kwargs):
         if not cols:
-            cols = row
-            RowType = namedtuple('Row', cols)
+            cols = spaced(row)
+            Row = make_dataclass('Row', cols)
             continue
-        yield RowType(**dict(list(zip(cols, row))))
+        yield Row(**dict(list(zip(cols, row))))
 
 def csv_dialect(fd):
-    snippet = fd.read(1024).encode('utf-8') if PY2 else fd.read(1024)
+    snippet = fd.read(1024)
     fd.seek(0)
     return csv.Sniffer().sniff(snippet)
 
@@ -244,7 +244,7 @@ def read(pth, format=None, encoding=None, cols=None, **kwargs):
 
     CSV files will return a list of rows. By default each row will be an ordered
     list of column values. If the first line of the file defines column names,
-    you can call read() with cols=True in which case each row will be a namedtuple
+    you can call read() with cols=True in which case each row will be a dataclass
     using those names as keys. If the file doesn't define its own column names,
     you can pass a list of strings as the `cols` parameter. Rows can be formatted
     as column-keyed dictionaries by passing True as the `dict` parameter.
