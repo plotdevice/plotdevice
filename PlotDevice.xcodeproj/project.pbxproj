@@ -147,6 +147,12 @@
 		2AC07CD818EF8EC500B75879 /* context.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = context.py; sourceTree = "<group>"; };
 		2AC07CE218EF9B2400B75879 /* atoms.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = atoms.py; sourceTree = "<group>"; };
 		2AC5187F18636C9F007FB066 /* sandbox.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sandbox.py; sourceTree = "<group>"; };
+		2ACFEAEF286746B5009BE346 /* geometry.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = geometry.py; sourceTree = "<group>"; };
+		2ACFEAF0286746BE009BE346 /* text.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = text.py; sourceTree = "<group>"; };
+		2ACFEAF1286746E2009BE346 /* foundry.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = foundry.py; sourceTree = "<group>"; };
+		2ACFEAF2286746EC009BE346 /* cocoa.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = cocoa.py; sourceTree = "<group>"; };
+		2ACFEAF3286746FA009BE346 /* common.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = common.py; sourceTree = "<group>"; };
+		2ACFEAF428674708009BE346 /* readers.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = readers.py; sourceTree = "<group>"; };
 		2AE5AD291862366300CCDD45 /* editor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = editor.py; sourceTree = "<group>"; };
 		2AE5AD2C1862386400CCDD45 /* widgets.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = widgets.py; sourceTree = "<group>"; };
 		2AEE843D18B5603900CF91D4 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
@@ -221,6 +227,7 @@
 			isa = PBXGroup;
 			children = (
 				2A294458185E539400E9F650 /* __init__.py */,
+				2ACFEAF3286746FA009BE346 /* common.py */,
 				2AC5187F18636C9F007FB066 /* sandbox.py */,
 				2A29445A185E539400E9F650 /* console.py */,
 			);
@@ -231,6 +238,8 @@
 			isa = PBXGroup;
 			children = (
 				2A32957218C59D0A00EEDD1C /* __init__.py */,
+				2ACFEAF2286746EC009BE346 /* cocoa.py */,
+				2ACFEAF1286746E2009BE346 /* foundry.py */,
 				2A32957718C59D0A00EEDD1C /* io.py */,
 				2A32957918C59D0A00EEDD1C /* pathmatics.py */,
 			);
@@ -321,7 +330,9 @@
 				2AC07CB818EF8E7D00B75879 /* bezier.py */,
 				2AC07CBA18EF8E7D00B75879 /* colors.py */,
 				2AC07CBD18EF8E7D00B75879 /* effects.py */,
+				2ACFEAEF286746B5009BE346 /* geometry.py */,
 				2AC07CC118EF8E7D00B75879 /* image.py */,
+				2ACFEAF0286746BE009BE346 /* text.py */,
 				2AC07CC518EF8E7D00B75879 /* typography.py */,
 			);
 			path = gfx;
@@ -362,6 +373,7 @@
 				2AEE846318BEC25B00CF91D4 /* iglob.py */,
 				611CC4D910BA8C1B00B55455 /* kgp.py */,
 				611CC4DA10BA8C1B00B55455 /* ottobot.py */,
+				2ACFEAF428674708009BE346 /* readers.py */,
 			);
 			path = util;
 			sourceTree = "<group>";
