@@ -79,12 +79,13 @@ class ExportSession(object):
 
 re_padded = re.compile(r'{(\d+)}')
 class ImageExportSession(ExportSession):
-    def __init__(self, fname, format='pdf', first=1, last=None, single=False, **rest):
+    def __init__(self, fname, format='pdf', zoom=1.0, first=1, last=None, single=False, **rest):
         super(ImageExportSession, self).__init__()
         self.single_file = single or first==last
         if last is not None:
             self.begin(pages=last-first+1)
         self.format = format
+        self.zoom = zoom
 
         m = re_padded.search(fname)
         pad = '%%0%id' % int(m.group(1)) if m else None
@@ -104,7 +105,7 @@ class ImageExportSession(ExportSession):
             self.writer = Pages.alloc().initWithPattern_(name_tmpl)
 
     def add(self, canvas):
-        image = canvas._getImageData(self.format)
+        image = canvas._getImageData(self.format, self.zoom)
         self.writer.addPage_(image)
         self.added += 1
 

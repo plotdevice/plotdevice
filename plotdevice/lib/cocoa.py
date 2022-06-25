@@ -37,12 +37,12 @@ from AppKit import NSAlert, NSApp, NSApplication, NSApplicationActivationPolicyA
                    NSImageCompressionFactor, NSImageInterpolationHigh, NSItalicFontMask, NSJPEGFileType, \
                    NSJustifiedTextAlignment, NSLayoutManager, NSLeftTextAlignment, NSLineBreakByWordWrapping, \
                    NSLineToBezierPathElement, NSMenu, NSMenuItem, NSMiniControlSize, NSMoveToBezierPathElement, \
-                   NSMutableParagraphStyle, NSNib, NSOffState, NSOnState, NSPDFPboardType, NSPNGFileType, \
-                   NSParagraphStyleAttributeName, NSPasteboard, NSPasteboardURLReadingContentsConformToTypesKey, \
-                   NSPasteboardURLReadingFileURLsOnlyKey, NSPostScriptPboardType, NSPrintOperation, NSRectFill, \
+                   NSMutableParagraphStyle, NSNib, NSOffState, NSOnState, NSPNGFileType, NSParagraphStyleAttributeName, \
+                   NSPasteboard, NSPasteboardTypePDF, NSPasteboardURLReadingContentsConformToTypesKey, \
+                   NSPasteboardURLReadingFileURLsOnlyKey, NSPasteboardTypeTIFF, NSPrintOperation, NSRectFill, \
                    NSRectFillUsingOperation, NSResponder, NSRightTextAlignment, NSSavePanel, NSScreen, NSShadow, \
                    NSSlider, NSSmallControlSize, NSSplitView, NSStringPboardType, NSSwitchButton, NSTIFFFileType, \
-                   NSTIFFPboardType, NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, NSTextView, \
+                   NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, NSTextView, \
                    NSToolbarItem, NSTrackingActiveInActiveApp, NSTrackingArea, NSTrackingMouseEnteredAndExited, \
                    NSUnboldFontMask, NSUnitalicFontMask, NSUnionRect, NSView, NSViewFrameDidChangeNotification, \
                    NSWindow, NSWindowBackingLocationVideoMemory, NSWindowController, NSWorkspace, NSKernAttributeName

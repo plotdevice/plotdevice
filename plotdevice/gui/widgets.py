@@ -1,6 +1,7 @@
 # encoding: utf-8
 import os
 from ..lib.cocoa import *
+from math import floor, ceil
 import objc
 
 ## classes instantiated by PlotDeviceDocument.xib & PlotDeviceScript.xib
@@ -236,6 +237,7 @@ class ExportSheet(NSObject):
     # Image export settings
     imageAccessory = IBOutlet()
     imageFormat = IBOutlet()
+    imageZoom = IBOutlet()
     imagePageCount = IBOutlet()
     imagePagination = IBOutlet()
     imageCMYK = IBOutlet()
@@ -251,7 +253,7 @@ class ExportSheet(NSObject):
     def awakeFromNib(self):
         self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'heic', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'mov', 'gif'))
         self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, codec=0)
-        self.image = dict(format='pdf', first=1, last=1, cmyk=False, single=True)
+        self.image = dict(format='pdf', zoom=100, first=1, last=1, cmyk=False, single=True)
         self.last = None
 
 
@@ -350,6 +352,7 @@ class ExportSheet(NSObject):
         fmts = self.formats['image']
         fmt_idx = self.imageFormat.indexOfSelectedItem()
         state = dict(format=fmts[fmt_idx],
+                     zoom=self.image['zoom'] / 100,
                      first=1,
                      cmyk=self.imageCMYK.state()==NSOnState,
                      single=fmt_idx==1,
@@ -375,6 +378,32 @@ class ExportSheet(NSObject):
         self.exportPanel.setAllowedFileTypes_([format])
         self.updateColorMode()
         self.updatePagination()
+
+    @IBAction
+    def imageZoomStepped_(self, sender):
+        step = sender.intValue()
+        sender.setIntValue_(0)
+
+        self.imageZoomChanged_(None) # reflect any editing in text field
+        pct = self.image['zoom']
+
+        if step > 0:
+            pct = 100 * ceil((pct + 1) / 100)
+        elif step < 0:
+            pct = 100 * floor((pct - 1) / 100)
+
+        if 0 < pct < 10000:
+            self.image['zoom'] = pct
+            self.imageZoom.setStringValue_("%i%%" % pct)
+
+    @IBAction
+    def imageZoomChanged_(self, sender):
+        pct = self.imageZoom.intValue()
+        if pct > 0:
+            self.image['zoom'] = pct
+        else:
+            pct = self.image['zoom']
+        self.imageZoom.setStringValue_("%i%%" % pct)
 
     @IBAction
     def movieFormatChanged_(self, sender):

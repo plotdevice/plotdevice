@@ -289,7 +289,7 @@ class ImageWriter(object):
             #
             m = re_padded.search(self.fname)
             fn = re_padded.sub('0'*int(m.group(1)), self.fname, count=1) if m else self.fname
-            _ctx.canvas.save(fn, self.format)
+            _ctx.canvas.save(fn, self.format, self.opts['zoom'])
 
     @property
     def page(self):

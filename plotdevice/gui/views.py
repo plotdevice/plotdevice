@@ -212,12 +212,13 @@ class GraphicsView(NSView):
     ### pasteboard delegate method ###
 
     def pasteboard_provideDataForType_(self, pboard, type):
-        formats = {NSPDFPboardType:"pdf",
-                   NSPostScriptPboardType:"eps",
-                   NSTIFFPboardType:"tiff"}
+        formats = {NSPasteboardTypePDF:"pdf",
+                   "com.adobe.encapsulated-postscript":"eps",
+                   NSPasteboardTypeTIFF:"tiff"}
         if self.canvas and type in formats:
             img_type = formats[type]
-            pboard.setData_forType_(self.canvas._getImageData(img_type), type)
+            mag = self.window().backingScaleFactor() if img_type=='tiff' else 1.0
+            pboard.setData_forType_(self.canvas._getImageData(img_type, mag), type)
 
     def mouseDown_(self, event):
         self.mousedown = True

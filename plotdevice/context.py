@@ -1461,7 +1461,7 @@ class Context(object):
         else:
             self.canvas.clear(*grobs)
 
-    def export(self, fname, fps=None, loop=None, bitrate=1.0, cmyk=False):
+    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=1.0, cmyk=False):
         """Write single images or manage batch exports for animations.
 
         To write the canvas's current contents to a file, simply call export("~/somefile.png")
@@ -1501,7 +1501,7 @@ class Context(object):
             raise DeviceError(badform)
 
         # build up opts based on type of output file (anim vs static)
-        opts = {"cmyk":cmyk}
+        opts = {"cmyk":cmyk, "zoom":zoom}
         if format=='mov' or (format=='gif' and fps or loop is not None):
             opts.update(fps=fps or 30, # set a default for .mov exports
                         loop={True:-1, False:0, None:0}.get(loop, loop), # convert bool args to int
@@ -1792,7 +1792,7 @@ class Canvas(object):
         img.unlockFocus()
         return img
 
-    def _getImageData(self, format):
+    def _getImageData(self, format, zoom=1.0):
         if format == 'pdf':
             view = _PDFRenderView.alloc().initWithCanvas_(self)
             return view.dataWithPDFInsideRect_(view.bounds())
@@ -1808,7 +1808,7 @@ class Canvas(object):
                        "heic": 'public.heic'}
 
             cgData = NSMutableData.data()
-            cgImage = self._cg_image()
+            cgImage = self._cg_image(zoom)
             cgDest = CGImageDestinationCreateWithData(cgData, cgTypes[format], 1, None)
             if format in ('jpg', 'jpeg'):
                 CGImageDestinationSetProperties(cgDest, {kCGImageDestinationLossyCompressionQuality:1.0})
@@ -1816,11 +1816,11 @@ class Canvas(object):
             CGImageDestinationFinalize(cgDest)
             return cgData
 
-    def save(self, fname, format=None):
+    def save(self, fname, format=None, zoom=1.0):
         """Write the current graphics objects to an image file"""
         if format is None:
             format = fname.rsplit('.',1)[-1].lower()
-        data = self._getImageData(format)
+        data = self._getImageData(format, zoom)
         fname = NSString.stringByExpandingTildeInPath(fname)
         data.writeToFile_atomically_(fname, False)
 

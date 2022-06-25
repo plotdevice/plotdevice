@@ -487,7 +487,7 @@ class ScriptController(NSWindowController):
         # if this is a single-image export and the canvas already contains some grobs,
         # write it out synchronously rather than starting up an export session
         if kind=='image' and opts['last']==opts['first'] and list(self.vm.canvas):
-            img_data = self.vm.canvas._getImageData(opts['format'])
+            img_data = self.vm.canvas._getImageData(opts['format'], opts['zoom'])
             img_data.writeToFile_atomically_(fname, True)
             self.exportStatus('complete')
             return
@@ -606,7 +606,9 @@ class ScriptController(NSWindowController):
     def copyImageAsPDF_(self, sender):
         pboard = NSPasteboard.generalPasteboard()
         # graphicsView implements the pboard delegate method to provide the data
-        pboard.declareTypes_owner_([NSPDFPboardType,NSPostScriptPboardType,NSTIFFPboardType], self.graphicsView)
+        pboard.declareTypes_owner_([
+            NSPasteboardTypePDF, NSPasteboardTypeTIFF,"com.adobe.encapsulated-postscript"
+        ], self.graphicsView)
 
 
     #
