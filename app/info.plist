@@ -72,13 +72,13 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>10.14</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>© 2014–15 Samizdat Drafting Co.</string>
+	<string>© 2014–22 Samizdat Drafting Co.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
-	<key>NSSystemAdministrationUsageDescription</key>
-	<string>PlotDevice would like to be able to write to your hard disk</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSSystemAdministrationUsageDescription</key>
+	<string>PlotDevice would like to be able to write to your hard disk</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
