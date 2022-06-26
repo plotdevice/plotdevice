@@ -70,7 +70,7 @@ def install_extensions(ext_root):
             raise OSError("Could not copy %s" % lib_name)
     print()
 
-if __name__=='__main__':
+def main():
     if len(sys.argv)>1:
         arg = sys.argv[1]
         if arg=='clean':
@@ -88,3 +88,6 @@ if __name__=='__main__':
             install_extensions(ext_root)
     else:
         print("usage: python build.py <destination-path>")
+
+if __name__=='__main__':
+    main()
