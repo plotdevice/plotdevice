@@ -1,5 +1,5 @@
-PYTHON_FRAMEWORK = $(PROJECT_DIR)/app/deps/embed/Python.framework
 PYTHON_VERSION = 3.10
+PYTHON_FRAMEWORK = $(PROJECT_DIR)/app/deps/embed/Python.framework
 PYTHON = $(PYTHON_FRAMEWORK)/Versions/$(PYTHON_VERSION)/bin/python3
 LIBRARY_SEARCH_PATHS = $(inherited) $(PYTHON_FRAMEWORK)/Versions/$(PYTHON_VERSION)/lib/python$(PYTHON_VERSION)/config-$(PYTHON_VERSION)-darwin
 HEADER_SEARCH_PATHS = $(inherited) $(PYTHON_FRAMEWORK)/Versions/$(PYTHON_VERSION)/Headers
