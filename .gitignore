@@ -6,6 +6,7 @@ app/deps/vendor/Sparkle*
 app/deps/vendor/*.tar.gz
 app/deps/embed/Python.framework
 app/deps/embed/relocatable-python
+app/deps/local
 
 # cds garbage
 related/
