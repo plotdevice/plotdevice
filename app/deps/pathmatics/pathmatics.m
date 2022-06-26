@@ -192,7 +192,7 @@ contours_in_path(NSBezierPath *path)
     {
         et = [path elementAtIndex:i];
 
-        if ( et == NSMoveToBezierPathElement )
+        if ( et == NSBezierPathElementMoveTo )
             ++sp;
     }
 
@@ -211,7 +211,7 @@ contours_in_path_from_el(NSBezierPath *path, int se)
     {
         et = [path elementAtIndex:i];
 
-        if ( et == NSMoveToBezierPathElement )
+        if ( et == NSBezierPathElementMoveTo )
             break;
 
         ++sp;
@@ -273,7 +273,7 @@ path_to_polygon(NSBezierPath *path, float flatness)
 
         switch( elem )
         {
-            case NSMoveToBezierPathElement:
+            case NSBezierPathElementMoveTo:
             // begins a new contour.
 
             if ( es != -1 )
@@ -301,20 +301,20 @@ path_to_polygon(NSBezierPath *path, float flatness)
 
             // fall through to record the vertex for the moveto
 
-            case NSLineToBezierPathElement:
+            case NSBezierPathElementLineTo:
             // add a vertex to the list
             poly->contour[es].vertex[k].x = ap[0].x;
             poly->contour[es].vertex[k].y = ap[0].y;
             ++k;
             break;
 
-            case NSCurveToBezierPathElement:
+            case NSBezierPathElementCurveTo:
                 // should never happen - we have already converted the path to a flat version. Bail.
                 printf("Got a curveto unexpectedly - bailing.\n");
                 gpc_free_polygon( poly );
                 return NULL;
 
-            case NSClosePathBezierPathElement:
+            case NSBezierPathElementClosePath:
                 // ignore
             break;
         }
@@ -354,7 +354,7 @@ polygon_to_path(gpc_polygon *poly)
     // set the default winding rule to be the one most useful for shapes
     // with holes.
 
-    [path setWindingRule:NSEvenOddWindingRule];
+    [path setWindingRule:NSWindingRuleEvenOdd];
 
     return path;
 }
@@ -676,13 +676,13 @@ coordinates(PyObject *self, PyObject *args) {
         NSPoint points[3];
         for (NSInteger i=0; i<numElements; i++){
             NSBezierPathElement elt = [nsPath elementAtIndex:i associatedPoints:points];
-            if (elt==NSMoveToBezierPathElement){
+            if (elt==NSBezierPathElementMoveTo){
                 CGPathMoveToPoint(path, NULL, points[0].x, points[0].y);
-            }else if(elt==NSLineToBezierPathElement){
+            }else if(elt==NSBezierPathElementLineTo){
                 CGPathAddLineToPoint(path, NULL, points[0].x, points[0].y);
-            }else if(elt==NSCurveToBezierPathElement){
+            }else if(elt==NSBezierPathElementCurveTo){
                 CGPathAddCurveToPoint(path, NULL, points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
-            }else if(elt==NSClosePathBezierPathElement){
+            }else if(elt==NSBezierPathElementClosePath){
                 CGPathCloseSubpath(path);
             }
         }
