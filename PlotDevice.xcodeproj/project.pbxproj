@@ -11,14 +11,14 @@
 		2A15C45018A329BD006BDFF0 /* editor.html in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C44418A329AE006BDFF0 /* editor.html */; };
 		2A15C45218A329BD006BDFF0 /* themes.json in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C44618A329AE006BDFF0 /* themes.json */; };
 		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
+		2A36AE2D2868B4E50088976E /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; };
+		2A36AE2E2868B4F30088976E /* Python.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
 		2A66ECEB18A99328002903DE /* ace.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDE18A992BD002903DE /* ace.js */; };
 		2A66ECEC18A99328002903DE /* editor.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDF18A992BD002903DE /* editor.js */; };
 		2A66ECED18A99328002903DE /* jquery-2.1.0.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE018A992BD002903DE /* jquery-2.1.0.js */; };
 		2A66ECEE18A99328002903DE /* keybindings.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE118A992BD002903DE /* keybindings.js */; };
 		2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */; };
-		2A79B146286508220074E96A /* Python3.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A79B144286507000074E96A /* Python3.framework */; };
-		2A79B147286508220074E96A /* Python3.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2A79B144286507000074E96A /* Python3.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = 2A7AF5C718D2AFAA00F8FFC2 /* examples */; };
 		2A93AE751903326E00C6144D /* placeholder.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A93AE731903326E00C6144D /* placeholder.pdf */; };
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
@@ -75,7 +75,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				2A79B147286508220074E96A /* Python3.framework in Embed Frameworks */,
+				2A36AE2E2868B4F30088976E /* Python.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -108,6 +108,7 @@
 		2A32957218C59D0A00EEDD1C /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		2A32957718C59D0A00EEDD1C /* io.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = io.py; sourceTree = "<group>"; };
 		2A32957918C59D0A00EEDD1C /* pathmatics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = pathmatics.py; sourceTree = "<group>"; };
+		2A36AE2C2868B4E50088976E /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = app/deps/embed/Python.framework; sourceTree = "<group>"; };
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
@@ -125,7 +126,6 @@
 		2A79B13E2864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = Resources/en.lproj/PlotDevicePreferences.xib; sourceTree = "<group>"; };
 		2A79B13F2864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = Resources/en.lproj/PlotDeviceScript.xib; sourceTree = "<group>"; };
 		2A79B1402864FDAF0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = en; path = Resources/en.lproj/placeholder.pdf; sourceTree = "<group>"; };
-		2A79B144286507000074E96A /* Python3.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python3.framework; path = Library/Frameworks/Python3.framework; sourceTree = DEVELOPER_DIR; };
 		2A7AF5C718D2AFAA00F8FFC2 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		2A827CC91859E9FE00A126BA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = python.xcconfig; path = app/python.xcconfig; sourceTree = "<group>"; };
@@ -173,11 +173,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2A36AE2D2868B4E50088976E /* Python.framework in Frameworks */,
 				2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */,
 				2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */,
 				2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */,
 				2A15C42D18A1FA14006BDFF0 /* WebKit.framework in Frameworks */,
-				2A79B146286508220074E96A /* Python3.framework in Frameworks */,
 				2A591FF0185C17D200D1833D /* Security.framework in Frameworks */,
 				8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */,
 			);
@@ -296,7 +296,7 @@
 		2A37F4C3FDCFA73011CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				2A79B144286507000074E96A /* Python3.framework */,
+				2A36AE2C2868B4E50088976E /* Python.framework */,
 				2AEE843D18B5603900CF91D4 /* CoreText.framework */,
 				2A15C42C18A1FA14006BDFF0 /* WebKit.framework */,
 				2A591FEF185C17D200D1833D /* Security.framework */,
@@ -388,6 +388,7 @@
 				8D15AC2B0486D014006FF6A4 /* Resources */,
 				2A15C43718A20929006BDFF0 /* Copy Editor Assets */,
 				2A66ECEA18A99303002903DE /* Copy Editor Scripts */,
+				2A36AE2F2868BB9A0088976E /* Build Python Framework */,
 				2A758E411957B7CE003ECF9D /* Build PlotDevice Module */,
 				2ABDB76F1867D9560069EFC3 /* Copy 'plotdevice' Tool */,
 				2AF8981419953CA1005A49A5 /* Manually Update Examples */,
@@ -454,6 +455,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		2A36AE2F2868BB9A0088976E /* Build Python Framework */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build Python Framework";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd app/deps/embed\nmake\n";
+		};
 		2A758E411957B7CE003ECF9D /* Build PlotDevice Module */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -576,7 +595,10 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)";
 				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/**";
+				FRAMEWORK_SEARCH_PATHS = (
+					"/Applications/Xcode.app/Contents/Developer/Library/Frameworks/**",
+					"$(PROJECT_DIR)/app/deps/embed",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -584,7 +606,7 @@
 				GCC_PREFIX_HEADER = "";
 				INFOPLIST_FILE = app/info.plist;
 				INSTALL_PATH = /Applications;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../Frameworks/Python.framework";
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "$(inherited)";
@@ -603,13 +625,16 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = dist;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				FRAMEWORK_SEARCH_PATHS = "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/**";
+				FRAMEWORK_SEARCH_PATHS = (
+					"/Applications/Xcode.app/Contents/Developer/Library/Frameworks/**",
+					"$(PROJECT_DIR)/app/deps/embed",
+				);
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "";
 				INFOPLIST_FILE = app/info.plist;
 				INSTALL_PATH = /Applications;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../Frameworks/Python.framework";
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = io.plotdevice.PlotDevice;

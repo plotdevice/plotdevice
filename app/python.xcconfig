@@ -1,5 +1,7 @@
-PYTHON = /Applications/Xcode.app/Contents/Developer/usr/bin/python3
-LIBRARY_SEARCH_PATHS = $(inherited) /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.8/lib/python3.8/config-3.8-darwin
-HEADER_SEARCH_PATHS = $(inherited) /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.8/Headers
-OTHER_LDFLAGS = $(inherited) -lpython3.8
-GCC_PREPROCESSOR_DEFINITIONS = $(inherited) PYTHON_BIN="/Applications/Xcode.app/Contents/Developer/usr/bin/python3" PY3K=1
+PYTHON_FRAMEWORK = $(PROJECT_DIR)/app/deps/embed/Python.framework
+PYTHON_VERSION = 3.10
+PYTHON = $(PYTHON_FRAMEWORK)/Versions/$(PYTHON_VERSION)/bin/python3
+LIBRARY_SEARCH_PATHS = $(inherited) $(PYTHON_FRAMEWORK)/Versions/$(PYTHON_VERSION)/lib/python$(PYTHON_VERSION)/config-$(PYTHON_VERSION)-darwin
+HEADER_SEARCH_PATHS = $(inherited) $(PYTHON_FRAMEWORK)/Versions/$(PYTHON_VERSION)/Headers
+OTHER_LDFLAGS = $(inherited) -lpython$(PYTHON_VERSION)
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) PYTHON_BIN="$(PYTHON)" PY3K=1
