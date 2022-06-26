@@ -206,7 +206,7 @@ except ImportError:
     HTTP = Decoy()
 
 def binaryish(content, format):
-    bin_types = ('pdf','eps','png','jpg','jpeg','gif','tiff','tif','zip','tar','gz')
+    bin_types = ('pdf','eps','png','jpg','jpeg','heic','gif','tiff','tif','zip','tar','gz')
     bin_formats = ('raw','bytes','img','image')
     if any(b in content for b in bin_types):
         return True
