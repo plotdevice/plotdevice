@@ -38,7 +38,7 @@ AUTHOR = plotdevice.__author__
 AUTHOR_EMAIL = plotdevice.__email__
 LICENSE = plotdevice.__license__
 URL = "http://plotdevice.io/"
-CLASSIFIERS = (
+CLASSIFIERS = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: MacOS X :: Cocoa",
     "Intended Audience :: Developers",
@@ -57,7 +57,7 @@ CLASSIFIERS = (
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: User Interfaces",
     "Topic :: Text Editors :: Integrated Development Environments (IDE)",
-)
+]
 DESCRIPTION = "Create two-dimensional graphics and animations with code"
 LONG_DESCRIPTION = """PlotDevice is a Macintosh application used for computational graphic design. It provides an
 interactive Python environment where you can create two-dimensional graphics
@@ -384,7 +384,16 @@ if __name__=='__main__':
         license = LICENSE,
         classifiers = CLASSIFIERS,
         packages = find_packages(exclude=['tests']),
-        install_requires = ['requests', 'cachecontrol', 'lockfile'],
+        install_requires = [
+            'requests',
+            'cachecontrol',
+            'lockfile',
+            'pyobjc-core==8.5',
+            'pyobjc-framework-Cocoa==8.5',
+            'pyobjc-framework-Quartz==8.5',
+            'pyobjc-framework-LaunchServices==8.5',
+            'pyobjc-framework-WebKit==8.5',
+        ],
         scripts = ["app/plotdevice"],
         zip_safe=False,
         cmdclass={
