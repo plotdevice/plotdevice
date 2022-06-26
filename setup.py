@@ -365,6 +365,40 @@ class DistCommand(Command):
         print("\nBuilt PlotDevice.app, %s, and release.json in ./dist" % basename(ZIP))
 
 
+# common config between module and app builds
+config = dict(
+    name = MODULE,
+    version = VERSION,
+    description = DESCRIPTION,
+    long_description = LONG_DESCRIPTION,
+    author = AUTHOR,
+    author_email = AUTHOR_EMAIL,
+    url = URL,
+    license = LICENSE,
+    classifiers = CLASSIFIERS,
+    packages = find_packages(exclude=['tests']),
+    install_requires = [
+        'requests',
+        'cachecontrol',
+        'lockfile',
+        'pyobjc-core==8.5',
+        'pyobjc-framework-Cocoa==8.5',
+        'pyobjc-framework-Quartz==8.5',
+        'pyobjc-framework-LaunchServices==8.5',
+        'pyobjc-framework-WebKit==8.5',
+    ],
+    scripts = ["app/plotdevice"],
+    zip_safe=False,
+    cmdclass={
+        'app': BuildAppCommand,
+        'clean': CleanCommand,
+        'build_py': BuildCommand,
+        'dist': DistCommand,
+        'sdist': BuildDistCommand,
+        'test': TestCommand,
+    },
+)
+
 ## Run Build ##
 
 if __name__=='__main__':
@@ -372,39 +406,6 @@ if __name__=='__main__':
     # (this means the various commands don't have to play path games)
     os.chdir(dirname(abspath(__file__)))
 
-    # common config between module and app builds
-    config = dict(
-        name = MODULE,
-        version = VERSION,
-        description = DESCRIPTION,
-        long_description = LONG_DESCRIPTION,
-        author = AUTHOR,
-        author_email = AUTHOR_EMAIL,
-        url = URL,
-        license = LICENSE,
-        classifiers = CLASSIFIERS,
-        packages = find_packages(exclude=['tests']),
-        install_requires = [
-            'requests',
-            'cachecontrol',
-            'lockfile',
-            'pyobjc-core==8.5',
-            'pyobjc-framework-Cocoa==8.5',
-            'pyobjc-framework-Quartz==8.5',
-            'pyobjc-framework-LaunchServices==8.5',
-            'pyobjc-framework-WebKit==8.5',
-        ],
-        scripts = ["app/plotdevice"],
-        zip_safe=False,
-        cmdclass={
-            'app': BuildAppCommand,
-            'clean': CleanCommand,
-            'build_py': BuildCommand,
-            'dist': DistCommand,
-            'sdist': BuildDistCommand,
-            'test': TestCommand,
-        },
-    )
 
     # py2app-specific config
     if 'py2app' in sys.argv:
