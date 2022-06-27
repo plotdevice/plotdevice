@@ -82,10 +82,8 @@ class ScriptAppDelegate(NSObject):
             self.script = ConsoleScript.alloc().init()
             self.script.setScript_options_(pth, opts)
 
-            # BUG? FEATURE? (it's a mystery!)
-            # exports will stall if `last` isn't an int. this should probably
-            # be handled by the command line arg-parser though, no?
-            if not opts.get('last',None):
+            # make sure the frame count is finite
+            if not opts.get('last', None):
                 opts['last'] = opts.get('first', 1)
 
             # kick off an export session
