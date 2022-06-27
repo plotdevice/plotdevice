@@ -1,46 +1,34 @@
 PlotDevice
 ==========
-PlotDevice is a Macintosh application used for computational graphic design. It provides an
-interactive Python environment where you can create two-dimensional graphics
-and output them in a variety of vector, bitmap, and animation formats. It is
-meant both as a sketch environment for exploring generative design and as a
-general purpose graphics library for use in external Python programs.
+PlotDevice is a Macintosh application used for computational graphic design. It 
+provides an interactive Python environment where you can create two-dimensional 
+graphics and output them in a variety of vector, bitmap, and animation formats. 
+It is meant both as a sketch environment for exploring generative design and as
+a general purpose graphics library for use in external Python programs.
 
 PlotDevice scripts can create images from simple geometric primitives, text, and
 external vector or bitmap images. Drawing commands provide a thin abstraction
 over Mac OS X's Quartz graphics engine, providing high-quality rendering
 of 2D imagery and powerful compositing operations.
 
-#### Derived from NodeBox
+#### Requirements
 
-PlotDevice is a [fork](https://github.com/nodebox/nodebox-pyobjc) of the legacy 
-[NodeBox 1](http://nodebox.net/code) application with a number of updates taking 
-advantage of recent OS features and simplifying its build procedure. As a result 
-it now happily runs on 64 bit systems, uses Python 2.7, and makes use of the version 
-of PyObjC provided by the system. It requires a Macintosh running OS X 10.9 or greater.
+The PlotDevice application requires macOS 11 or greater (either on Intel or Apple Silicon) 
+and comes bundled with a Python 3.10 distribution. The module can be installed via `pip3` 
+on Python versions ≥3.8 (including the interpreter from the Xcode 
+[command line tools](https://developer.apple.com/download/all/?q=command%20line%20tools%20for%20xcode)).
 
-#### Alternatives
+When using [pyenv](https://github.com/pyenv/pyenv), be sure to build the interpreter as a 
+**Framework** if you want to be able to view your script's output in a window:
+```console
+env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.10.4
+pyenv local 3.10.4
+python3 -m plotdevice
+``` 
 
-Though Quartz is not by any means ‘slow’, its focus on rendering quality does
-mean that if you're interested in doing realtime or interactive work you may
-be better served by [NodeBox GL](http://www.cityinabottle.org/nodebox/). This
-project's focus is on allowing your scripts to generate ‘camera ready’ graphics
-and movies for use elsewhere. To that end it provides functionality to
-efficiently export script output as vector documents (`pdf`,`eps`),
-bitmap images (`png`,`gif`,`jpg`,`tiff`), or animations (`mov`,`gif`).
+#### Latest changes (July 2020)
 
-#### Latest changes (July 2015)
-
-* Python 3 compatible
-* Can now be built with system Python or [Homebrew](http://brew.sh) versions of the interpreter
-* Much faster import times on Yosemite thanks to a bundled copy of PyObjC 3.0.4
-* HTTP is now handled by the `requests` module and caches responses locally
-* Totally revamped [typography](http://plotdevice.io/tut/Typography) system with
-  support for OpenType features, pagination, multi-column text, character geometry, and more
-* Added 130+ unit tests (run them with `python setup.py test`) plus bugfixes for
-  for `measure()`, `textpath()`, `Bezier.fit()`, `read()`, and the Preferences dialog
-* Miscellaneous enhancements to existing commands (see 
-  [`CHANGES.md`](https://github.com/plotdevice/plotdevice/blob/master/CHANGES.md) for details)
+* TKTK
 
 Installation
 ------------
@@ -70,7 +58,7 @@ and launch scripts from the command line (or from a ‘shebang’ line at the to
 script invoking the `plotdevice` tool). To install the module and command line tool use
 `python setup.py install`
 
-Easier still, you can install the module directly from PyPI with a simple `pip install plotdevice`
+Easier still, you can install the module directly from PyPI with a simple `pip3 install plotdevice`
 
 Documentation
 -------------
@@ -158,14 +146,14 @@ Libraries can be installed individually or en masse using the archive
 #### Installing Python modules
 
 The easiest way to use third-party modules from a PlotDevice script is to create a
-[`virtualenv`](http://virtualenv.org) and use `pip` to install your dependencies.
+[`virtualenv`](http://virtualenv.org) and use `pip3` to install your dependencies.
 You can then launch your script with the `--virtualenv` option to add them to
 the import path:
 
 ```bash
 $ virtualenv env
 $ source ./env/bin/activate
-(env)$ pip install redis
+(env)$ pip3 install redis
 (env)$ plotdevice script.pv --virtualenv ./env
 ```
 
@@ -177,8 +165,8 @@ omit the `--virtualenv` option:
 ```bash
 $ virtualenv env
 $ source ./env/bin/activate
-(env)$ pip install plotdevice
-(env)$ pip install requests envoy bs4 # some other useful packages
+(env)$ pip3 install plotdevice
+(env)$ pip3 install requests envoy bs4 # some other useful packages
 (env)$ plotdevice script.pv # uses the tool found at ./env/bin/plotdevice
 ```
 
