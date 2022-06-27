@@ -40,6 +40,7 @@
 }
 
 + (void)handleInterrupt{
+    // thanks to: https://www.mikeash.com/pyblog/friday-qa-2011-04-01-signal-handling.html
     dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_SIGNAL, SIGINT, 0, dispatch_get_global_queue(0, 0));
     dispatch_source_set_event_handler(source, ^{
         // quit on ctrl-c
