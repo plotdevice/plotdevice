@@ -125,7 +125,7 @@ class ConsoleScript(ScriptController):
     def setScript_options_(self, path, opts):
         self.vm.path = path
         self.vm.source = self.unicode_src
-        self.vm.metadata.update(opts)
+        self.vm.metadata = opts
         self.opts = opts
         self.watcher = ScriptWatcher.alloc().initWithScript_(self)
 
