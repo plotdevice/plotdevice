@@ -4,9 +4,8 @@ console.py
 
 Simple renderer for `.pv' scripts when run from the console rather than in-app.
 
-This is the back-end of the `plotdevice` command line script in the 'app' subdir of the source
-distribution (or the bin directory of your virtualenv once installed). It expects the parsed args
-from the front-end to be passed as a json blob piped to stdin.
+This is the back-end of the module's __main__.py command line interface. It expects the parsed args
+from the front-end to be passed as a dict to its run() method
 
 If an export option was specified, the output file(s) will be generated and the script will terminate
 once disk i/o completes. Otherwise a window will open to display the script's output and will remain
@@ -18,23 +17,22 @@ import sys
 import json
 import select
 import signal
-from site import addsitedir
 from math import floor, ceil
 from os.path import dirname, abspath, exists, join
 from io import open
 
+from ..run import objc, encoded
+from ..lib.cocoa import *
+from ..lib.io import SysAdmin
+from ..util import rsrc_path
+from ..gui import ScriptController
+
+from PyObjCTools import AppHelper
+from AppKit import NSRunningApplication
+
 STDOUT = sys.stdout
 STDERR = sys.stderr
 ERASER = '\r%s\r'%(' '*80)
-OPTS = json.loads(sys.stdin.readline())
-MODE = 'headless' if OPTS['export'] else 'windowed'
-
-addsitedir(OPTS['site']) # make sure the plotdevice module is accessible
-from plotdevice.run import objc, encoded # loads pyobjc as a side effect...
-from plotdevice.lib.cocoa import *
-from plotdevice.util import rsrc_path
-from plotdevice.gui import ScriptController
-from PyObjCTools import AppHelper
 
 class ScriptApp(NSApplication):
     @classmethod
@@ -55,16 +53,11 @@ class ScriptAppDelegate(NSObject):
     def initWithOpts_forMode_(self, opts, mode):
         self.opts = opts
         self.mode = mode
-        self.poll = NSFileHandle.fileHandleWithStandardInput()
-
-        nc = NSNotificationCenter.defaultCenter()
-        nc.addObserver_selector_name_object_(self, "catchInterrupts:", "NSFileHandleDataAvailableNotification", None)
-        self.poll.waitForDataInBackgroundAndNotify()
         return self
 
     def applicationDidFinishLaunching_(self, note):
         opts = self.opts
-        pth = opts['file']
+        pth = opts['script']
 
         if self.mode=='windowed':
             # load the viewer ui from the nib in plotdevice/rsrc
@@ -122,7 +115,6 @@ class ScriptAppDelegate(NSObject):
         if sender.tag() > 0:
             link += '/doc'
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(link))
-
 
     def done(self, quit=False):
         if self.mode=='headless' or quit:
@@ -256,9 +248,11 @@ def progress(written, total, width=20):
     return '[%s]' % dots
 
 
-if __name__ == '__main__':
-    app = ScriptApp.sharedApplicationForMode_(MODE)
-    delegate = ScriptAppDelegate.alloc().initWithOpts_forMode_(OPTS, MODE)
+def run(opts):
+    mode = 'headless' if opts['export'] else 'windowed'
+    app = ScriptApp.sharedApplicationForMode_(mode)
+    delegate = ScriptAppDelegate.alloc().initWithOpts_forMode_(opts, mode)
     app.setDelegate_(delegate)
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     AppHelper.runEventLoop(installInterrupt=False)
+    AppHelper.runEventLoop()
