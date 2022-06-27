@@ -471,7 +471,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# build a relocatable Python.framework with our dependencies pre-installed\ncd app/deps/embed\nmake\n";
+			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# build a relocatable Python.framework with our dependencies pre-installed\ncd app/deps/embed\nmake update\n";
 		};
 		2A758E411957B7CE003ECF9D /* Build PlotDevice Module */ = {
 			isa = PBXShellScriptBuildPhase;
