@@ -9,7 +9,8 @@ except ImportError:
     deps_dir = join(dirname(__file__), '../../app/deps')
     if exists(deps_dir):
         # if run from the sdist, install pyobjc et al. in a venv at app/deps/local
-        venv_dir = join(deps_dir, 'local')
+        import platform
+        venv_dir = join(deps_dir, 'local', platform.python_version())
         if not exists(venv_dir):
             import importlib.util
             spec = importlib.util.spec_from_file_location("setup", join(dirname(__file__), '../../setup.py'))
