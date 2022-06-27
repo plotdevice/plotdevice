@@ -627,7 +627,8 @@ class Context(object):
         return xf
 
     def translate(self, x=0, y=0):
-        """Shift subsequent drawing operations by (x,y)"""
+        x *= self._grid.dpx
+        y *= self._grid.dpx
         return self._transform.translate(x,y, rollback=True)
 
     def scale(self, x=1, y=None):
