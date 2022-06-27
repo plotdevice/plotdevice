@@ -38,4 +38,17 @@
     return YES;
     #pragma clang diagnostic warning "-Wdeprecated-declarations"
 }
+
++ (void)handleInterrupt{
+    dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_SIGNAL, SIGINT, 0, dispatch_get_global_queue(0, 0));
+    dispatch_source_set_event_handler(source, ^{
+        // quit on ctrl-c
+        [NSApp terminate:nil];
+    });
+    dispatch_resume(source);
+
+    struct sigaction action = { 0 };
+    action.sa_handler = SIG_IGN;
+    sigaction(SIGINT, &action, NULL);
+}
 @end

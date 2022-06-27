@@ -93,22 +93,6 @@ class ScriptAppDelegate(NSObject):
             kind = 'movie' if format in ('mov','gif') else 'image'
             self.script.exportInit(kind, opts['export'], opts)
 
-    def catchInterrupts_(self, sender):
-        read, write, timeout = select.select([sys.stdin.fileno()], [], [], 0)
-        for fd in read:
-            if fd == sys.stdin.fileno():
-                line = sys.stdin.readline().strip()
-                if 'CANCEL' in line:
-                    script = self.script
-                    if script.vm.session:
-                        script.vm.session.cancel()
-
-                    if getattr(script,'animationTimer',None) is not None:
-                        script.stopScript()
-                    elif self.mode == 'windowed':
-                        NSApp().delegate().done(quit=True)
-        self.poll.waitForDataInBackgroundAndNotify()
-
     @objc.IBAction
     def openLink_(self, sender):
         link = 'http://plotdevice.io'
@@ -249,10 +233,11 @@ def progress(written, total, width=20):
 
 
 def run(opts):
+    # install a signal handler to catch ^c
+    SysAdmin.handleInterrupt()
+
     mode = 'headless' if opts['export'] else 'windowed'
     app = ScriptApp.sharedApplicationForMode_(mode)
     delegate = ScriptAppDelegate.alloc().initWithOpts_forMode_(opts, mode)
     app.setDelegate_(delegate)
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-    AppHelper.runEventLoop(installInterrupt=False)
     AppHelper.runEventLoop()

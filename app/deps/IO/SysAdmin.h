@@ -7,7 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 
 @interface SysAdmin : NSObject
 + (BOOL)createSymlink:(NSString *)toolPath;
++ (void)handleInterrupt;
 @end
