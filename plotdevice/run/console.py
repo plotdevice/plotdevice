@@ -108,21 +108,8 @@ class ScriptWatcher(NSObject):
     def initWithScript_(self, script):
         self.script = script
         self.mtime = os.path.getmtime(script.path)
-        self._queue = NSOperationQueue.mainQueue()
-        NSFileCoordinator.addFilePresenter_(self)
+        SysAdmin.watchFile_for_onUpdate_(script.path, script, '_refresh')
         return self
-
-    def presentedItemURL(self):
-        return NSURL.fileURLWithPath_(self.script.path)
-
-    def presentedItemOperationQueue(self):
-        return self._queue
-
-    def presentedItemDidChange(self):
-        if not self.stale():
-            return
-        # call the script's _refresh handler if the change-event wasn't spurious
-        self.script.performSelectorOnMainThread_withObject_waitUntilDone_("_refresh", None, True)
 
     def stale(self):
         file_mtime = os.path.getmtime(self.script.path)
@@ -160,6 +147,8 @@ class ConsoleScript(ScriptController):
 
     def _refresh(self):
         # file changed: reread the script (and potentially run it)
+        if not self.watcher.stale():
+            return # file was re-saved but not changed
         self.vm.source = self.unicode_src
         if self.opts['live']:
             self.scriptedRun()
