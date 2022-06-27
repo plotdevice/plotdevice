@@ -176,7 +176,7 @@ class DashboardController(NSObject):
         control.setContinuous_(True)
         control.setTarget_(self)
         control.setTag_(cnt)
-        control.setAction_(objc.selector(self.numberChanged_, signature="v@:@@"))
+        control.setAction_(objc.selector(self.numberChanged_, signature=b"v@:@@"))
         self.panel.contentView().addSubview_(control)
 
     @objc.python_method
@@ -189,7 +189,7 @@ class DashboardController(NSObject):
         control.setFont_(MINI_FONT)
         control.setTarget_(self)
         control.setTag_(cnt)
-        control.setAction_(objc.selector(self.textChanged_, signature="v@:@@"))
+        control.setAction_(objc.selector(self.textChanged_, signature=b"v@:@@"))
         self.panel.contentView().addSubview_(control)
 
     @objc.python_method
@@ -212,7 +212,7 @@ class DashboardController(NSObject):
                                               NSColor.whiteColor(),
                                               (0, switchTitle.length()))
         control.setAttributedTitle_(switchTitle)
-        control.setAction_(objc.selector(self.booleanChanged_, signature="v@:@@"))
+        control.setAction_(objc.selector(self.booleanChanged_, signature=b"v@:@@"))
         self.panel.contentView().addSubview_(control)
 
     @objc.python_method
@@ -226,7 +226,7 @@ class DashboardController(NSObject):
         control.cell().setControlTint_(NSGraphiteControlTint)
         control.setTarget_(self)
         control.setTag_(cnt)
-        control.setAction_(objc.selector(self.buttonClicked_, signature="v@:@@"))
+        control.setAction_(objc.selector(self.buttonClicked_, signature=b"v@:@@"))
         self.panel.contentView().addSubview_(control)
 
 from ..context import RGB, CMYK
