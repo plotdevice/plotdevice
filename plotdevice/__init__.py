@@ -12,7 +12,7 @@
 
 """Quartz-powered vector machine
 
-Copyright (C) 2015 Samizdat Drafting Co.
+Copyright ©2014–2022 Samizdat Drafting Co.
 A derivative of http://nodebox.net/code by Frederik De Bleser & Tom De Smedt
 
 All rights reserved.
@@ -20,9 +20,9 @@ MIT Licensed (see README file for details)
 """
 import sys, re, os
 
-__version__ = '0.10.1'
+__version__ = '0.11'
 __author__  = 'Christian Swinehart'
-__email__   = 'drafting@samizdat.cc'
+__email__   = 'drafting@samizdat.co'
 __credits__ = 'Frederik De Bleser, Tom De Smedt, Just van Rossum, & Marcos Ojeda'
 __license__ = 'MIT'
 
@@ -64,5 +64,3 @@ else:
     # context/canvas's internal ns
     globals().update(ctx._ns)
     __all__ = list(ctx._ns.keys())
-
-
