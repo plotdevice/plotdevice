@@ -46,7 +46,15 @@ from AppKit import NSAlert, NSApp, NSApplication, NSApplicationActivationPolicyA
                    NSToolbarItem, NSTrackingActiveInActiveApp, NSTrackingArea, NSTrackingMouseEnteredAndExited, \
                    NSUnboldFontMask, NSUnitalicFontMask, NSUnionRect, NSView, NSViewFrameDidChangeNotification, \
                    NSWindow, NSWindowBackingLocationVideoMemory, NSWindowController, NSWorkspace, NSKernAttributeName
-from Foundation import *
+from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, \
+                   CIVector, Foundation, NO, NSAffineTransform, NSAffineTransformStruct, \
+                   NSAttributedString, NSAutoreleasePool, NSBundle, NSData, NSDate, NSDateFormatter, \
+                   NSFileCoordinator, NSFileHandle, NSFileHandleDataAvailableNotification, NSIntersectionRange, \
+                   NSHeight, NSInsetRect, NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, \
+                   NSMakeRange, NSMidX, NSMidY, NSMutableAttributedString, NSMutableData, NSNotificationCenter, NSObject,\
+                   NSOffsetRect, NSOperationQueue, NSPoint, NSRect, NSRectFromString, NSSelectorFromString, \
+                   NSSize, NSString, NSStringFromRect, NSTimeZone, NSTimer, NSURL, NSUserDefaults, \
+                   NSUTF8StringEncoding, NSWidth
 from LaunchServices import kUTTypePNG, kUTTypeJPEG, kUTTypeGIF, kUTTypeTIFF
 from WebKit import WebView
 from objc import IBOutlet, IBAction
