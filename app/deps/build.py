@@ -47,9 +47,6 @@ def build_extensions():
         print("Building %s..."% lib_name)
         build(lib_name)
 
-    print("Building pyobjc...")
-    make('pyobjc')
-
 def install_http_libs(mod_root):
     """Install the http modules into the Resources/python subdir"""
     print("Bundling requests module...")
@@ -63,7 +60,7 @@ def install_extensions(ext_root):
 
     # Copy all build results to plotdevice/lib dir
     for extension in glob("%s/*/build/lib*"%DEPS):
-        cmd = 'cp -pR %s/* %s' % (extension, ext_root)
+        cmd = 'cp -p %s/* %s' % (extension, ext_root)
         result = call(cmd, shell=True)
         if result > 0:
             lib_name = dirname(dirname(extension))
@@ -80,11 +77,6 @@ def main():
             mod_root = arg
             ext_root = join(mod_root, 'plotdevice/lib')
             build_extensions()
-            if 'ACTION' in os.environ:
-                # the ACTION env var will be defined for app and py2app builds, in which
-                # case we should install the http libs into Resources/python (for non-GUI
-                # builds, setup.py's install_requires will pull in dependencies automatically)
-                install_http_libs(mod_root)
             install_extensions(ext_root)
     else:
         print("usage: python build.py <destination-path>")

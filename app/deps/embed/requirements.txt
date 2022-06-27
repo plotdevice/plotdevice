@@ -6,3 +6,4 @@ lockfile
 pyobjc
 requests
 six
+../../..

@@ -471,7 +471,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd app/deps/embed\nmake\n";
+			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# build a relocatable Python.framework with our dependencies pre-installed\ncd app/deps/embed\nmake\n";
 		};
 		2A758E411957B7CE003ECF9D /* Build PlotDevice Module */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -485,7 +485,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# let the setup script handle updating\n$PYTHON setup.py build\n\n# copy the up-to-date module contents into the app bundle\nSITE_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/python\"\nditto build/lib \"$SITE_DIR\"\n\n# make sure everything has a .pyc (so code-signing doesn't break on first run)\n$PYTHON -m compileall -q \"$SITE_DIR/plotdevice\"\n";
+			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# let the setup script handle updating\n$PYTHON setup.py build\n\n# make sure everything has a .pyc (so code-signing doesn't break on first run)\n#$PYTHON -m compileall -q \"$SITE_DIR/plotdevice\"\n";
 			showEnvVarsInLog = 0;
 		};
 		2AF8981419953CA1005A49A5 /* Manually Update Examples */ = {
