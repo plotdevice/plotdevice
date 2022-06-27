@@ -4,8 +4,6 @@ from functools import partial
 from inspect import getargspec
 from collections import namedtuple
 from PyObjCTools import AppHelper
-from Foundation import *
-from AppKit import *
 from ..lib.io import MovieExportSession, ImageExportSession
 from .common import stacktrace, coredump, uncoded
 from plotdevice import util, context, gfx, Halted, DeviceError

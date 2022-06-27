@@ -1,10 +1,7 @@
 # encoding: utf-8
-from AppKit import *
-from Foundation import *
-from Quartz import *
 from collections import namedtuple, defaultdict
 
-from plotdevice import DeviceError
+from .. import DeviceError
 from ..lib.foundry import fontspec
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
