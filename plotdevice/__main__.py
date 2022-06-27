@@ -3,23 +3,23 @@
 """
 Examples:
   Run a script:
-    python -m plotdevice script.pv
+    python3 -m plotdevice script.pv
 
   Run fullscreen:
-    python -m plotdevice -f script.pv
+    python3 -m plotdevice -f script.pv
 
   Save script's output to pdf:
-    python -m plotdevice script.pv --export output.pdf
+    python3 -m plotdevice script.pv --export output.pdf
 
 Animation Examples:
   Create a 5 second long H.265 video at 2 megabits/sec:
-    python -m plotdevice script.pv --export output.mov --frames 150 --rate 2.0
+    python3 -m plotdevice script.pv --export output.mov --frames 150 --rate 2.0
 
   Create a sequence of numbered png files – one for each frame in the animation:
-    python -m plotdevice script.pv --export output.png --frames 10
+    python3 -m plotdevice script.pv --export output.png --frames 10
 
   Create an animated gif that loops every 2 seconds:
-    python -m plotdevice script.pv --export output.gif --frames 60 --fps 30 --loop
+    python3 -m plotdevice script.pv --export output.gif --frames 60 --fps 30 --loop
 """
 
 from __future__ import print_function
@@ -31,11 +31,16 @@ from glob import glob
 from subprocess import Popen, PIPE
 from os.path import exists, islink, dirname, abspath, realpath, join
 from .run.console import run
+from . import __version__
 
 def main():
-  """Run python scripts in a window or export graphics to a
-     document (pdf/eps), image (png/jpg/heic/gif/tiff), or movie (mov/gif)."""
-  parser = argparse.ArgumentParser(description=main.__doc__, add_help=False, prog='python -m plotdevice')
+  parser = argparse.ArgumentParser(
+    add_help=False,
+    description="Run python scripts in a window or export graphics to a document (pdf/eps), image (png/jpg/heic/gif/tiff), or movie (mov/gif).",
+    epilog=sys.modules[__name__].__doc__,
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    prog=os.environ.pop('_p_l_o_t_d_e_v_i_c_e_', 'python3 -m plotdevice')
+  )
   o = parser.add_argument_group("Options", None)
   o.add_argument('-h','--help', action='help', help='show this help message and exit')
   o.add_argument('-f', dest='fullscreen', action='store_const', const=True, default=False, help='run full-screen')
@@ -49,18 +54,20 @@ def main():
   o.add_argument('--cmyk', action='store_const', const=True, default=False, help='convert colors to c/m/y/k during exports')
   o.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
   o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='arguments to be passed to the script as sys.argv')
+  o.add_argument('--version', action='version', version='PlotDevice %s' % __version__)
+
   i = parser.add_argument_group("PlotDevice Script File", None)
   i.add_argument('script', help='the python script to be rendered')
 
-  try:
-      opts = parser.parse_args()
-  except:
-      parser.print_help()
-      print(sys.modules[__name__].__doc__)
-      return
+  if len(sys.argv)==1:
+    parser.print_usage()
+    print('for more detail:\n  %s --help' % parser.prog)
+    return
+
+  opts = parser.parse_args()
 
   if opts.virtualenv:
-    libdirs = glob('%s/lib/python*/site-packages'%opts.virtualenv)
+    libdirs = glob('%s/lib/python3.*/site-packages'%opts.virtualenv)
     if len(libdirs) and exists(libdir[0]):
       opts.virtualenv = abspath(libdir[0])
     else:

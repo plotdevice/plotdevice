@@ -1,5 +1,5 @@
 #!/bin/sh
-
+export _p_l_o_t_d_e_v_i_c_e_=$(basename ${0})
 python=$(
     self=${0}
     while [ -L "${self}" ];
