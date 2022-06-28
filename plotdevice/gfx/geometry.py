@@ -282,7 +282,7 @@ class Region(object):
         return iter([self.origin, self.size])
 
     def __hash__(self):
-        return hash((getattr(self, attr) for attr in ('x','y','w','h')))
+        return hash(tuple(getattr(self, attr) for attr in ('x','y','w','h')))
 
     def union(self, *args):
         """Return a new Region which fully encloses the existing Region and the arguments"""
