@@ -15,6 +15,9 @@ from Foundation import NSTimer
 def set_timeout(target, sel, delay, info=None, repeat=False):
     return NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(delay, target, sel, info, repeat)
 
+def next_tick(target, sel):
+    return NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0, target, sel, None, False)
+
 from .document import PlotDeviceDocument, PythonScriptDocument, ScriptController
 from .app import PlotDeviceAppDelegate
 from .views import GraphicsBackdrop, GraphicsView, FullscreenView

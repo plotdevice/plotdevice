@@ -25,7 +25,7 @@ from ..run import objc, encoded
 from ..lib.cocoa import *
 from ..lib.io import SysAdmin
 from ..util import rsrc_path
-from ..gui import ScriptController
+from ..gui import ScriptController, next_tick
 
 from PyObjCTools import AppHelper
 from AppKit import NSRunningApplication
@@ -50,16 +50,15 @@ class ScriptAppDelegate(NSObject):
     window = objc.IBOutlet()
     menu = objc.IBOutlet()
 
-    def initWithOpts_forMode_(self, opts, mode):
+    def initWithOpts_(self, opts):
         self.opts = opts
-        self.mode = mode
         return self
 
     def applicationDidFinishLaunching_(self, note):
         opts = self.opts
         pth = opts['script']
 
-        if self.mode=='windowed':
+        if self.opts['mode']=='windowed':
             # load the viewer ui from the nib in plotdevice/rsrc
             nib = NSData.dataWithContentsOfFile_(rsrc_path('viewer.nib'))
             ui = NSNib.alloc().initWithNibData_bundle_(nib, None)
@@ -77,7 +76,7 @@ class ScriptAppDelegate(NSObject):
                 NSApp().activateIgnoringOtherApps_(True)
             self.script.showWindow_(self)
             AppHelper.callAfter(self.script.scriptedRun)
-        elif self.mode=='headless':
+        elif self.opts['mode']=='headless':
             # create a window-less WindowController
             self.script = ConsoleScript.alloc().init()
             self.script.setScript_options_(pth, opts)
@@ -86,10 +85,13 @@ class ScriptAppDelegate(NSObject):
             if not opts.get('last', None):
                 opts['last'] = opts.get('first', 1)
 
-            # kick off an export session
-            format = opts['export'].rsplit('.',1)[1]
-            kind = 'movie' if format in ('mov','gif') else 'image'
-            self.script.exportInit(kind, opts['export'], opts)
+            if opts['export']:
+                # kick off an export session
+                format = opts['export'].rsplit('.',1)[1]
+                kind = 'movie' if format in ('mov','gif') else 'image'
+                self.script.exportInit(kind, opts['export'], opts)
+            else:
+                self.script.runHeadless()
 
     @objc.IBAction
     def openLink_(self, sender):
@@ -99,7 +101,7 @@ class ScriptAppDelegate(NSObject):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(link))
 
     def done(self, quit=False):
-        if self.mode=='headless' or quit:
+        if self.opts['mode']=='headless' or quit:
             NSApp().terminate_(None)
 
 class ScriptWatcher(NSObject):
@@ -165,6 +167,27 @@ class ConsoleScript(ScriptController):
         NSApp().terminate_(self)
 
     @objc.python_method
+    def invokeHeadless(self, method):
+        result = self.vm.run(method)
+        self.echo(result.output)
+        if not result.ok:
+            NSApp().terminate_(None)
+
+    def runHeadless(self):
+        self.vm.source = self.unicode_src
+        self.invokeHeadless(None)
+        self.invokeHeadless('setup')
+
+        if self.vm.animated:
+            self.redrawHeadless()
+        else:
+            NSApp().terminate_(None)
+
+    def redrawHeadless(self):
+        self.invokeHeadless('draw')
+        self.loop = next_tick(self, 'redrawHeadless')
+
+    @objc.python_method
     def echo(self, output):
         STDERR.write(ERASER)
         for isErr, data in output:
@@ -219,12 +242,12 @@ def progress(written, total, width=20):
     return '[%s]' % dots
 
 
+
 def run(opts):
     # install a signal handler to catch ^c
     SysAdmin.handleInterrupt()
 
-    mode = 'headless' if opts['export'] else 'windowed'
-    app = ScriptApp.sharedApplicationForMode_(mode)
-    delegate = ScriptAppDelegate.alloc().initWithOpts_forMode_(opts, mode)
+    app = ScriptApp.sharedApplicationForMode_(opts['mode'])
+    delegate = ScriptAppDelegate.alloc().initWithOpts_(opts)
     app.setDelegate_(delegate)
     AppHelper.runEventLoop()

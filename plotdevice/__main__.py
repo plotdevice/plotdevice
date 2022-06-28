@@ -36,15 +36,17 @@ from . import __version__
 def main():
   parser = argparse.ArgumentParser(
     add_help=False,
-    description="Run python scripts in a window or export graphics to a document (pdf/eps), image (png/jpg/heic/gif/tiff), or movie (mov/gif).",
+    description="Run PlotDevice scripts in a window or export graphics to a document (pdf/eps), image (png/jpg/heic/gif/tiff), or movie (mov/gif).",
     epilog=sys.modules[__name__].__doc__,
     formatter_class=argparse.RawDescriptionHelpFormatter,
     prog=os.environ.pop('_p_l_o_t_d_e_v_i_c_e_', 'python3 -m plotdevice')
   )
   o = parser.add_argument_group("Options", None)
   o.add_argument('-h','--help', action='help', help='show this help message and exit')
+  # mode = o.add_mutually_exclusive_group()
   o.add_argument('-f', dest='fullscreen', action='store_const', const=True, default=False, help='run full-screen')
   o.add_argument('-b', dest='activate', action='store_const', const=False, default=True, help='run PlotDevice in the background')
+  o.add_argument('-q', dest='mode', action='store_const', const='headless', default='windowed', help='run a PlotDevice script ‘quietly’ (without opening a window)')
   o.add_argument('--virtualenv', metavar='PATH', help='path to virtualenv whose libraries you want to use (this should point to the top-level virtualenv directory; a folder containing a lib/python3.x/site-packages subdirectory)')
   o.add_argument('--export', '-o', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, heic, gif, or mov')
   o.add_argument('--frames', metavar='N or M-N', help='number of frames to render or a range specifying the first and last frames (default "1-")')
@@ -95,6 +97,9 @@ def main():
   del opts.frames
 
   if opts.export:
+    # don't open a window
+    opts.mode = 'headless'
+
     # screen out unsupported file extensions
     _, ext = opts.export.lower().rsplit('.',1)
     if ext not in ('pdf', 'eps', 'png', 'jpg', 'heic', 'tiff', 'gif', 'mov'):
