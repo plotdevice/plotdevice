@@ -224,6 +224,7 @@ class DrawingTests(PlotDeviceTestCase):
             o = oval(0,0,100,100)   # not drawn
             s = rect(100,100,10,10) # same here
 
+    @unittest.skip("fix colors library first")
     @reference('drawing/ximport-colors.png')
     def test_ximport_colors(self):
         # ref/Canvas/compat/ximport()
