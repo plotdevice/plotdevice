@@ -26,7 +26,6 @@
 		2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */; };
 		2ABDB76B1867D8160069EFC3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2ABDB7681867D8160069EFC3 /* main.m */; };
 		2ABDB76E1867D8BB0069EFC3 /* plotdevice-app.py in Resources */ = {isa = PBXBuildFile; fileRef = 2ABDB7671867D8160069EFC3 /* plotdevice-app.py */; };
-		2ABDB7741867D9970069EFC3 /* plotdevice in Copy 'plotdevice' Tool */ = {isa = PBXBuildFile; fileRef = 2ABDB7721867D9920069EFC3 /* plotdevice */; };
 		611CC49810BA8B9E00B55455 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48110BA8B9E00B55455 /* Credits.rtf */; };
 		611CC49C10BA8B9E00B55455 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 611CC48910BA8B9E00B55455 /* InfoPlist.strings */; };
 		611CC4A110BA8B9E00B55455 /* PlotDevice.icns in Resources */ = {isa = PBXBuildFile; fileRef = 611CC49310BA8B9E00B55455 /* PlotDevice.icns */; };
@@ -78,17 +77,6 @@
 				2A36AE2E2868B4F30088976E /* Python.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		2ABDB76F1867D9560069EFC3 /* Copy 'plotdevice' Tool */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 12;
-			files = (
-				2ABDB7741867D9970069EFC3 /* plotdevice in Copy 'plotdevice' Tool */,
-			);
-			name = "Copy 'plotdevice' Tool";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -389,12 +377,11 @@
 				2A15C43718A20929006BDFF0 /* Copy Editor Assets */,
 				2A66ECEA18A99303002903DE /* Copy Editor Scripts */,
 				2A36AE2F2868BB9A0088976E /* Build Python Framework */,
-				2A758E411957B7CE003ECF9D /* Build PlotDevice Module */,
-				2ABDB76F1867D9560069EFC3 /* Copy 'plotdevice' Tool */,
 				2AF8981419953CA1005A49A5 /* Manually Update Examples */,
 				8D15AC300486D014006FF6A4 /* Sources */,
 				8D15AC330486D014006FF6A4 /* Frameworks */,
 				2A79B148286508220074E96A /* Embed Frameworks */,
+				2A36AE34286B81290088976E /* Symlink Command Line Tool */,
 			);
 			buildRules = (
 			);
@@ -473,20 +460,23 @@
 			shellPath = /bin/sh;
 			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# build a relocatable Python.framework with our dependencies pre-installed\ncd app/deps/embed\nmake\n";
 		};
-		2A758E411957B7CE003ECF9D /* Build PlotDevice Module */ = {
+		2A36AE34286B81290088976E /* Symlink Command Line Tool */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
+			inputFileListPaths = (
+			);
 			inputPaths = (
 			);
-			name = "Build PlotDevice Module";
+			name = "Symlink Command Line Tool";
+			outputFileListPaths = (
+			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# let the setup script handle updating\n$PYTHON setup.py build\n\n# make sure everything has a .pyc (so code-signing doesn't break on first run)\n#$PYTHON -m compileall -q \"$SITE_DIR/plotdevice\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "SCRIPT_DIR=\"$CONFIGURATION_BUILD_DIR/PlotDevice.app/Contents/SharedSupport\"\nmkdir -p \"$SCRIPT_DIR\"\nsrc=\"$SCRIPT_DIR/plotdevice\"\ndst=\"../Frameworks/Python.framework/Versions/Current/bin/plotdevice\"\nln -s $dst $src\n";
 		};
 		2AF8981419953CA1005A49A5 /* Manually Update Examples */ = {
 			isa = PBXShellScriptBuildPhase;
