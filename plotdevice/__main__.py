@@ -43,7 +43,6 @@ def main():
   )
   o = parser.add_argument_group("Options", None)
   o.add_argument('-h','--help', action='help', help='show this help message and exit')
-  # mode = o.add_mutually_exclusive_group()
   o.add_argument('-f', dest='fullscreen', action='store_const', const=True, default=False, help='run full-screen')
   o.add_argument('-b', dest='activate', action='store_const', const=False, default=True, help='run PlotDevice in the background')
   o.add_argument('-q', dest='mode', action='store_const', const='headless', default='windowed', help='run a PlotDevice script ‘quietly’ (without opening a window)')
