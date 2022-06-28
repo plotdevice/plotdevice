@@ -119,23 +119,19 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             if not is_xml:
                 txt_bytes = txt.encode('utf-8')
                 txt_opts = {'CharacterEncoding': NSUTF8StringEncoding}
-                decoded, info, err = NSMutableAttributedString.alloc().initWithData_options_documentAttributes_error_(
+                txt, info, err = NSMutableAttributedString.alloc().initWithData_options_documentAttributes_error_(
                     NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes)), txt_opts, None, None
                 )
 
                 # if the data got unpacked into anything more interesting than plain text,
                 # preserve its styling. otherwise fall through and style the txt val
                 if re.search(r'(html|rtf)$', info.get('UTI')):
-                    attrib_txt = decoded
+                    attrib_txt = txt
 
         if txt is not None and not attrib_txt:
             # convert non-textual `str` args to strings
             if not isinstance(txt, str) and not is_xml:
                 txt = repr(txt)
-
-            # try to insulate people from the need to use a unicode constant for any text
-            # with high-ascii characters (while waiting for the other shoe to drop)
-            decoded = txt #if isinstance(txt, unicode) else txt.decode('utf-8')
 
             # use the inherited baseline style but allow one-off overrides from kwargs
             merged_style = self._font._spec
@@ -146,7 +142,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             # its tag names. otherwise apply the merged style to the entire string
             if is_xml:
                 # find any tagged regions that need styling
-                parser = XMLParser(decoded, offset=len(self.text))
+                parser = XMLParser(txt, offset=len(self.text))
 
                 # update our internal lookup table of nodes
                 for tag, elts in parser.nodes.items():
@@ -167,7 +163,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             else:
                 # don't parse as xml, just apply the current font(), align(), and fill()
                 attrs = self._fontify(merged_style)
-                attrib_txt = NSMutableAttributedString.alloc().initWithString_attributes_(decoded, attrs)
+                attrib_txt = NSMutableAttributedString.alloc().initWithString_attributes_(txt, attrs)
 
             # ensure the very-first character of a Text is indented flush left. also watch for
             # double-newlines at the edge of the existing string and the appended chars. grafs
@@ -408,8 +404,6 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         Returns:
           a list of TextFragment objects
         """
-        # if isinstance(regex, str):
-        #     regex = regex.decode('utf-8')
         if isinstance(regex, str):
             flags = (re.I|re.S) if regex.lower()==regex else (re.S)
             regex = re.compile(regex, flags)
@@ -440,8 +434,6 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         Returns:
           a list of TextFragment objects
         """
-        if isinstance(tag_name, str):
-            tag_name = tag_name.decode('utf-8')
         return self._seek(self._nodes.get(tag_name, []), matches)
 
     def _seek(self, stream, limit):
