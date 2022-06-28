@@ -363,6 +363,10 @@ class ScriptController(NSWindowController):
         if self.vm.vars:
             self.dashboardController.buildInterface(self.vm.vars)
 
+        # Run the setup routine (if it exists)
+        if success:
+            success = self.invoke("setup")
+
         if not success or not self.vm.animated:
             # halt the progress indicator if we crashed (or if we succeeded in a non-anim)
             self.statusView.endRun()
@@ -376,10 +380,6 @@ class ScriptController(NSWindowController):
 
         # Check whether we are dealing with animation
         if self.vm.animated:
-
-            # Run setup routine
-            self.invoke("setup")
-
             if not self.vm.crashed:
                 # calling speed(0) just draws the first frame, so bail out before repeating
                 if self.vm.speed<=0:
@@ -391,7 +391,6 @@ class ScriptController(NSWindowController):
 
                 # Start the timer
                 self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
-
 
     def step(self):
         """Keep calling the script's draw method until an error occurs or the animation complete."""
