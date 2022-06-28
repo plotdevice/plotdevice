@@ -459,6 +459,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# build a relocatable Python.framework with our dependencies pre-installed\ncd app/deps/embed\nmake\n";
+			showEnvVarsInLog = 0;
 		};
 		2A36AE34286B81290088976E /* Symlink Command Line Tool */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -476,7 +477,8 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "SCRIPT_DIR=\"$CONFIGURATION_BUILD_DIR/PlotDevice.app/Contents/SharedSupport\"\nmkdir -p \"$SCRIPT_DIR\"\nsrc=\"$SCRIPT_DIR/plotdevice\"\ndst=\"../Frameworks/Python.framework/Versions/Current/bin/plotdevice\"\nln -s $dst $src\n";
+			shellScript = "SCRIPT_DIR=\"$CONFIGURATION_BUILD_DIR/PlotDevice.app/Contents/SharedSupport\"\nmkdir -p \"$SCRIPT_DIR\"\nsrc=\"$SCRIPT_DIR/plotdevice\"\ndst=\"../Frameworks/Python.framework/Versions/Current/bin/plotdevice\"\nln -sf $dst $src\n";
+			showEnvVarsInLog = 0;
 		};
 		2AF8981419953CA1005A49A5 /* Manually Update Examples */ = {
 			isa = PBXShellScriptBuildPhase;

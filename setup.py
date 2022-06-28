@@ -25,6 +25,7 @@ from distutils.dir_util import remove_tree
 from distutils.command.build_py import build_py
 from pkg_resources import DistributionNotFound
 from os.path import join, exists, dirname, basename, abspath, getmtime
+from subprocess import call
 import plotdevice
 
 
@@ -143,7 +144,8 @@ def gosub(cmd, on_err=True):
     ret = proc.returncode
     if on_err:
         msg = '%s:\n' % on_err if isinstance(on_err, str) else ''
-        assert ret==0, msg + (err or out)
+        if ret != 0:
+            print(msg + out.decode('utf8') + err.decode('utf8'))
     return out, err, ret
 
 def timestamp():
@@ -233,34 +235,12 @@ class BuildAppCommand(Command):
         pass
 
     def finalize_options(self):
-        # -- use the embedded framework rather now that system-python is gone:
-        # PYTHON_VERSION = 3.10
-        # PYTHON_FRAMEWORK = $(PROJECT_DIR)/app/deps/embed/Python.framework
-        # PYTHON = $(PYTHON_FRAMEWORK)/Versions/$(PYTHON_VERSION)/bin/python3
-        # LIBRARY_SEARCH_PATHS = $(inherited) $(PYTHON_FRAMEWORK)/Versions/$(PYTHON_VERSION)/lib/python$(PYTHON_VERSION)/config-$(PYTHON_VERSION)-darwin
-        # HEADER_SEARCH_PATHS = $(inherited) $(PYTHON_FRAMEWORK)/Versions/$(PYTHON_VERSION)/Headers
-        # OTHER_LDFLAGS = $(inherited) -lpython$(PYTHON_VERSION)
-        # GCC_PREPROCESSOR_DEFINITIONS = $(inherited) PYTHON_BIN="$(PYTHON)" PY3K=1
-
-        # customize the libpython paths based on the currently running interpreter
-        # from sysconfig import get_config_var
-        # macros = ['PYTHON_BIN="%s"'%sys.executable, 'PY3K=1' if sys.version_info[0] >=3 else '']
-        # py_version = "GCC_PREPROCESSOR_DEFINITIONS = $(inherited) PY3K=1\n" if sys.version_info[0] >=3 else ''
-
-        # re_cellarpath = re.compile(r'(.*)/Cellar/(python3?)/[^\/]+(.*)')
-        # py_lib = re_cellarpath.sub(r'\1/opt/\2\3', get_config_var('LIBPL'))
-        # py_inc = re_cellarpath.sub(r'\1/opt/\2\3', get_config_var('INCLUDEPY'))
-        # with open('app/python.xcconfig', 'w') as f:
-        #     f.writelines([ "PYTHON = %s\n" % sys.executable,
-        #                    "LIBRARY_SEARCH_PATHS = $(inherited) %s\n" % py_lib,
-        #                    "HEADER_SEARCH_PATHS = $(inherited) %s\n" % py_inc,
-        #                    "OTHER_LDFLAGS = $(inherited) -lpython%i.%i\n" % sys.version_info[:2],
-        #                    "GCC_PREPROCESSOR_DEFINITIONS = $(inherited) %s\n" % " ".join(macros).strip() ])
-        pass
+        # make sure the embedded framework exists (and has updated app/python.xcconfig)
+        print("Set up Python.framework for app build")
+        call('cd app/deps/embed && make', shell=True)
 
     def run(self):
         self.spawn(['xcodebuild'])
-        # update_shebang('dist/PlotDevice.app/Contents/SharedSupport/plotdevice', interpreter=sys.executable)
         remove_tree('dist/PlotDevice.app.dSYM')
         print("done building PlotDevice.app in ./dist")
 

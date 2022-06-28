@@ -8,6 +8,7 @@ all: Python.framework
 
 Python.framework: relocatable-python
 	python3 ./relocatable-python/make_relocatable_python_framework.py $(BUILD_OPTS)
+	$(BIN)/python3 config.py ../../python.xcconfig
 
 relocatable-python:
 	git clone $(FRAMEWORK_REPO)
