@@ -481,9 +481,8 @@ def findpath(points, curvature=1.0):
     # The list of points consists of Point objects,
     # but it shouldn't crash on something straightforward
     # such as someone supplying a list of (x,y)-tuples.
-    from types import TupleType, ListType
     for i, pt in enumerate(points):
-        if type(pt) in (TupleType, ListType):
+        if isinstance(pt, (tuple, list)):
             points[i] = Point(pt[0], pt[1])
 
     if len(points) == 0: return None
