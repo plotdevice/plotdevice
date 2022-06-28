@@ -10,7 +10,7 @@ from plotdevice import DeviceError, INTERNAL
 # data formats
 import json, csv
 from collections import defaultdict
-from dataclasses import make_dataclass
+from dataclasses import make_dataclass, replace
 from codecs import iterencode, iterdecode
 from xml.parsers import expat
 
@@ -133,13 +133,13 @@ class XMLParser(object):
         self.log(data)
 
     def _leave(self, name):
-        node = self.stack.pop()._replace(end=self.cursor)
+        node = replace(self.stack.pop(), end=self.cursor)
 
         # hang onto line-ending self-closed tags so they can be applied to the next '\n' in _chars
         if node.start==node.end:
             at = self._expat.CurrentByteIndex
             if self._xml[at-2:at]=='/>' and self._xml[at:at+1]=="\n":
-                node = node._replace(end=node.start+1)
+                node = replace(node, end=node.start+1)
                 self._crlf = node
 
         self.nodes[name].append(node)
