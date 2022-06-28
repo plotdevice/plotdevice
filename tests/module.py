@@ -15,14 +15,14 @@ class ModuleTests(PlotDeviceTestCase):
     def test_nodebox_compat(self):
         code = open('%s/tests/_in/compliance/nodebox.py'%sdist_path).read()
         os.chdir('%s/tests/_in/compliance'%sdist_path)
-        exec code in _ctx._ns.copy()
+        exec(code, _ctx._ns.copy())
         os.chdir(sdist_path)
 
     @reference('module/compliance.png')
     def test_compliance(self):
         code = open('%s/tests/_in/compliance/plotdevice.py'%sdist_path).read()
         os.chdir('%s/tests/_in/compliance'%sdist_path)
-        exec code in _ctx._ns.copy()
+        exec(code, _ctx._ns.copy())
         os.chdir(sdist_path)
 
     def test_cli(self):
