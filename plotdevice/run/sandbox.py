@@ -157,7 +157,8 @@ class Sandbox(object):
                 return check
 
         # Clear the canvas
-        self.canvas.clear()
+        if method != 'setup':
+            self.canvas.clear()
 
         # Reset the context state (and bind the .gfx objects as a side-effect)
         self.context._resetContext()
