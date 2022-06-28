@@ -10,7 +10,7 @@ from .geometry import Transform, Region, Size, Point, Pair
 from .colors import Color
 from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, FrameMixin, Grob
-from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, read
+from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, Element, read
 from ..lib import foundry
 from . import _ns_context
 
@@ -612,10 +612,10 @@ class TextFragment(object):
         elif hasattr(match, 'range'): # NSSubText
             self.start, n = match.range()
             self.end = self.start + n
-        elif hasattr(match, '_asdict'): # xml Element
-            for k,v in match._asdict().items():
+        elif isinstance(match, Element): # xml Element
+            for k,v in match.__dict__.items():
                 setattr(self, k, v)
-        elif hasattr(match, '_chars'): # TextBlock
+        elif isinstance(match, TextBlock): # TextBlock
             self.start, n = match._chars
             self.end = self.start + n
         elif hasattr(match, 'span'): # re.Match

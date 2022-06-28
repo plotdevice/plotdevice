@@ -11,7 +11,7 @@ from random import choice, shuffle
 
 from Foundation import NSAutoreleasePool
 from plotdevice import DeviceError
-from .readers import read, XMLParser
+from .readers import read, XMLParser, Element
 
 __all__ = ('grid', 'random', 'shuffled', 'choice', 'ordered', 'order', 'files', 'read', 'autotext', '_copy_attr', '_copy_attrs', 'odict', 'ddict', 'adict')
 
