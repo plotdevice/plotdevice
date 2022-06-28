@@ -2,6 +2,7 @@
 *.pyc
 build/
 dist/
+plotdevice.egg-info
 app/deps/vendor/Sparkle*
 app/deps/vendor/*.tar.gz
 app/deps/embed/Python.framework
