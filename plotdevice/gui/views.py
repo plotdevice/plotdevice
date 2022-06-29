@@ -15,14 +15,9 @@ class GraphicsBackdrop(NSView):
     """A container that sits between the NSClipView and GraphicsView
 
        It resizes to fit the size of the canvas and centers it when the canvas
-       is smaller than the display space in the NSSplitView. It also draws the
-       background color and maintains an isOpaque=True to take advantage of
-       Responsive Scrolling in 10.9
+       is smaller than the display space in the NSSplitView.
     """
     gfxView = None
-
-    def isOpaque(self):
-        return True
 
     def isFlipped(self):
         return True
@@ -53,11 +48,6 @@ class GraphicsBackdrop(NSView):
             nc = NSNotificationCenter.defaultCenter()
             nc.removeObserver_name_object_(self, NSViewFrameDidChangeNotification, subview)
 
-    def drawRect_(self, rect):
-        DARK_GREY.setFill()
-        NSRectFillUsingOperation(rect, NSCompositeCopy)
-        super(GraphicsBackdrop, self).drawRect_(rect)
-
     def viewFrameDidChange_(self, note):
         self.setFrame_(self.frame())
         newframe = self.frame()
@@ -74,7 +64,6 @@ class GraphicsBackdrop(NSView):
 
 class GraphicsView(NSView):
     script = IBOutlet()
-    placeholder = NSImage.imageNamed_('placeholder.pdf')
 
     # The zoom levels are 10%, 25%, 50%, 75%, 100%, 200% and so on up to 2000%.
     zoomLevels = [0.1, 0.25, 0.5, 0.75]
@@ -99,10 +88,18 @@ class GraphicsView(NSView):
         inaction = {k:None for k in ["onOrderOut", "sublayers", "contents", "position", "bounds"]}
         self.layer().setActions_(inaction)
 
-        # display the placeholder image until we're passed a canvas
-        if self.placeholder:
-            self.setFrameSize_(self.placeholder.size())
-            self.layer().setContents_(self.placeholder)
+        # display the placeholder image until we're passed a canvas (and keep it in sync with appearance)
+        self.updatePlaceholder(NSAppearance.currentDrawingAppearance())
+
+    @objc.python_method
+    def updatePlaceholder(self, appearance):
+        if self.canvas is None:
+            placeholder = NSImage.imageNamed_('placeholder-{mode}.pdf'.format(
+                mode = 'dark' if 'Dark' in appearance.name() else 'light'
+            ))
+            if placeholder:
+                self.setFrameSize_(placeholder.size())
+                self.layer().setContents_(placeholder)
 
     @objc.python_method
     def setCanvas(self, canvas):

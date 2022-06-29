@@ -201,6 +201,15 @@ class ScriptController(NSWindowController):
         # always a reference to either the in-window view or a fullscreen view
         self.currentView = self.graphicsView
 
+        # watch for changes in light/dark-mode and pass them along to graphicsView
+        NSApp.addObserver_forKeyPath_options_context_(self,
+            "effectiveAppearance", NSKeyValueObservingOptionNew, None
+        )
+
+    def observeValueForKeyPath_ofObject_change_context_(self, path, obj, change, context):
+        self.graphicsView.updatePlaceholder(change.get('new'))
+
+
     ## WindowController duties
 
     def windowDidLoad(self):
@@ -270,7 +279,7 @@ class ScriptController(NSWindowController):
 
         gfx_share = scrollview.width / (current.width-thumb_w)
         best_w = round(gworld.width/gfx_share) + thumb_w
-        best_h = gworld.height + 22
+        best_h = gworld.height + 38
         merged = NSIntersectionRect(rect, (rect.origin, (best_w, best_h)))
 
         if merged.size.width<300 or merged.size.height<222:
@@ -299,6 +308,9 @@ class ScriptController(NSWindowController):
             self.outputView._cleanup()
         self.graphicsView = self.outputView = self.editorView = self.statusView = None
         self.dashboardController = self.exportSheet = self.vm = None
+
+        # stop tracking appearance changes
+        NSApp.removeObserver_forKeyPath_(self, "effectiveAppearance")
 
     def shouldCloseDocument(self):
         return True

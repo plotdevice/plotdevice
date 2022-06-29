@@ -24,7 +24,7 @@ from Quartz import CALayer, CGColorCreate, CGContextAddPath, CGContextAddRect, C
                    kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, kCGPathFill, kCGPathFillStroke, \
                    kCGPathStroke, kCIInputImageKey, kCGImageDestinationLossyCompressionQuality, \
                    kCGImageAlphaPremultipliedFirst, kCGBitmapByteOrder32Host, kCGImageAlphaNoneSkipFirst
-from AppKit import NSAlert, NSApp, NSApplication, NSApplicationActivationPolicyAccessory, \
+from AppKit import NSAlert, NSApp, NSAppearance, NSApplication, NSApplicationActivationPolicyAccessory, \
                    NSBackingStoreBuffered, NSBeep, NSBezierPath, NSBitmapImageRep, NSBorderlessWindowMask, \
                    NSButton, NSCenterTextAlignment, NSChangeAutosaved, NSChangeCleared, NSChangeDone, \
                    NSChangeReadOtherContents, NSChangeRedone, NSChangeUndone, NSClipView, \
@@ -35,10 +35,10 @@ from AppKit import NSAlert, NSApp, NSApplication, NSApplicationActivationPolicyA
                    NSFont, NSFontDescriptor, NSFontManager, NSForegroundColorAttributeName, NSGIFFileType, \
                    NSGradient, NSGraphicsContext, NSGraphiteControlTint, NSImage, NSImageCacheNever, \
                    NSImageCompressionFactor, NSImageInterpolationHigh, NSItalicFontMask, NSJPEGFileType, \
-                   NSJustifiedTextAlignment, NSLayoutManager, NSLeftTextAlignment, NSLineBreakByWordWrapping, \
-                   NSLineToBezierPathElement, NSMenu, NSMenuItem, NSMiniControlSize, NSMoveToBezierPathElement, \
-                   NSMutableParagraphStyle, NSNib, NSOffState, NSOnState, NSPNGFileType, NSParagraphStyleAttributeName, \
-                   NSPasteboard, NSPasteboardTypePDF, NSPasteboardURLReadingContentsConformToTypesKey, \
+                   NSJustifiedTextAlignment, NSKeyValueObservingOptionNew, NSLayoutManager, NSLeftTextAlignment, \
+                   NSLineBreakByWordWrapping, NSLineToBezierPathElement, NSMenu, NSMenuItem, NSMiniControlSize, \
+                   NSMoveToBezierPathElement, NSMutableParagraphStyle, NSNib, NSOffState, NSOnState, NSPNGFileType, \
+                   NSParagraphStyleAttributeName, NSPasteboard, NSPasteboardTypePDF, NSPasteboardURLReadingContentsConformToTypesKey, \
                    NSPasteboardURLReadingFileURLsOnlyKey, NSPasteboardTypeTIFF, NSPrintOperation, NSRectFill, \
                    NSRectFillUsingOperation, NSResponder, NSRightTextAlignment, NSSavePanel, NSScreen, NSShadow, \
                    NSSlider, NSSmallControlSize, NSSplitView, NSStringPboardType, NSSwitch, NSSwitchButton, \

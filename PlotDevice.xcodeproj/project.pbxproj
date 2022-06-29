@@ -13,6 +13,8 @@
 		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
 		2A36AE2D2868B4E50088976E /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; };
 		2A36AE2E2868B4F30088976E /* Python.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2A36AE58286CA75B0088976E /* placeholder-light.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A36AE54286CA75B0088976E /* placeholder-light.pdf */; };
+		2A36AE59286CA75B0088976E /* placeholder-dark.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A36AE56286CA75B0088976E /* placeholder-dark.pdf */; };
 		2A591FF0185C17D200D1833D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A591FEF185C17D200D1833D /* Security.framework */; };
 		2A66ECEB18A99328002903DE /* ace.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDE18A992BD002903DE /* ace.js */; };
 		2A66ECEC18A99328002903DE /* editor.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECDF18A992BD002903DE /* editor.js */; };
@@ -20,7 +22,6 @@
 		2A66ECEE18A99328002903DE /* keybindings.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE118A992BD002903DE /* keybindings.js */; };
 		2A66ECEF18A99328002903DE /* underscore-1.5.2.min.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A66ECE218A992BD002903DE /* underscore-1.5.2.min.js */; };
 		2A7AF5C818D2AFAA00F8FFC2 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = 2A7AF5C718D2AFAA00F8FFC2 /* examples */; };
-		2A93AE751903326E00C6144D /* placeholder.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A93AE731903326E00C6144D /* placeholder.pdf */; };
 		2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2F91854018B001C4E0A /* AVFoundation.framework */; };
 		2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FB18540246001C4E0A /* CoreVideo.framework */; };
 		2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */; };
@@ -97,6 +98,8 @@
 		2A32957718C59D0A00EEDD1C /* io.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = io.py; sourceTree = "<group>"; };
 		2A32957918C59D0A00EEDD1C /* pathmatics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = pathmatics.py; sourceTree = "<group>"; };
 		2A36AE2C2868B4E50088976E /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = app/deps/embed/Python.framework; sourceTree = "<group>"; };
+		2A36AE55286CA75B0088976E /* en */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = en; path = "Resources/en.lproj/placeholder-light.pdf"; sourceTree = "<group>"; };
+		2A36AE57286CA75B0088976E /* en */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = en; path = "Resources/en.lproj/placeholder-dark.pdf"; sourceTree = "<group>"; };
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
@@ -113,7 +116,6 @@
 		2A79B13D2864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = Resources/en.lproj/PlotDeviceDocument.xib; sourceTree = "<group>"; };
 		2A79B13E2864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = Resources/en.lproj/PlotDevicePreferences.xib; sourceTree = "<group>"; };
 		2A79B13F2864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = Resources/en.lproj/PlotDeviceScript.xib; sourceTree = "<group>"; };
-		2A79B1402864FDAF0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = en; path = Resources/en.lproj/placeholder.pdf; sourceTree = "<group>"; };
 		2A7AF5C718D2AFAA00F8FFC2 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		2A827CC91859E9FE00A126BA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = python.xcconfig; path = app/python.xcconfig; sourceTree = "<group>"; };
@@ -274,7 +276,8 @@
 				611CC48910BA8B9E00B55455 /* InfoPlist.strings */,
 				611CC49310BA8B9E00B55455 /* PlotDevice.icns */,
 				611CC49410BA8B9E00B55455 /* PlotDeviceFile.icns */,
-				2A93AE731903326E00C6144D /* placeholder.pdf */,
+				2A36AE56286CA75B0088976E /* placeholder-dark.pdf */,
+				2A36AE54286CA75B0088976E /* placeholder-light.pdf */,
 				2ABDB76C1867D8210069EFC3 /* info.plist */,
 			);
 			name = Resources;
@@ -426,8 +429,9 @@
 				2ABDB76E1867D8BB0069EFC3 /* plotdevice-app.py in Resources */,
 				611CC49810BA8B9E00B55455 /* Credits.rtf in Resources */,
 				611CC49C10BA8B9E00B55455 /* InfoPlist.strings in Resources */,
+				2A36AE58286CA75B0088976E /* placeholder-light.pdf in Resources */,
 				611CC4A110BA8B9E00B55455 /* PlotDevice.icns in Resources */,
-				2A93AE751903326E00C6144D /* placeholder.pdf in Resources */,
+				2A36AE59286CA75B0088976E /* placeholder-dark.pdf in Resources */,
 				611CC4A210BA8B9E00B55455 /* PlotDeviceFile.icns in Resources */,
 				611CC5A010BA908C00B55455 /* PlotDeviceDocument.xib in Resources */,
 				611CC5A810BA919A00B55455 /* PlotDevicePreferences.xib in Resources */,
@@ -509,12 +513,20 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		2A93AE731903326E00C6144D /* placeholder.pdf */ = {
+		2A36AE54286CA75B0088976E /* placeholder-light.pdf */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2A79B1402864FDAF0074E96A /* en */,
+				2A36AE55286CA75B0088976E /* en */,
 			);
-			name = placeholder.pdf;
+			name = "placeholder-light.pdf";
+			sourceTree = "<group>";
+		};
+		2A36AE56286CA75B0088976E /* placeholder-dark.pdf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				2A36AE57286CA75B0088976E /* en */,
+			);
+			name = "placeholder-dark.pdf";
 			sourceTree = "<group>";
 		};
 		2AD0A9B5186E552700D1F6DE /* PlotDeviceScript.xib */ = {
