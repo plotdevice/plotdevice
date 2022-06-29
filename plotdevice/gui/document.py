@@ -201,13 +201,18 @@ class ScriptController(NSWindowController):
         # always a reference to either the in-window view or a fullscreen view
         self.currentView = self.graphicsView
 
-        # watch for changes in light/dark-mode and pass them along to graphicsView
+        # watch for changes in light/dark-mode and pass them along to subviews
+        from AppKit import NSKeyValueObservingOptionInitial
         NSApp.addObserver_forKeyPath_options_context_(self,
-            "effectiveAppearance", NSKeyValueObservingOptionNew, None
+            "effectiveAppearance", NSKeyValueObservingOptionNew | NSKeyValueObservingOptionInitial, None
         )
 
     def observeValueForKeyPath_ofObject_change_context_(self, path, obj, change, context):
-        self.graphicsView.updatePlaceholder(change.get('new'))
+        appearance = change.get('new', change.get('initial'))
+        self.editorView.superview().setDividerColor_(
+            NSColor.colorWithWhite_alpha_(1.0, 0.333) if 'Dark' in appearance.name() else NSColor.thinSplitViewDividerColor()
+        )
+        self.graphicsView.updatePlaceholder(appearance)
 
 
     ## WindowController duties
