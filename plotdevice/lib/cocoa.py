@@ -41,11 +41,12 @@ from AppKit import NSAlert, NSApp, NSApplication, NSApplicationActivationPolicyA
                    NSPasteboard, NSPasteboardTypePDF, NSPasteboardURLReadingContentsConformToTypesKey, \
                    NSPasteboardURLReadingFileURLsOnlyKey, NSPasteboardTypeTIFF, NSPrintOperation, NSRectFill, \
                    NSRectFillUsingOperation, NSResponder, NSRightTextAlignment, NSSavePanel, NSScreen, NSShadow, \
-                   NSSlider, NSSmallControlSize, NSSplitView, NSStringPboardType, NSSwitchButton, NSTIFFFileType, \
-                   NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, NSTextView, \
+                   NSSlider, NSSmallControlSize, NSSplitView, NSStringPboardType, NSSwitch, NSSwitchButton, \
+                   NSTIFFFileType, NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, NSTextView, \
                    NSToolbarItem, NSTrackingActiveInActiveApp, NSTrackingArea, NSTrackingMouseEnteredAndExited, \
-                   NSUnboldFontMask, NSUnitalicFontMask, NSUnionRect, NSView, NSViewFrameDidChangeNotification, \
-                   NSWindow, NSWindowBackingLocationVideoMemory, NSWindowController, NSWorkspace, NSKernAttributeName
+                   NSUnboldFontMask, NSUnitalicFontMask, NSUnionRect, NSView, NSViewWidthSizable,  \
+                   NSViewFrameDidChangeNotification, NSWindow, NSWindowBackingLocationVideoMemory, \
+                   NSWindowController, NSWorkspace, NSKernAttributeName
 from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, \
                    CIVector, Foundation, NO, NSAffineTransform, NSAffineTransformStruct, \
                    NSAttributedString, NSAutoreleasePool, NSBundle, NSData, NSDate, NSDateFormatter, \
