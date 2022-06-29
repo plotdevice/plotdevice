@@ -209,10 +209,11 @@ class ScriptController(NSWindowController):
 
     def observeValueForKeyPath_ofObject_change_context_(self, path, obj, change, context):
         appearance = change.get('new', change.get('initial'))
-        self.editorView.superview().setDividerColor_(
-            NSColor.colorWithWhite_alpha_(1.0, 0.333) if 'Dark' in appearance.name() else NSColor.thinSplitViewDividerColor()
-        )
         self.graphicsView.updatePlaceholder(appearance)
+        if self.editorView:
+            self.editorView.superview().setDividerColor_(
+                NSColor.colorWithWhite_alpha_(1.0, 0.333) if 'Dark' in appearance.name() else NSColor.thinSplitViewDividerColor()
+            )
 
 
     ## WindowController duties
