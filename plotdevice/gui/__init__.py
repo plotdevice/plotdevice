@@ -11,12 +11,15 @@ def bundle_path(subpath=None, rsrc=None, fmwk=None):
         return join(bundle, subpath)
     return bundle
 
-from Foundation import NSTimer
+from Foundation import NSTimer, NSRunLoop, NSRunLoopCommonModes
 def set_timeout(target, sel, delay, info=None, repeat=False):
-    return NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(delay, target, sel, info, repeat)
+    timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(delay, target, sel, info, repeat)
+    NSRunLoop.mainRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
+    return timer
 
 def next_tick(target, sel):
-    return NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0, target, sel, None, False)
+    timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0, target, sel, None, False)
+    NSRunLoop.mainRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
 
 from .document import PlotDeviceDocument, PythonScriptDocument, ScriptController
 from .app import PlotDeviceAppDelegate
