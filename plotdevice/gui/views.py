@@ -64,6 +64,7 @@ class GraphicsBackdrop(NSView):
 
 class GraphicsView(NSView):
     script = IBOutlet()
+    canvas = None
 
     # The zoom levels are 10%, 25%, 50%, 75%, 100%, 200% and so on up to 2000%.
     zoomLevels = [0.1, 0.25, 0.5, 0.75]
