@@ -25,7 +25,7 @@ from distutils.dir_util import remove_tree
 from distutils.command.build_py import build_py
 from pkg_resources import DistributionNotFound
 from os.path import join, exists, dirname, basename, abspath, getmtime
-from subprocess import call
+from subprocess import call, getoutput
 import plotdevice
 
 
@@ -176,6 +176,28 @@ class CleanCommand(Command):
         os.system('find plotdevice -name .DS_Store -exec rm {} \;')
         os.system('find plotdevice -name \*.pyc -exec rm {} \;')
         os.system('find plotdevice -name __pycache__ -type d -prune -exec rmdir {} \;')
+
+class LocalEnvCommand(Command):
+    description = "set up app/deps/local env to allow for running from the sdist"
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+        import platform
+        venv_dir = join('app/deps/local', platform.python_version())
+        if not exists(venv_dir):
+            import venv
+            venv.create(venv_dir, symlinks=True, with_pip=True)
+            PIP = '%s/bin/pip3' % venv_dir
+            call([PIP, 'install', '-q', '--upgrade', 'pip'])
+            call([PIP, '--isolated', 'install', '-q', *config['install_requires']])
+
+        # use the venv's site directory
+        site_path = getoutput('%s/bin/python3 -c "import site; print(site.getsitepackages()[0])"' % venv_dir)
+        print(site_path)
+
 
 from setuptools.command.sdist import sdist
 class BuildDistCommand(sdist):
@@ -384,6 +406,7 @@ config = dict(
         'dist': DistCommand,
         'sdist': BuildDistCommand,
         'test': TestCommand,
+        'env': LocalEnvCommand,
     },
 )
 

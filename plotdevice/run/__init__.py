@@ -6,25 +6,10 @@ try:
     # test the sys.path by attempting to load a PyObjC submodule...
     from Foundation import *
 except ImportError:
-    deps_dir = join(dirname(__file__), '../../app/deps')
-    if exists(deps_dir):
+    setup_py = join(dirname(__file__), '../../setup.py')
+    if exists(setup_py):
         # if run from the sdist, install pyobjc et al. in a venv at app/deps/local
-        import platform
-        venv_dir = join(deps_dir, 'local', platform.python_version())
-        if not exists(venv_dir):
-            import importlib.util
-            spec = importlib.util.spec_from_file_location("setup", join(dirname(__file__), '../../setup.py'))
-            setup = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(setup)
-
-            import venv
-            venv.create(venv_dir, symlinks=True, with_pip=True)
-            PIP = '%s/bin/pip3' % venv_dir
-            call([PIP, 'install', '--upgrade', 'pip'])
-            call([PIP, '--isolated', 'install', *setup.config['install_requires']])
-
-        # use the venv's site directory
-        site_path = getoutput('%s/bin/python3 -c "import site; print(site.getsitepackages()[0])"' % venv_dir)
+        site_path = getoutput('{py} {setup} -q env'.format(py=sys.executable, setup=setup_py))
         site.addsitedir(site_path)
         from Foundation import *
     else:
