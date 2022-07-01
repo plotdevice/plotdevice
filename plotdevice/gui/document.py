@@ -585,6 +585,7 @@ class ScriptController(NSWindowController):
             self.outputView.report(self.vm.crashed, self.vm.namespace.get('FRAME') if self.vm.animated else None)
 
         # return from fullscreen (if applicable)
+        needs_focus = False
         if self.fullScreen is not None:
             # copy the final frame back to the window's view
             self.graphicsView.setCanvas(self.vm.canvas)
@@ -595,6 +596,7 @@ class ScriptController(NSWindowController):
             self.fullScreen.orderOut_(self)
             self.fullScreen = None
             NSCursor.unhide()
+            needs_focus = True
 
         # try to send the cursor to the editor
         if self.editorView:
@@ -603,7 +605,7 @@ class ScriptController(NSWindowController):
             self.graphicsView.window().makeFirstResponder_(self.graphicsView)
 
         # bring the window forward (to recover from fullscreen mode) and re-cache the graphics
-        if self.graphicsView:
+        if needs_focus:
             # note that graphicsView is nulled out in self.close_ before we're called.
             # otherwise the makeKey will cause a double-flicker before the window disappears
             focus = self.editorView or self.graphicsView
