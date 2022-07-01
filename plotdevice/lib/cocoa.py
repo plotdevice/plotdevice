@@ -41,10 +41,10 @@ from AppKit import NSAlert, NSApp, NSAppearance, NSApplication, NSApplicationAct
                    NSParagraphStyleAttributeName, NSPasteboard, NSPasteboardTypePDF, NSPasteboardURLReadingContentsConformToTypesKey, \
                    NSPasteboardURLReadingFileURLsOnlyKey, NSPasteboardTypeTIFF, NSPrintOperation, NSRectFill, \
                    NSRectFillUsingOperation, NSResponder, NSRightTextAlignment, NSSavePanel, NSScreen, NSShadow, \
-                   NSSlider, NSSmallControlSize, NSSplitView, NSStringPboardType, NSSwitch, NSSwitchButton, \
+                   NSSlider, NSSmallControlSize, NSSplitView, NSStringPboardType, NSSwitch, \
                    NSTIFFFileType, NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, NSTextView, \
                    NSToolbarItem, NSTrackingActiveInActiveApp, NSTrackingArea, NSTrackingMouseEnteredAndExited, \
-                   NSUnboldFontMask, NSUnitalicFontMask, NSUnionRect, NSView, NSViewWidthSizable,  \
+                   NSUnboldFontMask, NSUnitalicFontMask, NSUnionRect, NSView, NSViewMinXMargin, NSViewWidthSizable,  \
                    NSViewFrameDidChangeNotification, NSWindow, NSWindowBackingLocationVideoMemory, \
                    NSWindowController, NSWorkspace, NSKernAttributeName
 from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, \

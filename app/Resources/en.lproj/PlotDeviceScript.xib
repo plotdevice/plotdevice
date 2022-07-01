@@ -21,7 +21,7 @@
             <rect key="contentRect" x="283" y="378" width="600" height="485"/>
             <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
             <value key="minSize" type="size" width="213" height="107"/>
-            <view key="contentView" id="6">
+            <view key="contentView" id="6" customClass="NSVisualEffectView">
                 <rect key="frame" x="0.0" y="0.0" width="600" height="485"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
@@ -107,61 +107,18 @@
             </connections>
             <point key="canvasLocation" x="-247" y="-21"/>
         </window>
-        <window title="Variables" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="169" userLabel="Panel" customClass="NSPanel">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES" nonactivatingPanel="YES" HUD="YES"/>
+        <window title="Variables" allowsToolTipsWhenApplicationIsInactive="NO" hidesOnDeactivate="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" appearanceType="darkAqua" animationBehavior="default" titlebarAppearsTransparent="YES" id="169" userLabel="Panel" customClass="NSPanel">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" resizable="YES" utility="YES" nonactivatingPanel="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="395" y="467" width="300" height="97"/>
             <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
             <value key="minSize" type="size" width="300" height="11"/>
-            <view key="contentView" id="168">
+            <value key="maxSize" type="size" width="2000" height="97"/>
+            <view key="contentView" appearanceType="darkAqua" id="168" customClass="NSVisualEffectView">
                 <rect key="frame" x="0.0" y="0.0" width="300" height="97"/>
                 <autoresizingMask key="autoresizingMask"/>
-                <subviews>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="102" translatesAutoresizingMaskIntoConstraints="NO" id="198">
-                        <rect key="frame" x="-3" y="64" width="106" height="13"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="Text:" id="288">
-                            <font key="font" metaFont="label"/>
-                            <color key="textColor" name="controlLightHighlightColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
-                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="199">
-                        <rect key="frame" x="108" y="63" width="172" height="15"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="left" drawsBackground="YES" id="289">
-                            <font key="font" metaFont="miniSystem"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="102" translatesAutoresizingMaskIntoConstraints="NO" id="200">
-                        <rect key="frame" x="-3" y="43" width="106" height="13"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="Number:" id="290">
-                            <font key="font" metaFont="label"/>
-                            <color key="textColor" name="controlLightHighlightColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
-                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="201">
-                        <rect key="frame" x="108" y="43" width="172" height="12"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <sliderCell key="cell" controlSize="mini" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" allowsTickMarkValuesOnly="YES" sliderType="linear" id="291">
-                            <font key="font" size="12" name="Helvetica"/>
-                        </sliderCell>
-                    </slider>
-                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="202">
-                        <rect key="frame" x="104" y="23" width="68" height="18"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <buttonCell key="cell" type="check" title="Switch" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" inset="2" id="292">
-                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="miniSystem"/>
-                        </buttonCell>
-                    </button>
-                </subviews>
             </view>
-            <point key="canvasLocation" x="-207" y="366"/>
+            <point key="canvasLocation" x="-207" y="365.5"/>
         </window>
         <customObject id="170" userLabel="DashboardController" customClass="DashboardController">
             <connections>
@@ -183,9 +140,9 @@
                 <outlet property="imageAccessory" destination="4ab-Za-16r" id="5TA-Ml-Rwf"/>
                 <outlet property="imageCMYK" destination="bNe-C5-UOr" id="WSU-Ye-GTh"/>
                 <outlet property="imageFormat" destination="tLr-cj-F0l" id="4Yd-fg-OCQ"/>
-                <outlet property="imageZoom" destination="ArM-Qx-DVZ" id="ad-hoc-2"/>
                 <outlet property="imagePageCount" destination="fo6-58-NU7" id="AUM-Z0-y7J"/>
                 <outlet property="imagePagination" destination="J7I-IL-aeY" id="EFN-Gk-ILG"/>
+                <outlet property="imageZoom" destination="ArM-Qx-DVZ" id="ad-hoc-2"/>
                 <outlet property="movieAccessory" destination="NES-Ui-JrE" id="bqi-sx-naG"/>
                 <outlet property="movieBitrate" destination="w8Y-cd-Lvr" id="rlQ-fB-cUk"/>
                 <outlet property="movieFormat" destination="Zbz-px-7RN" id="KDY-SH-cCS"/>

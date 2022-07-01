@@ -312,6 +312,7 @@ class ScriptController(NSWindowController):
         if self.editorView:
             self.editorView._cleanup()
             self.outputView._cleanup()
+        self.dashboardController.shutdown()
         self.graphicsView = self.outputView = self.editorView = self.statusView = None
         self.dashboardController = self.exportSheet = self.vm = None
 
@@ -378,8 +379,8 @@ class ScriptController(NSWindowController):
         success = self.invoke(None)
 
         # Display the dashboard if the var() command was called
-        if self.vm.vars:
-            self.dashboardController.buildInterface(self.vm.vars)
+        self.vm.params = self.vm.vars
+        self.dashboardController.updateInterface()
 
         # Run the setup routine (if it exists)
         if success:

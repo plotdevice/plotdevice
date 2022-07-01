@@ -96,9 +96,18 @@ class Sandbox(object):
         self.live = metadict.get('live', self.live)
     metadata = property(_get_meta, _set_meta)
 
+    # .params
+    def _get_params(self):
+        """Script variables currently being displayed in the UI (r/w)"""
+        return self.context._params
+    def _set_params(self, new_params):
+        self.context._params.clear()
+        self.context._params.update(new_params)
+    params = property(_get_params, _set_params)
+
     @property
     def vars(self):
-        """Script variables being tracked through the vars() method (r)"""
+        """Script variables added through the var() method in the last run (r)"""
         return self.context._vars
 
     @property
@@ -170,7 +179,6 @@ class Sandbox(object):
         result = self.call(method)
 
         # (non-animation scripts are now complete (as are anims that just crashed))
-
         if self.animated and result.ok:
             # animations require special bookkeeping depending on which routine is being run
             if method is None:

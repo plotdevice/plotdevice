@@ -1,7 +1,7 @@
 # encoding: utf-8
 import os, re, types
 from contextlib import contextmanager
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from os.path import exists, expanduser
 from objc import super
 
@@ -24,7 +24,7 @@ GridUnits = namedtuple('GridUnits', ['unit', 'dpx', 'to_px', 'from_px'])
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_oldvars', '_vars'
+    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_params', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -37,6 +37,7 @@ class Context(object):
         self._imagecache = {}
         self._statestack = []
         self._vars = []
+        self._params = OrderedDict()
 
         self._resetContext()     # initialize default graphics state
         self._resetEnvironment() # initialize namespace & canvas
@@ -99,10 +100,17 @@ class Context(object):
         self._autoclosepath = True
         self._autoplot = True
 
+        # track new calls to var() so we can update self._params
+        # (this is reset with every invocation but only checked after the full-module eval)
+        self._vars = OrderedDict()
+
+        # update existing variables' values from _params (so draw() can see updates)
+        for name, p in self._params.items():
+            if p.type != BUTTON: # buttons don't actually create variables
+                self._ns[name] = p.value
+
         # legacy internals
         self._transformstack = [] # only used by push/pop
-        self._oldvars = self._vars
-        self._vars = []
 
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context._state_vars]
@@ -1555,23 +1563,14 @@ class Context(object):
 
     ### Variables ###
 
-    def var(self, name, type, default=None, min=0, max=100, value=None):
-        v = Variable(name, type, default, min, max, value)
-        v = self.addvar(v)
+    def var(self, name, type, *args, **kwargs):
+        v = Variable(name, type, *args, **kwargs)
+        self._vars[v.name] = v
 
-    def addvar(self, v):
-        oldvar = self.findvar(v.name)
-        if oldvar is not None:
-            if oldvar.compliesTo(v):
-                v.value = oldvar.value
-        self._vars.append(v)
-        self._ns[v.name] = v.value
-
-    def findvar(self, name):
-        for v in self._oldvars:
-            if v.name == name:
-                return v
-        return None
+        # if we're re-running the script, don't overwrite the value set through the UI
+        if v.type != BUTTON: # buttons don't actually create variables
+            v.inherit(self._params.get(v.name, None))
+            self._ns[v.name] = v.value
 
 
 class PlotContext(object):
