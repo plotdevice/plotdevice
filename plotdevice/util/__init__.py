@@ -5,6 +5,7 @@ import re
 import json
 import csv
 from contextlib import contextmanager
+from functools import cmp_to_key
 from collections import OrderedDict, defaultdict
 from os.path import abspath, dirname, exists, join, splitext
 from random import choice, shuffle
@@ -100,19 +101,48 @@ def _as_sequence(seq):
 def _as_before(orig, lst):
     return "".join(lst) if isinstance(orig, str) else list(lst)
 
-def _getter(seq, names):
-    from operator import itemgetter, attrgetter
-    is_dotted = any(['.' in name for name in names])
-    getter = attrgetter if is_dotted or hasattr(seq[0],names[0]) else itemgetter
-    return getter(*names)
+def _key(seq, names):
+    # treat objects without a given key and objects with the key set to None equivalently
+    MISSING = None
+
+    # look for dict items by default
+    getter = lambda obj: tuple(obj.get(n, MISSING) for n in names)
+
+    # walk through the objects and see if any of them lacks the dict fields but has attrs
+    for obj in seq:
+        try:
+            if any(n in obj for n in names):
+                break # dict fields exist so use the itemgetter
+        except TypeError:
+            # for non-dict objects like namedtuples and dataclasses use an attrgetter
+            if any(hasattr(obj, n) for n in names):
+                getter = lambda obj: tuple(getattr(obj, n, MISSING) for n in names)
+
+    def compare(a, b):
+        default = 0
+        try:
+            a = getter(a)
+            b = getter(b)
+            if a > b: return 1
+            if a < b: return -1
+        except TypeError:
+            for aa, bb in zip(a, b):
+                if aa is MISSING and bb is MISSING: return default
+                if aa is MISSING: return default or 1
+                if bb is MISSING: return default or -1
+                if aa > bb: default = 1
+                if aa < bb: default = -1
+        return default
+
+    return cmp_to_key(compare)
 
 def order(seq, *names, **kwargs):
     lst = _as_sequence(seq)
     if not names or not seq:
         reordered = [(it,idx) for idx,it in enumerate(lst)]
     else:
-        getter = _getter(lst, names)
-        reordered = [(getter(it), idx) for idx,it in enumerate(lst)]
+        key = _key(lst, names)
+        reordered = [(key(it), idx) for idx,it in enumerate(lst)]
     reordered.sort(**kwargs)
     return [it[1] for it in reordered]
 
@@ -133,7 +163,7 @@ def ordered(seq, *names, **kwargs):
 
     if not names or not lst:
         return _as_before(seq, sorted(lst, **kwargs))
-    return _as_before(seq, sorted(lst, key=_getter(lst, names), **kwargs))
+    return _as_before(seq, sorted(lst, key=_key(lst, names), **kwargs))
 
 def shuffled(seq):
     """Returns a random permutation of a list or tuple (without modifying the original)"""
