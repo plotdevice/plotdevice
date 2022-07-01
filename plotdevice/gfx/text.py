@@ -1,6 +1,7 @@
 # encoding: utf-8
 import re
 import sys
+from unicodedata import normalize
 from collections import namedtuple
 from ..lib.cocoa import *
 
@@ -117,6 +118,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
             # try using the nsmagic parsing of HTML/RTF to build an attributed string
             if not is_xml:
+                txt = normalize("NFC", txt)
                 txt_bytes = txt.encode('utf-8')
                 txt_opts = {'CharacterEncoding': NSUTF8StringEncoding}
                 txt, info, err = NSMutableAttributedString.alloc().initWithData_options_documentAttributes_error_(
@@ -132,6 +134,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             # convert non-textual `str` args to strings
             if not isinstance(txt, str) and not is_xml:
                 txt = repr(txt)
+            txt = normalize("NFC", txt)
 
             # use the inherited baseline style but allow one-off overrides from kwargs
             merged_style = self._font._spec
