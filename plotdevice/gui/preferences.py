@@ -29,8 +29,6 @@ def defaultDefaults():
         "plotdevice:font-size":11,
     }
 NSUserDefaults.standardUserDefaults().registerDefaults_(defaultDefaults())
-ERR_COL = NSColor.colorWithRed_green_blue_alpha_(167/255.0, 41/255.0, 34/255.0, 1.0)
-OK_COL = NSColor.colorWithRed_green_blue_alpha_(60/255.0, 60/255.0, 60/255.0, 1.0)
 THEMES = None # to be filled in as needed
 
 def _hex_to_nscolor(hexclr):
@@ -216,7 +214,7 @@ class PlotDevicePreferencesController(NSWindowController):
         self.toolAction.setTitle_(action.title())
         self.toolPath.setSelectable_(found is not None)
         self.toolPath.setStringValue_(found.decode('utf8') if found else '')
-        self.toolPath.setTextColor_(OK_COL if valid else ERR_COL)
+        self.toolPath.setTextColor_(NSColor.labelColor() if valid else NSColor.systemRedColor())
         self.toolBoilerplate.setHidden_(found is not None)
         self.toolPath.setHidden_(found is None)
 
