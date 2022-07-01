@@ -11,6 +11,7 @@ from objc import super
 
 from ..lib.cocoa import *
 
+from .preferences import get_default
 from .editor import OutputTextView, EditorView
 from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
@@ -80,7 +81,7 @@ class PlotDeviceDocument(NSDocument):
     ## Autosave & restoration on re-launch
 
     def autosavesInPlace(self):
-        return True
+        return get_default('autosave')
 
     def encodeRestorableStateWithCoder_(self, coder):
         super(PlotDeviceDocument, self).encodeRestorableStateWithCoder_(coder)

@@ -27,6 +27,7 @@ def defaultDefaults():
         "plotdevice:bindings":"mac",
         "plotdevice:font-name":"Menlo",
         "plotdevice:font-size":11,
+        "plotdevice:autosave":True
     }
 NSUserDefaults.standardUserDefaults().registerDefaults_(defaultDefaults())
 THEMES = None # to be filled in as needed
@@ -88,6 +89,8 @@ class PlotDevicePreferencesController(NSWindowController):
     bindingsMenu = IBOutlet()
     fontMenu = IBOutlet()
     fontSizeMenu = IBOutlet()
+    autosaveEnabledRadio = IBOutlet()
+    autosaveDisabledRadio = IBOutlet()
     toolPath = IBOutlet()
     toolAction = IBOutlet()
     toolBoilerplate = IBOutlet()
@@ -107,6 +110,7 @@ class PlotDevicePreferencesController(NSWindowController):
         self.checkThemes()
         self.checkFonts()
         self.checkBindings()
+        self.checkAutosave()
         self.checkUpdater()
 
     @objc.python_method
@@ -148,6 +152,22 @@ class PlotDevicePreferencesController(NSWindowController):
         style = ['mac','emacs','vim'][sender.selectedItem().tag()]
         set_default('bindings', style)
         self._notify('BindingsChanged')
+
+    def checkAutosave(self):
+        enabled = get_default('autosave')
+        print('autosave ==', enabled)
+        if enabled:
+            self.autosaveEnabledRadio.setState_(NSOnState)
+        else:
+            self.autosaveDisabledRadio.setState_(NSOnState)
+        self.autosaveEnabledRadio.setState_(NSOnState if enabled else NSOffState)
+
+    @IBAction
+    def autosaveChanged_(self, sender):
+        enabled = sender.tag() == 1
+        print('autosave ->', enabled)
+        set_default('autosave', enabled)
+        # self._notify('AutosaveChanged')
 
     def checkThemes(self):
         light = sorted([t for t,m in THEMES.items() if not m['dark']], reverse=True)
