@@ -68,9 +68,9 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         # maintain a lookup table of nodes within xml input
         self._nodes = {}
 
-        # look for a string as the first positional arg or an xml/str kwarg
-        if args and isinstance(args[0], str):
-            kwargs['str'], args = args[0], args[1:]
+        # use the first positional arg if no xml/str/src kwarg was passed
+        if not any(o in kwargs for o in self.opts) and len(args):
+            kwargs['str'], args = str(args[0]), args[1:]
 
         # merge in any numlike positional args to define bounds
         if args:
