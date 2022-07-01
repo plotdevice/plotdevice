@@ -314,7 +314,7 @@ def rsrc_path(resource=None):
     if not exists(rsrc_root):
         # hack to run in-place in sdist
         from glob import glob
-        for pth in glob(join(module_root, '../build/lib/plotdevice/rsrc')):
+        for pth in glob(join(module_root, '../build/lib*/plotdevice/rsrc')):
             rsrc_root = abspath(pth)
             break
         else:

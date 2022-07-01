@@ -8,9 +8,9 @@ from operator import itemgetter, attrgetter
 from collections import namedtuple, OrderedDict as odict, defaultdict as ddict
 from .cocoa import *
 from ..util import numlike
-import cFoundry
 
 from plotdevice import DeviceError
+import _plotdevice
 
 __all__ = ["font_family", "font_encoding", "font_face", "best_face",
            "family_names", "family_members", "family_name", "standardized", "sanitized",

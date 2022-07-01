@@ -1,21 +1,16 @@
 import sys
-from os.path import abspath, dirname, exists
+from os.path import abspath, dirname, exists, join
 from glob import glob
 
-_libdir = abspath(dirname(__file__))
 try:
-    # if the lib files are missing, presume we're in the source dist and look in its build dir
-    if not glob('%s/*.so' % _libdir):
-        build_dir = '%s/../../build/lib/plotdevice/lib' % _libdir
-        if exists(build_dir): sys.path.append(abspath(build_dir))
-    else:
-        sys.path.append(_libdir)
-    from . import io, pathmatics, foundry # make sure the c-extensions are accessible
+    import _plotdevice # make sure the c-extensions are accessible
 except ImportError:
-    missing = "Missing C extensions (cPathmatics.so & friends) in %s" % _libdir
-    if exists('%s/../../setup.py' % _libdir):
-        missing += "\nBuild the plotdevice module with `python3 setup.py build` before attempting import it."
-    raise ImportError(missing)
+    setup_py = join(dirname(__file__), '../../setup.py')
+    if exists(setup_py):
+        from subprocess import call
+        # call('{py} {setup} build_ext --inplace'.format(py=sys.executable, setup=setup_py))
+        call([sys.executable, setup_py, 'build_ext', '--inplace'])
+    import _plotdevice
 
 # allow Libraries to request a _ctx reference
 def register(module):

@@ -1,6 +1,4 @@
-#import <Cocoa/Cocoa.h>
-#include <Python.h>
-
+#import "pathmatics.h"
 #include <math.h>
 #include <stdio.h>
 #include "gpc.h"
@@ -103,7 +101,7 @@ void _curvelength(double x0, double y0, double x1, double y1,
     *out_length = length;
 }
 
-static PyObject *
+PyObject *
 cPathmatics_linepoint(PyObject *self, PyObject *args)
 {
     double t, x0, y0, x1, y1;
@@ -118,7 +116,7 @@ cPathmatics_linepoint(PyObject *self, PyObject *args)
     return Py_BuildValue("dd", out_x, out_y);
 }
 
-static PyObject *
+PyObject *
 cPathmatics_linelength(PyObject *self, PyObject *args)
 {
     double x0, y0, x1, y1;
@@ -134,7 +132,7 @@ cPathmatics_linelength(PyObject *self, PyObject *args)
 }
 
 
-static PyObject *
+PyObject *
 cPathmatics_curvepoint(PyObject *self, PyObject *args)
 {
     double t, x0, y0, x1, y1, x2, y2, x3, y3, handles = 0;
@@ -159,7 +157,7 @@ cPathmatics_curvepoint(PyObject *self, PyObject *args)
     }
 }
 
-static PyObject *
+PyObject *
 cPathmatics_curvelength(PyObject *self, PyObject *args)
 {
     double x0, y0, x1, y1, x2, y2, x3, y3;
@@ -175,7 +173,7 @@ cPathmatics_curvelength(PyObject *self, PyObject *args)
     return Py_BuildValue("d", out_length);
 }
 
-static PyObject *PathmaticsError;
+PyObject *PathmaticsError;
 
 
 // ploymagic
@@ -426,7 +424,7 @@ parse_double_path_args(PyObject *self, PyObject *args, NSBezierPath **path1, NSB
     return true;
 }
 
-static PyObject *
+PyObject *
 build_objc_instance(PyTypeObject *ob_type, id obj) {
     // Because we don't want to include PyObjC on compilation,
     // we hack around the object creation by making our own
@@ -439,7 +437,7 @@ build_objc_instance(PyTypeObject *ob_type, id obj) {
 }
 
 // Check if two NSBezierPaths intersect.
-static PyObject *
+PyObject *
 cPathmatics_intersects(PyObject *self, PyObject *args)
 {
     NSBezierPath *path1, *path2;
@@ -511,28 +509,28 @@ cPathmatics_operation(PyObject *self, PyObject *args, int op)
 }
 
 // Returns the union of two NSBezierPaths as a new NSBezierPath.
-static PyObject *
+PyObject *
 cPathmatics_union(PyObject *self, PyObject *args)
 {
     return cPathmatics_operation(self, args, GPC_UNION);
 }
 
 // Returns the intersection of two NSBezierPaths as a new NSBezierPath.
-static PyObject *
+PyObject *
 cPathmatics_intersect(PyObject *self, PyObject *args)
 {
     return cPathmatics_operation(self, args, GPC_INT);
 }
 
 // Returns the difference of two NSBezierPaths as a new NSBezierPath.
-static PyObject *
+PyObject *
 cPathmatics_difference(PyObject *self, PyObject *args)
 {
     return cPathmatics_operation(self, args, GPC_DIFF);
 }
 
 // Returns the exclusive or of two NSBezierPaths as a new NSBezierPath.
-static PyObject *
+PyObject *
 cPathmatics_xor(PyObject *self, PyObject *args)
 {
     return cPathmatics_operation(self, args, GPC_XOR);
@@ -613,7 +611,7 @@ float _fast_inverse_sqrt(float x) {
 }
 
 // we're not running doom on a 32 bit cpu anymore...
-static PyObject *
+PyObject *
 fast_inverse_sqrt(PyObject *self, PyObject *args) {
     double x;
     if (!PyArg_ParseTuple(args, "d", &x))
@@ -626,7 +624,7 @@ fast_inverse_sqrt(PyObject *self, PyObject *args) {
 void _angle(double x0, double y0, double x1, double y1, double *a) {
     *a = atan2(y1-y0, x1-x0) / M_PI * 180;
 }
-static PyObject *
+PyObject *
 angle(PyObject *self, PyObject *args) {
     double x0, y0, x1, y1, a;
     if (!PyArg_ParseTuple(args, "dddd", &x0, &y0, &x1, &y1))
@@ -639,7 +637,7 @@ angle(PyObject *self, PyObject *args) {
 void _distance(double x0, double y0, double x1, double y1, double *d) {
     *d = sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0));
 }
-static PyObject *
+PyObject *
 distance(PyObject *self, PyObject *args) {
     double x0, y0, x1, y1, d;
     if (!PyArg_ParseTuple(args, "dddd", &x0, &y0, &x1, &y1))
@@ -653,7 +651,7 @@ void _coordinates(double x0, double y0, double d, double a, double *x1, double *
     *x1 = x0 + cos(a/180*M_PI) * d;
     *y1 = y0 + sin(a/180*M_PI) * d;
 }
-static PyObject *
+PyObject *
 coordinates(PyObject *self, PyObject *args) {
     double x0, y0, d, a, x1, y1;
     if (!PyArg_ParseTuple(args, "dddd", &x0, &y0, &d, &a))
@@ -692,44 +690,3 @@ coordinates(PyObject *self, PyObject *args) {
     return immutablePath;
 }
 @end
-
-
-#define MOD_ERROR_VAL NULL
-#define MOD_SUCCESS_VAL(val) val
-#define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
-#define MOD_DEF(ob, name, doc, methods) \
-        static struct PyModuleDef moduledef = { \
-          PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
-        ob = PyModule_Create(&moduledef);
-
-static PyMethodDef PathmaticsMethods[] = {
-    // pathmatics
-    {"linepoint",  cPathmatics_linepoint, METH_VARARGS, "Calculate linepoint."},
-    {"linelength",  cPathmatics_linelength, METH_VARARGS, "Calculate linelength."},
-    {"curvepoint",  cPathmatics_curvepoint, METH_VARARGS, "Calculate curvepoint."},
-    {"curvelength",  cPathmatics_curvelength, METH_VARARGS, "Calculate curvelength."},
-    // polymagic
-    {"intersects",  cPathmatics_intersects, METH_VARARGS, "Check if two NSBezierPaths intersect."},
-    {"union",  cPathmatics_union, METH_VARARGS, "Calculates the union of two NSBezierPaths."},
-    {"intersect",  cPathmatics_intersect, METH_VARARGS, "Calculates the intersection of two NSBezierPaths."},
-    {"difference",  cPathmatics_difference, METH_VARARGS, "Calculates the difference of two NSBezierPaths."},
-    {"xor",  cPathmatics_xor, METH_VARARGS, "Calculates the exclusive or of two NSBezierPaths."},
-    // trig
-    { "fast_inverse_sqrt", fast_inverse_sqrt, METH_VARARGS },
-    { "angle", angle, METH_VARARGS },
-    { "distance", distance, METH_VARARGS },
-    { "coordinates", coordinates, METH_VARARGS },
-    {NULL, NULL, 0, NULL}        /* Sentinel */
-};
-
-MOD_INIT(cPathmatics){
-    PyObject *m;
-
-    MOD_DEF(m, "cPathmatics", "Fast bezier math routines", PathmaticsMethods)
-
-    PathmaticsError = PyErr_NewException("cPathmatics.error", NULL, NULL);
-    Py_INCREF(PathmaticsError);
-    PyModule_AddObject(m, "error", PathmaticsError);
-
-    return MOD_SUCCESS_VAL(m);
-}

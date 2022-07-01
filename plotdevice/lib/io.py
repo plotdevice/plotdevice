@@ -1,6 +1,6 @@
 import objc, os, re
+import _plotdevice
 
-import cIO
 for cls in ["AnimatedGif", "Pages", "SysAdmin", "Video"]:
     globals()[cls] = objc.lookUpClass(cls)
 

@@ -3,8 +3,6 @@ from collections import namedtuple
 from .cocoa import CGPathRelease
 from ..gfx.geometry import Point
 from ..gfx.bezier import Bezier, Curve
-import cPathmatics
-
 
 # Quartz loop speedups
 
@@ -20,7 +18,7 @@ def convert_path(ns_path):
 
 try:
     # Faster C versions.
-    from .cPathmatics import fast_inverse_sqrt, angle, distance, coordinates
+    from _plotdevice import fast_inverse_sqrt, angle, distance, coordinates
     isqrt = inverse_sqrt = fast_inverse_sqrt
 except ImportError:
     from math import degrees, atan2
@@ -53,9 +51,9 @@ def reflect(x0, y0, x1, y1, d=1.0, a=180):
 
 # Ye olde polymagic
 
-from cPathmatics import intersects, union, intersect, difference, xor
+from _plotdevice import intersects, union, intersect, difference, xor
 try:
-    from cPathmatics import linepoint, linelength, curvepoint, curvelength
+    from _plotdevice import linepoint, linelength, curvepoint, curvelength
 except ImportError:
     from math import sqrt, pow
 

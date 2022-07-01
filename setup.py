@@ -218,14 +218,7 @@ class BuildDistCommand(sdist):
 
 class BuildCommand(build_py):
     def run(self):
-        # if 'build' was called explicitly, flag that requests etc. should be fetched
-        if 'install' not in sys.argv:
-            os.environ['ACTION'] = 'build'
-
-        # compile the dependencies into build/lib/plotdevice/lib...
-        self.spawn([sys.executable, 'app/deps/build.py', abspath(self.build_lib)])
-
-        # ...then let the real build_py routine do its thing
+        # let the real build_py routine do its thing
         build_py.run(self)
 
         # include some ui resources for running a script from the command line
@@ -374,6 +367,12 @@ class DistCommand(Command):
 
         print("\nBuilt PlotDevice.app, %s, and release.json in ./dist" % basename(ZIP))
 
+from glob import glob
+from setuptools.extension import Extension
+sources = ['app/deps/extensions/module.m', *glob('app/deps/extensions/*/*.[cm]')]
+frameworks = ['AppKit', 'Foundation', 'Quartz', 'Security', 'AVFoundation', 'CoreMedia', 'CoreVideo', 'CoreText']
+flags = sum((['-framework', fmwk] for fmwk in frameworks), [])
+_plotdevice = Extension('_plotdevice', sources=sources, extra_link_args=flags)
 
 # common config between module and app builds
 config = dict(
@@ -387,6 +386,7 @@ config = dict(
     license = LICENSE,
     classifiers = CLASSIFIERS,
     packages = find_packages(exclude=['tests']),
+    ext_modules = [_plotdevice],
     install_requires = [
         'requests',
         'cachecontrol',
