@@ -365,16 +365,26 @@ class Sandbox(object):
 class StdIO(object):
     class OutputFile(object):
         def __init__(self, stream, streamname):
-            self.stream = stream
-            self.isErr = streamname=='stderr'
+            self._stream = stream
+            self.fileno = lambda: 1 if streamname=='stdout' else 2
 
         def write(self, data):
-            # if isinstance(data, str):
-            #     try:
-            #         data = str(data, "utf_8", "replace")
-            #     except UnicodeDecodeError:
-            #         data = "XXX " + repr(data)
-            self.stream.write(Output(self.isErr, data))
+            self._stream.write(Output(self.fileno()==2, data))
+
+        def writelines(self, lines):
+            self._stream.write(Output(self.fileno()==2, ''.join(lines)))
+
+        def writable(self):
+            return True
+
+        def readable(self, data):
+            return False
+
+        def isatty(self):
+            return False
+
+        def flush(self):
+            pass
 
     def __init__(self):
         self.data = [] # the list of (isErr, txt) tuples .write calls go to
