@@ -13,8 +13,8 @@ deps/local
 /*.so
 
 # app dependencies
-deps/framework/*.framework
-deps/framework/relocatable-python
+deps/frameworks/*.framework
+deps/frameworks/relocatable-python
 
 # cds garbage
 related/

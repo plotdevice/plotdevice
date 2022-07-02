@@ -363,7 +363,7 @@ class DistCommand(Command):
         )
 
         # Download Sparkle (if necessary) and copy it into the bundle
-        ORIG = 'deps/framework/Sparkle.framework'
+        ORIG = 'deps/frameworks/Sparkle.framework'
         SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
         if not exists(ORIG):
             self.mkpath(dirname(ORIG))

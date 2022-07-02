@@ -97,7 +97,7 @@
 		2A32957218C59D0A00EEDD1C /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		2A32957718C59D0A00EEDD1C /* io.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = io.py; sourceTree = "<group>"; };
 		2A32957918C59D0A00EEDD1C /* pathmatics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = pathmatics.py; sourceTree = "<group>"; };
-		2A36AE2C2868B4E50088976E /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = deps/framework/Python.framework; sourceTree = "<group>"; };
+		2A36AE2C2868B4E50088976E /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = deps/frameworks/Python.framework; sourceTree = "<group>"; };
 		2A36AE55286CA75B0088976E /* en */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = en; path = "Resources/en.lproj/placeholder-light.pdf"; sourceTree = "<group>"; };
 		2A36AE57286CA75B0088976E /* en */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = en; path = "Resources/en.lproj/placeholder-dark.pdf"; sourceTree = "<group>"; };
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -462,7 +462,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# build a relocatable Python.framework with our dependencies pre-installed\ncd deps/framework\nmake\n";
+			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# build a relocatable Python.framework with our dependencies pre-installed\ncd deps/frameworks\nmake\n";
 			showEnvVarsInLog = 0;
 		};
 		2A36AE34286B81290088976E /* Symlink Command Line Tool */ = {
@@ -601,7 +601,7 @@
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"/Applications/Xcode.app/Contents/Developer/Library/Frameworks/**",
-					"$(PROJECT_DIR)/deps/framework",
+					"$(PROJECT_DIR)/deps/frameworks",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
@@ -631,7 +631,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = (
 					"/Applications/Xcode.app/Contents/Developer/Library/Frameworks/**",
-					"$(PROJECT_DIR)/deps/framework",
+					"$(PROJECT_DIR)/deps/frameworks",
 				);
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
