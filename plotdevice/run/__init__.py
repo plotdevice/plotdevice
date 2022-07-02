@@ -11,7 +11,7 @@ except ImportError:
     repo = abspath(join(dirname(__file__), '../..'))
     setup_py = '%s/setup.py' % repo
     if exists(setup_py):
-        local_libs = '%s/app/deps/local/%s/libs' % (repo, platform.python_version())
+        local_libs = '%s/deps/local/%s/libs' % (repo, platform.python_version())
         if not exists(local_libs):
             call([sys.executable, setup_py, 'dev'])
         site.addsitedir(local_libs)

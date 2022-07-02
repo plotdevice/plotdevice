@@ -4,11 +4,11 @@ build/
 dist/
 plotdevice.egg-info
 /*.so
-app/deps/vendor/Sparkle*
-app/deps/vendor/*.tar.gz
-app/deps/framework/Python.framework
-app/deps/framework/relocatable-python
-app/deps/local
+deps/vendor/Sparkle*
+deps/vendor/*.tar.gz
+deps/framework/Python.framework
+deps/framework/relocatable-python
+deps/local
 
 # cds garbage
 related/
