@@ -1,22 +1,21 @@
 # encoding:utf-8
 
 # To install the module & command line tool in site-packages, use:
-#    python setup.py install
+#    python3 setup.py install
 #
 # In addition to the `install' command, there are a few other variants:
 #    app:    builds ./dist/PlotDevice.app using Xcode
 #    py2app: builds the application using py2app
 #    clean:  discard anything already built and start fresh
 #    test:   run unit tests and generate the file "details.html" with the test output
-#    build:  puts the module in a usable state. after building, you should be able
-#            to run the ./app/plotdevice command line tool within the source distribution.
+#    dev:    puts the module in a usable state within the source distribution. after running,
+#            you should be able to run the `python3 -m plotdevice` command line interface.
 #            If you're having trouble building the app, this can be a good way to sanity
 #            check your setup
 #
 # We require some dependencies:
-# - Mac OS X 10.9+ and xcode command line tools
-# - the system-provided /usr/bin/python2.7 or a homebrew-built python interpreter
-# - cFoundry, cPathmatics, cIO, & PyObjC (included in the "app/deps" folder)
+# - Mac OS X 11+ and Xcode command line tools (type `xcode-select --install` in the terminal)
+# - the python3.8 provided by Xcode or a homebrew- or pyenv-built python3 interpreter
 # - Sparkle.framework (auto-downloaded only for `dist` builds)
 
 import os, sys, json, re, platform
@@ -153,14 +152,15 @@ def timestamp():
     return now.strftime("%a, %d %b %Y %H:%M:%S %z")
 
 def stale(dst, src):
-  if not exists(dst) or getmtime(dst) < getmtime(src):
-    yield dst, src
+  if exists(src):
+    if not exists(dst) or getmtime(dst) < getmtime(src):
+        yield dst, src
 
 ## Build Commands ##
 
 from distutils.core import Command
 class CleanCommand(Command):
-    description = "wipe out the ./build ./dist and app/deps/local dirs"
+    description = "wipe out the ./build ./dist and deps/local dirs"
     user_options = []
     def initialize_options(self):
         pass
@@ -168,7 +168,7 @@ class CleanCommand(Command):
         pass
     def run(self):
         os.system('rm -rf ./build ./dist')
-        os.system('rm -rf ./app/deps/local')
+        os.system('rm -rf ./deps/local')
         os.system('rm -rf plotdevice.egg-info MANIFEST.in PKG')
         os.system('rm -rf ./tests/_out ./tests/_diff ./details.html')
         os.system('rm -f ./_plotdevice.*.so')
@@ -184,14 +184,14 @@ class LocalDevCommand(Command):
     def finalize_options(self):
         pass
     def run(self):
-        # install pyobjc, requests and the other pypi dependencies in app/deps/local
+        # install pyobjc, requests and the other pypi dependencies in deps/local
         import platform
-        venv_dir = join('app/deps/local', platform.python_version())
+        venv_dir = join('deps/local', platform.python_version())
         if not exists(venv_dir):
             import venv
             venv.create(venv_dir, symlinks=True, with_pip=True)
             PIP = '%s/bin/pip3' % venv_dir
-            call([PIP, 'install', '-q', '--upgrade', 'pip'])
+            call([PIP, 'install', '-q', '--upgrade', 'pip', 'wheel'])
             call([PIP, '--isolated', 'install', '--target', join(venv_dir, 'libs'), *config['install_requires']])
 
         # place the compiled c-extensions in the main repo dir
@@ -203,21 +203,33 @@ class LocalDevCommand(Command):
         self.run_command('build_py')
 
 
-
 from setuptools.command.sdist import sdist
 class BuildDistCommand(sdist):
     def finalize_options(self):
         with open('MANIFEST.in','w') as f:
-            tracked, _, _ = gosub('git ls-tree --full-tree --name-only -r HEAD')
-            for line in tracked.splitlines()[1:]:
-                f.write("include %s\n"%line)
+            f.write("""
+                graft app/Resources
+                prune app/Resources/en.lproj
+                prune app/Resources/ui
+                include app/plotdevice
+                include deps/extensions/*/*.h
+                include tests/*.py
+                graft tests/_in
+                graft examples
+                include *.md
+                include *.url
+            """)
         sdist.finalize_options(self)
 
     def run(self):
+        # include a compiled nib in the sdist so ibtool (and thus Xcode.app) isn't required to install
+        for dst, src in stale('app/Resources/viewer.nib', "app/Resources/en.lproj/PlotDeviceScript.xib"):
+            self.spawn(['/usr/bin/ibtool','--compile', dst, src])
+
+        # build the sdist based on our MANIFEST additions
         sdist.run(self)
 
-        # it would be nice to clean up MANIFEST.in and plotdevice.egg-info here,
-        # but we'll see if the upload command depends on them...
+        # clean up
         remove_tree('plotdevice.egg-info')
         os.unlink('MANIFEST.in')
 
@@ -229,11 +241,16 @@ class BuildCommand(build_py):
         # include some ui resources for running a script from the command line
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
         self.mkpath(rsrc_dir)
-
-        self.copy_file("app/Resources/colors.json", '%s/colors.json'%rsrc_dir)
         self.copy_file("app/Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
-        for dst, src in stale('%s/viewer.nib'%rsrc_dir, src="app/Resources/en.lproj/PlotDeviceScript.xib"):
-            self.spawn(['/usr/bin/ibtool','--compile', dst, src])
+        self.copy_file("app/Resources/colors.json", rsrc_dir)
+
+        # recompile the command-line UI nib if necessary
+        xib = 'app/Resources/en.lproj/PlotDeviceScript.xib'
+        nib = 'app/Resources/viewer.nib'
+        for dst, src in stale(nib, xib):
+            self.spawn(['/usr/bin/ibtool','--compile', nib, xib])
+        self.copy_file(nib, rsrc_dir)
+
 
 class TestCommand(Command):
     description = "Run unit tests"
@@ -257,7 +274,7 @@ class BuildAppCommand(Command):
     def finalize_options(self):
         # make sure the embedded framework exists (and has updated app/python.xcconfig)
         print("Set up Python.framework for app build")
-        call('cd app/deps/embed && make', shell=True)
+        call('cd deps/embed && make', shell=True)
 
     def run(self):
         self.spawn(['xcodebuild'])
@@ -274,7 +291,7 @@ try:
         def finalize_options(self):
             self.verbose=0
             build_py2app.finalize_options(self)
-            os.environ['ACTION'] = 'build' # flag for app/deps/build.py
+            os.environ['ACTION'] = 'build' # flag for deps/build.py
 
         def run(self):
             build_py2app.run(self)
@@ -346,7 +363,7 @@ class DistCommand(Command):
         )
 
         # Download Sparkle (if necessary) and copy it into the bundle
-        ORIG = 'app/deps/vendor/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
+        ORIG = 'deps/vendor/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
         SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
         if not exists(ORIG):
             self.mkpath(dirname(ORIG))
@@ -386,7 +403,7 @@ config = dict(
     packages = find_packages(exclude=['tests']),
     ext_modules = [Extension(
         '_plotdevice',
-        sources = ['app/deps/extensions/module.m', *glob('app/deps/extensions/*/*.[cm]')],
+        sources = ['deps/extensions/module.m', *glob('deps/extensions/*/*.[cm]')],
         extra_link_args=sum((['-framework', fmwk] for fmwk in
             ['AppKit', 'Foundation', 'Quartz', 'Security', 'AVFoundation', 'CoreMedia', 'CoreVideo', 'CoreText']
         ), [])

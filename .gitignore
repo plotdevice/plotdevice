@@ -1,20 +1,28 @@
 .DS_Store
 *.pyc
+
+# setuptools detritus
 build/
 dist/
 plotdevice.egg-info
+app/Resources/viewer.nib
+Manifest.in
+
+# local development
+deps/local
 /*.so
+
+# app dependencies
 deps/vendor/Sparkle*
-deps/vendor/*.tar.gz
 deps/framework/Python.framework
 deps/framework/relocatable-python
-deps/local
 
 # cds garbage
 related/
 todo.txt
 test.py
 speedtrials.py
+/out.*
 
 # Xcode user files
 project.xcworkspace
