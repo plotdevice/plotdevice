@@ -108,19 +108,20 @@ SPARKLE_URL = 'https://github.com/sparkle-project/Sparkle/releases/download/%(v)
 # helpers for dealing with plists & git (spiritual cousins if ever there were)
 import plistlib
 def info_plist(pth='app/info.plist'):
-    info = plistlib.readPlist(pth)
+    info = plistlib.load(open(pth, 'rb'))
     # overwrite the xcode placeholder vars
     info['CFBundleExecutable'] = info['CFBundleName'] = APP_NAME
     return info
 
 def update_plist(pth, **modifications):
-    info = plistlib.readPlist(pth)
+    info = plistlib.load(open(pth, 'rb'))
     for key, val in modifications.items():
         if val is None:
             info.pop(key)
         else:
             info[key] = val
-    plistlib.writePlist(info, pth)
+    with open(pth, 'wb') as f:
+        plistlib.dump(info, f)
 
 def update_shebang(pth, interpreter):
     body = open(pth).readlines()[1:]
@@ -147,9 +148,7 @@ def gosub(cmd, on_err=True):
 
 def timestamp():
     from datetime import datetime
-    from pytz import timezone, utc
-    now = utc.localize(datetime.utcnow()).astimezone(timezone('US/Eastern'))
-    return now.strftime("%a, %d %b %Y %H:%M:%S %z")
+    datetime.now().strftime("%a, %d %b %Y %H:%M:%S")
 
 def stale(dst, src):
   if exists(src):
@@ -347,35 +346,33 @@ class DistCommand(Command):
         APP = 'dist/PlotDevice.app'
         ZIP = 'dist/PlotDevice_app-%s.zip' % VERSION
 
-        # build the app
-        self.spawn(['xcodebuild'])
+        if False:
+            # run the Xcode build
+            self.run_command('app')
 
-        # we don't need no stinking core dumps
-        remove_tree(APP+'.dSYM')
+            # set the bundle version to the current commit number and prime the updater
+            info_pth = 'dist/PlotDevice.app/Contents/Info.plist'
+            update_plist(info_pth,
+                CFBundleVersion = last_commit(),
+                CFBundleShortVersionString = VERSION,
+                SUFeedURL = 'http://plotdevice.io/app.xml',
+                SUEnableSystemProfiling = 'YES'
+            )
 
-        # set the bundle version to the current commit number and prime the updater
-        info_pth = 'dist/PlotDevice.app/Contents/Info.plist'
-        update_plist(info_pth,
-            CFBundleVersion = last_commit(),
-            CFBundleShortVersionString = VERSION,
-            SUFeedURL = 'http://plotdevice.io/app.xml',
-            SUEnableSystemProfiling = 'YES'
-        )
-
-        # Download Sparkle (if necessary) and copy it into the bundle
-        ORIG = 'deps/frameworks/Sparkle.framework'
-        SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
-        if not exists(ORIG):
-            self.mkpath(dirname(ORIG))
-            print("Downloading Sparkle.framework")
-            os.system('curl -L -# %s | xz -dc | tar xf - -C %s %s'%(SPARKLE_URL, dirname(ORIG), basename(ORIG)))
-        self.mkpath(dirname(SPARKLE))
-        self.spawn(['ditto', ORIG, SPARKLE])
+            # Download Sparkle (if necessary) and copy it into the bundle
+            ORIG = 'deps/frameworks/Sparkle.framework'
+            SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
+            if not exists(ORIG):
+                self.mkpath(dirname(ORIG))
+                print("Downloading Sparkle.framework")
+                os.system('curl -L -# %s | xz -dc | tar xf - -C %s %s'%(SPARKLE_URL, dirname(ORIG), basename(ORIG)))
+            self.mkpath(dirname(SPARKLE))
+            self.spawn(['ditto', ORIG, SPARKLE])
 
         # code-sign the app and sparkle bundles, then verify
-        self.spawn(['codesign', '-f', '-v', '-s', "Developer ID Application", SPARKLE])
-        self.spawn(['codesign', '-f', '-v', '-s', "Developer ID Application", APP])
-        self.spawn(['spctl', '--assess', '-v', 'dist/PlotDevice.app'])
+        self.spawn(['codesign', '--deep', '-f', '-v', '-s', "Developer ID Application", APP])
+        self.spawn(['codesign', '--verify', '-vv', APP])
+        self.spawn(['spctl', '--assess', '-t', 'exec', '-vvv', APP])
 
         # create versioned zipfile of the app
         self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
