@@ -13,8 +13,7 @@ deps/local
 /*.so
 
 # app dependencies
-deps/vendor/Sparkle*
-deps/framework/Python.framework
+deps/framework/*.framework
 deps/framework/relocatable-python
 
 # cds garbage

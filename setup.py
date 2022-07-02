@@ -102,8 +102,8 @@ Requirements:
 ## Basic Utils ##
 
 # the sparkle updater framework will be fetched as needed
-SPARKLE_VERSION = '1.10.0'
-SPARKLE_URL = 'https://github.com/sparkle-project/Sparkle/releases/download/%(v)s/Sparkle-%(v)s.tar.bz2' % {'v':SPARKLE_VERSION}
+SPARKLE_VERSION = '2.1.0'
+SPARKLE_URL = 'https://github.com/sparkle-project/Sparkle/releases/download/%(v)s/Sparkle-%(v)s.tar.xz' % {'v':SPARKLE_VERSION}
 
 # helpers for dealing with plists & git (spiritual cousins if ever there were)
 import plistlib
@@ -363,12 +363,12 @@ class DistCommand(Command):
         )
 
         # Download Sparkle (if necessary) and copy it into the bundle
-        ORIG = 'deps/vendor/Sparkle-%s/Sparkle.framework'%SPARKLE_VERSION
+        ORIG = 'deps/framework/Sparkle.framework'
         SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
         if not exists(ORIG):
             self.mkpath(dirname(ORIG))
             print("Downloading Sparkle.framework")
-            os.system('curl -L -# %s | bunzip2 -c | tar xf - -C %s'%(SPARKLE_URL, dirname(ORIG)))
+            os.system('curl -L -# %s | xz -dc | tar xf - -C %s %s'%(SPARKLE_URL, dirname(ORIG), basename(ORIG)))
         self.mkpath(dirname(SPARKLE))
         self.spawn(['ditto', ORIG, SPARKLE])
 
