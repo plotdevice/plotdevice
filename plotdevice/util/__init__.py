@@ -318,7 +318,7 @@ def rsrc_path(resource=None):
             rsrc_root = abspath(pth)
             break
         else:
-            notfound = "Couldn't locate resources directory (try running `python setup.py build` before running from the source dist)."
+            notfound = "Couldn't locate resources directory (try running `python setup.py dev` before running from the source dist)."
             raise RuntimeError(notfound)
     if resource:
         return join(rsrc_root, resource)

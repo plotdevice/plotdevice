@@ -1,16 +1,20 @@
 import sys, site
+import platform
 from os.path import abspath, dirname, exists, join
-from subprocess import call, getoutput
+from subprocess import call
 
 try:
     # test the sys.path by attempting to load a PyObjC submodule...
     from Foundation import *
 except ImportError:
-    setup_py = join(dirname(__file__), '../../setup.py')
+    # detect whether we're being run from the repository and set up a local env if so
+    repo = abspath(join(dirname(__file__), '../..'))
+    setup_py = '%s/setup.py' % repo
     if exists(setup_py):
-        # if run from the sdist, install pyobjc et al. in a venv at app/deps/local
-        site_path = getoutput('{py} {setup} -q env'.format(py=sys.executable, setup=setup_py))
-        site.addsitedir(site_path)
+        local_libs = '%s/app/deps/local/%s/libs' % (repo, platform.python_version())
+        if not exists(local_libs):
+            call([sys.executable, setup_py, 'dev'])
+        site.addsitedir(local_libs)
         from Foundation import *
     else:
         from pprint import pformat

@@ -190,20 +190,13 @@ def csv_dialect(fd):
 
 ### HTTP utils ###
 
-try:
-    import requests
-    from cachecontrol import CacheControl, CacheControlAdapter
-    from cachecontrol.caches import FileCache
-    from cachecontrol.heuristics import LastModified
+import requests
+from cachecontrol import CacheControl, CacheControlAdapter
+from cachecontrol.caches import FileCache
+from cachecontrol.heuristics import LastModified
 
-    cache_dir = '%s/Library/Caches/PlotDevice'%os.environ['HOME']
-    HTTP = CacheControl(requests.Session(), cache=FileCache(cache_dir), heuristic=LastModified())
-except ImportError:
-    class Decoy(object):
-        def get(self, url):
-            unsupported = 'could not find the "requests" library (try running "python setup.py build" first)'
-            raise RuntimeError(unsupported)
-    HTTP = Decoy()
+cache_dir = '%s/Library/Caches/PlotDevice'%os.environ['HOME']
+HTTP = CacheControl(requests.Session(), cache=FileCache(cache_dir), heuristic=LastModified())
 
 def binaryish(content, format):
     bin_types = ('pdf','eps','png','jpg','jpeg','heic','gif','tiff','tif','zip','tar','gz')

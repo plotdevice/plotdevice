@@ -19,8 +19,10 @@
 # - cFoundry, cPathmatics, cIO, & PyObjC (included in the "app/deps" folder)
 # - Sparkle.framework (auto-downloaded only for `dist` builds)
 
-import os, sys, json, re
+import os, sys, json, re, platform
+from glob import glob
 from setuptools import setup, find_packages
+from setuptools.extension import Extension
 from distutils.dir_util import remove_tree
 from distutils.command.build_py import build_py
 from pkg_resources import DistributionNotFound
@@ -47,10 +49,8 @@ CLASSIFIERS = [
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS :: MacOS X",
-    "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.8",
     "Topic :: Artistic Software",
     "Topic :: Multimedia :: Graphics",
     "Topic :: Multimedia :: Graphics :: Editors :: Vector-Based",
@@ -96,11 +96,9 @@ Version 0.9.4 added:
 
 Requirements:
 
-* Mac OS X 10.9+
-* Python 2.7 or 3.4+
-* the requests, cachecontrol, and lockfile modules
+* Mac OS X 11+
+* Python 3.8+
 """
-
 
 ## Basic Utils ##
 
@@ -162,7 +160,7 @@ def stale(dst, src):
 
 from distutils.core import Command
 class CleanCommand(Command):
-    description = "wipe out the ./build ./dist and app/deps/.../build dirs"
+    description = "wipe out the ./build ./dist and app/deps/local dirs"
     user_options = []
     def initialize_options(self):
         pass
@@ -170,21 +168,23 @@ class CleanCommand(Command):
         pass
     def run(self):
         os.system('rm -rf ./build ./dist')
-        os.system('rm -rf ./app/deps/*/build')
+        os.system('rm -rf ./app/deps/local')
         os.system('rm -rf plotdevice.egg-info MANIFEST.in PKG')
         os.system('rm -rf ./tests/_out ./tests/_diff ./details.html')
+        os.system('rm -f ./_plotdevice.*.so')
         os.system('find plotdevice -name .DS_Store -exec rm {} \;')
         os.system('find plotdevice -name \*.pyc -exec rm {} \;')
         os.system('find plotdevice -name __pycache__ -type d -prune -exec rmdir {} \;')
 
-class LocalEnvCommand(Command):
-    description = "set up app/deps/local env to allow for running from the sdist"
+class LocalDevCommand(Command):
+    description = "set up environment to allow for running `python -m plotdevice` within the repo"
     user_options = []
     def initialize_options(self):
         pass
     def finalize_options(self):
         pass
     def run(self):
+        # install pyobjc, requests and the other pypi dependencies in app/deps/local
         import platform
         venv_dir = join('app/deps/local', platform.python_version())
         if not exists(venv_dir):
@@ -192,11 +192,16 @@ class LocalEnvCommand(Command):
             venv.create(venv_dir, symlinks=True, with_pip=True)
             PIP = '%s/bin/pip3' % venv_dir
             call([PIP, 'install', '-q', '--upgrade', 'pip'])
-            call([PIP, '--isolated', 'install', '-q', *config['install_requires']])
+            call([PIP, '--isolated', 'install', '--target', join(venv_dir, 'libs'), *config['install_requires']])
 
-        # use the venv's site directory
-        site_path = getoutput('%s/bin/python3 -c "import site; print(site.getsitepackages()[0])"' % venv_dir)
-        print(site_path)
+        # place the compiled c-extensions in the main repo dir
+        build_ext = self.distribution.get_command_obj('build_ext')
+        build_ext.inplace = 1
+        self.run_command('build_ext')
+
+        # build the sdist (primarily for access to its rsrc subdir)
+        self.run_command('build_py')
+
 
 
 from setuptools.command.sdist import sdist
@@ -367,13 +372,6 @@ class DistCommand(Command):
 
         print("\nBuilt PlotDevice.app, %s, and release.json in ./dist" % basename(ZIP))
 
-from glob import glob
-from setuptools.extension import Extension
-sources = ['app/deps/extensions/module.m', *glob('app/deps/extensions/*/*.[cm]')]
-frameworks = ['AppKit', 'Foundation', 'Quartz', 'Security', 'AVFoundation', 'CoreMedia', 'CoreVideo', 'CoreText']
-flags = sum((['-framework', fmwk] for fmwk in frameworks), [])
-_plotdevice = Extension('_plotdevice', sources=sources, extra_link_args=flags)
-
 # common config between module and app builds
 config = dict(
     name = MODULE,
@@ -386,7 +384,13 @@ config = dict(
     license = LICENSE,
     classifiers = CLASSIFIERS,
     packages = find_packages(exclude=['tests']),
-    ext_modules = [_plotdevice],
+    ext_modules = [Extension(
+        '_plotdevice',
+        sources = ['app/deps/extensions/module.m', *glob('app/deps/extensions/*/*.[cm]')],
+        extra_link_args=sum((['-framework', fmwk] for fmwk in
+            ['AppKit', 'Foundation', 'Quartz', 'Security', 'AVFoundation', 'CoreMedia', 'CoreVideo', 'CoreText']
+        ), [])
+    )],
     install_requires = [
         'requests',
         'cachecontrol',
@@ -406,7 +410,7 @@ config = dict(
         'dist': DistCommand,
         'sdist': BuildDistCommand,
         'test': TestCommand,
-        'env': LocalEnvCommand,
+        'dev': LocalDevCommand,
     },
 )
 
@@ -416,7 +420,6 @@ if __name__=='__main__':
     # make sure we're at the project root regardless of the cwd
     # (this means the various commands don't have to play path games)
     os.chdir(dirname(abspath(__file__)))
-
 
     # py2app-specific config
     if 'py2app' in sys.argv:

@@ -1,5 +1,4 @@
 import objc, os, re
-import _plotdevice
 
 for cls in ["AnimatedGif", "Pages", "SysAdmin", "Video"]:
     globals()[cls] = objc.lookUpClass(cls)

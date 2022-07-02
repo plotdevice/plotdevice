@@ -1,16 +1,5 @@
 import sys
-from os.path import abspath, dirname, exists, join
-from glob import glob
-
-try:
-    import _plotdevice # make sure the c-extensions are accessible
-except ImportError:
-    setup_py = join(dirname(__file__), '../../setup.py')
-    if exists(setup_py):
-        from subprocess import call
-        # call('{py} {setup} build_ext --inplace'.format(py=sys.executable, setup=setup_py))
-        call([sys.executable, setup_py, 'build_ext', '--inplace'])
-    import _plotdevice
+import _plotdevice # make sure the c-extensions are accessible for the submodules
 
 # allow Libraries to request a _ctx reference
 def register(module):
