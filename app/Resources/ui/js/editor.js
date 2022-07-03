@@ -77,9 +77,12 @@ var UndoMgr = function() { this.reset(); };
 
 
 ace.require("ace/ext/language_tools");
+// ace.require("ace/ext/error_marker");
+// ace.require("ace/ext/keybinding_menu");
+
 var Editor = function(elt){
-    var dom = $(elt)
-    var ed = ace.edit(dom.attr('id'))
+    var dom = document.querySelector(elt)
+    var ed = ace.edit(dom.getAttribute('id'))
     var undo = new UndoMgr()
     var sess = null
     var _menu_cmds = { // commands whose keyboard shortcuts are caught by ace rather than NSView
@@ -101,6 +104,7 @@ var Editor = function(elt){
             ed.commands.addCommands(PLOTDEVICE_KEYBINDINGS)
             ed.setOptions({
                 enableBasicAutocompletion: true,
+                // enableLiveAutocompletion: true,
                 enableSnippets: true
             });
             ed.renderer.updateCharacterSize()
@@ -113,7 +117,7 @@ var Editor = function(elt){
             sess.setMode("ace/mode/plotdevice");
             sess.setTabSize(4);
             sess.setUseSoftTabs(true);
-            sess.setUndoManager(undo);
+//            sess.setUndoManager(undo);
 
             // it would be nice if this didn't *select* the undo segment, but did *scroll*
             // the viewport to the cursor position. ace.js's default behavior is all or none
@@ -130,19 +134,19 @@ var Editor = function(elt){
             // listen for commands that have key equivalents in the main menu and notify the
             // objc side of things when one of them is entered
             var cmd = e.command.name
-            _.each(_menu_cmds, function(cmds, menu){
-                if (_.contains(cmds, cmd)) app.flash_(menu)
-            })
+            for (const [cmds, menu] of Object.entries(_menu_cmds)){
+                if (cmds.includes(cmd)) app.flash_(menu)
+            }
         },
         _scroll_h:function(x){
             var now = Date.now()
             if (_htimer) clearTimeout(_htimer)
             else{
                 _hmin = now + 500
-                dom.addClass('scrolling-h')
+                dom.classList.add('scrolling-h')
             }
             _htimer = setTimeout(function(){
-                dom.removeClass('scrolling-h');
+                dom.classList.remove('scrolling-h')
                 _htimer=null
             }, Math.max(_hmin-now, 180))
         },
@@ -151,10 +155,10 @@ var Editor = function(elt){
             if (_vtimer) clearTimeout(_vtimer)
             else{
                 _vmin = now + 500
-                dom.addClass('scrolling-v')
+                dom.classList.add('scrolling-v')
             }
             _vtimer = setTimeout(function(){
-                dom.removeClass('scrolling-v');
+                dom.classList.remove('scrolling-v')
                 _vtimer=null
             }, Math.max(_vmin-now, 180))
         },
@@ -186,7 +190,8 @@ var Editor = function(elt){
             }
         },
         font:function(family, px){
-            dom.css({fontFamily:family, fontSize:px})
+            dom.style.fontFamily = family
+            dom.style.fontSize = px
         },
         theme:function(thm){
             if (thm===undefined){
@@ -207,9 +212,10 @@ var Editor = function(elt){
             var sel = ed.getSelection()
             var rng = ed.getSelectionRange()
             var tok = sess.getTokens(rng.start.row)
-            console.log('tokens',_.map(tok, function(t){return t.type}))
+            console.log('tokens', tok.map(t => t.type))
             var at = sess.getTokenAt(rng.start.row,rng.start.column)
-            _.each(tok, function(t, i){
+
+            tok.forEach((t, i) => {
                 if (t===at) console.log('FOUND', t,'at',i)
             })
             var word_rng = sess.getAWordRange(rng.start.row,rng.start.column)
@@ -249,9 +255,9 @@ var Editor = function(elt){
             if (err==null){
                 sess.clearAnnotations()
             }else{
-                var anns = _.map(lines, function(line, i){
+                var anns = lines.map((line, i) => {
                     var ann = {row:line, col:0, type:"warning"}
-                    if (i==0) _.extend(ann, {type:"error", text:err})
+                    if (i==0) Object.assign(ann, {type:"error", text:err})
                     return ann
                 })
                 sess.setAnnotations(anns)
@@ -260,5 +266,6 @@ var Editor = function(elt){
         }
     }
 
-    return (dom.length==0) ? {} : that.init()
+
+    return dom ? that.init() : {}
 }

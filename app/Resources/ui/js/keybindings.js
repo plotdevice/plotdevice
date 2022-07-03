@@ -38,7 +38,7 @@ PLOTDEVICE_KEYBINDINGS=[
         }
     // },{
     //     name: "showKeyboardShortcuts",
-    //     bindKey: {mac: "Command-Alt-h"},
+    //     bindKey: {mac: "Ctrl-h"},
     //     exec: function(editor) {
     //         ace.config.loadModule("ace/ext/keybinding_menu", function(module) {
     //             module.init(editor);
@@ -134,13 +134,13 @@ PLOTDEVICE_KEYBINDINGS=[
         bindKey: "Command-Shift-L",
         readonly: true
     },{
-        name: "expandSnippet",
-        exec: function(editor) {
-            if (!editor.completer)
-                editor.completer = new Autocomplete();
-            ed.completer.insertMatch()
-        }
-    },{
+    //     name: "expandSnippet",
+    //     exec: function(editor) {
+    //         if (!editor.completer)
+    //             editor.completer = new Autocomplete();
+    //         ed.completer.insertMatch()
+    //     }
+    // },{
         name: "startAutocomplete",
         bindKey: "Ctrl-Space|Ctrl-Shift-Space|Alt-Space",
         exec: function(editor) {

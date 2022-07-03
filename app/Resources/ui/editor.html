@@ -45,9 +45,8 @@
 
         
     </style>
-    <script src="js/jquery-2.1.0.js" charset="utf-8"></script>
-    <script src="js/underscore-1.5.2.min.js" charset="utf-8"></script>
-    <script src="js/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/keybindings.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/editor.js" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" type="text/css" href="autocomplete.css">
@@ -55,10 +54,10 @@
 <body>
 <div id="editor"></div>
 <script>
-    $(document).ready(function(){
-
+    document.addEventListener('DOMContentLoaded', () => {
         // initialize ace
         window.editor = Editor("#editor")
+        console.log('ED', editor)
 
         // intercept opt-tab before the webview uses it for ill
         function option_tab(e){
@@ -68,7 +67,9 @@
                 e.preventDefault()
             }
         }
-        document.getElementsByTagName('body')[0].addEventListener('keydown', option_tab, true)
+
+        document.querySelector('body').addEventListener('keydown', option_tab, true)
+        // document.getElementsByTagName('body')[0].addEventListener('keydown', option_tab, true)
     })
 </script>
 
