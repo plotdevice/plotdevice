@@ -49,7 +49,11 @@ CLASSIFIERS = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS :: MacOS X",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Topic :: Artistic Software",
     "Topic :: Multimedia :: Graphics",
     "Topic :: Multimedia :: Graphics :: Editors :: Vector-Based",
@@ -96,7 +100,6 @@ Version 0.9.4 added:
 Requirements:
 
 * Mac OS X 11+
-* Python 3.8+
 * Python 3.6+
 """
 
@@ -500,6 +503,10 @@ if __name__=='__main__':
             },
             install_requires=[]
         ))
+
+    # include a backport of dataclasses on 3.6
+    if sys.version_info < (3,7):
+        config['install_requires'].append('dataclasses')
 
     # begin the build process
     setup(**config)
