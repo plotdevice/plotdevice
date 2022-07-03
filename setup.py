@@ -97,6 +97,7 @@ Requirements:
 
 * Mac OS X 11+
 * Python 3.8+
+* Python 3.6+
 """
 
 ## Basic Utils ##
@@ -131,7 +132,7 @@ def update_shebang(pth, interpreter):
 
 def last_commit():
     commit_count, _, _ = gosub('git log --oneline | wc -l')
-    return 'r%s' % commit_count.strip()
+    return 'r%s' % commit_count.decode('utf-8').strip()
 
 def gosub(cmd, on_err=True):
     """Run a shell command and return the output"""
@@ -168,6 +169,7 @@ class CleanCommand(Command):
     def run(self):
         os.system('rm -rf ./build ./dist')
         os.system('rm -rf ./deps/local')
+        os.system('rm -rf ./deps/frameworks/*.framework')
         os.system('rm -rf plotdevice.egg-info MANIFEST.in PKG')
         os.system('rm -rf ./tests/_out ./tests/_diff ./details.html')
         os.system('rm -f ./_plotdevice.*.so')
@@ -234,6 +236,7 @@ class BuildDistCommand(sdist):
 
 class BuildCommand(build_py):
     def run(self):
+
         # let the real build_py routine do its thing
         build_py.run(self)
 
@@ -273,10 +276,10 @@ class BuildAppCommand(Command):
     def finalize_options(self):
         # make sure the embedded framework exists (and has updated app/python.xcconfig)
         print("Set up Python.framework for app build")
-        call('cd deps/embed && make', shell=True)
+        call('cd deps/frameworks && make', shell=True)
 
     def run(self):
-        self.spawn(['xcodebuild'])
+        self.spawn(['xcodebuild', '-configuration', 'Release'])
         remove_tree('dist/PlotDevice.app.dSYM')
         print("done building PlotDevice.app in ./dist")
 
@@ -346,35 +349,69 @@ class DistCommand(Command):
         APP = 'dist/PlotDevice.app'
         ZIP = 'dist/PlotDevice_app-%s.zip' % VERSION
 
-        if False:
-            # run the Xcode build
-            self.run_command('app')
+        # run the Xcode build
+        self.run_command('app')
 
-            # set the bundle version to the current commit number and prime the updater
-            info_pth = 'dist/PlotDevice.app/Contents/Info.plist'
-            update_plist(info_pth,
-                CFBundleVersion = last_commit(),
-                CFBundleShortVersionString = VERSION,
-                SUFeedURL = 'http://plotdevice.io/app.xml',
-                SUEnableSystemProfiling = 'YES'
-            )
+        # set the bundle version to the current commit number and prime the updater
+        info_pth = 'dist/PlotDevice.app/Contents/Info.plist'
+        update_plist(info_pth,
+            CFBundleVersion = last_commit(),
+            CFBundleShortVersionString = VERSION,
+            SUFeedURL = 'http://plotdevice.io/app.xml',
+            SUEnableSystemProfiling = 'YES'
+        )
 
-            # Download Sparkle (if necessary) and copy it into the bundle
-            ORIG = 'deps/frameworks/Sparkle.framework'
-            SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
-            if not exists(ORIG):
-                self.mkpath(dirname(ORIG))
-                print("Downloading Sparkle.framework")
-                os.system('curl -L -# %s | xz -dc | tar xf - -C %s %s'%(SPARKLE_URL, dirname(ORIG), basename(ORIG)))
-            self.mkpath(dirname(SPARKLE))
-            self.spawn(['ditto', ORIG, SPARKLE])
+        # Download Sparkle (if necessary) and copy it into the bundle
+        ORIG = 'deps/frameworks/Sparkle.framework'
+        SPARKLE = join(APP,'Contents/Frameworks/Sparkle.framework')
+        if not exists(ORIG):
+            self.mkpath(dirname(ORIG))
+            print("Downloading Sparkle.framework")
+            os.system('curl -L -# %s | xz -dc | tar xf - -C %s %s'%(SPARKLE_URL, dirname(ORIG), basename(ORIG)))
+        self.mkpath(dirname(SPARKLE))
+        self.spawn(['ditto', ORIG, SPARKLE])
 
-        # code-sign the app and sparkle bundles, then verify
-        self.spawn(['codesign', '--deep', '-f', '-v', '-s', "Developer ID Application", APP])
+        # code-sign the app and embedded frameworks, then verify
+        def codesign(root, name=None, exec=False, entitlement=False):
+            test = []
+            if name:
+                test += ['-name', name]
+            if exec:
+                test += ['-perm', '-u=x']
+
+            codesign = ['codesign', '--deep', '--strict', '--timestamp', '-o', 'runtime', '-f', '-v', '-s', 'Developer ID Application']
+            if entitlement:
+                codesign += ['--entitlements', 'app/PlotDevice.entitlements']
+
+            if test:
+                self.spawn(['find', root, '-type', 'f', *test, '-exec', *codesign, "{}", ";"])
+            else:
+                self.spawn([*codesign, root])
+
+        PYTHON = join(APP,'Contents/Frameworks/Python.framework')
+        codesign('%s/Versions/Current/lib'%PYTHON, name="*.dylib")
+        codesign('%s/Versions/Current/lib'%PYTHON, name="*.o")
+        codesign('%s/Versions/Current/lib'%PYTHON, name="*.a")
+        codesign('%s/Versions/Current/lib'%PYTHON, exec=True)
+        codesign('%s/Versions/Current/bin'%PYTHON, exec=True)
+        codesign('%s/Versions/Current/bin'%PYTHON, name="python3.*", entitlement=True)
+        codesign('%s/Versions/Current/Resources/Python.app'%PYTHON, entitlement=True)
+        codesign(PYTHON)
+        self.spawn(['codesign', '--verify', '-vv', PYTHON])
+
+        codesign('%s/Versions/Current/Updater.app'%SPARKLE)
+        codesign(SPARKLE)
+        self.spawn(['codesign', '--verify', '-vv', SPARKLE])
+
+        codesign(APP)
         self.spawn(['codesign', '--verify', '-vv', APP])
-        self.spawn(['spctl', '--assess', '-t', 'exec', '-vvv', APP])
 
-        # create versioned zipfile of the app
+        # create versioned zipfile of the app & notarize it
+        self.spawn(['ditto', '-ck', '--keepParent', APP, ZIP])
+        self.spawn(['xcrun', 'notarytool', 'submit', ZIP, '--keychain-profile', 'AC_NOTARY', '--wait'])
+
+        # staple notarization ticket and regenerate zip
+        self.spawn(['xcrun', 'stapler', 'staple', APP])
         self.spawn(['ditto','-ck', '--keepParent', APP, ZIP])
 
         # write out the release metadata for plotdevice-site to consume/merge

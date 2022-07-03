@@ -100,10 +100,11 @@
 		2A36AE2C2868B4E50088976E /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = deps/frameworks/Python.framework; sourceTree = "<group>"; };
 		2A36AE55286CA75B0088976E /* en */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = en; path = "Resources/en.lproj/placeholder-light.pdf"; sourceTree = "<group>"; };
 		2A36AE57286CA75B0088976E /* en */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = en; path = "Resources/en.lproj/placeholder-dark.pdf"; sourceTree = "<group>"; };
+		2A36AE5C2870AE8E0088976E /* PlotDevice.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = PlotDevice.entitlements; path = app/PlotDevice.entitlements; sourceTree = "<group>"; };
 		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		2A591FEF185C17D200D1833D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		2A64AB46195F4E78001E4E69 /* deps */ = {isa = PBXFileReference; lastKnownFileType = folder; name = deps; path = deps; sourceTree = "<group>"; };
+		2A64AB46195F4E78001E4E69 /* deps */ = {isa = PBXFileReference; lastKnownFileType = folder; path = deps; sourceTree = "<group>"; };
 		2A66ECDE18A992BD002903DE /* ace.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = ace.js; path = Resources/ui/js/ace.js; sourceTree = "<group>"; };
 		2A66ECDF18A992BD002903DE /* editor.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = editor.js; path = Resources/ui/js/editor.js; sourceTree = "<group>"; };
 		2A66ECE018A992BD002903DE /* jquery-2.1.0.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "jquery-2.1.0.js"; path = "Resources/ui/js/jquery-2.1.0.js"; sourceTree = "<group>"; };
@@ -239,6 +240,7 @@
 		2A37F4AAFDCFA73011CA2CEA /* PlotDevice */ = {
 			isa = PBXGroup;
 			children = (
+				2A36AE5C2870AE8E0088976E /* PlotDevice.entitlements */,
 				6155D9F213E2B79E00675A92 /* CHANGES.md */,
 				6155D9F313E2B79E00675A92 /* README.md */,
 				611CC4AE10BA8C1B00B55455 /* plotdevice */,
@@ -595,10 +597,12 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_ENTITLEMENTS = app/PlotDevice.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)";
 				COPY_PHASE_STRIP = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"/Applications/Xcode.app/Contents/Developer/Library/Frameworks/**",
 					"$(PROJECT_DIR)/deps/frameworks",
@@ -625,10 +629,12 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_ENTITLEMENTS = app/PlotDevice.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = dist;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"/Applications/Xcode.app/Contents/Developer/Library/Frameworks/**",
 					"$(PROJECT_DIR)/deps/frameworks",
