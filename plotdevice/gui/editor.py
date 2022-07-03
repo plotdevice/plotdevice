@@ -285,7 +285,7 @@ class EditorView(NSView):
 
     @IBAction
     def performFindAction_(self, sender):
-        actions = {1:'find', 2:'findnext', 3:'findprevious', 7:'setneedle'}
+        actions = {1:'find', 2:'findnext', 3:'findprevious', 4:'replace', 7:'setneedle'}
         self.js('editor.exec', args(actions[sender.tag()]))
 
     # JS-initiated actions

@@ -249,6 +249,12 @@ CQ
                                                 <action selector="performFindAction:" target="-1" id="Qm8-uD-718"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Find and Replace" tag="4" keyEquivalent="f" id="S2Y-JK-BbP">
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                            <connections>
+                                                <action selector="performFindAction:" target="-1" id="S05-ca-iXd"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem title="Use Selection for Find" tag="7" keyEquivalent="e" id="446">
                                             <connections>
                                                 <action selector="performFindAction:" target="-1" id="RMO-nZ-Fjw"/>
