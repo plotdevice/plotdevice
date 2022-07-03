@@ -79,7 +79,7 @@ def possibleToolLocations():
             if path.startswith(b'/usr/bin'): continue
             if path in locations: continue
             locations.append(path)
-    return locations
+    return [pth.decode('utf-8') for pth in locations]
 
 
 
@@ -155,7 +155,6 @@ class PlotDevicePreferencesController(NSWindowController):
 
     def checkAutosave(self):
         enabled = get_default('autosave')
-        print('autosave ==', enabled)
         if enabled:
             self.autosaveEnabledRadio.setState_(NSOnState)
         else:
@@ -165,9 +164,6 @@ class PlotDevicePreferencesController(NSWindowController):
     @IBAction
     def autosaveChanged_(self, sender):
         enabled = sender.tag() == 1
-        print('autosave ->', enabled)
-        set_default('autosave', enabled)
-        # self._notify('AutosaveChanged')
 
     def checkThemes(self):
         light = sorted([t for t,m in THEMES.items() if not m['dark']], reverse=True)
@@ -230,10 +226,9 @@ class PlotDevicePreferencesController(NSWindowController):
 
     def checkTool(self):
         found, valid, action = self._tool
-
         self.toolAction.setTitle_(action.title())
         self.toolPath.setSelectable_(found is not None)
-        self.toolPath.setStringValue_(found.decode('utf8') if found else '')
+        self.toolPath.setStringValue_(found.replace(os.environ['HOME'], '~') if found else '')
         self.toolPath.setTextColor_(NSColor.labelColor() if valid else NSColor.systemRedColor())
         self.toolBoilerplate.setHidden_(found is not None)
         self.toolPath.setHidden_(found is None)
@@ -244,7 +239,7 @@ class PlotDevicePreferencesController(NSWindowController):
         for path in possibleToolLocations():
             if os.path.islink(path):
                 # if it's a symlink, make sure it points to this bundle
-                tool_path = os.path.realpath(path).decode('utf8')
+                tool_path = os.path.realpath(path)
                 found = path
                 valid = tool_path.startswith(bundle_path())
                 if valid:
@@ -267,9 +262,9 @@ class PlotDevicePreferencesController(NSWindowController):
         found, _, action = self._tool
 
         if action == 'reveal':
-            os.system(b'open --reveal "%s"'%found)
+            os.system(b'open --reveal "%s"' % found.encode('utf-8'))
         elif action in ('install', 'repair'):
-            locs = [loc.decode('utf8').replace(os.environ['HOME'], '~') for loc in possibleToolLocations()]
+            locs = [loc.replace(os.environ['HOME'], '~') for loc in possibleToolLocations()]
             self.toolInstallMenu.removeAllItems()
             self.toolInstallMenu.addItemsWithTitles_(locs)
             NSApp().beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.toolInstallSheet, self.window(), self, None, 0)
