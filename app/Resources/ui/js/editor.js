@@ -1,89 +1,22 @@
-// A trivial reimplementation of the default ace undo manager. its only distinction
-// is informing the objc EditorView object of edits (via relaying the changeCount int)
-var UndoMgr = function() { this.reset(); };
-(function() {
-     // Provides a means for implementing your own undo manager. `options` has one property, `args`, an [[Array `Array`]], with two elements:
-     // - `args[0]` is an array of deltas
-     // - `args[1]` is the document to associate with
-     // @param {Object} options Contains additional properties
-     this.execute = function(options) {
-        var deltas = options.args[0];
-        this.$doc  = options.args[1]; // the edit session
-
-        if (options.merge && this.hasUndo()){
-            this.changeCount--;
-            deltas = this.$undoStack.pop().concat(deltas);
-        }
-        this.$undoStack.push(deltas);
-        this.$redoStack = [];
-
-        // The user has made a change after undoing past the last clean state.
-        // We can never get back to a clean state now until markClean() is called.
-        if (this.changeCount < 0) this.changeCount = NaN;
-
-        this.changeCount++;
-        app.edits_(this.changeCount)
-    };
-
-     // [Perform an undo operation on the document, reverting the last change.]{: #UndoManager.undo}
-     // @param {Boolean} dontSelect {:dontSelect}
-     // @Returns {Range} The range of the undo.
-     this.undo = function(dontSelect) {
-        var deltas = this.$undoStack.pop();
-        var undoSelectionRange = null;
-        if (deltas) {
-            undoSelectionRange =
-                this.$doc.undoChanges(deltas, dontSelect);
-            this.$redoStack.push(deltas);
-            this.changeCount--;
-            app.edits_(this.changeCount)
-        }
-
-        return undoSelectionRange;
-    };
-
-     // [Perform a redo operation on the document, reimplementing the last change.]{: #UndoManager.redo}
-     // @param {Boolean} dontSelect {:dontSelect}
-     this.redo = function(dontSelect) {
-        var deltas = this.$redoStack.pop();
-        var redoSelectionRange = null;
-        if (deltas) {
-            redoSelectionRange =
-                this.$doc.redoChanges(deltas, dontSelect);
-            this.$undoStack.push(deltas);
-            this.changeCount++;
-            app.edits_(this.changeCount)
-        }
-
-        return redoSelectionRange;
-    };
-
-     // Destroys the stack of undo and redo redo operations.
-     this.reset = function() {
-        this.$undoStack = [];
-        this.$redoStack = [];
-        this.changeCount = 0;
-        console.log({app})
-        app.edits_(this.changeCount)
-    };
-
-    // state accessors
-    this.hasUndo = function() {return this.$undoStack.length > 0; };
-    this.hasRedo = function() {return this.$redoStack.length > 0; };
-    this.markClean = function() {this.changeCount = 0; };
-    this.isClean = function() {return this.changeCount === 0; };
-
-}).call(UndoMgr.prototype);
-
-
+// the language-tools extension provides snippets and autocomplete
 ace.require("ace/ext/language_tools");
-// ace.require("ace/ext/error_marker");
-// ace.require("ace/ext/keybinding_menu");
+
+// Wrap the ace UndoManager's mutation methods with callbacks to the pyobjc EditorView
+// keeping it up-to-date on whether the file has been modified & whether undo/redo are available
+const {UndoManager:__UndoManager} = ace.require('ace/undomanager')
+function UndoManager(){ __UndoManager.call(this) }
+UndoManager.prototype = Object.create(__UndoManager.prototype);
+for (const method of ['add', 'undo', 'redo', 'reset']){
+    UndoManager.prototype[method] = function(){
+        __UndoManager.prototype[method].call(this, ...arguments);
+        app.edits_(this.$undoStack.length)
+    }
+}
 
 var Editor = function(elt){
     var dom = document.querySelector(elt)
     var ed = ace.edit(dom.getAttribute('id'))
-    var undo = new UndoMgr()
+    var undo = new UndoManager()
     var sess = null
     var _menu_cmds = { // commands whose keyboard shortcuts are caught by ace rather than NSView
         "Edit":['selectline', 'splitIntoLines', 'addCursorAbove', 'addCursorBelow', 'centerselection',
@@ -101,6 +34,7 @@ var Editor = function(elt){
             ed.setFadeFoldWidgets(true);
             ed.setHighlightActiveLine(false);
             ed.setHighlightGutterLine(false);
+            console.log('COMMANDS', ed.commands)
             ed.commands.addCommands(PLOTDEVICE_KEYBINDINGS)
             ed.setOptions({
                 enableBasicAutocompletion: true,
@@ -117,7 +51,7 @@ var Editor = function(elt){
             sess.setMode("ace/mode/plotdevice");
             sess.setTabSize(4);
             sess.setUseSoftTabs(true);
-//            sess.setUndoManager(undo);
+            sess.setUndoManager(undo);
 
             // it would be nice if this didn't *select* the undo segment, but did *scroll*
             // the viewport to the cursor position. ace.js's default behavior is all or none
