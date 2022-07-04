@@ -69,16 +69,19 @@
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <subviews>
                                 <progressIndicator fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="P5L-MA-afK">
-                                    <rect key="frame" x="83" y="3" width="16" height="16"/>
+                                    <rect key="frame" x="83" y="3" width="17" height="17"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                 </progressIndicator>
                                 <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="R8f-Yl-ECD">
-                                    <rect key="frame" x="85" y="5" width="12" height="12"/>
+                                    <rect key="frame" x="78" y="-2" width="27" height="27"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="NSStopProgressFreestandingTemplate" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="oIz-n9-ZV7">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="system"/>
                                     </buttonCell>
+                                    <connections>
+                                        <action selector="stopScript:" target="-1" id="run-script-toolbar-action"/>
+                                    </connections>
                                 </button>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fkv-TE-ZBx">
                                     <rect key="frame" x="3" y="6" width="76" height="11"/>
@@ -97,9 +100,17 @@
                             </connections>
                         </customView>
                     </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="18F11564-9324-411B-A6EE-B0286335D7DA" label="Run Script" paletteLabel="Run Script" tag="-1" image="NSTouchBarPlayTemplate" bordered="YES" id="dMm-KR-TTT">
+                        <size key="minSize" width="24" height="25"/>
+                        <size key="maxSize" width="24" height="25"/>
+                        <connections>
+                            <action selector="runScript:" target="-1" id="L79-Ub-51b"/>
+                        </connections>
+                    </toolbarItem>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
                     <toolbarItem reference="p4b-Gm-7hn"/>
+                    <toolbarItem reference="dMm-KR-TTT"/>
                 </defaultToolbarItems>
             </toolbar>
             <connections>
@@ -637,5 +648,6 @@
     </objects>
     <resources>
         <image name="NSStopProgressFreestandingTemplate" width="15" height="15"/>
+        <image name="NSTouchBarPlayTemplate" width="12" height="13"/>
     </resources>
 </document>
