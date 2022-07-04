@@ -67,7 +67,7 @@ def openAnything(source):
     import urllib.request
     try:
         return urllib.request.urlopen(source)
-    except (IOError, OSError):
+    except (IOError, OSError, ValueError):
         pass
 
     # try to open with native open function (if source is pathname)
