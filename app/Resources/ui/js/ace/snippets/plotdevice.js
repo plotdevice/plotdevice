@@ -57,32 +57,32 @@ snippet cl\n\
 	  def __init__(self, ${4:arg}):\n\
 	    ${5:super($1, self).__init__()}\n\
 	    self.$4 = $4\n\
-	    ${6}\n\
+	    $6\n\
 # New Function\n\
 snippet def\n\
 	def ${1:fname}($2):\n\
-	    ${3}\n\
+	    $3\n\
 # New Method\n\
 snippet defs\n\
 	def ${1:mname}(self, ${2:arg}):\n\
-	  ${3}\n\
+	  $3\n\
 # self\n\
 snippet .\n\
 	self.\n\
 # Ifs\n\
 snippet if\n\
 	if ${1:condition}:\n\
-	  ${2}\n\
+	  $2\n\
 snippet el\n\
 	else:\n\
-	  ${1}\n\
+	  $1\n\
 snippet ei\n\
 	elif ${1:condition}:\n\
-	  ${2}\n\
+	  $2\n\
 # For\n\
 snippet for\n\
 	for ${1:item} in ${2:items}:\n\
-	  ${3}\n\
+	  $3\n\
 # Lambda\n\
 snippet ld\n\
 	${1:var} = lambda ${2:vars} : ${3:action}\n\
@@ -96,9 +96,9 @@ snippet ifmain\n\
 	  ${1:main()}\n\
 # __dunder__\n\
 snippet _\n\
-	__${1:init}__${2}\n\
+	__${1:init}__$2\n\
 snippet pprint\n\
-	import pprint; pprint.pprint(${1})${2}\n\
+	import pprint; pprint.pprint(${1})$2\n\
 # Encodes\n\
 snippet cutf8\n\
 	# -*- coding: utf-8 -*-\n\
