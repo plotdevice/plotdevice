@@ -125,7 +125,7 @@ var Editor = function(elt){
         },
         font:function(family, px){
             dom.style.fontFamily = family
-            dom.style.fontSize = px
+            dom.style.fontSize = `${px}px`
         },
         theme:function(thm){
             if (thm===undefined){
