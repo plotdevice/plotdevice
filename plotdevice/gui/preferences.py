@@ -164,6 +164,7 @@ class PlotDevicePreferencesController(NSWindowController):
     @IBAction
     def autosaveChanged_(self, sender):
         enabled = sender.tag() == 1
+        set_default('autosave', enabled)
 
     def checkThemes(self):
         light = sorted([t for t,m in THEMES.items() if not m['dark']], reverse=True)
