@@ -59,7 +59,7 @@ class PlotDeviceDocument(NSDocument):
 
     def writeToURL_ofType_error_(self, url, tp, err):
         path = url.fileSystemRepresentation()
-        # always use the same encoding we were read in with
+        # always use the same encoding we were read in with (even if they deleted the '# encoding:' line)
         with open(path, 'w', encoding=self.source_enc) as f:
             f.write(self.script._get_source())
         return True, err
@@ -80,6 +80,7 @@ class PlotDeviceDocument(NSDocument):
 
     ## Autosave & restoration on re-launch
 
+    @classmethod
     def autosavesInPlace(self):
         return get_default('autosave')
 
