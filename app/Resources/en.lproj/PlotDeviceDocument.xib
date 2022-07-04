@@ -13,7 +13,6 @@
                 <outlet property="exportSheet" destination="2ZA-Wl-gCw" id="Z4Z-5p-VeV"/>
                 <outlet property="graphicsView" destination="15o-mm-Ppr" id="oax-n6-MB2"/>
                 <outlet property="outputView" destination="31" id="37"/>
-                <outlet property="runButton" destination="OFm-Uo-o5t" id="toolbar-run-button-outlet"/>
                 <outlet property="statusView" destination="NAS-Uo-kIt" id="OWZ-kH-bik"/>
                 <outlet property="window" destination="5" id="dxm-Qo-rrG"/>
             </connections>
