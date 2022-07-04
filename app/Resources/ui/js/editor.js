@@ -34,8 +34,7 @@ var Editor = function(elt){
             ed.setFadeFoldWidgets(true);
             ed.setHighlightActiveLine(false);
             ed.setHighlightGutterLine(false);
-            console.log('COMMANDS', ed.commands)
-            ed.commands.addCommands(PLOTDEVICE_KEYBINDINGS)
+            ed.commands.addCommands(PLOTDEVICE_KEYBINDINGS) // TODO: only apply when Default is chosen in prefs…
             ed.setOptions({
                 enableBasicAutocompletion: true,
                 // enableLiveAutocompletion: true,
@@ -146,12 +145,11 @@ var Editor = function(elt){
             var sel = ed.getSelection()
             var rng = ed.getSelectionRange()
             var tok = sess.getTokens(rng.start.row)
-            console.log('tokens', tok.map(t => t.type))
+            // console.log('tokens', tok.map(t => t.type))
             var at = sess.getTokenAt(rng.start.row,rng.start.column)
-
-            tok.forEach((t, i) => {
-                if (t===at) console.log('FOUND', t,'at',i)
-            })
+            // tok.forEach((t, i) => {
+            //     if (t===at) console.log('FOUND', t,'at',i)
+            // })
             var word_rng = sess.getAWordRange(rng.start.row,rng.start.column)
             var word = sess.getTextRange(word_rng)
             return word

@@ -36,15 +36,15 @@ PLOTDEVICE_KEYBINDINGS=[
         exec: function(editor) {
             app.loadPrefs()
         }
-    // },{
-    //     name: "showKeyboardShortcuts",
-    //     bindKey: {mac: "Ctrl-h"},
-    //     exec: function(editor) {
-    //         ace.config.loadModule("ace/ext/keybinding_menu", function(module) {
-    //             module.init(editor);
-    //             editor.showKeyboardShortcuts()
-    //         })
-    //     }
+    },{
+        name: "showKeyboardShortcuts",
+        bindKey: {mac: "Ctrl-h"},
+        exec: function(editor) {
+            ace.config.loadModule("ace/ext/keybinding_menu", function(module) {
+                module.init(editor);
+                editor.showKeyboardShortcuts()
+            })
+        }
     },{
         name: "movelinesup",
         bindKey: "Alt-Up",
