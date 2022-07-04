@@ -121,14 +121,16 @@
                                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="m8W-Aw-ued">
                                     <rect key="frame" x="79" y="34" width="237" height="22"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="Ku8-By-OnQ">
+                                    <popUpButtonCell key="cell" type="push" title="Macintosh Default" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="bEk-U6-Qru" id="Ku8-By-OnQ">
                                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="smallSystem"/>
                                         <menu key="menu" title="OtherViews" id="UjV-pw-s04">
                                             <items>
-                                                <menuItem title="Macintosh" id="bEk-U6-Qru"/>
-                                                <menuItem title="Emacs" tag="1" id="AEv-ee-hQl"/>
-                                                <menuItem title="Vim" tag="2" id="Vck-kB-oJq"/>
+                                                <menuItem title="Macintosh Default" id="bEk-U6-Qru"/>
+                                                <menuItem title="Sublime Text" tag="1" id="dr6-GY-HQU"/>
+                                                <menuItem title="Visual Studio Code" tag="2" id="IT8-jC-pF1"/>
+                                                <menuItem title="Emacs" tag="3" id="AEv-ee-hQl"/>
+                                                <menuItem title="Vim" tag="4" id="Vck-kB-oJq"/>
                                             </items>
                                         </menu>
                                     </popUpButtonCell>

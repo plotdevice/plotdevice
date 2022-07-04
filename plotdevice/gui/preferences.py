@@ -144,12 +144,12 @@ class PlotDevicePreferencesController(NSWindowController):
 
     def checkBindings(self):
         style = get_default('bindings')
-        tag = ['mac','emacs','vim']
+        tag = ['mac','sublime','vscode','emacs','vim']
         self.bindingsMenu.selectItemWithTag_(tag.index(style))
 
     @IBAction
     def bindingsChanged_(self, sender):
-        style = ['mac','emacs','vim'][sender.selectedItem().tag()]
+        style = ['mac','sublime','vscode','emacs','vim'][sender.selectedItem().tag()]
         set_default('bindings', style)
         self._notify('BindingsChanged')
 
