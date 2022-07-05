@@ -20,7 +20,7 @@ def iglob(pathname, case=True):
         return
     dirname, basename = os.path.split(pathname)
     if not dirname:
-        for name in glob1(os.curdir, basename):
+        for name in glob1(os.curdir, basename, case):
             yield name
         return
     # `os.path.split()` returns the argument itself as a dirname if it is a

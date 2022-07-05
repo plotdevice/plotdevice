@@ -83,7 +83,7 @@ def files(path="*", case=True):
     #     path.encode('utf-8')
     path = os.path.expanduser(path)
 
-    return list(iglob(path.decode('utf-8'), case=case))
+    return list(iglob(path, case=case))
 
 def autotext(sourceFile):
     from plotdevice.util.kgp import KantGenerator
