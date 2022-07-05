@@ -432,6 +432,9 @@ class MagicNumber(object):
     def __int__(self): return int(self.value)
     def __float__(self): return float(self.value)
     def __cmp__(self, n): return cmp(self.value, n)
+    def __eq__(self, n): return n == self.value
+    def __lt__(self, n): return self.value < n
+    def __gt__(self, n): return self.value > n
 
     def __abs__(self): return abs(self.value)
     def __pos__(self): return +self.value
