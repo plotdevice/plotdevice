@@ -25,16 +25,6 @@ class StatusView(NSView):
         self.cancel.cell().setShowsStateBy_(NSContentsCellMask)
         self.counter.setHidden_(True)
 
-    def beginRun(self):
-        self._state = 'run'
-        self.spinner.setIndeterminate_(True)
-        self.spinner.startAnimation_(None)
-
-    def endRun(self):
-        self._state = 'idle'
-        self.spinner.stopAnimation_(None)
-        self.cancel.setHidden_(True)
-
     def beginExport(self):
         self._state = 'run'
 

@@ -121,6 +121,8 @@ class ScriptController(NSWindowController):
     outputView = IBOutlet()
     editorView = IBOutlet()
     statusView = IBOutlet()
+    runButton = IBOutlet()
+    stopButton = IBOutlet()
 
     # auxiliary windows
     dashboardController = IBOutlet()
@@ -198,6 +200,7 @@ class ScriptController(NSWindowController):
         # wire up the statusView in the title bar
         statusItem = win.toolbar().items()[0]
         statusItem.setView_(self.statusView)
+        self.setToolbarMode_('stop')
 
         # sign up for autoresume on quit-and-relaunch (but only if this isn't console.py)
         if self.editorView:
@@ -235,7 +238,6 @@ class ScriptController(NSWindowController):
             # now that the editor has woken up, we can populate it.
             if self.vm.source:
                 self.editorView.source = self.vm.source
-
 
     def encodeRestorableStateWithCoder_(self, coder):
         # walk through editor's superviews to autosave the splitview positions
@@ -357,6 +359,27 @@ class ScriptController(NSWindowController):
             NSCursor.hide()
         self.runScript()
 
+    def validateToolbarItem_(self, item):
+        return item.isEnabled()
+
+    def setToolbarMode_(self, mode):
+        # mode is export/play/pause/stop
+        toolbar = self.window().toolbar()
+        if mode=='export':
+            while len(toolbar.items()) > 1:
+                toolbar.removeItemAtIndex_(1)
+        else:
+            if len(toolbar.items()) == 1:
+                toolbar.insertItemWithItemIdentifier_atIndex_(self.stopButton.itemIdentifier(), 1)
+                toolbar.insertItemWithItemIdentifier_atIndex_(self.runButton.itemIdentifier(), 2)
+
+            if mode == 'stop':
+                run_style = ('play.fill', 'Run Script')
+            else:
+                run_style = ('play.fill', 'Resume') if mode == 'pause' else ('pause.fill', 'Pause')
+            self.runButton.setImage_(NSImage.imageWithSystemSymbolName_accessibilityDescription_(*run_style))
+            self.stopButton.setEnabled_(mode != 'stop')
+
     def runScript(self):
         """Compile the script and run its global scope.
 
@@ -368,13 +391,16 @@ class ScriptController(NSWindowController):
         call self.invoke('draw') until cancelled by the user.
         """
 
-        # halt any animation that was already running
+        # if an animation is already running, either pause or resume it
         if self.animationTimer:
-            self.animationTimer.invalidate()
-            self.animationTimer = None
+            if self.animationTimer.isValid():
+                self.animationTimer.invalidate()
+            else:
+                self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
+            self.setToolbarMode_("play" if self.animationTimer.isValid() else "pause")
+            return
 
-        # get all the output progress indicators going
-        self.statusView.beginRun()
+        # clear the previous run's output
         if (self.outputView):
             self.editorView.clearErrors()
             self.outputView.clear(timestamp=True)
@@ -392,9 +418,6 @@ class ScriptController(NSWindowController):
             success = self.invoke("setup")
 
         if not success or not self.vm.animated:
-            # halt the progress indicator if we crashed (or if we succeeded in a non-anim)
-            self.statusView.endRun()
-
             # don't mess with the gui window-state if running in fullscreen until the
             # user explicitly cancels with esc or cmd-period
             if success and not self.fullScreen:
@@ -415,6 +438,9 @@ class ScriptController(NSWindowController):
 
                 # Start the timer
                 self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
+
+                # enable the stop button in the toolbar
+                self.setToolbarMode_("play")
 
     def step(self):
         """Keep calling the script's draw method until an error occurs or the animation complete."""
@@ -518,6 +544,9 @@ class ScriptController(NSWindowController):
         # if we're exporting multiple frames, give some ui feedback
         if self.outputView:
             self.outputView.clear(timestamp=True)
+
+        # replace the toolbar buttons with a progress indicator
+        self.setToolbarMode_("export")
         if self.statusView:
             self.statusView.beginExport()
 
@@ -580,9 +609,8 @@ class ScriptController(NSWindowController):
             result = self.vm.stop()
             self.echo(result.output)
 
-        # disable progress spinner
-        if self.statusView and not self.vm.session:
-            self.statusView.endRun()
+        # re-enable the play button
+        self.setToolbarMode_("stop")
 
         # relay any errors to the text panes (if we're in the app)
         if self.editorView:

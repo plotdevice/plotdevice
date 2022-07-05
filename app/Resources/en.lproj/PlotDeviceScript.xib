@@ -58,13 +58,13 @@
                     </scrollView>
                 </subviews>
             </view>
-            <toolbar key="toolbar" implicitIdentifier="2E4A019F-C22A-413D-A96D-595F5B88CEC1" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="5QJ-Nr-i0E">
+            <toolbar key="toolbar" implicitIdentifier="2E4A019F-C22A-413D-A96D-595F5B88CEC1" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconOnly" sizeMode="regular" id="5QJ-Nr-i0E">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="0F56688C-1EB0-4A6D-B08D-25B0037B2BB1" label="Custom View" paletteLabel="Custom View" tag="-1" sizingBehavior="auto" id="p4b-Gm-7hn">
                         <nil key="toolTip"/>
-                        <customView key="view" id="RbF-zl-VKw" customClass="StatusView">
+                        <customView key="view" autoresizesSubviews="NO" id="RbF-zl-VKw" customClass="StatusView">
                             <rect key="frame" x="0.0" y="14" width="100" height="22"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                            <autoresizingMask key="autoresizingMask"/>
                             <subviews>
                                 <progressIndicator fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="P5L-MA-afK">
                                     <rect key="frame" x="83" y="3" width="17" height="17"/>
@@ -98,14 +98,22 @@
                             </connections>
                         </customView>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="18F11564-9324-411B-A6EE-B0286335D7DA" label="Run Script" paletteLabel="Run Script" tag="-1" image="NSTouchBarPlayTemplate" bordered="YES" sizingBehavior="auto" id="dMm-KR-TTT">
+                    <toolbarItem implicitItemIdentifier="18F11564-9324-411B-A6EE-B0286335D7DA" explicitItemIdentifier="run-script" label="Run Script" paletteLabel="Run Script" tag="-1" image="pause.fill" catalog="system" bordered="YES" id="dMm-KR-TTT">
+                        <size key="minSize" width="36" height="25"/>
+                        <size key="maxSize" width="36" height="25"/>
                         <connections>
                             <action selector="runScript:" target="-1" id="L79-Ub-51b"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="133F0992-F662-447D-BB3F-CE39BA0639A3" explicitItemIdentifier="stop-script" label="Stop Script" paletteLabel="Stop Script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="Mor-T9-0sZ">
+                        <connections>
+                            <action selector="stopScript:" target="-1" id="TNR-tg-B3R"/>
                         </connections>
                     </toolbarItem>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
                     <toolbarItem reference="p4b-Gm-7hn"/>
+                    <toolbarItem reference="Mor-T9-0sZ"/>
                     <toolbarItem reference="dMm-KR-TTT"/>
                 </defaultToolbarItems>
             </toolbar>
@@ -138,7 +146,9 @@
                 <outlet property="dashboardController" destination="170" id="EUP-eP-mMm"/>
                 <outlet property="exportSheet" destination="NPn-1j-FnS" id="yP3-Mz-FOg"/>
                 <outlet property="graphicsView" destination="vrd-6s-Y5i" id="TrA-Sg-ITa"/>
+                <outlet property="runButton" destination="dMm-KR-TTT" id="run-button-outlet"/>
                 <outlet property="statusView" destination="RbF-zl-VKw" id="XFX-qV-8NQ"/>
+                <outlet property="stopButton" destination="Mor-T9-0sZ" id="stop-button-outlet"/>
                 <outlet property="window" destination="5" id="ZRW-jd-ILx"/>
             </connections>
         </customObject>
@@ -644,6 +654,7 @@
     </objects>
     <resources>
         <image name="NSStopProgressFreestandingTemplate" width="15" height="15"/>
-        <image name="NSTouchBarPlayTemplate" width="12" height="13"/>
+        <image name="pause.fill" catalog="system" width="11" height="13"/>
+        <image name="stop.fill" catalog="system" width="14" height="13"/>
     </resources>
 </document>

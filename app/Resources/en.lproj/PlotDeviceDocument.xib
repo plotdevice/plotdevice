@@ -13,7 +13,9 @@
                 <outlet property="exportSheet" destination="2ZA-Wl-gCw" id="Z4Z-5p-VeV"/>
                 <outlet property="graphicsView" destination="15o-mm-Ppr" id="oax-n6-MB2"/>
                 <outlet property="outputView" destination="31" id="37"/>
+                <outlet property="runButton" destination="OFm-Uo-o5t" id="run-button-outlet"/>
                 <outlet property="statusView" destination="NAS-Uo-kIt" id="OWZ-kH-bik"/>
+                <outlet property="stopButton" destination="wUL-BX-PpT" id="stop-button-outlet"/>
                 <outlet property="window" destination="5" id="dxm-Qo-rrG"/>
             </connections>
         </customObject>
@@ -118,13 +120,13 @@
                     </splitView>
                 </subviews>
             </view>
-            <toolbar key="toolbar" implicitIdentifier="46B074B4-EE8C-4F09-9547-E60CB5854BF6" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="1Ye-0t-gpR">
+            <toolbar key="toolbar" implicitIdentifier="46B074B4-EE8C-4F09-9547-E60CB5854BF6" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconOnly" sizeMode="regular" id="1Ye-0t-gpR">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="ByI-gB-2LU"/>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="1vH-nG-f9L"/>
                     <toolbarItem implicitItemIdentifier="5089AF19-F362-4D9B-8F29-55B0FAA5865D" label="Custom View" paletteLabel="Custom View" tag="-1" sizingBehavior="auto" id="t02-8K-CYR">
                         <nil key="toolTip"/>
-                        <customView key="view" id="NAS-Uo-kIt" customClass="StatusView">
+                        <customView key="view" autoresizesSubviews="NO" id="NAS-Uo-kIt" customClass="StatusView">
                             <rect key="frame" x="0.0" y="14" width="100" height="22"/>
                             <autoresizingMask key="autoresizingMask"/>
                             <subviews>
@@ -160,14 +162,20 @@
                             </connections>
                         </customView>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="1B170BFA-98A0-4CDA-BC30-1F929B40EC04" label="Run Script" paletteLabel="Run Script" toolTip="Run the script" tag="-1" image="NSTouchBarPlayTemplate" bordered="YES" sizingBehavior="auto" id="OFm-Uo-o5t">
+                    <toolbarItem implicitItemIdentifier="1B170BFA-98A0-4CDA-BC30-1F929B40EC04" explicitItemIdentifier="run-script" label="Run Script" paletteLabel="Run Script" toolTip="Run the script" tag="-1" image="play.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="OFm-Uo-o5t">
                         <connections>
                             <action selector="runScript:" target="-1" id="fSU-Wg-1X7"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="C7B1FE38-0BD0-4352-9171-E6F8F88D2159" explicitItemIdentifier="stop-script" label="Stop Script" paletteLabel="Stop Script" toolTip="Stop the script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="wUL-BX-PpT">
+                        <connections>
+                            <action selector="stopScript:" target="-1" id="7UT-vo-kcR"/>
                         </connections>
                     </toolbarItem>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
                     <toolbarItem reference="t02-8K-CYR"/>
+                    <toolbarItem reference="wUL-BX-PpT"/>
                     <toolbarItem reference="OFm-Uo-o5t"/>
                 </defaultToolbarItems>
             </toolbar>
@@ -572,6 +580,7 @@ DQ
     </objects>
     <resources>
         <image name="NSStopProgressFreestandingTemplate" width="15" height="15"/>
-        <image name="NSTouchBarPlayTemplate" width="12" height="13"/>
+        <image name="play.fill" catalog="system" width="12" height="13"/>
+        <image name="stop.fill" catalog="system" width="14" height="13"/>
     </resources>
 </document>
