@@ -174,7 +174,6 @@ class ScriptController(NSWindowController):
         is_untitled = tmpl.startswith('TMPL:')
         is_example = os.path.exists(tmpl) and not is_untitled
         if is_example:
-            # self.source = file(tmpl).read().decode("utf-8")
             self.source = open(tmpl, encoding='utf-8').read()
             if self.document():
                 # when an example script is opened, setStatioenry is called before the
