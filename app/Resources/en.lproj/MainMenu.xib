@@ -77,17 +77,25 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="New…" id="vlR-MX-qMj">
                                     <items>
-                                        <menuItem title="New sketch" keyEquivalent="n" id="82">
+                                        <menuItem title="Sketch" keyEquivalent="n" id="82">
                                             <connections>
                                                 <action selector="newSketch:" target="-1" id="k0D-qP-8lg"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="New animation" tag="1" keyEquivalent="N" id="iU7-va-cpd">
+                                        <menuItem title="Animation" tag="1" keyEquivalent="N" id="iU7-va-cpd">
                                             <connections>
                                                 <action selector="newSketch:" target="-1" id="3oi-mY-K4x"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Ottobot script" tag="2" id="434">
+                                        <menuItem title="Window Tab" tag="2" keyEquivalent="t" id="1IQ-0I-Pcz">
+                                            <connections>
+                                                <action selector="newSketch:" target="-1" id="W8M-Tv-44T"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="sYp-gF-I7Q">
+                                            <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                                        </menuItem>
+                                        <menuItem title="Ottobot Script" tag="3" id="434">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="newSketch:" target="-1" id="ciz-Bq-ExE"/>

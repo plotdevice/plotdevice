@@ -160,6 +160,7 @@ class ScriptController(NSWindowController):
         self.fullScreen = None
         self.currentView = None
         self.stationery = None
+        self.is_tab = False
 
     def setPath_source_(self, path, source):
         self.vm.path = path
@@ -186,9 +187,11 @@ class ScriptController(NSWindowController):
         elif is_untitled:
             from plotdevice.util.ottobot import genTemplate
             self.source = genTemplate(tmpl.split(':',1)[1])
+            self.is_tab = tmpl.endswith(':tab')
 
     def awakeFromNib(self):
         win = self.window()
+        win.setTabbingMode_(NSWindowTabbingModePreferred if self.is_tab else NSWindowTabbingModeAutomatic)
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
         win.useOptimizedDrawing_(True)
 

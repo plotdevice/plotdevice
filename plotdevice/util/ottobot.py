@@ -252,6 +252,8 @@ def stop():
 """
     elif kind=='ottobot':
         return genProgram()
+    else:
+        return ""
 
 if __name__ == '__main__':
     print(genProgram())
