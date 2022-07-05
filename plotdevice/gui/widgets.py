@@ -40,7 +40,7 @@ class StatusView(NSView):
     def updateExport_total_(self, written, total):
         self.spinner.setMaxValue_(total)
         self.spinner.setDoubleValue_(written)
-        msg = "Frame %i/%i"%(written, total) if written<total else "Finishing…"
+        msg = "Frame {:,}/{:,}".format(written, total) if written<total else "Finishing…"
         self.counter.setStringValue_(msg)
 
     def finishExport(self):

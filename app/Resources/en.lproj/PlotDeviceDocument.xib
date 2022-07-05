@@ -124,18 +124,18 @@
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="ByI-gB-2LU"/>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="1vH-nG-f9L"/>
-                    <toolbarItem implicitItemIdentifier="5089AF19-F362-4D9B-8F29-55B0FAA5865D" label="Custom View" paletteLabel="Custom View" tag="-1" sizingBehavior="auto" id="t02-8K-CYR">
+                    <toolbarItem implicitItemIdentifier="5089AF19-F362-4D9B-8F29-55B0FAA5865D" label="Export Status" paletteLabel="Export Status" tag="-1" sizingBehavior="auto" id="t02-8K-CYR">
                         <nil key="toolTip"/>
                         <customView key="view" autoresizesSubviews="NO" id="NAS-Uo-kIt" customClass="StatusView">
-                            <rect key="frame" x="0.0" y="14" width="100" height="22"/>
+                            <rect key="frame" x="0.0" y="14" width="120" height="22"/>
                             <autoresizingMask key="autoresizingMask"/>
                             <subviews>
                                 <progressIndicator fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="OJ6-ac-5EU">
-                                    <rect key="frame" x="83" y="3" width="17" height="17"/>
+                                    <rect key="frame" x="98" y="3" width="17" height="17"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                 </progressIndicator>
                                 <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4lL-EC-Lny">
-                                    <rect key="frame" x="78" y="-2" width="27" height="27"/>
+                                    <rect key="frame" x="93" y="-2" width="27" height="27"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="NSStopProgressFreestandingTemplate" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="ano-B7-bzc">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -146,10 +146,10 @@
                                     </connections>
                                 </button>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jHA-5Y-kZ4">
-                                    <rect key="frame" x="3" y="6" width="76" height="11"/>
+                                    <rect key="frame" x="0" y="5" width="94" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="101/500" id="Ehs-N6-3Qw">
-                                        <font key="font" metaFont="miniSystem"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="101/500" id="Ehs-N6-3Qw">
+                                        <font key="font" metaFont="smallSystem"/>
                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
