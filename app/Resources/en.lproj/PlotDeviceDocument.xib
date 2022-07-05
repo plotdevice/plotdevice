@@ -160,9 +160,7 @@
                             </connections>
                         </customView>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="1B170BFA-98A0-4CDA-BC30-1F929B40EC04" label="Run Script" paletteLabel="Run Script" toolTip="Run the script" tag="-1" image="NSTouchBarPlayTemplate" bordered="YES" id="OFm-Uo-o5t">
-                        <size key="minSize" width="24" height="25"/>
-                        <size key="maxSize" width="24" height="25"/>
+                    <toolbarItem implicitItemIdentifier="1B170BFA-98A0-4CDA-BC30-1F929B40EC04" label="Run Script" paletteLabel="Run Script" toolTip="Run the script" tag="-1" image="NSTouchBarPlayTemplate" bordered="YES" sizingBehavior="auto" id="OFm-Uo-o5t">
                         <connections>
                             <action selector="runScript:" target="-1" id="fSU-Wg-1X7"/>
                         </connections>
