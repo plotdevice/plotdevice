@@ -22,18 +22,15 @@ Animation Examples:
     python3 -m plotdevice script.pv --export output.gif --frames 60 --fps 30 --loop
 """
 
-from __future__ import print_function
 import sys, os, re
 import argparse
-import json
-import signal
-from glob import glob
-from subprocess import Popen, PIPE
 from os.path import exists, islink, dirname, abspath, realpath, join
-from .run.console import run
-from . import __version__
+
 
 def main():
+  import plotdevice
+  from .run.console import run
+
   parser = argparse.ArgumentParser(
     add_help=False,
     description="Run PlotDevice scripts in a window or export graphics to a document (pdf/eps), image (png/jpg/heic/gif/tiff), or movie (mov/gif).",
@@ -44,7 +41,7 @@ def main():
   o = parser.add_argument_group("Options", None)
   o.add_argument('-h','--help', action='help', help='show this help message and exit')
   o.add_argument('-f', dest='fullscreen', action='store_const', const=True, default=False, help='run full-screen')
-  o.add_argument('-b', dest='activate', action='store_const', const=False, default=True, help='run PlotDevice in the background')
+  o.add_argument('-b', dest='activate', action='store_const', const=False, default=True, help='run PlotDevice in the background (i.e., leave focus in the active application)')
   o.add_argument('-q', dest='mode', action='store_const', const='headless', default='windowed', help='run a PlotDevice script ‘quietly’ (without opening a window)')
   o.add_argument('--virtualenv', metavar='PATH', help='path to virtualenv whose libraries you want to use (this should point to the top-level virtualenv directory; a folder containing a lib/python3.x/site-packages subdirectory)')
   o.add_argument('--export', '-o', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, heic, gif, or mov')
@@ -55,7 +52,7 @@ def main():
   o.add_argument('--cmyk', action='store_const', const=True, default=False, help='convert colors to c/m/y/k during exports')
   o.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
   o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='arguments to be passed to the script as sys.argv')
-  o.add_argument('--version', action='version', version='PlotDevice %s' % __version__)
+  o.add_argument('--version', action='version', version='PlotDevice %s' % plotdevice.__version__)
 
   i = parser.add_argument_group("PlotDevice Script File", None)
   i.add_argument('script', help='the python script to be rendered')
@@ -120,6 +117,7 @@ def main():
     opts.single = bool(ext=='pdf' and not re.search('{\d+}', opts.export) and opts.last and opts.first < opts.last)
 
   # set it off
+  plotdevice.__all__.clear()
   run(vars(opts))
 
 if __name__ == "__main__":
