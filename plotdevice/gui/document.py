@@ -364,21 +364,22 @@ class ScriptController(NSWindowController):
 
     def setToolbarMode_(self, mode):
         # mode is export/play/pause/stop
-        toolbar = self.window().toolbar()
-        if mode=='export':
-            while len(toolbar.items()) > 1:
-                toolbar.removeItemAtIndex_(1)
-        else:
-            if len(toolbar.items()) == 1:
-                toolbar.insertItemWithItemIdentifier_atIndex_(self.stopButton.itemIdentifier(), 1)
-                toolbar.insertItemWithItemIdentifier_atIndex_(self.runButton.itemIdentifier(), 2)
-
-            if mode == 'stop':
-                run_style = ('play.fill', 'Run Script')
+        if self.window():
+            toolbar = self.window().toolbar()
+            if mode=='export':
+                while len(toolbar.items()) > 1:
+                    toolbar.removeItemAtIndex_(1)
             else:
-                run_style = ('play.fill', 'Resume') if mode == 'pause' else ('pause.fill', 'Pause')
-            self.runButton.setImage_(NSImage.imageWithSystemSymbolName_accessibilityDescription_(*run_style))
-            self.stopButton.setEnabled_(mode != 'stop')
+                if len(toolbar.items()) == 1:
+                    toolbar.insertItemWithItemIdentifier_atIndex_(self.stopButton.itemIdentifier(), 1)
+                    toolbar.insertItemWithItemIdentifier_atIndex_(self.runButton.itemIdentifier(), 2)
+
+                if mode == 'stop':
+                    run_style = ('play.fill', 'Run Script')
+                else:
+                    run_style = ('play.fill', 'Resume') if mode == 'pause' else ('pause.fill', 'Pause')
+                self.runButton.setImage_(NSImage.imageWithSystemSymbolName_accessibilityDescription_(*run_style))
+                self.stopButton.setEnabled_(mode != 'stop')
 
     def runScript(self):
         """Compile the script and run its global scope.
