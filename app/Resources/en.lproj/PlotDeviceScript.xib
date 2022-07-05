@@ -60,10 +60,8 @@
             </view>
             <toolbar key="toolbar" implicitIdentifier="2E4A019F-C22A-413D-A96D-595F5B88CEC1" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="5QJ-Nr-i0E">
                 <allowedToolbarItems>
-                    <toolbarItem implicitItemIdentifier="0F56688C-1EB0-4A6D-B08D-25B0037B2BB1" label="Custom View" paletteLabel="Custom View" tag="-1" id="p4b-Gm-7hn">
+                    <toolbarItem implicitItemIdentifier="0F56688C-1EB0-4A6D-B08D-25B0037B2BB1" label="Custom View" paletteLabel="Custom View" tag="-1" sizingBehavior="auto" id="p4b-Gm-7hn">
                         <nil key="toolTip"/>
-                        <size key="minSize" width="100" height="22"/>
-                        <size key="maxSize" width="100" height="22"/>
                         <customView key="view" id="RbF-zl-VKw" customClass="StatusView">
                             <rect key="frame" x="0.0" y="14" width="100" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
@@ -100,9 +98,7 @@
                             </connections>
                         </customView>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="18F11564-9324-411B-A6EE-B0286335D7DA" label="Run Script" paletteLabel="Run Script" tag="-1" image="NSTouchBarPlayTemplate" bordered="YES" id="dMm-KR-TTT">
-                        <size key="minSize" width="24" height="25"/>
-                        <size key="maxSize" width="24" height="25"/>
+                    <toolbarItem implicitItemIdentifier="18F11564-9324-411B-A6EE-B0286335D7DA" label="Run Script" paletteLabel="Run Script" tag="-1" image="NSTouchBarPlayTemplate" bordered="YES" sizingBehavior="auto" id="dMm-KR-TTT">
                         <connections>
                             <action selector="runScript:" target="-1" id="L79-Ub-51b"/>
                         </connections>
