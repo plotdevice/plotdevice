@@ -82,7 +82,7 @@
                                     </connections>
                                 </button>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fkv-TE-ZBx">
-                                    <rect key="frame" x="0" y="5" width="94" height="14"/>
+                                    <rect key="frame" x="0.0" y="5" width="94" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="101/500" id="oIq-is-Zo4">
                                         <font key="font" metaFont="smallSystem"/>
@@ -572,6 +572,9 @@
                             </items>
                         </menu>
                     </popUpButtonCell>
+                    <connections>
+                        <action selector="movieFormatChanged:" target="NPn-1j-FnS" id="movie-format-changed-action"/>
+                    </connections>
                 </popUpButton>
                 <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="49" translatesAutoresizingMaskIntoConstraints="NO" id="ml9-oS-dkC">
                     <rect key="frame" x="29" y="110" width="53" height="17"/>
