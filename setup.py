@@ -246,7 +246,7 @@ class BuildCommand(build_py):
         # include some ui resources for running a script from the command line
         rsrc_dir = '%s/plotdevice/rsrc'%self.build_lib
         self.mkpath(rsrc_dir)
-        self.copy_file("app/Resources/PlotDeviceFile.icns", '%s/viewer.icns'%rsrc_dir)
+        self.copy_file("app/Resources/PlotDeviceFile.icns", rsrc_dir)
         self.copy_file("app/Resources/colors.json", rsrc_dir)
 
         # recompile the command-line UI nib if necessary

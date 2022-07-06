@@ -313,13 +313,9 @@ def rsrc_path(resource=None):
 
     if not exists(rsrc_root):
         # hack to run in-place in sdist
-        from glob import glob
-        for pth in glob(join(module_root, '../build/lib*/plotdevice/rsrc')):
-            rsrc_root = abspath(pth)
-            break
-        else:
-            notfound = "Couldn't locate resources directory (try running `python setup.py dev` before running from the source dist)."
-            raise RuntimeError(notfound)
+        rsrc_root = join(module_root, '../app/Resources')
+        if not exists(rsrc_root):
+            raise RuntimeError("Couldn't locate resources directory.")
     if resource:
         return join(rsrc_root, resource)
     return rsrc_root
