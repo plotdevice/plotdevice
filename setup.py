@@ -163,7 +163,7 @@ def stale(dst, src):
 
 from distutils.core import Command
 class CleanCommand(Command):
-    description = "wipe out the ./build ./dist and deps/local dirs"
+    description = "wipe out the ./build & ./dist dirs and other setup-generated files"
     user_options = []
     def initialize_options(self):
         pass
@@ -171,14 +171,24 @@ class CleanCommand(Command):
         pass
     def run(self):
         os.system('rm -rf ./build ./dist')
-        os.system('rm -rf ./deps/local')
-        os.system('rm -rf ./deps/frameworks/*.framework')
         os.system('rm -rf plotdevice.egg-info MANIFEST.in PKG')
         os.system('rm -rf ./tests/_out ./tests/_diff ./details.html')
         os.system('rm -f ./_plotdevice.*.so')
         os.system('find plotdevice -name .DS_Store -exec rm {} \;')
         os.system('find plotdevice -name \*.pyc -exec rm {} \;')
         os.system('find plotdevice -name __pycache__ -type d -prune -exec rmdir {} \;')
+
+class DistCleanCommand(Command):
+    description = "delete Python.framework, local pypi dependencies, and all generated files"
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+        self.run_command('clean')
+        os.system('rm -rf ./deps/local')
+        os.system('rm -rf ./deps/frameworks/*.framework')
 
 class LocalDevCommand(Command):
     description = "set up environment to allow for running `python -m plotdevice` within the repo"
@@ -460,6 +470,7 @@ config = dict(
     cmdclass={
         'app': BuildAppCommand,
         'clean': CleanCommand,
+        'distclean': DistCleanCommand,
         'build_py': BuildCommand,
         'dist': DistCommand,
         'sdist': BuildDistCommand,
