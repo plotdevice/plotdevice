@@ -334,10 +334,18 @@ class ScriptController(NSWindowController):
 
     @IBAction
     def runScript_(self, sender):
-        # listens for cmd-r
         if self.vm.session:
             return NSBeep()
-        self.runScript()
+
+        # always run from beginning for cmd-r, but play/pause for toolbar clicks
+        if self.animationTimer and not isinstance(sender, NSMenuItem):
+            if self.animationTimer.isValid():
+                self.animationTimer.invalidate()
+            else:
+                self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
+            self.setToolbarMode_("play" if self.animationTimer.isValid() else "pause")
+        else:
+            self.runScript()
 
     @IBAction
     def runFullscreen_(self, sender):
@@ -396,14 +404,10 @@ class ScriptController(NSWindowController):
         call self.invoke('draw') until cancelled by the user.
         """
 
-        # if an animation is already running, either pause or resume it
+        # ihalt any animation that was already running
         if self.animationTimer:
-            if self.animationTimer.isValid():
-                self.animationTimer.invalidate()
-            else:
-                self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
-            self.setToolbarMode_("play" if self.animationTimer.isValid() else "pause")
-            return
+            self.animationTimer.invalidate()
+            self.animationTimer = None
 
         # clear the previous run's output
         if (self.outputView):
