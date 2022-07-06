@@ -373,10 +373,10 @@ class Region(object):
 
 ### argument destructuring madness (a.k.a. wouldn't multimethods be nice...) ###
 
-def _abort(stream, objs, types):
+def _abort(stream, objs, types, orig):
     needed = [t.__name__ for t in types]
     got = [o.__class__.__name__ for o in objs] + [arg.__class__.__name__ for arg in stream]
-    invalid = 'Invalid coordinates (looking for %r, got %r)' % (needed, got)
+    invalid = 'Invalid coordinates (looking for %r, found %r in %r)' % (needed, got, orig)
     raise DeviceError(invalid)
 
 def parse_coords(coords, types):
@@ -400,7 +400,7 @@ def parse_coords(coords, types):
     for cls in types:
         # crash on insufficient args
         if not stream:
-            _abort(stream, objs, types)
+            _abort(stream, objs, types, coords)
 
         # unpack the next 1 or 2 args into a Point/Size/float (or die trying)
         try:
@@ -411,13 +411,13 @@ def parse_coords(coords, types):
                 obj = cls(stream[0])
                 del stream[0]
         except:
-            _abort(stream, objs, types)
+            _abort(stream, objs, types, coords)
 
         objs.append(obj)
 
     # crash on extraneous args
     if stream:
-        _abort(stream, coords, types)
+        _abort(stream, objs, types, coords)
 
     # exclude the container list if only one arg is returned
     if len(types) == 1:
