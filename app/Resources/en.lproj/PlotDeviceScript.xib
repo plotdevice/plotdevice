@@ -98,21 +98,20 @@
                             </connections>
                         </customView>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="18F11564-9324-411B-A6EE-B0286335D7DA" explicitItemIdentifier="run-script" label="Run Script" paletteLabel="Run Script" tag="-1" image="pause.fill" catalog="system" bordered="YES" id="dMm-KR-TTT">
-                        <size key="minSize" width="36" height="25"/>
-                        <size key="maxSize" width="36" height="25"/>
+                    <toolbarItem implicitItemIdentifier="18F11564-9324-411B-A6EE-B0286335D7DA" label="Run Script" paletteLabel="Run Script" tag="-1" image="play.fill" catalog="system" bordered="YES" id="dMm-KR-TTT">
+                        <size key="minSize" width="30" height="25"/>
+                        <size key="maxSize" width="30" height="25"/>
                         <connections>
                             <action selector="runScript:" target="-1" id="L79-Ub-51b"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="133F0992-F662-447D-BB3F-CE39BA0639A3" explicitItemIdentifier="stop-script" label="Stop Script" paletteLabel="Stop Script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="Mor-T9-0sZ">
+                    <toolbarItem implicitItemIdentifier="133F0992-F662-447D-BB3F-CE39BA0639A3" label="Stop Script" paletteLabel="Stop Script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="Mor-T9-0sZ">
                         <connections>
                             <action selector="stopScript:" target="-1" id="TNR-tg-B3R"/>
                         </connections>
                     </toolbarItem>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
-                    <toolbarItem reference="p4b-Gm-7hn"/>
                     <toolbarItem reference="Mor-T9-0sZ"/>
                     <toolbarItem reference="dMm-KR-TTT"/>
                 </defaultToolbarItems>
@@ -148,6 +147,7 @@
                 <outlet property="graphicsView" destination="vrd-6s-Y5i" id="TrA-Sg-ITa"/>
                 <outlet property="runButton" destination="dMm-KR-TTT" id="run-button-outlet"/>
                 <outlet property="statusView" destination="RbF-zl-VKw" id="XFX-qV-8NQ"/>
+                <outlet property="statusViewItem" destination="p4b-Gm-7hn" id="status-view-toolbar-item-outlet"/>
                 <outlet property="stopButton" destination="Mor-T9-0sZ" id="stop-button-outlet"/>
                 <outlet property="window" destination="5" id="ZRW-jd-ILx"/>
             </connections>
@@ -657,7 +657,7 @@
     </objects>
     <resources>
         <image name="NSStopProgressFreestandingTemplate" width="15" height="15"/>
-        <image name="pause.fill" catalog="system" width="11" height="13"/>
+        <image name="play.fill" catalog="system" width="12" height="13"/>
         <image name="stop.fill" catalog="system" width="14" height="13"/>
     </resources>
 </document>

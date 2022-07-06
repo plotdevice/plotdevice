@@ -121,6 +121,7 @@ class ScriptController(NSWindowController):
     outputView = IBOutlet()
     editorView = IBOutlet()
     statusView = IBOutlet()
+    statusViewItem = IBOutlet()
     runButton = IBOutlet()
     stopButton = IBOutlet()
 
@@ -196,9 +197,8 @@ class ScriptController(NSWindowController):
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
         win.useOptimizedDrawing_(True)
 
-        # wire up the statusView in the title bar
-        statusItem = win.toolbar().items()[0]
-        statusItem.setView_(self.statusView)
+        # wire up the export-status widget in the title bar
+        self.statusViewItem.setView_(self.statusView)
         self.setToolbarMode_('stop')
 
         # sign up for autoresume on quit-and-relaunch (but only if this isn't console.py)
@@ -366,19 +366,24 @@ class ScriptController(NSWindowController):
         if self.window():
             toolbar = self.window().toolbar()
             if mode=='export':
-                while len(toolbar.items()) > 1:
-                    toolbar.removeItemAtIndex_(1)
+                while len(toolbar.items()):
+                    toolbar.removeItemAtIndex_(0)
+                toolbar.insertItemWithItemIdentifier_atIndex_(self.statusViewItem.itemIdentifier(), 0)
             else:
-                if len(toolbar.items()) == 1:
-                    toolbar.insertItemWithItemIdentifier_atIndex_(self.stopButton.itemIdentifier(), 1)
-                    toolbar.insertItemWithItemIdentifier_atIndex_(self.runButton.itemIdentifier(), 2)
+                if len(toolbar.items()) != 2:
+                    while len(toolbar.items()):
+                        toolbar.removeItemAtIndex_(0)
+                    toolbar.insertItemWithItemIdentifier_atIndex_(self.stopButton.itemIdentifier(), 0)
+                    toolbar.insertItemWithItemIdentifier_atIndex_(self.runButton.itemIdentifier(), 1)
 
                 if mode == 'stop':
-                    run_style = ('play.fill', 'Run Script')
+                    icon, title = ('play.fill', 'Run the Script')
                 else:
-                    run_style = ('play.fill', 'Resume') if mode == 'pause' else ('pause.fill', 'Pause')
-                self.runButton.setImage_(NSImage.imageWithSystemSymbolName_accessibilityDescription_(*run_style))
+                    icon, title = ('forward.frame.fill', 'Resume') if mode == 'pause' else ('pause.fill', 'Pause')
+                self.runButton.setImage_(NSImage.imageWithSystemSymbolName_accessibilityDescription_(icon, title))
+                self.runButton.setToolTip_(title)
                 self.stopButton.setEnabled_(mode != 'stop')
+                self.stopButton.setToolTip_('Stop the Script')
 
     def runScript(self):
         """Compile the script and run its global scope.

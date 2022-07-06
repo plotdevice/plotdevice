@@ -15,6 +15,7 @@
                 <outlet property="outputView" destination="31" id="37"/>
                 <outlet property="runButton" destination="OFm-Uo-o5t" id="run-button-outlet"/>
                 <outlet property="statusView" destination="NAS-Uo-kIt" id="OWZ-kH-bik"/>
+                <outlet property="statusViewItem" destination="t02-8K-CYR" id="status-view-toolbar-item-outlet"/>
                 <outlet property="stopButton" destination="wUL-BX-PpT" id="stop-button-outlet"/>
                 <outlet property="window" destination="5" id="dxm-Qo-rrG"/>
             </connections>
@@ -146,7 +147,7 @@
                                     </connections>
                                 </button>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jHA-5Y-kZ4">
-                                    <rect key="frame" x="0" y="5" width="94" height="14"/>
+                                    <rect key="frame" x="0.0" y="5" width="94" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="101/500" id="Ehs-N6-3Qw">
                                         <font key="font" metaFont="smallSystem"/>
@@ -162,7 +163,9 @@
                             </connections>
                         </customView>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="1B170BFA-98A0-4CDA-BC30-1F929B40EC04" explicitItemIdentifier="run-script" label="Run Script" paletteLabel="Run Script" toolTip="Run the script" tag="-1" image="play.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="OFm-Uo-o5t">
+                    <toolbarItem implicitItemIdentifier="1B170BFA-98A0-4CDA-BC30-1F929B40EC04" explicitItemIdentifier="run-script" label="Run Script" paletteLabel="Run Script" toolTip="Run the script" tag="-1" image="play.fill" catalog="system" bordered="YES" id="OFm-Uo-o5t">
+                        <size key="minSize" width="30" height="25"/>
+                        <size key="maxSize" width="30" height="25"/>
                         <connections>
                             <action selector="runScript:" target="-1" id="fSU-Wg-1X7"/>
                         </connections>
@@ -174,7 +177,6 @@
                     </toolbarItem>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
-                    <toolbarItem reference="t02-8K-CYR"/>
                     <toolbarItem reference="wUL-BX-PpT"/>
                     <toolbarItem reference="OFm-Uo-o5t"/>
                 </defaultToolbarItems>
