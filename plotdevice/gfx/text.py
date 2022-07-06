@@ -74,7 +74,10 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         # merge in any numlike positional args to define bounds
         if args:
-            self._frame._parse(args)
+            try:
+                self._frame._parse(args)
+            except:
+                raise DeviceError("Expected an x/y point (and optional width/height) but got %r" % (args,))
 
         # fontify the str/xml/src arg and store it in the TextBlock
         self.append(**{k:v for k,v in kwargs.items() if k in self.opts})
