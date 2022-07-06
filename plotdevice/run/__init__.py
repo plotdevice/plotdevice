@@ -1,5 +1,4 @@
 import sys, site
-import platform
 from os.path import abspath, dirname, exists, join
 from subprocess import call
 
@@ -11,7 +10,9 @@ except ImportError:
     repo = abspath(join(dirname(__file__), '../..'))
     setup_py = '%s/setup.py' % repo
     if exists(setup_py):
-        local_libs = '%s/deps/local/%s/libs' % (repo, platform.python_version())
+        from platform import python_version
+        from sysconfig import get_config_var
+        local_libs = '%s/deps/local/%s/lib/python%s/site-packages' % (repo, python_version(), get_config_var('py_version_short'))
         if not exists(local_libs):
             call([sys.executable, setup_py, 'dev'])
         site.addsitedir(local_libs)

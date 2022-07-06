@@ -17,7 +17,7 @@
 # - Mac OS X 11+ and Xcode command line tools (type `xcode-select --install` in the terminal)
 # - the python3.8 provided by Xcode or a homebrew- or pyenv-built python3 interpreter
 # - Sparkle.framework (auto-downloaded only for `dist` builds)
-
+#
 import os, sys, json, re, platform
 from glob import glob
 from setuptools import setup, find_packages
@@ -205,8 +205,8 @@ class LocalDevCommand(Command):
             import venv
             venv.create(venv_dir, symlinks=True, with_pip=True)
             PIP = '%s/bin/pip3' % venv_dir
-            call([PIP, 'install', '-q', '--upgrade', 'pip', 'wheel'])
-            call([PIP, '--isolated', 'install', '--target', join(venv_dir, 'libs'), *config['install_requires']])
+            call([PIP, 'install', '-q', '--upgrade', 'pip', 'wheel', 'py2app'])
+            call([PIP, '--isolated', 'install', *config['install_requires']])
 
         # place the compiled c-extensions in the main repo dir
         build_ext = self.distribution.get_command_obj('build_ext')
@@ -306,8 +306,6 @@ try:
         def finalize_options(self):
             self.verbose=0
             build_py2app.finalize_options(self)
-            os.environ['ACTION'] = 'build' # flag for deps/build.py
-
         def run(self):
             build_py2app.run(self)
             if self.dry_run:
@@ -317,21 +315,8 @@ try:
             info_pth = 'dist/PlotDevice.app/Contents/Info.plist'
             update_plist(info_pth, CFBundleShortVersionString=None)
 
-            # set up internal paths and ensure destination dirs exist
-            RSRC = self.resdir
-            BIN = join(dirname(RSRC), 'SharedSupport')
-            LIB = join(RSRC, 'python')
-            MODULES = join(self.bdist_base, 'lib')
-
-            # install the module in Resources/python
-            self.spawn(['/usr/bin/ditto', MODULES, LIB])
-
-            # discard the eggery-pokery
-            remove_tree(join(RSRC,'lib'), dry_run=self.dry_run)
-            os.unlink(join(RSRC,'include'))
-            os.unlink(join(RSRC,'site.pyc'))
-
             # place the command line tool in SharedSupport
+            BIN = join(dirname(self.resdir), 'SharedSupport')
             self.mkpath(BIN)
             self.copy_file("app/plotdevice", BIN)
 
@@ -344,8 +329,10 @@ except (DistributionNotFound, ImportError):
     # so only abort the build if the 'py2app' command was given
     if 'py2app' in sys.argv:
         print("""setup.py: py2app build failed
-          Couldn't find the py2app module (perhaps because you've called setup.py from a virtualenv).
-          Make sure you're using the system's /usr/bin/python interpreter for py2app builds.""")
+          Couldn't find the py2app module. To set up a virtualenv that contains all the necessary
+          dependencies in the deps/local directory, call the `dev` command first:
+          > python3 setup.py dev
+          > ./deps/local/<python-version>/bin/python3 setup.py py2app""")
         sys.exit(1)
 
 
@@ -469,9 +456,9 @@ config = dict(
     zip_safe=False,
     cmdclass={
         'app': BuildAppCommand,
+        'build_py': BuildCommand,
         'clean': CleanCommand,
         'distclean': DistCleanCommand,
-        'build_py': BuildCommand,
         'dist': DistCommand,
         'sdist': BuildDistCommand,
         'test': TestCommand,
@@ -495,6 +482,7 @@ if __name__=='__main__':
             }],
             data_files = [
                 "app/Resources/ui",
+                "app/Resources/colors.json",
                 "app/Resources/en.lproj",
                 "app/Resources/PlotDevice.icns",
                 "app/Resources/PlotDeviceFile.icns",
@@ -511,8 +499,7 @@ if __name__=='__main__':
             cmdclass={
                 'build_py': BuildCommand,
                 'py2app': BuildPy2AppCommand,
-            },
-            install_requires=[]
+            }
         ))
 
     # include a backport of dataclasses on 3.6

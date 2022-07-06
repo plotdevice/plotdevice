@@ -11,6 +11,7 @@ from os.path import abspath, dirname, exists, join, splitext
 from random import choice, shuffle
 
 from Foundation import NSAutoreleasePool
+from AppKit import NSBundle
 from plotdevice import DeviceError
 from .readers import read, XMLParser, Element
 
@@ -308,14 +309,18 @@ def autorelease():
 
 def rsrc_path(resource=None):
     """Return absolute path of the rsrc directory (or a file within it)"""
-    module_root = abspath(dirname(dirname(__file__)))
-    rsrc_root = join(module_root, 'rsrc')
+    mod_root = abspath(dirname(dirname(__file__)))
+    app_root = NSBundle.mainBundle().bundlePath()
+    mod_rsrc = join(mod_root, 'rsrc')
+    app_rsrc = join(app_root, 'Contents/Resources')
+    src_rsrc = join(mod_root, '../app/Resources')
 
-    if not exists(rsrc_root):
-        # hack to run in-place in sdist
-        rsrc_root = join(module_root, '../app/Resources')
-        if not exists(rsrc_root):
-            raise RuntimeError("Couldn't locate resources directory.")
+    for rsrc_root in (mod_rsrc, app_rsrc, src_rsrc):
+        if exists("%s/colors.json" % rsrc_root): # check for a known rsrc file
+            break
+    else:
+        raise RuntimeError("Couldn't locate resources directory.")
+
     if resource:
         return join(rsrc_root, resource)
     return rsrc_root
