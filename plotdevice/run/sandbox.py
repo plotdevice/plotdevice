@@ -167,8 +167,7 @@ class Sandbox(object):
             def compileScript():
                 # _source is already unicode so strip out the `encoding:` comment
                 src = uncoded(self._source)
-                scriptname = self._path or "<Untitled>"
-                fname = scriptname.encode('ascii', 'ignore')
+                fname = self._path or "<Untitled>"
                 self._code = compile(src, fname, "exec")
             result = self.call(compileScript)
             if not result.ok:
