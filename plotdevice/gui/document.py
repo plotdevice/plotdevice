@@ -120,14 +120,19 @@ class ScriptController(NSWindowController):
     graphicsView = IBOutlet()
     outputView = IBOutlet()
     editorView = IBOutlet()
-    statusView = IBOutlet()
-    statusViewItem = IBOutlet()
-    runButton = IBOutlet()
-    stopButton = IBOutlet()
 
     # auxiliary windows
     dashboardController = IBOutlet()
     exportSheet = IBOutlet()
+
+    # toolbar modes
+    imageToolbar = IBOutlet()
+    animToolbar = IBOutlet()
+    runningToolbar = IBOutlet()
+    pausedToolbar = IBOutlet()
+    exportToolbar = IBOutlet()
+    statusView = IBOutlet()
+    statusViewItem = IBOutlet()
 
     ## Properties
 
@@ -329,6 +334,34 @@ class ScriptController(NSWindowController):
         return True
 
     #
+    # Toolbar state
+    #
+
+    def setToolbarMode_(self, mode):
+        if self.window():
+            if not self.vm.animated:
+                toolbar = self.imageToolbar
+            else:
+                toolbar = dict(
+                    export = self.exportToolbar,
+                    play = self.runningToolbar,
+                    pause = self.pausedToolbar,
+                    stop = self.animToolbar,
+                )[mode]
+
+            self.window().setToolbar_(toolbar)
+            toolbar.validateVisibleItems()
+
+    def validateToolbarItem_(self, item):
+        ident = item.itemIdentifier()
+        anim = self.animationTimer is not None
+        if ident == 'stop-script':
+            return anim
+        if ident == 'export':
+            return not anim or not self.animationTimer.isValid()
+        return True
+
+    #
     # Running the script in the main window
     #
 
@@ -345,6 +378,7 @@ class ScriptController(NSWindowController):
                 self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
             self.setToolbarMode_("play" if self.animationTimer.isValid() else "pause")
         else:
+            self.setToolbarMode_("play")
             self.runScript()
 
     @IBAction
@@ -365,33 +399,6 @@ class ScriptController(NSWindowController):
             NSMenu.setMenuBarVisible_(False)
             NSCursor.hide()
         self.runScript()
-
-    def validateToolbarItem_(self, item):
-        return item.isEnabled()
-
-    def setToolbarMode_(self, mode):
-        # mode is export/play/pause/stop
-        if self.window():
-            toolbar = self.window().toolbar()
-            if mode=='export':
-                while len(toolbar.items()):
-                    toolbar.removeItemAtIndex_(0)
-                toolbar.insertItemWithItemIdentifier_atIndex_(self.statusViewItem.itemIdentifier(), 0)
-            else:
-                if len(toolbar.items()) != 2:
-                    while len(toolbar.items()):
-                        toolbar.removeItemAtIndex_(0)
-                    toolbar.insertItemWithItemIdentifier_atIndex_(self.stopButton.itemIdentifier(), 0)
-                    toolbar.insertItemWithItemIdentifier_atIndex_(self.runButton.itemIdentifier(), 1)
-
-                if mode == 'stop':
-                    icon, title = ('play.fill', 'Run the Script')
-                else:
-                    icon, title = ('forward.frame.fill', 'Resume') if mode == 'pause' else ('pause.fill', 'Pause')
-                self.runButton.setImage_(NSImage.imageWithSystemSymbolName_accessibilityDescription_(icon, title))
-                self.runButton.setToolTip_(title)
-                self.stopButton.setEnabled_(mode != 'stop')
-                self.stopButton.setToolTip_('Stop the Script')
 
     def runScript(self):
         """Compile the script and run its global scope.

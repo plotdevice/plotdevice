@@ -8,15 +8,18 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ScriptController">
             <connections>
+                <outlet property="animToolbar" destination="xN7-fG-ZV6" id="anim-toolbar-outlet"/>
                 <outlet property="dashboardController" destination="170" id="171"/>
                 <outlet property="editorView" destination="M8a-Fy-5V5" id="S5m-9Q-p7s"/>
                 <outlet property="exportSheet" destination="2ZA-Wl-gCw" id="Z4Z-5p-VeV"/>
+                <outlet property="exportToolbar" destination="KVf-qx-2do" id="export-toolbar-outlet"/>
                 <outlet property="graphicsView" destination="15o-mm-Ppr" id="oax-n6-MB2"/>
+                <outlet property="imageToolbar" destination="ZMw-0m-lWA" id="image-toolbar-outlet"/>
                 <outlet property="outputView" destination="31" id="37"/>
-                <outlet property="runButton" destination="OFm-Uo-o5t" id="run-button-outlet"/>
-                <outlet property="statusView" destination="NAS-Uo-kIt" id="OWZ-kH-bik"/>
-                <outlet property="statusViewItem" destination="t02-8K-CYR" id="status-view-toolbar-item-outlet"/>
-                <outlet property="stopButton" destination="wUL-BX-PpT" id="stop-button-outlet"/>
+                <outlet property="pausedToolbar" destination="9Ux-KA-Pd2" id="paused-anim-toolbar-outlet"/>
+                <outlet property="runningToolbar" destination="xN7-fG-ZV6" id="running-anim-toolbar-outlet"/>
+                <outlet property="statusView" destination="GUG-R8-rZF" id="status-view-outlet"/>
+                <outlet property="statusViewItem" destination="L6P-qK-ACT" id="status-view-toolbar-item-outlet"/>
                 <outlet property="window" destination="5" id="dxm-Qo-rrG"/>
             </connections>
         </customObject>
@@ -122,64 +125,8 @@
                 </subviews>
             </view>
             <toolbar key="toolbar" implicitIdentifier="46B074B4-EE8C-4F09-9547-E60CB5854BF6" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconOnly" sizeMode="regular" id="1Ye-0t-gpR">
-                <allowedToolbarItems>
-                    <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="ByI-gB-2LU"/>
-                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="1vH-nG-f9L"/>
-                    <toolbarItem implicitItemIdentifier="5089AF19-F362-4D9B-8F29-55B0FAA5865D" label="Export Status" paletteLabel="Export Status" tag="-1" sizingBehavior="auto" id="t02-8K-CYR">
-                        <nil key="toolTip"/>
-                        <customView key="view" autoresizesSubviews="NO" id="NAS-Uo-kIt" customClass="StatusView">
-                            <rect key="frame" x="0.0" y="14" width="120" height="22"/>
-                            <autoresizingMask key="autoresizingMask"/>
-                            <subviews>
-                                <progressIndicator fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="OJ6-ac-5EU">
-                                    <rect key="frame" x="98" y="3" width="17" height="17"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                </progressIndicator>
-                                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4lL-EC-Lny">
-                                    <rect key="frame" x="93" y="-2" width="27" height="27"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                    <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="NSStopProgressFreestandingTemplate" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="ano-B7-bzc">
-                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                        <font key="font" metaFont="system"/>
-                                    </buttonCell>
-                                    <connections>
-                                        <action selector="stopScript:" target="-2" id="e6L-20-IFv"/>
-                                    </connections>
-                                </button>
-                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jHA-5Y-kZ4">
-                                    <rect key="frame" x="0.0" y="5" width="94" height="14"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="101/500" id="Ehs-N6-3Qw">
-                                        <font key="font" metaFont="smallSystem"/>
-                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                    </textFieldCell>
-                                </textField>
-                            </subviews>
-                            <connections>
-                                <outlet property="cancel" destination="4lL-EC-Lny" id="vfQ-Ew-JYJ"/>
-                                <outlet property="counter" destination="jHA-5Y-kZ4" id="hYX-Iw-PZM"/>
-                                <outlet property="spinner" destination="OJ6-ac-5EU" id="LnL-OM-xFa"/>
-                            </connections>
-                        </customView>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="1B170BFA-98A0-4CDA-BC30-1F929B40EC04" explicitItemIdentifier="run-script" label="Run Script" paletteLabel="Run Script" toolTip="Run the script" tag="-1" image="play.fill" catalog="system" bordered="YES" id="OFm-Uo-o5t">
-                        <size key="minSize" width="30" height="25"/>
-                        <size key="maxSize" width="30" height="25"/>
-                        <connections>
-                            <action selector="runScript:" target="-1" id="fSU-Wg-1X7"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="C7B1FE38-0BD0-4352-9171-E6F8F88D2159" explicitItemIdentifier="stop-script" label="Stop Script" paletteLabel="Stop Script" toolTip="Stop the script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="wUL-BX-PpT">
-                        <connections>
-                            <action selector="stopScript:" target="-1" id="7UT-vo-kcR"/>
-                        </connections>
-                    </toolbarItem>
-                </allowedToolbarItems>
-                <defaultToolbarItems>
-                    <toolbarItem reference="wUL-BX-PpT"/>
-                    <toolbarItem reference="OFm-Uo-o5t"/>
-                </defaultToolbarItems>
+                <allowedToolbarItems/>
+                <defaultToolbarItems/>
             </toolbar>
             <connections>
                 <outlet property="delegate" destination="-2" id="9"/>
@@ -577,12 +524,156 @@ DQ
             <connections>
                 <outlet property="delegate" destination="M8a-Fy-5V5" id="zjB-lh-FMk"/>
             </connections>
-            <point key="canvasLocation" x="112" y="-415"/>
+            <point key="canvasLocation" x="640" y="526"/>
         </window>
+        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="export-toolbar" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="KVf-qx-2do">
+            <allowedToolbarItems>
+                <toolbarItem implicitItemIdentifier="340D005E-2BE6-4E96-AD6C-2ADC514FC30B" label="Export Status" paletteLabel="Export Status" tag="-1" sizingBehavior="auto" id="L6P-qK-ACT">
+                    <nil key="toolTip"/>
+                    <customView key="view" autoresizesSubviews="NO" id="GUG-R8-rZF" customClass="StatusView">
+                        <rect key="frame" x="0.0" y="14" width="120" height="22"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <subviews>
+                            <progressIndicator fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="8L7-WO-Ehf">
+                                <rect key="frame" x="98" y="3" width="17" height="17"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                            </progressIndicator>
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cXz-hc-zPP">
+                                <rect key="frame" x="93" y="-2" width="27" height="27"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="NSStopProgressFreestandingTemplate" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="8XH-Q1-TUB">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="stopScript:" target="-2" id="3YN-oS-bjI"/>
+                                </connections>
+                            </button>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nIb-41-bnr">
+                                <rect key="frame" x="0.0" y="5" width="94" height="14"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="101/500" id="5P9-Cd-iVj">
+                                    <font key="font" metaFont="smallSystem"/>
+                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                        </subviews>
+                        <connections>
+                            <outlet property="cancel" destination="cXz-hc-zPP" id="j2v-OH-5h9"/>
+                            <outlet property="counter" destination="nIb-41-bnr" id="EcI-vY-3A9"/>
+                            <outlet property="spinner" destination="8L7-WO-Ehf" id="L3c-Cr-dZF"/>
+                        </connections>
+                    </customView>
+                </toolbarItem>
+            </allowedToolbarItems>
+            <defaultToolbarItems>
+                <toolbarItem reference="L6P-qK-ACT"/>
+            </defaultToolbarItems>
+            <point key="canvasLocation" x="35" y="-515"/>
+        </toolbar>
+        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="anim-toolbar" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="xN7-fG-ZV6">
+            <allowedToolbarItems>
+                <toolbarItem implicitItemIdentifier="B06BBB3A-8DC7-4ABC-83DE-EA091DF17181" explicitItemIdentifier="stop-script" label="Stop Script" paletteLabel="Stop Script" toolTip="Stop the script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="WW0-Z4-TSn">
+                    <connections>
+                        <action selector="stopScript:" target="-1" id="Dok-L3-AJi"/>
+                    </connections>
+                </toolbarItem>
+                <toolbarItem implicitItemIdentifier="46D9F5BE-71C3-4212-9F59-CFE6B73873F7" explicitItemIdentifier="export" label="Export Video" paletteLabel="Export Video" tag="-1" image="video.circle.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="pPl-dw-xWG">
+                    <connections>
+                        <action selector="exportAsMovie:" target="-1" id="MF1-om-MJz"/>
+                    </connections>
+                </toolbarItem>
+                <toolbarItem implicitItemIdentifier="F05393E1-8247-44DF-A1FB-F73D00243696" explicitItemIdentifier="run-script" label="Run Script" paletteLabel="Run Script" toolTip="Run the script" tag="-1" image="play.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="lrN-da-gZL">
+                    <connections>
+                        <action selector="runScript:" target="-1" id="CBP-OJ-drK"/>
+                    </connections>
+                </toolbarItem>
+            </allowedToolbarItems>
+            <defaultToolbarItems>
+                <toolbarItem reference="lrN-da-gZL"/>
+                <toolbarItem reference="WW0-Z4-TSn"/>
+                <toolbarItem reference="pPl-dw-xWG"/>
+            </defaultToolbarItems>
+            <point key="canvasLocation" x="1280" y="-505"/>
+        </toolbar>
+        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="image-toolbar" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="ZMw-0m-lWA">
+            <allowedToolbarItems>
+                <toolbarItem implicitItemIdentifier="FF570CB1-C253-4C5C-BDCD-0E071E5579B4" explicitItemIdentifier="export" label="Export Image" paletteLabel="Export Image" tag="-1" image="camera.circle.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="uOq-Ls-WPF">
+                    <connections>
+                        <action selector="exportAsImage:" target="-1" id="bG0-tA-BYg"/>
+                    </connections>
+                </toolbarItem>
+                <toolbarItem implicitItemIdentifier="8C2B5D7E-5E22-4577-9BD2-148A111CE930" explicitItemIdentifier="run-script" label="Run Script" paletteLabel="Run Script" toolTip="Run the script" tag="-1" image="play.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="OHT-mW-Xc6">
+                    <connections>
+                        <action selector="runScript:" target="-1" id="k5s-TU-nss"/>
+                    </connections>
+                </toolbarItem>
+            </allowedToolbarItems>
+            <defaultToolbarItems>
+                <toolbarItem reference="OHT-mW-Xc6"/>
+                <toolbarItem reference="uOq-Ls-WPF"/>
+            </defaultToolbarItems>
+            <point key="canvasLocation" x="640" y="-505"/>
+        </toolbar>
+        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="running-toolbar" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="uXT-mP-vt5">
+            <allowedToolbarItems>
+                <toolbarItem implicitItemIdentifier="B06BBB3A-8DC7-4ABC-83DE-EA091DF17181" explicitItemIdentifier="stop-script" label="Stop Script" paletteLabel="Stop Script" toolTip="Stop the script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="tnu-iE-eYu">
+                    <connections>
+                        <action selector="stopScript:" target="-1" id="6aT-Lb-Y4N"/>
+                    </connections>
+                </toolbarItem>
+                <toolbarItem implicitItemIdentifier="46D9F5BE-71C3-4212-9F59-CFE6B73873F7" explicitItemIdentifier="export" label="Export Video" paletteLabel="Export Video" tag="-1" image="video.circle.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="saU-AA-R4H">
+                    <connections>
+                        <action selector="exportAsMovie:" target="-1" id="JLX-d2-3n9"/>
+                    </connections>
+                </toolbarItem>
+                <toolbarItem implicitItemIdentifier="F05393E1-8247-44DF-A1FB-F73D00243696" explicitItemIdentifier="run-script" label="Pause" paletteLabel="Pause" toolTip="Run the script" tag="-1" image="pause.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="UMH-Fb-zac">
+                    <connections>
+                        <action selector="runScript:" target="-1" id="Uuz-3r-4do"/>
+                    </connections>
+                </toolbarItem>
+            </allowedToolbarItems>
+            <defaultToolbarItems>
+                <toolbarItem reference="UMH-Fb-zac"/>
+                <toolbarItem reference="tnu-iE-eYu"/>
+                <toolbarItem reference="saU-AA-R4H"/>
+            </defaultToolbarItems>
+            <point key="canvasLocation" x="1280" y="-170"/>
+        </toolbar>
+        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="paused-toolbar" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="9Ux-KA-Pd2">
+            <allowedToolbarItems>
+                <toolbarItem implicitItemIdentifier="B06BBB3A-8DC7-4ABC-83DE-EA091DF17181" explicitItemIdentifier="stop-script" label="Stop Script" paletteLabel="Stop Script" toolTip="Stop the script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="s8D-Jk-bfU">
+                    <connections>
+                        <action selector="stopScript:" target="-1" id="Q0H-ry-od1"/>
+                    </connections>
+                </toolbarItem>
+                <toolbarItem implicitItemIdentifier="46D9F5BE-71C3-4212-9F59-CFE6B73873F7" explicitItemIdentifier="export" label="Export Video" paletteLabel="Export Video" tag="-1" image="video.circle.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="VQM-Sb-KKJ">
+                    <connections>
+                        <action selector="exportAsMovie:" target="-1" id="pY6-s8-A8v"/>
+                    </connections>
+                </toolbarItem>
+                <toolbarItem implicitItemIdentifier="F05393E1-8247-44DF-A1FB-F73D00243696" explicitItemIdentifier="run-script" label="Resume" paletteLabel="Resume" toolTip="Run the script" tag="-1" image="forward.frame.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="0Cr-07-WLz">
+                    <connections>
+                        <action selector="runScript:" target="-1" id="zGk-02-wDd"/>
+                    </connections>
+                </toolbarItem>
+            </allowedToolbarItems>
+            <defaultToolbarItems>
+                <toolbarItem reference="0Cr-07-WLz"/>
+                <toolbarItem reference="s8D-Jk-bfU"/>
+                <toolbarItem reference="VQM-Sb-KKJ"/>
+            </defaultToolbarItems>
+            <point key="canvasLocation" x="1280" y="173"/>
+        </toolbar>
     </objects>
     <resources>
         <image name="NSStopProgressFreestandingTemplate" width="15" height="15"/>
+        <image name="camera.circle.fill" catalog="system" width="15" height="15"/>
+        <image name="forward.frame.fill" catalog="system" width="17" height="13"/>
+        <image name="pause.fill" catalog="system" width="11" height="13"/>
         <image name="play.fill" catalog="system" width="12" height="13"/>
         <image name="stop.fill" catalog="system" width="14" height="13"/>
+        <image name="video.circle.fill" catalog="system" width="15" height="15"/>
     </resources>
 </document>
