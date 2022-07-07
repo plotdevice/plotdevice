@@ -1,4 +1,4 @@
-import os, sys, re
+import os, sys, re, ast
 from os.path import dirname, basename, abspath, relpath, isdir
 from functools import partial
 from inspect import getargspec
@@ -32,6 +32,24 @@ class Delegate(object):
     def exportStatus(self, status):
         pass
     def exportProgress(self, written, total):
+        pass
+
+class ScriptDoctor(ast.NodeVisitor):
+    # parse the source and determine whether the script is an animation
+    def __init__(self, src):
+        self.is_animated = False
+        try:
+            self.visit(ast.parse(src))
+        except SyntaxError:
+            pass
+
+    def visit_Module(self, node):
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_FunctionDef(self, node):
+        if node.name=='draw': self.is_animated = True
+
+    def generic_visit(self, node):
         pass
 
 class Sandbox(object):
@@ -78,6 +96,9 @@ class Sandbox(object):
         if src==self._source: return
         self._source = src
         self._code = None
+        if ScriptDoctor(self._source).is_animated:
+            self._anim = util.adict()
+
     source = property(_get_source, _set_source)
 
     # .state
