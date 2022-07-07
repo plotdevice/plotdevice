@@ -447,7 +447,6 @@ config = dict(
         'cachecontrol',
         'lockfile',
         'pyobjc-core==8.5',
-        'pyobjc-framework-Cocoa==8.5',
         'pyobjc-framework-Quartz==8.5',
         'pyobjc-framework-LaunchServices==8.5',
         'pyobjc-framework-WebKit==8.5',
