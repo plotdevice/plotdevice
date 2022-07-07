@@ -40,7 +40,7 @@ def draw(anim):
     # Draw a grid of 5 by 5.
     for x, y in grid(5,5,45,42):
         # Oscillate the fill color.
-        fill(0, 0, sin(cnt+s*5.0)/2.0)
+        fill(0, 0, 0.5 + sin(cnt+s*5.0)/2.0)
         # Draw the oval.
         oval(x + sin(cnt+s)*10.0, y + cos(cnt+s)*-6.0, 41.0, 36.0)
         # Increase the counter so that every oval looks a bit different.
