@@ -416,6 +416,9 @@ class ScriptController(NSWindowController):
             self.animationTimer.invalidate()
             self.animationTimer = None
 
+        # clear out any key/mousedown state from previous run
+        self.reset_ui()
+
         # clear the previous run's output
         if (self.outputView):
             self.editorView.clearErrors()
@@ -502,6 +505,12 @@ class ScriptController(NSWindowController):
         """Pass a list of (isStdErr, txt) tuples to the output window"""
         for isErr, data in output:
             self.outputView.append(data, stream='err' if isErr else 'message')
+
+    def reset_ui(self):
+        self.currentView.mousedown = None
+        self.currentView.keydown = None
+        self.currentView.key = None
+        self.currentView.keycode = None
 
     def _ui_state(self):
         """Collect mouse & keyboard events to be spliced into the script's namespace"""
