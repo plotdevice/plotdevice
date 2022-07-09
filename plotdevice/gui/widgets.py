@@ -406,6 +406,7 @@ class ExportSheet(NSObject):
         # If a file was already exported, use that folder/filename as the default.
         if self.last is not None:
             dirName, fileName = self.last
+            fileName, ext = os.path.splitext(fileName)
 
         # create the sheet
         exportPanel = NSSavePanel.savePanel()
