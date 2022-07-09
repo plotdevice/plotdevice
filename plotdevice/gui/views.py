@@ -4,6 +4,7 @@ import os
 import traceback
 import objc
 
+from . import set_timeout
 from ..lib.cocoa import *
 from ..gfx import Color
 from ..gfx.atoms import KEY_ESC
@@ -266,6 +267,7 @@ class FullscreenView(NSView):
         self.keydown = False
         self.key = None
         self.keycode = None
+        self.mousehide = None
         # self.scrollwheel = False
         # self.wheeldelta = 0.0
         return self
@@ -297,6 +299,28 @@ class FullscreenView(NSView):
             clip.addClip()
             self.canvas.draw()
         NSGraphicsContext.currentContext().restoreGraphicsState()
+
+    def updateTrackingAreas(self):
+        for area in self.trackingAreas():
+            self.removeTrackingArea_(area)
+        track = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(
+            self.bounds(),
+            (NSTrackingMouseMoved | NSTrackingActiveInKeyWindow),
+            self,
+            None
+        )
+        self.addTrackingArea_(track)
+
+    def mouseMoved_(self, event):
+        if self.mousehide:
+            self.mousehide.invalidate()
+        else:
+            NSCursor.unhide()
+        self.mousehide = set_timeout(self, 'hideMouse:', 1)
+
+    def hideMouse_(self, timer):
+        self.mousehide = None
+        NSCursor.hide()
 
     def isFlipped(self):
         return True
