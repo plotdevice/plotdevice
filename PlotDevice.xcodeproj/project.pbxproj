@@ -12,7 +12,7 @@
 		2A15C45218A329BD006BDFF0 /* themes.json in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C44618A329AE006BDFF0 /* themes.json */; };
 		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
 		2A36AE2D2868B4E50088976E /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; };
-		2A36AE2E2868B4F30088976E /* Python.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2A36AE2E2868B4F30088976E /* Python.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2A36AE58286CA75B0088976E /* placeholder-light.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A36AE54286CA75B0088976E /* placeholder-light.pdf */; };
 		2A36AE59286CA75B0088976E /* placeholder-dark.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A36AE56286CA75B0088976E /* placeholder-dark.pdf */; };
 		2A36AE5E287210C70088976E /* ace in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A36AE5D287210C70088976E /* ace */; };
@@ -607,7 +607,7 @@
 				INFOPLIST_FILE = app/info.plist;
 				INSTALL_PATH = /Applications;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../Frameworks/Python.framework";
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = io.plotdevice.PlotDevice;
@@ -637,7 +637,7 @@
 				INFOPLIST_FILE = app/info.plist;
 				INSTALL_PATH = /Applications;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../Frameworks/Python.framework";
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = io.plotdevice.PlotDevice;
 				PRODUCT_NAME = PlotDevice;
