@@ -13,6 +13,7 @@ from ..util.readers import HTTP, last_modified
 from ..lib.io import MovieExportSession, ImageExportSession
 from .geometry import Region, Size, Point, Transform, CENTER
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
+from .colors import CMYK
 from . import _ns_context
 
 _ctx = None
@@ -289,7 +290,8 @@ class ImageWriter(object):
             #
             m = re_padded.search(self.fname)
             fn = re_padded.sub('0'*int(m.group(1)), self.fname, count=1) if m else self.fname
-            _ctx.canvas.save(fn, self.format, self.opts['zoom'])
+            _ctx._outputmode = self.mode
+            _ctx.canvas.save(fn, self.format, self.opts['zoom'], self.mode==CMYK)
 
     @property
     def page(self):

@@ -126,7 +126,7 @@ class Color(object):
     def copy(self):
         new = self.__class__()
         new._rgb = self._rgb.copy()
-        new._updateCmyk()
+        new._cmyk = self._cmyk.copy()
         return new
 
     def _updateCmyk(self):

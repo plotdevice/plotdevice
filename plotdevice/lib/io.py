@@ -86,6 +86,7 @@ class ImageExportSession(ExportSession):
             self.begin(pages=last-first+1)
         self.format = format
         self.zoom = zoom
+        self.cmyk = rest.get('cmyk', False)
 
         m = re_padded.search(fname)
         pad = '%%0%id' % int(m.group(1)) if m else None
@@ -105,7 +106,7 @@ class ImageExportSession(ExportSession):
             self.writer = Pages.alloc().initWithPattern_(name_tmpl)
 
     def add(self, canvas):
-        image = canvas._getImageData(self.format, self.zoom)
+        image = canvas._getImageData(self.format, self.zoom, self.cmyk)
         self.writer.addPage_(image)
         self.added += 1
 
@@ -124,9 +125,10 @@ class MovieExportSession(ExportSession):
         self.loop = loop
         self.bitrate = bitrate
         self.codec = codec
+        self.cmyk = False
 
     def add(self, canvas):
-        image = canvas.rasterize()
+        image = canvas._nsImage
         if not self.writer:
             dims = image.size()
             if self.format == 'mov':

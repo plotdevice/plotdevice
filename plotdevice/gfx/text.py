@@ -210,7 +210,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         # assign a font and color based on the coalesced spec
         font = Font({k:v for k,v in spec.items() if k in Stylesheet.kwargs})
-        color = Color(spec.pop('fill')).nsColor
+        color = Color(spec.pop('fill')).copy()
 
         # factor the relevant attrs into a paragraph style
         graf = NSMutableParagraphStyle.alloc().init()
@@ -250,7 +250,16 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             kern = (spec['tracking'] * font.size)/1000.0
 
         # build the dict of features for this combination of styles
-        return dict(NSFont=font._nsFont, NSColor=color, NSParagraphStyle=graf, NSKern=kern)
+        return dict(NSFont=font._nsFont, PDColor=color, NSParagraphStyle=graf, NSKern=kern)
+
+    def _colorize(self):
+        """Updates the TextStorage, rewriting Colors as rgb or cmyk NSColors based on the current output mode"""
+        at = 0
+        end = self._store.length()
+        while at < end:
+            clr, rng = self._store.attribute_atIndex_effectiveRange_('PDColor', at, None)
+            self._store.addAttribute_value_range_('NSColor', clr.nsColor, rng)
+            at += rng.length
 
     @classmethod
     def _dedent(cls, attrib_txt, idx=0, inherit=False):
@@ -559,6 +568,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     def _draw(self):
         with _ns_context():                  # save and restore the gstate
             self._screen_transform.concat()  # transform so text can be drawn at the origin
+            self._colorize()                 # convert from Color to NSColor using current output mode
             with self.effects.applied():     # apply any blend/alpha/shadow effects
                 for block in self._blocks:
                     px_offset = self._to_px(block.offset)

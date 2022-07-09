@@ -353,8 +353,12 @@ class Sandbox(object):
             # step to the proper FRAME value
             self._meta.frame = self.session.next()
 
-            # run the draw() function if it exists (or the whole top-level if not)
-            result = self.run(method="draw" if self.animated else None)
+            if self.animated:
+                # run the draw() function if it exists
+                result = self.run("draw", cmyk=self.session.cmyk)
+            else:
+                # if not, we've already exec'd the module & setup() so use the canvas as-is
+                result = Outcome(True, StdIO().data)
 
             # let the delegate draw to the screen
             self.delegate.exportFrame(result, self.canvas)

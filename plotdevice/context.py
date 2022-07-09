@@ -1611,15 +1611,13 @@ class PlotContext(object):
 
 ### containers ###
 
-class _PDFRenderView(NSView):
-
-    # This view was created to provide PDF data.
-    # Strangely enough, the only way to get PDF data from Cocoa is by asking
-    # dataWithPDFInsideRect_ from a NSView. So, we create one just to get to
-    # the PDF data.
+class _PostScriptView(NSView):
+    # This view was created to provide EPS data. CoreGraphics isn't antiquarian
+    # enough to speak EPS so we need to draw to an NSView then use its
+    # dataWithEPSInsideRect_ instead
 
     def initWithCanvas_(self, canvas):
-        super(_PDFRenderView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
+        super(_PostScriptView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
         self.canvas = canvas
         return self
 
@@ -1640,6 +1638,7 @@ class Canvas(object):
         self.height = height
         self.speed = None
         self.mousedown = False
+        self._render_cache = {}
         self.clear() # set up the container & stack
 
     @trim_zeroes
@@ -1731,73 +1730,57 @@ class Canvas(object):
 
     @property
     def _nsImage(self):
-        return self.rasterize()
-
-    def _cg_image(self, zoom=1.0):
-        """Return a CGImage with the canvas dimensions scaled to the specified zoom level"""
+        # Allow the canvas to be used with the image() command
         w,h = self.pagesize
-        # size = Size(int(w*zoom), int(h*zoom))
-        size = Size(*[int(dim*zoom) for dim in self.pagesize])
-        bitmapBytesPerRow   = (size.width * 4);
-        bitmapByteCount     = (bitmapBytesPerRow * size.height);
-        bitmapContext = CGBitmapContextCreate(None,
-                                              size.width, size.height, 8, bitmapBytesPerRow,
-                                              CGColorSpaceCreateDeviceRGB(),
-                                              kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
-
-        ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmapContext, True)
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.setCurrentContext_(ns_ctx)
-        trans = NSAffineTransform.transform()
-        trans.translateXBy_yBy_(0, size.height)
-        trans.scaleXBy_yBy_(zoom,-zoom)
-        trans.concat()
-        self.draw()
-        NSGraphicsContext.restoreGraphicsState()
-
-        return CGBitmapContextCreateImage(bitmapContext)
-
-    def _bitmap_image(self, zoom=1.0):
-        w,h = self.pagesize
-        img_rect = Region(0,0, int(w*zoom), int(h*zoom))
-
-        from Cocoa import NSBitmapImageRep, NSDeviceRGBColorSpace, NSAlphaFirstBitmapFormat
-
-        offscreen = NSBitmapImageRep.alloc().initWithBitmapDataPlanes_pixelsWide_pixelsHigh_bitsPerSample_samplesPerPixel_hasAlpha_isPlanar_colorSpaceName_bitmapFormat_bytesPerRow_bitsPerPixel_(
-          None, img_rect.w, img_rect.h, 8, 4, True, False, NSDeviceRGBColorSpace, NSAlphaFirstBitmapFormat, 0, 0
-        )
-
-        ns_ctx = NSGraphicsContext.graphicsContextWithBitmapImageRep_(offscreen)
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.setCurrentContext_(ns_ctx)
-        trans = NSAffineTransform.transform()
-        trans.scaleBy_(zoom)
-        trans.concat()
-        self.draw()
-        NSGraphicsContext.restoreGraphicsState()
-
-        img = NSImage.alloc().initWithSize_(img_rect.size)
-        img.addRepresentation_(offscreen)
-        return img
-
-    def rasterize(self, zoom=1.0):
-        """Return an NSImage with the canvas dimensions scaled to the specified zoom level"""
-        w,h = self.pagesize
-        img = NSImage.alloc().initWithSize_((w*zoom, h*zoom))
+        img = NSImage.alloc().initWithSize_((w, h))
         img.lockFocusFlipped_(True)
-        trans = NSAffineTransform.transform()
-        trans.scaleBy_(zoom)
-        trans.concat()
         self.draw()
         img.unlockFocus()
         return img
 
-    def _getImageData(self, format, zoom=1.0):
+    def _cgImage(self, zoom=1.0):
+        # Called by on-screen views to update the display
+        size = Size(*[int(dim*zoom) for dim in self.pagesize])
+        config = (size.width, size.height, 8, size.width * 4)
+
+        # try to reuse the same context between frames
+        if config not in self._render_cache:
+            colorspace, opts = CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
+            self._render_cache = {config:CGBitmapContextCreate(None, *config, colorspace, opts)}
+        bitmapContext = self._render_cache[config]
+
+        self._render_to_context(bitmapContext, zoom)
+        cgImage = CGBitmapContextCreateImage(bitmapContext)
+        CGContextClearRect(bitmapContext, CGRectMake(0, 0, size.width, size.height))
+        return cgImage
+
+    def _render_to_context(self, cgContext, zoom):
+        ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(cgContext, True)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.setCurrentContext_(ns_ctx)
+        NSGraphicsContext.saveGraphicsState()
+        trans = NSAffineTransform.transform()
+        trans.translateXBy_yBy_(0, self.pagesize.height*zoom)
+        trans.scaleXBy_yBy_(zoom,-zoom)
+        trans.concat()
+        self.draw()
+        NSGraphicsContext.restoreGraphicsState()
+        NSGraphicsContext.restoreGraphicsState()
+
+    def _getImageData(self, format, zoom=1.0, cmyk=False):
         if format == 'pdf':
-            view = _PDFRenderView.alloc().initWithCanvas_(self)
-            return view.dataWithPDFInsideRect_(view.bounds())
+            w, h = self.pagesize
+            cgData = NSMutableData.data()
+            dataConsumer = CGDataConsumerCreateWithCFData(cgData)
+            pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w, h), None)
+            CGPDFContextBeginPage(pdfContext, None)
+            self._render_to_context(pdfContext, zoom)
+            CGPDFContextEndPage(pdfContext)
+            CGPDFContextClose(pdfContext)
+            pdfContext = None
+            return cgData
         elif format == 'eps':
-            view = _PDFRenderView.alloc().initWithCanvas_(self)
+            view = _PostScriptView.alloc().initWithCanvas_(self)
             return view.dataWithEPSInsideRect_(view.bounds())
         else:
             cgTypes = {"gif":  kUTTypeGIF,
@@ -1807,8 +1790,16 @@ class Canvas(object):
                        "tiff": kUTTypeTIFF,
                        "heic": 'public.heic'}
 
+            if format in ('jpeg', 'jpg', 'tiff') and cmyk:
+                colorspace, opts = CGColorSpaceCreateDeviceCMYK(), kCGImageAlphaNone
+            else:
+                colorspace, opts = CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
+
+            size = Size(*[int(dim*zoom) for dim in self.pagesize])
+            bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
+            self._render_to_context(bitmapContext, zoom)
+            cgImage = CGBitmapContextCreateImage(bitmapContext)
             cgData = NSMutableData.data()
-            cgImage = self._cg_image(zoom)
             cgDest = CGImageDestinationCreateWithData(cgData, cgTypes[format], 1, None)
             if format in ('jpg', 'jpeg'):
                 CGImageDestinationSetProperties(cgDest, {kCGImageDestinationLossyCompressionQuality:1.0})
@@ -1816,11 +1807,11 @@ class Canvas(object):
             CGImageDestinationFinalize(cgDest)
             return cgData
 
-    def save(self, fname, format=None, zoom=1.0):
+    def save(self, fname, format=None, zoom=1.0, cmyk=False):
         """Write the current graphics objects to an image file"""
         if format is None:
             format = fname.rsplit('.',1)[-1].lower()
-        data = self._getImageData(format, zoom)
+        data = self._getImageData(format, zoom, cmyk)
         fname = NSString.stringByExpandingTildeInPath(fname)
         data.writeToFile_atomically_(fname, False)
 

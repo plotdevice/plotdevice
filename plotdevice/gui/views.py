@@ -117,7 +117,7 @@ class GraphicsView(NSView):
         y_pct = NSMidY(visible) / NSHeight(oldframe)
 
         # render (and possibly bomb...)
-        bitmap = canvas.rasterize(zoom=self.zoom)
+        bitmap = canvas._cgImage(zoom=self.zoom)
 
         # resize
         w, h = [s*self.zoom for s in canvas.pagesize]

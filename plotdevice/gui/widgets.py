@@ -472,7 +472,7 @@ class ExportSheet(NSObject):
 
     def updateColorMode(self):
         format = self.imageState('format')
-        can_cmyk = format in ('pdf','eps','tiff')
+        can_cmyk = format in ('pdf','eps','tiff','jpg')
         self.imageCMYK.setEnabled_(can_cmyk)
         if not can_cmyk:
             self.imageCMYK.setState_(NSOffState)

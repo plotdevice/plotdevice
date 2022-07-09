@@ -1,29 +1,29 @@
 # all the NSBits and NSPieces
 
-from Quartz import CALayer, CGColorCreate, CGContextAddPath, CGContextAddRect, CGContextBeginPath, \
-                   CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, \
-                   CGContextClip, CGContextClipToMask, CGContextDrawPath, CGContextEOClip, \
-                   CGContextEndTransparencyLayer, CGContextRestoreGState, CGContextSaveGState, \
-                   CGContextSetAlpha, CGContextSetBlendMode, CGContextSetFillColorWithColor, \
-                   CGContextSetLineCap, CGContextSetLineDash, CGContextSetLineJoin, CGContextSetLineWidth, \
-                   CGContextSetStrokeColorWithColor, CGImageGetBitsPerComponent, CGImageGetBitsPerPixel, \
-                   CGImageGetBytesPerRow, CGImageGetDataProvider, CGImageGetHeight, CGImageGetWidth, \
-                   CGImageMaskCreate, CGPathAddCurveToPoint, CGPathAddLineToPoint, CGPathCloseSubpath, \
-                   CGPathCreateCopy, CGPathCreateMutable, CGPathRelease, CGPathMoveToPoint, kCGBlendModeClear, \
-                   CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpaceCreateDeviceRGB, \
-                   CGImageDestinationCreateWithData, CGImageDestinationAddImage, CGImageDestinationFinalize, \
-                   CGImageDestinationSetProperties, CGContextClearRect, CGSizeMake, CGRectMake, \
-                   kCGBlendModeColor, kCGBlendModeColorBurn, kCGBlendModeColorDodge, kCGBlendModeCopy, \
-                   kCGBlendModeDarken, kCGBlendModeDestinationAtop, kCGBlendModeDestinationIn, \
-                   kCGBlendModeDestinationOut, kCGBlendModeDestinationOver, kCGBlendModeDifference, \
-                   kCGBlendModeExclusion, kCGBlendModeHardLight, kCGBlendModeHue, kCGBlendModeLighten, \
-                   kCGBlendModeLuminosity, kCGBlendModeMultiply, kCGBlendModeNormal, kCGBlendModeOverlay, \
-                   kCGBlendModePlusDarker, kCGBlendModePlusLighter, kCGBlendModeSaturation, \
+from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorCreate, \
+                   CGColorSpaceCreateDeviceRGB, CGContextAddPath, CGContextAddRect, CGContextBeginPath, \
+                   CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, CGContextClearRect, \
+                   CGContextClip, CGContextClipToMask, CGContextDrawPath, CGContextEndTransparencyLayer, \
+                   CGContextEOClip, CGContextRestoreGState, CGContextSaveGState, CGContextSetAlpha, \
+                   CGContextSetBlendMode, CGContextSetFillColorWithColor, CGContextSetLineCap, CGContextSetLineDash, \
+                   CGContextSetLineJoin, CGContextSetLineWidth, CGContextSetStrokeColorWithColor, \
+                   CGDataConsumerCreateWithCFData, CGImageDestinationAddImage, CGImageDestinationCreateWithData, \
+                   CGImageDestinationFinalize, CGImageDestinationSetProperties, CGImageGetBitsPerComponent, \
+                   CGImageGetBitsPerPixel, CGImageGetBytesPerRow, CGImageGetDataProvider, CGImageGetHeight, \
+                   CGImageGetWidth, CGImageMaskCreate, CGPathAddCurveToPoint, CGPathAddLineToPoint, \
+                   CGPathCloseSubpath, CGPathCreateCopy, CGPathCreateMutable, CGPathMoveToPoint, CGPathRelease, \
+                   CGPDFContextBeginPage, CGPDFContextClose, CGPDFContextCreate, CGPDFContextEndPage, CGRectMake, \
+                   CGSizeMake, kCGBitmapByteOrder32Host, kCGBlendModeClear, kCGBlendModeColor, kCGBlendModeColorBurn, \
+                   kCGBlendModeColorDodge, kCGBlendModeCopy, kCGBlendModeDarken, kCGBlendModeDestinationAtop, \
+                   kCGBlendModeDestinationIn, kCGBlendModeDestinationOut, kCGBlendModeDestinationOver, \
+                   kCGBlendModeDifference, kCGBlendModeExclusion, kCGBlendModeHardLight, kCGBlendModeHue, \
+                   kCGBlendModeLighten, kCGBlendModeLuminosity, kCGBlendModeMultiply, kCGBlendModeNormal, \
+                   kCGBlendModeOverlay, kCGBlendModePlusDarker, kCGBlendModePlusLighter, kCGBlendModeSaturation, \
                    kCGBlendModeScreen, kCGBlendModeSoftLight, kCGBlendModeSourceAtop, kCGBlendModeSourceIn, \
-                   kCGBlendModeSourceOut, kCGBlendModeXOR, kCGLineCapButt, kCGLineCapRound, kCGLineCapSquare, \
-                   kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, kCGPathFill, kCGPathFillStroke, \
-                   kCGPathStroke, kCIInputImageKey, kCGImageDestinationLossyCompressionQuality, \
-                   kCGImageAlphaPremultipliedFirst, kCGBitmapByteOrder32Host, kCGImageAlphaNoneSkipFirst
+                   kCGBlendModeSourceOut, kCGBlendModeXOR, kCGImageAlphaNoneSkipFirst, \
+                   kCGImageAlphaPremultipliedFirst, kCGImageDestinationLossyCompressionQuality, kCGLineCapButt, \
+                   kCGLineCapRound, kCGLineCapSquare, kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, \
+                   kCGPathFill, kCGPathFillStroke, kCGPathStroke, kCIInputImageKey, kCGImageAlphaNone, CGColorSpaceCreateDeviceCMYK, CGContextClearRect
 from AppKit import NSAlert, NSApp, NSAppearance, NSApplication, NSApplicationActivationPolicyAccessory, \
                    NSBackingStoreBuffered, NSBeep, NSBezierPath, NSBitmapImageRep, NSBorderlessWindowMask, \
                    NSButton, NSCenterTextAlignment, NSChangeAutosaved, NSChangeCleared, NSChangeDone, \

@@ -552,7 +552,7 @@ class ScriptController(NSWindowController):
         # if this is a single-image export and the canvas already contains some grobs,
         # write it out synchronously rather than starting up an export session
         if kind=='image' and opts['last']==opts['first'] and list(self.vm.canvas):
-            img_data = self.vm.canvas._getImageData(opts['format'], opts['zoom'])
+            img_data = self.vm.canvas._getImageData(opts['format'], opts['zoom'], opts['cmyk'])
             img_data.writeToFile_atomically_(fname, True)
             self.exportStatus('complete')
             return
