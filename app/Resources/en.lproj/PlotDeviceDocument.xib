@@ -572,7 +572,7 @@ DQ
             </defaultToolbarItems>
             <point key="canvasLocation" x="35" y="-515"/>
         </toolbar>
-        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="anim-toolbar" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="xN7-fG-ZV6">
+        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="anim-toolbar" displayMode="iconAndLabel" sizeMode="regular" id="xN7-fG-ZV6">
             <allowedToolbarItems>
                 <toolbarItem implicitItemIdentifier="B06BBB3A-8DC7-4ABC-83DE-EA091DF17181" explicitItemIdentifier="stop-script" label="Stop Script" paletteLabel="Stop Script" toolTip="Stop the script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="WW0-Z4-TSn">
                     <connections>
@@ -597,7 +597,7 @@ DQ
             </defaultToolbarItems>
             <point key="canvasLocation" x="1280" y="-505"/>
         </toolbar>
-        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="image-toolbar" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="ZMw-0m-lWA">
+        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="image-toolbar" displayMode="iconAndLabel" sizeMode="regular" id="ZMw-0m-lWA">
             <allowedToolbarItems>
                 <toolbarItem implicitItemIdentifier="FF570CB1-C253-4C5C-BDCD-0E071E5579B4" explicitItemIdentifier="export" label="Export Image" paletteLabel="Export Image" tag="-1" image="camera.circle.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="uOq-Ls-WPF">
                     <connections>
@@ -616,7 +616,7 @@ DQ
             </defaultToolbarItems>
             <point key="canvasLocation" x="640" y="-505"/>
         </toolbar>
-        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="running-toolbar" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="uXT-mP-vt5">
+        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="running-toolbar" displayMode="iconAndLabel" sizeMode="regular" id="uXT-mP-vt5">
             <allowedToolbarItems>
                 <toolbarItem implicitItemIdentifier="B06BBB3A-8DC7-4ABC-83DE-EA091DF17181" explicitItemIdentifier="stop-script" label="Stop Script" paletteLabel="Stop Script" toolTip="Stop the script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="tnu-iE-eYu">
                     <connections>
@@ -641,7 +641,7 @@ DQ
             </defaultToolbarItems>
             <point key="canvasLocation" x="1280" y="-170"/>
         </toolbar>
-        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="paused-toolbar" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="9Ux-KA-Pd2">
+        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="paused-toolbar" displayMode="iconAndLabel" sizeMode="regular" id="9Ux-KA-Pd2">
             <allowedToolbarItems>
                 <toolbarItem implicitItemIdentifier="B06BBB3A-8DC7-4ABC-83DE-EA091DF17181" explicitItemIdentifier="stop-script" label="Stop Script" paletteLabel="Stop Script" toolTip="Stop the script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="s8D-Jk-bfU">
                     <connections>
