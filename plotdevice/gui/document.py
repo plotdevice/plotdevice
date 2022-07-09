@@ -128,8 +128,6 @@ class ScriptController(NSWindowController):
     # toolbar modes
     imageToolbar = IBOutlet()
     animToolbar = IBOutlet()
-    runningToolbar = IBOutlet()
-    pausedToolbar = IBOutlet()
     exportToolbar = IBOutlet()
     statusView = IBOutlet()
     statusViewItem = IBOutlet()
@@ -339,15 +337,17 @@ class ScriptController(NSWindowController):
 
     def setToolbarMode_(self, mode):
         if self.window():
-            if not self.vm.animated:
+            if mode == 'export':
+                toolbar = self.exportToolbar
+            elif not self.vm.animated:
                 toolbar = self.imageToolbar
             else:
-                toolbar = dict(
-                    export = self.exportToolbar,
-                    play = self.runningToolbar,
-                    pause = self.pausedToolbar,
-                    stop = self.animToolbar,
-                )[mode]
+                toolbar = self.animToolbar
+                for item in toolbar.items():
+                    if item.itemIdentifier() == 'run-script':
+                        action = dict(play='pause', pause='forward.frame', stop='play')[mode]
+                        caption = dict(play='Pause', pause='Resume', stop='Run Script')[mode]
+                        item.setImage_(NSImage.imageWithSystemSymbolName_accessibilityDescription_('%s.fill'%action, caption))
 
             self.window().setToolbar_(toolbar)
             toolbar.validateVisibleItems()

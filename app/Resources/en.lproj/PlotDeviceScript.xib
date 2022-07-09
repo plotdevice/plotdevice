@@ -94,8 +94,6 @@
                 <outlet property="exportToolbar" destination="KVf-qx-2do" id="export-toolbar-outlet"/>
                 <outlet property="graphicsView" destination="vrd-6s-Y5i" id="TrA-Sg-ITa"/>
                 <outlet property="imageToolbar" destination="ZMw-0m-lWA" id="image-toolbar-outlet"/>
-                <outlet property="pausedToolbar" destination="9Ux-KA-Pd2" id="paused-anim-toolbar-outlet"/>
-                <outlet property="runningToolbar" destination="xN7-fG-ZV6" id="running-anim-toolbar-outlet"/>
                 <outlet property="statusView" destination="GUG-R8-rZF" id="status-view-outlet"/>
                 <outlet property="statusViewItem" destination="L6P-qK-ACT" id="status-view-item-outlet"/>
                 <outlet property="window" destination="5" id="ZRW-jd-ILx"/>
@@ -647,7 +645,7 @@
             <defaultToolbarItems>
                 <toolbarItem reference="L6P-qK-ACT"/>
             </defaultToolbarItems>
-            <point key="canvasLocation" x="35" y="-515"/>
+            <point key="canvasLocation" x="-283" y="-515"/>
         </toolbar>
         <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="anim-toolbar" displayMode="iconAndLabel" sizeMode="regular" id="xN7-fG-ZV6">
             <allowedToolbarItems>
@@ -672,7 +670,7 @@
                 <toolbarItem reference="WW0-Z4-TSn"/>
                 <toolbarItem reference="pPl-dw-xWG"/>
             </defaultToolbarItems>
-            <point key="canvasLocation" x="1280" y="-505"/>
+            <point key="canvasLocation" x="903" y="-515"/>
         </toolbar>
         <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="image-toolbar" displayMode="iconAndLabel" sizeMode="regular" id="ZMw-0m-lWA">
             <allowedToolbarItems>
@@ -691,64 +689,12 @@
                 <toolbarItem reference="OHT-mW-Xc6"/>
                 <toolbarItem reference="uOq-Ls-WPF"/>
             </defaultToolbarItems>
-            <point key="canvasLocation" x="640" y="-505"/>
-        </toolbar>
-        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="running-toolbar" displayMode="iconAndLabel" sizeMode="regular" id="uXT-mP-vt5">
-            <allowedToolbarItems>
-                <toolbarItem implicitItemIdentifier="B06BBB3A-8DC7-4ABC-83DE-EA091DF17181" explicitItemIdentifier="stop-script" label="Stop Script" paletteLabel="Stop Script" toolTip="Stop the script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="tnu-iE-eYu">
-                    <connections>
-                        <action selector="stopScript:" target="-1" id="6aT-Lb-Y4N"/>
-                    </connections>
-                </toolbarItem>
-                <toolbarItem implicitItemIdentifier="46D9F5BE-71C3-4212-9F59-CFE6B73873F7" explicitItemIdentifier="export" label="Export Video" paletteLabel="Export Video" tag="-1" image="video.circle.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="saU-AA-R4H">
-                    <connections>
-                        <action selector="exportAsMovie:" target="-1" id="JLX-d2-3n9"/>
-                    </connections>
-                </toolbarItem>
-                <toolbarItem implicitItemIdentifier="F05393E1-8247-44DF-A1FB-F73D00243696" explicitItemIdentifier="run-script" label="Pause" paletteLabel="Pause" toolTip="Run the script" tag="-1" image="pause.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="UMH-Fb-zac">
-                    <connections>
-                        <action selector="runScript:" target="-1" id="Uuz-3r-4do"/>
-                    </connections>
-                </toolbarItem>
-            </allowedToolbarItems>
-            <defaultToolbarItems>
-                <toolbarItem reference="UMH-Fb-zac"/>
-                <toolbarItem reference="tnu-iE-eYu"/>
-                <toolbarItem reference="saU-AA-R4H"/>
-            </defaultToolbarItems>
-            <point key="canvasLocation" x="1280" y="-170"/>
-        </toolbar>
-        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" explicitIdentifier="paused-toolbar" displayMode="iconAndLabel" sizeMode="regular" id="9Ux-KA-Pd2">
-            <allowedToolbarItems>
-                <toolbarItem implicitItemIdentifier="B06BBB3A-8DC7-4ABC-83DE-EA091DF17181" explicitItemIdentifier="stop-script" label="Stop Script" paletteLabel="Stop Script" toolTip="Stop the script" tag="-1" image="stop.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="s8D-Jk-bfU">
-                    <connections>
-                        <action selector="stopScript:" target="-1" id="Q0H-ry-od1"/>
-                    </connections>
-                </toolbarItem>
-                <toolbarItem implicitItemIdentifier="46D9F5BE-71C3-4212-9F59-CFE6B73873F7" explicitItemIdentifier="export" label="Export Video" paletteLabel="Export Video" tag="-1" image="video.circle.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="VQM-Sb-KKJ">
-                    <connections>
-                        <action selector="exportAsMovie:" target="-1" id="pY6-s8-A8v"/>
-                    </connections>
-                </toolbarItem>
-                <toolbarItem implicitItemIdentifier="F05393E1-8247-44DF-A1FB-F73D00243696" explicitItemIdentifier="run-script" label="Resume" paletteLabel="Resume" toolTip="Run the script" tag="-1" image="forward.frame.fill" catalog="system" bordered="YES" sizingBehavior="auto" id="0Cr-07-WLz">
-                    <connections>
-                        <action selector="runScript:" target="-1" id="zGk-02-wDd"/>
-                    </connections>
-                </toolbarItem>
-            </allowedToolbarItems>
-            <defaultToolbarItems>
-                <toolbarItem reference="0Cr-07-WLz"/>
-                <toolbarItem reference="s8D-Jk-bfU"/>
-                <toolbarItem reference="VQM-Sb-KKJ"/>
-            </defaultToolbarItems>
-            <point key="canvasLocation" x="1280" y="173"/>
+            <point key="canvasLocation" x="313" y="-515"/>
         </toolbar>
     </objects>
     <resources>
         <image name="NSStopProgressFreestandingTemplate" width="15" height="15"/>
         <image name="camera.circle.fill" catalog="system" width="15" height="15"/>
-        <image name="forward.frame.fill" catalog="system" width="17" height="13"/>
-        <image name="pause.fill" catalog="system" width="11" height="13"/>
         <image name="play.fill" catalog="system" width="12" height="13"/>
         <image name="stop.fill" catalog="system" width="14" height="13"/>
         <image name="video.circle.fill" catalog="system" width="15" height="15"/>
