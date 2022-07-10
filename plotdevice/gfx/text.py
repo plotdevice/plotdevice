@@ -692,7 +692,7 @@ class TextFragment(object):
         indices = list(range(1, len(self.m.regs)))
         if not indices:
             return ()
-        return tuple(m if m else default for m in self.group(*indices))
+        return tuple([m if m else default for m in self.group(*indices)])
 
     def groupdict(self, default=None):
         """Return a dictionary containing all the named subgroups of the match,

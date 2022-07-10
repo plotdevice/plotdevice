@@ -241,7 +241,7 @@ class Family(object):
 
         self._name = family_name(famname)
         self._faces = odict( (f.psname,f) for f in family_members(self._name) )
-        self.encoding = font_encoding(self._faces.keys()[0])
+        self.encoding = font_encoding(list(self._faces.keys())[0])
 
     def __repr__(self):
         contents = ['"%s"'%self._name, ]
@@ -285,7 +285,7 @@ class Family(object):
             if f.variant not in v_names:
                 v_names.append(f.variant)
         if any(v_names) and None in v_names:
-            return tuple(None, *filter(None, v_names))
+            return tuple([None, *filter(None, v_names)])
         return tuple(v_names)
 
     @property
