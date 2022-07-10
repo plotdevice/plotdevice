@@ -1731,12 +1731,7 @@ class Canvas(object):
     @property
     def _nsImage(self):
         # Allow the canvas to be used with the image() command
-        w,h = self.pagesize
-        img = NSImage.alloc().initWithSize_((w, h))
-        img.lockFocusFlipped_(True)
-        self.draw()
-        img.unlockFocus()
-        return img
+        return self._render_to_image()
 
     def _cgImage(self, zoom=1.0):
         # Called by on-screen views to update the display
@@ -1753,6 +1748,18 @@ class Canvas(object):
         cgImage = CGBitmapContextCreateImage(bitmapContext)
         CGContextClearRect(bitmapContext, CGRectMake(0, 0, size.width, size.height))
         return cgImage
+
+    def _render_to_image(self, zoom=1.0, flipped=True):
+        size = Size(*[int(dim*zoom) for dim in self.pagesize])
+        img = NSImage.alloc().initWithSize_(size)
+        img.lockFocusFlipped_(flipped)
+        trans = NSAffineTransform.transform()
+        trans.translateXBy_yBy_(0, self.pagesize.height*zoom)
+        trans.scaleXBy_yBy_(zoom,-zoom)
+        trans.concat()
+        self.draw()
+        img.unlockFocus()
+        return img
 
     def _render_to_context(self, cgContext, zoom):
         ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(cgContext, True)

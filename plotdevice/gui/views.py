@@ -80,9 +80,10 @@ class GraphicsView(NSView):
         self.keydown = False
         self.key = None
         self.keycode = None
+        self._zoom = 1.0
+        self._dpr = self.window().backingScaleFactor()
         # self.scrollwheel = False
         # self.wheeldelta = 0.0
-        self._zoom = 1.0
 
         # set up layer `hosting' and disable implicit anims
         self.setLayer_(CALayer.new())
@@ -118,7 +119,8 @@ class GraphicsView(NSView):
         y_pct = NSMidY(visible) / NSHeight(oldframe)
 
         # render (and possibly bomb...)
-        bitmap = canvas._cgImage(zoom=self.zoom)
+        ns_image = canvas._render_to_image(self.zoom, flipped=False)
+        bitmap = ns_image.layerContentsForContentsScale_(self._dpr)
 
         # resize
         w, h = [s*self.zoom for s in canvas.pagesize]
@@ -135,10 +137,6 @@ class GraphicsView(NSView):
 
         # cache the canvas image
         self.layer().setContents_(bitmap)
-
-        # possible bug:
-        # rasterize might be better off creating cgimages instead:
-        # http://sean.voisen.org/blog/2013/04/high-performance-image-loading-os-x/
 
         # keep a reference to the canvas so we can zoom later on
         self.canvas = canvas
