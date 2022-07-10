@@ -467,6 +467,14 @@ class ScriptController(NSWindowController):
         if not ok:
             self.stopScript()
 
+        # if not hasattr(self, '_step_times'):
+        #     self._step_times = []
+        # self._step_times.append(time.time())
+        # if len(self._step_times) == 10:
+        #     fps = sum([1.0/(t1-t0) for t0, t1 in zip(self._step_times, self._step_times[1:])]) / len(self._step_times)
+        #     print(fps)
+        #     self._step_times = []
+
     @objc.python_method
     def invoke(self, method):
         """Call a method defined in the script's global namespace and update the ui appropriately
