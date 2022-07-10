@@ -23,7 +23,9 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    kCGBlendModeSourceOut, kCGBlendModeXOR, kCGImageAlphaNoneSkipFirst, \
                    kCGImageAlphaPremultipliedFirst, kCGImageDestinationLossyCompressionQuality, kCGLineCapButt, \
                    kCGLineCapRound, kCGLineCapSquare, kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, \
-                   kCGPathFill, kCGPathFillStroke, kCGPathStroke, kCIInputImageKey, kCGImageAlphaNone, CGColorSpaceCreateDeviceCMYK, CGContextClearRect
+                   kCGPathFill, kCGPathFillStroke, kCGPathStroke, kCIInputImageKey, kCGImageAlphaNone, CGColorSpaceCreateDeviceCMYK, CGContextClearRect, \
+                   kCGImagePropertyDPIWidth, kCGImagePropertyDPIHeight
+
 from AppKit import NSAlert, NSApp, NSAppearance, NSApplication, NSApplicationActivationPolicyAccessory, \
                    NSBackingStoreBuffered, NSBeep, NSBezierPath, NSBitmapImageRep, NSBorderlessWindowMask, \
                    NSButton, NSCenterTextAlignment, NSChangeAutosaved, NSChangeCleared, NSChangeDone, \

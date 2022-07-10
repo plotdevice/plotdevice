@@ -1808,9 +1808,10 @@ class Canvas(object):
             cgImage = CGBitmapContextCreateImage(bitmapContext)
             cgData = NSMutableData.data()
             cgDest = CGImageDestinationCreateWithData(cgData, cgTypes[format], 1, None)
+            cgProperies = {kCGImagePropertyDPIWidth: 72*zoom, kCGImagePropertyDPIHeight: 72*zoom}
             if format in ('jpg', 'jpeg'):
-                CGImageDestinationSetProperties(cgDest, {kCGImageDestinationLossyCompressionQuality:1.0})
-            CGImageDestinationAddImage(cgDest, cgImage, None)
+                cgProperies[kCGImageDestinationLossyCompressionQuality] = 1.0
+            CGImageDestinationAddImage(cgDest, cgImage, cgProperies)
             CGImageDestinationFinalize(cgDest)
             return cgData
 
