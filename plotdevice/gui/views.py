@@ -119,7 +119,7 @@ class GraphicsView(NSView):
         y_pct = NSMidY(visible) / NSHeight(oldframe)
 
         # render (and possibly bomb...)
-        ns_image = canvas._render_to_image(self.zoom, flipped=False)
+        ns_image = canvas._render_to_image(self.zoom)
         bitmap = ns_image.layerContentsForContentsScale_(self._dpr)
 
         # resize
