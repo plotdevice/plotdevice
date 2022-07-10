@@ -1597,6 +1597,22 @@ class PlotContext(object):
         self._spec = spec
         self._ctx = ctx
 
+    @property
+    def nib(self):
+        return self._ctx._penstyle.nib
+
+    @property
+    def cap(self):
+        return self._ctx._penstyle.cap
+
+    @property
+    def join(self):
+        return self._ctx._penstyle.join
+
+    @property
+    def dash(self):
+        return self._ctx._penstyle.dash
+
     def __enter__(self):
         return dict(self._spec)
 
