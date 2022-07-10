@@ -11,6 +11,11 @@ Examples:
   Save script's output to pdf:
     python3 -m plotdevice script.pv --export output.pdf
 
+  Generate 1:1 and retina-scaled png files:
+    python3 -m plotdevice script.pv --export normal.png
+    python3 -m plotdevice script.pv --export retina.png --zoom 200
+    python3 -m plotdevice script.pv --export also-retina@2x.png
+
 Animation Examples:
   Create a 5 second long H.265 video at 2 megabits/sec:
     python3 -m plotdevice script.pv --export output.mov --frames 150 --rate 2.0
@@ -44,7 +49,6 @@ def main():
   o.add_argument('-b', dest='activate', action='store_const', const=False, default=True, help='run PlotDevice in the background (i.e., leave focus in the active application)')
   o.add_argument('-q', dest='mode', action='store_const', const='headless', default='windowed', help='run a PlotDevice script ‘quietly’ (without opening a window)')
   o.add_argument('--virtualenv', metavar='PATH', help='path to virtualenv whose libraries you want to use (this should point to the top-level virtualenv directory; a folder containing a lib/python3.x/site-packages subdirectory)')
-  o.add_argument('--export', '-o', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, heic, gif, or mov')
   o.add_argument('--frames', metavar='N or M-N', help='number of frames to render or a range specifying the first and last frames (default "1-")')
   o.add_argument('--fps', metavar='N', default=30, type=int, help='frames per second in exported video (default 30)')
   o.add_argument('--rate', metavar='N', default=1.0, type=float, dest='bitrate', help='bitrate in megabits per second (video only)')
@@ -53,6 +57,10 @@ def main():
   o.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
   o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='arguments to be passed to the script as sys.argv')
   o.add_argument('--version', action='version', version='PlotDevice %s' % plotdevice.__version__)
+
+  x = parser.add_argument_group("Export Options")
+  x.add_argument('--export', '-o', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, heic, gif, or mov')
+  x.add_argument('--zoom', metavar='PERCENT', default=100, type=int, help='scale of the output file (100 = regular size) or just append @2x/@3x/etc to the filename')
 
   i = parser.add_argument_group("PlotDevice Script File", None)
   i.add_argument('script', help='the python script to be rendered')
@@ -97,7 +105,7 @@ def main():
     opts.mode = 'headless'
 
     # screen out unsupported file extensions
-    _, ext = opts.export.lower().rsplit('.',1)
+    basename, ext = opts.export.lower().rsplit('.',1)
     if ext not in ('pdf', 'eps', 'png', 'jpg', 'heic', 'tiff', 'gif', 'mov'):
       parser.exit(1, 'bad argument [--export]\nthe output filename must end with a supported format:\n  pdf, eps, png, tiff, jpg, heic, gif, or mov\n')
 
@@ -115,6 +123,11 @@ def main():
     # if it's a multiframe pdf, check for a telltale "{n}" to determine whether
     # it's a `single' doc or a sequence of numbered pdf files
     opts.single = bool(ext=='pdf' and not re.search('{\d+}', opts.export) and opts.last and opts.first < opts.last)
+
+    if m:= re.search(r'@(\d+)[xX]$', basename):
+      opts.zoom = float(m.group(1))
+    else:
+      opts.zoom = max(0.01, opts.zoom/100)
 
   # set it off
   plotdevice.__all__.clear()
