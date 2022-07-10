@@ -7,7 +7,7 @@ size(600, 600)
 # A helper-function for choosing what text to draw
 def rand_txt():
     """Returns a random string of up to 9 characters."""
-    t = u""
+    t = ""
     for i in range(random(10)):
         t += chr(random(10,120))
     return t

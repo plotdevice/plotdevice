@@ -20,14 +20,14 @@ def Vertices():
 # pairs of index-addresses into the array returned by Cube
 def Edges():
     lines = [0, 1, 1, 2, 2, 3, 3, 0] + [0]*56
-    for i in xrange(8):
+    for i in range(8):
         lines[i+8]=lines[i]+4
-    for i in xrange(4):
+    for i in range(4):
         lines[i*2 + 16]=i
         lines[i*2 + 17]=i+4
-    for i in xrange(24):
+    for i in range(24):
         lines[i+24]=lines[i]+8
-    for i in xrange(8):
+    for i in range(8):
         lines[i*2 + 48]=i
         lines[i*2 + 49]=i+8
     return lines
@@ -102,19 +102,19 @@ def draw(state):
 
     pen(13, cap=ROUND)
     with bezier(stroke='#aaa', strokewidth=6):
-        for i in xrange(24, 32):
+        for i in range(24, 32):
             src = spoints[lines[i*2]]
             dst = spoints[lines[i*2+1]]
             line(src[0],src[1],dst[0],dst[1])
 
     with bezier(stroke=('#fff', 0.5)):
-        for i in xrange(12):
+        for i in range(12):
             src = spoints[lines[i*2]]
             dst = spoints[lines[i*2+1]]
             line(src[0],src[1],dst[0],dst[1])
 
     with bezier(stroke=('#444',0.8)):
-        for i in xrange(12, 24):
+        for i in range(12, 24):
             src = spoints[lines[i*2]]
             dst = spoints[lines[i*2+1]]
             line(src[0],src[1],dst[0],dst[1])
