@@ -46,8 +46,15 @@ class Font(object):
 
         # collect the attrs from the current font to fill in any gaps
         cur_spec = _ctx._font._spec
+
+        # if called with positional args we're starting over; inherit just the weight and size
+        if args and 'family' in new_spec:
+            cur_spec['width'] = None
+            cur_spec['variant'] = None
+            cur_spec['italic'] = False
+
+        # convert weight & width to integer values
         for axis, num_axis in dict(weight='wgt', width='wid').items():
-            # convert weight & width to integer values
             cur_spec[num_axis] = getattr(_ctx._font._face, num_axis)
             if axis in new_spec:
                 name, val = standardized(axis, new_spec[axis])
