@@ -1748,13 +1748,12 @@ class Canvas(object):
         # Allow the canvas to be used with the image() command
         return self._render_to_image()
 
-    def _render_to_image(self, zoom=1.0, flipped=True):
+    def _render_to_image(self, zoom=1.0):
         size = Size(*[int(dim*zoom) for dim in self.pagesize])
         img = NSImage.alloc().initWithSize_(size)
-        img.lockFocusFlipped_(flipped)
+        img.lockFocusFlipped_(True)
         trans = NSAffineTransform.transform()
-        trans.translateXBy_yBy_(0, self.pagesize.height*zoom)
-        trans.scaleXBy_yBy_(zoom,-zoom)
+        trans.scaleXBy_yBy_(zoom,zoom)
         trans.concat()
         self.draw()
         img.unlockFocus()
