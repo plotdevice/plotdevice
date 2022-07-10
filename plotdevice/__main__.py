@@ -53,14 +53,14 @@ def main():
   o.add_argument('--fps', metavar='N', default=30, type=int, help='frames per second in exported video (default 30)')
   o.add_argument('--rate', metavar='N', default=1.0, type=float, dest='bitrate', help='bitrate in megabits per second (video only)')
   o.add_argument('--loop', metavar='N', default=0, nargs='?', const=-1, help='number of times to loop an exported animated gif (omit N to loop forever)')
-  o.add_argument('--cmyk', action='store_const', const=True, default=False, help='convert colors to c/m/y/k during exports')
   o.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
   o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='arguments to be passed to the script as sys.argv')
   o.add_argument('--version', action='version', version='PlotDevice %s' % plotdevice.__version__)
 
   x = parser.add_argument_group("Export Options")
   x.add_argument('--export', '-o', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, heic, gif, or mov')
-  x.add_argument('--zoom', metavar='PERCENT', default=100, type=int, help='scale of the output file (100 = regular size) or just append @2x/@3x/etc to the filename')
+  x.add_argument('--zoom', metavar='PERCENT', default=100, type=int, help='scale of the output image (100 = regular size) unless specified by a filename ending in @2x/@3x/etc')
+  o.add_argument('--cmyk', action='store_const', const=True, default=False, help='convert colors to c/m/y/k during exports')
 
   i = parser.add_argument_group("PlotDevice Script File", None)
   i.add_argument('script', help='the python script to be rendered')

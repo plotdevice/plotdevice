@@ -1,3 +1,33 @@
+PlotDevice 1.0.0
+-----------------
+
+##### New Features
+* Python 3 support (including a bundled 3.10 installation in the app)
+* images can now be exported in HEIC format and videos support H.265 (HEVC)
+* image exports have a configurable 'zoom' to create 2x/3x/etc 'retina' images
+* revamped `var()` command for creating GUIs to modify values via sliders, buttons, toggles, etc.
+* updated text editor with multiple tabs, new themes, and additional key-binding modes for sublime and vs code users
+* the module's command line interface is now accessible through `python3 -m plotdevice`
+* user-configurable document autosaving
+
+##### Bugfixes
+* exported images generated on retina machines now have the proper dimensions
+* hex colors can now use lowercase letters
+* automatic variables like WIDTH & HEIGHT correctly support the `/` operator
+* the Color object's `.blend()` method is working again
+* the `read()` command can now handle csv files with spaces in their header row names
+* the `translate()` command now incorporates non-pixel grid units set via the `size()` command
+* cmyk exports are working reliably for command line `--export` and via the `export(cmyk=True)` method
+* arguments defined using the command line tool's `--args` options are now passed to the script's `sys.argv`
+
+##### Misc. Improvements
+* the command line tool can be exited via ctrl-c in addtion to being Quit from the menu bar
+* simplified unicode handling (and improved support for normalization of user-provided strings)
+* building the module now only requires Xcode command line tools—not a full Xcode.app installation
+* the `text()` command will always treat its first argument as content (even if it's not a string) unless a `str`, `xml`, or `src` keyword argument is provided
+* the mouse pointer is now visible in full-screen mode (and will auto-hide when inactive)
+
+
 PlotDevice 0.10.0
 -----------------
 

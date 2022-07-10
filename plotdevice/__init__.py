@@ -13,14 +13,14 @@
 """Quartz-powered vector machine
 
 Copyright ©2014–2022 Samizdat Drafting Co.
-A derivative of http://nodebox.net/code by Frederik De Bleser & Tom De Smedt
+A derivative of https://www.nodebox.net/code/index.php/Home by Frederik De Bleser & Tom De Smedt
 
 All rights reserved.
 MIT Licensed (see README file for details)
 """
 import sys, re, os
 
-__version__ = '0.11'
+__version__ = '1.0.0'
 __author__  = 'Christian Swinehart'
 __email__   = 'drafting@samizdat.co'
 __credits__ = 'Frederik De Bleser, Tom De Smedt, Just van Rossum, & Marcos Ojeda'
