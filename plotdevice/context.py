@@ -1638,7 +1638,6 @@ class Canvas(object):
         self.height = height
         self.speed = None
         self.mousedown = False
-        self._render_cache = {}
         self.clear() # set up the container & stack
 
     @trim_zeroes
@@ -1732,22 +1731,6 @@ class Canvas(object):
     def _nsImage(self):
         # Allow the canvas to be used with the image() command
         return self._render_to_image()
-
-    def _cgImage(self, zoom=1.0):
-        # Called by on-screen views to update the display
-        size = Size(*[int(dim*zoom) for dim in self.pagesize])
-        config = (size.width, size.height, 8, size.width * 4)
-
-        # try to reuse the same context between frames
-        if config not in self._render_cache:
-            colorspace, opts = CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
-            self._render_cache = {config:CGBitmapContextCreate(None, *config, colorspace, opts)}
-        bitmapContext = self._render_cache[config]
-
-        self._render_to_context(bitmapContext, zoom)
-        cgImage = CGBitmapContextCreateImage(bitmapContext)
-        CGContextClearRect(bitmapContext, CGRectMake(0, 0, size.width, size.height))
-        return cgImage
 
     def _render_to_image(self, zoom=1.0, flipped=True):
         size = Size(*[int(dim*zoom) for dim in self.pagesize])
