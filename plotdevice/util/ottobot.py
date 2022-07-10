@@ -227,7 +227,8 @@ def genTemplate(kind='sketch'):
         return """size(512, 512)
 background(1)
 
-text("Welcome to PlotDevice", 40, 40)
+rect(20, 15, WIDTH-40, 1)
+text("Welcome to PlotDevice", 20, 40)
 """
     elif kind=='anim':
         return """# to create an animation, call speed() with a
