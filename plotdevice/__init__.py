@@ -12,17 +12,17 @@
 
 """Quartz-powered vector machine
 
-Copyright (C) 2015 Samizdat Drafting Co.
-A derivative of http://nodebox.net/code by Frederik De Bleser & Tom De Smedt
+Copyright ©2014–2022 Samizdat Drafting Co.
+A derivative of https://www.nodebox.net/code/index.php/Home by Frederik De Bleser & Tom De Smedt
 
 All rights reserved.
 MIT Licensed (see README file for details)
 """
 import sys, re, os
 
-__version__ = '0.10.0'
+__version__ = '1.0.0'
 __author__  = 'Christian Swinehart'
-__email__   = 'drafting@samizdat.cc'
+__email__   = 'drafting@samizdat.co'
 __credits__ = 'Frederik De Bleser, Tom De Smedt, Just van Rossum, & Marcos Ojeda'
 __license__ = 'MIT'
 
@@ -32,8 +32,8 @@ class Halted(Exception): pass      # special exception to cleanly exit animation
 
 # note whether the module is being used within the .app, via console.py, or from the repl
 called_from = getattr(sys.modules['__main__'], '__file__', '<interactive>')
-is_windowed = bool(re.search(r'plotdevice(-app|/run/console)\.py$', called_from))
-in_setup = bool(called_from.endswith('setup.py')) # (for builds)
+in_app = called_from.endswith('plotdevice-app.py')
+in_setup = called_from.endswith('setup.py')
 
 # don't mess with sys.path during builds
 if not in_setup:
@@ -47,8 +47,8 @@ if not in_setup:
     objc.setVerbose(True)
 
 # populate the namespace (or don't) depending on the context
-if is_windowed or in_setup:
-    # if a script imports * from within the app/tool, nothing should be (re-)added to the
+if in_app or in_setup:
+    # if a script imports * from within the app, nothing should be (re-)added to the
     # global namespace. we'll let the Sandbox handle populating the namespace instead.
     __all__ = []
 else:
@@ -63,6 +63,4 @@ else:
     # set up the standard plotdevice global namespace by exposing the module-level
     # context/canvas's internal ns
     globals().update(ctx._ns)
-    __all__ = ctx._ns.keys()
-
-
+    __all__ = list(ctx._ns.keys())

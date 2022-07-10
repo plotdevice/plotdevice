@@ -2,9 +2,12 @@
 import sys
 import os
 import traceback
+import objc
 
+from . import set_timeout
 from ..lib.cocoa import *
 from ..gfx import Color
+from ..gfx.atoms import KEY_ESC
 from objc import super
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
@@ -13,14 +16,9 @@ class GraphicsBackdrop(NSView):
     """A container that sits between the NSClipView and GraphicsView
 
        It resizes to fit the size of the canvas and centers it when the canvas
-       is smaller than the display space in the NSSplitView. It also draws the
-       background color and maintains an isOpaque=True to take advantage of
-       Responsive Scrolling in 10.9
+       is smaller than the display space in the NSSplitView.
     """
     gfxView = None
-
-    def isOpaque(self):
-        return True
 
     def isFlipped(self):
         return True
@@ -51,11 +49,6 @@ class GraphicsBackdrop(NSView):
             nc = NSNotificationCenter.defaultCenter()
             nc.removeObserver_name_object_(self, NSViewFrameDidChangeNotification, subview)
 
-    def drawRect_(self, rect):
-        DARK_GREY.setFill()
-        NSRectFillUsingOperation(rect, NSCompositeCopy)
-        super(GraphicsBackdrop, self).drawRect_(rect)
-
     def viewFrameDidChange_(self, note):
         self.setFrame_(self.frame())
         newframe = self.frame()
@@ -72,7 +65,7 @@ class GraphicsBackdrop(NSView):
 
 class GraphicsView(NSView):
     script = IBOutlet()
-    placeholder = NSImage.imageNamed_('placeholder.pdf')
+    canvas = None
 
     # The zoom levels are 10%, 25%, 50%, 75%, 100%, 200% and so on up to 2000%.
     zoomLevels = [0.1, 0.25, 0.5, 0.75]
@@ -87,9 +80,10 @@ class GraphicsView(NSView):
         self.keydown = False
         self.key = None
         self.keycode = None
+        self._zoom = 1.0
+        self._dpr = self.window().backingScaleFactor()
         # self.scrollwheel = False
         # self.wheeldelta = 0.0
-        self._zoom = 1.0
 
         # set up layer `hosting' and disable implicit anims
         self.setLayer_(CALayer.new())
@@ -97,11 +91,20 @@ class GraphicsView(NSView):
         inaction = {k:None for k in ["onOrderOut", "sublayers", "contents", "position", "bounds"]}
         self.layer().setActions_(inaction)
 
-        # display the placeholder image until we're passed a canvas
-        if self.placeholder:
-            self.setFrameSize_(self.placeholder.size())
-            self.layer().setContents_(self.placeholder)
+        # display the placeholder image until we're passed a canvas (and keep it in sync with appearance)
+        self.updatePlaceholder(NSAppearance.currentDrawingAppearance())
 
+    @objc.python_method
+    def updatePlaceholder(self, appearance):
+        if self.canvas is None:
+            placeholder = NSImage.imageNamed_('placeholder-{mode}.pdf'.format(
+                mode = 'dark' if 'Dark' in appearance.name() else 'light'
+            ))
+            if placeholder:
+                self.setFrameSize_(placeholder.size())
+                self.layer().setContents_(placeholder)
+
+    @objc.python_method
     def setCanvas(self, canvas):
         # set the scroller color based on the background
         bg = canvas.background
@@ -116,7 +119,8 @@ class GraphicsView(NSView):
         y_pct = NSMidY(visible) / NSHeight(oldframe)
 
         # render (and possibly bomb...)
-        bitmap = canvas.rasterize(zoom=self.zoom)
+        ns_image = canvas._render_to_image(self.zoom, flipped=False)
+        bitmap = ns_image.layerContentsForContentsScale_(self._dpr)
 
         # resize
         w, h = [s*self.zoom for s in canvas.pagesize]
@@ -134,20 +138,19 @@ class GraphicsView(NSView):
         # cache the canvas image
         self.layer().setContents_(bitmap)
 
-        # possible bug:
-        # rasterize might be better off creating cgimages instead:
-        # http://sean.voisen.org/blog/2013/04/high-performance-image-loading-os-x/
-
         # keep a reference to the canvas so we can zoom later on
         self.canvas = canvas
 
     def _get_zoom(self):
         return self._zoom
+
+    @objc.python_method
     def _set_zoom(self, zoom):
         self._zoom = zoom
         self.setCanvas(self.canvas)
     zoom = property(_get_zoom, _set_zoom)
 
+    @objc.python_method
     def findNearestZoomIndex(self, zoom):
         """Returns the nearest zoom level, and whether we found a direct, exact
         match or a fuzzy match."""
@@ -206,12 +209,13 @@ class GraphicsView(NSView):
     ### pasteboard delegate method ###
 
     def pasteboard_provideDataForType_(self, pboard, type):
-        formats = {NSPDFPboardType:"pdf",
-                   NSPostScriptPboardType:"eps",
-                   NSTIFFPboardType:"tiff"}
+        formats = {NSPasteboardTypePDF:"pdf",
+                   "com.adobe.encapsulated-postscript":"eps",
+                   NSPasteboardTypeTIFF:"tiff"}
         if self.canvas and type in formats:
             img_type = formats[type]
-            pboard.setData_forType_(self.canvas._getImageData(img_type), type)
+            mag = self.window().backingScaleFactor() if img_type=='tiff' else 1.0
+            pboard.setData_forType_(self.canvas._getImageData(img_type, mag), type)
 
     def mouseDown_(self, event):
         self.mousedown = True
@@ -224,7 +228,7 @@ class GraphicsView(NSView):
         self.key = event.characters()
         self.keycode = event.keyCode()
 
-        if self.keycode==53: # stop animating on ESC
+        if self.keycode==KEY_ESC: # stop animating on ESC
             NSApp.sendAction_to_from_('stopScript:', None, self)
 
     def keyUp_(self, event):
@@ -261,10 +265,12 @@ class FullscreenView(NSView):
         self.keydown = False
         self.key = None
         self.keycode = None
+        self.mousehide = None
         # self.scrollwheel = False
         # self.wheeldelta = 0.0
         return self
 
+    @objc.python_method
     def setCanvas(self, canvas):
         self.canvas = canvas
         self.setNeedsDisplay_(True)
@@ -292,6 +298,28 @@ class FullscreenView(NSView):
             self.canvas.draw()
         NSGraphicsContext.currentContext().restoreGraphicsState()
 
+    def updateTrackingAreas(self):
+        for area in self.trackingAreas():
+            self.removeTrackingArea_(area)
+        track = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(
+            self.bounds(),
+            (NSTrackingMouseMoved | NSTrackingActiveInKeyWindow),
+            self,
+            None
+        )
+        self.addTrackingArea_(track)
+
+    def mouseMoved_(self, event):
+        if self.mousehide:
+            self.mousehide.invalidate()
+        else:
+            NSCursor.unhide()
+        self.mousehide = set_timeout(self, 'hideMouse:', 1)
+
+    def hideMouse_(self, timer):
+        self.mousehide = None
+        NSCursor.hide()
+
     def isFlipped(self):
         return True
 
@@ -306,7 +334,7 @@ class FullscreenView(NSView):
         self.key = event.characters()
         self.keycode = event.keyCode()
 
-        if self.keycode==53: # stop animating on ESC
+        if self.keycode==KEY_ESC: # stop animating on ESC
             NSApp().sendAction_to_from_('stopScript:', None, self)
 
     def keyUp_(self, event):

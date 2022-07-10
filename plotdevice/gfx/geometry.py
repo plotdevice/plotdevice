@@ -65,19 +65,19 @@ class Pair(object):
         return not self.__eq__(other)
 
     @paired
-    def __abs__(self): return map(abs, self)
+    def __abs__(self): return list(map(abs, self))
     @paired
     def __pos__(self): return self
     @paired
-    def __neg__(self): return map(neg, self)
+    def __neg__(self): return list(map(neg, self))
     @paired
-    def __add__(self, other):  return map(sum, zip(self, other))
+    def __add__(self, other):  return list(map(sum, list(zip(self, other))))
     @paired
-    def __radd__(self, other): return map(sum, zip(self, other))
+    def __radd__(self, other): return list(map(sum, list(zip(self, other))))
     @paired
-    def __sub__(self, other):  return map(sum, zip(self, -other))
+    def __sub__(self, other):  return list(map(sum, list(zip(self, -other))))
     @paired
-    def __rsub__(self, other): return map(sum, zip(other, -self))
+    def __rsub__(self, other): return list(map(sum, list(zip(other, -self))))
     @paired
     def __mul__(self, other):  return [a * b for a,b in zip(self, other)]
     @paired
@@ -254,7 +254,7 @@ class Region(object):
             # try to unpack a full rect or at least an origin from the args
             try:
                 self.origin, self.size = parse_coords(coords, [Point,Size])
-            except Exception, e_orig:
+            except Exception as e_orig:
                 try:
                     self.origin, self.width = parse_coords(coords, [Point,float])
                 except:
@@ -265,7 +265,7 @@ class Region(object):
 
     @trim_zeroes
     def __repr__(self):
-        vals = [getattr(self, attr) for attr in 'x','y','w','h']
+        vals = [getattr(self, attr) for attr in ('x','y','w','h')]
         dims = ["%.3f"%d if numlike(d) else repr(d) for d in vals]
         return 'Region(x=%s, y=%s, w=%s, h=%s)' % tuple(dims)
 
@@ -280,6 +280,9 @@ class Region(object):
     def __iter__(self):
         # allow for assignments like: (x,y), (w,h) = Region()
         return iter([self.origin, self.size])
+
+    def __hash__(self):
+        return hash(tuple(getattr(self, attr) for attr in ('x','y','w','h')))
 
     def union(self, *args):
         """Return a new Region which fully encloses the existing Region and the arguments"""
@@ -370,10 +373,10 @@ class Region(object):
 
 ### argument destructuring madness (a.k.a. wouldn't multimethods be nice...) ###
 
-def _abort(stream, objs, types):
+def _abort(stream, objs, types, orig):
     needed = [t.__name__ for t in types]
     got = [o.__class__.__name__ for o in objs] + [arg.__class__.__name__ for arg in stream]
-    invalid = 'Invalid coordinates (looking for %r, got %r)' % (needed, got)
+    invalid = 'Invalid coordinates (looking for %r, found %r in %r)' % (needed, got, orig)
     raise DeviceError(invalid)
 
 def parse_coords(coords, types):
@@ -390,14 +393,14 @@ def parse_coords(coords, types):
     objs = []
 
     # splice in a Point + Size for any Regions passed in the args
-    for i in xrange(len(stream)-1,-1,-1):
+    for i in range(len(stream)-1,-1,-1):
         if isinstance(stream[i], Region):
             stream[i:i+1] = [stream[i].origin, stream[i].size]
 
     for cls in types:
         # crash on insufficient args
         if not stream:
-            _abort(stream, objs, types)
+            _abort(stream, objs, types, coords)
 
         # unpack the next 1 or 2 args into a Point/Size/float (or die trying)
         try:
@@ -408,13 +411,13 @@ def parse_coords(coords, types):
                 obj = cls(stream[0])
                 del stream[0]
         except:
-            _abort(stream, objs, types)
+            _abort(stream, objs, types, coords)
 
         objs.append(obj)
 
     # crash on extraneous args
     if stream:
-        _abort(stream, coords, types)
+        _abort(stream, objs, types, coords)
 
     # exclude the container list if only one arg is returned
     if len(types) == 1:
@@ -427,9 +430,11 @@ def parse_coords(coords, types):
 class MagicNumber(object):
     # be a well-behaved pseudo-number (based on the float in self.value)
     def __int__(self): return int(self.value)
-    def __long__(self): return long(self.value)
     def __float__(self): return float(self.value)
     def __cmp__(self, n): return cmp(self.value, n)
+    def __eq__(self, n): return n == self.value
+    def __lt__(self, n): return self.value < n
+    def __gt__(self, n): return self.value > n
 
     def __abs__(self): return abs(self.value)
     def __pos__(self): return +self.value
@@ -440,7 +445,7 @@ class MagicNumber(object):
     def __add__(self, n): return self.value + n
     def __sub__(self, n): return self.value - n
     def __mul__(self, n): return self.value * n
-    def __div__(self, n): return self.value/n
+    def __truediv__(self, n): return self.value/n
     def __floordiv__(self, n): return self.value // n
     def __mod__(self, n): return self.value % n
     def __pow__(self, n): return self.value ** n

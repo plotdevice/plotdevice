@@ -43,7 +43,7 @@ ns = {}
 for module in modules:
   ns.update( (a,getattr(module,a)) for a in module.__all__  )
 globals().update(ns)
-__all__ = ns.keys()
+__all__ = list(ns.keys())
 
 # called by a Context to do the dependency injection™
 def bind(ctx):

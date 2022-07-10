@@ -5,11 +5,13 @@ import re
 import traceback
 import random
 import time
+import objc
 from io import open
 from objc import super
 
 from ..lib.cocoa import *
 
+from .preferences import get_default
 from .editor import OutputTextView, EditorView
 from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
@@ -57,7 +59,7 @@ class PlotDeviceDocument(NSDocument):
 
     def writeToURL_ofType_error_(self, url, tp, err):
         path = url.fileSystemRepresentation()
-        # always use the same encoding we were read in with
+        # always use the same encoding we were read in with (even if they deleted the '# encoding:' line)
         with open(path, 'w', encoding=self.source_enc) as f:
             f.write(self.script._get_source())
         return True, err
@@ -78,8 +80,9 @@ class PlotDeviceDocument(NSDocument):
 
     ## Autosave & restoration on re-launch
 
+    @classmethod
     def autosavesInPlace(self):
-        return True
+        return get_default('autosave')
 
     def encodeRestorableStateWithCoder_(self, coder):
         super(PlotDeviceDocument, self).encodeRestorableStateWithCoder_(coder)
@@ -117,17 +120,25 @@ class ScriptController(NSWindowController):
     graphicsView = IBOutlet()
     outputView = IBOutlet()
     editorView = IBOutlet()
-    statusView = IBOutlet()
 
     # auxiliary windows
     dashboardController = IBOutlet()
     exportSheet = IBOutlet()
 
+    # toolbar modes
+    imageToolbar = IBOutlet()
+    animToolbar = IBOutlet()
+    exportToolbar = IBOutlet()
+    statusView = IBOutlet()
+    statusViewItem = IBOutlet()
+
     ## Properties
 
     # .path
+    @objc.python_method
     def _get_path(self):
         return self.vm.path
+    @objc.python_method
     def _set_path(self, pth):
         self.vm.path = pth
     path = property(_get_path, _set_path)
@@ -135,6 +146,7 @@ class ScriptController(NSWindowController):
     # .source
     def _get_source(self):
         return self.editorView.source if self.editorView else self.vm.source
+    @objc.python_method
     def _set_source(self, src):
         self.vm.source = src
         if self.editorView:
@@ -150,9 +162,11 @@ class ScriptController(NSWindowController):
     def _init_state(self):
         self.vm = Sandbox(self)
         self.animationTimer = None
+        self.offscreen = None
         self.fullScreen = None
         self.currentView = None
         self.stationery = None
+        self.is_tab = False
 
     def setPath_source_(self, path, source):
         self.vm.path = path
@@ -164,7 +178,6 @@ class ScriptController(NSWindowController):
         is_untitled = tmpl.startswith('TMPL:')
         is_example = os.path.exists(tmpl) and not is_untitled
         if is_example:
-            # self.source = file(tmpl).read().decode("utf-8")
             self.source = open(tmpl, encoding='utf-8').read()
             if self.document():
                 # when an example script is opened, setStatioenry is called before the
@@ -179,16 +192,17 @@ class ScriptController(NSWindowController):
         elif is_untitled:
             from plotdevice.util.ottobot import genTemplate
             self.source = genTemplate(tmpl.split(':',1)[1])
+            self.is_tab = tmpl.endswith(':tab')
 
     def awakeFromNib(self):
         win = self.window()
+        win.setTabbingMode_(NSWindowTabbingModePreferred if self.is_tab else NSWindowTabbingModeAutomatic)
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
         win.useOptimizedDrawing_(True)
 
-        # place the statusView in the title bar
-        frame = win.frame()
-        win.contentView().superview().addSubview_(self.statusView)
-        self.statusView.setFrame_( ((frame.size.width-104,frame.size.height-22), (100,22)) )
+        # wire up the export-status widget in the title bar
+        self.statusViewItem.setView_(self.statusView)
+        self.setToolbarMode_('stop')
 
         # sign up for autoresume on quit-and-relaunch (but only if this isn't console.py)
         if self.editorView:
@@ -196,6 +210,21 @@ class ScriptController(NSWindowController):
 
         # always a reference to either the in-window view or a fullscreen view
         self.currentView = self.graphicsView
+
+        # watch for changes in light/dark-mode and pass them along to subviews
+        from AppKit import NSKeyValueObservingOptionInitial
+        NSApp.addObserver_forKeyPath_options_context_(self,
+            "effectiveAppearance", NSKeyValueObservingOptionNew | NSKeyValueObservingOptionInitial, None
+        )
+
+    def observeValueForKeyPath_ofObject_change_context_(self, path, obj, change, context):
+        appearance = change.get('new', change.get('initial'))
+        self.graphicsView.updatePlaceholder(appearance)
+        if self.editorView:
+            self.editorView.superview().setDividerColor_(
+                NSColor.colorWithWhite_alpha_(1.0, 0.333) if 'Dark' in appearance.name() else NSColor.thinSplitViewDividerColor()
+            )
+
 
     ## WindowController duties
 
@@ -211,7 +240,6 @@ class ScriptController(NSWindowController):
             # now that the editor has woken up, we can populate it.
             if self.vm.source:
                 self.editorView.source = self.vm.source
-
 
     def encodeRestorableStateWithCoder_(self, coder):
         # walk through editor's superviews to autosave the splitview positions
@@ -266,7 +294,7 @@ class ScriptController(NSWindowController):
 
         gfx_share = scrollview.width / (current.width-thumb_w)
         best_w = round(gworld.width/gfx_share) + thumb_w
-        best_h = gworld.height + 22
+        best_h = gworld.height + 38
         merged = NSIntersectionRect(rect, (rect.origin, (best_w, best_h)))
 
         if merged.size.width<300 or merged.size.height<222:
@@ -293,10 +321,44 @@ class ScriptController(NSWindowController):
         if self.editorView:
             self.editorView._cleanup()
             self.outputView._cleanup()
+        self.dashboardController.shutdown()
         self.graphicsView = self.outputView = self.editorView = self.statusView = None
         self.dashboardController = self.exportSheet = self.vm = None
 
+        # stop tracking appearance changes
+        NSApp.removeObserver_forKeyPath_(self, "effectiveAppearance")
+
     def shouldCloseDocument(self):
+        return True
+
+    #
+    # Toolbar state
+    #
+
+    def setToolbarMode_(self, mode):
+        if self.window():
+            if mode == 'export':
+                toolbar = self.exportToolbar
+            elif not self.vm.animated:
+                toolbar = self.imageToolbar
+            else:
+                toolbar = self.animToolbar
+                for item in toolbar.items():
+                    if item.itemIdentifier() == 'run-script':
+                        action = dict(play='pause', pause='forward.frame', stop='play')[mode]
+                        caption = dict(play='Pause', pause='Resume', stop='Run Script')[mode]
+                        item.setImage_(NSImage.imageWithSystemSymbolName_accessibilityDescription_('%s.fill'%action, caption))
+
+            self.window().setToolbar_(toolbar)
+            toolbar.validateVisibleItems()
+
+    def validateToolbarItem_(self, item):
+        ident = item.itemIdentifier()
+        anim = self.animationTimer is not None
+        if ident == 'stop-script':
+            return anim
+        if ident == 'export':
+            return not anim or not self.animationTimer.isValid()
         return True
 
     #
@@ -305,10 +367,19 @@ class ScriptController(NSWindowController):
 
     @IBAction
     def runScript_(self, sender):
-        # listens for cmd-r
         if self.vm.session:
             return NSBeep()
-        self.runScript()
+
+        # always run from beginning for cmd-r, but play/pause for toolbar clicks
+        if self.animationTimer and not isinstance(sender, NSMenuItem):
+            if self.animationTimer.isValid():
+                self.animationTimer.invalidate()
+            else:
+                self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
+            self.setToolbarMode_("play" if self.animationTimer.isValid() else "pause")
+        else:
+            self.setToolbarMode_("play")
+            self.runScript()
 
     @IBAction
     def runFullscreen_(self, sender):
@@ -319,7 +390,9 @@ class ScriptController(NSWindowController):
             self.currentView = FullscreenView.alloc().init()
             self.currentView.canvas = None
             fullRect = NSScreen.mainScreen().frame()
-            self.fullScreen = FullscreenWindow.alloc().initWithRect_(fullRect)
+            if not self.offscreen:
+                self.offscreen = FullscreenWindow.alloc().initWithRect_(fullRect)
+            self.fullScreen = self.offscreen
             self.fullScreen.setContentView_(self.currentView)
             self.fullScreen.makeKeyAndOrderFront_(self)
             self.fullScreen.makeFirstResponder_(self.currentView)
@@ -338,13 +411,15 @@ class ScriptController(NSWindowController):
         call self.invoke('draw') until cancelled by the user.
         """
 
-        # halt any animation that was already running
+        # ihalt any animation that was already running
         if self.animationTimer:
             self.animationTimer.invalidate()
             self.animationTimer = None
 
-        # get all the output progress indicators going
-        self.statusView.beginRun()
+        # clear out any key/mousedown state from previous run
+        self.reset_ui()
+
+        # clear the previous run's output
         if (self.outputView):
             self.editorView.clearErrors()
             self.outputView.clear(timestamp=True)
@@ -354,13 +429,14 @@ class ScriptController(NSWindowController):
         success = self.invoke(None)
 
         # Display the dashboard if the var() command was called
-        if self.vm.vars:
-            self.dashboardController.buildInterface(self.vm.vars)
+        self.vm.params = self.vm.vars
+        self.dashboardController.updateInterface()
+
+        # Run the setup routine (if it exists)
+        if success:
+            success = self.invoke("setup")
 
         if not success or not self.vm.animated:
-            # halt the progress indicator if we crashed (or if we succeeded in a non-anim)
-            self.statusView.endRun()
-
             # don't mess with the gui window-state if running in fullscreen until the
             # user explicitly cancels with esc or cmd-period
             if success and not self.fullScreen:
@@ -370,10 +446,6 @@ class ScriptController(NSWindowController):
 
         # Check whether we are dealing with animation
         if self.vm.animated:
-
-            # Run setup routine
-            self.invoke("setup")
-
             if not self.vm.crashed:
                 # calling speed(0) just draws the first frame, so bail out before repeating
                 if self.vm.speed<=0:
@@ -386,6 +458,8 @@ class ScriptController(NSWindowController):
                 # Start the timer
                 self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
 
+                # enable the stop button in the toolbar
+                self.setToolbarMode_("play")
 
     def step(self):
         """Keep calling the script's draw method until an error occurs or the animation complete."""
@@ -393,6 +467,15 @@ class ScriptController(NSWindowController):
         if not ok:
             self.stopScript()
 
+        # if not hasattr(self, '_step_times'):
+        #     self._step_times = []
+        # self._step_times.append(time.time())
+        # if len(self._step_times) == 10:
+        #     fps = sum([1.0/(t1-t0) for t0, t1 in zip(self._step_times, self._step_times[1:])]) / len(self._step_times)
+        #     print(fps)
+        #     self._step_times = []
+
+    @objc.python_method
     def invoke(self, method):
         """Call a method defined in the script's global namespace and update the ui appropriately
 
@@ -416,7 +499,7 @@ class ScriptController(NSWindowController):
         if result.ok and redraw:
             try:
                 self.currentView.setCanvas(self.vm.canvas)
-            except DeviceError, e:
+            except DeviceError as e:
                 return self.crash()
         if not result.ok and method in (None, "setup"):
             self.stopScript()
@@ -425,10 +508,17 @@ class ScriptController(NSWindowController):
 
         return result.ok
 
+    @objc.python_method
     def echo(self, output):
         """Pass a list of (isStdErr, txt) tuples to the output window"""
         for isErr, data in output:
             self.outputView.append(data, stream='err' if isErr else 'message')
+
+    def reset_ui(self):
+        self.currentView.mousedown = None
+        self.currentView.keydown = None
+        self.currentView.key = None
+        self.currentView.keycode = None
 
     def _ui_state(self):
         """Collect mouse & keyboard events to be spliced into the script's namespace"""
@@ -470,6 +560,7 @@ class ScriptController(NSWindowController):
             return NSBeep()
         self.exportSheet.beginExport('movie')
 
+    @objc.python_method
     def exportInit(self, kind, fname, opts):
         """Begin actual export (invoked by self.exportSheet unless sheet was cancelled)"""
         if self.animationTimer is not None:
@@ -478,7 +569,7 @@ class ScriptController(NSWindowController):
         # if this is a single-image export and the canvas already contains some grobs,
         # write it out synchronously rather than starting up an export session
         if kind=='image' and opts['last']==opts['first'] and list(self.vm.canvas):
-            img_data = self.vm.canvas._getImageData(opts['format'])
+            img_data = self.vm.canvas._getImageData(opts['format'], opts['zoom'], opts['cmyk'])
             img_data.writeToFile_atomically_(fname, True)
             self.exportStatus('complete')
             return
@@ -486,6 +577,9 @@ class ScriptController(NSWindowController):
         # if we're exporting multiple frames, give some ui feedback
         if self.outputView:
             self.outputView.clear(timestamp=True)
+
+        # replace the toolbar buttons with a progress indicator
+        self.setToolbarMode_("export")
         if self.statusView:
             self.statusView.beginExport()
 
@@ -493,6 +587,7 @@ class ScriptController(NSWindowController):
         self.vm.source = self.source
         self.vm.export(kind, fname, opts)
 
+    @objc.python_method
     def exportFrame(self, status, canvas=None):
         """Handle a newly rendered frame (and any console output it generated)"""
         if status.output:
@@ -503,11 +598,13 @@ class ScriptController(NSWindowController):
             # blit the canvas to the graphics view            ^ (but only every other frame)
             self.currentView.setCanvas(canvas)
 
+    @objc.python_method
     def exportProgress(self, written, total, cancelled):
         """Update the progress meter in the StatusView (invoked by self.vm.session)"""
         if self.statusView:
             self.statusView.updateExport_total_(written, total)
 
+    @objc.python_method
     def exportStatus(self, event):
         """Handle an export-lifecycle event (invoked by self.vm.session)"""
 
@@ -545,9 +642,8 @@ class ScriptController(NSWindowController):
             result = self.vm.stop()
             self.echo(result.output)
 
-        # disable progress spinner
-        if self.statusView and not self.vm.session:
-            self.statusView.endRun()
+        # re-enable the play button
+        self.setToolbarMode_("stop")
 
         # relay any errors to the text panes (if we're in the app)
         if self.editorView:
@@ -555,6 +651,7 @@ class ScriptController(NSWindowController):
             self.outputView.report(self.vm.crashed, self.vm.namespace.get('FRAME') if self.vm.animated else None)
 
         # return from fullscreen (if applicable)
+        needs_focus = False
         if self.fullScreen is not None:
             # copy the final frame back to the window's view
             self.graphicsView.setCanvas(self.vm.canvas)
@@ -562,9 +659,10 @@ class ScriptController(NSWindowController):
 
             # close the fullscreen window
             NSMenu.setMenuBarVisible_(True)
-            self.fullScreen.performClose_(self)
+            self.fullScreen.orderOut_(self)
             self.fullScreen = None
             NSCursor.unhide()
+            needs_focus = True
 
         # try to send the cursor to the editor
         if self.editorView:
@@ -573,7 +671,7 @@ class ScriptController(NSWindowController):
             self.graphicsView.window().makeFirstResponder_(self.graphicsView)
 
         # bring the window forward (to recover from fullscreen mode) and re-cache the graphics
-        if self.graphicsView:
+        if needs_focus:
             # note that graphicsView is nulled out in self.close_ before we're called.
             # otherwise the makeKey will cause a double-flicker before the window disappears
             focus = self.editorView or self.graphicsView
@@ -594,7 +692,9 @@ class ScriptController(NSWindowController):
     def copyImageAsPDF_(self, sender):
         pboard = NSPasteboard.generalPasteboard()
         # graphicsView implements the pboard delegate method to provide the data
-        pboard.declareTypes_owner_([NSPDFPboardType,NSPostScriptPboardType,NSTIFFPboardType], self.graphicsView)
+        pboard.declareTypes_owner_([
+            NSPasteboardTypePDF, NSPasteboardTypeTIFF,"com.adobe.encapsulated-postscript"
+        ], self.graphicsView)
 
 
     #

@@ -1,7 +1,7 @@
 # encoding: utf-8
 import os, re, types
 from contextlib import contextmanager
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from os.path import exists, expanduser
 from objc import super
 
@@ -24,7 +24,7 @@ GridUnits = namedtuple('GridUnits', ['unit', 'dpx', 'to_px', 'from_px'])
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_oldvars', '_vars'
+    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_params', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -37,6 +37,7 @@ class Context(object):
         self._imagecache = {}
         self._statestack = []
         self._vars = []
+        self._params = OrderedDict()
 
         self._resetContext()     # initialize default graphics state
         self._resetEnvironment() # initialize namespace & canvas
@@ -99,10 +100,17 @@ class Context(object):
         self._autoclosepath = True
         self._autoplot = True
 
+        # track new calls to var() so we can update self._params
+        # (this is reset with every invocation but only checked after the full-module eval)
+        self._vars = OrderedDict()
+
+        # update existing variables' values from _params (so draw() can see updates)
+        for name, p in self._params.items():
+            if p.type != BUTTON: # buttons don't actually create variables
+                self._ns[name] = p.value
+
         # legacy internals
         self._transformstack = [] # only used by push/pop
-        self._oldvars = self._vars
-        self._vars = []
 
     def _saveContext(self):
         cached = [_copy_attr(getattr(self, v)) for v in Context._state_vars]
@@ -113,7 +121,7 @@ class Context(object):
         try:
             cached = self._statestack.pop(0)
         except IndexError:
-            raise DeviceError, "Too many Context._restoreContext calls."
+            raise DeviceError("Too many Context._restoreContext calls.")
 
         for attr, val in zip(Context._state_vars, cached):
             setattr(self, attr, val)
@@ -204,7 +212,7 @@ class Context(object):
             elif isinstance(args[0], Image):
                 bg = Pattern(args[0])
                 self.canvas.clear(args[0])
-            elif isinstance(args[0],basestring) and (args[0].startswith('http') or exists(expanduser(args[0]))):
+            elif isinstance(args[0],str) and (args[0].startswith('http') or exists(expanduser(args[0]))):
                 bg = Pattern(args[0])
             elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
                 bg = Gradient(*args, **kwargs)
@@ -274,7 +282,7 @@ class Context(object):
         """
         (x,y) = parse_coords(coords, [Point])
         if self._path is None:
-            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+            raise DeviceError("No active path. Use bezier() or beginpath() first.")
         self._path.moveto(x,y)
 
     def lineto(self, *coords, **kwargs):
@@ -288,7 +296,7 @@ class Context(object):
         close = kwargs.pop('close', False)
         (x,y) = parse_coords(coords, [Point])
         if self._path is None:
-            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+            raise DeviceError("No active path. Use bezier() or beginpath() first.")
         self._path.lineto(x, y)
         if close:
             self._path.closepath()
@@ -308,7 +316,7 @@ class Context(object):
         (x1,y1), (x2,y2), (x3,y3) = parse_coords(coords, [Point,Point,Point])
 
         if self._path is None:
-            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+            raise DeviceError("No active path. Use bezier() or beginpath() first.")
         self._path.curveto(x1, y1, x2, y2, x3, y3)
         if close:
             self._path.closepath()
@@ -346,7 +354,7 @@ class Context(object):
                 (x1,y1) = parse_coords(coords, [Point])
 
         if self._path is None:
-            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+            raise DeviceError("No active path. Use bezier() or beginpath() first.")
         self._path.arcto(x1, y1, x2, y2, radius, ccw)
         if close:
             self._path.closepath()
@@ -509,14 +517,14 @@ class Context(object):
 
     def closepath(self):
         if self._path is None:
-            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+            raise DeviceError("No active path. Use bezier() or beginpath() first.")
         if not self._pathclosed:
             self._path.closepath()
             self._pathclosed = True
 
     def endpath(self, **kwargs):
         if self._path is None:
-            raise DeviceError, "No active path. Use bezier() or beginpath() first."
+            raise DeviceError("No active path. Use bezier() or beginpath() first.")
         if self._autoclosepath:
             self.closepath()
         p = self._path
@@ -558,8 +566,8 @@ class Context(object):
         try:
             self._transform = Transform(self._transformstack[0])
             del self._transformstack[0]
-        except IndexError, e:
-            raise DeviceError, "pop: too many pops!"
+        except IndexError as e:
+            raise DeviceError("pop: too many pops!")
 
     def transform(self, mode=None, matrix=None):
         """Change the transform mode or begin a `with`-statement-scoped set of transformations
@@ -627,7 +635,8 @@ class Context(object):
         return xf
 
     def translate(self, x=0, y=0):
-        """Shift subsequent drawing operations by (x,y)"""
+        x *= self._grid.dpx
+        y *= self._grid.dpx
         return self._transform.translate(x,y, rollback=True)
 
     def scale(self, x=1, y=None):
@@ -797,7 +806,7 @@ class Context(object):
             if isinstance(args[0], Image):
                 clr = Pattern(args[0])
                 self.canvas.clear(args[0])
-            elif isinstance(args[0],basestring) and (args[0].startswith('http') or exists(expanduser(args[0]))):
+            elif isinstance(args[0],str) and (args[0].startswith('http') or exists(expanduser(args[0]))):
                 clr = Pattern(args[0])
             elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
                 clr = Gradient(*args, **kwargs)
@@ -882,7 +891,7 @@ class Context(object):
         """Legacy command. Equivalent to: pen(caps=style)"""
         if style is not None:
             if style not in (BUTT, ROUND, SQUARE):
-                raise DeviceError, 'Line cap style should be BUTT, ROUND or SQUARE.'
+                raise DeviceError('Line cap style should be BUTT, ROUND or SQUARE.')
             self._penstyle = self._penstyle._replace(cap=style)
         return self._penstyle.cap
 
@@ -890,7 +899,7 @@ class Context(object):
         """Legacy command. Equivalent to: pen(joins=style)"""
         if style is not None:
             if style not in (MITER, ROUND, BEVEL):
-                raise DeviceError, 'Line join style should be MITER, ROUND or BEVEL.'
+                raise DeviceError('Line join style should be MITER, ROUND or BEVEL.')
             self._penstyle = self._penstyle._replace(join=style)
         return self._penstyle.join
 
@@ -1461,7 +1470,7 @@ class Context(object):
         else:
             self.canvas.clear(*grobs)
 
-    def export(self, fname, fps=None, loop=None, bitrate=1.0, cmyk=False):
+    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=1.0, cmyk=False):
         """Write single images or manage batch exports for animations.
 
         To write the canvas's current contents to a file, simply call export("~/somefile.png")
@@ -1478,7 +1487,7 @@ class Context(object):
 
         To export a movie:
             with export('anim.mov', fps=30, bitrate=1.8) as movie:
-                for i in xrange(100):
+                for i in range(100):
                     with movie.frame:
                         ... # draw the next frame
 
@@ -1495,13 +1504,13 @@ class Context(object):
         """
 
         # determine the format by normalizing the file extension
-        format = fname.lower().rsplit('.',1)[1]
-        if format not in ('pdf','eps','png','jpg','gif','tiff', 'mov'):
+        format = fname.lower().rsplit('.',1)[-1]
+        if format not in ('pdf','eps','png','jpg','heic','gif','tiff', 'mov'):
             badform = 'Unknown export format "%s"'%format
             raise DeviceError(badform)
 
         # build up opts based on type of output file (anim vs static)
-        opts = {"cmyk":cmyk}
+        opts = {"cmyk":cmyk, "zoom":zoom}
         if format=='mov' or (format=='gif' and fps or loop is not None):
             opts.update(fps=fps or 30, # set a default for .mov exports
                         loop={True:-1, False:0, None:0}.get(loop, loop), # convert bool args to int
@@ -1537,7 +1546,7 @@ class Context(object):
         If `obj` if a file() object, PlotDevice will treat it as an image file and
         return its pixel dimensions.
         """
-        if isinstance(obj, basestring):
+        if isinstance(obj, str):
             obj = Text(obj, 0, 0, width, height, **kwargs)
 
         if hasattr(obj, 'metrics'):
@@ -1554,23 +1563,14 @@ class Context(object):
 
     ### Variables ###
 
-    def var(self, name, type, default=None, min=0, max=100, value=None):
-        v = Variable(name, type, default, min, max, value)
-        v = self.addvar(v)
+    def var(self, name, type, *args, **kwargs):
+        v = Variable(name, type, *args, **kwargs)
+        self._vars[v.name] = v
 
-    def addvar(self, v):
-        oldvar = self.findvar(v.name)
-        if oldvar is not None:
-            if oldvar.compliesTo(v):
-                v.value = oldvar.value
-        self._vars.append(v)
-        self._ns[v.name] = v.value
-
-    def findvar(self, name):
-        for v in self._oldvars:
-            if v.name == name:
-                return v
-        return None
+        # if we're re-running the script, don't overwrite the value set through the UI
+        if v.type != BUTTON: # buttons don't actually create variables
+            v.inherit(self._params.get(v.name, None))
+            self._ns[v.name] = v.value
 
 
 class PlotContext(object):
@@ -1597,6 +1597,22 @@ class PlotContext(object):
         self._spec = spec
         self._ctx = ctx
 
+    @property
+    def nib(self):
+        return self._ctx._penstyle.nib
+
+    @property
+    def cap(self):
+        return self._ctx._penstyle.cap
+
+    @property
+    def join(self):
+        return self._ctx._penstyle.join
+
+    @property
+    def dash(self):
+        return self._ctx._penstyle.dash
+
     def __enter__(self):
         return dict(self._spec)
 
@@ -1611,15 +1627,13 @@ class PlotContext(object):
 
 ### containers ###
 
-class _PDFRenderView(NSView):
-
-    # This view was created to provide PDF data.
-    # Strangely enough, the only way to get PDF data from Cocoa is by asking
-    # dataWithPDFInsideRect_ from a NSView. So, we create one just to get to
-    # the PDF data.
+class _PostScriptView(NSView):
+    # This view was created to provide EPS data. CoreGraphics isn't antiquarian
+    # enough to speak EPS so we need to draw to an NSView then use its
+    # dataWithEPSInsideRect_ instead
 
     def initWithCanvas_(self, canvas):
-        super(_PDFRenderView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
+        super(_PostScriptView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
         self.canvas = canvas
         return self
 
@@ -1711,8 +1725,8 @@ class Canvas(object):
         try:
             del self._stack[0]
             self._container = self._stack[0]
-        except IndexError, e:
-            raise DeviceError, "pop: too many canvas pops!"
+        except IndexError as e:
+            raise DeviceError("pop: too many canvas pops!")
 
     def draw(self):
         if self.background is not None:
@@ -1731,101 +1745,80 @@ class Canvas(object):
 
     @property
     def _nsImage(self):
-        return self.rasterize()
+        # Allow the canvas to be used with the image() command
+        return self._render_to_image()
 
-    def _cg_image(self, zoom=1.0):
-        """Return a CGImage with the canvas dimensions scaled to the specified zoom level"""
-        from Quartz import CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpaceCreateDeviceRGB, CGContextClearRect
-        from Quartz import CGSizeMake, CGRectMake
-        from Quartz import kCGImageAlphaPremultipliedFirst, kCGBitmapByteOrder32Host, kCGImageAlphaNoneSkipFirst
-        w,h = self.pagesize
-        # size = Size(int(w*zoom), int(h*zoom))
+    def _render_to_image(self, zoom=1.0, flipped=True):
         size = Size(*[int(dim*zoom) for dim in self.pagesize])
-        bitmapBytesPerRow   = (size.width * 4);
-        bitmapByteCount     = (bitmapBytesPerRow * size.height);
-        bitmapContext = CGBitmapContextCreate(None,
-                                              size.width, size.height, 8, bitmapBytesPerRow,
-                                              CGColorSpaceCreateDeviceRGB(),
-                                              kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
-
-        ns_ctx = NSGraphicsContext.graphicsContextWithGraphicsPort_flipped_(bitmapContext, True)
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.setCurrentContext_(ns_ctx)
+        img = NSImage.alloc().initWithSize_(size)
+        img.lockFocusFlipped_(flipped)
         trans = NSAffineTransform.transform()
-        trans.translateXBy_yBy_(0, size.height)
+        trans.translateXBy_yBy_(0, self.pagesize.height*zoom)
         trans.scaleXBy_yBy_(zoom,-zoom)
-        trans.concat()
-        self.draw()
-        NSGraphicsContext.restoreGraphicsState()
-
-        return CGBitmapContextCreateImage(bitmapContext)
-
-    def _bitmap_image(self, zoom=1.0):
-        w,h = self.pagesize
-        img_rect = Region(0,0, int(w*zoom), int(h*zoom))
-
-        from Cocoa import NSBitmapImageRep, NSDeviceRGBColorSpace, NSAlphaFirstBitmapFormat
-
-        offscreen = NSBitmapImageRep.alloc().initWithBitmapDataPlanes_pixelsWide_pixelsHigh_bitsPerSample_samplesPerPixel_hasAlpha_isPlanar_colorSpaceName_bitmapFormat_bytesPerRow_bitsPerPixel_(
-          None, img_rect.w, img_rect.h, 8, 4, True, False, NSDeviceRGBColorSpace, NSAlphaFirstBitmapFormat, 0, 0
-        )
-
-        ns_ctx = NSGraphicsContext.graphicsContextWithBitmapImageRep_(offscreen)
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.setCurrentContext_(ns_ctx)
-        trans = NSAffineTransform.transform()
-        trans.scaleBy_(zoom)
-        trans.concat()
-        self.draw()
-        NSGraphicsContext.restoreGraphicsState()
-
-        img = NSImage.alloc().initWithSize_(img_rect.size)
-        img.addRepresentation_(offscreen)
-        return img
-
-    def rasterize(self, zoom=1.0):
-        """Return an NSImage with the canvas dimensions scaled to the specified zoom level"""
-        w,h = self.pagesize
-        img = NSImage.alloc().initWithSize_((w*zoom, h*zoom))
-        img.setFlipped_(True)
-        img.lockFocus()
-        trans = NSAffineTransform.transform()
-        trans.scaleBy_(zoom)
         trans.concat()
         self.draw()
         img.unlockFocus()
         return img
 
-    def _getImageData(self, format):
+    def _render_to_context(self, cgContext, zoom):
+        ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(cgContext, True)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.setCurrentContext_(ns_ctx)
+        NSGraphicsContext.saveGraphicsState()
+        trans = NSAffineTransform.transform()
+        trans.translateXBy_yBy_(0, self.pagesize.height*zoom)
+        trans.scaleXBy_yBy_(zoom,-zoom)
+        trans.concat()
+        self.draw()
+        NSGraphicsContext.restoreGraphicsState()
+        NSGraphicsContext.restoreGraphicsState()
+
+    def _getImageData(self, format, zoom=1.0, cmyk=False):
         if format == 'pdf':
-            view = _PDFRenderView.alloc().initWithCanvas_(self)
-            return view.dataWithPDFInsideRect_(view.bounds())
+            w, h = self.pagesize
+            cgData = NSMutableData.data()
+            dataConsumer = CGDataConsumerCreateWithCFData(cgData)
+            pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w, h), None)
+            CGPDFContextBeginPage(pdfContext, None)
+            self._render_to_context(pdfContext, zoom)
+            CGPDFContextEndPage(pdfContext)
+            CGPDFContextClose(pdfContext)
+            pdfContext = None
+            return cgData
         elif format == 'eps':
-            view = _PDFRenderView.alloc().initWithCanvas_(self)
+            view = _PostScriptView.alloc().initWithCanvas_(self)
             return view.dataWithEPSInsideRect_(view.bounds())
         else:
-            imgTypes = {"gif":  NSGIFFileType,
-                        "jpg":  NSJPEGFileType,
-                        "jpeg": NSJPEGFileType,
-                        "png":  NSPNGFileType,
-                        "tiff": NSTIFFFileType}
-            if format not in imgTypes:
-                badformat = "Filename should end in .pdf, .eps, .tiff, .gif, .jpg or .png"
-                raise DeviceError(badformat)
-            data = self.rasterize().TIFFRepresentation()
-            if format != 'tiff':
-                imgType = imgTypes[format]
-                rep = NSBitmapImageRep.imageRepWithData_(data)
-                props = {NSImageCompressionFactor:1.0} if format in ('jpg','jpeg') else None
-                return rep.representationUsingType_properties_(imgType, props)
-            else:
-                return data
+            cgTypes = {"gif":  kUTTypeGIF,
+                       "jpg":  kUTTypeJPEG,
+                       "jpeg": kUTTypeJPEG,
+                       "png":  kUTTypePNG,
+                       "tiff": kUTTypeTIFF,
+                       "heic": 'public.heic'}
 
-    def save(self, fname, format=None):
+            if format in ('jpeg', 'jpg', 'tiff') and cmyk:
+                colorspace, opts = CGColorSpaceCreateDeviceCMYK(), kCGImageAlphaNone
+            else:
+                colorspace, opts = CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
+
+            size = Size(*[int(dim*zoom) for dim in self.pagesize])
+            bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
+            self._render_to_context(bitmapContext, zoom)
+            cgImage = CGBitmapContextCreateImage(bitmapContext)
+            cgData = NSMutableData.data()
+            cgDest = CGImageDestinationCreateWithData(cgData, cgTypes[format], 1, None)
+            cgProperies = {kCGImagePropertyDPIWidth: 72*zoom, kCGImagePropertyDPIHeight: 72*zoom}
+            if format in ('jpg', 'jpeg'):
+                cgProperies[kCGImageDestinationLossyCompressionQuality] = 1.0
+            CGImageDestinationAddImage(cgDest, cgImage, cgProperies)
+            CGImageDestinationFinalize(cgDest)
+            return cgData
+
+    def save(self, fname, format=None, zoom=1.0, cmyk=False):
         """Write the current graphics objects to an image file"""
         if format is None:
             format = fname.rsplit('.',1)[-1].lower()
-        data = self._getImageData(format)
+        data = self._getImageData(format, zoom, cmyk)
         fname = NSString.stringByExpandingTildeInPath(fname)
         data.writeToFile_atomically_(fname, False)
 

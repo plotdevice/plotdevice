@@ -13,6 +13,7 @@ from ..util.readers import HTTP, last_modified
 from ..lib.io import MovieExportSession, ImageExportSession
 from .geometry import Region, Size, Point, Transform, CENTER
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
+from .colors import CMYK
 from . import _ns_context
 
 _ctx = None
@@ -70,7 +71,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                 self._nsImage.setFlipped_(True)
             elif hasattr(src, '_nsImage'):
                 self._nsImage = src._nsImage
-            elif isinstance(src, basestring):
+            elif isinstance(src, str):
                 self._nsImage = self._lazyload(path=src)
             else:
                 invalid = "Not a valid image source: %r" % type(src)
@@ -289,7 +290,8 @@ class ImageWriter(object):
             #
             m = re_padded.search(self.fname)
             fn = re_padded.sub('0'*int(m.group(1)), self.fname, count=1) if m else self.fname
-            _ctx.canvas.save(fn, self.format)
+            _ctx._outputmode = self.mode
+            _ctx.canvas.save(fn, self.format, self.opts['zoom'], self.mode==CMYK)
 
     @property
     def page(self):
@@ -342,7 +344,7 @@ class ImageWriter(object):
         files. For example, to generate 'output-0001.png' through 'output-0100.png':
 
             with export('output.png') as seq:
-                for i in xrange(100):
+                for i in range(100):
                     with seq.frame:
                         ... # draw the next image in the sequence
 
@@ -351,7 +353,7 @@ class ImageWriter(object):
         generate files named '01-output.png' through '100-output.png':
 
             with export('{2}-output.png') as seq:
-                for i in xrange(100):
+                for i in range(100):
                     with seq.frame:
                         ... # draw the next image in the sequence
         """

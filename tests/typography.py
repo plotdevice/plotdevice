@@ -259,7 +259,7 @@ class TypographyTests(PlotDeviceTestCase):
         
         body = text(10,20, 170, xml=flaubert)
         for fn in body.select('fn'):
-            note = text(190, fn.baseline.y, width=100, italic=True)
+            note = text('', 190, fn.baseline.y, width=100, italic=True)
             note.append(fn.text, vpos=1)
             note.append(' '+fn.attrs['note'])
 

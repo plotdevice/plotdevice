@@ -46,7 +46,7 @@ with clip(p):
 
 # Set the font. Note that all state operations work as expected for the
 # textpath() command just as they would with text()
-font("Bodoni", "bold", 72)
+font("Didot", "bold", 72)
 align(CENTER)
 
 # Return a path that can be used for clipping. Textpaths never draw on screen.

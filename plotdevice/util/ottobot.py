@@ -224,13 +224,13 @@ colormode(HSB)
 
 def genTemplate(kind='sketch'):
     if kind=='sketch':
-        return u"""size(512, 512)
+        return """size(512, 512)
 background(1)
 
 text("Welcome to PlotDevice", 40, 40)
 """
     elif kind=='anim':
-        return u"""# to create an animation, call speed() with a
+        return """# to create an animation, call speed() with a
 # frame-rate value. This has the side-effect of
 # running setup, draw, and stop in the pattern
 # described below:
@@ -240,7 +240,7 @@ speed(30)
 def setup():
     size(500, 500)
     background(1)
-    print "start"
+    print("start")
 
 # runs repeatedly until you cancel with ⌘.
 def draw():
@@ -248,10 +248,12 @@ def draw():
 
 # runs once after the animation was cancelled
 def stop():
-    print "done"
+    print("done")
 """
     elif kind=='ottobot':
         return genProgram()
+    else:
+        return ""
 
 if __name__ == '__main__':
-    print genProgram()
+    print(genProgram())

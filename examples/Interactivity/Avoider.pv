@@ -17,20 +17,21 @@ STATUS_BAR_HEIGHT = 12
 # Use the import statement to gather up functions needed for geometry
 # and game-time calculations
 from math import pi, sqrt, sin, cos, asin, atan2
-from plotdevice.lib.geometry import angle, coordinates, distance
 import time
 
 class Hero:
     """The hero of the game."""
 
     def __init__(self, x, y):
-        self.x, self.y = x, y
+        self.origin = Point(x, y)
         self.speed = 5.0
         self.size = 5.0
 
     def draw(self):
+        x, y = self.origin
+        sz = self.size
         fill(0, 0, 0)
-        oval(self.x-self.size, self.y-self.size, self.size*2, self.size*2)
+        oval(x-sz, y-sz, sz*2, sz*2)
 
 class Blob:
     """"The bad guys in the game. Avoid them!
@@ -39,7 +40,7 @@ class Blob:
     The update method contains their "brain"."""
 
     def __init__(self, x, y):
-        self.x, self.y = x, y
+        self.origin = Point(x, y)
         self.size = 5.0
         self.speed = random(0.5,0.8)
         self.seed = random()
@@ -53,7 +54,7 @@ class Blob:
             sz = self.size # We use size a lot in this method -- store it
 
             # Move to the center of the blob
-            translate(self.x+sz, self.y+sz)
+            translate(self.origin + Point(sz, sz))
             scale(sz)
 
             # Rotate the blob. You won't see this when drawing the first oval,
@@ -73,16 +74,16 @@ class Blob:
         """Implements the chase behaviour of the blobs."""
 
         # First, calculate the angle between ourselves and the hero
-        self.angle = angle(self.x, self.y, hero.x, hero.y)
+        self.angle = self.origin.angle(hero.origin)
 
         # Then, move in that direction using the moving speed
-        self.x, self.y = coordinates(self.x, self.y, self.speed, self.angle)
+        self.origin = self.origin.coordinates(self.speed, self.angle)
 
         # Calculate if I'm not bumping into another blob. If I am, calculate a new
         # jump to an empty spot on the board.
         for blob in blobs:
-            if blob is not self and abs(distance(self.x, self.y, blob.x, blob.y)) < blob.size*2:
-                self.x, self.y = random_spot_away_from_hero(hero)
+            if blob is not self and abs(self.origin.distance(blob.origin)) < blob.size*2:
+                self.origin = random_spot_away_from_hero(hero)
 
         # Increase and decrease the size based on the speed of the blob
         self.size = abs(sin(self.seed+FRAME/(5.0-self.speed*2.0)) * 2.0+self.seed) + 4.0
@@ -94,9 +95,9 @@ def random_spot_away_from_hero(hero, mindist = 20.0):
     # We use a brute-force: while we have not found a good point, choose a random
     # point and calculate its distance. Rinse and repeat until a good point is found.
     while dist < mindist:
-        x, y = random(WIDTH), random(HEIGHT)
-        dist = distance(x, y, hero.x, hero.y)
-    return x, y
+        spot = Point(random(WIDTH), random(HEIGHT))
+        dist = spot.distance(hero.origin)
+    return spot
 
 # The setup of the game. This initializes the positions of the hero and the blobs,
 # sets the begintime and various other constants.
@@ -142,25 +143,28 @@ def draw():
         # The min and max lines keep the hero within the bounds
         # of the playing field
         if keydown:
+            x, y = hero.origin
+            sz = hero.size
             if keycode == KEY_UP:
-                hero.y -= hero.speed
-                hero.y = max(hero.size, hero.y)
+                y -= hero.speed
+                y = max(sz, y)
             if keycode == KEY_DOWN:
-                hero.y += hero.speed
-                hero.y = min(WIDTH-hero.size, hero.y)
+                y += hero.speed
+                y = min(WIDTH-sz, y)
             if keycode == KEY_LEFT:
-                hero.x -= hero.speed
-                hero.x = max(hero.size, hero.x)
+                x -= hero.speed
+                x = max(sz, x)
             if keycode == KEY_RIGHT:
-                hero.x += hero.speed
-                hero.x = min(WIDTH-hero.size, hero.x)
+                x += hero.speed
+                x = min(WIDTH-sz, x)
+            hero.origin = Point(x, y)
 
         # Update the blobs. This part is the actual "intelligence" of the game.
         # This routine also calculates if one of the blobs hits your hero, in
         # which case the game is over.
         for blob in blobs:
             blob.update(hero, blobs)
-            if abs(distance(hero.x, hero.y, blob.x, blob.y)) < blob.size + hero.size:
+            if abs(hero.origin.distance(blob.origin)) < blob.size + hero.size:
                 gameover = True
                 # The endtime stores how long we survived.
                 endtime = time.time()

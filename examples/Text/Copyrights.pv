@@ -21,6 +21,6 @@ for i in range(20):
     # The TradeMark, Registered and Copyright signs are
     # Unicode characters. You should prefix the string with
     # a 'u', for Unicode.
-    text(u"™", random(500),random(400))
-    text(u"®", random(500),random(400))
-    text(u"©", random(500),random(400))
+    text("™", random(500),random(400))
+    text("®", random(500),random(400))
+    text("©", random(500),random(400))

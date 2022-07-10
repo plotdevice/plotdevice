@@ -8,7 +8,6 @@ from operator import itemgetter, attrgetter
 from collections import namedtuple, OrderedDict as odict, defaultdict as ddict
 from .cocoa import *
 from ..util import numlike
-import cFoundry
 
 from plotdevice import DeviceError
 
@@ -67,12 +66,6 @@ def best_face(spec):
 
 # typography arg validators/standardizers
 
-PY2 = sys.version_info[0] == 2
-if not PY2:
-    char_type = bytes
-else:
-    char_type = str
-
 def fontspec(*args, **kwargs):
     """Validate a set of font/stylesheet/text args and return a canonicalized
     font-specification dictionary (which can then be passed to best_face)"""
@@ -84,7 +77,7 @@ def fontspec(*args, **kwargs):
 def font_axes(*args, **kwargs):
     # start with kwarg values as the canonical settings
     _canon = ('family','size','weight','italic','width','variant','fontsize')
-    spec = {k:v.decode('utf-8') if isinstance(v,char_type) else v for k,v in kwargs.items() if k in _canon}
+    spec = {k:v for k,v in kwargs.items() if k in _canon}
     basis = kwargs.get('face', kwargs.get('fontname'))
 
     # be backward compatible with the old arg names
@@ -100,10 +93,10 @@ def font_axes(*args, **kwargs):
 
         # validate the weight and width args (if any)
         if 'weight' in spec and not weighty(spec['weight']):
-            print 'Font: unknown weight "%s"' % spec.pop('weight')
+            print('Font: unknown weight "%s"' % spec.pop('weight'))
 
         if spec.get('width') is not None and not widthy(spec['width']):
-            print 'Font: unknown width "%s"' % spec.pop('width')
+            print('Font: unknown width "%s"' % spec.pop('width'))
 
     # look for a postscript name passed as `face` or `fontname` and validate it
     if basis and not font_exists(basis):
@@ -122,9 +115,8 @@ def font_axes(*args, **kwargs):
             # existing Font object
             for k,v in item._spec.items():
                 spec.setdefault(k,v)
-        elif isinstance(item, basestring):
+        elif isinstance(item, str):
             # name-like values
-            item = item.decode('utf-8') if isinstance(item,char_type) else item
             if fammy(item):
                 spec.setdefault('family', family_name(item))
             elif widthy(item):
@@ -396,7 +388,7 @@ def facey(word):
     return word in _fm.availableFonts() or NSFont.fontWithName_size_(word,9)
 
 def widthy(word):
-    return sanitized(word) in wid_corpus+wid_abbrevs.keys()
+    return sanitized(word) in wid_corpus + list(wid_abbrevs.keys())
 
 def weighty(word):
     return sanitized(word) in wgt_corpus
@@ -430,7 +422,7 @@ def standardized(axis, val):
             for i,names in enumerate(std_weights):
                 if weight in names:
                     return weight.title(), i
-            print weight, 'not in', std_weights
+            print(weight, 'not in', std_weights)
     elif axis=='width':
         width = sanitized(val)
         width = sanitized(wid_abbrevs.get(width, width))
@@ -442,22 +434,22 @@ def standardized(axis, val):
             idx += 0 if idx<0 else 1
             return width.title(), idx
         else:
-            print [width],"not in", wid_corpus
+            print([width],"not in", wid_corpus)
 
 def parse_display_name(dname):
     """Try to extract style attributes from the font's display name"""
     # break the string on spaces and on lc/uc transitions
-    elts = filter(None, re.sub(r'(?<=[^ ])([A-Z][a-z]+)',r' \1',dname).split(' '))
+    elts = list([s for s in re.sub(r'(?<=[^ ])([A-Z][a-z]+)',r' \1',dname).split(' ') if s])
 
     # disregard the first italic-y word in the name (if any)
-    for i in xrange(len(elts)-1,-1,-1):
+    for i in range(len(elts)-1,-1,-1):
         # look for full italic/oblique/slanted spellings first
         if italicky(elts[i], strict=True):
             elts.pop(i)
             break
     else:
         # if one wasn't found, settle for an it/a/l/ic/s fragment
-        for i in xrange(len(elts)-1,-1,-1):
+        for i in range(len(elts)-1,-1,-1):
             if italicky(elts[i], strict=False):
                 elts.pop(i)
                 break
@@ -465,7 +457,7 @@ def parse_display_name(dname):
     # next search for width-y words
     width = None
     wid_val = 0
-    for i in xrange(len(elts)-2,-1,-1):
+    for i in range(len(elts)-2,-1,-1):
         # first look for modifier+width combinations
         prefix, suffix = elts[i:i+2]
         if widthy(prefix+suffix) and sanitized(prefix) in wid_mods:
@@ -478,7 +470,7 @@ def parse_display_name(dname):
             break
     else:
         # otherwise just look for a single-word width (leave width==None if no match)
-        for i in xrange(len(elts)-1,-1,-1):
+        for i in range(len(elts)-1,-1,-1):
             if widthy(elts[i]):
                 width = elts[i]
                 _, wid_val = standardized('width', width)
@@ -490,7 +482,7 @@ def parse_display_name(dname):
     # search for weighty words in what's left
     weight = None
     wgt_val = 5
-    for i in xrange(len(elts)-2,-1,-1):
+    for i in range(len(elts)-2,-1,-1):
         # first look for modifier+weight combinations
         prefix, suffix = elts[i:i+2]
         if weighty(prefix+suffix) and sanitized(prefix) in wgt_mods:
@@ -501,7 +493,7 @@ def parse_display_name(dname):
             break
     else:
         # otherwise just look for a single-word weight (leave weight==None if no match)
-        for i in xrange(len(elts)-1,-1,-1):
+        for i in range(len(elts)-1,-1,-1):
             if weighty(elts[i]):
                 weight = elts[i]
                 _, wgt_val = standardized('weight', weight)
@@ -602,7 +594,7 @@ class Librarian(object):
 
             scores = {}
             for f in faces:
-                scores[f] = sum([score(axis,f) for axis in 'italic', 'wgt', 'wid', 'variant'])
+                scores[f] = sum([score(axis,f) for axis in ('italic', 'wgt', 'wid', 'variant')])
 
             candidates = [dict(score=s, face=f, ps=f.psname) for f,s in scores.items()]
             candidates.sort(key=itemgetter('score'), reverse=True)
@@ -677,8 +669,8 @@ class Librarian(object):
 
 
             # if something that looks like a weight pops up as a variant in a face, wipe it out
-            seen_weights = filter(None, set(f.weight for f in fam))
-            seen_vars = filter(None, set(f.variant for f in fam))
+            seen_weights = [w for w in set(f.weight for f in fam) if w]
+            seen_vars = [v for v in set(f.variant for f in fam) if v]
             iffy_vars = [v for v in seen_vars if v in seen_weights]
             for i,f in enumerate(fam):
                 if f.variant in iffy_vars:

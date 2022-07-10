@@ -27,10 +27,9 @@ def defaultDefaults():
         "plotdevice:bindings":"mac",
         "plotdevice:font-name":"Menlo",
         "plotdevice:font-size":11,
+        "plotdevice:autosave":True
     }
 NSUserDefaults.standardUserDefaults().registerDefaults_(defaultDefaults())
-ERR_COL = NSColor.colorWithRed_green_blue_alpha_(167/255.0, 41/255.0, 34/255.0, 1.0)
-OK_COL = NSColor.colorWithRed_green_blue_alpha_(60/255.0, 60/255.0, 60/255.0, 1.0)
 THEMES = None # to be filled in as needed
 
 def _hex_to_nscolor(hexclr):
@@ -61,25 +60,26 @@ def editor_info(name=None):
     return dict(_editor_info)
 
 def possibleToolLocations():
-    homebin = '%s/bin/plotdevice'%os.environ['HOME']
-    localbin = '/usr/local/bin/plotdevice'
+    homebin = b'%s/bin/plotdevice'%os.environ['HOME'].encode('utf-8')
+    localbin = b'/usr/local/bin/plotdevice'
     locations = [homebin, localbin]
 
     # find the user's login shell
-    out, _ = Popen(['dscl','.','-read','/Users/'+os.environ['USER'],'UserShell'], stdout=PIPE).communicate()
-    shell = out.replace('UserShell:','').strip()
+    userdir = ('/Users/'+os.environ['USER']).encode('utf8')
+    out, _ = Popen([b'dscl', b'.', b'-read', userdir, b'UserShell'], stdout=PIPE).communicate()
+    shell = out.replace(b'UserShell:', b'').strip()
 
     # try launching a shell to extract the user's path
     if shell:
-        out, _ = Popen([shell,"-l"], stdout=PIPE, stderr=PIPE, stdin=PIPE).communicate("echo $PATH")
-        for path in out.strip().split(':'):
-            path += '/plotdevice'
-            if '/sbin' in path: continue
-            if path.startswith('/bin'): continue
-            if path.startswith('/usr/bin'): continue
+        out, _ = Popen([shell, b"-l"], stdout=PIPE, stderr=PIPE, stdin=PIPE).communicate(b"echo $PATH")
+        for path in out.strip().split(b':'):
+            path += b'/plotdevice'
+            if b'/sbin' in path: continue
+            if path.startswith(b'/bin'): continue
+            if path.startswith(b'/usr/bin'): continue
             if path in locations: continue
             locations.append(path)
-    return locations
+    return [pth.decode('utf-8') for pth in locations]
 
 
 
@@ -89,6 +89,8 @@ class PlotDevicePreferencesController(NSWindowController):
     bindingsMenu = IBOutlet()
     fontMenu = IBOutlet()
     fontSizeMenu = IBOutlet()
+    autosaveEnabledRadio = IBOutlet()
+    autosaveDisabledRadio = IBOutlet()
     toolPath = IBOutlet()
     toolAction = IBOutlet()
     toolBoilerplate = IBOutlet()
@@ -108,8 +110,10 @@ class PlotDevicePreferencesController(NSWindowController):
         self.checkThemes()
         self.checkFonts()
         self.checkBindings()
+        self.checkAutosave()
         self.checkUpdater()
 
+    @objc.python_method
     def _notify(self, notification):
         nc = NSNotificationCenter.defaultCenter()
         nc.postNotificationName_object_(notification, None)
@@ -140,14 +144,27 @@ class PlotDevicePreferencesController(NSWindowController):
 
     def checkBindings(self):
         style = get_default('bindings')
-        tag = ['mac','emacs','vim']
+        tag = ['mac','sublime','vscode','emacs','vim']
         self.bindingsMenu.selectItemWithTag_(tag.index(style))
 
     @IBAction
     def bindingsChanged_(self, sender):
-        style = ['mac','emacs','vim'][sender.selectedItem().tag()]
+        style = ['mac','sublime','vscode','emacs','vim'][sender.selectedItem().tag()]
         set_default('bindings', style)
         self._notify('BindingsChanged')
+
+    def checkAutosave(self):
+        enabled = get_default('autosave')
+        if enabled:
+            self.autosaveEnabledRadio.setState_(NSOnState)
+        else:
+            self.autosaveDisabledRadio.setState_(NSOnState)
+        self.autosaveEnabledRadio.setState_(NSOnState if enabled else NSOffState)
+
+    @IBAction
+    def autosaveChanged_(self, sender):
+        enabled = sender.tag() == 1
+        set_default('autosave', enabled)
 
     def checkThemes(self):
         light = sorted([t for t,m in THEMES.items() if not m['dark']], reverse=True)
@@ -210,11 +227,10 @@ class PlotDevicePreferencesController(NSWindowController):
 
     def checkTool(self):
         found, valid, action = self._tool
-
         self.toolAction.setTitle_(action.title())
         self.toolPath.setSelectable_(found is not None)
-        self.toolPath.setStringValue_(found if found else '')
-        self.toolPath.setTextColor_(OK_COL if valid else ERR_COL)
+        self.toolPath.setStringValue_(found.replace(os.environ['HOME'], '~') if found else '')
+        self.toolPath.setTextColor_(NSColor.labelColor() if valid else NSColor.systemRedColor())
         self.toolBoilerplate.setHidden_(found is not None)
         self.toolPath.setHidden_(found is None)
 
@@ -247,9 +263,9 @@ class PlotDevicePreferencesController(NSWindowController):
         found, _, action = self._tool
 
         if action == 'reveal':
-            os.system('open --reveal "%s"'%found)
+            os.system(b'open --reveal "%s"' % found.encode('utf-8'))
         elif action in ('install', 'repair'):
-            locs = [loc.replace(os.environ['HOME'],'~') for loc in possibleToolLocations()]
+            locs = [loc.replace(os.environ['HOME'], '~') for loc in possibleToolLocations()]
             self.toolInstallMenu.removeAllItems()
             self.toolInstallMenu.addItemsWithTitles_(locs)
             NSApp().beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.toolInstallSheet, self.window(), self, None, 0)
@@ -259,7 +275,7 @@ class PlotDevicePreferencesController(NSWindowController):
         should_install = sender.tag()
         if should_install:
             console_py = bundle_path('Contents/SharedSupport/plotdevice')
-            pth = self.toolInstallMenu.selectedItem().title().replace('~',os.environ['HOME'])
+            pth = self.toolInstallMenu.selectedItem().title().replace('~', os.environ['HOME'])
             dirname = os.path.dirname(pth)
             try:
                 if os.path.exists(pth) or os.path.islink(pth):

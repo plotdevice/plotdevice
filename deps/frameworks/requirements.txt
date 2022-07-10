@@ -1,0 +1,8 @@
+# --no-binary :all:
+xattr
+cachecontrol
+cffi
+lockfile
+pyobjc
+requests
+six
