@@ -174,7 +174,7 @@ Using external libraries
 
 Since PlotDevice scripts are pure Python, the entirety of the
 [stdlib](https://docs.python.org/3/library/) and [PyPI](https://pypi.python.org/pypi)
-are avaliable to you. In addition, a wide array of PlotDevice Libraries have been contributed
+are available to you. In addition, a wide array of PlotDevice Libraries have been contributed
 by the community to solve more visualization-specific problems.
 
 #### Installing PlotDevice Libraries
