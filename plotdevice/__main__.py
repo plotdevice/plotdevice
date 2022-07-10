@@ -29,7 +29,7 @@ Animation Examples:
 
 import sys, os, re
 import argparse
-from os.path import exists, islink, dirname, abspath, realpath, join
+from os.path import exists, islink, dirname, basename, abspath, realpath, join, splitext
 
 
 def main():
@@ -105,7 +105,12 @@ def main():
     opts.mode = 'headless'
 
     # screen out unsupported file extensions
-    basename, ext = opts.export.lower().rsplit('.',1)
+    try:
+      outname, ext = opts.export.lower().rsplit('.',1)
+    except ValueError:
+      ext = opts.export.lower()
+      outname = splitext(basename(opts.script))[0]
+      opts.export = '.'.join([outname, ext])
     if ext not in ('pdf', 'eps', 'png', 'jpg', 'heic', 'tiff', 'gif', 'mov'):
       parser.exit(1, 'bad argument [--export]\nthe output filename must end with a supported format:\n  pdf, eps, png, tiff, jpg, heic, gif, or mov\n')
 
@@ -124,7 +129,7 @@ def main():
     # it's a `single' doc or a sequence of numbered pdf files
     opts.single = bool(ext=='pdf' and not re.search('{\d+}', opts.export) and opts.last and opts.first < opts.last)
 
-    if m:= re.search(r'@(\d+)[xX]$', basename):
+    if m:= re.search(r'@(\d+)[xX]$', outname):
       opts.zoom = float(m.group(1))
     else:
       opts.zoom = max(0.01, opts.zoom/100)
