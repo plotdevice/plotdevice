@@ -1,8 +1,8 @@
 import objc
 from collections import namedtuple
 from .cocoa import CGPathRelease
-import cPathmatics
-
+from ..gfx.geometry import Point
+from ..gfx.bezier import Bezier, Curve
 
 # Quartz loop speedups
 
@@ -18,7 +18,7 @@ def convert_path(ns_path):
 
 try:
     # Faster C versions.
-    from cPathmatics import fast_inverse_sqrt, angle, distance, coordinates
+    from _plotdevice import fast_inverse_sqrt, angle, distance, coordinates
     isqrt = inverse_sqrt = fast_inverse_sqrt
 except ImportError:
     from math import degrees, atan2
@@ -51,9 +51,9 @@ def reflect(x0, y0, x1, y1, d=1.0, a=180):
 
 # Ye olde polymagic
 
-from cPathmatics import intersects, union, intersect, difference, xor
+from _plotdevice import intersects, union, intersect, difference, xor
 try:
-    from cPathmatics import linepoint, linelength, curvepoint, curvelength
+    from _plotdevice import linepoint, linelength, curvepoint, curvelength
 except ImportError:
     from math import sqrt, pow
 
@@ -215,7 +215,7 @@ def segment_lengths(path, relative=False, n=20):
     if relative:
         length = sum(lengths)
         try:
-            return map(lambda l: l / length, lengths)
+            return [l / length for l in lengths]
         except ZeroDivisionError: # If the length is zero, just return zero for all segments
             return [0.0] * len(lengths)
     else:
@@ -297,13 +297,12 @@ def _locate(path, t, segments=None):
     >>> _locate(path, 1.0)
     (0, 1.0, Point(x=0.0, y=0.0))
     """
-    from ..gfx.geometry import Point
 
     if segments == None:
         segments = path.segmentlengths(relative=True)
 
     if len(segments) == 0:
-        raise DeviceError, "The given path is empty"
+        raise DeviceError("The given path is empty")
 
     for i, el in enumerate(path):
         if i == 0 or el.cmd == MOVETO:
@@ -350,10 +349,9 @@ def point(path, t, segments=None):
     >>> point(path, 0.1)
     Curve(LINETO, ((10.0, 0.0),))
     """
-    from ..gfx.bezier import Curve
 
     if len(path) == 0:
-        raise DeviceError, "The given path is empty"
+        raise DeviceError("The given path is empty")
 
     i, t, closeto = _locate(path, t, segments=segments)
 
@@ -372,7 +370,7 @@ def point(path, t, segments=None):
         x, y, c1x, c1y, c2x, c2y = curvepoint(t, x0, y0, x1, y1, x2, y2, x3, y3)
         return Curve(CURVETO, ((c1x, c1y), (c2x, c2y), (x, y)))
     else:
-        raise DeviceError, "Unknown cmd for p1 %s" % p1
+        raise DeviceError("Unknown cmd for p1 %s" % p1)
 
 def points(path, amount=100):
     """Returns an iterator with a list of calculated points for the path.
@@ -395,7 +393,7 @@ def points(path, amount=100):
     """
 
     if len(path) == 0:
-        raise DeviceError, "The given path is empty"
+        raise DeviceError("The given path is empty")
 
     # The delta value is divided by amount - 1, because we also want the last point (t=1.0)
     # If I wouldn't use amount - 1, I fall one point short of the end.
@@ -406,7 +404,7 @@ def points(path, amount=100):
     except ZeroDivisionError:
         delta = 1.0
 
-    for i in xrange(amount):
+    for i in range(amount):
         yield point(path, delta*i)
 
 def contours(path):
@@ -441,7 +439,6 @@ def contours(path):
     >>> len(contours(path))
     2
     """
-    from ..gfx.bezier import Bezier
 
     contours = []
     current_contour = None
@@ -482,11 +479,8 @@ def findpath(points, curvature=1.0):
     # The list of points consists of Point objects,
     # but it shouldn't crash on something straightforward
     # such as someone supplying a list of (x,y)-tuples.
-    from ..gfx.geometry import Point
-    from ..gfx.bezier import Bezier
-    from types import TupleType, ListType
     for i, pt in enumerate(points):
-        if type(pt) in (TupleType, ListType):
+        if isinstance(pt, (tuple, list)):
             points[i] = Point(pt[0], pt[1])
 
     if len(points) == 0: return None
@@ -524,9 +518,7 @@ def findpath(points, curvature=1.0):
         ax[i] = -(points[i+1].x-points[i-1].x-ax[i-1]) * bi[i]
         ay[i] = -(points[i+1].y-points[i-1].y-ay[i-1]) * bi[i]
 
-    r = range(1, len(points)-1)
-    r.reverse()
-    for i in r:
+    for i in reversed(range(1, len(points)-1)):
         dx[i] = ax[i] + dx[i+1] * bi[i]
         dy[i] = ay[i] + dy[i+1] * bi[i]
 
@@ -590,7 +582,7 @@ def insert_point(path, t):
         pt_x, pt_y, pt_c1x, pt_c1y, pt_c2x, pt_c2y, pt_h1x, pt_h1y, pt_h2x, pt_h2y = \
             curvepoint(t, x0, y0, x1, y1, x2, y2, x3, y3, True)
     else:
-        raise DeviceError, "Locate should not return a MOVETO"
+        raise DeviceError("Locate should not return a MOVETO")
 
     new_path = Bezier(None)
     new_path.moveto(path[0].x, path[0].y)
@@ -610,7 +602,7 @@ def insert_point(path, t):
                 else:
                     new_path.closepath()
             else:
-                raise DeviceError, "Didn't expect pt_cmd %s here" % pt_cmd
+                raise DeviceError("Didn't expect pt_cmd %s here" % pt_cmd)
 
         else:
             if path[j].cmd == MOVETO:

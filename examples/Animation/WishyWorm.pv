@@ -13,7 +13,7 @@ from random import seed
 
 size(400, 400)
 background(0,0,0.15)
-speed(50)
+speed(60)
 
 def setup(anim):
     anim.a = 10.0

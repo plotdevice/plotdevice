@@ -42,6 +42,7 @@ def setup(anim):
 
 # Draw the animation by updating and drawing each individual ball.
 def draw(anim):
+    background(0.2)
     seed(1)
     # This translate command makes the ball move up on the screen.
     translate(0, HEIGHT-FRAME)

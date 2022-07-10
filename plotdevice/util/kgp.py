@@ -64,10 +64,10 @@ def openAnything(source):
         return sys.stdin
 
     # try to open with urllib (if source is http, ftp, or file URL)
-    import urllib
+    import urllib.request
     try:
-        return urllib.urlopen(source)
-    except (IOError, OSError):
+        return urllib.request.urlopen(source)
+    except (IOError, OSError, ValueError):
         pass
 
     # try to open with native open function (if source is pathname)
@@ -77,8 +77,8 @@ def openAnything(source):
         pass
 
     # treat source as string
-    import StringIO
-    return StringIO.StringIO(str(source))
+    import io
+    return io.StringIO(str(source))
 
 class NoSourceError(Exception): pass
 
@@ -131,7 +131,7 @@ class KantGenerator:
         xrefs = xrefs.keys()
         standaloneXrefs = [e for e in self.refs.keys() if e not in xrefs]
         if not standaloneXrefs:
-            raise NoSourceError, "can't guess source, and no source specified"
+            raise NoSourceError("can't guess source, and no source specified")
         return '<xref id="%s"/>' % random.choice(standaloneXrefs)
 
     def reset(self):
@@ -269,7 +269,7 @@ class KantGenerator:
         self.parse(self.randomChildElement(node))
 
 def usage():
-    print __doc__
+    print(__doc__)
 
 def main(argv):
     grammar = "kant.xml"
@@ -290,7 +290,7 @@ def main(argv):
 
     source = "".join(args)
     k = KantGenerator(grammar, source)
-    print k.output()
+    print(k.output())
 
 if __name__ == "__main__":
     main(sys.argv[1:])

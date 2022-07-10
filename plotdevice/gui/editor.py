@@ -3,6 +3,7 @@ import os
 import re
 import json
 import cgi
+import objc
 from io import open
 from objc import super
 from pprint import pprint
@@ -27,7 +28,7 @@ class DraggyWebView(WebView):
                     NSPasteboardURLReadingContentsConformToTypesKey:NSImage.imageTypes() }
         urls = pb.readObjectsForClasses_options_([NSURL], options)
         strs = pb.readObjectsForClasses_options_([NSString], {})
-        rewrite = u"\n".join([u'"%s"'%u.path() for u in urls] + strs) + u"\n"
+        rewrite = "\n".join(['"%s"'%u.path() for u in urls] + strs) + "\n"
         pb.declareTypes_owner_([NSStringPboardType], self)
         pb.setString_forType_(rewrite, NSStringPboardType)
         return super(DraggyWebView, self).draggingEntered_(sender)
@@ -46,6 +47,7 @@ class DraggyWebView(WebView):
         return True
 
 class EditorView(NSView):
+    document = IBOutlet()
     jumpPanel = IBOutlet()
     jumpLine = IBOutlet()
 
@@ -117,13 +119,13 @@ class EditorView(NSView):
 
     # def webView_didFinishLoadForFrame_(self, sender, frame):
     def webView_didClearWindowObject_forFrame_(self, sender, win, frame):
-        self.webview.windowScriptObject().setValue_forKey_(self,'app')
+        self.webview.windowScriptObject().setValue_forKey_(self, 'app')
 
     def webView_contextMenuItemsForElement_defaultMenuItems_(self, sender, elt, menu):
         items = [
-            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u"Cut", "cut:", ""),
-            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u"Copy", "copy:", ""),
-            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u"Paste", "paste:", ""),
+            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Cut", "cut:", ""),
+            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Copy", "copy:", ""),
+            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Paste", "paste:", ""),
             NSMenuItem.separatorItem(),
         ]
 
@@ -181,10 +183,12 @@ class EditorView(NSView):
 
     # App-initiated actions
 
+    @objc.python_method
     def _get_source(self):
         return self.webview.stringByEvaluatingJavaScriptFromString_('editor.source();')
+    @objc.python_method
     def _set_source(self, src):
-        self.js(u'editor.source', args(src))
+        self.js('editor.source', args(src))
     source = property(_get_source, _set_source)
 
     def fontChanged(self, note=None):
@@ -209,6 +213,7 @@ class EditorView(NSView):
     def clearErrors(self):
         self.js('editor.mark', args(None))
 
+    @objc.python_method
     def report(self, crashed, script):
         if not crashed:
             self.js('editor.mark', args(None))
@@ -217,6 +222,7 @@ class EditorView(NSView):
             err_lines = [line-1 for fn, line, env, src in reversed(traceback) if fn==script]
             self.js('editor.mark', args("\n".join(exc), err_lines))
 
+    @objc.python_method
     def js(self, cmd, args=''):
         op = '%s(%s);'%(cmd,args)
         if self._wakeup:
@@ -279,7 +285,7 @@ class EditorView(NSView):
 
     @IBAction
     def performFindAction_(self, sender):
-        actions = {1:'find', 2:'findnext', 3:'findprevious', 7:'setneedle'}
+        actions = {1:'find', 2:'findnext', 3:'findprevious', 4:'replace', 7:'setneedle'}
         self.js('editor.exec', args(actions[sender.tag()]))
 
     # JS-initiated actions
@@ -298,7 +304,7 @@ class EditorView(NSView):
         menu = mm.itemWithTitle_("Python")
         menu.submenu().performActionForItemAtIndex_(3)
 
-    def edits(self, count):
+    def edits_(self, count):
         # inform the undo manager of the changes
         um = self._undo_mgr
         c = int(count)
@@ -316,15 +322,16 @@ class EditorView(NSView):
     def syncUndoState_(self, count):
         pass # this would be useful if only it got called for redo as well as undo...
 
+    @objc.python_method
     def setSearchPasteboard(self, query):
         if not query: return
 
         pb = NSPasteboard.pasteboardWithName_(NSFindPboard)
         pb.declareTypes_owner_([NSStringPboardType],None)
         pb.setString_forType_(query, NSStringPboardType)
-        self.flash("Edit")
+        self.flash_("Edit")
 
-    def flash(self, menuname):
+    def flash_(self, menuname):
         # when a menu item's key command was entered in the editor, flash the menu
         # bar to give a hint of where the command lives
         mm=NSApp().mainMenu()
@@ -407,10 +414,11 @@ class OutputTextView(NSTextView):
     def changeColor_(self, clr):
         pass # ignore system color panel
 
+    @objc.python_method
     def append(self, txt, stream='message'):
         if not txt: return
-        defer_endl = txt.endswith(u'\n')
-        txt = (u"\n" if self.endl else u"") + (txt[:-1 if defer_endl else None])
+        defer_endl = txt.endswith('\n')
+        txt = ("\n" if self.endl else "") + (txt[:-1 if defer_endl else None])
         atxt = NSAttributedString.alloc().initWithString_attributes_(txt, self._attrs(stream))
         self.ts.beginEditing()
         self.ts.appendAttributedString_(atxt)
@@ -428,6 +436,7 @@ class OutputTextView(NSTextView):
             timestamp = NSDate.date().descriptionWithCalendarFormat_timeZone_locale_("%Y-%m-%d %H:%M:%S", None, locale)
             self.append(timestamp+"\n", 'info')
 
+    @objc.python_method
     def report(self, crashed, frames):
         if not hasattr(self, '_begin'):
             return

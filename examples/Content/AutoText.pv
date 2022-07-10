@@ -9,12 +9,12 @@ size(400, 500)
 
 # Generate automatic text from an XML file and store it as a string
 # in the txt variable.
-txt = autotext("http://plotdevice.io/data/kant.xml")
+txt = autotext("https://plotdevice.io/data/kant.xml")
 
 # Also try the "thanks.xml" file, which generates "thank you" notes,
 # or "insults.xml", which generates all sorts of crazy epithets:
-#txt = autotext("http://plotdevice.io/data/thanks.xml")
-#txt = autotext("http://plotdevice.io/data/insults.xml")
+#txt = autotext("https://plotdevice.io/data/thanks.xml")
+#txt = autotext("https://plotdevice.io/data/insults.xml")
 
 font("Times", 12)
 lineheight(1.7)

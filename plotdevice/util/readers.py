@@ -1,32 +1,31 @@
 # encoding: utf-8
 import os, sys, re
 from operator import attrgetter
-PY2 = sys.version_info[0] == 2
 
 # files & io
 from io import open, StringIO, BytesIO
 from os.path import abspath, dirname, exists, join, splitext
 from plotdevice import DeviceError, INTERNAL
-text_type = str if not PY2 else unicode
 
 # data formats
 import json, csv
-from collections import namedtuple, defaultdict
+from collections import defaultdict
+from dataclasses import make_dataclass, replace
 from codecs import iterencode, iterdecode
 from xml.parsers import expat
 
 # http
-from urlparse import urlparse
+from urllib.parse import urlparse
 from Foundation import NSDateFormatter, NSLocale, NSTimeZone, NSDate
 
 
 ### XML handling ###
 
-Element = namedtuple('Element', ['tag', 'attrs', 'parents', 'start', 'end'])
+Element = make_dataclass('Element', ['tag', 'attrs', 'parents', 'start', 'end'])
 escapes = [('break','0C'), ('indent', '09'), ('flush', '08')]
 doctype = '<!DOCTYPE plod [ %s ]>' % "".join(['<!ENTITY %s "&#xE0%s;" >'%e for e in escapes])
-HEAD = u"%s<%s>" % (doctype, INTERNAL)
-TAIL = u"</%s>" % INTERNAL
+HEAD = "%s<%s>" % (doctype, INTERNAL)
+TAIL = "</%s>" % INTERNAL
 class XMLParser(object):
     _log = 0
 
@@ -50,30 +49,30 @@ class XMLParser(object):
 
         # wrap everything in a root node (and include the whitespace entities which shift
         # the tty escapes into the unicode PUA for the duration)
-        if isinstance(txt, text_type):
+        if isinstance(txt, str):
             txt = txt.encode('utf-8')
         self._xml = HEAD.encode('utf-8') + txt + TAIL.encode('utf-8')
 
         # parse the input xml string
         try:
             self._expat.Parse(self._xml, True)
-        except expat.ExpatError, e:
+        except expat.ExpatError as e:
             self._expat_error(e)
 
     @property
     def text(self):
         # returns the processed string (with all markup removed and tty-escapes un-shifted)
-        return u"".join(self.body).translate({0xE000+v:v for v in (8,9,12)})
+        return "".join(self.body).translate({0xE000+v:v for v in (8,9,12)})
 
     def _expat_error(self, e):
         # correct the column and line-string for our wrapper element
         col = e.offset
-        err = u"\n".join(e.args)
+        err = "\n".join(e.args)
         line = self._xml.decode('utf-8').split("\n")[e.lineno-1]
         if line.startswith(HEAD):
             line = line[len(HEAD):]
             col -= len(HEAD)
-            err = re.sub(ur'column \d+', 'column %i'%col, err)
+            err = re.sub(r'column \d+', 'column %i'%col, err)
         if line.endswith(TAIL):
             line = line[:-len(TAIL)]
 
@@ -89,35 +88,35 @@ class XMLParser(object):
         # show which ends of the line are truncated
         clipped = [snippet]
         if not line.endswith(snippet):
-            clipped.append(u'...')
+            clipped.append('...')
         if not line.startswith(snippet):
-            clipped.insert(0, u'...')
+            clipped.insert(0, '...')
             col+=3
-        caret = u' '*(col-1) + u'^'
+        caret = ' '*(col-1) + '^'
 
         # raise the exception
-        msg = u'Text: ' + err
-        stack = u'stack: ' + u" ".join(['<%s>'%elt.tag for elt in self.stack[1:]]) + u' ...'
-        xmlfail = u"\n".join([msg, u"".join(clipped), caret, stack])
+        msg = 'Text: ' + err
+        stack = 'stack: ' + " ".join(['<%s>'%elt.tag for elt in self.stack[1:]]) + ' ...'
+        xmlfail = "\n".join([msg, "".join(clipped), caret, stack])
         raise DeviceError(xmlfail)
 
     def log(self, s=None, indent=0):
-        if not isinstance(s, basestring):
+        if not isinstance(s, str):
             if s is None:
                 return self._log
             self._log = int(s)
             return
         if not self._log: return
         if indent<0: self._log-=1
-        msg = (u'  '*self._log)+(s if s.startswith('<') else repr(s)[1:])
-        print msg.encode('utf-8')
+        msg = ('  '*self._log)+(s if s.startswith('<') else repr(s)[1:])
+        print((msg.encode('utf-8')))
         if indent>0: self._log+=1
 
     def _enter(self, name, attrs):
         parents = tuple(reversed([e.tag for e in self.stack[1:]]))
         elt = Element(name, attrs, parents, self.cursor, end=None)
         self.stack.append(elt)
-        self.log(u'<%s>'%(name), indent=1)
+        self.log('<%s>'%(name), indent=1)
 
     def _chars(self, data):
         selector = tuple([e.tag for e in self.stack])
@@ -134,17 +133,17 @@ class XMLParser(object):
         self.log(data)
 
     def _leave(self, name):
-        node = self.stack.pop()._replace(end=self.cursor)
+        node = replace(self.stack.pop(), end=self.cursor)
 
         # hang onto line-ending self-closed tags so they can be applied to the next '\n' in _chars
         if node.start==node.end:
             at = self._expat.CurrentByteIndex
             if self._xml[at-2:at]=='/>' and self._xml[at:at+1]=="\n":
-                node = node._replace(end=node.start+1)
+                node = replace(node, end=node.start+1)
                 self._crlf = node
 
         self.nodes[name].append(node)
-        self.log(u'</%s>'%(name), indent=-1)
+        self.log('</%s>'%(name), indent=-1)
 
         # if we've exited the root node, clean up the parsed elements
         if name == INTERNAL:
@@ -155,9 +154,7 @@ class XMLParser(object):
 ### CSV unpacking ###
 
 def csv_rows(file_obj, dialect=csv.excel, **kwargs):
-    csvfile = iterencode(file_obj, 'utf-8') if PY2 else file_obj
-    csvreader = csv.reader(csvfile, dialect=dialect, **kwargs)
-    csvreader = (list(iterdecode(i, 'utf-8')) for i in csvreader) if PY2 else csvreader
+    csvreader = csv.reader(file_obj, dialect=dialect, **kwargs)
     for row in csvreader:
         yield row
 
@@ -168,45 +165,41 @@ def csv_dict(file_obj, dialect=csv.excel, cols=None, dict=dict, **kwargs):
         if not cols:
           cols = row
           continue
-        yield dict(zip(cols,row))
+        yield dict(list(zip(cols,row)))
 
 def csv_tuple(file_obj, dialect=csv.excel, cols=None, **kwargs):
-    if not isinstance(cols, (list, tuple)):
-        cols=None
-    elif cols:
-        RowType = namedtuple('Row', cols)
+    spaced = lambda a: [s.strip().replace(' ', '_') for s in a] if a else a
+
+    if isinstance(cols, (list, tuple)):
+        Row = make_dataclass('Row', spaced(cols))
+    else:
+        cols = None
+
     for row in csv_rows(file_obj, dialect, **kwargs):
         if not cols:
-            cols = row
-            RowType = namedtuple('Row', cols)
+            cols = spaced(row)
+            Row = make_dataclass('Row', cols)
             continue
-        yield RowType(**dict(zip(cols, row)))
+        yield Row(**dict(list(zip(cols, row))))
 
 def csv_dialect(fd):
-    snippet = fd.read(1024).encode('utf-8') if PY2 else fd.read(1024)
+    snippet = fd.read(1024)
     fd.seek(0)
     return csv.Sniffer().sniff(snippet)
 
 
 ### HTTP utils ###
 
-try:
-    import requests
-    from cachecontrol import CacheControl, CacheControlAdapter
-    from cachecontrol.caches import FileCache
-    from cachecontrol.heuristics import LastModified
+import requests
+from cachecontrol import CacheControl, CacheControlAdapter
+from cachecontrol.caches import FileCache
+from cachecontrol.heuristics import LastModified
 
-    cache_dir = '%s/Library/Caches/PlotDevice'%os.environ['HOME']
-    HTTP = CacheControl(requests.Session(), cache=FileCache(cache_dir), heuristic=LastModified())
-except ImportError:
-    class Decoy(object):
-        def get(self, url):
-            unsupported = 'could not find the "requests" library (try running "python setup.py build" first)'
-            raise RuntimeError(unsupported)
-    HTTP = Decoy()
+cache_dir = '%s/Library/Caches/PlotDevice'%os.environ['HOME']
+HTTP = CacheControl(requests.Session(), cache=FileCache(cache_dir), heuristic=LastModified())
 
 def binaryish(content, format):
-    bin_types = ('pdf','eps','png','jpg','jpeg','gif','tiff','tif','zip','tar','gz')
+    bin_types = ('pdf','eps','png','jpg','jpeg','heic','gif','tiff','tif','zip','tar','gz')
     bin_formats = ('raw','bytes','img','image')
     if any(b in content for b in bin_types):
         return True
@@ -244,7 +237,7 @@ def read(pth, format=None, encoding=None, cols=None, **kwargs):
 
     CSV files will return a list of rows. By default each row will be an ordered
     list of column values. If the first line of the file defines column names,
-    you can call read() with cols=True in which case each row will be a namedtuple
+    you can call read() with cols=True in which case each row will be a dataclass
     using those names as keys. If the file doesn't define its own column names,
     you can pass a list of strings as the `cols` parameter. Rows can be formatted
     as column-keyed dictionaries by passing True as the `dict` parameter.

@@ -1,11 +1,9 @@
-import os, sys, re
+import os, sys, re, ast
 from os.path import dirname, basename, abspath, relpath, isdir
 from functools import partial
 from inspect import getargspec
 from collections import namedtuple
 from PyObjCTools import AppHelper
-from Foundation import *
-from AppKit import *
 from ..lib.io import MovieExportSession, ImageExportSession
 from .common import stacktrace, coredump, uncoded
 from plotdevice import util, context, gfx, Halted, DeviceError
@@ -34,6 +32,24 @@ class Delegate(object):
     def exportStatus(self, status):
         pass
     def exportProgress(self, written, total):
+        pass
+
+class ScriptDoctor(ast.NodeVisitor):
+    # parse the source and determine whether the script is an animation
+    def __init__(self, src):
+        self.is_animated = False
+        try:
+            self.visit(ast.parse(src))
+        except SyntaxError:
+            pass
+
+    def visit_Module(self, node):
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_FunctionDef(self, node):
+        if node.name=='draw': self.is_animated = True
+
+    def generic_visit(self, node):
         pass
 
 class Sandbox(object):
@@ -80,6 +96,9 @@ class Sandbox(object):
         if src==self._source: return
         self._source = src
         self._code = None
+        if ScriptDoctor(self._source).is_animated:
+            self._anim = util.adict()
+
     source = property(_get_source, _set_source)
 
     # .state
@@ -98,9 +117,18 @@ class Sandbox(object):
         self.live = metadict.get('live', self.live)
     metadata = property(_get_meta, _set_meta)
 
+    # .params
+    def _get_params(self):
+        """Script variables currently being displayed in the UI (r/w)"""
+        return self.context._params
+    def _set_params(self, new_params):
+        self.context._params.clear()
+        self.context._params.update(new_params)
+    params = property(_get_params, _set_params)
+
     @property
     def vars(self):
-        """Script variables being tracked through the vars() method (r)"""
+        """Script variables added through the var() method in the last run (r)"""
         return self.context._vars
 
     @property
@@ -139,8 +167,7 @@ class Sandbox(object):
             def compileScript():
                 # _source is already unicode so strip out the `encoding:` comment
                 src = uncoded(self._source)
-                scriptname = self._path or "<Untitled>"
-                fname = scriptname.encode('ascii', 'ignore')
+                fname = self._path or "<Untitled>"
                 self._code = compile(src, fname, "exec")
             result = self.call(compileScript)
             if not result.ok:
@@ -159,7 +186,8 @@ class Sandbox(object):
                 return check
 
         # Clear the canvas
-        self.canvas.clear()
+        if method != 'setup':
+            self.canvas.clear()
 
         # Reset the context state (and bind the .gfx objects as a side-effect)
         self.context._resetContext()
@@ -171,7 +199,6 @@ class Sandbox(object):
         result = self.call(method)
 
         # (non-animation scripts are now complete (as are anims that just crashed))
-
         if self.animated and result.ok:
             # animations require special bookkeeping depending on which routine is being run
             if method is None:
@@ -193,7 +220,7 @@ class Sandbox(object):
             elif method=='draw':
                 # tick the frame ahead after each draw call
                 self._meta.frame+=1
-                if self._meta.frame > self._meta.last and self._meta.loop:
+                if self._meta.last and self._meta.frame > self._meta.last and self._meta.loop:
                     self._meta.frame = self._meta.first
 
         return result
@@ -215,7 +242,7 @@ class Sandbox(object):
         # default to running the script itself if a method (e.g., compile) isn't specified.
         if not method:
             def execScript():
-                exec self._code in self.namespace
+                exec(self._code, self.namespace)
             method = execScript
         elif callable(self.namespace.get(method, None)):
             method = self.namespace[method]
@@ -326,8 +353,12 @@ class Sandbox(object):
             # step to the proper FRAME value
             self._meta.frame = self.session.next()
 
-            # run the draw() function if it exists (or the whole top-level if not)
-            result = self.run(method="draw" if self.animated else None)
+            if self.animated:
+                # run the draw() function if it exists
+                result = self.run("draw", cmyk=self.session.cmyk)
+            else:
+                # if not, we've already exec'd the module & setup() so use the canvas as-is
+                result = Outcome(True, StdIO().data)
 
             # let the delegate draw to the screen
             self.delegate.exportFrame(result, self.canvas)
@@ -355,25 +386,29 @@ class Sandbox(object):
         # self.session = None
         self.delegate = None
 
-PY2 = sys.version_info[0] == 2
-if not PY2:
-    char_type = bytes
-else:
-    char_type = str
-
 class StdIO(object):
     class OutputFile(object):
         def __init__(self, stream, streamname):
-            self.stream = stream
-            self.isErr = streamname=='stderr'
+            self._stream = stream
+            self.fileno = lambda: 1 if streamname=='stdout' else 2
 
         def write(self, data):
-            if isinstance(data, char_type):
-                try:
-                    data = unicode(data, "utf_8", "replace")
-                except UnicodeDecodeError:
-                    data = "XXX " + repr(data)
-            self.stream.write(Output(self.isErr, data))
+            self._stream.write(Output(self.fileno()==2, data))
+
+        def writelines(self, lines):
+            self._stream.write(Output(self.fileno()==2, ''.join(lines)))
+
+        def writable(self):
+            return True
+
+        def readable(self, data):
+            return False
+
+        def isatty(self):
+            return False
+
+        def flush(self):
+            pass
 
     def __init__(self):
         self.data = [] # the list of (isErr, txt) tuples .write calls go to

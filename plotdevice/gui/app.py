@@ -78,7 +78,7 @@ class PlotDeviceAppDelegate(NSObject):
 
     @IBAction
     def newSketch_(self, sender):
-        kind = ['sketch','anim','ottobot'][sender.tag()]
+        kind = ['sketch','anim','tab','ottobot'][sender.tag()]
         doc = self.docFromTemplate_('TMPL:'+kind)
         if kind=='ottobot':
             AppHelper.callLater(0.1, doc.script.runScript)

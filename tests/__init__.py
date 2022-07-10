@@ -4,7 +4,7 @@ import unittest
 import random
 from distutils.spawn import find_executable
 from subprocess import check_output, PIPE
-from os.path import dirname, abspath, isdir, join, basename, splitext
+from os.path import dirname, abspath, isdir, join, basename, splitext, relpath
 from glob import glob
 from pdb import set_trace as tron
 
@@ -69,17 +69,24 @@ try:
 except (ImportError, RuntimeError) as e:
   pass
 
-def report(multisuite):
+def suites():
+  from . import typography, primitives, drawing, compositing, geometry, module
+
+  suite = unittest.TestSuite()
+  for mod in (typography, primitives, drawing, compositing, geometry, module):
+    suite.addTest(mod.suite())
+  return suite
+
+def report():
   """Create an html document presenting all the rendered images, their references, and the diff between them"""
   with open('details.html', 'w') as f:
     f.write(html_head)
-    for suite in [s._tests[0]._tests for s in multisuite._tests]:
-      cat = suite[0].__module__.split('.')[-1]
-      for test in suite:
-        if hasattr(test, '_image'):
-          f.write(result_div % {"name":test._testMethodName, "img":test._image})
+    for pth in glob('tests/_out/*/*'):
+      img = relpath(pth, 'tests/_out')
+      name = splitext(img)[0]
+      f.write(result_div % {"name":name, "img":img})
     f.write(html_foot)
-  print "See details.html for case-by-case test comparisons"
+  print("See details.html for case-by-case test comparisons")
 
 html_head = """
 <!DOCTYPE html>

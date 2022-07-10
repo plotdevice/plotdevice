@@ -5,13 +5,15 @@ import re
 import json
 import csv
 from contextlib import contextmanager
+from functools import cmp_to_key
 from collections import OrderedDict, defaultdict
 from os.path import abspath, dirname, exists, join, splitext
 from random import choice, shuffle
 
 from Foundation import NSAutoreleasePool
+from AppKit import NSBundle
 from plotdevice import DeviceError
-from .readers import read, XMLParser
+from .readers import read, XMLParser, Element
 
 __all__ = ('grid', 'random', 'shuffled', 'choice', 'ordered', 'order', 'files', 'read', 'autotext', '_copy_attr', '_copy_attrs', 'odict', 'ddict', 'adict')
 
@@ -25,8 +27,8 @@ def grid(cols, rows, colSize=1, rowSize=1, shuffled=False):
             rect(x,y, 10,10)
     """
     # Prefer using generators.
-    rowRange = xrange(int(rows))
-    colRange = xrange(int(cols))
+    rowRange = range(int(rows))
+    colRange = range(int(cols))
     # Shuffled needs a real list, though.
     if (shuffled):
         rowRange = list(rowRange)
@@ -77,12 +79,12 @@ def files(path="*", case=True):
 
     For a case insensitive search, call files() with case=False
     """
-    from iglob import iglob
-    if type(path)==unicode:
-        path.encode('utf-8')
+    from .iglob import iglob
+    # if type(path)==unicode:
+    #     path.encode('utf-8')
     path = os.path.expanduser(path)
 
-    return list(iglob(path.decode('utf-8'), case=case))
+    return list(iglob(path, case=case))
 
 def autotext(sourceFile):
     from plotdevice.util.kgp import KantGenerator
@@ -98,21 +100,50 @@ def _as_sequence(seq):
     return list(seq)
 
 def _as_before(orig, lst):
-    return "".join(lst) if isinstance(orig, basestring) else list(lst)
+    return "".join(lst) if isinstance(orig, str) else list(lst)
 
-def _getter(seq, names):
-    from operator import itemgetter, attrgetter
-    is_dotted = any(['.' in name for name in names])
-    getter = attrgetter if is_dotted or hasattr(seq[0],names[0]) else itemgetter
-    return getter(*names)
+def _key(seq, names):
+    # treat objects without a given key and objects with the key set to None equivalently
+    MISSING = None
+
+    # look for dict items by default
+    getter = lambda obj: tuple(obj.get(n, MISSING) for n in names)
+
+    # walk through the objects and see if any of them lacks the dict fields but has attrs
+    for obj in seq:
+        try:
+            if any(n in obj for n in names):
+                break # dict fields exist so use the itemgetter
+        except TypeError:
+            # for non-dict objects like namedtuples and dataclasses use an attrgetter
+            if any(hasattr(obj, n) for n in names):
+                getter = lambda obj: tuple(getattr(obj, n, MISSING) for n in names)
+
+    def compare(a, b):
+        default = 0
+        try:
+            a = getter(a)
+            b = getter(b)
+            if a > b: return 1
+            if a < b: return -1
+        except TypeError:
+            for aa, bb in zip(a, b):
+                if aa is MISSING and bb is MISSING: return default
+                if aa is MISSING: return default or 1
+                if bb is MISSING: return default or -1
+                if aa > bb: default = 1
+                if aa < bb: default = -1
+        return default
+
+    return cmp_to_key(compare)
 
 def order(seq, *names, **kwargs):
     lst = _as_sequence(seq)
     if not names or not seq:
         reordered = [(it,idx) for idx,it in enumerate(lst)]
     else:
-        getter = _getter(lst, names)
-        reordered = [(getter(it), idx) for idx,it in enumerate(lst)]
+        key = _key(lst, names)
+        reordered = [(key(it), idx) for idx,it in enumerate(lst)]
     reordered.sort(**kwargs)
     return [it[1] for it in reordered]
 
@@ -133,7 +164,7 @@ def ordered(seq, *names, **kwargs):
 
     if not names or not lst:
         return _as_before(seq, sorted(lst, **kwargs))
-    return _as_before(seq, sorted(lst, key=_getter(lst, names), **kwargs))
+    return _as_before(seq, sorted(lst, key=_key(lst, names), **kwargs))
 
 def shuffled(seq):
     """Returns a random permutation of a list or tuple (without modifying the original)"""
@@ -154,17 +185,17 @@ def _copy_attr(v):
         return tuple(v)
     elif isinstance(v, list):
         return list(v)
-    elif isinstance(v, (int, str, unicode, float, bool, long)):
+    elif isinstance(v, (int, str, float, bool)):
         return v
     else:
-        raise DeviceError, "Don't know how to copy '%s'." % v
+        raise DeviceError("Don't know how to copy '%s'." % v)
 
 def _copy_attrs(source, target, attrs):
     for attr in attrs:
         try:
             setattr(target, attr, _copy_attr(getattr(source, attr)))
-        except AttributeError, e:
-            print "missing attr: %r"% attr, hasattr(source, attr), hasattr(target, attr)
+        except AttributeError as e:
+            print("missing attr: %r"% attr, hasattr(source, attr), hasattr(target, attr))
             raise e
 
 ### tuple/list de-nester ###
@@ -249,20 +280,20 @@ class adict(BetterRepr, dict):
     def __getattr__(self, key):
         try:
             return self[key]
-        except KeyError, k:
-            raise AttributeError, k
+        except KeyError as k:
+            raise AttributeError(k)
 
     def __setattr__(self, key, value):
         # this test allows attributes to be set in the __init__ method
-        if not self.__dict__.has_key('_adict__initialised'):
+        if '_adict__initialised' not in self.__dict__:
             return dict.__setattr__(self, key, value)
         self[key] = value
 
     def __delattr__(self, key):
         try:
             del self[key]
-        except KeyError, k:
-            raise AttributeError, k
+        except KeyError as k:
+            raise AttributeError(k)
 
 
 ### autorelease pool manager ###
@@ -278,18 +309,18 @@ def autorelease():
 
 def rsrc_path(resource=None):
     """Return absolute path of the rsrc directory (or a file within it)"""
-    module_root = abspath(dirname(dirname(__file__)))
-    rsrc_root = join(module_root, 'rsrc')
+    mod_root = abspath(dirname(dirname(__file__)))
+    app_root = NSBundle.mainBundle().bundlePath()
+    mod_rsrc = join(mod_root, 'rsrc')
+    app_rsrc = join(app_root, 'Contents/Resources')
+    src_rsrc = join(mod_root, '../app/Resources')
 
-    if not exists(rsrc_root):
-        # hack to run in-place in sdist
-        from glob import glob
-        for pth in glob(join(module_root, '../build/lib/plotdevice/rsrc')):
-            rsrc_root = abspath(pth)
+    for rsrc_root in (mod_rsrc, app_rsrc, src_rsrc):
+        if exists("%s/colors.json" % rsrc_root): # check for a known rsrc file
             break
-        else:
-            notfound = "Couldn't locate resources directory (try running `python setup.py build` before running from the source dist)."
-            raise RuntimeError(notfound)
+    else:
+        raise RuntimeError("Couldn't locate resources directory.")
+
     if resource:
         return join(rsrc_root, resource)
     return rsrc_root

@@ -1,6 +1,7 @@
 # encoding: utf-8
 import re
 import sys
+from unicodedata import normalize
 from collections import namedtuple
 from ..lib.cocoa import *
 
@@ -10,7 +11,7 @@ from .geometry import Transform, Region, Size, Point, Pair
 from .colors import Color
 from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, FrameMixin, Grob
-from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, read
+from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, Element, read
 from ..lib import foundry
 from . import _ns_context
 
@@ -67,13 +68,16 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         # maintain a lookup table of nodes within xml input
         self._nodes = {}
 
-        # look for a string as the first positional arg or an xml/str kwarg
-        if args and isinstance(args[0], basestring):
-            kwargs['str'], args = args[0], args[1:]
+        # use the first positional arg if no xml/str/src kwarg was passed
+        if not any(o in kwargs for o in self.opts) and len(args):
+            kwargs['str'], args = str(args[0]), args[1:]
 
         # merge in any numlike positional args to define bounds
         if args:
-            self._frame._parse(args)
+            try:
+                self._frame._parse(args)
+            except:
+                raise DeviceError("Expected an x/y point (and optional width/height) but got %r" % (args,))
 
         # fontify the str/xml/src arg and store it in the TextBlock
         self.append(**{k:v for k,v in kwargs.items() if k in self.opts})
@@ -117,25 +121,23 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
             # try using the nsmagic parsing of HTML/RTF to build an attributed string
             if not is_xml:
+                txt = normalize("NFC", txt)
                 txt_bytes = txt.encode('utf-8')
-                txt_opts = {u'CharacterEncoding': NSUTF8StringEncoding}
-                decoded, info, err = NSMutableAttributedString.alloc().initWithData_options_documentAttributes_error_(
+                txt_opts = {'CharacterEncoding': NSUTF8StringEncoding}
+                txt, info, err = NSMutableAttributedString.alloc().initWithData_options_documentAttributes_error_(
                     NSData.dataWithBytes_length_(txt_bytes, len(txt_bytes)), txt_opts, None, None
                 )
 
                 # if the data got unpacked into anything more interesting than plain text,
                 # preserve its styling. otherwise fall through and style the txt val
                 if re.search(r'(html|rtf)$', info.get('UTI')):
-                    attrib_txt = decoded
+                    attrib_txt = txt
 
         if txt is not None and not attrib_txt:
             # convert non-textual `str` args to strings
-            if not isinstance(txt, basestring) and not is_xml:
+            if not isinstance(txt, str) and not is_xml:
                 txt = repr(txt)
-
-            # try to insulate people from the need to use a unicode constant for any text
-            # with high-ascii characters (while waiting for the other shoe to drop)
-            decoded = txt if isinstance(txt, unicode) else txt.decode('utf-8')
+            txt = normalize("NFC", txt)
 
             # use the inherited baseline style but allow one-off overrides from kwargs
             merged_style = self._font._spec
@@ -146,7 +148,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             # its tag names. otherwise apply the merged style to the entire string
             if is_xml:
                 # find any tagged regions that need styling
-                parser = XMLParser(decoded, offset=len(self.text))
+                parser = XMLParser(txt, offset=len(self.text))
 
                 # update our internal lookup table of nodes
                 for tag, elts in parser.nodes.items():
@@ -167,7 +169,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             else:
                 # don't parse as xml, just apply the current font(), align(), and fill()
                 attrs = self._fontify(merged_style)
-                attrib_txt = NSMutableAttributedString.alloc().initWithString_attributes_(decoded, attrs)
+                attrib_txt = NSMutableAttributedString.alloc().initWithString_attributes_(txt, attrs)
 
             # ensure the very-first character of a Text is indented flush left. also watch for
             # double-newlines at the edge of the existing string and the appended chars. grafs
@@ -208,7 +210,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         # assign a font and color based on the coalesced spec
         font = Font({k:v for k,v in spec.items() if k in Stylesheet.kwargs})
-        color = Color(spec.pop('fill')).nsColor
+        color = Color(spec.pop('fill')).copy()
 
         # factor the relevant attrs into a paragraph style
         graf = NSMutableParagraphStyle.alloc().init()
@@ -248,7 +250,16 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             kern = (spec['tracking'] * font.size)/1000.0
 
         # build the dict of features for this combination of styles
-        return dict(NSFont=font._nsFont, NSColor=color, NSParagraphStyle=graf, NSKern=kern)
+        return dict(NSFont=font._nsFont, PDColor=color, NSParagraphStyle=graf, NSKern=kern)
+
+    def _colorize(self):
+        """Updates the TextStorage, rewriting Colors as rgb or cmyk NSColors based on the current output mode"""
+        at = 0
+        end = self._store.length()
+        while at < end:
+            clr, rng = self._store.attribute_atIndex_effectiveRange_('PDColor', at, None)
+            self._store.addAttribute_value_range_('NSColor', clr.nsColor, rng)
+            at += rng.length
 
     @classmethod
     def _dedent(cls, attrib_txt, idx=0, inherit=False):
@@ -262,6 +273,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         Note that this method *modifies* the attrib_txt reference rather than returning a value.
         """
+        if not attrib_txt.length(): return
         attrib_txt.beginEditing()
         old_graf, _ = attrib_txt.attribute_atIndex_effectiveRange_("NSParagraphStyle", idx, None);
         graf = old_graf.mutableCopy()
@@ -276,7 +288,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     def overleaf(self):
         """Returns a Text object containing any characters that did not fit within this object's bounds.
         If the entire string fits within the current object, returns None."""
-        seen = u"".join(getattr(f, 'text') for f in self._blocks)
+        seen = "".join(getattr(f, 'text') for f in self._blocks)
         full = self.text
         if full not in seen:
             next_pg = self.copy()
@@ -408,8 +420,6 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
           a list of TextFragment objects
         """
         if isinstance(regex, str):
-            regex = regex.decode('utf-8')
-        if isinstance(regex, unicode):
             flags = (re.I|re.S) if regex.lower()==regex else (re.S)
             regex = re.compile(regex, flags)
         if not hasattr(regex, 'pattern'):
@@ -439,8 +449,6 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         Returns:
           a list of TextFragment objects
         """
-        if isinstance(tag_name, str):
-            tag_name = tag_name.decode('utf-8')
         return self._seek(self._nodes.get(tag_name, []), matches)
 
     def _seek(self, stream, limit):
@@ -457,7 +465,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     @property
     def text(self):
         """Returns the unicode string being typeset"""
-        return unicode(self._store.string())
+        return self._store.string()
 
     @property
     def words(self):
@@ -560,6 +568,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     def _draw(self):
         with _ns_context():                  # save and restore the gstate
             self._screen_transform.concat()  # transform so text can be drawn at the origin
+            self._colorize()                 # convert from Color to NSColor using current output mode
             with self.effects.applied():     # apply any blend/alpha/shadow effects
                 for block in self._blocks:
                     px_offset = self._to_px(block.offset)
@@ -619,10 +628,10 @@ class TextFragment(object):
         elif hasattr(match, 'range'): # NSSubText
             self.start, n = match.range()
             self.end = self.start + n
-        elif hasattr(match, '_asdict'): # xml Element
-            for k,v in match._asdict().items():
+        elif isinstance(match, Element): # xml Element
+            for k,v in match.__dict__.items():
                 setattr(self, k, v)
-        elif hasattr(match, '_chars'): # TextBlock
+        elif isinstance(match, TextBlock): # TextBlock
             self.start, n = match._chars
             self.end = self.start + n
         elif hasattr(match, 'span'): # re.Match
@@ -680,7 +689,7 @@ class TextFragment(object):
         but returns TextFragment objects rather than character strings
         """
         self._is_regex('groups')
-        indices = range(1,len(self.m.regs))
+        indices = list(range(1, len(self.m.regs)))
         if not indices:
             return ()
         return tuple(m if m else default for m in self.group(*indices))

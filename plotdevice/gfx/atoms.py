@@ -1,10 +1,9 @@
 # encoding: utf-8
-from AppKit import *
-from Foundation import *
-from Quartz import *
+import re
+from math import floor
 from collections import namedtuple, defaultdict
 
-from plotdevice import DeviceError
+from .. import DeviceError
 from ..lib.foundry import fontspec
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
@@ -34,6 +33,7 @@ KEY_TAB = 48
 KEY_ESC = 53
 
 
+
 ### Graphic object inheritance hierarchy w/ mixins to merge local and context state ###
 
 class Bequest(type):
@@ -59,9 +59,8 @@ class Bequest(type):
             for attr, val in info.items():
                 setattr(cls, attr, val)
 
-class Grob(object):
+class Grob(object, metaclass=Bequest):
     """A GRaphic OBject is the base class for all drawing primitives."""
-    __metaclass__ = Bequest
     ctxAttrs = ('_grid',)
 
     def __init__(self, **kwargs):
@@ -167,7 +166,7 @@ class FrameMixin(Grob):
         x, y = kwargs.get('x',0), kwargs.get('y',0)
         h = kwargs.get('h',kwargs.get('height',None))
         w = kwargs.get('w',kwargs.get('width',None))
-        if isinstance(w, basestring):
+        if isinstance(w, str):
             w = None # ignore width if it's passing a font style
         self._frame = Region(x,y,w,h)
 
@@ -297,7 +296,7 @@ class PenMixin(Grob):
     def _get_capstyle(self):
         return self._penstyle.cap
     def _set_capstyle(self, style):
-        from bezier import BUTT, ROUND, SQUARE
+        from .bezier import BUTT, ROUND, SQUARE
         if style not in (BUTT, ROUND, SQUARE):
             badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
             raise DeviceError(badstyle)
@@ -307,7 +306,7 @@ class PenMixin(Grob):
     def _get_joinstyle(self):
         return self._penstyle.join
     def _set_joinstyle(self, style):
-        from bezier import MITER, ROUND, BEVEL
+        from .bezier import MITER, ROUND, BEVEL
         if style not in (MITER, ROUND, BEVEL):
             badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
             raise DeviceError(badstyle)
@@ -320,7 +319,7 @@ class PenMixin(Grob):
         if None in segments:
             steps = None
         else:
-            steps = map(int, _flatten(segments))
+            steps = list(map(int, _flatten(segments)))
             if len(steps)%2:
                 steps += steps[-1:] # assume even spacing for omitted skip sizes
         self._penstyle = self._penstyle._replace(dash=steps)
@@ -339,7 +338,7 @@ class StyleMixin(Grob):
         super(StyleMixin, self).__init__(**kwargs)
 
         # ignore `width` if it's a column-width rather than typeface width
-        if not isinstance(kwargs.get('width', ''), basestring):
+        if not isinstance(kwargs.get('width', ''), str):
             kwargs = dict(kwargs)
             del kwargs['width']
 
@@ -389,65 +388,76 @@ class StyleMixin(Grob):
     def fill(self):
         return self._fillcolor
 
+re_var = re.compile(r'[A-Za-z_][A-Za-z0-9_]*$')
+re_punct = re.compile(r'([^\!\'\#\%\&\'\(\)\*\+\,\-\.\/\:\;\<\=\>\?\@\[\/\]\^\_\{\|\}\~])$')
 class Variable(object):
-    def __init__(self, name, type, default=None, min=0, max=100, value=None):
+    def __init__(self, name, type, *args, **kwargs):
+        # var(name, TEXT, value, label=)
+        # var(name, BOOLEAN, value, label=)
+        # var(name, NUMBER, value, min, max, step, label=)
+        # var(handler, BUTTON, buttonText, color=, label=)
+        if not re_var.match(name):
+            raise DeviceError('Not a legal variable name: "%s"' % name)
+
         self.name = name
         self.type = type or NUMBER
+        self.label = re_punct.sub(r'\1:', kwargs.get('label', name))
+
         if self.type == NUMBER:
-            if default is None:
-                self.default = 50
+            attrs = ['value', 'min', 'max', 'step']
+            for attr, val in zip(attrs, args):
+                setattr(self, attr, val)
+            for attr, val in kwargs.items():
+                if attr in attrs:
+                    setattr(self, attr, val)
+
+            self.min = getattr(self, 'min', 0)
+            if hasattr(self, 'value'):
+                self.max = getattr(self, 'max', 100 if 0 <= self.value <= 100 else self.value * 2)
             else:
-                self.default = default
-            self.min = min
-            self.max = max
+                self.max = getattr(self, 'max', 100)
+            self.min, self.max = min(self.min, self.max), max(self.min, self.max)
+            self.value = getattr(self, 'value', (self.min + self.max) / 2)
+            self.step = getattr(self, 'step', None)
+
+            if self.step:
+                if ((self.max-self.min) / self.step) % 1 > 0:
+                    raise DeviceError("The step size %d doesn't fit evenly into the range %d–%d" % (self.step, self.min, self.max))
+                self.value = self.step * floor((self.value + self.step/2) / self.step)
+
+            small = min(self.min, self.max)
+            big = max(self.min, self.max)
+            if not small < self.value < big:
+                raise DeviceError("The value %d doesn't fall with the range %d–%d" % (self.value, self.min, self.max))
+
         elif self.type == TEXT:
-            if default is None:
-                self.default = "hello"
-            else:
-                self.default = default
+            self.value = next(iter(args), "hello")
         elif self.type == BOOLEAN:
-            if default is None:
-                self.default = True
-            else:
-                self.default = default
+            self.value = bool(next(iter(args), True))
         elif self.type == BUTTON:
-            self.default = self.name
-        self.value = value or self.default
+            # first arg can be a function name or direct reference
+            if callable(name):
+                self.name = name.__name__
 
-    def sanitize(self, val):
-        """Given a Variable and a value, cleans it out"""
-        if self.type == NUMBER:
-            try:
-                return float(val)
-            except ValueError:
-                return 0.0
-        elif self.type == TEXT:
-            return unicode(str(val), "utf_8", "replace")
-            try:
-                return unicode(str(val), "utf_8", "replace")
-            except:
-                return ""
-        elif self.type == BOOLEAN:
-            if unicode(val).lower() in ("true", "1", "yes"):
-                return True
+            # use value as button text (else use function name)
+            self.value = next(iter(args), name)
+
+            # only add label text if it's provided explicitly
+            if 'label' not in kwargs:
+                self.label = None
+            clr = kwargs.get('color', None)
+            self.color = Color(clr) if clr else None
+
+    def inherit(self, old=None):
+        if old and old.type is self.type:
+            if self.type is NUMBER:
+                self.value = max(self.min, min(self.max, old.value))
+                if self.step:
+                    self.value = self.step * floor((self.value + self.step/2) / self.step)
             else:
-                return False
-
-    def compliesTo(self, v):
-        """Return whether I am compatible with the given var:
-             - Type should be the same
-             - My value should be inside the given vars' min/max range.
-        """
-        if self.type == v.type:
-            if self.type == NUMBER:
-                if self.value < self.min or self.value > self.max:
-                    return False
-            return True
-        return False
+                self.value = old.value
 
     @trim_zeroes
     def __repr__(self):
-        if hasattr(self, 'min'):
-            return "Variable(name=%s, type=%s, default=%s, min=%s, max=%s, value=%s)" % (self.name, self.type, self.default, self.min, self.max, self.value)
-
-        return "Variable(name=%s, type=%s, default=%s, value=%s)" % (self.name, self.type, self.default, self.value)
+        attrs = ['name', 'type', 'value', 'min', 'max', 'step', 'color', 'label']
+        return "Variable(%s)" % ' '.join('%s=%s' % (a,getattr(self, a)) for a in attrs if hasattr(self, a))

@@ -1,6 +1,8 @@
 # encoding: utf-8
-import os
+import os, re
+from collections import OrderedDict
 from ..lib.cocoa import *
+from math import floor, ceil
 import objc
 
 ## classes instantiated by PlotDeviceDocument.xib & PlotDeviceScript.xib
@@ -23,16 +25,6 @@ class StatusView(NSView):
         self.cancel.cell().setShowsStateBy_(NSContentsCellMask)
         self.counter.setHidden_(True)
 
-    def beginRun(self):
-        self._state = 'run'
-        self.spinner.setIndeterminate_(True)
-        self.spinner.startAnimation_(None)
-
-    def endRun(self):
-        self._state = 'idle'
-        self.spinner.stopAnimation_(None)
-        self.cancel.setHidden_(True)
-
     def beginExport(self):
         self._state = 'run'
 
@@ -48,7 +40,7 @@ class StatusView(NSView):
     def updateExport_total_(self, written, total):
         self.spinner.setMaxValue_(total)
         self.spinner.setDoubleValue_(written)
-        msg = "Frame %i/%i"%(written, total) if written<total else u"Finishing…"
+        msg = "Frame {:,}/{:,}".format(written, total) if written<total else "Finishing…"
         self.counter.setStringValue_(msg)
 
     def finishExport(self):
@@ -79,148 +71,269 @@ class StatusView(NSView):
         self.spinner.setHidden_(False)
 
 
-from plotdevice.context import NUMBER, TEXT, BOOLEAN, BUTTON
+from ..context import NUMBER, TEXT, BOOLEAN, BUTTON
 SMALL_FONT = NSFont.systemFontOfSize_(NSFont.smallSystemFontSize())
 MINI_FONT = NSFont.systemFontOfSize_(NSFont.systemFontSizeForControlSize_(NSMiniControlSize))
+
+class DashboardSwitch(NSSwitch):
+    def acceptsFirstMouse_(self, e):
+        return True
+
+class DashboardRow(NSView):
+
+    def initWithVariable_forDelegate_(self, var, delegate):
+        self.initWithFrame_(((0,-999), (200, 30)))
+        self.setAutoresizingMask_(NSViewWidthSizable)
+
+        label = NSTextField.alloc().init()
+        if var.label is not None:
+            label.setStringValue_(var.label)
+        label.setAlignment_(NSRightTextAlignment)
+        label.setEditable_(False)
+        label.setBordered_(False)
+        label.setDrawsBackground_(False)
+        label.setFont_(SMALL_FONT)
+        label.sizeToFit()
+        self.addSubview_(label)
+
+        if var.type is TEXT:
+            control = NSTextField.alloc().init()
+            control.setStringValue_(var.value)
+            control.cell().setControlSize_(NSSmallControlSize)
+            control.setFont_(SMALL_FONT)
+            control.setTarget_(self)
+            control.setAutoresizingMask_(NSViewWidthSizable)
+            control.setDelegate_(self)
+            self.addSubview_(control)
+
+        elif var.type is BOOLEAN:
+            control = DashboardSwitch.alloc().init()
+            control.setState_(NSOnState if var.value else NSOffState)
+            control.setControlSize_(NSSmallControlSize)
+            control.sizeToFit()
+            control.setFont_(SMALL_FONT)
+            control.setTarget_(self)
+            control.setAction_(objc.selector(self.booleanChanged_, signature=b"v@:@@"))
+            self.addSubview_(control)
+
+        elif var.type is NUMBER:
+            control = NSSlider.alloc().init()
+            control.setMaxValue_(var.max)
+            control.setMinValue_(var.min)
+            control.setFloatValue_(var.value)
+            control.cell().setControlSize_(NSSmallControlSize)
+            control.setContinuous_(True)
+            control.setTarget_(self)
+            control.setAutoresizingMask_(NSViewWidthSizable)
+            control.setAction_(objc.selector(self.numberChanged_, signature=b"v@:@@"))
+            self.addSubview_(control)
+
+            num = NSTextField.alloc().init()
+            num.setBordered_(False)
+            num.setEditable_(False)
+            num.setAutoresizingMask_(NSViewMinXMargin)
+            num.setSelectable_(True)
+            num.setDrawsBackground_(False)
+            num.setFont_(SMALL_FONT)
+
+            # measure all the possible values to decide on the text-field width
+            num_w = self._num_w(var.min, var.max, var.step)
+            num.setStringValue_(self._fmt(var.value))
+            num.setFrameSize_((num_w, 18))
+            self.addSubview_(num)
+            self.step = var.step
+            self.num = num
+
+        elif var.type is BUTTON:
+            control = NSButton.alloc().init()
+            control.setTitle_(var.value)
+            control.setBezelStyle_(1)
+            control.setFont_(SMALL_FONT)
+            control.cell().setControlSize_(NSSmallControlSize)
+            control.setTarget_(self)
+            control.sizeToFit()
+            control.setBezelColor_(getattr(var.color, '_rgb', None))
+            control.setAction_(objc.selector(self.buttonClicked_, signature=b"v@:@@"))
+            self.addSubview_(control)
+
+        self.name = var.name
+        self.type = var.type
+        self.label = label
+        self.control = control
+        self.button_w = control.frame().size.width if var.type is BUTTON else 0
+        self.num_w = num_w if var.type is NUMBER else 0
+        self.label_w = label.frame().size.width
+        self.delegate = delegate
+        return self
+
+    @objc.python_method
+    def _fmt(self, num):
+        s = "{:,.3f}".format(num)
+        s = re.sub(r'\.0+$', '', s)
+        return re.sub(r'(\.[^0])+0*$', r'\1', s)
+
+    @objc.python_method
+    def _num_w(self, lo, hi, step):
+        num_w = 0
+        inc = step if step else (hi - lo) / 97
+        num = NSTextField.alloc().init()
+        num.setFont_(SMALL_FONT)
+        for i in range(1+ceil((hi - lo) / inc)):
+            n = min(hi, lo + i*inc)
+            s = self._fmt(n)
+            num.setStringValue_(s)
+            num.sizeToFit()
+            num_w = max(num_w, num.frame().size.width)
+        return num_w
+
+    @objc.python_method
+    def roundOff(self):
+        if self.step:
+            rounded = self.step * floor((self.control.floatValue() + self.step/2) / self.step)
+            self.control.cell().setFloatValue_(rounded)
+        self.num.setStringValue_(self._fmt(self.control.floatValue()))
+
+    @objc.python_method
+    def updateConfig(self, var):
+        label = self.label
+        control = self.control
+        label.setStringValue_(var.label or '')
+        label.sizeToFit()
+        self.label_w = label.frame().size.width
+
+        if var.type is NUMBER:
+            control.setMaxValue_(var.max)
+            control.setMinValue_(var.min)
+            self.step = var.step
+            self.num_w = self._num_w(var.min, var.max, var.step)
+            self.roundOff()
+
+        elif var.type is BUTTON:
+            control.setTitle_(var.value)
+            self.button_w = control.frame().size.width
+            control.setBezelColor_(getattr(var.color, '_rgb', None))
+
+    @objc.python_method
+    def updateLayout(self, indent, width, row_width, offset):
+        self.setFrame_(((0,  offset), (row_width, 30)))
+        self.label.setFrame_(((10, 0), (indent-15, 18)))
+        if self.type is TEXT:
+            self.control.setFrame_(((indent, 3),(width - indent, 18)))
+        elif self.type is BOOLEAN:
+            self.control.setFrameOrigin_((indent, 0))
+        elif self.type is NUMBER:
+            self.control.setFrame_(((indent, 1), (width - indent, 18)))
+            self.num.setFrameOrigin_((width + 5, 0))
+        elif self.type is BUTTON:
+            self.control.setFrameOrigin_((indent-5, -5))
+
+    def numberChanged_(self, sender):
+        self.roundOff()
+        if self.delegate:
+            self.delegate.setVariable_to_(self.name, sender.floatValue())
+
+    def controlTextDidChange_(self, note):
+        if self.delegate:
+            sender = note.object()
+            self.delegate.setVariable_to_(self.name, sender.stringValue())
+
+    def booleanChanged_(self, sender):
+        if self.delegate:
+            self.delegate.setVariable_to_(self.name, sender.state() == NSOnState)
+
+    def buttonClicked_(self, sender):
+        if self.delegate:
+            self.delegate.callHandler_(self.name)
+
 class DashboardController(NSObject):
     script = IBOutlet()
     panel = IBOutlet()
 
-    def clearInterface(self):
-        for s in list(self.panel.contentView().subviews()):
-            s.removeFromSuperview()
+    def awakeFromNib(self):
+        self.panel.contentView().setFlipped_(True)
+        self.rows = OrderedDict()
+        self.positioned = False
 
-    def numberChanged_(self, sender):
-        var = self.script.vm.vars[sender.tag()]
-        var.value = sender.floatValue()
-        self.script.runScript()
+    def shutdown(self):
+        self.panel.close()
+        for row in self.rows.values():
+            row.delegate = None
+            if row.type is TEXT:
+                row.control.setDelegate_(None)
 
-    def textChanged_(self, sender):
-        var = self.script.vm.vars[sender.tag()]
-        var.value = sender.stringValue()
-        self.script.runScript()
+    def setVariable_to_(self, name, val):
+        var = self.script.vm.params[name]
+        var.value = val
+        if self.script.animationTimer is None:
+            self.script.runScript()
 
-    def booleanChanged_(self, sender):
-        var = self.script.vm.vars[sender.tag()]
-        if sender.state() == NSOnState:
-            var.value = True
-        else:
-            var.value = False
-        self.script.runScript()
+    def callHandler_(self, name):
+        var = self.script.vm.params[name]
+        result = self.script.vm.call(var.name)
+        self.script.echo(result.output)
 
-    def buttonClicked_(self, sender):
-        print "out of service"
-        # var = self.script.vm.vars[sender.tag()]
-        # self.script.vm.call(var.name)
-        # self.script.runScript()
+    @objc.python_method
+    def updateInterface(self):
+        params = self.script.vm.params
+        for name, widget in self.rows.items():
+            if name not in params:
+                widget.removeFromSuperview()
+                self.script.vm.namespace.pop(name)
 
-    def buildInterface(self, vars):
-        self.vars = vars
-        self.clearInterface()
-        if len(self.vars) > 0:
-            self.panel.orderFront_(None)
-        else:
+        new_rows = OrderedDict()
+        for name, var in params.items():
+            try:
+                new_rows[name] = self.rows[name]
+                new_rows[name].updateConfig(var)
+            except KeyError:
+                new_rows[name] = DashboardRow.alloc().initWithVariable_forDelegate_(var, self)
+                self.panel.contentView().addSubview_(new_rows[name])
+        self.rows = new_rows
+
+        if not self.rows:
             self.panel.orderOut_(None)
-            return
-
-        # Set the title of the parameter panel to the title of the window
-        self.panel.setTitle_(self.script.window().title())
-
-        (px,py),(pw,ph) = self.panel.frame()
-        # Height of the window. Each element has a height of 21.
-        # The extra "fluff" is 38 pixels.
-        ph = len(self.vars) * 21 + 54
-        # Start of first element
-        # First element is the height minus the fluff.
-        y = ph - 49
-        cnt = 0
-        for v in self.vars:
-            if v.type == NUMBER:
-                self._addLabel(v, y, cnt)
-                self._addSlider(v, y, cnt)
-            elif v.type == TEXT:
-                self._addLabel(v, y, cnt)
-                self._addTextField(v, y, cnt)
-            elif v.type == BOOLEAN:
-                self._addSwitch(v, y, cnt)
-            elif v.type == BUTTON:
-                self._addButton(v, y, cnt)
-            y -= 21
-            cnt += 1
-        self.panel.setFrame_display_animate_( ((px,py),(pw,ph)), True, True )
-
-    def _addLabel(self, v, y, cnt):
-        control = NSTextField.alloc().init()
-        control.setFrame_(((0,y),(100,13)))
-        control.setStringValue_(v.name + ":")
-        control.setAlignment_(NSRightTextAlignment)
-        control.setEditable_(False)
-        control.setBordered_(False)
-        control.setDrawsBackground_(False)
-        control.setFont_(SMALL_FONT)
-        control.setTextColor_(NSColor.whiteColor())
-        self.panel.contentView().addSubview_(control)
-
-    def _addSlider(self, v, y, cnt):
-        control = NSSlider.alloc().init()
-        control.setMaxValue_(v.max)
-        control.setMinValue_(v.min)
-        control.setFloatValue_(v.value)
-        control.setFrame_(((108,y-1),(172,13)))
-        control.cell().setControlSize_(NSMiniControlSize)
-        control.cell().setControlTint_(NSGraphiteControlTint)
-        control.setContinuous_(True)
-        control.setTarget_(self)
-        control.setTag_(cnt)
-        control.setAction_(objc.selector(self.numberChanged_, signature="v@:@@"))
-        self.panel.contentView().addSubview_(control)
-
-    def _addTextField(self, v, y, cnt):
-        control = NSTextField.alloc().init()
-        control.setStringValue_(v.value)
-        control.setFrame_(((108,y-2),(172,15)))
-        control.cell().setControlSize_(NSMiniControlSize)
-        control.cell().setControlTint_(NSGraphiteControlTint)
-        control.setFont_(MINI_FONT)
-        control.setTarget_(self)
-        control.setTag_(cnt)
-        control.setAction_(objc.selector(self.textChanged_, signature="v@:@@"))
-        self.panel.contentView().addSubview_(control)
-
-    def _addSwitch(self, v, y, cnt):
-        control = NSButton.alloc().init()
-        control.setButtonType_(NSSwitchButton)
-        if v.value:
-            control.setState_(NSOnState)
         else:
-            control.setState_(NSOffState)
-        control.setFrame_(((108,y-2),(172,16)))
-        control.setTitle_(v.name)
-        control.setFont_(SMALL_FONT)
-        control.cell().setControlSize_(NSSmallControlSize)
-        control.cell().setControlTint_(NSGraphiteControlTint)
-        control.setTarget_(self)
-        control.setTag_(cnt)
-        switchTitle = NSMutableAttributedString.alloc().initWithAttributedString_(control.attributedTitle())
-        switchTitle.addAttribute_value_range_(NSForegroundColorAttributeName,
-                                              NSColor.whiteColor(),
-                                              (0, switchTitle.length()))
-        control.setAttributedTitle_(switchTitle)
-        control.setAction_(objc.selector(self.booleanChanged_, signature="v@:@@"))
-        self.panel.contentView().addSubview_(control)
+            # Set the title of the parameter panel to the title of the window
+            self.panel.setTitle_(self.script.window().title())
 
-    def _addButton(self, v, y, cnt):
-        control = NSButton.alloc().init()
-        control.setFrame_(((108, y-2),(172,16)))
-        control.setTitle_(v.name)
-        control.setBezelStyle_(1)
-        control.setFont_(SMALL_FONT)
-        control.cell().setControlSize_(NSMiniControlSize)
-        control.cell().setControlTint_(NSGraphiteControlTint)
-        control.setTarget_(self)
-        control.setTag_(cnt)
-        control.setAction_(objc.selector(self.buttonClicked_, signature="v@:@@"))
-        self.panel.contentView().addSubview_(control)
+            # recalculate the layout
+            (pOrigin, pSize) = self.panel.frame()
+            label_w = max([v.label_w for v in self.rows.values()])
+            button_w = max([v.button_w for v in self.rows.values()])
+            num_w = max([v.num_w for v in self.rows.values()])
+            ph = len(self.rows) * 30 + 30
+            pw = label_w + 15 + max(button_w, 200) + num_w
+            col = label_w + 15
+
+            self.panel.setMinSize_( (pw, ph))
+            self.panel.setMaxSize_( (pw * 5, ph))
+
+            needs_resize = pSize.width < pw or pSize.height != ph
+            pw = max(pw, pSize.width)
+
+            if not self.positioned:
+                win = self.script.window().frame()
+                screen = self.script.window().screen().visibleFrame()
+                if win.origin.x + win.size.width + pw < screen.size.width:
+                    pOrigin = (win.origin.x + win.size.width, win.origin.y + win.size.height - ph - 38)
+                elif win.origin.x - pw > 0:
+                    pOrigin = (win.origin.x - pw, win.origin.y + win.size.height - ph - 38)
+                else:
+                    pOrigin = (win.origin.x + win.size.width - pw - 15, win.origin.y + 15)
+                self.panel.setFrame_display_animate_( (pOrigin, (pw,ph)), True, True )
+                self.positioned = True
+
+            elif needs_resize:
+                pOrigin.y -= ph-pSize.height
+                self.panel.setFrame_display_animate_( (pOrigin, (pw,ph)), True, True )
+
+            # reposition the elements of each row to fit the new panel size and row contents
+            for idx, v in enumerate(self.rows.values()):
+                v.updateLayout(col, pw - 10 - num_w, pw, idx*30)
+
+            self.panel.orderFront_(None)
+
+
 
 from ..context import RGB, CMYK
 class ExportSheet(NSObject):
@@ -230,6 +343,7 @@ class ExportSheet(NSObject):
     # Image export settings
     imageAccessory = IBOutlet()
     imageFormat = IBOutlet()
+    imageZoom = IBOutlet()
     imagePageCount = IBOutlet()
     imagePagination = IBOutlet()
     imageCMYK = IBOutlet()
@@ -243,12 +357,13 @@ class ExportSheet(NSObject):
     movieBitrate = IBOutlet()
 
     def awakeFromNib(self):
-        self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'gif'))
-        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0)
-        self.image = dict(format='pdf', first=1, last=1, cmyk=False, single=True)
+        self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'heic', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'mov', 'gif'))
+        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, codec=0)
+        self.image = dict(format='pdf', zoom=100, first=1, last=1, cmyk=False, single=True)
         self.last = None
 
 
+    @objc.python_method
     def beginExport(self, kind):
         # configure the accessory controls
         if kind=='image':
@@ -291,6 +406,7 @@ class ExportSheet(NSObject):
         # If a file was already exported, use that folder/filename as the default.
         if self.last is not None:
             dirName, fileName = self.last
+            fileName, ext = os.path.splitext(fileName)
 
         # create the sheet
         exportPanel = NSSavePanel.savePanel()
@@ -298,9 +414,9 @@ class ExportSheet(NSObject):
         exportPanel.setPrompt_("Export")
         exportPanel.setCanSelectHiddenExtension_(True)
         exportPanel.setShowsTagField_(False)
-        exportPanel.setAllowedFileTypes_(filter(None, self.formats[kind]))
-        exportPanel.setRequiredFileType_(format)
+        exportPanel.setAllowedFileTypes_([format])
         exportPanel.setAccessoryView_(accessory)
+        self.exportPanel = exportPanel
 
         # present the dialog
         callback = "exportPanelDidEnd:returnCode:contextInfo:"
@@ -328,12 +444,12 @@ class ExportSheet(NSObject):
         fmts = self.formats['movie']
         fmt_idx = self.movieFormat.indexOfSelectedItem()
         state = dict(format = fmts[fmt_idx],
-                     # format=panel.requiredFileType(),
                      first=1,
                      last=self.movieFrames.intValue(),
                      fps=self.movieFps.floatValue(),
                      loop=-1 if self.movieLoop.state()==NSOnState else 0,
-                     bitrate=self.movieBitrate.selectedItem().tag() )
+                     bitrate=self.movieBitrate.selectedItem().tag(),
+                     codec=fmt_idx ) # 0=h265 1=h264
         if key:
             return state[key]
         return state
@@ -342,6 +458,7 @@ class ExportSheet(NSObject):
         fmts = self.formats['image']
         fmt_idx = self.imageFormat.indexOfSelectedItem()
         state = dict(format=fmts[fmt_idx],
+                     zoom=self.image['zoom'] / 100,
                      first=1,
                      cmyk=self.imageCMYK.state()==NSOnState,
                      single=fmt_idx==1,
@@ -356,24 +473,48 @@ class ExportSheet(NSObject):
 
     def updateColorMode(self):
         format = self.imageState('format')
-        can_cmyk = format in ('pdf','eps','tiff')
+        can_cmyk = format in ('pdf','eps','tiff','jpg')
         self.imageCMYK.setEnabled_(can_cmyk)
         if not can_cmyk:
             self.imageCMYK.setState_(NSOffState)
 
     @IBAction
     def imageFormatChanged_(self, sender):
-        panel = sender.window()
         format = self.formats['image'][sender.indexOfSelectedItem()]
-        panel.setRequiredFileType_(format)
+        self.exportPanel.setAllowedFileTypes_([format])
         self.updateColorMode()
         self.updatePagination()
 
     @IBAction
+    def imageZoomStepped_(self, sender):
+        step = sender.intValue()
+        sender.setIntValue_(0)
+
+        self.imageZoomChanged_(None) # reflect any editing in text field
+        pct = self.image['zoom']
+
+        if step > 0:
+            pct = 100 * ceil((pct + 1) / 100)
+        elif step < 0:
+            pct = 100 * floor((pct - 1) / 100)
+
+        if 0 < pct < 10000:
+            self.image['zoom'] = pct
+            self.imageZoom.setStringValue_("%i%%" % pct)
+
+    @IBAction
+    def imageZoomChanged_(self, sender):
+        pct = self.imageZoom.intValue()
+        if pct > 0:
+            self.image['zoom'] = pct
+        else:
+            pct = self.image['zoom']
+        self.imageZoom.setStringValue_("%i%%" % pct)
+
+    @IBAction
     def movieFormatChanged_(self, sender):
-        panel = sender.window()
         format = self.formats['movie'][sender.indexOfSelectedItem()]
-        panel.setRequiredFileType_(format)
+        self.exportPanel.setAllowedFileTypes_([format])
         is_gif = format=='gif'
         self.movieLoop.setState_(NSOnState if is_gif else NSOffState)
         self.movieLoop.setEnabled_(is_gif)

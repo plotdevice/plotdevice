@@ -54,7 +54,8 @@ class Font(object):
                 new_spec.update({axis:name, num_axis:val})
 
         # merge in changes from the new spec
-        spec = dict(cur_spec.items() + new_spec.items()) # our criteria
+        spec = cur_spec.copy()
+        spec.update(new_spec) # our criteria
 
         # use the combined spec to pick a face then break it into attributes
         self._face = best_face(spec)
@@ -67,7 +68,7 @@ class Font(object):
             spec.insert(2, self._face.variant)
         spec.insert(1, '/' if self._face.italic else '|')
         spec.insert(1, ("%.1fpt"%self._metrics['size']).replace('.0pt','pt'))
-        return (u'Font(%s)'%" ".join(spec)).encode('utf-8')
+        return ('Font(%s)'%" ".join(spec)).encode('utf-8')
 
     def __enter__(self):
         if not hasattr(self, '_rollback'):
@@ -248,7 +249,7 @@ class Family(object):
             n = len(getattr(self, group))
             if n:
                 contents.append('%i %s%s' % (n, group[:-1], '' if n==1 else 's'))
-        return (u'Family(%s)'%", ".join(contents)).encode('utf-8')
+        return ('Family(%s)'%", ".join(contents)).encode('utf-8')
 
     @property
     def name(self):
@@ -284,7 +285,7 @@ class Family(object):
             if f.variant not in v_names:
                 v_names.append(f.variant)
         if any(v_names) and None in v_names:
-            return tuple([None] + filter(None,v_names))
+            return tuple(None, *filter(None, v_names))
         return tuple(v_names)
 
     @property
@@ -370,7 +371,7 @@ class Stylesheet(object):
             spec.update(fontspec(*args, **kwargs))
             color = kwargs.get('fill')
             if color and not isinstance(color, Color):
-                if isinstance(color, (basestring, int, float, long)):
+                if isinstance(color, (str, int, float)):
                     color = (color,)
                 color = Color(*color)
             if color:

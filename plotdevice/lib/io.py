@@ -1,5 +1,5 @@
 import objc, os, re
-import cIO
+
 for cls in ["AnimatedGif", "Pages", "SysAdmin", "Video"]:
     globals()[cls] = objc.lookUpClass(cls)
 
@@ -79,12 +79,14 @@ class ExportSession(object):
 
 re_padded = re.compile(r'{(\d+)}')
 class ImageExportSession(ExportSession):
-    def __init__(self, fname, format='pdf', first=1, last=None, single=False, **rest):
+    def __init__(self, fname, format='pdf', zoom=1.0, first=1, last=None, single=False, **rest):
         super(ImageExportSession, self).__init__()
         self.single_file = single or first==last
         if last is not None:
             self.begin(pages=last-first+1)
         self.format = format
+        self.zoom = zoom
+        self.cmyk = rest.get('cmyk', False)
 
         m = re_padded.search(fname)
         pad = '%%0%id' % int(m.group(1)) if m else None
@@ -104,12 +106,12 @@ class ImageExportSession(ExportSession):
             self.writer = Pages.alloc().initWithPattern_(name_tmpl)
 
     def add(self, canvas):
-        image = canvas._getImageData(self.format)
+        image = canvas._getImageData(self.format, self.zoom, self.cmyk)
         self.writer.addPage_(image)
         self.added += 1
 
 class MovieExportSession(ExportSession):
-    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=1, loop=0, **rest):
+    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=1, loop=0, codec=0, **rest):
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
@@ -122,19 +124,21 @@ class MovieExportSession(ExportSession):
         self.fps = fps
         self.loop = loop
         self.bitrate = bitrate
+        self.codec = codec
+        self.cmyk = False
 
     def add(self, canvas):
-        image = canvas.rasterize()
+        image = canvas._nsImage
         if not self.writer:
             dims = image.size()
             if self.format == 'mov':
                 self.writer = Video.alloc()
-                self.writer.initWithFile_size_fps_bitrate_(self.fname, dims, self.fps, self.bitrate)
+                self.writer.initWithFile_size_fps_bitrate_codec_(self.fname, dims, self.fps, self.bitrate, self.codec)
             elif self.format == 'gif':
                 self.writer = AnimatedGif.alloc()
                 self.writer.initWithFile_size_fps_loop_(self.fname, dims, self.fps, self.loop)
             else:
-                print 'unrecognized output format: %s' % self.format
+                print('unrecognized output format: %s' % self.format)
                 return self.shutdown()
         self.writer.addFrame_(image)
         self.added += 1

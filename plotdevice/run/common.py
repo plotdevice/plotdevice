@@ -1,6 +1,6 @@
 import re, sys, linecache
 from io import open
-from os.path import abspath, dirname, relpath
+from os.path import abspath, dirname, relpath, exists
 from traceback import format_list, format_exception_only
 
 ### encoding-pragma helpers ###
@@ -50,7 +50,7 @@ def stacktrace(script=None, src=None):
         # we only want to prepend the Traceback text for syntax errs
         if 'SyntaxError' not in msg: return msg
 
-    return u"Traceback (most recent call last):\n%s" % msg
+    return "Traceback (most recent call last):\n%s" % msg
 
 def coredump(script=None, src=None, syntax=True):
     """Get a clean stacktrace with absolute paths and source pulled from the editor rather than disk"""
@@ -90,7 +90,8 @@ def extract_tb(tb, script=None, src=None):
 
     # omit the internal plotdevice stack frames in `dist` builds
     from AppKit import NSBundle
-    debug = 'flux' in NSBundle.mainBundle().infoDictionary().get('CFBundleVersion','')
+    debug = 'flux' in NSBundle.mainBundle().infoDictionary().get('CFBundleVersion','') \
+            or exists('%s/../../setup.py'%dirname(__file__))
     if not debug:
         moduledir = abspath(dirname(dirname(__file__)))
         return [frame for frame in list if moduledir not in frame[0]]

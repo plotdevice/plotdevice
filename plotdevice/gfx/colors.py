@@ -54,7 +54,7 @@ class Color(object):
             return
         elif params == 1 and isinstance(args[0], NSColor):  # NSColor object
             clr = args[0]
-        elif params>=1 and isinstance(args[0], basestring):
+        elif params>=1 and isinstance(args[0], str):
             r, g, b, a = Color._parse(args[0])              # Hex string or named color
             if args[1:]:
                 a = args[1]
@@ -126,7 +126,7 @@ class Color(object):
     def copy(self):
         new = self.__class__()
         new._rgb = self._rgb.copy()
-        new._updateCmyk()
+        new._cmyk = self._cmyk.copy()
         return new
 
     def _updateCmyk(self):
@@ -281,8 +281,8 @@ class Color(object):
         """
         if hasattr(otherColor, "color"):
             otherColor = otherColor._rgb
-        return self.__class__(color=self._rgb.blendedColorWithFraction_ofColor_(
-                factor, otherColor))
+        return self.__class__(self._rgb.blendedColorWithFraction_ofColor_(
+                factor, otherColor._rgb))
 
     def _normalize(self, v, rng=None):
         """Bring the color into the 0-1 scale for the current colorrange"""
@@ -300,8 +300,10 @@ class Color(object):
         if isinstance(blob, Color):
             return True
 
-        valid_str = lambda s: isinstance(s, basestring) and (s.strip() in _CSS_COLORS or \
-                                                             re.match(r'#?[a-z0-9]{3,8}$', s.strip()) )
+        def valid_str(s):
+            s = s.strip() if isinstance(s, str) else ''
+            return s in _CSS_COLORS or re.match(r'#?[A-Fa-f0-9]{3,8}$', s)
+
         if isinstance(blob, (tuple, list)):
             demoded = [b for b in blob if b not in (RGB,HSV,CMYK,GREY)]
             if all(numlike(n) and len(demoded)<=5 for n in blob):
@@ -312,7 +314,7 @@ class Color(object):
                     return True
                 if len(demoded)==2 and numlike(demoded[1]):
                     return True
-        elif isinstance(blob, basestring):
+        elif isinstance(blob, str):
             return valid_str(blob)
 
     @classmethod
@@ -331,7 +333,7 @@ class Color(object):
         if clrstr in _CSS_COLORS: # handle css color names
             clrstr = _CSS_COLORS[clrstr]
 
-        if re.search(r'#?[0-9a-f]{3,8}', clrstr): # rgb & rgba hex strings
+        if re.search(r'#?[0-9a-fA-F]{3,8}', clrstr): # rgb & rgba hex strings
             hexclr = clrstr.lstrip('#')
             if len(hexclr) in (3,4):
                 hexclr = "".join(map("".join, zip(hexclr,hexclr)))
@@ -351,7 +353,7 @@ class Pattern(object):
             self._nsColor = img._nsColor
         else:
             from .image import Image
-            img = Image(img) if isinstance(img, basestring) else img
+            img = Image(img) if isinstance(img, str) else img
             self._nsColor = NSColor.colorWithPatternImage_(img._nsImage)
 
     # fill() and stroke() both cache the previous canvas state by creating a _rollback attr.
