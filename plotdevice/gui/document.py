@@ -331,6 +331,10 @@ class ScriptController(NSWindowController):
     def shouldCloseDocument(self):
         return True
 
+    def splitView_shouldAdjustSizeOfSubview_(self, splitview, subview):
+        # keep the size of the editor fixed and adjust the graphics view on resize
+        return type(subview) is not NSSplitView
+
     #
     # Toolbar state
     #
