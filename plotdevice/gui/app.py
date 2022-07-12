@@ -9,6 +9,9 @@ from .preferences import PlotDevicePreferencesController, get_default
 from . import bundle_path, set_timeout
 
 LIB_DIR_README = """"You can put PlotDevice libraries In this directory to make them available to your scripts.
+
+You can also install anything you find on https://pypi.org here using the command line tool:
+  plotdevice --install <package-name>
 """
 
 class PlotDeviceAppDelegate(NSObject):

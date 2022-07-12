@@ -31,6 +31,7 @@ a bit of breakage. Some of the highlights of this maintenance release include:
 - revamped `var()` command for creating GUIs to modify values via sliders, buttons, toggles, etc.
 - updated text editor with multiple tabs, new themes, and additional key-binding modes emulating Sublime Text and VS Code
 - the module's command line interface is now accessible through `python3 -m plotdevice`
+- the command line tool has a new `--install` option to download [PyPI](https://pypi.org) packages for use within the app
 - document autosaving is now user-configurable 
 
 ###### Bugfixes

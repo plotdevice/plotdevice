@@ -25,6 +25,9 @@ Animation Examples:
 
   Create an animated gif that loops every 2 seconds:
     python3 -m plotdevice script.pv --export output.gif --frames 60 --fps 30 --loop
+
+Installing Libraries:
+  python3 -m plotdevice --install urllib3 jinja2 numpy
 """
 
 import sys, os, re
@@ -60,15 +63,28 @@ def main():
   x = parser.add_argument_group("Export Options")
   x.add_argument('--export', '-o', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, heic, gif, or mov')
   x.add_argument('--zoom', metavar='PERCENT', default=100, type=int, help='scale of the output image (100 = regular size) unless specified by a filename ending in @2x/@3x/etc')
-  o.add_argument('--cmyk', action='store_const', const=True, default=False, help='convert colors to c/m/y/k during exports')
+  x.add_argument('--cmyk', action='store_const', const=True, default=False, help='convert colors to c/m/y/k during exports')
 
   i = parser.add_argument_group("PlotDevice Script File", None)
   i.add_argument('script', help='the python script to be rendered')
+
+  p = parser.add_argument_group("Installing Packages", "Run `pip install` with ~/Library/Application Support/PlotDevice as the target")
+  p.add_argument('--install', nargs='*', default=[], metavar='package', help="Note: cannot be combined with any other plotdevice arguments")
+
 
   if len(sys.argv)==1:
     parser.print_usage()
     print('for more detail:\n  %s --help' % parser.prog)
     return
+  elif sys.argv[1] == '--install':
+    # --install has to be the first argument (in which case we can handle it now and bail)
+    libDir = os.path.join(os.getenv("HOME"), "Library", "Application Support", "PlotDevice")
+    if not os.path.exists(libDir):
+        os.mkdir(libDir)
+
+    from subprocess import call
+    PIP = os.environ.pop('_p_l_o_t_d_e_v_i_c_e___p_i_p_', 'pip3')
+    sys.exit(call([PIP, 'install', '--isolated', '--target', libDir, *sys.argv[2:]]))
 
   opts = parser.parse_args()
 
@@ -133,6 +149,10 @@ def main():
       opts.zoom = float(m.group(1))
     else:
       opts.zoom = max(0.01, opts.zoom/100)
+
+  if opts.install:
+    print("The --install option must be used on its own, not in combination with other flags")
+    sys.exit(1)
 
   # set it off
   plotdevice.__all__.clear()
