@@ -271,6 +271,12 @@ class DashboardController(NSObject):
         var = self.script.vm.params[name]
         result = self.script.vm.call(var.name)
         self.script.echo(result.output)
+        if result.ok:
+            try:
+                self.script.currentView.setCanvas(self.script.vm.canvas)
+            except DeviceError as e:
+                return self.script.crash()
+
 
     @objc.python_method
     def updateInterface(self):
