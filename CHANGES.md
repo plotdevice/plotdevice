@@ -4,16 +4,17 @@ PlotDevice 1.0.0
 ##### New Features
 * Python 3 support (including a bundled 3.10 installation in the app)
 * images can now be exported in HEIC format and videos support H.265 (HEVC)
-* image exports have a configurable 'zoom' to create 2x/3x/etc 'retina' images
+* image exports have a configurable `zoom` to create 2x/3x/etc ‘retina’ images
 * revamped `var()` command for creating GUIs to modify values via sliders, buttons, toggles, etc.
-* updated text editor with multiple tabs, new themes, and additional key-binding modes for sublime and vs code users
+* updated text editor with multiple tabs, new themes, and additional key-binding modes emulating Sublime Text and VS Code
 * the module's command line interface is now accessible through `python3 -m plotdevice`
-* user-configurable document autosaving
+* the command line tool has a new `--install` option to download [PyPI](https://pypi.org) packages for use within the app
+* document autosaving is now user-configurable 
 
 ##### Bugfixes
 * exported images generated on retina machines now have the proper dimensions
 * hex colors can now use lowercase letters
-* automatic variables like WIDTH & HEIGHT correctly support the `/` operator
+* automatic variables like `WIDTH` & `HEIGHT` correctly support the `/` operator
 * the Color object's `.blend()` method is working again
 * the `read()` command can now handle csv files with spaces in their header row names
 * the `translate()` command now incorporates non-pixel grid units set via the `size()` command
@@ -27,6 +28,10 @@ PlotDevice 1.0.0
 * the `text()` command will always treat its first argument as content (even if it's not a string) unless a `str`, `xml`, or `src` keyword argument is provided
 * the mouse pointer is now visible in full-screen mode (and will auto-hide when inactive)
 
+###### Unfortunate Casualties
+* The NodeBox Libraries (`coreimage`, `colors`, and friends) would require quite a bit of attention to get working properly again. 
+  A first pass can be found in the [`plotdevice-libs` repository](https://github.com/plotdevice/plotdevice-libs) but they're not
+  ready for prime-time. If you're interested in contributing, this would be a terrific place to start!
 
 PlotDevice 0.10.0
 -----------------
