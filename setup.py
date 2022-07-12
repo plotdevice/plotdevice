@@ -213,9 +213,7 @@ class LocalDevCommand(Command):
         build_ext.inplace = 1
         self.run_command('build_ext')
 
-        # build the sdist (primarily for access to its rsrc subdir)
-        self.run_command('build_py')
-
+        print("\nA local development environment has been set up in %s" % venv_dir)
 
 from setuptools.command.sdist import sdist
 class BuildDistCommand(sdist):

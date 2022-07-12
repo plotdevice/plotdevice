@@ -24,31 +24,36 @@ and those [installed through Homebrew](https://docs.brew.sh/Homebrew-and-Python)
 Over the years since the last release, progress in both macOS and Python itself led to quite
 a bit of breakage. Some of the highlights of this maintenance release include:
 
-New Features
+###### New Features
 - Python 3 support (including a bundled 3.10 installation in the app)
 - images can now be exported in HEIC format and videos support H.265 (HEVC)
-- image exports have a configurable 'zoom' to create 2x/3x/etc 'retina' images
+- image exports have a configurable `zoom` to create 2x/3x/etc ‘retina’ images
 - revamped `var()` command for creating GUIs to modify values via sliders, buttons, toggles, etc.
-- updated text editor with multiple tabs, new themes, and additional key-binding modes for sublime and vs code users
+- updated text editor with multiple tabs, new themes, and additional key-binding modes emulating Sublime Text and VS Code
 - the module's command line interface is now accessible through `python3 -m plotdevice`
-- user-configurable document autosaving
+- document autosaving is now user-configurable 
 
-Bugfixes
+###### Bugfixes
 - exported images generated on retina machines now have the proper dimensions
 - hex colors can now use lowercase letters
-- automatic variables like WIDTH & HEIGHT correctly support the `/` operator
+- automatic variables like `WIDTH` & `HEIGHT` correctly support the `/` operator
 - the Color object's `.blend()` method is working again
 - the `read()` command can now handle csv files with spaces in their header row names
 - the `translate()` command now incorporates non-pixel grid units set via the `size()` command
 - cmyk exports are working reliably for command line `--export` and via the `export(cmyk=True)` method
 - arguments defined using the command line tool's `--args` options are now passed to the script's `sys.argv`
 
-Misc. Improvements
+###### Misc. Improvements
 - the command line tool can be exited via ctrl-c in addtion to being Quit from the menu bar
 - simplified unicode handling (and improved support for normalization of user-provided strings)
 - building the module now only requires Xcode command line tools—not a full Xcode.app installation
 - the `text()` command will always treat its first argument as content (even if it's not a string) unless a `str`, `xml`, or `src` keyword argument is provided
 - the mouse pointer is now visible in full-screen mode (and will auto-hide when inactive)
+
+###### Unfortunate Casualties
+- The NodeBox Libraries (`coreimage`, `colors`, and friends) would require quite a bit of attention to get working properly again. 
+  A first pass can be found in the [`plotdevice-libs` repository](https://github.com/plotdevice/plotdevice-libs) but they're not
+  ready for prime-time. If you're interested in contributing, this would be a terrific place to start!
 
 Installation
 ------------
@@ -95,6 +100,11 @@ pyenv shell 3.10.4
 pip3 install plotdevice
 python3 -m plotdevice <script.pv>
 ``` 
+
+#### Building from source
+
+You can also clone the git repository and build PlotDevice as a module or application from scratch. 
+Consult the [build instructions](https://github.com/plotdevice/plotdevice/discussions/59) for details.
 
 Documentation
 -------------
