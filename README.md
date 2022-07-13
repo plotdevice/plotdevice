@@ -85,7 +85,9 @@ and launch scripts from the command line (or from a ‘shebang’ line at the to
 script invoking the `plotdevice` tool). To install the module and command line tool use
 `python3 setup.py install`
 
-Easier still, you can install the module directly from PyPI with a simple `pip3 install plotdevice`
+Easier still, you can install the module directly from PyPI with a simple `pip3 install plotdevice`.
+It's a good idea to install the `wheel` module first since it greatly speeds up installation of the
+PyObjC libraries PlotDevice depends on.
 
 #### Alternative Python Interpreters
 
