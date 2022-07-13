@@ -5,6 +5,7 @@ import json
 import warnings
 import math
 from contextlib import contextmanager
+from urllib.parse import urlparse
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
@@ -111,7 +112,10 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             if key in _cache:
                 return _cache[key][0]
             # ...or load from the data
-            image = NSImage.alloc().initWithData_(data)
+            if b'<svg' in data.getBytes_length_(None, 128):
+                image = NSImage.svgFromData_(data)
+            else:
+                image = NSImage.alloc().initWithData_(data)
         elif path is not None:
             if re.match(r'https?:', path):
                 # load from url
@@ -122,13 +126,16 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                 if path in _cache and _cache[path][1] >= mtime:
                     return _cache[path][0]
                 # ...or load from the data
-                bytes = resp.content
-                data = NSData.dataWithBytes_length_(bytes, len(bytes))
-                image = NSImage.alloc().initWithData_(data)
+                data = NSData.dataWithBytes_length_(resp.content, len(resp.content))
+                if 'svg' in resp.headers['Content-Type'] or urlparse(path).path.lower().endswith('.svg'):
+                    image = NSImage.svgFromData_(data)
+                else:
+                    image = NSImage.alloc().initWithData_(data)
             else:
                 # load from file path
                 try:
                     path = NSString.stringByExpandingTildeInPath(path)
+                    print("PTH", path)
                     mtime = os.path.getmtime(path)
                     # return a cached image if possible...
                     if path in _cache and _cache[path][1] >= mtime:
@@ -138,7 +145,10 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                     raise DeviceError(notfound)
                 key = err_info = path
                 # ...or load from the file
-                image = NSImage.alloc().initWithContentsOfFile_(path)
+                if path.lower().endswith('.svg'):
+                    image = NSImage.svgFromURL_(NSURL.fileURLWithPath_(path))
+                else:
+                    image = NSImage.alloc().initWithContentsOfFile_(path)
 
         # if we wound up with a valid image, configure and cache the NSImage
         # before returning it
@@ -248,7 +258,6 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                 self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
                 # NB: the nodebox source warns about quartz bugs triggered by drawing
                 # EPSs to other origin points. no clue whether this still applies...
-
 
 ### context manager for calls to `with export(...)` ###
 

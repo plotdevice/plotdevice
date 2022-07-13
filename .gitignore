@@ -12,9 +12,10 @@ Manifest.in
 deps/local
 /*.so
 
-# app dependencies
+# external dependencies
 deps/frameworks/*.framework
 deps/frameworks/relocatable-python
+deps/extensions/svg/SwiftDraw*
 
 # cds garbage
 related/

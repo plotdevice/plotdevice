@@ -27,6 +27,7 @@ a bit of breakage. Some of the highlights of this maintenance release include:
 ###### New Features
 - Python 3 support (including a bundled 3.10 installation in the app)
 - images can now be exported in HEIC format and videos support H.265 (HEVC)
+- SVG files can now be drawn to the canvas using the `image()` command (thanks to the magical [SwiftDraw](https://github.com/swhitty/SwiftDraw) library)
 - image exports have a configurable `zoom` to create 2x/3x/etc ‘retina’ images
 - revamped `var()` command for creating GUIs to modify values via sliders, buttons, toggles, etc.
 - updated text editor with multiple tabs, new themes, and additional key-binding modes emulating Sublime Text and VS Code

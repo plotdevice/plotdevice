@@ -24,6 +24,7 @@ from setuptools import setup, find_packages
 from setuptools.extension import Extension
 from distutils.dir_util import remove_tree
 from distutils.command.build_py import build_py
+from distutils.command.build_ext import build_ext
 from pkg_resources import DistributionNotFound
 from os.path import join, exists, dirname, basename, abspath, getmtime
 from subprocess import call, getoutput
@@ -174,6 +175,7 @@ class CleanCommand(Command):
         os.system('rm -rf plotdevice.egg-info MANIFEST.in PKG')
         os.system('rm -rf ./tests/_out ./tests/_diff ./details.html')
         os.system('rm -f ./_plotdevice.*.so')
+        os.system('cd deps/extensions/svg && make clean')
         os.system('find plotdevice -name .DS_Store -exec rm {} \;')
         os.system('find plotdevice -name \*.pyc -exec rm {} \;')
         os.system('find plotdevice -name __pycache__ -type d -prune -exec rmdir {} \;')
@@ -225,6 +227,7 @@ class BuildDistCommand(sdist):
                 prune app/Resources/ui
                 include app/plotdevice
                 include deps/extensions/*/*.h
+                recursive-include deps/extensions/svg *.swift Makefile
                 include tests/*.py
                 graft tests/_in
                 graft examples
@@ -237,6 +240,9 @@ class BuildDistCommand(sdist):
         # include a compiled nib in the sdist so ibtool (and thus Xcode.app) isn't required to install
         for dst, src in stale('app/Resources/viewer.nib', "app/Resources/en.lproj/PlotDeviceScript.xib"):
             self.spawn(['/usr/bin/ibtool','--compile', dst, src])
+
+        # make sure we have the sources for SwiftDraw
+        call('cd deps/extensions/svg && make SwiftDraw', shell=True)
 
         # build the sdist based on our MANIFEST additions
         sdist.run(self)
@@ -264,6 +270,10 @@ class BuildCommand(build_py):
             self.spawn(['/usr/bin/ibtool','--compile', nib, xib])
         self.copy_file(nib, rsrc_dir)
 
+class BuildExtCommand(build_ext):
+    def run(self):
+        call('cd deps/extensions/svg && make', shell=True)
+        build_ext.run(self)
 
 class TestCommand(Command):
     description = "Run unit tests"
@@ -436,6 +446,7 @@ config = dict(
     ext_modules = [Extension(
         '_plotdevice',
         sources = ['deps/extensions/module.m', *glob('deps/extensions/*/*.[cm]')],
+        extra_objects=['deps/extensions/svg/SwiftDraw.o'],
         extra_link_args=sum((['-framework', fmwk] for fmwk in
             ['AppKit', 'Foundation', 'Quartz', 'Security', 'AVFoundation', 'CoreMedia', 'CoreVideo', 'CoreText']
         ), [])
@@ -454,6 +465,7 @@ config = dict(
     cmdclass={
         'app': BuildAppCommand,
         'build_py': BuildCommand,
+        'build_ext': BuildExtCommand,
         'clean': CleanCommand,
         'distclean': DistCleanCommand,
         'dist': DistCommand,
