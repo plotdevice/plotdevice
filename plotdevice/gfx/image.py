@@ -135,7 +135,6 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                 # load from file path
                 try:
                     path = NSString.stringByExpandingTildeInPath(path)
-                    print("PTH", path)
                     mtime = os.path.getmtime(path)
                     # return a cached image if possible...
                     if path in _cache and _cache[path][1] >= mtime:
