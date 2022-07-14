@@ -1,0 +1,83 @@
+name: New release
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  app:
+    name: Build App
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Keychain
+      env:
+        BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+        P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        AC_TEAM: ${{ secrets.AC_TEAM }}
+        AC_ID:  ${{ secrets.AC_ID }}
+      run: |
+        # import code signing cert
+        CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+        echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+
+        # create temporary keychain
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+        security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+        # import certificate to keychain
+        security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        security list-keychain -d user -s $KEYCHAIN_PATH
+
+        # collect notarization credentials
+        xcrun notarytool store-credentials "AC_NOTARY" --apple-id "$AC_ID" --team-id "$AC_TEAM" --password "${{ secrets.AC_PASSWORD }}"
+
+    - name: Run Tests
+      run: |
+        python3 setup.py test
+
+    - name: Build & Notarize App
+      run: |
+        python3 setup.py dist
+
+    - name: Create Draft Release
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: true
+        name: PlotDevice ${{ github.ref_name }}
+        body_path: CHANGES.md
+        files: |
+          dist/*.zip
+
+  sdist:
+    name: Post to test.pypi.org
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Run Tests
+      run: |
+        python3 setup.py test
+
+    - name: Build Source Distribution
+      run: |
+        python3 setup.py sdist
+
+    - name: Upload to test.pypi.org
+      env:
+        TWINE_USERNAME: samizdat
+        TWINE_PASSWORD: ${{ secrets.PYPI_TEST_PASSWORD }}
+        TWINE_REPOSITORY: https://test.pypi.org/legacy/
+        TWINE_NON_INTERACTIVE: 1
+      run: |
+        pip3 install twine
+        twine check dist/*
+        twine upload -r testpypi dist/*

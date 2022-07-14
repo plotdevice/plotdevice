@@ -1,0 +1,20 @@
+name: Run tests
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-tests:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout repository
+      id: repo
+      uses: actions/checkout@v3
+
+    - name: Build PyPI Package
+      run: |
+        python3 setup.py test

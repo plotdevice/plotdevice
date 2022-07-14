@@ -1,0 +1,33 @@
+name: Publish to PyPI
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    name: Publish to PyPI
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Run Tests
+      run: |
+        python3 setup.py test
+
+    - name: Build sdist
+      run: |
+        python3 setup.py sdist
+
+    - name: Upload to PyPI
+      env:
+        TWINE_USERNAME: samizdat
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        TWINE_REPOSITORY: https://pypi.org/legacy/
+        TWINE_NON_INTERACTIVE: 1
+      run: |
+        pip3 install twine
+        twine check dist/*
+        twine upload dist/*
