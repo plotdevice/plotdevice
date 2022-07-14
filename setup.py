@@ -172,7 +172,7 @@ def gosub(cmd, on_err=True):
 
 def timestamp():
     from datetime import datetime
-    datetime.now().strftime("%a, %d %b %Y %H:%M:%S")
+    return datetime.now().strftime("%a, %d %b %Y %H:%M:%S")
 
 def stale(dst, src):
   if exists(src):
