@@ -427,7 +427,7 @@ class Variable(object):
 
             small = min(self.min, self.max)
             big = max(self.min, self.max)
-            if not small < self.value < big:
+            if not small <= self.value <= big:
                 raise DeviceError("The value %d doesn't fall with the range %d–%d" % (self.value, self.min, self.max))
 
         elif self.type == TEXT:
