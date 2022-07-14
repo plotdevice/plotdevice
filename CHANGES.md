@@ -2,6 +2,7 @@ PlotDevice 1.0.0
 -----------------
 
 ##### New Features
+* Runs natively on Intel and Apple Silicon and supports retina displays
 * Python 3 support (including a bundled 3.10 installation in the app)
 * images can now be exported in HEIC format and videos support H.265 (HEVC)
 * SVG files can be drawn to the canvas using the `image()` command (thanks to the magical [SwiftDraw](https://github.com/swhitty/SwiftDraw) library)

@@ -25,6 +25,7 @@ Over the years since the last release, progress in both macOS and Python itself 
 a bit of breakage. Some of the highlights of this maintenance release include:
 
 ###### New Features
+- Runs natively on Intel and Apple Silicon and supports retina displays
 - Python 3 support (including a bundled 3.10 installation in the app)
 - images can now be exported in HEIC format and videos support H.265 (HEVC)
 - SVG files can now be drawn to the canvas using the `image()` command (thanks to the magical [SwiftDraw](https://github.com/swhitty/SwiftDraw) library)
