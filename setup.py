@@ -501,6 +501,9 @@ if __name__=='__main__':
     # (this means the various commands don't have to play path games)
     os.chdir(dirname(abspath(__file__)))
 
+    # clear away any finder droppings that may have accumulated
+    call('find . -name .DS_Store -delete', shell=True)
+
     # py2app-specific config
     if 'py2app' in sys.argv:
         config.update(dict(
