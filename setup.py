@@ -225,7 +225,7 @@ class LocalDevCommand(Command):
             import venv
             venv.create(venv_dir, symlinks=True, with_pip=True)
             PIP = '%s/bin/pip3' % venv_dir
-            call([PIP, 'install', '-q', '--upgrade', 'pip', 'wheel', 'py2app'])
+            call([PIP, 'install', '-q', '--upgrade', 'pip', 'wheel', 'py2app', 'twine'])
             call([PIP, '--isolated', 'install', *config['install_requires']])
 
         # place the compiled c-extensions in the main repo dir
