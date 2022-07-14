@@ -383,7 +383,7 @@ class DistCommand(Command):
         update_plist(info_pth,
             CFBundleVersion = last_commit(),
             CFBundleShortVersionString = VERSION,
-            SUFeedURL = 'http://plotdevice.io/app.xml',
+            SUFeedURL = 'https://plotdevice.io/app.xml',
             SUEnableSystemProfiling = 'YES'
         )
 
