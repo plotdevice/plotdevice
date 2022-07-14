@@ -20,11 +20,11 @@
 #
 import os, sys, json, re, platform
 from glob import glob
-from setuptools import setup, find_packages
+from shutil import rmtree
+from setuptools import setup, find_packages, Command
 from setuptools.extension import Extension
-from distutils.dir_util import remove_tree
-from distutils.command.build_py import build_py
-from distutils.command.build_ext import build_ext
+from setuptools.command.build_py import build_py
+from setuptools.command.build_ext import build_ext
 from pkg_resources import DistributionNotFound
 from os.path import join, exists, dirname, basename, abspath, getmtime
 from subprocess import call, getoutput
@@ -162,7 +162,6 @@ def stale(dst, src):
 
 ## Build Commands ##
 
-from distutils.core import Command
 class CleanCommand(Command):
     description = "wipe out the ./build & ./dist dirs and other setup-generated files"
     user_options = []
@@ -248,7 +247,7 @@ class BuildDistCommand(sdist):
         sdist.run(self)
 
         # clean up
-        remove_tree('plotdevice.egg-info')
+        rmtree('plotdevice.egg-info')
         os.unlink('MANIFEST.in')
 
 class BuildCommand(build_py):
@@ -301,7 +300,7 @@ class BuildAppCommand(Command):
 
     def run(self):
         self.spawn(['xcodebuild', '-configuration', 'Release'])
-        remove_tree('dist/PlotDevice.app.dSYM')
+        rmtree('dist/PlotDevice.app.dSYM')
         print("done building PlotDevice.app in ./dist")
 
 try:
