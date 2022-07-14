@@ -423,14 +423,12 @@ class DistCommand(Command):
         codesign('%s/Versions/Current/bin'%PYTHON, name="python3.*", entitlement=True)
         codesign('%s/Versions/Current/Resources/Python.app'%PYTHON, entitlement=True)
         codesign(PYTHON)
-        self.spawn(['codesign', '--verify', '-vv', PYTHON])
 
         codesign('%s/Versions/Current/Updater.app'%SPARKLE)
         codesign(SPARKLE)
-        self.spawn(['codesign', '--verify', '-vv', SPARKLE])
 
-        codesign(APP)
-        self.spawn(['codesign', '--verify', '-vv', APP])
+        codesign(APP, entitlement=True)
+        self.spawn(['codesign', '--verify', '--deep', '-vv', APP])
 
         # create versioned zipfile of the app & notarize it
         self.spawn(['ditto', '-ck', '--keepParent', APP, ZIP])
