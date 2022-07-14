@@ -8,7 +8,7 @@ a general purpose graphics library for use in external Python programs.
 
 PlotDevice scripts can create images from simple geometric primitives, text, and
 external vector or bitmap images. Drawing commands provide a thin abstraction
-over Mac OS X's Quartz graphics engine, providing high-quality rendering
+over macOS's Quartz graphics engine, providing high-quality rendering
 of 2D imagery and powerful compositing operations.
 
 #### Requirements

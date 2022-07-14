@@ -64,16 +64,35 @@ CLASSIFIERS = [
     "Topic :: Text Editors :: Integrated Development Environments (IDE)",
 ]
 DESCRIPTION = "Create two-dimensional graphics and animations with code"
-LONG_DESCRIPTION = """PlotDevice is a Macintosh application used for computational graphic design. It provides an
-interactive Python environment where you can create two-dimensional graphics
-and output them in a variety of vector, bitmap, and animation formats. It is
-meant both as a sketch environment for exploring generative design and as a
-general purpose graphics library for use in stand-alone Python programs.
+LONG_DESCRIPTION = """PlotDevice is a Macintosh application used for computational graphic design. It
+provides an interactive Python environment where you can create two-dimensional
+graphics and output them in a variety of vector, bitmap, and animation formats.
+It is meant both as a sketch environment for exploring generative design and as
+a general purpose graphics library for use in external Python programs.
+
+PlotDevice scripts can create images from simple geometric primitives, text, and
+external vector or bitmap images. Drawing commands provide a thin abstraction
+over macOS's Quartz graphics engine, providing high-quality rendering
+of 2D imagery and powerful compositing operations.
 
 PlotDevice is a fork of NodeBox 1.9.7rc1 with support for modern versions of
 Python and Mac OS.
 
 The new version features:
+
+* Runs natively on Intel and Apple Silicon and supports retina displays
+* Python 3 only (including a bundled 3.10 installation in the app)
+* images can now be exported in HEIC format and videos support H.265 (HEVC)
+* SVG files can now be drawn to the canvas using the `image()` command (thanks to the magical [SwiftDraw](https://github.com/swhitty/SwiftDraw) library)
+* image exports have a configurable `zoom` to create 2x/3x/etc ‘retina’ images
+* revamped `var()` command for creating GUIs to modify values via sliders, buttons, toggles, etc.
+* updated text editor with multiple tabs, new themes, and additional key-binding modes emulating Sublime Text and VS Code
+* the module's command line interface is now accessible through `python3 -m plotdevice`
+* the command line tool has a new `--install` option to download [PyPI](https://pypi.org) packages for use within the app
+* document autosaving is now user-configurable
+* Bugfixes and misc. improvements detailed in the [changelog](https://github.com/plotdevice/plotdevice/blob/main/CHANGES.md)
+
+Version 0.9.5 added:
 
 * Python 3 compatible
 * Can now be built with system Python or Homebrew versions of the interpreter
@@ -436,6 +455,7 @@ config = dict(
     version = VERSION,
     description = DESCRIPTION,
     long_description = LONG_DESCRIPTION,
+    long_description_content_type = 'text/markdown',
     author = AUTHOR,
     author_email = AUTHOR_EMAIL,
     url = URL,
