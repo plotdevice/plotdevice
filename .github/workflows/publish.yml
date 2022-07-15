@@ -15,6 +15,7 @@ jobs:
 
     - name: Run Tests
       run: |
+        pip3 install -U pip wheel twine
         python3 setup.py test
 
     - name: Build sdist
@@ -25,9 +26,8 @@ jobs:
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        TWINE_REPOSITORY: https://upload.pypi.org/legacy/
         TWINE_NON_INTERACTIVE: 1
       run: |
-        pip3 install -U pip twine
+        ls -la ~
         twine check dist/*
         twine upload dist/*
