@@ -636,7 +636,7 @@ class Librarian(object):
 
             matches = [self._fams[corpus.index(m)] for m in in_corpus]
             if matches:
-                nomatch += '.\nDid you mean: %s'%[m.encode('utf-8') for m in matches]
+                nomatch += '.\nDid you mean: %s'%matches
             return DeviceError(nomatch)
 
 

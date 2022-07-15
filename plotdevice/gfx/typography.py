@@ -75,7 +75,7 @@ class Font(object):
             spec.insert(2, self._face.variant)
         spec.insert(1, '/' if self._face.italic else '|')
         spec.insert(1, ("%.1fpt"%self._metrics['size']).replace('.0pt','pt'))
-        return ('Font(%s)'%" ".join(spec)).encode('utf-8')
+        return ('Font(%s)'%" ".join(spec))
 
     def __enter__(self):
         if not hasattr(self, '_rollback'):
@@ -256,7 +256,7 @@ class Family(object):
             n = len(getattr(self, group))
             if n:
                 contents.append('%i %s%s' % (n, group[:-1], '' if n==1 else 's'))
-        return ('Family(%s)'%", ".join(contents)).encode('utf-8')
+        return ('Family(%s)'%", ".join(contents))
 
     @property
     def name(self):
