@@ -133,7 +133,7 @@ directly via `python3 -m plotdevice` (which accepts all the same command line ar
 #### Command line usage
 ```
 plotdevice [-h] [-f] [-b] [-q] [--live] [--cmyk] [--virtualenv PATH] [--args [a [b ...]]]
-           [--export FILE] [--frames N or M-N] [--fps N] [--rate N] [--loop [N]]
+           [--export FILE] [--frames N or M-N] [--fps N] [--rate N] [--loop [N]] [--install [PACKAGES ...]]
            file
 ```
 
@@ -159,6 +159,11 @@ plotdevice [-h] [-f] [-b] [-q] [--live] [--cmyk] [--virtualenv PATH] [--args [a 
 > `--fps N`             frames per second in exported video (default `30`)  
 > `--rate N`            video bitrate in megabits per second (default `1`)  
 > `--loop [N]`          number of times to loop an exported animated gif (omit `N` to loop forever)
+>
+> ##### Installing Packages from [PyPI](https://pypi.org):
+> `--install [packages ...]` Use `pip install` to download libraries into the  **~/Library/Application Support/PlotDevice** directory, making 
+> them `import`-able in the application and by scripts run from the command line
+
 
 
 #### Usage examples
@@ -181,6 +186,9 @@ plotdevice script.pv --export output.png --frames 10
 
 # Create a 5 second long H.265 video at 2 megabits/sec
 plotdevice script.pv --export output.mov --frames 150 --rate 2.0
+
+# Install some useful modules
+plotdevice --install urllib3 jinja2 numpy
 ```
 
 

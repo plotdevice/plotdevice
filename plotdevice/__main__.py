@@ -68,8 +68,8 @@ def main():
   i = parser.add_argument_group("PlotDevice Script File", None)
   i.add_argument('script', help='the python script to be rendered')
 
-  p = parser.add_argument_group("Installing Packages", "Run `pip install` with ~/Library/Application Support/PlotDevice as the target")
-  p.add_argument('--install', nargs='*', default=[], metavar='package', help="Note: cannot be combined with any other plotdevice arguments")
+  p = parser.add_argument_group("Installing Packages")
+  p.add_argument('--install', nargs='*', default=[], metavar='package', help="Use `pip` to download libraries into the ~/Library/Application Support/PlotDevice directory, making them `import`-able in the application and by scripts run from the command line")
 
 
   if len(sys.argv)==1:
