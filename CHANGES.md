@@ -30,7 +30,7 @@ PlotDevice 1.0.0
 * the `text()` command will always treat its first argument as content (even if it's not a string) unless a `str`, `xml`, or `src` keyword argument is provided
 * the mouse pointer is now visible in full-screen mode (and will auto-hide when inactive)
 
-###### Unfortunate Casualties
+##### Unfortunate Casualties
 * The NodeBox Libraries (`coreimage`, `colors`, and friends) would require quite a bit of attention to get working properly again. 
   A first pass can be found in the [`plotdevice-libs` repository](https://github.com/plotdevice/plotdevice-libs) but they're not
   ready for prime-time. If you're interested in contributing, this would be a terrific place to start!
