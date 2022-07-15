@@ -23,11 +23,11 @@ jobs:
 
     - name: Upload to PyPI
       env:
-        TWINE_USERNAME: samizdat
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        TWINE_REPOSITORY: https://pypi.org/legacy/
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        TWINE_REPOSITORY: https://upload.pypi.org/legacy/
         TWINE_NON_INTERACTIVE: 1
       run: |
-        pip3 install twine
+        pip3 install -U pip twine
         twine check dist/*
         twine upload dist/*
