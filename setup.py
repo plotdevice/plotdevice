@@ -40,7 +40,7 @@ VERSION = plotdevice.__version__
 AUTHOR = plotdevice.__author__
 AUTHOR_EMAIL = plotdevice.__email__
 LICENSE = plotdevice.__license__
-URL = "http://plotdevice.io/"
+URL = "https://plotdevice.io/"
 CLASSIFIERS = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: MacOS X :: Cocoa",

@@ -374,18 +374,18 @@ with export('{2}-img.png') as img:
 
 Lineage
 -------
-PlotDevice was derived from [NodeBox](http://nodebox.net/code)'s 1.9.7 release. Its current maintainer is
+PlotDevice was derived from [NodeBox](https://nodebox.net/code/index.php/Home)'s 1.9.7 release. Its current maintainer is
 [Christian Swinehart](mailto:drafting@samizdat.co).
 
 NodeBox is a BSD-licensed graphics environment written by [Frederik De Bleser](mailto:frederik@burocrazy.com).  
 The NodeBox manual and example code are by [Tom De Smedt](mailto:tomdesmedt@organisms.be).
 
-NodeBox is a fork of [DrawBot](http://drawbot.com) by [Just van Rossum](mailto:just@letterror.com).
+NodeBox is a fork of [DrawBot](https://drawbot.com) by [Just van Rossum](mailto:just@letterror.com).
 
 License
 -------
 
-PlotDevice is released under the [MIT license](http://opensource.org/licenses/MIT). Use it as you see fit.
+PlotDevice is released under the [MIT license](https://opensource.org/licenses/MIT). Use it as you see fit.
 
 Contributing
 ------------
