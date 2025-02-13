@@ -1,5 +1,6 @@
 # --no-binary :all:
 xattr
+filelock
 cachecontrol
 cffi
 lockfile
