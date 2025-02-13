@@ -4,7 +4,7 @@ from operator import attrgetter
 
 # files & io
 from io import open, StringIO, BytesIO
-from os.path import abspath, dirname, exists, join, splitext
+from os.path import abspath, dirname, exists, join, splitext, expanduser
 from plotdevice import DeviceError, INTERNAL
 
 # data formats
@@ -190,13 +190,25 @@ def csv_dialect(fd):
 
 ### HTTP utils ###
 
-import requests
-from cachecontrol import CacheControl, CacheControlAdapter
-from cachecontrol.caches import FileCache
-from cachecontrol.heuristics import LastModified
+HTTP = None
 
-cache_dir = '%s/Library/Caches/PlotDevice'%os.environ['HOME']
-HTTP = CacheControl(requests.Session(), cache=FileCache(cache_dir), heuristic=LastModified())
+def get_http_session():
+    """Returns a cached HTTP session (creating it if necessary)"""
+    global HTTP
+    if HTTP is None:
+        try:
+            from cachecontrol import CacheControl
+            from cachecontrol.caches import FileCache
+            from cachecontrol.heuristics import LastModified
+            import requests
+            
+            cache_dir = join(expanduser('~'), 'Library/Caches/PlotDevice')
+            HTTP = CacheControl(requests.Session(), 
+                              cache=FileCache(cache_dir), 
+                              heuristic=LastModified())
+        except ImportError as e:
+            raise ImportError("HTTP dependencies not available. Install with: pip install requests cachecontrol[filecache]") from e
+    return HTTP
 
 def binaryish(content, format):
     bin_types = ('pdf','eps','png','jpg','jpeg','heic','gif','tiff','tif','zip','tar','gz')
@@ -244,7 +256,8 @@ def read(pth, format=None, encoding=None, cols=None, **kwargs):
     """
 
     if re.match(r'https?:', pth):
-        resp = HTTP.get(pth)
+        session = get_http_session()  # Get the session only when needed
+        resp = session.get(pth)
         resp.raise_for_status()
 
         extension_type = splitext(urlparse(pth).path)[-1]
