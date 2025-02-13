@@ -338,14 +338,20 @@ class TestCommand(Command):
 
 class BuildAppCommand(Command):
     description = "Build PlotDevice.app with xcode"
-    user_options = []
+    user_options = [
+        ('no-cache', None, 'do not use pip cache when installing dependencies'),
+    ]
+    
     def initialize_options(self):
-        pass
+        self.no_cache = None
 
     def finalize_options(self):
         # make sure the embedded framework exists (and has updated app/python.xcconfig)
         print("Set up Python.framework for app build")
-        call('cd deps/frameworks && make', shell=True)
+        env = os.environ.copy()
+        if self.no_cache:
+            env['PIP_NO_CACHE_DIR'] = '1'
+        call('cd deps/frameworks && make', shell=True, env=env)
 
     def run(self):
         self.spawn(['xcodebuild', '-configuration', 'Release'])
