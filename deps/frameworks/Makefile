@@ -7,7 +7,7 @@ all: Python.framework
 	$(BIN)/pip3 install --upgrade ../..
 
 Python.framework: relocatable-python
-	python3 ./relocatable-python/make_relocatable_python_framework.py $(BUILD_OPTS)
+	PYTHONNOUSERSITE=1 python3 ./relocatable-python/make_relocatable_python_framework.py $(BUILD_OPTS)
 	$(BIN)/python3 config.py ../../app/python.xcconfig
 
 relocatable-python:
