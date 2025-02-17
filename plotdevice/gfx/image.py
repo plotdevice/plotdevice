@@ -63,6 +63,10 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         elif args and args[0] is None:
             args.pop(0) # make image(None, 10,20, image=...) work properly for compat
 
+        # Validate that we have either a source or data
+        if not (src or data):
+            raise DeviceError("Image requires either a source (path/url/Image) or image data")
+
         # get an NSImage reference (once way or another)
         if data:
             self._nsImage = self._lazyload(data=data)
