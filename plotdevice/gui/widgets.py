@@ -376,6 +376,9 @@ class ExportSheet(NSObject):
             format = self.image['format']
             accessory = self.imageAccessory
 
+            # Set the zoom value so that UI reflects the previously stored value
+            self.imageZoom.setStringValue_("%i%%" % self.image['zoom'])
+
             if self.image['single']:
                 self.imageFormat.selectItemAtIndex_(1)
             else:
@@ -442,7 +445,17 @@ class ExportSheet(NSObject):
                 kind, opts = 'movie', self.movieState()
             else:
                 kind, opts = 'image', self.imageState()
-            setattr(self, kind, dict(opts))  # save the options for next time
+            
+            # Convert zoom multiplier back to percentage before saving
+            saved_opts = dict(opts)
+            if 'zoom' in saved_opts:
+                saved_opts['zoom'] = saved_opts['zoom'] * 100
+
+            # Save the modified options (with percentage zoom)
+            setattr(self, kind, saved_opts)
+            print("Export options:", saved_opts)
+            
+            # Continue with the export using the original options (with decimal zoom)
             self.last = os.path.split(fname) # save the path we exported to
             self.script.exportInit(kind, fname, opts)
 
