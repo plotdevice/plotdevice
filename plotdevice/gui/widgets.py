@@ -453,7 +453,6 @@ class ExportSheet(NSObject):
 
             # Save the modified options (with percentage zoom)
             setattr(self, kind, saved_opts)
-            print("Export options:", saved_opts)
             
             # Continue with the export using the original options (with decimal zoom)
             self.last = os.path.split(fname) # save the path we exported to
