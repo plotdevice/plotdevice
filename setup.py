@@ -226,7 +226,7 @@ class CleanCommand(Command):
                         rmtree(path)
                     else:
                         os.unlink(path)
-                        
+
         # Run make clean in svg extensions dir
         if exists('deps/extensions/svg'):
             os.system('cd deps/extensions/svg && make clean')
@@ -234,7 +234,7 @@ class CleanCommand(Command):
 class DistCleanCommand(CleanCommand):
     """Alias for `clean --dist` for backward compatibility"""
     description = "delete Python.framework, local pypi dependencies, and all generated files"
-    
+
     def initialize_options(self):
         super().initialize_options()
         self.dist = True  # always do a deep clean
@@ -340,7 +340,7 @@ class BuildAppCommand(Command):
     user_options = [
         ('no-cache', None, 'do not use pip cache when installing dependencies'),
     ]
-    
+
     def initialize_options(self):
         self.no_cache = None
 
