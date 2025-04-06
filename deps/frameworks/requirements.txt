@@ -2,6 +2,6 @@
 xattr
 cachecontrol[filecache]
 cffi
-pyobjc
+pyobjc==8.5
 requests
 six
