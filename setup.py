@@ -506,8 +506,7 @@ config = dict(
     )],
     install_requires = [
         'requests',
-        'cachecontrol',
-        'lockfile',
+        'cachecontrol[filecache]',
         'pyobjc-core==8.5',
         'pyobjc-framework-Quartz==8.5',
         'pyobjc-framework-LaunchServices==8.5',

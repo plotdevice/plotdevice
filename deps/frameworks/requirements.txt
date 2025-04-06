@@ -1,9 +1,7 @@
 # --no-binary :all:
 xattr
-filelock
-cachecontrol
+cachecontrol[filecache]
 cffi
-lockfile
 pyobjc
 requests
 six
