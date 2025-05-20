@@ -77,6 +77,9 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             else:
                 invalid = "Not a valid image source: %r" % type(src)
                 raise DeviceError(invalid)
+        else:
+            undefined = "Image requires either a source (path/url/Image) or image data"
+            raise DeviceError(undefined)
 
         # set the bounds (in phases)
         if isinstance(src, Image):
