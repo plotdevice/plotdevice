@@ -1,8 +1,7 @@
 # --no-binary :all:
 xattr
-cachecontrol
+cachecontrol[filecache]
 cffi
-lockfile
-pyobjc
+pyobjc==8.5
 requests
 six

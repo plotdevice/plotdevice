@@ -47,7 +47,6 @@ CLASSIFIERS = [
     "Intended Audience :: Developers",
     "Intended Audience :: Education",
     "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS :: MacOS X",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.6",
@@ -182,33 +181,63 @@ def stale(dst, src):
 ## Build Commands ##
 
 class CleanCommand(Command):
-    description = "wipe out the ./build & ./dist dirs and other setup-generated files"
-    user_options = []
-    def initialize_options(self):
-        pass
-    def finalize_options(self):
-        pass
-    def run(self):
-        os.system('rm -rf ./build ./dist')
-        os.system('rm -rf plotdevice.egg-info MANIFEST.in PKG')
-        os.system('rm -rf ./tests/_out ./tests/_diff ./details.html')
-        os.system('rm -f ./_plotdevice.*.so')
-        os.system('cd deps/extensions/svg && make clean')
-        os.system('find plotdevice -name .DS_Store -exec rm {} \;')
-        os.system('find plotdevice -name \*.pyc -exec rm {} \;')
-        os.system('find plotdevice -name __pycache__ -type d -prune -exec rmdir {} \;')
+    description = "wipe out generated files and build artifacts"
+    user_options = [
+        ('dist', None, 'also remove Python.framework and local dependencies'),
+    ]
 
-class DistCleanCommand(Command):
-    description = "delete Python.framework, local pypi dependencies, and all generated files"
-    user_options = []
     def initialize_options(self):
-        pass
+        self.dist = None
+
     def finalize_options(self):
         pass
+
     def run(self):
-        self.run_command('clean')
-        os.system('rm -rf ./deps/local')
-        os.system('rm -rf ./deps/frameworks/*.framework')
+        paths = [
+            'build',
+            'dist',
+            '*.egg',
+            '*.egg-info',
+            '.eggs',
+            'MANIFEST.in',
+            'PKG',
+            'tests/_out',
+            'tests/_diff',
+            'details.html',
+            '_plotdevice.*.so',
+            '**/*.pyc',
+            '**/__pycache__',
+            '**/.DS_Store',
+        ]
+
+        # Add framework paths if --dist flag is used
+        if self.dist:
+            paths.extend([
+                'deps/local',
+                'deps/frameworks/Python.framework',
+                'deps/frameworks/relocatable-python',
+            ])
+
+        for path_pattern in paths:
+            for path in glob(path_pattern, recursive=True):
+                if exists(path):
+                    print('removing %s'%path)
+                    if os.path.isdir(path):
+                        rmtree(path)
+                    else:
+                        os.unlink(path)
+
+        # Run make clean in svg extensions dir
+        if exists('deps/extensions/svg'):
+            os.system('cd deps/extensions/svg && make clean')
+
+class DistCleanCommand(CleanCommand):
+    """Alias for `clean --dist` for backward compatibility"""
+    description = "delete Python.framework, local pypi dependencies, and all generated files"
+
+    def initialize_options(self):
+        super().initialize_options()
+        self.dist = True  # always do a deep clean
 
 class LocalDevCommand(Command):
     description = "set up environment to allow for running `python -m plotdevice` within the repo"
@@ -308,14 +337,20 @@ class TestCommand(Command):
 
 class BuildAppCommand(Command):
     description = "Build PlotDevice.app with xcode"
-    user_options = []
+    user_options = [
+        ('no-cache', None, 'do not use pip cache when installing dependencies'),
+    ]
+
     def initialize_options(self):
-        pass
+        self.no_cache = None
 
     def finalize_options(self):
         # make sure the embedded framework exists (and has updated app/python.xcconfig)
         print("Set up Python.framework for app build")
-        call('cd deps/frameworks && make', shell=True)
+        env = os.environ.copy()
+        if self.no_cache:
+            env['PIP_NO_CACHE_DIR'] = '1'
+        call('cd deps/frameworks && make', shell=True, env=env)
 
     def run(self):
         self.spawn(['xcodebuild', '-configuration', 'Release'])
@@ -470,8 +505,7 @@ config = dict(
     )],
     install_requires = [
         'requests',
-        'cachecontrol',
-        'lockfile',
+        'cachecontrol[filecache]',
         'pyobjc-core==8.5',
         'pyobjc-framework-Quartz==8.5',
         'pyobjc-framework-LaunchServices==8.5',
