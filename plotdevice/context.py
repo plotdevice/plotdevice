@@ -1777,7 +1777,7 @@ class Canvas(object):
             w, h = self.pagesize
             cgData = NSMutableData.data()
             dataConsumer = CGDataConsumerCreateWithCFData(cgData)
-            pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w, h), None)
+            pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w*zoom, h*zoom), None)
             CGPDFContextBeginPage(pdfContext, None)
             self._render_to_context(pdfContext, zoom)
             CGPDFContextEndPage(pdfContext)
