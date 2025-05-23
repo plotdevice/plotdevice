@@ -1,7 +1,7 @@
 import os, sys, re, ast
 from os.path import dirname, basename, abspath, relpath, isdir
 from functools import partial
-from inspect import getargspec
+from inspect import getfullargspec
 from collections import namedtuple
 from PyObjCTools import AppHelper
 from ..lib.io import MovieExportSession, ImageExportSession
@@ -214,7 +214,7 @@ class Sandbox(object):
                     func = self.namespace.get(routine)
                     # replace each such routine with a partial application passing
                     # the dict. this means we can .call() it without any explicit args
-                    if callable(func) and getargspec(func).args:
+                    if callable(func) and getfullargspec(func).args:
                         self.namespace[routine] = partial(self.namespace[routine], self._anim)
 
             elif method=='draw':
