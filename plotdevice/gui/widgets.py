@@ -365,9 +365,8 @@ class ExportSheet(NSObject):
     def awakeFromNib(self):
         self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'heic', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'mov', 'gif'))
         self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, codec=0)
-        self.image = dict(format='pdf', zoom=100, first=1, last=1, cmyk=False, single=True)
+        self.image = dict(format='pdf', zoom=1.0, first=1, last=1, cmyk=False, single=True)
         self.last = None
-
 
     @objc.python_method
     def beginExport(self, kind):
@@ -464,7 +463,7 @@ class ExportSheet(NSObject):
         fmts = self.formats['image']
         fmt_idx = self.imageFormat.indexOfSelectedItem()
         state = dict(format=fmts[fmt_idx],
-                     zoom=self.image['zoom'] / 100,
+                     zoom=self.image['zoom'],
                      first=1,
                      cmyk=self.imageCMYK.state()==NSOnState,
                      single=fmt_idx==1,
@@ -497,7 +496,7 @@ class ExportSheet(NSObject):
         sender.setIntValue_(0)
 
         self.imageZoomChanged_(None) # reflect any editing in text field
-        pct = self.image['zoom']
+        pct = self.image['zoom'] * 100
 
         if step > 0:
             pct = 100 * ceil((pct + 1) / 100)
@@ -505,16 +504,16 @@ class ExportSheet(NSObject):
             pct = 100 * floor((pct - 1) / 100)
 
         if 0 < pct < 10000:
-            self.image['zoom'] = pct
+            self.image['zoom'] = pct / 100
             self.imageZoom.setStringValue_("%i%%" % pct)
 
     @IBAction
     def imageZoomChanged_(self, sender):
         pct = self.imageZoom.intValue()
         if pct > 0:
-            self.image['zoom'] = pct
+            self.image['zoom'] = pct / 100
         else:
-            pct = self.image['zoom']
+            pct = self.image['zoom'] * 100
         self.imageZoom.setStringValue_("%i%%" % pct)
 
     @IBAction
