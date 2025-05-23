@@ -7,7 +7,7 @@ all: SwiftDraw.o
 
 SwiftDraw.o: SwiftDraw
 	cd SwiftDraw && swift build -c release --target SwiftDraw --arch arm64 --arch x86_64
-	cp SwiftDraw/.build/apple/Products/Release/SwiftDraw.o .
+	cp SwiftDraw/.build/apple/Products/Release/SwiftDraw*.o $@
 
 SwiftDraw:
 	git clone --depth 1 --branch $(TAG) $(REPO)
