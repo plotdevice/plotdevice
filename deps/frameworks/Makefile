@@ -1,4 +1,4 @@
-PYTHON_VERSION = 3.11.9
+PYTHON_VERSION = 3.13.3
 FRAMEWORK_REPO = https://github.com/gregneagle/relocatable-python.git
 BUILD_OPTS = --os-version=11 --python-version=$(PYTHON_VERSION) --upgrade-pip --pip-requirements=requirements.txt
 BIN = ./Python.framework/Versions/Current/bin
