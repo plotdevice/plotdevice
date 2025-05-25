@@ -2,6 +2,7 @@
 xattr
 cachecontrol[filecache]
 cffi
-pyobjc==8.5.1
+pyobjc==11.0
+py2app
 requests
 six

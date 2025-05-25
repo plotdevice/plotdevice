@@ -5,6 +5,7 @@ from subprocess import call
 try:
     # test the sys.path by attempting to load a PyObjC submodule...
     from Foundation import *
+    import objc
 except ImportError:
     # detect whether we're being run from the repository and set up a local env if so
     repo = abspath(join(dirname(__file__), '../..'))
@@ -17,6 +18,7 @@ except ImportError:
             call([sys.executable, setup_py, 'dev'])
         site.addsitedir(local_libs)
         from Foundation import *
+        import objc
     else:
         from pprint import pformat
         missing = "Searched for PyObjC libraries in:\n%s\nto no avail..."%pformat(sys.path)
