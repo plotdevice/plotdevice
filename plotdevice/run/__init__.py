@@ -28,4 +28,4 @@ from .common import encoded
 # expose the script-runner object
 from .sandbox import Sandbox
 
-__all__ = ('objc', 'encoding', 'Sandbox')
+__all__ = ('objc', 'encoded', 'Sandbox')
