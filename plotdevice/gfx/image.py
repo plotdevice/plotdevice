@@ -10,7 +10,7 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attrs, autorelease
-from ..util.readers import HTTP, last_modified
+from ..util.readers import get_http_session, last_modified
 from ..lib.io import MovieExportSession, ImageExportSession
 from .geometry import Region, Size, Point, Transform, CENTER
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
@@ -123,7 +123,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             if re.match(r'https?:', path):
                 # load from url
                 key = err_info = path
-                resp = HTTP.get(path)
+                resp = get_http_session().get(path)
                 mtime = last_modified(resp)
                 # return a cached image if possible...
                 if path in _cache and _cache[path][1] >= mtime:
