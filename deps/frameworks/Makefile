@@ -11,6 +11,7 @@ PIP_INCLUDES = $(shell $(BIN)/python3-config --includes)
 
 all: Python.framework
 	$(PIP_ENV) CFLAGS="$(PIP_INCLUDES)" $(BIN)/pip3 install --upgrade ../..
+	find $(shell find ./Python.framework -name py2app -type d) -name main-\* -not -name \*universal2 -delete
 
 Python.framework: relocatable-python
 	PYTHONNOUSERSITE=1 $(PIP_ENV) python3 ./relocatable-python/make_relocatable_python_framework.py $(BUILD_OPTS)
