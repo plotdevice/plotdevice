@@ -35,9 +35,9 @@ class ModuleTests(PlotDeviceTestCase):
 
 
 def suite():
-    from unittest import TestSuite, makeSuite
+    from unittest import TestSuite, defaultTestLoader
 
     suite = TestSuite()
-    suite.addTest(makeSuite(ModuleTests))
+    suite.addTest(defaultTestLoader.loadTestsFromTestCase(ModuleTests))
 
     return suite

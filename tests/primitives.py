@@ -160,5 +160,5 @@ class PrimitivesTests(PlotDeviceTestCase):
 
 def suite():
   suite = unittest.TestSuite()
-  suite.addTest(unittest.makeSuite(PrimitivesTests))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(PrimitivesTests))
   return suite
