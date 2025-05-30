@@ -494,5 +494,5 @@ class TypographyTests(PlotDeviceTestCase):
 
 def suite():
   suite = unittest.TestSuite()
-  suite.addTest(unittest.makeSuite(TypographyTests))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(TypographyTests))
   return suite

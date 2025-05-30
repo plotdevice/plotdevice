@@ -2,13 +2,10 @@
 import os
 import re
 import json
-import cgi
 import objc
 from io import open
 from objc import super
-from pprint import pprint
 from time import time
-from bisect import bisect
 from ..lib.cocoa import *
 from plotdevice.gui.preferences import get_default, editor_info
 from plotdevice.gui import bundle_path, set_timeout

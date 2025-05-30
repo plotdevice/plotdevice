@@ -247,5 +247,5 @@ class GeometryTests(PlotDeviceTestCase):
 
 def suite():
   suite = unittest.TestSuite()
-  suite.addTest(unittest.makeSuite(GeometryTests))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(GeometryTests))
   return suite

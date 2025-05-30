@@ -479,5 +479,5 @@ class DrawingTests(PlotDeviceTestCase):
 
 def suite():
   suite = unittest.TestSuite()
-  suite.addTest(unittest.makeSuite(DrawingTests))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(DrawingTests))
   return suite

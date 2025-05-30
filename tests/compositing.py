@@ -111,5 +111,5 @@ class CompositingTests(PlotDeviceTestCase):
 
 def suite():
   suite = unittest.TestSuite()
-  suite.addTest(unittest.makeSuite(CompositingTests))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(CompositingTests))
   return suite
