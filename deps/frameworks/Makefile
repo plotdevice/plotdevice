@@ -16,6 +16,7 @@ all: Python.framework
 Python.framework: relocatable-python
 	PYTHONNOUSERSITE=1 $(PIP_ENV) python3 ./relocatable-python/make_relocatable_python_framework.py $(BUILD_OPTS)
 	$(BIN)/python3 config.py ../../app/python.xcconfig
+	python3 reduce_framework_size.py
 
 relocatable-python:
 	git clone $(FRAMEWORK_REPO)
