@@ -10,8 +10,6 @@ from ..gfx import Color
 from ..gfx.atoms import KEY_ESC
 from objc import super
 
-DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
-
 class GraphicsBackdrop(NSView):
     """A container that sits between the NSClipView and GraphicsView
 
@@ -63,6 +61,31 @@ class GraphicsBackdrop(NSView):
             gfxframe.origin.y = 0
         self.gfxView.setFrame_(gfxframe)
 
+    def magnifyWithEvent_(self, event):
+        if self.gfxView:
+            self.gfxView.magnifyWithEvent_(event)
+        return None
+
+    def beginGestureWithEvent_(self, event):
+        if self.gfxView:
+            self.gfxView.beginGestureWithEvent_(event)
+        return None
+
+    def endGestureWithEvent_(self, event):
+        return None
+
+    def acceptsTouchEvents(self):
+        return True
+
+    def scrollWheel_(self, event):
+        if self.gfxView:
+            self.gfxView.scrollWheel_(event)
+        else:
+            # Pass the scroll event to the scroll view
+            scrollview = self.superview()
+            if scrollview:
+                scrollview.scrollWheel_(event)
+
 class GraphicsView(NSView):
     script = IBOutlet()
     canvas = None
@@ -81,18 +104,13 @@ class GraphicsView(NSView):
         self.key = None
         self.keycode = None
         self._zoom = 1.0
-        self._dpr = self.window().backingScaleFactor()
-        # self.scrollwheel = False
-        # self.wheeldelta = 0.0
-
-        # set up layer `hosting' and disable implicit anims
-        self.setLayer_(CALayer.new())
-        self.setWantsLayer_(True)
-        inaction = {k:None for k in ["onOrderOut", "sublayers", "contents", "position", "bounds"]}
-        self.layer().setActions_(inaction)
 
         # display the placeholder image until we're passed a canvas (and keep it in sync with appearance)
         self.updatePlaceholder(NSAppearance.currentDrawingAppearance())
+
+        # Enable gesture recognition
+        self.setWantsRestingTouches_(True)
+        self.setAcceptsTouchEvents_(True)
 
     @objc.python_method
     def updatePlaceholder(self, appearance):
@@ -102,7 +120,7 @@ class GraphicsView(NSView):
             ))
             if placeholder:
                 self.setFrameSize_(placeholder.size())
-                self.layer().setContents_(placeholder)
+                self.setNeedsDisplay_(True)  # trigger a redraw
 
     @objc.python_method
     def setCanvas(self, canvas):
@@ -118,10 +136,6 @@ class GraphicsView(NSView):
         x_pct = NSMidX(visible) / NSWidth(oldframe)
         y_pct = NSMidY(visible) / NSHeight(oldframe)
 
-        # render (and possibly bomb...)
-        ns_image = canvas._render_to_image(self.zoom)
-        bitmap = ns_image.layerContentsForContentsScale_(self._dpr)
-
         # resize
         w, h = [s*self.zoom for s in canvas.pagesize]
         self.setFrameSize_([w, h])
@@ -135,11 +149,11 @@ class GraphicsView(NSView):
             half_h = NSHeight(visible) / 2.0
             self.scrollPoint_( (x_pct*w-half_w, y_pct*h-half_h) )
 
-        # cache the canvas image
-        self.layer().setContents_(bitmap)
-
-        # keep a reference to the canvas so we can zoom later on
+        # keep a reference to the canvas
         self.canvas = canvas
+        
+        # trigger a redraw
+        self.setNeedsDisplay_(True)
 
     def _get_zoom(self):
         return self._zoom
@@ -151,38 +165,80 @@ class GraphicsView(NSView):
     zoom = property(_get_zoom, _set_zoom)
 
     @objc.python_method
-    def findNearestZoomIndex(self, zoom):
-        """Returns the nearest zoom level, and whether we found a direct, exact
-        match or a fuzzy match."""
-        try: # Search for a direct hit first.
-            idx = self.zoomLevels.index(zoom)
-            return idx, True
-        except ValueError: # Can't find the zoom level, try looking at the indexes.
-            idx = 0
-            try:
-                while self.zoomLevels[idx] < zoom:
-                    idx += 1
-            except KeyError: # End of the list
-                idx = len(self.zoomLevels) - 1 # Just return the last index.
-            return idx, False
+    def _findNearestZoomLevel(self, zoom):
+        """Find the nearest zoom level to the given zoom value"""
+        return min(self.zoomLevels, key=lambda x: abs(x - zoom))
+
+    @objc.python_method
+    def _applyZoom(self, delta, mouse_point=None):
+        """Apply zoom with given delta, centered at mouse_point"""
+        # calculate new zoom with smoother scaling
+        new_zoom = self.zoom * (1.0 + (delta * 0.8))
+        new_zoom = max(0.1, min(20.0, new_zoom))
+        
+        # if no mouse point provided, just update zoom
+        if not mouse_point:
+            self.zoom = new_zoom
+            return
+            
+        # get the clip view and current visible area
+        clip_view = self.superview().superview()
+        visible = clip_view.documentVisibleRect()
+        
+        # calculate the point in document coordinates that's under the mouse
+        doc_x = mouse_point.x
+        doc_y = mouse_point.y
+        
+        # store old zoom and apply new zoom
+        old_zoom = self.zoom
+        self.zoom = new_zoom
+        
+        # calculate how much the document point should move
+        scale_factor = new_zoom / old_zoom
+        dx = doc_x * (scale_factor - 1.0)
+        dy = doc_y * (scale_factor - 1.0)
+        
+        # calculate new scroll position to keep mouse point fixed
+        new_x = visible.origin.x + dx
+        new_y = visible.origin.y + dy
+        
+        # apply scroll
+        self.scrollPoint_((new_x, new_y))
+
+    @objc.python_method
+    def _getMousePointForZoom(self, event):
+        """Get mouse position for zoom operations, returns None if no window"""
+        window = self.window()
+        if window:
+            mouse_point = window.mouseLocationOutsideOfEventStream()
+            return self.convertPoint_fromView_(mouse_point, None)
+        return None
+
+    @objc.python_method
+    def _calculateZoomDelta(self, event, is_scroll=False):
+        """Convert event input to a normalized zoom delta"""
+        if is_scroll:
+            # For scroll events, normalize the scroll delta
+            return event.scrollingDeltaY() / 100.0
+        else:
+            # For pinch events, use the magnification directly
+            return event.magnification()
 
     @IBAction
     def zoomIn_(self, sender):
-        idx, direct = self.findNearestZoomIndex(self.zoom)
-        # Direct hits are perfect, but indirect hits require a bit of help.
-        # Because of the way indirect hits are calculated, they are already
-        # rounded up to the upper zoom level; this means we don't need to add 1.
-        if direct:
-            idx += 1
-        idx = max(min(idx, len(self.zoomLevels)-1), 0)
-        self.zoom = self.zoomLevels[idx]
+        """Zoom in one level"""
+        current = self._findNearestZoomLevel(self.zoom)
+        idx = self.zoomLevels.index(current)
+        new_idx = min(idx + 1, len(self.zoomLevels) - 1)
+        self.zoom = self.zoomLevels[new_idx]
 
     @IBAction
     def zoomOut_(self, sender):
-        idx, direct = self.findNearestZoomIndex(self.zoom)
-        idx -= 1
-        idx = max(min(idx, len(self.zoomLevels)-1), 0)
-        self.zoom = self.zoomLevels[idx]
+        """Zoom out one level"""
+        current = self._findNearestZoomLevel(self.zoom)
+        idx = self.zoomLevels.index(current)
+        new_idx = max(idx - 1, 0)
+        self.zoom = self.zoomLevels[new_idx]
 
     @IBAction
     def resetZoom_(self, sender):
@@ -236,10 +292,31 @@ class GraphicsView(NSView):
         self.key = event.characters()
         self.keycode = event.keyCode()
 
-    # def scrollWheel_(self, event):
-    #     NSResponder.scrollWheel_(self, event)
-    #     self.scrollwheel = True
-    #     self.wheeldelta = event.scrollingDeltaY()
+    def scrollWheel_(self, event):
+        # check if Command key is pressed for zoom
+        if event.modifierFlags() & NSEventModifierFlagCommand:
+            # get zoom delta from scroll
+            delta = self._calculateZoomDelta(event, is_scroll=True)
+            mouse_point = self._getMousePointForZoom(event)
+            self._applyZoom(delta, mouse_point)
+        else:
+            # pass the scroll event to the scroll view
+            scrollview = self.superview().superview()
+            if scrollview:
+                scrollview.scrollWheel_(event)
+
+    def magnifyWithEvent_(self, event):
+        # get zoom delta from pinch
+        delta = self._calculateZoomDelta(event)
+        mouse_point = self._getMousePointForZoom(event)
+        self._applyZoom(delta, mouse_point)
+        return None
+
+    def beginGestureWithEvent_(self, event):
+        return None
+
+    def endGestureWithEvent_(self, event):
+        return None
 
     def canBecomeKeyView(self):
         return True
@@ -247,6 +324,42 @@ class GraphicsView(NSView):
     def acceptsFirstResponder(self):
         return True
 
+    def acceptsTouchEvents(self):
+        return True
+
+    def drawRect_(self, rect):
+        if self.canvas is None:
+            # draw placeholder if no canvas
+            if placeholder := NSImage.imageNamed_('placeholder-{mode}.pdf'.format(
+                mode = 'dark' if 'Dark' in NSAppearance.currentDrawingAppearance().name() else 'light'
+            )):
+                placeholder.drawInRect_(self.bounds())
+            return
+
+        # convert the dirty rect to canvas coordinates
+        viewToCanvas = NSAffineTransform.transform()
+        viewToCanvas.scaleBy_(1.0/self.zoom)
+        canvasRect = viewToCanvas.transformRect_(rect)
+        
+        # set up the graphics state for zoomed drawing
+        NSGraphicsContext.currentContext().saveGraphicsState()
+        
+        # apply zoom transform
+        transform = NSAffineTransform.transform()
+        transform.scaleBy_(self.zoom)
+        transform.concat()
+        
+        # set up clipping to the intersection of canvas bounds and visible area
+        canvasBounds = ((0, 0), self.canvas.pagesize)
+        visibleBounds = NSIntersectionRect(canvasRect, canvasBounds)
+        clip = NSBezierPath.bezierPathWithRect_(visibleBounds)
+        clip.addClip()
+        
+        # draw the canvas contents
+        self.canvas.draw()
+        
+        # restore the graphics state
+        NSGraphicsContext.currentContext().restoreGraphicsState()
 
 class FullscreenWindow(NSWindow):
 
@@ -354,4 +467,3 @@ class FullscreenView(NSView):
 
 def calc_scaling_factor(width, height, maxwidth, maxheight):
     return min(float(maxwidth) / width, float(maxheight) / height)
-
