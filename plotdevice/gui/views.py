@@ -467,4 +467,3 @@ class FullscreenView(NSView):
 
 def calc_scaling_factor(width, height, maxwidth, maxheight):
     return min(float(maxwidth) / width, float(maxheight) / height)
-
