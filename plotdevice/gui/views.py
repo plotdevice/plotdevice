@@ -10,8 +10,6 @@ from ..gfx import Color
 from ..gfx.atoms import KEY_ESC
 from objc import super
 
-DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
-
 class GraphicsBackdrop(NSView):
     """A container that sits between the NSClipView and GraphicsView
 
