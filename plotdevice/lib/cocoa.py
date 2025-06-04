@@ -48,7 +48,7 @@ from AppKit import NSAlert, NSApp, NSAppearance, NSApplication, NSApplicationAct
                    NSTrackingMouseMoved, NSUnboldFontMask, NSUnionRect, NSUnitalicFontMask, NSView, \
                    NSViewFrameDidChangeNotification, NSViewMinXMargin, NSViewWidthSizable, NSWindow, \
                    NSWindowBackingLocationVideoMemory, NSWindowController, NSWindowTabbingModeAutomatic, \
-                   NSWindowTabbingModePreferred, NSWorkspace
+                   NSWindowTabbingModePreferred, NSWorkspace, NSEventModifierFlagCommand
 from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, CIVector, Foundation, NO, \
                        NSAffineTransform, NSAffineTransformStruct, NSAttributedString, NSAutoreleasePool, NSBundle, \
                        NSData, NSDate, NSDateFormatter, NSFileCoordinator, NSFileHandle, \
