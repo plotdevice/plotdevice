@@ -149,38 +149,25 @@ class GraphicsView(NSView):
     zoom = property(_get_zoom, _set_zoom)
 
     @objc.python_method
-    def findNearestZoomIndex(self, zoom):
-        """Returns the nearest zoom level, and whether we found a direct, exact
-        match or a fuzzy match."""
-        try: # Search for a direct hit first.
-            idx = self.zoomLevels.index(zoom)
-            return idx, True
-        except ValueError: # Can't find the zoom level, try looking at the indexes.
-            idx = 0
-            try:
-                while self.zoomLevels[idx] < zoom:
-                    idx += 1
-            except KeyError: # End of the list
-                idx = len(self.zoomLevels) - 1 # Just return the last index.
-            return idx, False
+    def _findNearestZoomLevel(self, zoom):
+        """Find the nearest zoom level to the given zoom value"""
+        return min(self.zoomLevels, key=lambda x: abs(x - zoom))
 
     @IBAction
     def zoomIn_(self, sender):
-        idx, direct = self.findNearestZoomIndex(self.zoom)
-        # Direct hits are perfect, but indirect hits require a bit of help.
-        # Because of the way indirect hits are calculated, they are already
-        # rounded up to the upper zoom level; this means we don't need to add 1.
-        if direct:
-            idx += 1
-        idx = max(min(idx, len(self.zoomLevels)-1), 0)
-        self.zoom = self.zoomLevels[idx]
+        """Zoom in one level"""
+        current = self._findNearestZoomLevel(self.zoom)
+        idx = self.zoomLevels.index(current)
+        new_idx = min(idx + 1, len(self.zoomLevels) - 1)
+        self.zoom = self.zoomLevels[new_idx]
 
     @IBAction
     def zoomOut_(self, sender):
-        idx, direct = self.findNearestZoomIndex(self.zoom)
-        idx -= 1
-        idx = max(min(idx, len(self.zoomLevels)-1), 0)
-        self.zoom = self.zoomLevels[idx]
+        """Zoom out one level"""
+        current = self._findNearestZoomLevel(self.zoom)
+        idx = self.zoomLevels.index(current)
+        new_idx = max(idx - 1, 0)
+        self.zoom = self.zoomLevels[new_idx]
 
     @IBAction
     def resetZoom_(self, sender):
