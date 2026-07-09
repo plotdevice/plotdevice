@@ -7,7 +7,7 @@ name = "plotdevice"
 dynamic = ["version"]
 description = "Create two-dimensional graphics and animations with code"
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Christian Swinehart", email = "drafting@samizdat.co" }]
 urls = { Homepage = "https://plotdevice.io/" }
@@ -19,7 +19,6 @@ classifiers = [
     "Intended Audience :: End Users/Desktop",
     "Operating System :: MacOS :: MacOS X",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
