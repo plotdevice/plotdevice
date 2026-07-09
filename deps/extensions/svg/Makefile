@@ -17,7 +17,7 @@ SwiftDraw:
 	rm SwiftDraw/*.*
 
 	cp NSImage+PlotDevice.swift SwiftDraw/SwiftDraw
-	cp Package.swift SwiftDraw/
+	cp Package.swift.tmpl SwiftDraw/Package.swift
 
 clean:
 	rm -rf SwiftDraw

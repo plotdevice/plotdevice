@@ -11,6 +11,7 @@ Manifest.in
 # local development
 deps/local
 /*.so
+.build
 
 # external dependencies
 deps/frameworks/*.framework
