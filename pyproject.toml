@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plotdevice"
+dynamic = ["version"]
+description = "Create two-dimensional graphics and animations with code"
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "Christian Swinehart", email = "drafting@samizdat.co" }]
+urls = { Homepage = "https://plotdevice.io/" }
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: MacOS X :: Cocoa",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Artistic Software",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Multimedia :: Graphics :: Editors :: Vector-Based",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: Text Editors :: Integrated Development Environments (IDE)",
+]
+dependencies = [
+    "requests",
+    "cachecontrol[filecache]",
+    "pyobjc-core==11.0",
+    "pyobjc-framework-Quartz==11.0",
+    "pyobjc-framework-LaunchServices==11.0",
+    "pyobjc-framework-WebKit==11.0",
+]
+
+[tool.setuptools]
+script-files = ["app/plotdevice"]
+zip-safe = false
+
+[tool.setuptools.dynamic]
+version = { attr = "plotdevice.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["plotdevice*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+plotdevice = ["rsrc/*"]

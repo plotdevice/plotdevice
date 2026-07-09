@@ -13,14 +13,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Run Tests
+    - name: Install build dependencies
+      run: pip3 install -U pip wheel twine build setuptools
+
+    - name: Install PlotDevice and run tests
       run: |
-        pip3 install -U pip wheel twine
-        python3 setup.py test
+        pip3 install .
+        python3 -m tests
 
     - name: Build sdist
       run: |
-        python3 setup.py sdist
+        python3 -m build --sdist
 
     - name: Upload to PyPI
       env:
