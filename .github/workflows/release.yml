@@ -75,6 +75,11 @@ jobs:
         pip3 install .
         python3 -m tests
 
+    - name: Build Wheels
+      uses: pypa/cibuildwheel@v4
+      with:
+        output-dir: dist
+
     - name: Build Source Distribution
       run: |
         python3 -m build --sdist

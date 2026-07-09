@@ -54,3 +54,10 @@ exclude = ["tests*"]
 
 [tool.setuptools.package-data]
 plotdevice = ["rsrc/*"]
+
+[tool.cibuildwheel]
+build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+
+[tool.cibuildwheel.macos]
+archs = ["universal2"]
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
