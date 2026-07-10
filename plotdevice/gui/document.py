@@ -91,7 +91,7 @@ class PlotDeviceDocument(NSDocument):
 
     def restoreStateWithCoder_(self, coder):
         super(PlotDeviceDocument, self).restoreStateWithCoder_(coder)
-        self.stationery = coder.decodeObjectForKey_("plotdevice:stationery")
+        self.stationery = coder.decodeObjectOfClass_forKey_(NSString, "plotdevice:stationery")
         if self.stationery:
             self.script.setStationery_(self.stationery)
 
@@ -259,7 +259,7 @@ class ScriptController(NSWindowController):
 
     def restoreStateWithCoder_(self, coder):
         # restore the splitview positions (if rects were autosaved)
-        split_frames = coder.decodeObjectForKey_("plotdevice:split_rects")
+        split_frames = coder.decodeObjectOfClasses_forKey_({NSArray, NSString}, "plotdevice:split_rects")
         if split_frames:
             it = self.editorView
             while it.superview():
