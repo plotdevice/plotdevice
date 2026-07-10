@@ -14,8 +14,8 @@ of 2D imagery and powerful compositing operations.
 #### Requirements
 
 The PlotDevice application requires macOS 11 or greater (either on Intel or Apple Silicon) 
-and comes bundled with a Python 3.10 distribution. The module can be installed via `pip3` 
-on Python versions ≥3.6 (including the interpreter from the Xcode 
+and comes bundled with a Python 3.14 distribution. The module can be installed via `pip3` 
+on Python versions ≥3.8 (including the interpreter from the Xcode 
 [command line tools](https://developer.apple.com/download/all/?q=command%20line%20tools%20for%20xcode)
 and those [installed through Homebrew](https://docs.brew.sh/Homebrew-and-Python)).
 
@@ -100,11 +100,13 @@ the Dock or give you access to the menu bar.
 
 To set up and run a script using a Framework build, do something along the lines of:
 ```console
-env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.10.4
-pyenv shell 3.10.4
+env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.14.6
+pyenv shell 3.14.6
 pip3 install plotdevice
 python3 -m plotdevice <script.pv>
 ``` 
+
+
 
 #### Building from source
 
