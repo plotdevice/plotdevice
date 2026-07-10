@@ -7,6 +7,7 @@ dist/
 plotdevice.egg-info
 app/Resources/viewer.nib
 Manifest.in
+plotdevice/rsrc
 
 # local development
 deps/local
