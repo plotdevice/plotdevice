@@ -50,8 +50,8 @@ from AppKit import NSAlert, NSApp, NSAppearance, NSApplication, NSApplicationAct
                    NSWindowBackingLocationVideoMemory, NSWindowController, NSWindowTabbingModeAutomatic, \
                    NSWindowTabbingModePreferred, NSWorkspace
 from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, CIVector, Foundation, NO, \
-                       NSAffineTransform, NSAffineTransformStruct, NSAttributedString, NSAutoreleasePool, NSBundle, \
-                       NSData, NSDate, NSDateFormatter, NSFileCoordinator, NSFileHandle, \
+                       NSAffineTransform, NSAffineTransformStruct, NSArray, NSAttributedString, NSAutoreleasePool, \
+                       NSBundle, NSData, NSDate, NSDateFormatter, NSFileCoordinator, NSFileHandle, \
                        NSFileHandleDataAvailableNotification, NSHeight, NSInsetRect, NSIntersectionRange, \
                        NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, NSMakeRange, NSMidX, NSMidY, \
                        NSMutableAttributedString, NSMutableData, NSNotificationCenter, NSObject, NSOffsetRect, \

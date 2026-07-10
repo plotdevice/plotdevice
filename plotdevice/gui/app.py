@@ -31,6 +31,9 @@ class PlotDeviceAppDelegate(NSObject):
         except OSError: pass
         except IOError: pass
 
+    def applicationSupportsSecureRestorableState_(self, app):
+        return True
+
     def applicationDidFinishLaunching_(self, note):
         mm=NSApp().mainMenu()
 
