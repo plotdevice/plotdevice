@@ -5,8 +5,9 @@ import re
 import json
 import csv
 from contextlib import contextmanager
-from functools import cmp_to_key
+from functools import cmp_to_key, reduce
 from collections import OrderedDict, defaultdict
+from collections.abc import Mapping
 from os.path import abspath, dirname, exists, join, splitext
 from random import choice, shuffle
 
@@ -106,18 +107,15 @@ def _key(seq, names):
     # treat objects without a given key and objects with the key set to None equivalently
     MISSING = None
 
-    # look for dict items by default
-    getter = lambda obj: tuple(obj.get(n, MISSING) for n in names)
+    def getter(obj):
+        # use item lookup if obj is dict-like
+        if isinstance(obj, Mapping):
+            return tuple(obj.get(n, MISSING) for n in names)
 
-    # walk through the objects and see if any of them lacks the dict fields but has attrs
-    for obj in seq:
-        try:
-            if any(n in obj for n in names):
-                break # dict fields exist so use the itemgetter
-        except TypeError:
-            # for non-dict objects like namedtuples and dataclasses use an attrgetter
-            if any(hasattr(obj, n) for n in names):
-                getter = lambda obj: tuple(getattr(obj, n, MISSING) for n in names)
+        # otherwise check attrs
+        return tuple(
+            reduce(lambda o, part: getattr(o, part, MISSING), n.split('.'), obj) for n in names
+        )
 
     def compare(a, b):
         default = 0
