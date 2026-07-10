@@ -70,10 +70,10 @@ except (ImportError, RuntimeError) as e:
   pass
 
 def suites():
-  from . import typography, primitives, drawing, compositing, geometry, module
+  from . import typography, primitives, drawing, compositing, geometry, module, canvas
 
   suite = unittest.TestSuite()
-  for mod in (typography, primitives, drawing, compositing, geometry, module):
+  for mod in (typography, primitives, drawing, compositing, geometry, module, canvas):
     suite.addTest(mod.suite())
   return suite
 
