@@ -6,7 +6,7 @@ library/app itself), there are a few different ways to build it.
 ## Requirements
 
 - macOS 11+ and Xcode or the Xcode command line tools (`xcode-select --install`)
-- A Python 3.8+ interpreter with wheel availability for `pyobjc-core==11.0`
+- A Python 3.8+ interpreter with wheel availability for `pyobjc-core==11.1`
   (i.e. not a brand-new Python release that predates PyObjC’s own support for it)
 
 ## Local dev environment
