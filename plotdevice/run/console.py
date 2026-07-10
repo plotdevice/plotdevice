@@ -17,6 +17,7 @@ import sys
 import json
 import select
 import signal
+from objc import super
 from math import floor, ceil
 from os.path import dirname, abspath, exists, join
 from io import open
@@ -122,7 +123,7 @@ class ConsoleScript(ScriptController):
     def init(self):
         self._init_state()
         self._buf = '' # cache the export progress message between stdout writes
-        return super(ScriptController, self).init()
+        return super(ConsoleScript, self).init()
 
     def setScript_options_(self, path, opts):
         self.vm.path = path
