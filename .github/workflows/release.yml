@@ -48,7 +48,7 @@ jobs:
 
     - name: Build & Notarize App
       run: |
-        python3 build.py dist
+        python3 make.py dist
 
     - name: Create Draft Release
       uses: softprops/action-gh-release@v1

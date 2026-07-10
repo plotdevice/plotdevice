@@ -144,11 +144,11 @@ def cmd_py2app(args):
     try:
         import py2app
     except ImportError:
-        print("""build.py: py2app build failed
+        print("""make.py: py2app build failed
   Couldn't find the py2app module. To set up a virtualenv that contains all the necessary
   dependencies in the deps/local directory, call the `dev` command first:
-  > python3 build.py dev
-  > ./deps/local/<python-version>/bin/python3 build.py py2app""")
+  > python3 make.py dev
+  > ./deps/local/<python-version>/bin/python3 make.py py2app""")
         sys.exit(1)
 
     from py2app.build_app import py2app as build_py2app
@@ -184,7 +184,7 @@ def cmd_py2app(args):
     from setuptools import setup
     old_argv = sys.argv
     try:
-        sys.argv = ['build.py', 'py2app']
+        sys.argv = ['make.py', 'py2app']
         setup(
             name='plotdevice',
             app=[{
@@ -302,7 +302,7 @@ def main():
     # clear away any finder droppings that may have accumulated
     call(['find', '.', '-name', '.DS_Store', '-delete'])
 
-    parser = argparse.ArgumentParser(prog='build.py')
+    parser = argparse.ArgumentParser(prog='make.py')
     sub = parser.add_subparsers(dest='command', required=True)
 
     p_dev = sub.add_parser('dev', help='set up virtualenv in deps/local with required dependencies')

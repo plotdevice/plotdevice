@@ -9,13 +9,13 @@ try:
 except ImportError:
     # detect whether we're being run from the repository and set up a local env if so
     repo = abspath(join(dirname(__file__), '../..'))
-    setup_py = '%s/setup.py' % repo
-    if exists(setup_py):
+    make_py = '%s/make.py' % repo
+    if exists(make_py):
         from platform import python_version
         from sysconfig import get_config_var
         local_libs = '%s/deps/local/%s/lib/python%s/site-packages' % (repo, python_version(), get_config_var('py_version_short'))
         if not exists(local_libs):
-            call([sys.executable, setup_py, 'dev'])
+            call([sys.executable, make_py, 'dev'])
         site.addsitedir(local_libs)
         from Foundation import *
         import objc

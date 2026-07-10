@@ -11,7 +11,7 @@ library/app itself), there are a few different ways to build it.
 
 ## Local dev environment
 
-`python3 build.py dev` sets up a self-contained virtualenv at `deps/local/<python-version>/` 
+`python3 make.py dev` sets up a self-contained virtualenv at `deps/local/<python-version>/` 
 and ensures PlotDevice’s dependencies (including its native-code extensions) are installed.
 Once this environment has been set up you can use `python3 -m plotdevice <script.pv>` or 
 `app/plotdevice <script.pv>` to run scripts directly from the repo.
@@ -37,26 +37,26 @@ python3 -m build --wheel
 
 ## Application builds
 
-The `build.py` script contains utilites for building **PlotDevice.app** (i.e., the full GUI application).
+The `make.py` script contains utilites for building **PlotDevice.app** (i.e., the full GUI application).
 If you have the full Xcode installed on your system, you can build the app (including its own embedded copy
 of Python) with:
 ```console
-python3 build.py app
+python3 make.py app
 ```
 
 Alternatively (if you only have the Xcode command line tools installed) you can use `py2app`, which can
 be especially useful for quick, local tests:
 ```console
-python3 build.py py2app
+python3 make.py py2app
 ```
 
 ## CI/Maintainer scripts
 
-The `build.py` script contains other subcommands that are primarily useful for packaging:
+The `make.py` script contains other subcommands that are primarily useful for packaging:
 ```console
-python3 build.py clean        # remove build artifacts
-python3 build.py distclean    # also remove the embedded Python.framework and deps/local
-python3 build.py dist         # build app (codesigned, notarized, and zipped) and update release.json
+python3 make.py clean        # remove build artifacts
+python3 make.py distclean    # also remove the embedded Python.framework and deps/local
+python3 make.py dist         # build app (codesigned, notarized, and zipped) and update release.json
 ```
 
 Note that `dist` requires a "Developer ID Application" signing identity and a `notarytool` keychain profile
