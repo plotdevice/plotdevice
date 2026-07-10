@@ -46,6 +46,23 @@ class SdistPrepCommand(sdist):
     """Make sure an sdist can be installed without needing Xcode/ibtool, and
     bundles the SwiftDraw sources for offline/reproducible builds."""
 
+    def finalize_options(self):
+        with open(join(ROOT, 'MANIFEST.in'), 'w') as f:
+            f.write("""
+                graft app/Resources
+                prune app/Resources/en.lproj
+                prune app/Resources/ui
+                include app/plotdevice
+                include deps/extensions/*/*.h
+                recursive-include deps/extensions/svg *.swift Makefile
+                include tests/*.py
+                graft tests/_in
+                graft examples
+                include *.md
+                include *.url
+            """)
+        sdist.finalize_options(self)
+
     def run(self):
         # include a compiled nib in the sdist so ibtool (and thus Xcode.app) isn't required to install
         xib = join(ROOT, 'app/Resources/en.lproj/PlotDeviceScript.xib')
@@ -56,7 +73,7 @@ class SdistPrepCommand(sdist):
         # make sure we have the sources for SwiftDraw
         call('cd deps/extensions/svg && make SwiftDraw', shell=True, cwd=ROOT)
 
-        # build the sdist based on MANIFEST.in
+        # build the sdist based on our MANIFEST.in additions
         sdist.run(self)
 
 setup(

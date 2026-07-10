@@ -93,6 +93,7 @@ def cmd_clean(args):
         'details.html',
         '_plotdevice.*.so',
         'plotdevice/rsrc',
+        'MANIFEST.in',
         '**/*.pyc',
         '**/__pycache__',
         '**/.DS_Store',
