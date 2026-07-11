@@ -9,6 +9,7 @@ PlotDevice 1.0.1
 
 ##### Bugfixes
 * `ordered()` now works correctly and no longer causes the `Advanced/Sorting.pv` example to crash
+* `Text.flow()` will now invoke user-provided callbacks to determine layout of multi-column runs
 * Command line tool now parses `{4}`-style padded number blocks in exported filenames correctly
 * Silenced a console error by fixing `super()` use in command line tool
 * Document restoration in app now uses modern 'secure restorable state'
