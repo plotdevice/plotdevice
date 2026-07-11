@@ -88,7 +88,7 @@ class TypographyTests(PlotDeviceTestCase):
     def test_typography_styles_font(self):
         # tut/Typography (8)
         size(200, 220)
-        font('jenson', 'medium', 22)
+        font('Avenir Next', 'medium', 22)
         text("September 1972", 20,40)
         
         font(osf=True) # old-style figures
@@ -124,7 +124,7 @@ class TypographyTests(PlotDeviceTestCase):
         text('handgloves', 10,70, style='emph')
         text('handgloves', 10,100, style='bright')
         
-        font('Joanna MT', 28)
+        font('Hoefler Text', 28)
         text('handgloves', 10,150)
         text('handgloves', 10,180, style='emph')
         text('handgloves', 10,210, style='bright')
@@ -183,8 +183,8 @@ class TypographyTests(PlotDeviceTestCase):
     @reference('typography/typography-layout-fragments.png')
     def test_typography_layout_fragments(self):
         # tut/Typography (15)
-        size(300, 210)
-        font('Joanna MT', 80, italic=True)
+        size(380, 210)
+        font('Palatino', 80, italic=True)
         t = text(20,120, str='Axiomatic')
         
         first = t[0]
@@ -213,10 +213,10 @@ class TypographyTests(PlotDeviceTestCase):
     @reference('typography/typography-layout-words.png')
     def test_typography_layout_words(self):
         # tut/Typography (17)
-        size(300, 140)
+        size(300, 180)
         rhyme = "Tinker, tailor, soldier, sailor, rich man, poor man, begger man, thief"
         
-        font('Joanna MT', 32, italic=True)
+        font('Palatino', 32, italic=True)
         t = text(20,40, 270,160, str=rhyme)
         
         nofill()
@@ -250,10 +250,10 @@ class TypographyTests(PlotDeviceTestCase):
     @reference('typography/typography-layout-select2.png')
     def test_typography_layout_select2(self):
         # tut/Typography (20)
-        size(300, 240)
+        size(300, 270)
         flaubert = "“Five hundred lines for all the class!” shouted in a furious voice stopped, like the Quos ego<fn note=\"A quotation from the Aeneid signifying a threat.\">1</fn>, a fresh outburst. “Silence!” continued the master indignantly, wiping his brow with his handkerchief, which he had just taken from his cap. “As to you, ‘new boy,’ you will conjugate ‘ridiculus sum’<fn note=\"I am ridiculous.\">2</fn> twenty times.”\nThen, in a gentler tone, “Come, you’ll find your cap again; it hasn’t been stolen.”"
         
-        font('Adobe Jenson', 14)
+        font('STIX Two Text', 14)
         layout(hyphenate=True, indent=True)
         stylesheet('fn', vpos=1, fill='red')
         
@@ -323,7 +323,7 @@ class TypographyTests(PlotDeviceTestCase):
         size(300, 150)
         kafka = 'Someone must have been telling lies about Josef K., he knew he had done nothing wrong but, one morning, he was arrested. Every day at eight in the morning he was brought his breakfast by Mrs. Grubach’s cook. Mrs. Gru-bach was his landlady but today she didn’t come. That had never happened before. K. waited a little while, looked from his pillow at the old woman who lived opposite and who was watching him with an inquisitiveness quite unusual for her, and finally, both hungry and disconcerted, rang the bell. There was immediately a knock at the door and a man entered.'
         
-        font('Adobe Garamond', size=10)
+        font('Hoefler Text', size=10)
         layout(align=JUSTIFY, hyphenate=True)
         t = text(20,20, 120,120, str=kafka)
         for block in t.flow(2):
@@ -335,7 +335,7 @@ class TypographyTests(PlotDeviceTestCase):
         size(300, 330)
         kafka = 'and a man entered. He had never seen the man in this house before. He was slim but firmly built, his clothes were black and close-fitting, with many folds and pockets, buckles and buttons and a belt, all of which gave the impression of being very practical but without making it very clear what they were actually for. “Who are you?” asked K., sitting half upright in his bed. The man, however, ignored the question as if his arrival simply had to be accepted, and merely replied, “You rang?” “Anna should have brought me my breakfast,” said K. He tried to work out who the man actually was, first in silence, just through observation and by thinking about it, but the man didn’t stay still to be looked at for very long. Instead he went over to the door, opened it slightly, and said to someone who was clearly standing immediately behind it, “He wants Anna to bring him his breakfast.” There was a little laughter in the neighbouring room, it was not clear from the sound of it whether there were several people laughing. The strange man could not have learned anything from it that he hadn’t known already, but now he said to K., as if making his report “It is not possible.” “It would be the first time that’s happened,” said K., as he jumped out of bed and quickly pulled on his trousers. “I want to see who that is in the next room, and why it is that Mrs. Grubach has let me be disturbed in this way.” It immediately occurred to him that he needn’t have said this out loud, and that he must to some extent have acknowledged their authority by doing so, but that ...'
         
-        font('Adobe Garamond', size=10)
+        font('Palatino', size=10)
         layout(align=JUSTIFY, hyphenate=True)
         
         def leftright(block):
@@ -354,7 +354,7 @@ class TypographyTests(PlotDeviceTestCase):
         size(300, 240)
         welles = 'Before the law, there stands a guard. A man comes from the country, begging admittance to the law. But the guard cannot admit him. May he hope to enter at a later time? That is possible, said the guard. The man tries to peer through the entrance. He’d been taught that the law was to be accessible to every man. “Do not attempt to enter without my permission”, says the guard. I am very powerful. Yet I am the least of all the guards. From hall to hall, door after door, each guard is more powerful than the last. By the guard’s permission, the man sits by the side of the door, and there he waits. For years, he waits. Everything he has, he gives away in the hope of bribing the guard, who never fails to say to him “I take what you give me only so that you will not feel that you left something undone.” Keeping his watch during the long years, the man has come to know even the fleas on the guard’s fur collar. Growing childish in old age, he begs the fleas to persuade the guard to change his mind and allow him to enter. His sight has dimmed, but in the darkness he perceives a radiance streaming immortally from the door of the law. And now, before he dies, all he’s experienced condenses into one question, a question he’s never asked. He beckons the guard. Says the guard, “You are insatiable! What is it now?” Says the man, “Every man strives to attain the law. How is it then that in all these years, no one else has ever come here, seeking admittance?” His hearing has failed, so the guard yells into his ear. “Nobody else but you could ever have obtained admittance. No one else could enter this door! This door was intended only for you! And now, I’m going to close it.” This tale is told during the story called “The Trial”. It’s been said that the logic of this story is the logic of a dream... a nightmare.'
         
-        font('Adobe Garamond', size=10)
+        font('Hoefler Text', size=10)
         t = text(20,26, 80,120, str=welles)
         for block in t.flow(3):
             block.x += block.width + 10
