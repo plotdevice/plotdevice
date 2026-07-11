@@ -37,7 +37,7 @@ python3 -m build --wheel
 
 ## Application builds
 
-The `make.py` script contains utilites for building **PlotDevice.app** (i.e., the full GUI application).
+The `make.py` script contains utilities for building **PlotDevice.app** (i.e., the full GUI application).
 If you have the full Xcode installed on your system, you can build the app (including its own embedded copy
 of Python) with:
 ```console
@@ -50,7 +50,7 @@ be especially useful for quick, local tests:
 python3 make.py py2app
 ```
 
-## CI/Maintainer scripts
+## Miscellany
 
 The `make.py` script contains other subcommands that are primarily useful for packaging:
 ```console
