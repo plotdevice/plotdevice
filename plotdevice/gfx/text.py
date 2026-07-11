@@ -332,7 +332,8 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         if not layout:
             return self._reflow(columns)   # return the generator for iteration
-        map(layout, self._reflow(columns)) # apply the layout function to each block in sequence
+        for block in self._reflow(columns): 
+            layout(block) # apply the layout function to each block in sequence
 
     def _reflow(self, count):
         # wipe out any previously set blocks then keep adding new ones until
@@ -926,4 +927,3 @@ class TextBlock(FrameMixin, Grob):
         # we inherit from Grob for the methods, not drawability
         codependent = "TextBlocks can't be drawn directly; plot() the parent Text object instead"
         raise DeviceError(codependent)
-
