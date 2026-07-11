@@ -431,16 +431,20 @@ class MagicNumber(object):
     # be a well-behaved pseudo-number (based on the float in self.value)
     def __int__(self): return int(self.value)
     def __float__(self): return float(self.value)
-    def __cmp__(self, n): return cmp(self.value, n)
+    def __index__(self): return int(self.value)
     def __eq__(self, n): return n == self.value
+    def __hash__(self): return hash(self.value)
     def __lt__(self, n): return self.value < n
     def __gt__(self, n): return self.value > n
+    def __le__(self, n): return self.value <= n
+    def __ge__(self, n): return self.value >= n
 
     def __abs__(self): return abs(self.value)
     def __pos__(self): return +self.value
     def __neg__(self): return -self.value
-    def __invert__(self): return ~self.value
     def __trunc__(self): return math.trunc(self.value)
+    def __round__(self, ndigits=None): return round(self.value, ndigits)
+    def __format__(self, spec): return format(self.value, spec)
 
     def __add__(self, n): return self.value + n
     def __sub__(self, n): return self.value - n
@@ -449,18 +453,14 @@ class MagicNumber(object):
     def __floordiv__(self, n): return self.value // n
     def __mod__(self, n): return self.value % n
     def __pow__(self, n): return self.value ** n
-    def __lshift__(self, n): return self.value << n
-    def __rshift__(self, n): return self.value >> n
 
     def __radd__(self, n): return n + self.value
     def __rsub__(self, n): return n - self.value
     def __rmul__(self, n): return n * self.value
-    def __rdiv__(self, n): return n / self.value
+    def __rtruediv__(self, n): return n / self.value
     def __rfloordiv__(self, n): return n // self.value
     def __rmod__(self, n): return n % self.value
     def __rpow__(self, n): return n ** self.value
-    def __rlshift__(self, n): return n << self.value
-    def __rrshift__(self, n): return n >> self.value
 
 # the WIDTH and HEIGHT globals are Dimension objects
 class Dimension(MagicNumber):
