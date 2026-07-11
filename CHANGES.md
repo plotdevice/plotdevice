@@ -1,3 +1,18 @@
+PlotDevice 1.0.1
+----------------
+
+##### Misc. Improvements
+* Upgraded bundled Python to 3.14 in app
+* Added precompiled wheels for module installs (supporting Python 3.9–3.14)
+* No longer requires Xcode command line tools in order to install
+* Added support for running under `uv`
+
+##### Bugfixes
+* `ordered()` now works correctly and no longer causes the `Advanced/Sorting.pv` example to crash
+* Command line tool now parses `{4}`-style padded number blocks in exported filenames correctly
+* Silenced a console error by fixing `super()` use in command line tool
+* Document restoration in app now uses modern 'secure restorable state'
+
 PlotDevice 1.0.0
 -----------------
 

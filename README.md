@@ -15,62 +15,37 @@ of 2D imagery and powerful compositing operations.
 
 The PlotDevice application requires macOS 11 or greater (either on Intel or Apple Silicon) 
 and comes bundled with a Python 3.14 distribution. The module can be installed via `pip3` 
-on Python versions ≥3.8 (including the interpreter from the Xcode 
+on Python versions ≥3.9 (including the interpreter from the Xcode 
 [command line tools](https://developer.apple.com/download/all/?q=command%20line%20tools%20for%20xcode)
 and those [installed through Homebrew](https://docs.brew.sh/Homebrew-and-Python)).
 
-#### Latest changes (July 2022)
+#### Latest changes (July 2026)
 
-Over the years since the last release, progress in both macOS and Python itself led to quite
-a bit of breakage. Some of the highlights of this maintenance release include:
+Version 1.0.1 adds compatibility for more recent python3 versions and no longer requires
+the C & Swift extensions to be built when installing (they're now included in binary wheels).
+The build system has been updated to use a declarative `pyproject.toml` scheme, with custom
+builds now handled by the `make.py` utility script (see [BUILDING.md](BUILDING.md) for details).
 
-###### New Features
-- Runs natively on Intel and Apple Silicon and supports retina displays
-- Python 3 support (including a bundled 3.10 installation in the app)
-- images can now be exported in HEIC format and videos support H.265 (HEVC)
-- SVG files can now be drawn to the canvas using the `image()` command (thanks to the magical [SwiftDraw](https://github.com/swhitty/SwiftDraw) library)
-- image exports have a configurable `zoom` to create 2x/3x/etc ‘retina’ images
-- revamped `var()` command for creating GUIs to modify values via sliders, buttons, toggles, etc.
-- updated text editor with multiple tabs, new themes, and additional key-binding modes emulating Sublime Text and VS Code
-- the module's command line interface is now accessible through `python3 -m plotdevice`
-- the command line tool has a new `--install` option to download [PyPI](https://pypi.org) packages for use within the app
-- document autosaving is now user-configurable 
-
-###### Bugfixes
-- exported images generated on retina machines now have the proper dimensions
-- hex colors can now use lowercase letters
-- automatic variables like `WIDTH` & `HEIGHT` correctly support the `/` operator
-- the Color object's `.blend()` method is working again
-- the `read()` command can now handle csv files with spaces in their header row names
-- the `translate()` command now incorporates non-pixel grid units set via the `size()` command
-- cmyk exports are working reliably for command line `--export` and via the `export(cmyk=True)` method
-- arguments defined using the command line tool's `--args` options are now passed to the script's `sys.argv`
-
-###### Misc. Improvements
-- the command line tool can be exited via ctrl-c in addtion to being Quit from the menu bar
-- simplified unicode handling (and improved support for normalization of user-provided strings)
-- building the module now only requires Xcode command line tools—not a full Xcode.app installation
-- the `text()` command will always treat its first argument as content (even if it's not a string) unless a `str`, `xml`, or `src` keyword argument is provided
-- the mouse pointer is now visible in full-screen mode (and will auto-hide when inactive)
-
-###### Unfortunate Casualties
-- The NodeBox Libraries (`coreimage`, `colors`, and friends) would require quite a bit of attention to get working properly again. 
-  A first pass can be found in the [`plotdevice-libs` repository](https://github.com/plotdevice/plotdevice-libs) but they're not
-  ready for prime-time. If you're interested in contributing, this would be a terrific place to start!
+See the [changelog](CHANGES.md) for details of previous releases.
 
 Installation
 ------------
 
 PlotDevice supports being built as either a full-fledged Cocoa application, or as
 a standard Python module to be installed into a virtualenv alongside your source files.
-In both cases it now includes a command line tool called [`plotdevice`](#running-scripts) allowing you to run
-scripts and perform batch exports from the console.
+In both cases it now includes a command line tool called [`plotdevice`](#running-scripts) 
+allowing you to run scripts and perform batch exports from the console.
+
+*This section provides a high-level overview of how to get a working copy of PlotDevice installed.
+If you're interested in doing development work on the library itself, take a look at the full 
+[build instructions](BUILDING.md).*
+
 
 #### Application builds
 
 The application can be built in Xcode with the `PlotDevice.xcodeproj` project. It can also
-be built from the command line by using `python3 setup.py app` (which uses Xcode) or 
-`python3 setup.py py2app` (which uses setuptools). 
+be built from the command line by using `python3 make.py app` (which uses Xcode) or 
+`python3 make.py py2app` (which uses setuptools). 
 
 The resulting binary will appear in the `dist` subdirectory and can be moved to your
 Applications folder or any other fixed directory. To install a symlink to the command
@@ -83,35 +58,76 @@ Prebuilt application binaries can be downloaded from the [PlotDevice site](https
 
 PlotDevice can also be built as a Python module, allowing you to rely on an external editor
 and launch scripts from the command line (or from a ‘shebang’ line at the top of your
-script invoking the `plotdevice` tool). To install the module and command line tool use
-`python3 setup.py install`
+script invoking the `plotdevice` tool). To install the module and command line tool run
+`pip3 install .` from the root of the source repo.
 
 Easier still, you can install the module directly from PyPI with a simple `pip3 install plotdevice`.
-It's a good idea to install the `wheel` module first since it greatly speeds up installation of the
-PyObjC libraries PlotDevice depends on.
 
 #### Alternative Python Interpreters
 
-When using [pyenv](https://github.com/pyenv/pyenv) (or compiling Python from source) you have the
-option of building the interpreter as a **Framework**. This gives you access to a GUI interface for
-running PlotDevice scripts via the `python3 -m plotdevice` command. Non-framework builds support the
-command line's `--export` functionality and will open a viewer window, but will not show an icon in
-the Dock or give you access to the menu bar.
+By default, macOS only includes a `python3` interpreter if you install Xcode (or its command line tools).
+There are a few other ways to get a usable Python setup worth considering if you're interested in using
+PlotDevice from the command line. A key feature distinguishing the different options is whether they 
+install Python as a ‘framework’ or ‘stand-alone’:
 
-To set up and run a script using a Framework build, do something along the lines of:
+> A **framework** Python installation allows PlotDevice to give you access to a GUI interface for
+> running scripts via the `python3 -m plotdevice` command. **Stand-alone** Python is slightly more limited:
+> it supports ‘headless’ use (via the command line tool’s [`--export`](#imageanimation-export) option) and can open a window displaying
+> your canvas, but it will not show an icon in the Dock or give you access to commands in the menu bar.
+
+##### Homebrew
+
+The [Homebrew](https://docs.brew.sh/Homebrew-and-Python) package manager provides a **framework** build via its `python3` package. You can install it and run `plotdevice` with:
+```console
+brew install python3
+pip3 install plotdevice
+python3 -m plotdevice <script.pv>
+```
+
+##### `pyenv`
+
+The [pyenv](https://github.com/pyenv/pyenv) version manager lets you easily switch between multiple python versions on the same system. 
+You can install a new **stand-alone** interpreter by specifying the version number:
+```console
+pyenv install 3.14.6
+```
+
+If you want a **framework** install, you need to pass a custom option via environment variables:
 ```console
 env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.14.6
+```
+
+Once you've installed Python, you can activate a particular version and get `plotdevice` running with:
+```console
 pyenv shell 3.14.6
 pip3 install plotdevice
 python3 -m plotdevice <script.pv>
 ``` 
 
+##### `uv`
 
+A newer alternative is [`uv`](https://docs.astral.sh/uv/), which uses its own prebuilt interpreters (but currently does not provide **framework** builds).
+If you're okay with the limitations of a **stand-alone** interpreter (see above), `uv` gives you a number of ways to 
+run PlotDevice.
 
-#### Building from source
+Run a script without permanently installing `plotdevice`:
+```console
+uvx --from plotdevice plotdevice <script.pv>
+```
 
-You can also clone the git repository and build PlotDevice as a module or application from scratch. 
-Consult the [build instructions](https://github.com/plotdevice/plotdevice/discussions/59) for details.
+Install `plotdevice` as a standalone CLI tool:
+```console
+uv tool install plotdevice
+plotdevice <script.pv>
+```
+
+Add `plotdevice` as a dependency in a `uv`-managed project:
+```console
+uv python install 3.14
+uv init myproject && cd myproject
+uv add plotdevice
+uv run plotdevice <script.pv>
+```
 
 Documentation
 -------------
