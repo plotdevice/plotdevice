@@ -142,7 +142,7 @@ class Effect(Frob):
 
         # i *think* it's better to skip the transparency layer when only blending,
         # but am bracing for the discovery that it's not...
-        return bool(fx) and fx.keys() != ('blend',)
+        return bool(fx) and fx.keys() != {'blend'}
         # return bool(fx) # return whether any state was just changed
 
     @contextmanager
