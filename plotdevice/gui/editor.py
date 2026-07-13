@@ -159,7 +159,7 @@ class EditorView(NSView):
     def userContentController_didReceiveScriptMessage_(self, ucc, msg):
         body = msg.body()
         fn, fnargs = body['fn'], list(body.get('args', []))
-        if fn in ('edits_', 'flash_', 'setSearchPasteboard', 'cancelRun', 'loadPrefs'):
+        if fn in ('sync_edits', 'flash_menu', 'setSearchPasteboard', 'cancelRun', 'loadPrefs'):
             getattr(self, fn)(*fnargs)
 
     def resizeSubviewsWithOldSize_(self, oldSize):
@@ -202,7 +202,7 @@ class EditorView(NSView):
 
     @objc.python_method
     def _get_source(self):
-        # return the copy of the source relayed by the last edits_ call from js
+        # return the copy of the source relayed by the last sync_edits call from js
         return self._last_source
     @objc.python_method
     def _set_source(self, src):
@@ -336,7 +336,7 @@ class EditorView(NSView):
         menu.submenu().performActionForItemAtIndex_(3)
 
     @objc.python_method
-    def edits_(self, count, source=None):
+    def sync_edits(self, count, source=None):
         # inform the undo manager of the changes
         um = self._undo_mgr
         c = int(count)
@@ -365,9 +365,10 @@ class EditorView(NSView):
         pb = NSPasteboard.pasteboardWithName_(NSFindPboard)
         pb.declareTypes_owner_([NSStringPboardType],None)
         pb.setString_forType_(query, NSStringPboardType)
-        self.flash_("Edit")
+        self.flash_menu("Edit")
 
-    def flash_(self, menuname):
+    @objc.python_method
+    def flash_menu(self, menuname):
         # when a menu item's key command was entered in the editor, flash the menu
         # bar to give a hint of where the command lives
         mm=NSApp().mainMenu()
