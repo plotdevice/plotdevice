@@ -2,14 +2,16 @@
 ace.require("ace/ext/language_tools");
 
 // Wrap the ace UndoManager's mutation methods with callbacks to the pyobjc EditorView
-// keeping it up-to-date on whether the file has been modified & whether undo/redo are available
+// keeping it up-to-date on whether the file has been modified & whether undo/redo are available.
+// Also send a copy of the buffer contents with each change so the EditorView's shadow copy is
+// fresh enough to be read synchronously at save-time.
 const {UndoManager:__UndoManager} = ace.require('ace/undomanager')
 function UndoManager(){ __UndoManager.call(this) }
 UndoManager.prototype = Object.create(__UndoManager.prototype);
 for (const method of ['add', 'undo', 'redo', 'reset']){
     UndoManager.prototype[method] = function(){
         __UndoManager.prototype[method].call(this, ...arguments);
-        app.edits_(this.$undoStack.length)
+        app.edits_(this.$undoStack.length, window?.editor?.source?.() ?? null)
     }
 }
 

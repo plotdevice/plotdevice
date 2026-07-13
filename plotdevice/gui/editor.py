@@ -202,19 +202,7 @@ class EditorView(NSView):
 
     @objc.python_method
     def _get_source(self):
-        # Spin the runloop while waiting for the editor to return its contents async.
-        if self._loading:
-            return self._last_source
-        result = {}
-        def done(value, error):
-            result['value'] = value
-        self.webview.evaluateJavaScript_completionHandler_('editor.source();', done)
-        deadline = NSDate.dateWithTimeIntervalSinceNow_(2.0)
-        while 'value' not in result and deadline.timeIntervalSinceNow() > 0:
-            NSRunLoop.currentRunLoop().runMode_beforeDate_(
-                NSDefaultRunLoopMode, NSDate.dateWithTimeIntervalSinceNow_(0.01))
-        if result.get('value') is not None:
-            self._last_source = result['value']
+        # return the copy of the source relayed by the last edits_ call from js
         return self._last_source
     @objc.python_method
     def _set_source(self, src):
@@ -347,7 +335,8 @@ class EditorView(NSView):
         menu = mm.itemWithTitle_("Python")
         menu.submenu().performActionForItemAtIndex_(3)
 
-    def edits_(self, count):
+    @objc.python_method
+    def edits_(self, count, source=None):
         # inform the undo manager of the changes
         um = self._undo_mgr
         c = int(count)
@@ -361,6 +350,10 @@ class EditorView(NSView):
         # update the undo/redo menus items
         for item, can in zip(self._doers, (um.canUndo(), um.canRedo())):
             item.setEnabled_(can)
+
+        # cache the editor's contents for use by the synchronous .source property
+        if isinstance(source, str):
+            self._last_source = source
 
     def syncUndoState_(self, count):
         pass # this would be useful if only it got called for redo as well as undo...
