@@ -320,7 +320,7 @@ class Stencil(Frob):
             singlechannel = ciFilter(self.channel, self.bmp._ciImage)
             greyscale = ciFilter(self.invert, singlechannel)
             ci_ctx = CIContext.contextWithOptions_(None)
-            maskRef = ci_ctx.createCGImage_fromRect_(greyscale, ((0,0), self.bmp.size))
+            maskRef = ci_ctx.createCGImage_fromRect_(greyscale, ((0,0), self.bmp._screen_size))
 
             # turn the image into an ‘imagemask’ cg-image
             cg_mask = CGImageMaskCreate(CGImageGetWidth(maskRef),

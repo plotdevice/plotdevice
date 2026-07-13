@@ -4,7 +4,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGContextAddPath, CGContextAddRect, \
                    CGContextBeginPath, CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, \
                    CGContextClearRect, CGContextClearRect, CGContextClip, CGContextClipToMask, CGContextDrawPath, \
-                   CGContextEndTransparencyLayer, CGContextEOClip, CGContextRestoreGState, CGContextSaveGState, \
+                   CGContextEndTransparencyLayer, CGContextEOClip, CGContextGetCTM, CGContextRestoreGState, CGContextSaveGState, \
                    CGContextSetAlpha, CGContextSetBlendMode, CGContextSetFillColorWithColor, CGContextSetLineCap, \
                    CGContextSetLineDash, CGContextSetLineJoin, CGContextSetLineWidth, \
                    CGContextSetStrokeColorWithColor, CGDataConsumerCreateWithCFData, CGImageDestinationAddImage, \
@@ -56,7 +56,8 @@ from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CI
                        NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, NSMakeRange, NSMidX, NSMidY, \
                        NSMutableAttributedString, NSMutableData, NSNotificationCenter, NSObject, NSOffsetRect, \
                        NSOperationQueue, NSPoint, NSRect, NSRectFromString, NSSelectorFromString, NSSize, NSString, \
-                       NSStringFromRect, NSTimer, NSTimeZone, NSURL, NSUserDefaults, NSUTF8StringEncoding, NSWidth
+                       NSStringFromRect, NSTimer, NSTimeZone, NSURL, NSUserDefaults, NSUTF8StringEncoding, NSWidth, \
+                       NSZeroRect
 from LaunchServices import kUTTypePNG, kUTTypeJPEG, kUTTypeGIF, kUTTypeTIFF
 from WebKit import WebView
 from objc import IBOutlet, IBAction

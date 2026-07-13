@@ -15,7 +15,7 @@ from ..lib.io import MovieExportSession, ImageExportSession
 from .geometry import Region, Size, Point, Transform, CENTER
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
 from .colors import CMYK
-from . import _ns_context
+from . import _ns_context, _cg_port
 
 _ctx = None
 __all__ = ("Image", 'ImageWriter')
@@ -174,8 +174,9 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             if isinstance(bitmap, NSBitmapImageRep):
                 break
         else:
-            # ...otherwise convert the vector image to a bitmap
-            # (note that this should use _screen_transform somehow but currently doesn't)
+            # ...otherwise convert the vector image to a bitmap at its native size.
+            # it will only be used for a hasAlpha() check in effects.py, so the actual
+            # pixel data needn't match its _screen_size
             tiffdata = self._nsImage.TIFFRepresentation()
             image = NSImage.alloc().initWithData_(tiffdata)
             bitmap = image.representations()[0]
@@ -183,12 +184,38 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
     @property
     def _ciImage(self):
+        """A CIImage suitable for use as a clip()/mask() stencil.
+
+        Raster sources are used as-is. Vector sources are scaled to the size
+        they'll actually occupy on the canvas before being rasterized.
+        """
+
+        # if the image is raster-based, use its bitmap as-is
+        for bitmap in self._nsImage.representations():
+            if isinstance(bitmap, NSBitmapImageRep):
+                break
+        else:
+            # if vector-based, rasterize it at its 'actual' on-screen size
+            w, h = self._screen_size
+
+            # create an offscreen bitmap context and rasterize the scaled image into it
+            bitmap_opts = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
+            bitmap_ctx = CGBitmapContextCreate(None, w, h, 8, w*4, CGColorSpaceCreateDeviceRGB(), bitmap_opts)
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.setCurrentContext_(
+              NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmap_ctx, True)
+            )
+            self._nsImage.drawInRect_fromRect_operation_fraction_(((0,0),(w,h)), NSZeroRect, NSCompositeSourceOver, 1.0)
+            NSGraphicsContext.restoreGraphicsState() # NB: class-level restore also resets currentContext
+
+            bitmap = NSBitmapImageRep.alloc().initWithCGImage_(CGBitmapContextCreateImage(bitmap_ctx))
+
         # core-image needs to be told to compensate for our flipped coords
         flip = NSAffineTransform.transform()
-        flip.translateXBy_yBy_(0, self.size.height)
+        flip.translateXBy_yBy_(0, bitmap.pixelsHigh())
         flip.scaleXBy_yBy_(1,-1)
 
-        ciImage = CIImage.alloc().initWithBitmapImageRep_(self._nsBitmap)
+        ciImage = CIImage.alloc().initWithBitmapImageRep_(bitmap)
         transform = CIFilter.filterWithName_("CIAffineTransform")
         transform.setValue_forKey_(ciImage, "inputImage")
         transform.setValue_forKey_(flip, "inputTransform")
@@ -248,6 +275,29 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         xf.prepend(nudge.inverse)  # Move back to the real origin.
         xf.scale(factor)           # scale to fit size constraints (if any)
         return xf
+
+    @property
+    def _screen_size(self):
+        """Returns the image's real pixel dimensions.
+
+        Raster-backed images return their native size, but vector-based images incorporate
+        the canvas's current CTM and the image's scaling based on its _screen_transform."""
+
+        # if the image is raster-based, use its native size
+        for bitmap in self._nsImage.representations():
+            if isinstance(bitmap, NSBitmapImageRep):
+                return bitmap.pixelsWide(), bitmap.pixelsHigh()
+
+        # if vector-based, use the canvas's CTM and the image's _screen_transform to
+        # determine its 'actual' size (rather than just using its mediabox 1:1)
+        ctm = CGContextGetCTM(_cg_port())
+        ctm_scale = max(math.hypot(ctm.a, ctm.b), math.hypot(ctm.c, ctm.d))
+        xf_a, xf_b, xf_c, xf_d, _, _ = self._screen_transform.matrix
+        xf_scale = max(math.hypot(xf_a, xf_b), math.hypot(xf_c, xf_d))
+        scale = max(ctm_scale * xf_scale, 1.0)
+        src_w, src_h = self._nsImage.size()
+
+        return max(1, round(src_w * scale)), max(1, round(src_h * scale))
 
     def _draw(self):
         """Draw an image on the given coordinates."""
@@ -390,4 +440,3 @@ class ImageWriter(object):
             if self.session.writer.doneWriting():
                 break
             time.sleep(0.1)
-

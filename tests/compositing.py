@@ -42,6 +42,13 @@ class CompositingTests(PlotDeviceTestCase):
         with clip(text('Hi', 5, 100)):
             image('tests/_in/plaid.png')
 
+    @reference('compositing/clip-vector-image.png')
+    def test_clip_image_vector(self):
+        size(125, 125)
+        # ensure tiny PDF is scaled up before rasterizing into a larger mask
+        with clip(image('tests/_in/tiny-triangle.pdf', width=125, height=125)):
+            image('tests/_in/plaid.png')
+
     @reference('compositing/mask.png')
     def test_mask(self):
         # ref/Compositing/commands/mask()
@@ -62,6 +69,13 @@ class CompositingTests(PlotDeviceTestCase):
         size(125, 125)
         font("Avenir", "bold", 112)
         with mask(text('Hi', 5, 100)):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/mask-vector-image.png')
+    def test_mask_image_vector(self):
+        size(125, 125)
+        # ensure tiny PDF is scaled up before rasterizing into a larger mask
+        with mask(image('tests/_in/tiny-triangle.pdf', width=125, height=125)):
             image('tests/_in/plaid.png')
 
     @reference('compositing/shadow-multi.png')
