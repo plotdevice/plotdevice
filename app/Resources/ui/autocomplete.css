@@ -403,3 +403,12 @@
 #editor.ace-cloud9-day ~ div.ace_autocomplete + .ace_tooltip.ace_doc-tooltip{ background-color:rgba(251, 251, 251, 1.0); color:rgba(0, 0, 0, 1.0); border-color:rgba(0, 0, 0, 1.0); font-family: -apple-system; font-size: 80%; color: rgba(76, 136, 107, 1.0); border-style: dotted; }
 #editor.ace-cloud9-day ~ div.ace_autocomplete + .ace_tooltip.ace_doc-tooltip b{ color:rgba(0, 0, 0, 1.0); }
 #editor.ace-cloud9-day ~ div.ace_autocomplete + .ace_tooltip.ace_doc-tooltip hr{ opacity:.75; }
+#editor.ace-samizdat ~ div.ace_autocomplete.ace-tm .ace_marker-layer .ace_active-line {border:1px solid rgba(55, 55, 61, 1.0); background-color:rgba(55, 55, 61, 0.7);}
+#editor.ace-samizdat ~ div.ace_autocomplete.ace-tm .ace_line{color:rgba(235, 219, 178, 1.0);}
+#editor.ace-samizdat ~ div.ace_autocomplete.ace-tm .ace_line-hover {border-color:rgba(78, 78, 78, 1.0); background-color:rgba(78, 78, 78, 0.7);}
+#editor.ace-samizdat ~ div.ace_rightAlignedText {color:rgba(133, 133, 133, 1.0);}
+#editor.ace-samizdat ~ div.ace_autocomplete .ace_completion-highlight{color:rgba(251, 82, 69, 1.0);}
+#editor.ace-samizdat ~ div.ace_autocomplete {background-color:rgba(24, 25, 32, 1.0); color:rgba(235, 219, 178, 1.0); border-color:rgba(235, 219, 178, 1.0);}
+#editor.ace-samizdat ~ div.ace_autocomplete + .ace_tooltip.ace_doc-tooltip{ background-color:rgba(24, 25, 32, 1.0); color:rgba(235, 219, 178, 1.0); border-color:rgba(235, 219, 178, 1.0); font-family: -apple-system; font-size: 80%; color: rgba(133, 133, 133, 1.0); border-style: dotted; }
+#editor.ace-samizdat ~ div.ace_autocomplete + .ace_tooltip.ace_doc-tooltip b{ color:rgba(235, 219, 178, 1.0); }
+#editor.ace-samizdat ~ div.ace_autocomplete + .ace_tooltip.ace_doc-tooltip hr{ opacity:.75; }

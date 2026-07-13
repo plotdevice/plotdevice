@@ -22,7 +22,7 @@ def set_default(label, value):
 
 def defaultDefaults():
     return {
-        "plotdevice:theme":"Solarized Dark",
+        "plotdevice:theme":"Samizdat",
         "plotdevice:bindings":"mac",
         "plotdevice:font-name":"Menlo",
         "plotdevice:font-size":11,

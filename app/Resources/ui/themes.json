@@ -538,5 +538,17 @@
     "dark": false,
     "theme": "Cloud9 Day",
     "module": "ace/theme/cloud9_day"
+  },
+  "Samizdat": {
+    "colors": {
+      "background": "#090b10ff",
+      "color": "#ebdbb2ff",
+      "selection": "#569cd655",
+      "comment": "#a89984ff",
+      "error": "#f44747ff"
+    },
+    "dark": true,
+    "theme": "Samizdat",
+    "module": "ace/theme/samizdat"
   }
 }
