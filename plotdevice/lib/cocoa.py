@@ -31,7 +31,7 @@ from AppKit import NSAlert, NSApp, NSAppearance, NSApplication, NSApplicationAct
                    NSChangeRedone, NSChangeUndone, NSClipView, NSClosePathBezierPathElement, NSColor, NSColorSpace, \
                    NSCompositeCopy, NSCompositeSourceOver, NSContentsCellMask, NSCriticalAlertStyle, NSCursor, \
                    NSCurveToBezierPathElement, NSDeviceCMYKColorSpace, NSDeviceRGBColorSpace, NSDocument, \
-                   NSDocumentController, NSFindPboard, NSFixedPitchFontMask, NSFocusRingTypeExterior, NSFont, \
+                   NSDocumentController, NSDragOperationCopy, NSFindPboard, NSFixedPitchFontMask, NSFocusRingTypeExterior, NSFont, \
                    NSFontDescriptor, NSFontManager, NSForegroundColorAttributeName, NSGIFFileType, NSGradient, \
                    NSGraphicsContext, NSGraphiteControlTint, NSImage, NSImageCacheNever, NSImageCompressionFactor, \
                    NSImageInterpolationHigh, NSItalicFontMask, NSJPEGFileType, NSJustifiedTextAlignment, \
@@ -51,13 +51,13 @@ from AppKit import NSAlert, NSApp, NSAppearance, NSApplication, NSApplicationAct
                    NSWindowTabbingModePreferred, NSWorkspace
 from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, CIVector, Foundation, NO, \
                        NSAffineTransform, NSAffineTransformStruct, NSArray, NSAttributedString, NSAutoreleasePool, \
-                       NSBundle, NSData, NSDate, NSDateFormatter, NSFileCoordinator, NSFileHandle, \
+                       NSBundle, NSData, NSDate, NSDateFormatter, NSDefaultRunLoopMode, NSFileCoordinator, NSFileHandle, \
                        NSFileHandleDataAvailableNotification, NSHeight, NSInsetRect, NSIntersectionRange, \
                        NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, NSMakeRange, NSMidX, NSMidY, \
                        NSMutableAttributedString, NSMutableData, NSNotificationCenter, NSObject, NSOffsetRect, \
-                       NSOperationQueue, NSPoint, NSRect, NSRectFromString, NSSelectorFromString, NSSize, NSString, \
+                       NSOperationQueue, NSPoint, NSRect, NSRectFromString, NSRunLoop, NSSelectorFromString, NSSize, NSString, \
                        NSStringFromRect, NSTimer, NSTimeZone, NSURL, NSUserDefaults, NSUTF8StringEncoding, NSWidth, \
                        NSZeroRect
 from LaunchServices import kUTTypePNG, kUTTypeJPEG, kUTTypeGIF, kUTTypeTIFF
-from WebKit import WebView
+from WebKit import WKWebView, WKWebViewConfiguration, WKUserScript, WKUserScriptInjectionTimeAtDocumentStart
 from objc import IBOutlet, IBAction

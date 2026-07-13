@@ -60,7 +60,6 @@ var Editor = function(elt){
             // responsible for their hide/show behavior, sadly....
             sess.on("changeScrollLeft", that._scroll_h)
             sess.on("changeScrollTop", that._scroll_v)
-            that.ready = true // flag that the objc side can start sending messages
             return that
         },
         _commandStream:function(e){
