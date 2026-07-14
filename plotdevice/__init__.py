@@ -44,7 +44,7 @@ if not in_setup:
     from .run import objc
 
     # print python exceptions to the console rather than silently failing
-    objc.setVerbose(True)
+    objc.options.verbose = True
 
 # populate the namespace (or don't) depending on the context
 if in_app or in_setup:
