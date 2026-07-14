@@ -1,4 +1,4 @@
-PlotDevice 1.0.1
+PlotDevice 1.1.0
 ----------------
 
 ##### Misc. Improvements
@@ -7,13 +7,16 @@ PlotDevice 1.0.1
 * No longer requires Xcode command line tools in order to install
 * `plotdevice` command's exit code now reflects script errors
 * Added support for running under `uv`
+* Editor now uses a `WKWebView` (replacing the deprecated `WebView`)
+* Added new default editor theme
+* New app icon should avoid "squircle jail" on macOS 26+
 
 ##### Bugfixes
 * `ordered()` now works correctly and no longer causes the `Advanced/Sorting.pv` example to crash
 * `Text.flow()` will now invoke user-provided callbacks to determine layout of multi-column runs
 * Command line tool now parses `{4}`-style padded number blocks in exported filenames correctly
 * Silenced a console error by fixing `super()` use in command line tool
-* Document restoration in app now uses modern 'secure restorable state'
+* Restorable state in the app now uses the newer 'secure' api
 
 PlotDevice 1.0.0
 -----------------
