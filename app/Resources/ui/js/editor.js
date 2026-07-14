@@ -1,5 +1,8 @@
 // the language-tools extension provides snippets and autocomplete
 ace.require("ace/ext/language_tools");
+// used to render usage-sample tooltips with the same tokenizer+theme as the live editor
+var staticHighlight = ace.require("ace/ext/static_highlight");
+var Range = ace.require("ace/range").Range;
 
 // Wrap the ace UndoManager's mutation methods with callbacks to the pyobjc EditorView
 // keeping it up-to-date on whether the file has been modified & whether undo/redo are available.
@@ -46,6 +49,10 @@ var Editor = function(elt){
             ed.commands.on("afterExec", that._commandStream)
             ed.on("blur", that._blur)
             ed.on("focus", that._focus)
+
+            // enable syntax-documentation tooltips
+            ed.hoverTooltip.setDataProvider(that._sampleHover)
+            ed.hoverTooltip.addToEditor(ed)
 
             // configure the buffer
             sess = ed.getSession()
@@ -104,6 +111,46 @@ var Editor = function(elt){
         _blur:function(){
             ed.setHighlightActiveLine(false)
             ed.setHighlightGutterLine(false)
+        },
+
+        _isBindingTarget:function(token){
+            // spot locations where a term is being used as a kwarg (or other assignment), so we can
+            // exclude it from the usage-sample tooltip (since it would only coincidentally share
+            // the name of a documented function in that case)
+            return !!token && (token.type === "variable.parameter" || token.type === "variable.assignment")
+        },
+        _sampleHover:function(e, editor){
+            var pos = e.getDocumentPosition()
+            var token = sess.getTokenAt(pos.row, pos.column)
+            var word = token && token.value
+
+            // don't show tooltip for kwargs if the docs are for a function
+            if (!token || that._isBindingTarget(token) || !PLOTDEVICE_SYMBOL_USAGE.hasOwnProperty(word)) return
+            var range = Range.fromPoints({row:pos.row, column:token.start}, {row:pos.row, column:token.start+token.value.length})
+            var text = PLOTDEVICE_SYMBOL_USAGE[word].join("\n")
+
+            // use syntax highlighting to style the usage sample
+            staticHighlight.render(text, sess.getMode(), ed.getTheme(), 1, true, function(result){
+                var tooltip = document.createElement("div")
+                tooltip.innerHTML = result.html
+
+                // add a link to the docs page (if applicable)
+                var url = PLOTDEVICE_SYMBOL_DOCS[word]
+                if (url){
+                    var more = document.createElement("div")
+                    more.className = "ace_symbol-doc-more"
+                    more.style.color = getComputedStyle(dom).color
+                    var moreText = document.createElement("span")
+                    moreText.textContent = "read more…"
+                    more.appendChild(moreText)
+                    more.addEventListener("click", function(){ app.openDoc(url) })
+                    tooltip.appendChild(more)
+                }
+
+                // default tooltip style is too specific to override with css, so manully set background to match theme
+                ed.hoverTooltip.getElement().style.backgroundColor = getComputedStyle(dom).backgroundColor
+                ed.hoverTooltip.showForRange(editor, range, tooltip, e)
+            })
         },
 
         focus:function(){

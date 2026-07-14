@@ -43,11 +43,45 @@
             box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.3);
         }
 
+        /* italicize kwarg names */
+        .ace_variable.ace_parameter { font-style: italic; }
+
+        /* allow the max tooltip width to be a little bigger than default */
+        #editor .ace_tooltip {
+            max-width: min(48em, 66vw);
+        }
         
+        /* the "read mode…" link in tooltips */
+        .ace_symbol-doc-more {
+            margin-top: 4px;
+            cursor: pointer;
+            font-family: system-ui;
+            font-style: italic;
+        }
+
+        .ace_symbol-doc-more::before{
+          content:"";
+          display:block;
+          border-top: 1px solid currentColor;
+          opacity: 0.6;
+        }
+        .ace_symbol-doc-more span{ 
+          opacity: .6; 
+          padding: 4px 0 2px 0;
+          display:inline-block;
+        }
+        .ace_symbol-doc-more:hover span {
+            text-decoration: underline;
+            opacity:1;
+        }
+
+
     </style>
     <script src="js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/ace/ext-static_highlight.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/keybindings.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/symbols.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/editor.js" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" type="text/css" href="autocomplete.css">
 </head>

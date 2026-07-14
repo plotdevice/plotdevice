@@ -181,11 +181,20 @@ var PlotDeviceHighlightRules = function() {
             token: "punctuation",
             regex: ",|:|;|\\->|\\+=|\\-=|\\*=|\\/=|\\/\\/=|%=|@=|&=|\\|=|^=|>>=|<<=|\\*\\*="
         }, {
+            // count current bracket depth in `stack`
             token: "paren.lparen",
-            regex: "[\\[\\(\\{]"
+            regex: "[\\[\\(\\{]",
+            onMatch: function(value, currentState, stack){
+                stack.unshift(value)
+                return "paren.lparen"
+            }
         }, {
             token: "paren.rparen",
-            regex: "[\\]\\)\\}]"
+            regex: "[\\]\\)\\}]",
+            onMatch: function(value, currentState, stack){
+                stack.shift()
+                return "paren.rparen"
+            }
         }, {
             token: ["keyword", "text", "entity.name.function"],
             regex: "(def|class)(\\s+)([\\u00BF-\\u1FFF\\u2C00-\\uD7FF\\w]+)"
@@ -446,6 +455,12 @@ var PlotDeviceHighlightRules = function() {
         }, {
             token: ["punctuation", "function.support"],// method
             regex: "(\\.)([a-zA-Z_]+)\\b"
+        }, {
+            // distinguish between variable assignments and kwargs (based on whether there are surrounding parens)
+            regex: "[a-zA-Z_$][a-zA-Z0-9_$]*(?=\\s*=(?!=))",
+            onMatch: function(value, currentState, stack){
+                return stack.length ? "variable.parameter" : "variable.assignment"
+            }
         }, {
             token: keywordMapper,
             regex: "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
