@@ -160,7 +160,7 @@ var Editor = function(elt){
         },
         _linkHover:function(e){
             var word = e.token && e.token.value
-            if (_altHeld || !Object.prototype.hasOwnProperty.call(PLOTDEVICE_SYMBOL_DOCS, word)){
+            if (_altHeld || that._isBindingTarget(e.token) || !PLOTDEVICE_SYMBOL_DOCS.hasOwnProperty(word)){
                 that._linkHoverOut()
                 return
             }
@@ -185,8 +185,15 @@ var Editor = function(elt){
             _linkMarker = null
             ed.renderer.setCursorStyle("")
         },
+        _isBindingTarget:function(token){
+            // spot locations where a term is being used as a kwarg (or other assignment), so we can 
+            // exclude it from the command-click-for-docs behavior (since it would only coincidentally 
+            // share the name of a documented function in that case)
+            return !!token && (token.type === "variable.parameter" || token.type === "variable.assignment")
+        },
         _linkClick:function(e){
             if (_altHeld) return // let ace's own cmd-option-click add-cursor gesture proceed instead
+            if (that._isBindingTarget(e.token)) return // kwargs/assignments never have cmd-clickable docs
             var word = e.token && e.token.value
             var url = PLOTDEVICE_SYMBOL_DOCS[word]
             if (url) app.openDoc(url)
