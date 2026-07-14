@@ -43,11 +43,29 @@
             box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.3);
         }
 
-        
+        .ace_symbol-doc-link {
+            /* ace's "text" markers are empty overlay divs, not text nodes, so
+               text-decoration has nothing to draw under -- border-bottom works
+               since these divs are already sized to the token's line height.
+               position:absolute is required -- ace's built-in marker classes
+               (ace_selection, ace_bracket, etc.) each declare this themselves
+               in the stylesheet; the top/left set inline by the renderer are
+               otherwise ignored and the div renders in normal static flow.
+               z-index must beat the other .ace_marker-layer classes (active-line:2,
+               step/stack:3, selected-word:4, selection:5, bracket:6) or this gets
+               painted underneath them since it otherwise stacks in DOM order */
+            position: absolute;
+            z-index: 7;
+            border-bottom: 1px solid currentColor;
+            cursor: pointer;
+        }
+
     </style>
     <script src="js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/ace/ext-linking.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/keybindings.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/symbols.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/editor.js" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" type="text/css" href="autocomplete.css">
 </head>

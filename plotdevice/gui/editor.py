@@ -159,7 +159,7 @@ class EditorView(NSView):
     def userContentController_didReceiveScriptMessage_(self, ucc, msg):
         body = msg.body()
         fn, fnargs = body['fn'], list(body.get('args', []))
-        if fn in ('sync_edits', 'flash_menu', 'setSearchPasteboard', 'cancelRun', 'loadPrefs'):
+        if fn in ('sync_edits', 'flash_menu', 'setSearchPasteboard', 'cancelRun', 'loadPrefs', 'openDoc'):
             getattr(self, fn)(*fnargs)
 
     def resizeSubviewsWithOldSize_(self, oldSize):
@@ -328,6 +328,10 @@ class EditorView(NSView):
 
     def loadPrefs(self):
        NSApp().delegate().showPreferencesPanel_(self)
+
+    @objc.python_method
+    def openDoc(self, url):
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
 
     def cancelRun(self):
         # catch command-period even when the editor is first responder
