@@ -1988,6 +1988,8 @@ var Autocomplete = /** @class */ (function () {
         var theme = this.editor.renderer.theme;
         this.tooltipNode.className = "ace_tooltip ace_doc-tooltip " +
             (theme.isDark ? "ace_dark " : "") + (theme.cssClass || "");
+        // default tooltip style is too specific to override with css, so manually set background to match theme
+        this.tooltipNode.style.backgroundColor = getComputedStyle(this.editor.container).backgroundColor;
         var tooltipNode = this.tooltipNode;
         if (item.docHTML) {
             tooltipNode.innerHTML = item.docHTML;
@@ -2351,6 +2353,23 @@ var FilteredList = /** @class */ (function () {
             item.exactMatch = penalty ? 0 : 1;
             item.$score = (item.score || 0) - penalty;
             results.push(item);
+        }
+        var snippetNames = Object.create(null);
+        var keywordNames = Object.create(null);
+        for (var i=0, j=results.length; i<j; i++){
+            if (!results[i]) continue;
+            var name = results[i].caption || results[i].value || results[i].name;
+            if (results[i].completerId=='snippetCompleter') snippetNames[name] = true;
+            else if (results[i].meta=='keyword') keywordNames[name] = true;
+        }
+        for (var i=results.length-1; i-->=0;){
+            if (!results[i]) continue;
+            var name = results[i].caption || results[i].value || results[i].name;
+            if (results[i].meta=='local' && (snippetNames[name] || keywordNames[name])){
+                results.splice(i,1)
+            } else if (results[i].meta=='keyword' && snippetNames[name]){
+                results.splice(i,1)
+            }
         }
         return results;
     };
@@ -2721,4 +2740,3 @@ exports.MarkerGroup = MarkerGroup;
                         }
                     });
                 })();
-            
