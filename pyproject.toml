@@ -38,7 +38,7 @@ dependencies = [
     "cachecontrol[filecache]",
     "pyobjc-core==11.1",
     "pyobjc-framework-Quartz==11.1",
-    "pyobjc-framework-LaunchServices==11.1",
+    "pyobjc-framework-CoreServices==11.1",
     "pyobjc-framework-WebKit==11.1",
 ]
 
