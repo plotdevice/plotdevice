@@ -5,6 +5,7 @@ PlotDevice 1.0.1
 * Upgraded bundled Python to 3.14 in app
 * Added precompiled wheels for module installs (supporting Python 3.9–3.14)
 * No longer requires Xcode command line tools in order to install
+* `plotdevice` command's exit code now reflects script errors
 * Added support for running under `uv`
 
 ##### Bugfixes
