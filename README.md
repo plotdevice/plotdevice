@@ -1,5 +1,9 @@
-PlotDevice
-==========
+<center>
+
+![PlotDevice](app/art/hero@2x.png)
+
+</center>
+
 PlotDevice is a Macintosh application used for computational graphic design. It 
 provides an interactive Python environment where you can create two-dimensional 
 graphics and output them in a variety of vector, bitmap, and animation formats. 
