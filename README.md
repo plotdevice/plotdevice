@@ -332,7 +332,7 @@ use of a nested `with` statement in the final example):
 ```python
 # export a 100-frame movie
 movie = export('anim.mov', fps=50, bitrate=1.8)
-for i in xrange(100):
+for i in range(100):
     clear(all)  # erase the previous frame from the canvas
     ...         # (do some drawing)
     movie.add() # add the canvas to the movie
@@ -341,7 +341,7 @@ movie.finish()  # wait for i/o to complete
 ```python
 # export a movie (with the context manager finishing the file when done)
 with export('anim.mov', fps=50, bitrate=1.8) as movie:
-    for i in xrange(100):
+    for i in range(100):
         clear(all)  # erase the previous frame from the canvas
         ...         # (do some drawing)
         movie.add() # add the canvas to the movie
@@ -350,7 +350,7 @@ with export('anim.mov', fps=50, bitrate=1.8) as movie:
 # export a movie (with the context manager finishing the file when done)
 # let the movie.frame context manager call clear() and add() for us
 with export('anim.mov', fps=50, bitrate=1.8) as movie:
-    for i in xrange(100):
+    for i in range(100):
         with movie.frame:
             ... # draw the next frame
 ```
@@ -363,7 +363,7 @@ use the `page` attribute rather than `frame`:
 ```python
 # export a five-page pdf document
 pdf = export('multipage.pdf')
-for i in xrange(5):
+for i in range(5):
     clear(all) # erase the previous page's graphics from the canvas
     ...        # (do some drawing)
     pdf.add()  # add the canvas to the pdf as a new page
@@ -372,7 +372,7 @@ pdf.finish()   # write the pdf document to disk
 ```python
 # export a pdf document more succinctly
 with export('multipage.pdf') as pdf:
-    for i in xrange(5):
+    for i in range(5):
         with pdf.page:
             ... # draw the next page
 ```
@@ -389,7 +389,7 @@ If the filename contains a number between curly braces (e.g., `"name-{4}.ext"`),
 # export a sequence of images to output-0001.png, output-0002.png, ...
 #                                output-0099.png, output-0100.png
 with export('output.png') as img:
-    for i in xrange(100):
+    for i in range(100):
         with img.frame:
             ... # draw the next image in the sequence
 ```
@@ -397,7 +397,7 @@ with export('output.png') as img:
 # export a sequence of images to 01-img.png, 02-img.png, ...
 #                                99-img.png, 100-img.png
 with export('{2}-img.png') as img:
-    for i in xrange(100):
+    for i in range(100):
         with img.frame:
             ... # draw the next image in the sequence
 ```
