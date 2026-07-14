@@ -3,6 +3,14 @@
 #include <stdio.h>
 #include "gpc.h"
 
+// the macOS 14 SDK renamed NSBezierPathElementCurveTo to ...CubicCurveTo and
+// added a new ...QuadraticCurveTo element type
+#if defined(MAC_OS_VERSION_14_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_14_0
+  #define HAS_QUADRATIC_PATH_ELEMENTS 1
+#else
+  #define HAS_QUADRATIC_PATH_ELEMENTS 0
+#endif
+
 void _linepoint(double t, double x0, double y0, double x1, double y1,
                 double *out_x, double *out_y
                 )
@@ -306,7 +314,12 @@ path_to_polygon(NSBezierPath *path, float flatness)
             ++k;
             break;
 
+#if HAS_QUADRATIC_PATH_ELEMENTS
+            case NSBezierPathElementCubicCurveTo:
+            case NSBezierPathElementQuadraticCurveTo:
+#else
             case NSBezierPathElementCurveTo:
+#endif
                 // should never happen - we have already converted the path to a flat version. Bail.
                 printf("Got a curveto unexpectedly - bailing.\n");
                 gpc_free_polygon( poly );
@@ -678,8 +691,20 @@ coordinates(PyObject *self, PyObject *args) {
                 CGPathMoveToPoint(path, NULL, points[0].x, points[0].y);
             }else if(elt==NSBezierPathElementLineTo){
                 CGPathAddLineToPoint(path, NULL, points[0].x, points[0].y);
+// NSBezierPathElement* values are compile-time constants, not linked symbols,
+// so comparing against the macOS 14 names is safe at any deployment target
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
+#if HAS_QUADRATIC_PATH_ELEMENTS
+            }else if(elt==NSBezierPathElementCubicCurveTo){
+                CGPathAddCurveToPoint(path, NULL, points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
+            }else if(elt==NSBezierPathElementQuadraticCurveTo){
+                CGPathAddQuadCurveToPoint(path, NULL, points[0].x, points[0].y, points[1].x, points[1].y);
+#else
             }else if(elt==NSBezierPathElementCurveTo){
                 CGPathAddCurveToPoint(path, NULL, points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
+#endif
+#pragma clang diagnostic pop
             }else if(elt==NSBezierPathElementClosePath){
                 CGPathCloseSubpath(path);
             }
