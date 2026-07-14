@@ -55,6 +55,8 @@
 	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleIconFile</key>
 	<string>PlotDevice.icns</string>
+	<key>CFBundleIconName</key>
+	<string>PlotDevice-app</string>
 	<key>CFBundleIdentifier</key>
 	<string>io.plotdevice.PlotDevice</string>
 	<key>CFBundleInfoDictionaryVersion</key>

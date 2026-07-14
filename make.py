@@ -6,12 +6,13 @@ Subcommands:
     app          build PlotDevice.app (requires full Xcode install
     py2app       build PlotDevice.app via py2app (requires Xcode command line tools)
     dist         build app (codesigned, notarized, & zipped) and update release.json
+    icon         regenerate app/Resources/Assets.car from app/art/PlotDevice-app.icon
     clean        remove build artifacts
     distclean    also remove the embedded Python.framework and deps/local
 """
-import argparse, os, sys, json, plistlib
+import argparse, os, sys, json, plistlib, tempfile
 from glob import glob
-from shutil import rmtree
+from shutil import rmtree, copy
 from subprocess import call, run, Popen, PIPE
 from os.path import join, exists, dirname, basename, abspath, getsize
 
@@ -78,6 +79,29 @@ def cmd_dev(args):
         call([PIP, 'install', '-q', '-e', ROOT])
 
     print("\nA local development environment has been set up in %s" % venv_dir)
+
+
+def cmd_icon(args):
+    _, _, ret = gosub(['xcrun', '--find', 'actool'], on_err=False)
+    if ret != 0:
+        print("make.py: Couldn't find `actool`. Try installing the full Xcode (not just the command line tools)")
+        sys.exit(1)
+
+    ICON_SRC = 'app/art/PlotDevice-app.icon'
+    ICON_OUT = 'app/Resources/Assets.car'
+    info = info_plist()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        spawn(['xcrun', 'actool',
+               '--output-format', 'human-readable-text', '--notices', '--warnings', '--errors',
+               '--platform', 'macosx', '--minimum-deployment-target', info['LSMinimumSystemVersion'],
+               '--app-icon', info['CFBundleIconName'],
+               '--output-partial-info-plist', join(tmp, 'partial-info.plist'),
+               '--compile', tmp,
+               ICON_SRC])
+        copy(join(tmp, 'Assets.car'), ICON_OUT)
+
+    print("done building %s" % ICON_OUT)
 
 
 def cmd_clean(args):
@@ -197,6 +221,7 @@ def cmd_py2app(args):
                 "app/Resources/en.lproj",
                 "app/Resources/PlotDevice.icns",
                 "app/Resources/PlotDeviceFile.icns",
+                "app/Resources/Assets.car",
                 "examples",
             ],
             options={ # type: ignore[dict-item]
@@ -307,6 +332,9 @@ def main():
 
     p_dev = sub.add_parser('dev', help='set up virtualenv in deps/local with required dependencies')
     p_dev.set_defaults(func=cmd_dev)
+
+    p_icon = sub.add_parser('icon', help='regenerate app/Resources/Assets.car from app/art/PlotDevice-app.icon')
+    p_icon.set_defaults(func=cmd_icon)
 
     p_clean = sub.add_parser('clean', help='remove build artifacts')
     p_clean.add_argument('--dist', action='store_true', help='also remove Python.framework and deps/local')
