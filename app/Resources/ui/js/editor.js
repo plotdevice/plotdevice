@@ -2,6 +2,8 @@
 ace.require("ace/ext/language_tools");
 // the linking extension provides accel-hover/click token events (used for cmd-click docs links)
 ace.require("ace/ext/linking");
+// used to render usage-sample tooltips with the same tokenizer+theme as the live editor
+var staticHighlight = ace.require("ace/ext/static_highlight");
 var Range = ace.require("ace/range").Range;
 
 // Wrap the ace UndoManager's mutation methods with callbacks to the pyobjc EditorView
@@ -52,6 +54,10 @@ var Editor = function(elt){
             ed.commands.on("afterExec", that._commandStream)
             ed.on("blur", that._blur)
             ed.on("focus", that._focus)
+
+            // enable syntax-documentation tooltips
+            ed.hoverTooltip.setDataProvider(that._sampleHover)
+            ed.hoverTooltip.addToEditor(ed)
 
             // cmd-hover/cmd-click a mapped symbol to underline/open its docs.
             // $enableJumpToDef frees up plain cmd-click for this (multi-cursor-add
@@ -190,6 +196,39 @@ var Editor = function(elt){
             // exclude it from the command-click-for-docs behavior (since it would only coincidentally 
             // share the name of a documented function in that case)
             return !!token && (token.type === "variable.parameter" || token.type === "variable.assignment")
+        },
+        _sampleHover:function(e, editor){
+            var pos = e.getDocumentPosition()
+            var token = sess.getTokenAt(pos.row, pos.column)
+            var word = token && token.value
+
+            // don't show tooltip for kwargs if the docs are for a function
+            if (!token || that._isBindingTarget(token) || !PLOTDEVICE_SYMBOL_USAGE.hasOwnProperty(word)) return
+            var range = Range.fromPoints({row:pos.row, column:token.start}, {row:pos.row, column:token.start+token.value.length})
+            var text = PLOTDEVICE_SYMBOL_USAGE[word].join("\n")
+
+            // use syntax highlighting to style the usage sample
+            staticHighlight.render(text, sess.getMode(), ed.getTheme(), 1, true, function(result){
+                var tooltip = document.createElement("div")
+                tooltip.innerHTML = result.html
+
+                // add a link to the docs page (if applicable)
+                var url = PLOTDEVICE_SYMBOL_DOCS[word]
+                if (url){
+                    var more = document.createElement("div")
+                    more.className = "ace_symbol-doc-more"
+                    more.style.color = getComputedStyle(dom).color
+                    var moreText = document.createElement("span")
+                    moreText.textContent = "read more…"
+                    more.appendChild(moreText)
+                    more.addEventListener("click", function(){ app.openDoc(url) })
+                    tooltip.appendChild(more)
+                }
+
+                // default tooltip style is too specific to override with css, so manully set background to match theme
+                ed.hoverTooltip.getElement().style.backgroundColor = getComputedStyle(dom).backgroundColor
+                ed.hoverTooltip.showForRange(editor, range, tooltip, e)
+            })
         },
         _linkClick:function(e){
             if (_altHeld) return // let ace's own cmd-option-click add-cursor gesture proceed instead

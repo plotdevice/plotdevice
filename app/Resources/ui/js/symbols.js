@@ -245,7 +245,7 @@ var PLOTDEVICE_SYMBOL_USAGE = {
     strokewidth: [`strokewidth(width)`],
 
     // Primitives
-    poly: [`poly(self, x, y, radius, sides=4, points=None, plot=True, **style)`],
+    poly: [`poly(x, y, radius, sides=4, points=None, plot=True, **style)`],
     rect: [`rect(x, y, width, height, roundness=0.0, radius=None, plot=True, **style)`],
     arc: [`arc(x, y, radius, range=None, ccw=False, close=False, plot=True, **style)`],
     oval: [`oval(x, y, width, height, plot=True, **style)`],
@@ -290,33 +290,13 @@ var PLOTDEVICE_SYMBOL_USAGE = {
         `transform(matrix=[m11, m21, m12, m22, tX, tY])`,
         `with transform(mode=None, matrix=None):`,
         `    ... # drawing & transformation commands`,
-        `with transform(CORNER):`,
-        `    translate(100,20)`,
-        `    line(0,0, 40,0)`,
-        `oldmode = CENTER`,
-        `transform(CORNER)`,
-        `push()`,
-        `translate(100,20)`,
-        `line(0,0, 40,0)`,
-        `pop()`,
-        `transform(oldmode)`,
-        `fill(0.2)`,
-        `fontsize(14)`,
-        `rotate(90)`,
-        `text("one", 40, 80)`,
-        ``,
-        `with transform():`,
-        `    rotate(-90)`,
-        `    text("two", 40, 40)`,
-        ``,
-        `text("three", 50, 80)`
     ],
     translate: [`translate(x, y)`],
     rotate: [
         `rotate(amount) # amount to rotate (in default unit)`,
         `rotate(percent=0.5) # 0 ... 1.0`,
         `rotate(degrees=180) # 0 ... 360`,
-        `rotate(radians=pi)  # 0 ... 2*pi (a.k.a. tau)`
+        `rotate(radians=pi)  # 0 ... 2*pi`
     ],
     scale: [`scale(x, y=None)`],
     skew: [`skew(x, y=None)`],

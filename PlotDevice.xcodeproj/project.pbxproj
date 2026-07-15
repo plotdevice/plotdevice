@@ -12,6 +12,7 @@
 		2A15C45218A329BD006BDFF0 /* themes.json in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C44618A329AE006BDFF0 /* themes.json */; };
 		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
 		2A2EFF223005C16B000B4593 /* Assets.car in Resources */ = {isa = PBXBuildFile; fileRef = 2A2EFF213005C16B000B4593 /* Assets.car */; };
+		2A2EFF2430073AE1000B4593 /* symbols.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A2EFF2330073AE1000B4593 /* symbols.js */; };
 		2A36AE2D2868B4E50088976E /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; };
 		2A36AE2E2868B4F30088976E /* Python.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2A36AE58286CA75B0088976E /* placeholder-light.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A36AE54286CA75B0088976E /* placeholder-light.pdf */; };
@@ -62,6 +63,7 @@
 				2A36AE5E287210C70088976E /* ace in Copy Editor Scripts */,
 				2A66ECEC18A99328002903DE /* editor.js in Copy Editor Scripts */,
 				2A66ECEE18A99328002903DE /* keybindings.js in Copy Editor Scripts */,
+				2A2EFF2430073AE1000B4593 /* symbols.js in Copy Editor Scripts */,
 			);
 			name = "Copy Editor Scripts";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -92,6 +94,7 @@
 		2A294467185E575F00E9F650 /* document.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = document.py; sourceTree = "<group>"; };
 		2A294468185E575F00E9F650 /* preferences.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = preferences.py; sourceTree = "<group>"; };
 		2A2EFF213005C16B000B4593 /* Assets.car */ = {isa = PBXFileReference; lastKnownFileType = file; name = Assets.car; path = Resources/Assets.car; sourceTree = "<group>"; };
+		2A2EFF2330073AE1000B4593 /* symbols.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = symbols.js; path = Resources/ui/js/symbols.js; sourceTree = "<group>"; };
 		2A32957218C59D0A00EEDD1C /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		2A32957718C59D0A00EEDD1C /* io.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = io.py; sourceTree = "<group>"; };
 		2A32957918C59D0A00EEDD1C /* pathmatics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = pathmatics.py; sourceTree = "<group>"; };
@@ -306,6 +309,7 @@
 				2A36AE5D287210C70088976E /* ace */,
 				2A66ECDF18A992BD002903DE /* editor.js */,
 				2A66ECE118A992BD002903DE /* keybindings.js */,
+				2A2EFF2330073AE1000B4593 /* symbols.js */,
 			);
 			name = js;
 			sourceTree = "<group>";
