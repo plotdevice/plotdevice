@@ -23,7 +23,9 @@ PLOTDEVICE_KEYBINDINGS=[
         scrollIntoView: "selectionPart"
     },{
         name: "refreshdoc",
-        exec: function(editor, str) { editor.session.setValue(str); },
+        // ace's default command dispatcher replaces falsy args (e.g. a legitimately
+        // empty source string) with {} before calling exec, so guard against that here
+        exec: function(editor, str) { editor.session.setValue(typeof str === "string" ? str : ""); },
     },{
         name: "cancelRun",
         bindKey: {mac: "Command-."},
