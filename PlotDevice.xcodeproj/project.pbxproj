@@ -11,6 +11,7 @@
 		2A15C45018A329BD006BDFF0 /* editor.html in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C44418A329AE006BDFF0 /* editor.html */; };
 		2A15C45218A329BD006BDFF0 /* themes.json in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C44618A329AE006BDFF0 /* themes.json */; };
 		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
+		2A2EFF223005C16B000B4593 /* Assets.car in Resources */ = {isa = PBXBuildFile; fileRef = 2A2EFF213005C16B000B4593 /* Assets.car */; };
 		2A36AE2D2868B4E50088976E /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; };
 		2A36AE2E2868B4F30088976E /* Python.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2A36AE58286CA75B0088976E /* placeholder-light.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A36AE54286CA75B0088976E /* placeholder-light.pdf */; };
@@ -90,6 +91,7 @@
 		2A294464185E575F00E9F650 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		2A294467185E575F00E9F650 /* document.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = document.py; sourceTree = "<group>"; };
 		2A294468185E575F00E9F650 /* preferences.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = preferences.py; sourceTree = "<group>"; };
+		2A2EFF213005C16B000B4593 /* Assets.car */ = {isa = PBXFileReference; lastKnownFileType = file; name = Assets.car; path = Resources/Assets.car; sourceTree = "<group>"; };
 		2A32957218C59D0A00EEDD1C /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		2A32957718C59D0A00EEDD1C /* io.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = io.py; sourceTree = "<group>"; };
 		2A32957918C59D0A00EEDD1C /* pathmatics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = pathmatics.py; sourceTree = "<group>"; };
@@ -270,6 +272,7 @@
 				2AD0A9B5186E552700D1F6DE /* PlotDeviceScript.xib */,
 				611CC48110BA8B9E00B55455 /* Credits.rtf */,
 				611CC48910BA8B9E00B55455 /* InfoPlist.strings */,
+				2A2EFF213005C16B000B4593 /* Assets.car */,
 				611CC49310BA8B9E00B55455 /* PlotDevice.icns */,
 				611CC49410BA8B9E00B55455 /* PlotDeviceFile.icns */,
 				2A36AE56286CA75B0088976E /* placeholder-dark.pdf */,
@@ -428,6 +431,7 @@
 				2A36AE59286CA75B0088976E /* placeholder-dark.pdf in Resources */,
 				611CC4A210BA8B9E00B55455 /* PlotDeviceFile.icns in Resources */,
 				611CC5A010BA908C00B55455 /* PlotDeviceDocument.xib in Resources */,
+				2A2EFF223005C16B000B4593 /* Assets.car in Resources */,
 				611CC5A810BA919A00B55455 /* PlotDevicePreferences.xib in Resources */,
 				611CC68010BAA08300B55455 /* MainMenu.xib in Resources */,
 				611CC68710BAA0A600B55455 /* AskString.xib in Resources */,

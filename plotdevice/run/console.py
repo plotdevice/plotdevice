@@ -17,6 +17,7 @@ import sys
 import json
 import select
 import signal
+from objc import super
 from math import floor, ceil
 from os.path import dirname, abspath, exists, join
 from io import open
@@ -100,9 +101,12 @@ class ScriptAppDelegate(NSObject):
             link += '/doc'
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(link))
 
-    def done(self, quit=False):
-        if self.opts['mode']=='headless' or quit:
-            NSApp().terminate_(None)
+    def done(self, ok=True):
+        if self.opts['mode']=='headless':
+            if not ok:
+                os._exit(1)
+            else:
+                NSApp().terminate_(None)
 
 class ScriptWatcher(NSObject):
     def initWithScript_(self, script):
@@ -122,7 +126,7 @@ class ConsoleScript(ScriptController):
     def init(self):
         self._init_state()
         self._buf = '' # cache the export progress message between stdout writes
-        return super(ScriptController, self).init()
+        return super(ConsoleScript, self).init()
 
     def setScript_options_(self, path, opts):
         self.vm.path = path
@@ -171,7 +175,7 @@ class ConsoleScript(ScriptController):
         result = self.vm.run(method)
         self.echo(result.output)
         if not result.ok:
-            NSApp().terminate_(None)
+            NSApp().delegate().done(ok=False)
 
     def runHeadless(self):
         self.vm.source = self.unicode_src
@@ -202,7 +206,7 @@ class ConsoleScript(ScriptController):
     def exportFrame(self, status, canvas=None):
         super(ConsoleScript, self).exportFrame(status, canvas)
         if not status.ok:
-            NSApp().delegate().done()
+            NSApp().delegate().done(ok=False)
 
     @objc.python_method
     def exportStatus(self, event):

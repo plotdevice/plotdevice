@@ -91,7 +91,7 @@ class PlotDeviceDocument(NSDocument):
 
     def restoreStateWithCoder_(self, coder):
         super(PlotDeviceDocument, self).restoreStateWithCoder_(coder)
-        self.stationery = coder.decodeObjectForKey_("plotdevice:stationery")
+        self.stationery = coder.decodeObjectOfClass_forKey_(NSString, "plotdevice:stationery")
         if self.stationery:
             self.script.setStationery_(self.stationery)
 
@@ -259,7 +259,7 @@ class ScriptController(NSWindowController):
 
     def restoreStateWithCoder_(self, coder):
         # restore the splitview positions (if rects were autosaved)
-        split_frames = coder.decodeObjectForKey_("plotdevice:split_rects")
+        split_frames = coder.decodeObjectOfClasses_forKey_({NSArray, NSString}, "plotdevice:split_rects")
         if split_frames:
             it = self.editorView
             while it.superview():
@@ -428,8 +428,17 @@ class ScriptController(NSWindowController):
             self.editorView.clearErrors()
             self.outputView.clear(timestamp=True)
 
+        if self.editorView:
+            # fetch the current source from the editor (asynchronously), then run it
+            self.editorView.with_source(self._runSource)
+        else:
+            # run in the (editor-less) CLI-spawned window
+            self._runSource(self.vm.source)
+
+    @objc.python_method
+    def _runSource(self, source):
         # Compile the script and run its global scope
-        self.vm.source = self.source
+        self.vm.source = source
         success = self.invoke(None)
 
         # Display the dashboard if the var() command was called
@@ -587,9 +596,14 @@ class ScriptController(NSWindowController):
         if self.statusView:
             self.statusView.beginExport()
 
-        # let the Sandbox take over
-        self.vm.source = self.source
-        self.vm.export(kind, fname, opts)
+        # fetch the current source, then let the Sandbox take over
+        def begin(source):
+            self.vm.source = source
+            self.vm.export(kind, fname, opts)
+        if self.editorView:
+            self.editorView.with_source(begin)
+        else:
+            begin(self.vm.source)
 
     @objc.python_method
     def exportFrame(self, status, canvas=None):

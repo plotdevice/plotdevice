@@ -22,8 +22,7 @@ def set_default(label, value):
 
 def defaultDefaults():
     return {
-        "WebKitDeveloperExtras":True,
-        "plotdevice:theme":"Solarized Dark",
+        "plotdevice:theme":"Samizdat",
         "plotdevice:bindings":"mac",
         "plotdevice:font-name":"Menlo",
         "plotdevice:font-size":11,
@@ -31,6 +30,23 @@ def defaultDefaults():
     }
 NSUserDefaults.standardUserDefaults().registerDefaults_(defaultDefaults())
 THEMES = None # to be filled in as needed
+
+def dev_extras():
+    """Should the editor's web inspector be enabled?
+
+    Defaults to on for dev builds (running from the source checkout, or an app
+    built by `make.py app`/`py2app`) and off for official releases (which have a
+    real version stamped over info.plist's "in flux" placeholder by `make.py dist`).
+    Either behavior can be forced with e.g.:
+        defaults write io.plotdevice.PlotDevice WebKitDeveloperExtras -bool YES
+    """
+    override = get_default('WebKitDeveloperExtras')
+    if override is not None:
+        return bool(override)
+    bundle = NSBundle.mainBundle()
+    if bundle.bundleIdentifier() != 'io.plotdevice.PlotDevice':
+        return True # running from the source checkout rather than PlotDevice.app
+    return bundle.objectForInfoDictionaryKey_('CFBundleVersion') == 'in flux'
 
 def _hex_to_nscolor(hexclr):
     hexclr = hexclr.lstrip('#')

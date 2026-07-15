@@ -1,3 +1,23 @@
+PlotDevice 1.1.0
+----------------
+
+##### Misc. Improvements
+* Upgraded bundled Python to 3.14 in app
+* Added precompiled wheels for module installs (supporting Python 3.9–3.14)
+* No longer requires Xcode command line tools in order to install
+* `plotdevice` command's exit code now reflects script errors
+* Added support for running under `uv`
+* Editor now uses a `WKWebView` (replacing the deprecated `WebView`)
+* Added new default editor theme
+* New app icon should avoid "squircle jail" on macOS 26+
+
+##### Bugfixes
+* `ordered()` now works correctly and no longer causes the `Advanced/Sorting.pv` example to crash
+* `Text.flow()` will now invoke user-provided callbacks to determine layout of multi-column runs
+* Command line tool now parses `{4}`-style padded number blocks in exported filenames correctly
+* Silenced a console error by fixing `super()` use in command line tool
+* Restorable state in the app now uses the newer 'secure' api
+
 PlotDevice 1.0.0
 -----------------
 
@@ -24,7 +44,7 @@ PlotDevice 1.0.0
 * arguments defined using the command line tool's `--args` options are now passed to the script's `sys.argv`
 
 ##### Misc. Improvements
-* the command line tool can be exited via ctrl-c in addtion to being Quit from the menu bar
+* the command line tool can be exited via ctrl-c in addition to being Quit from the menu bar
 * simplified unicode handling (and improved support for normalization of user-provided strings)
 * building the module now only requires Xcode command line tools—not a full Xcode.app installation
 * the `text()` command will always treat its first argument as content (even if it's not a string) unless a `str`, `xml`, or `src` keyword argument is provided
@@ -224,7 +244,7 @@ NodeBox 1.8.3
 
 NodeBox 1.8.2
 -------------
-* Direct view is turned of because it broke vector output.
+* Direct view is turned off because it broke vector output.
 * AppleScripting is back.
 
 NodeBox 1.8.1
@@ -267,8 +287,8 @@ NodeBox 1.0rc4
 * Uses a scene graph internally for speeding things up. All objects now have an inheritFromContext that copies all state out of the context and into the objects.
 * Added animation. Adding a speed method indicates that the script is an animation. Animation scripts have a setup() method that does initial setup, and a draw() method that is called for each frame. You can use the throttle to change parameters while the animation is running.
 * Removed document properties and variables. NodeBox doesn't touch the code anymore.
-* Added measurements for centimeters, milimeters and inches. Just use 5*cm for 5 centimeters.
-* All drawing commands are now methods of the Context object. This makes sure that canvases don't interfere with eachother. NOTE: This will have some problems when drawing from libraries. Most notably, "from DrawingPrimitives import *" doesn't work anymore. However, libraries that do drawing can be imported with ximport("mylibrary") to automatically gain access to the _ctx global that has all drawing methods.
+* Added measurements for centimeters, millimeters and inches. Just use 5*cm for 5 centimeters.
+* All drawing commands are now methods of the Context object. This makes sure that canvases don't interfere with each other. NOTE: This will have some problems when drawing from libraries. Most notably, "from DrawingPrimitives import *" doesn't work anymore. However, libraries that do drawing can be imported with ximport("mylibrary") to automatically gain access to the _ctx global that has all drawing methods.
 * BezierPaths are no longer lists internally. They can still be accessed as a sequence, but the returned PathElements are not bound to the path. To manipulate the PathElements, iterate over the sequence, do the changes and use the BezierPath constructor with a list of PathElements as argument.
 
 NodeBox 1.0rc3
@@ -304,15 +324,15 @@ Version 1.0rc1
 * The BezierPath object got a major overhaul: it now integrates nicely with the state model (using the transformedpath method) and is actually a list containing PathElement objects that contain a command, x and y coordinates and (optionally) control points.
 * All 'w' and 'h' parameters were changed to 'width' and 'height' (image, strokewidth)
 * All of the major state change commands return their state: font, fontsize, lineheight, align, colormode, fill, stroke, strokewidth, transform.
-* Documentation is user-friendler and inside of the DrawBot application, so that it can be accessed through Apple's Help system.
+* Documentation is user-friendlier and inside of the DrawBot application, so that it can be accessed through Apple's Help system.
 
 Version 0.9b9
 -------------
 * ValueLadder now respects type of original value: if the original is an integer, the new value will be an integer as well.
 * Fixed booleans in variables interface.
-* Shift-dragging the value ladder now adds hundreths of a number instead of tenths.
+* Shift-dragging the value ladder now adds hundredths of a number instead of tenths.
 * Fixed an obscure bug when using CMYK color objects to set the fill (they used the infamous "DrawBot-black" because the converted from the RGB system instead of CMYK)
-* Turned of line highlighting on error because of bugs in PyDETextView.
+* Turned off line highlighting on error because of bugs in PyDETextView.
 
 Version 0.9b8
 -------------
@@ -345,7 +365,7 @@ Version 0.9b6
 * text() command returns the text bounds. (In the same way as textmetrics() would do)
 * size, width and height property for the Image object. You can use imagewidth() and imageheight() also.
 * Fixed a bug where outlined text could not be stroked when the fill color was not set.
-* The drawing region (DrawBotGraphicsView, a subclass of NSView) is acccessible using the graphicsView variable. This is only intented for hackers and will remain undocumented.
+* The drawing region (DrawBotGraphicsView, a subclass of NSView) is accessible using the graphicsView variable. This is only intended for hackers and will remain undocumented.
 * Added the 'New with code' command which invokes OttoBot.
 
 Version 0.9b5

@@ -2,14 +2,16 @@
 ace.require("ace/ext/language_tools");
 
 // Wrap the ace UndoManager's mutation methods with callbacks to the pyobjc EditorView
-// keeping it up-to-date on whether the file has been modified & whether undo/redo are available
+// keeping it up-to-date on whether the file has been modified & whether undo/redo are available.
+// Also send a copy of the buffer contents with each change so the EditorView's shadow copy is
+// fresh enough to be read synchronously at save-time.
 const {UndoManager:__UndoManager} = ace.require('ace/undomanager')
 function UndoManager(){ __UndoManager.call(this) }
 UndoManager.prototype = Object.create(__UndoManager.prototype);
 for (const method of ['add', 'undo', 'redo', 'reset']){
     UndoManager.prototype[method] = function(){
         __UndoManager.prototype[method].call(this, ...arguments);
-        app.edits_(this.$undoStack.length)
+        app.sync_edits(this.$undoStack.length, window?.editor?.source?.() ?? null)
     }
 }
 
@@ -60,7 +62,6 @@ var Editor = function(elt){
             // responsible for their hide/show behavior, sadly....
             sess.on("changeScrollLeft", that._scroll_h)
             sess.on("changeScrollTop", that._scroll_v)
-            that.ready = true // flag that the objc side can start sending messages
             return that
         },
         _commandStream:function(e){
@@ -68,7 +69,7 @@ var Editor = function(elt){
             // objc side of things when one of them is entered
             var cmd = e.command.name
             for (const [cmds, menu] of Object.entries(_menu_cmds)){
-                if (cmds.includes(cmd)) app.flash_(menu)
+                if (cmds.includes(cmd)) app.flash_menu(menu)
             }
         },
         _scroll_h:function(x){

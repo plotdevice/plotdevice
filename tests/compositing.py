@@ -42,6 +42,35 @@ class CompositingTests(PlotDeviceTestCase):
         with clip(text('Hi', 5, 100)):
             image('tests/_in/plaid.png')
 
+    @reference('compositing/clip-vector-image.png')
+    def test_clip_image_vector(self):
+        size(125, 125)
+        # ensure tiny PDF is scaled up before rasterizing into a larger mask
+        with clip(image('tests/_in/tiny-triangle.pdf', width=125, height=125)):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/clip-vector-image-scale.png')
+    def test_clip_image_vector_scale(self):
+        size(125, 125)
+        scale(2)
+        with clip(image('tests/_in/tiny-triangle.pdf', width=62, height=62)):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/clip-vector-image-rotate.png')
+    def test_clip_image_vector_rotate(self):
+        size(125, 125)
+        rotate(30)
+        with clip(image('tests/_in/tiny-triangle.pdf', width=125, height=125)):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/clip-vector-image-transform.png')
+    def test_clip_image_vector_transform(self):
+        size(125, 125)
+        scale(1.5)
+        rotate(20)
+        with clip(image('tests/_in/tiny-triangle.pdf', width=83, height=83)):
+            image('tests/_in/plaid.png')
+
     @reference('compositing/mask.png')
     def test_mask(self):
         # ref/Compositing/commands/mask()
@@ -62,6 +91,13 @@ class CompositingTests(PlotDeviceTestCase):
         size(125, 125)
         font("Avenir", "bold", 112)
         with mask(text('Hi', 5, 100)):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/mask-vector-image.png')
+    def test_mask_image_vector(self):
+        size(125, 125)
+        # ensure tiny PDF is scaled up before rasterizing into a larger mask
+        with mask(image('tests/_in/tiny-triangle.pdf', width=125, height=125)):
             image('tests/_in/plaid.png')
 
     @reference('compositing/shadow-multi.png')

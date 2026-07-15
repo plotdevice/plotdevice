@@ -142,7 +142,7 @@ class Effect(Frob):
 
         # i *think* it's better to skip the transparency layer when only blending,
         # but am bracing for the discovery that it's not...
-        return bool(fx) and fx.keys() != ('blend',)
+        return bool(fx) and fx.keys() != {'blend'}
         # return bool(fx) # return whether any state was just changed
 
     @contextmanager
@@ -320,7 +320,7 @@ class Stencil(Frob):
             singlechannel = ciFilter(self.channel, self.bmp._ciImage)
             greyscale = ciFilter(self.invert, singlechannel)
             ci_ctx = CIContext.contextWithOptions_(None)
-            maskRef = ci_ctx.createCGImage_fromRect_(greyscale, ((0,0), self.bmp.size))
+            maskRef = ci_ctx.createCGImage_fromRect_(greyscale, ((0,0), self.bmp._screen_size))
 
             # turn the image into an ‘imagemask’ cg-image
             cg_mask = CGImageMaskCreate(CGImageGetWidth(maskRef),
