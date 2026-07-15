@@ -2552,11 +2552,18 @@ var keyWordCompleter = {
     id: "keywordCompleter"
 };
 var transformSnippetTooltip = function (str) {
+    // resolve leaf placeholders (no nested ${...} in their default text) first,
+    // then repeat until stable so nested groups collapse regardless of depth
     var record = {};
-    return str.replace(/\${(\d+)(:(.*?))?}/g, function (_, p1, p2, p3) {
-        return (record[p1] = p3 || '');
-    }).replace(/\$(\d+?)/g, function (_, p1) {
-        return record[p1];
+    var prev;
+    do {
+        prev = str;
+        str = str.replace(/\${(\d+)(:([^{}]*))?}/g, function (_, p1, p2, p3) {
+            return (record[p1] = p3 || '');
+        });
+    } while (str !== prev);
+    return str.replace(/\$(\d+?)/g, function (_, p1) {
+        return record[p1] || '';
     });
 };
 var snippetCompleter = {
