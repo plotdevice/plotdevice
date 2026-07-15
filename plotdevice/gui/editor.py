@@ -70,11 +70,12 @@ class DraggyWebView(WKWebView):
                 menu.insertItem_atIndex_(NSMenuItem.separatorItem(), idx)
                 idx += 1
             prefix = u"View Documentation: "
-            title = prefix + target['word']
+            suffix = "()" if target['url'].endswith('()') else ""
+            title = prefix + target['word'] + suffix
             base_font = NSFont.menuFontOfSize_(0)
             mono_font = NSFont.monospacedSystemFontOfSize_weight_(base_font.pointSize(), -0.8)
             attr_title = NSMutableAttributedString.alloc().initWithString_attributes_(title, {"NSFont":base_font})
-            attr_title.addAttribute_value_range_("NSFont", mono_font, (len(prefix), len(target['word'])))
+            attr_title.addAttribute_value_range_("NSFont", mono_font, (len(prefix), len(target['word'] + suffix)))
             doc = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, "viewDocumentation:", "")
             doc.setAttributedTitle_(attr_title)
             doc.setTarget_(self)
