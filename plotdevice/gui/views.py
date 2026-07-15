@@ -147,7 +147,8 @@ class GraphicsView(NSView):
     @objc.python_method
     def _set_zoom(self, zoom):
         self._zoom = zoom
-        self.setCanvas(self.canvas)
+        if self.canvas is not None:
+            self.setCanvas(self.canvas)
     zoom = property(_get_zoom, _set_zoom)
 
     @objc.python_method
