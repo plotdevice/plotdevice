@@ -8,7 +8,7 @@ class DrawingTests(PlotDeviceTestCase):
     def test_paths_transform_pre(self):
         # tut/Bezier_Paths (1)
         size(180, 180)
-        font("Dolly", "bold", 300)
+        font("Rockwell", "bold", 280)
         path = textpath("e", 10, 150)
         bezier(path, stroke='black', fill=None)
 
@@ -16,7 +16,7 @@ class DrawingTests(PlotDeviceTestCase):
     def test_paths_transform_post(self):
         # tut/Bezier_Paths (2)
         size(180, 180)
-        font("Dolly", "bold", 300)
+        font("Rockwell", "bold", 280)
         path = textpath("e", 10, 150)
         curves = []
         for curve in path:
@@ -30,7 +30,7 @@ class DrawingTests(PlotDeviceTestCase):
     def test_paths_broken(self):
         # tut/Bezier_Paths (3)
         size(334, 87)
-        font("Dolly", "bold", 100)
+        font("Rockwell", "bold", 90)
         path = textpath("broken", 0,80)
         
         curves = []
@@ -48,7 +48,7 @@ class DrawingTests(PlotDeviceTestCase):
     def test_pathmatics_contours(self):
         # tut/Bezier_Paths (4)
         size(181, 70)
-        font("Dolly", "bold", 50)
+        font("Rockwell", "bold", 50)
         with pen(2), nofill():
             path = textpath("@#$&!", 10, 50)
             for contour in path.contours:

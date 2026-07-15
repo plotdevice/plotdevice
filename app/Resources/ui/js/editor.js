@@ -1,15 +1,20 @@
 // the language-tools extension provides snippets and autocomplete
 ace.require("ace/ext/language_tools");
+// used to render usage-sample tooltips with the same tokenizer+theme as the live editor
+var staticHighlight = ace.require("ace/ext/static_highlight");
+var Range = ace.require("ace/range").Range;
 
 // Wrap the ace UndoManager's mutation methods with callbacks to the pyobjc EditorView
-// keeping it up-to-date on whether the file has been modified & whether undo/redo are available
+// keeping it up-to-date on whether the file has been modified & whether undo/redo are available.
+// Also send a copy of the buffer contents with each change so the EditorView's shadow copy is
+// fresh enough to be read synchronously at save-time.
 const {UndoManager:__UndoManager} = ace.require('ace/undomanager')
 function UndoManager(){ __UndoManager.call(this) }
 UndoManager.prototype = Object.create(__UndoManager.prototype);
 for (const method of ['add', 'undo', 'redo', 'reset']){
     UndoManager.prototype[method] = function(){
         __UndoManager.prototype[method].call(this, ...arguments);
-        app.edits_(this.$undoStack.length)
+        app.sync_edits(this.$undoStack.length, window?.editor?.source?.() ?? null)
     }
 }
 
@@ -45,6 +50,17 @@ var Editor = function(elt){
             ed.on("blur", that._blur)
             ed.on("focus", that._focus)
 
+            // enable syntax-documentation tooltips
+            ed.hoverTooltip.setDataProvider(that._sampleHover)
+            ed.hoverTooltip.addToEditor(ed)
+
+            // keep the native side informed of which documented symbol (if any) is
+            // under the pointer and/or text cursor, so the right-click context menu
+            // can offer a "View Documentation" item
+            that._docTarget = {mouse: null, caret: null}
+            ed.on("changeSelection", that._trackDocTarget)
+            ed.on("nativecontextmenu", that._trackDocTarget)
+
             // configure the buffer
             sess = ed.getSession()
             sess.setMode("ace/mode/plotdevice");
@@ -60,7 +76,6 @@ var Editor = function(elt){
             // responsible for their hide/show behavior, sadly....
             sess.on("changeScrollLeft", that._scroll_h)
             sess.on("changeScrollTop", that._scroll_v)
-            that.ready = true // flag that the objc side can start sending messages
             return that
         },
         _commandStream:function(e){
@@ -68,7 +83,7 @@ var Editor = function(elt){
             // objc side of things when one of them is entered
             var cmd = e.command.name
             for (const [cmds, menu] of Object.entries(_menu_cmds)){
-                if (cmds.includes(cmd)) app.flash_(menu)
+                if (cmds.includes(cmd)) app.flash_menu(menu)
             }
         },
         _scroll_h:function(x){
@@ -103,6 +118,61 @@ var Editor = function(elt){
         _blur:function(){
             ed.setHighlightActiveLine(false)
             ed.setHighlightGutterLine(false)
+        },
+
+        _isBindingTarget:function(token){
+            // spot locations where a term is being used as a kwarg (or other assignment), so we can
+            // exclude it from the usage-sample tooltip and doc-target tracking (since it would only
+            // coincidentally share the name of a documented function in that case)
+            return !!token && (token.type === "variable.parameter" || token.type === "variable.assignment")
+        },
+        _trackDocTarget:function(e){
+            // find the symbol currently under the mouse (if e is defined) or the insertion point (if not)
+            let coords = e?.domEvent
+            let pos = coords ? ed.renderer.screenToTextCoordinates(coords.clientX, coords.clientY) : ed.getCursorPosition()
+            var token = sess.getTokenAt(pos.row, pos.column)
+            var word = token && token.value
+
+            // if there's documentation for it (and it's changed since the last event), relay it to the pyobjc side
+            var url = (!that._isBindingTarget(token) && word && PLOTDEVICE_SYMBOL_DOCS[word]) || null
+            let inputType = coords ? "mouse" : "caret"
+            if (url !== that._docTarget[inputType]?.url){
+                that._docTarget[inputType] = url ? {word, url} : null
+                app.setDocTarget(that._docTarget)
+            }
+        },
+        _sampleHover:function(e, editor){
+            var pos = e.getDocumentPosition()
+            var token = sess.getTokenAt(pos.row, pos.column)
+            var word = token && token.value
+
+            // don't show tooltip for kwargs if the docs are for a function
+            if (!token || that._isBindingTarget(token) || !PLOTDEVICE_SYMBOL_USAGE.hasOwnProperty(word)) return
+            var range = Range.fromPoints({row:pos.row, column:token.start}, {row:pos.row, column:token.start+token.value.length})
+            var text = PLOTDEVICE_SYMBOL_USAGE[word].join("\n")
+
+            // use syntax highlighting to style the usage sample
+            staticHighlight.render(text, sess.getMode(), ed.getTheme(), 1, true, function(result){
+                var tooltip = document.createElement("div")
+                tooltip.innerHTML = result.html
+
+                // add a link to the docs page (if applicable)
+                var url = PLOTDEVICE_SYMBOL_DOCS[word]
+                if (url){
+                    var more = document.createElement("div")
+                    more.className = "ace_symbol-doc-more"
+                    more.style.color = getComputedStyle(dom).color
+                    var moreText = document.createElement("span")
+                    moreText.textContent = "view documentation…"
+                    more.appendChild(moreText)
+                    more.addEventListener("click", function(){ app.openDoc(url) })
+                    tooltip.appendChild(more)
+                }
+
+                // default tooltip style is too specific to override with css, so manully set background to match theme
+                ed.hoverTooltip.getElement().style.backgroundColor = getComputedStyle(dom).backgroundColor
+                ed.hoverTooltip.showForRange(editor, range, tooltip, e)
+            })
         },
 
         focus:function(){

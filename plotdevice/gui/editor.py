@@ -3,11 +3,10 @@ import os
 import re
 import json
 import objc
-from io import open
 from objc import super
 from time import time
 from ..lib.cocoa import *
-from plotdevice.gui.preferences import get_default, editor_info
+from plotdevice.gui.preferences import get_default, editor_info, dev_extras
 from plotdevice.gui import bundle_path, set_timeout
 
 __all__ = ['EditorView', 'OutputTextView']
@@ -15,10 +14,14 @@ __all__ = ['EditorView', 'OutputTextView']
 def args(*jsargs):
     return ', '.join([json.dumps(v, ensure_ascii=False) for v in jsargs])
 
-class DraggyWebView(WebView):
-    def initWithFrame_(self, rect):
-        return self.initWithFrame_frameName_groupName_(rect, None, None)
+def menu_index_of(menu, identifier):
+    # NSMenu has no indexOfItemWithIdentifier_ in this AppKit/PyObjC version; search manually
+    for i, item in enumerate(menu.itemArray()):
+        if item.identifier() == identifier:
+            return i
+    return -1
 
+class DraggyWebView(WKWebView):
     def draggingEntered_(self, sender):
         pb = sender.draggingPasteboard()
         options = { NSPasteboardURLReadingFileURLsOnlyKey:True,
@@ -28,7 +31,15 @@ class DraggyWebView(WebView):
         rewrite = "\n".join(['"%s"'%u.path() for u in urls] + strs) + "\n"
         pb.declareTypes_owner_([NSStringPboardType], self)
         pb.setString_forType_(rewrite, NSStringPboardType)
-        return super(DraggyWebView, self).draggingEntered_(sender)
+        # don't consult super: WKWebView's drag negotiation round-trips to the web
+        # process and can veto the rewritten pasteboard
+        return NSDragOperationCopy
+
+    def draggingUpdated_(self, sender):
+        return NSDragOperationCopy
+
+    def prepareForDragOperation_(self, sender):
+        return True
 
     def performDragOperation_(self, sender):
         pb = sender.draggingPasteboard()
@@ -40,8 +51,44 @@ class DraggyWebView(WebView):
             return True
         return False
 
-    def shouldCloseWithWindow(self):
-        return True
+    def willOpenMenu_withEvent_(self, menu, event):
+        # omit everything from context menu except Cut/Copy/Paste (+ Inspect Element)
+        keep = ('WKMenuItemIdentifierCut', 'WKMenuItemIdentifierCopy',
+                'WKMenuItemIdentifierPaste', 'WKMenuItemIdentifierInspectElement')
+        for item in list(menu.itemArray()):
+            if item.identifier() not in keep:
+                menu.removeItem_(item)
+
+        # read _doc_target to get the tokens currently targeted by the mouse and caret
+        # then choose which one to offer a View Docs menu item for based on the event type
+        targets = getattr(self.owner, '_doc_target', None) or {}
+        target = targets.get('caret' if event.type() == NSEventTypeKeyDown else 'mouse')
+        if target:
+            idx = menu_index_of(menu, 'WKMenuItemIdentifierInspectElement')
+            idx = idx if idx >= 0 else menu.numberOfItems()
+            if menu.numberOfItems() > 0:
+                menu.insertItem_atIndex_(NSMenuItem.separatorItem(), idx)
+                idx += 1
+            prefix = u"View Documentation: "
+            suffix = "()" if target['url'].endswith('()') else ""
+            title = prefix + target['word'] + suffix
+            base_font = NSFont.menuFontOfSize_(0)
+            mono_font = NSFont.monospacedSystemFontOfSize_weight_(base_font.pointSize(), -0.8)
+            attr_title = NSMutableAttributedString.alloc().initWithString_attributes_(title, {"NSFont":base_font})
+            attr_title.addAttribute_value_range_("NSFont", mono_font, (len(prefix), len(target['word'] + suffix)))
+            doc = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, "viewDocumentation:", "")
+            doc.setAttributedTitle_(attr_title)
+            doc.setTarget_(self)
+            doc.setRepresentedObject_(target['url'])
+            menu.insertItem_atIndex_(doc, idx)
+
+        inspect = menu_index_of(menu, 'WKMenuItemIdentifierInspectElement')
+        if inspect >= 0:
+            menu.insertItem_atIndex_(NSMenuItem.separatorItem(), inspect)
+
+    def viewDocumentation_(self, sender):
+        self.owner.openDoc(sender.representedObject())
+
 
 class EditorView(NSView):
     document = IBOutlet()
@@ -51,93 +98,92 @@ class EditorView(NSView):
     # WebKit mgmt
 
     def awakeFromNib(self):
-        self.webview = DraggyWebView.alloc().initWithFrame_(self.bounds())
-        self.webview.setAllowsUndo_(False)
-        self.webview.setFrameLoadDelegate_(self)
-        self.webview.setUIDelegate_(self)
+        config = WKWebViewConfiguration.alloc().init()
+        dev = dev_extras() # whether to enable Inspect Element menu
+        config.preferences().setValue_forKey_(dev, 'developerExtrasEnabled')
+        ucc = config.userContentController()
+        ucc.addScriptMessageHandler_name_(self, 'app')
+        shim = WKUserScript.alloc().initWithSource_injectionTime_forMainFrameOnly_(
+          # forward any app.<fn>() call as a message to the 'app' script-message handler
+          """window.app = new Proxy({}, {
+              get: (_, fn) => (...args) => window.webkit.messageHandlers.app.postMessage({fn:String(fn), args:args})
+          });""", WKUserScriptInjectionTimeAtDocumentStart, True)
+        ucc.addUserScript_(shim)
+
+        self.webview = DraggyWebView.alloc().initWithFrame_configuration_(self.bounds(), config)
+        self.webview.owner = self
+        if dev and self.webview.respondsToSelector_('setInspectable:'):
+            self.webview.setInspectable_(True)
+        self.webview.setValue_forKey_(False, 'drawsBackground')
+        self.webview.setNavigationDelegate_(self)
         self.addSubview_(self.webview)
-        self.webview.setHidden_(True)
-
-        html = bundle_path(rsrc='ui/editor.html')
-        ui = open(html, encoding='utf-8').read()
-        baseurl = NSURL.fileURLWithPath_(os.path.dirname(html))
-        self.webview.mainFrame().loadHTMLString_baseURL_(ui, baseurl)
-
-        # set a theme-derived background for the webview's clipview
-        docview = self.webview.mainFrame().frameView().documentView()
-        clipview = docview.superview()
-        scrollview = clipview.superview()
-        if clipview is not None:
-            bgcolor = editor_info('colors')['background']
-            clipview.setDrawsBackground_(True)
-            clipview.setBackgroundColor_(bgcolor)
-            scrollview.setVerticalScrollElasticity_(1)
-            scrollview.setScrollerKnobStyle_(2)
 
         nc = NSNotificationCenter.defaultCenter()
         nc.addObserver_selector_name_object_(self, "themeChanged", "ThemeChanged", None)
         nc.addObserver_selector_name_object_(self, "fontChanged", "FontChanged", None)
         nc.addObserver_selector_name_object_(self, "bindingsChanged", "BindingsChanged", None)
         nc.addObserver_selector_name_object_(self, "insertDroppedFiles:", "DropOperation", self.webview)
-        self._wakeup = set_timeout(self, '_jostle', .05, repeat=True)
-        self._queue = []
         self._edits = 0
-        self.themeChanged()
-        self.fontChanged()
-        self.bindingsChanged()
+        self._last_source = ''
+        self._refresh()
 
         mm=NSApp().mainMenu()
         self._doers = mm.itemWithTitle_('Edit').submenu().itemArray()[1:3]
         self._undo_mgr = None
 
     def drawRect_(self, rect):
-        if self._wakeup:
-            # try to minimize the f.o.u.c. while the webview starts up
-            bgcolor = editor_info('colors')['background']
-            bgcolor.setFill()
-            NSRectFillUsingOperation(rect, NSCompositeCopy)
+        # the webview is transparent, so draw the theme background here
+        bgcolor = editor_info('colors')['background']
+        bgcolor.setFill()
+        NSRectFillUsingOperation(rect, NSCompositeCopy)
         super(EditorView, self).drawRect_(rect)
 
+    @objc.python_method
+    def _refresh(self):
+        # (re)load the editor page, queueing up prefs & source to be applied once it
+        # signals readiness (see webView_didFinishNavigation_)
+        self._loading = True
+        self._queue = []
+        self.webview.setHidden_(True)
+        self.themeChanged()
+        self.fontChanged()
+        self.bindingsChanged()
+        self._set_source(self._last_source)
+        html = bundle_path(rsrc='ui/editor.html')
+        ui_dir = NSURL.fileURLWithPath_isDirectory_(os.path.dirname(html), True)
+        self.webview.loadFileURL_allowingReadAccessToURL_(NSURL.fileURLWithPath_(html), ui_dir)
 
-    def _jostle(self):
-        awoke = self.webview.stringByEvaluatingJavaScriptFromString_('window.editor && window.editor.ready')
-        if awoke:
-            for op in self._queue:
-                self.webview.stringByEvaluatingJavaScriptFromString_(op)
-            self._wakeup.invalidate()
-            self._wakeup = None
-            self._queue = None
-            self.webview.setHidden_(False)
+    def _ready(self):
+        # js editor has been loaded and is ready to receive queued prefs & source
+        self._loading = False
+        for op in self._queue:
+            self.webview.evaluateJavaScript_completionHandler_(op, None)
+        self._queue = []
+        self.webview.setHidden_(False)
+        self.setNeedsDisplay_(True)
 
     def _cleanup(self):
+        # break the retain cycle through the WKUserContentController (it holds its
+        # message handlers strongly)
+        self.webview.configuration().userContentController().removeScriptMessageHandlerForName_('app')
+        self.webview.setNavigationDelegate_(None)
         nc = NSNotificationCenter.defaultCenter()
         nc.removeObserver_(self)
         self._doers = self._undo_mgr = self.jumpPanel = self.jumpLine = None
 
-    # def webView_didFinishLoadForFrame_(self, sender, frame):
-    def webView_didClearWindowObject_forFrame_(self, sender, win, frame):
-        self.webview.windowScriptObject().setValue_forKey_(self, 'app')
+    def webView_didFinishNavigation_(self, sender, nav):
+        # called after DOMContentLoaded
+        self._ready()
 
-    def webView_contextMenuItemsForElement_defaultMenuItems_(self, sender, elt, menu):
-        items = [
-            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Cut", "cut:", ""),
-            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Copy", "copy:", ""),
-            NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Paste", "paste:", ""),
-            NSMenuItem.separatorItem(),
-        ]
+    def webViewWebContentProcessDidTerminate_(self, sender):
+        # try to restore if the webkit subprocess crashes
+        self._refresh()
 
-        # once a doc viewer exists, add a lookup-ref menu item pointing to it:
-        # word = self.js('editor.selected')
-        # _ns = ['curveto', 'TEXT', 'BezierPath', ...]
-        # def ref_url(proc):
-        #     if proc in _ns:
-        #         return proc
-        # if ref_url(word):
-        #     doc = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u"Documentation for ‘%s()’"%word, "copy:", "")
-        #     sep = NSMenuItem.separatorItem()
-        #     items.insert(0, sep)
-        #     items.insert(0, doc)
-        return items + [it for it in menu if it.title()=='Inspect Element']
+    def userContentController_didReceiveScriptMessage_(self, ucc, msg):
+        body = msg.body()
+        fn, fnargs = body['fn'], list(body.get('args', []))
+        if fn in ('sync_edits', 'flash_menu', 'setSearchPasteboard', 'cancelRun', 'loadPrefs', 'openDoc', 'setDocTarget'):
+            getattr(self, fn)(*fnargs)
 
     def resizeSubviewsWithOldSize_(self, oldSize):
         self.resizeWebview()
@@ -147,9 +193,6 @@ class EditorView(NSView):
 
     def insertDroppedFiles_(self, note):
         self.js('editor.insert', args(note.userInfo()))
-
-    def isSelectorExcludedFromWebScript_(self, sel):
-        return False
 
     def windowDidResignKey_(self, note):
         if note.object() is self.jumpPanel:
@@ -182,11 +225,24 @@ class EditorView(NSView):
 
     @objc.python_method
     def _get_source(self):
-        return self.webview.stringByEvaluatingJavaScriptFromString_('editor.source();')
+        # return the copy of the source relayed by the last sync_edits call from js
+        return self._last_source
     @objc.python_method
     def _set_source(self, src):
+        self._last_source = src
         self.js('editor.source', args(src))
     source = property(_get_source, _set_source)
+
+    @objc.python_method
+    def with_source(self, callback):
+        """Read the editor buffer asynchronously, then invoke callback(src)"""
+        if self._loading: # webview not ready: use the shadow copy
+            return callback(self._last_source)
+        def done(value, error):
+            if value is not None:
+                self._last_source = value
+            callback(self._last_source)
+        self.webview.evaluateJavaScript_completionHandler_('editor.source();', done)
 
     def fontChanged(self, note=None):
         info = editor_info()
@@ -194,14 +250,15 @@ class EditorView(NSView):
 
     def themeChanged(self, note=None):
         info = editor_info()
-        clipview = self.webview.mainFrame().frameView().documentView().superview()
-        clipview.setBackgroundColor_(info['colors']['background'])
         self.js('editor.theme', args(info['module']))
+        self.setNeedsDisplay_(True)
 
     def bindingsChanged(self, note=None):
         self.js('editor.bindings', args(get_default('bindings')))
 
     def focus(self):
+        if self.window():
+            self.window().makeFirstResponder_(self.webview)
         self.js('editor.focus')
 
     def blur(self):
@@ -222,10 +279,10 @@ class EditorView(NSView):
     @objc.python_method
     def js(self, cmd, args=''):
         op = '%s(%s);'%(cmd,args)
-        if self._wakeup:
+        if self._loading:
             self._queue.append(op)
         else:
-            return self.webview.stringByEvaluatingJavaScriptFromString_(op)
+            self.webview.evaluateJavaScript_completionHandler_(op, None)
 
     # Menubar actions
 
@@ -295,13 +352,22 @@ class EditorView(NSView):
     def loadPrefs(self):
        NSApp().delegate().showPreferencesPanel_(self)
 
+    @objc.python_method
+    def openDoc(self, url):
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
+
+    @objc.python_method
+    def setDocTarget(self, target):
+        self._doc_target = target
+
     def cancelRun(self):
         # catch command-period even when the editor is first responder
         mm=NSApp().mainMenu()
         menu = mm.itemWithTitle_("Python")
         menu.submenu().performActionForItemAtIndex_(3)
 
-    def edits_(self, count):
+    @objc.python_method
+    def sync_edits(self, count, source=None):
         # inform the undo manager of the changes
         um = self._undo_mgr
         c = int(count)
@@ -316,6 +382,10 @@ class EditorView(NSView):
         for item, can in zip(self._doers, (um.canUndo(), um.canRedo())):
             item.setEnabled_(can)
 
+        # cache the editor's contents for use by the synchronous .source property
+        if isinstance(source, str):
+            self._last_source = source
+
     def syncUndoState_(self, count):
         pass # this would be useful if only it got called for redo as well as undo...
 
@@ -326,9 +396,10 @@ class EditorView(NSView):
         pb = NSPasteboard.pasteboardWithName_(NSFindPboard)
         pb.declareTypes_owner_([NSStringPboardType],None)
         pb.setString_forType_(query, NSStringPboardType)
-        self.flash_("Edit")
+        self.flash_menu("Edit")
 
-    def flash_(self, menuname):
+    @objc.python_method
+    def flash_menu(self, menuname):
         # when a menu item's key command was entered in the editor, flash the menu
         # bar to give a hint of where the command lives
         mm=NSApp().mainMenu()

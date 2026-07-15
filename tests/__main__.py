@@ -14,5 +14,6 @@ except (ImportError, RuntimeError) as e:
 
 tests = suites()
 verb = 2 if '-v' in sys.argv else 1
-unittest.TextTestRunner(verbosity=verb).run(tests)
+result = unittest.TextTestRunner(verbosity=verb).run(tests)
 report()
+sys.exit(0 if result.wasSuccessful() else 1)

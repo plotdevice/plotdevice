@@ -143,7 +143,7 @@ def main():
 
     # if it's a multiframe pdf, check for a telltale "{n}" to determine whether
     # it's a `single' doc or a sequence of numbered pdf files
-    opts.single = bool(ext=='pdf' and not re.search('{\d+}', opts.export) and opts.last and opts.first < opts.last)
+    opts.single = bool(ext=='pdf' and not re.search(r'{\d+}', opts.export) and opts.last and opts.first < opts.last)
 
     if m:= re.search(r'@(\d+)[xX]$', outname):
       opts.zoom = float(m.group(1))
