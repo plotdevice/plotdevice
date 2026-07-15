@@ -14,6 +14,13 @@ __all__ = ['EditorView', 'OutputTextView']
 def args(*jsargs):
     return ', '.join([json.dumps(v, ensure_ascii=False) for v in jsargs])
 
+def menu_index_of(menu, identifier):
+    # NSMenu has no indexOfItemWithIdentifier_ in this AppKit/PyObjC version; search manually
+    for i, item in enumerate(menu.itemArray()):
+        if item.identifier() == identifier:
+            return i
+    return -1
+
 class DraggyWebView(WKWebView):
     def draggingEntered_(self, sender):
         pb = sender.draggingPasteboard()
@@ -51,21 +58,35 @@ class DraggyWebView(WKWebView):
         for item in list(menu.itemArray()):
             if item.identifier() not in keep:
                 menu.removeItem_(item)
-        inspect = menu.indexOfItemWithIdentifier_('WKMenuItemIdentifierInspectElement')
-        if inspect > 0:
+
+        # read _doc_target to get the tokens currently targeted by the mouse and caret
+        # then choose which one to offer a View Docs menu item for based on the event type
+        targets = getattr(self.owner, '_doc_target', None) or {}
+        target = targets.get('caret' if event.type() == NSEventTypeKeyDown else 'mouse')
+        if target:
+            idx = menu_index_of(menu, 'WKMenuItemIdentifierInspectElement')
+            idx = idx if idx >= 0 else menu.numberOfItems()
+            if menu.numberOfItems() > 0:
+                menu.insertItem_atIndex_(NSMenuItem.separatorItem(), idx)
+                idx += 1
+            prefix = u"View Documentation: "
+            title = prefix + target['word']
+            base_font = NSFont.menuFontOfSize_(0)
+            mono_font = NSFont.monospacedSystemFontOfSize_weight_(base_font.pointSize(), -0.8)
+            attr_title = NSMutableAttributedString.alloc().initWithString_attributes_(title, {"NSFont":base_font})
+            attr_title.addAttribute_value_range_("NSFont", mono_font, (len(prefix), len(target['word'])))
+            doc = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, "viewDocumentation:", "")
+            doc.setAttributedTitle_(attr_title)
+            doc.setTarget_(self)
+            doc.setRepresentedObject_(target['url'])
+            menu.insertItem_atIndex_(doc, idx)
+
+        inspect = menu_index_of(menu, 'WKMenuItemIdentifierInspectElement')
+        if inspect >= 0:
             menu.insertItem_atIndex_(NSMenuItem.separatorItem(), inspect)
 
-        # TODO: once a doc viewer exists, add a lookup-ref menu item pointing to it:
-        # word = self.js('editor.selected')
-        # _ns = ['curveto', 'TEXT', 'BezierPath', ...]
-        # def ref_url(proc):
-        #     if proc in _ns:
-        #         return proc
-        # if ref_url(word):
-        #     doc = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u"Documentation for ‘%s()’"%word, "copy:", "")
-        #     sep = NSMenuItem.separatorItem()
-        #     items.insert(0, sep)
-        #     items.insert(0, doc)
+    def viewDocumentation_(self, sender):
+        self.owner.openDoc(sender.representedObject())
 
 
 class EditorView(NSView):
@@ -89,6 +110,7 @@ class EditorView(NSView):
         ucc.addUserScript_(shim)
 
         self.webview = DraggyWebView.alloc().initWithFrame_configuration_(self.bounds(), config)
+        self.webview.owner = self
         if dev and self.webview.respondsToSelector_('setInspectable:'):
             self.webview.setInspectable_(True)
         self.webview.setValue_forKey_(False, 'drawsBackground')
@@ -159,7 +181,7 @@ class EditorView(NSView):
     def userContentController_didReceiveScriptMessage_(self, ucc, msg):
         body = msg.body()
         fn, fnargs = body['fn'], list(body.get('args', []))
-        if fn in ('sync_edits', 'flash_menu', 'setSearchPasteboard', 'cancelRun', 'loadPrefs', 'openDoc'):
+        if fn in ('sync_edits', 'flash_menu', 'setSearchPasteboard', 'cancelRun', 'loadPrefs', 'openDoc', 'setDocTarget'):
             getattr(self, fn)(*fnargs)
 
     def resizeSubviewsWithOldSize_(self, oldSize):
@@ -332,6 +354,10 @@ class EditorView(NSView):
     @objc.python_method
     def openDoc(self, url):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
+
+    @objc.python_method
+    def setDocTarget(self, target):
+        self._doc_target = target
 
     def cancelRun(self):
         # catch command-period even when the editor is first responder
