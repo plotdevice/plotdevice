@@ -191,14 +191,10 @@ var PLOTDEVICE_SYMBOL_USAGE = {
     ],
     geometry: [`geometry(units)`],
     export: [
-        `... # draw to the canvas`,
         `export("spool.pdf", cmyk=False)`,
-        `... # draw at retina-quality to the canvas`,
         `export("spool.png", zoom=2)`,
         `with export("movie.mov", fps=30, bitrate=1.0):`,
         `    ... # draw movie frames`,
-        `with export("anim.gif", fps=30, loop=0):`,
-        `    ... # draw gif frames`
     ],
     plot: [`plot(grob)`],
     clear: [
@@ -215,9 +211,9 @@ var PLOTDEVICE_SYMBOL_USAGE = {
         `color(mode=RGB, range=1.0) # the default color mode and range`,
         `color(range=255)           # use 0-255 component values rather than 0–1`,
         `color(HSV)                 # color-related commands will expect HSV values`,
-        `color(r, g, b, a=1)    # RGB mode`,
-        `color(h, s, v, a=1)    # HSV mode`,
-        `color(c, m, y, k, a=1) # CMYK mode`,
+        `color(r, g, b, a=1)        # RGB mode`,
+        `color(h, s, v, a=1)        # HSV mode`,
+        `color(c, m, y, k, a=1)     # CMYK mode`,
         `color(v, a=1)`
     ],
     stroke: [
