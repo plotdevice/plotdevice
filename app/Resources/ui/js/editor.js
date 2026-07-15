@@ -54,6 +54,13 @@ var Editor = function(elt){
             ed.hoverTooltip.setDataProvider(that._sampleHover)
             ed.hoverTooltip.addToEditor(ed)
 
+            // keep the native side informed of which documented symbol (if any) is
+            // under the pointer and/or text cursor, so the right-click context menu
+            // can offer a "View Documentation" item
+            that._docTarget = {mouse: null, caret: null}
+            ed.on("changeSelection", that._trackDocTarget)
+            ed.on("nativecontextmenu", that._trackDocTarget)
+
             // configure the buffer
             sess = ed.getSession()
             sess.setMode("ace/mode/plotdevice");
@@ -115,9 +122,24 @@ var Editor = function(elt){
 
         _isBindingTarget:function(token){
             // spot locations where a term is being used as a kwarg (or other assignment), so we can
-            // exclude it from the usage-sample tooltip (since it would only coincidentally share
-            // the name of a documented function in that case)
+            // exclude it from the usage-sample tooltip and doc-target tracking (since it would only
+            // coincidentally share the name of a documented function in that case)
             return !!token && (token.type === "variable.parameter" || token.type === "variable.assignment")
+        },
+        _trackDocTarget:function(e){
+            // find the symbol currently under the mouse (if e is defined) or the insertion point (if not)
+            let coords = e?.domEvent
+            let pos = coords ? ed.renderer.screenToTextCoordinates(coords.clientX, coords.clientY) : ed.getCursorPosition()
+            var token = sess.getTokenAt(pos.row, pos.column)
+            var word = token && token.value
+
+            // if there's documentation for it (and it's changed since the last event), relay it to the pyobjc side
+            var url = (!that._isBindingTarget(token) && word && PLOTDEVICE_SYMBOL_DOCS[word]) || null
+            let inputType = coords ? "mouse" : "caret"
+            if (url !== that._docTarget[inputType]?.url){
+                that._docTarget[inputType] = url ? {word, url} : null
+                app.setDocTarget(that._docTarget)
+            }
         },
         _sampleHover:function(e, editor){
             var pos = e.getDocumentPosition()
@@ -141,7 +163,7 @@ var Editor = function(elt){
                     more.className = "ace_symbol-doc-more"
                     more.style.color = getComputedStyle(dom).color
                     var moreText = document.createElement("span")
-                    moreText.textContent = "read more…"
+                    moreText.textContent = "view documentation…"
                     more.appendChild(moreText)
                     more.addEventListener("click", function(){ app.openDoc(url) })
                     tooltip.appendChild(more)

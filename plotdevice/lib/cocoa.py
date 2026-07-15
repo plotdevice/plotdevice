@@ -31,7 +31,7 @@ from AppKit import NSAlert, NSApp, NSAppearance, NSApplication, NSApplicationAct
                    NSChangeRedone, NSChangeUndone, NSClipView, NSClosePathBezierPathElement, NSColor, NSColorSpace, \
                    NSCommandKeyMask, NSCompositeCopy, NSCompositeSourceOver, NSContentsCellMask, NSCriticalAlertStyle, NSCursor, \
                    NSCurveToBezierPathElement, NSDeviceCMYKColorSpace, NSDeviceIndependentModifierFlagsMask, NSDeviceRGBColorSpace, NSDocument, \
-                   NSDocumentController, NSDragOperationCopy, NSFindPboard, NSFixedPitchFontMask, NSFocusRingTypeExterior, NSFont, \
+                   NSDocumentController, NSDragOperationCopy, NSEventTypeKeyDown, NSFindPboard, NSFixedPitchFontMask, NSFocusRingTypeExterior, NSFont, \
                    NSFontDescriptor, NSFontManager, NSForegroundColorAttributeName, NSGIFFileType, NSGradient, \
                    NSGraphicsContext, NSGraphiteControlTint, NSImage, NSImageCacheNever, NSImageCompressionFactor, \
                    NSImageInterpolationHigh, NSItalicFontMask, NSJPEGFileType, NSJustifiedTextAlignment, \
