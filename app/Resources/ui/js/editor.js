@@ -1,7 +1,5 @@
 // the language-tools extension provides snippets and autocomplete
 ace.require("ace/ext/language_tools");
-// the linking extension provides accel-hover/click token events (used for cmd-click docs links)
-ace.require("ace/ext/linking");
 // used to render usage-sample tooltips with the same tokenizer+theme as the live editor
 var staticHighlight = ace.require("ace/ext/static_highlight");
 var Range = ace.require("ace/range").Range;
@@ -33,9 +31,6 @@ var Editor = function(elt){
         "Python":[]
     }
     var _htimer = null, _vtimer = null, _hmin=0, _vmin=0;
-    var _linkMarker = null;
-    var _altHeld = false;
-    var _lastMouseEvent = null;
     var that = {
         init:function(){
 
@@ -58,26 +53,6 @@ var Editor = function(elt){
             // enable syntax-documentation tooltips
             ed.hoverTooltip.setDataProvider(that._sampleHover)
             ed.hoverTooltip.addToEditor(ed)
-
-            // cmd-hover/cmd-click a mapped symbol to underline/open its docs.
-            // $enableJumpToDef frees up plain cmd-click for this (multi-cursor-add
-            // moves to cmd-option-click instead). registered before enableLinking so
-            // it runs first and _altHeld is current by the time linkHover/linkClick
-            // fire (ext-linking.js doesn't pass the alt-key state through itself)
-            ed.on("mousemove", that._trackMouse)
-            ed.on("click", that._trackMouse)
-            ed.setOption("enableLinking", true)
-            ed.$mouseHandler.$enableJumpToDef = true
-            ed.on("linkHover", that._linkHover)
-            ed.on("linkHoverOut", that._linkHoverOut)
-            ed.on("linkClick", that._linkClick)
-
-            // mousemove-driven hover only fires on actual pointer movement, so
-            // pressing/releasing cmd while stationary over a symbol wouldn't
-            // otherwise show/hide the underline -- re-check the last known
-            // mouse position directly against cmd's/option's keydown/keyup instead
-            document.addEventListener('keydown', that._trackModifiers, true)
-            document.addEventListener('keyup', that._trackModifiers, true)
 
             // configure the buffer
             sess = ed.getSession()
@@ -136,65 +111,12 @@ var Editor = function(elt){
         _blur:function(){
             ed.setHighlightActiveLine(false)
             ed.setHighlightGutterLine(false)
-            that._linkHoverOut()
         },
 
-        _trackMouse:function(e){
-            // ext-linking.js's linkHover/linkClick events don't carry the raw dom
-            // event, so track option/alt ourselves to know whether it's held
-            // alongside cmd (in which case ace's own cmd-option-click add-cursor
-            // gesture should win instead of the docs link) -- also cache the
-            // event itself so _trackModifiers can re-derive hover state against
-            // the last known mouse position when cmd/option change while stationary
-            _altHeld = !!(e.domEvent && e.domEvent.altKey)
-            _lastMouseEvent = e
-        },
-        _trackModifiers:function(e){
-            // pressing/releasing cmd or option alone doesn't fire a mousemove, so
-            // ext-linking.js never re-evaluates the token under a stationary pointer
-            // -- do it ourselves. modifier flags on the event reflect live state
-            // (including for the key's own keyup), so no keydown/keyup branching
-            // is needed -- just recompute from current state each time
-            if ((e.key !== 'Meta' && e.key !== 'Alt') || !_lastMouseEvent) return
-            _altHeld = !!e.altKey
-            if (!e.metaKey || _altHeld){
-                that._linkHoverOut()
-                return
-            }
-            var docPos = _lastMouseEvent.getDocumentPosition()
-            that._linkHover({position:docPos, token:sess.getTokenAt(docPos.row, docPos.column)})
-        },
-        _linkHover:function(e){
-            var word = e.token && e.token.value
-            if (_altHeld || that._isBindingTarget(e.token) || !PLOTDEVICE_SYMBOL_DOCS.hasOwnProperty(word)){
-                that._linkHoverOut()
-                return
-            }
-            that._linkHoverOut()
-            ed.renderer.setCursorStyle("pointer") // .ace_layer has pointer-events:none, so css :hover/cursor on the marker itself has no effect
-            var row = e.position.row
-            var range = Range.fromPoints({row:row, column:e.token.start}, {row:row, column:e.token.start+e.token.value.length})
-            // addMarker(..., "text") goes through drawTextMarker, which is built for
-            // multi-row wrapped spans (wrong width + rounded corners for a single-row
-            // range) -- draw a plain single-line underline via the same primitive
-            // ace uses for selection/highlight markers instead. a dynamic marker must
-            // NOT have a .range property or ace routes it through the static-marker
-            // path (using its .clazz, which we don't set) instead of calling .update()
-            _linkMarker = sess.addDynamicMarker({
-                update: function(html, markerLayer, session, config){
-                    markerLayer.drawSingleLineMarker(html, range, "ace_symbol-doc-link", config)
-                }
-            })
-        },
-        _linkHoverOut:function(){
-            if (_linkMarker!=null) sess.removeMarker(_linkMarker.id)
-            _linkMarker = null
-            ed.renderer.setCursorStyle("")
-        },
         _isBindingTarget:function(token){
-            // spot locations where a term is being used as a kwarg (or other assignment), so we can 
-            // exclude it from the command-click-for-docs behavior (since it would only coincidentally 
-            // share the name of a documented function in that case)
+            // spot locations where a term is being used as a kwarg (or other assignment), so we can
+            // exclude it from the usage-sample tooltip (since it would only coincidentally share
+            // the name of a documented function in that case)
             return !!token && (token.type === "variable.parameter" || token.type === "variable.assignment")
         },
         _sampleHover:function(e, editor){
@@ -229,13 +151,6 @@ var Editor = function(elt){
                 ed.hoverTooltip.getElement().style.backgroundColor = getComputedStyle(dom).backgroundColor
                 ed.hoverTooltip.showForRange(editor, range, tooltip, e)
             })
-        },
-        _linkClick:function(e){
-            if (_altHeld) return // let ace's own cmd-option-click add-cursor gesture proceed instead
-            if (that._isBindingTarget(e.token)) return // kwargs/assignments never have cmd-clickable docs
-            var word = e.token && e.token.value
-            var url = PLOTDEVICE_SYMBOL_DOCS[word]
-            if (url) app.openDoc(url)
         },
 
         focus:function(){
