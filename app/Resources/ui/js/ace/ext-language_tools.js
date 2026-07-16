@@ -1770,6 +1770,16 @@ var Autocomplete = /** @class */ (function () {
                 this.updateDocTooltip();
             }
         }
+        // the popup's row DOM repaints asynchronously (its RenderLoop batches changes via
+        // requestAnimationFrame), so any doc-tooltip position computed synchronously above -
+        // or via the "select" event fired by setRow() earlier in this method, which also
+        // fires when just refiltering an already-open popup (keepPopupPosition=true) and can
+        // still resize it - measures the popup's *previous* layout, not the one about to be
+        // painted for this update. once the real rows have painted, recompute against the
+        // true size.
+        requestAnimationFrame(function(){
+            this.updateDocTooltip();
+        }.bind(this));
         this.changeTimer.cancel();
         this.observeLayoutChanges();
     };
