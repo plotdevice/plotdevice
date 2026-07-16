@@ -1998,8 +1998,6 @@ var Autocomplete = /** @class */ (function () {
         var theme = this.editor.renderer.theme;
         this.tooltipNode.className = "ace_tooltip ace_doc-tooltip " +
             (theme.isDark ? "ace_dark " : "") + (theme.cssClass || "");
-        // default tooltip style is too specific to override with css, so manually set background to match theme
-        this.tooltipNode.style.backgroundColor = getComputedStyle(this.editor.container).backgroundColor;
         var tooltipNode = this.tooltipNode;
         if (item.docHTML) {
             tooltipNode.innerHTML = item.docHTML;

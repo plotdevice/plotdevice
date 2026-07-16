@@ -196,8 +196,6 @@ var Editor = function(elt){
                     tooltip.appendChild(more)
                 }
 
-                // default tooltip style is too specific to override with css, so manully set background to match theme
-                ed.hoverTooltip.getElement().style.backgroundColor = getComputedStyle(dom).backgroundColor
                 ed.hoverTooltip.showForRange(editor, range, tooltip, e)
             })
         },
