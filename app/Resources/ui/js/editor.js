@@ -1,8 +1,10 @@
 // the language-tools extension provides snippets and autocomplete
-ace.require("ace/ext/language_tools");
-// used to render usage-sample tooltips with the same tokenizer+theme as the live editor
+var langTools = ace.require("ace/ext/language_tools");
+// used to render usage-sample tooltips (and snippet previews) with the same tokenizer+theme as the live editor
 var staticHighlight = ace.require("ace/ext/static_highlight");
 var Range = ace.require("ace/range").Range;
+var lang = ace.require("ace/lib/lang");
+var aceDom = ace.require("ace/lib/dom");
 
 // Wrap the ace UndoManager's mutation methods with callbacks to the pyobjc EditorView
 // keeping it up-to-date on whether the file has been modified & whether undo/redo are available.
@@ -76,6 +78,31 @@ var Editor = function(elt){
             // responsible for their hide/show behavior, sadly....
             sess.on("changeScrollLeft", that._scroll_h)
             sess.on("changeScrollTop", that._scroll_v)
+
+            // show a preview popup when a snippet is highlighted
+            langTools.snippetCompleter.getDocTooltip = function(item){
+                if (item.snippet && !item.docHTML){
+                    // use a (fixed) version of ext-language_tools.js's helper for formatting snippets that
+                    // correctly handles nested placeholders
+                    var placeholders = {};
+                    var source = item.snippet, prev;
+                    do {
+                        prev = source;
+                        source = source.replace(/\${(\d+)(:([^{}]*))?}/g, (_, p1, p2, p3) => (placeholders[p1] = p3 || ''));
+                    } while (source !== prev);
+                    source = source.replace(/\$(\d+?)/g, (_, p1) => placeholders[p1] || '');
+
+                    // trim trailing whitespace so a bare final tabstop doesn't render as an empty line
+                    source = source.split('\n').map(line => line.replace(/[ \t]+$/, '')).join('\n')
+                    source = source.replace(/\n+$/, '')
+
+                    // syntax-highlight the preview using the same tokenizer+theme as the live editor
+                    var result = staticHighlight.renderSync(source, sess.getMode(), ed.renderer.theme, 1, true)
+                    aceDom.importCssString(result.css, "ace_highlight", true)
+                    item.docHTML = "<b>" + lang.escapeHTML(item.caption) + "</b><hr></hr>" + result.html
+                }
+            }
+
             return that
         },
         _commandStream:function(e){

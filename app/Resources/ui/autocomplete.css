@@ -412,3 +412,5 @@
 #editor.ace-samizdat ~ div.ace_autocomplete + .ace_tooltip.ace_doc-tooltip{ background-color:rgba(24, 25, 32, 1.0); color:rgba(235, 219, 178, 1.0); border-color:rgba(235, 219, 178, 1.0); font-family: -apple-system; font-size: 80%; color: rgba(133, 133, 133, 1.0); border-style: dotted; }
 #editor.ace-samizdat ~ div.ace_autocomplete + .ace_tooltip.ace_doc-tooltip b{ color:rgba(235, 219, 178, 1.0); }
 #editor.ace-samizdat ~ div.ace_autocomplete + .ace_tooltip.ace_doc-tooltip hr{ opacity:.75; }
+
+.ace_tooltip.ace_doc-tooltip{ padding:5px 4px; }
