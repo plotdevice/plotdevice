@@ -431,10 +431,15 @@ def point(path, t, segments=None, elements=None):
 
     return _curve_at(t, x0, y0, p1, closeto)
 
-def points(path, amount=100):
+def points(path, amount=100, start=0, end=1):
     """Returns an iterator with a list of calculated points for the path.
     This method calls the point method <amount> times, increasing t,
     distributing point spacing linearly.
+
+    `start`/`end` restrict the sweep to a sub-range of the path (fractions
+    of its total length, the same units as point()'s `t`) instead of
+    always covering it from 0.0 to 1.0. Each is clamped to the valid
+    0.0-1.0 range.
 
     >>> path = Bezier(None)
     >>> list(points(path))
@@ -454,12 +459,15 @@ def points(path, amount=100):
     if len(path) == 0:
         raise DeviceError("The given path is empty")
 
-    # The delta value is divided by amount - 1, because we also want the last point (t=1.0)
+    start = max(start, 0.0)
+    end = min(end, 1.0)
+
+    # The delta value is divided by amount - 1, because we also want the last point (t=end)
     # If I wouldn't use amount - 1, I fall one point short of the end.
-    # E.g. if amount = 4, I want point at t 0.0, 0.33, 0.66 and 1.0,
-    # if amount = 2, I want point at t 0.0 and t 1.0
+    # E.g. if amount = 4, I want point at t start, start+.33*span, start+.66*span
+    # and end, if amount = 2, I want point at t start and t end
     try:
-        delta = 1.0/(amount-1)
+        delta = (end-start)/(amount-1)
     except ZeroDivisionError:
         delta = 1.0
 
@@ -475,7 +483,7 @@ def points(path, amount=100):
     segments = path.segmentlengths(relative=True)
 
     for step in range(amount):
-        yield point(path, delta*step, segments=segments, elements=elements)
+        yield point(path, start + delta*step, segments=segments, elements=elements)
 
 def contours(path):
     """Returns a list of contours in the path.

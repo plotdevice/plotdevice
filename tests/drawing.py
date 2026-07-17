@@ -357,6 +357,32 @@ class DrawingTests(PlotDeviceTestCase):
         self.assertAlmostEqual(pts[1].x, 500)
         self.assertAlmostEqual(pts[1].y, 500)
 
+    def test_points_subrange(self):
+        # start/end restrict the sweep to a sub-range of the path instead of
+        # always covering the whole 0.0-1.0 span
+        size(100, 100)
+        path = Bezier()
+        path.moveto(0, 0)
+        path.lineto(100, 0)
+
+        pts = list(path.points(5, start=0.25, end=0.75))
+        self.assertEqual(len(pts), 5)
+        self.assertAlmostEqual(pts[0].x, 25)
+        self.assertAlmostEqual(pts[-1].x, 75)
+        for pt, x in zip(pts, (25, 37.5, 50, 62.5, 75)):
+            self.assertAlmostEqual(pt.x, x)
+            self.assertAlmostEqual(pt.y, 0)
+
+        # out-of-range start/end are clamped rather than extrapolated
+        clamped = list(path.points(3, start=-1, end=2))
+        self.assertAlmostEqual(clamped[0].x, 0)
+        self.assertAlmostEqual(clamped[-1].x, 100)
+
+        # a single point in a sub-range lands on its start, not on t=0.0
+        single = list(path.points(1, start=0.3, end=0.9))
+        self.assertEqual(len(single), 1)
+        self.assertAlmostEqual(single[0].x, 30)
+
     def test_area(self):
         size(50, 50)
         path = rect(0, 0, 40, 25, plot=False)
