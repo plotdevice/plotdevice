@@ -1,5 +1,6 @@
 import objc
 from collections import namedtuple
+from math import degrees, atan2, sqrt, pow, radians, sin, cos
 from .cocoa import CGPathRelease, NSBezierPath
 from ..gfx.geometry import Point
 from ..gfx.bezier import Bezier, Curve
@@ -16,31 +17,22 @@ def convert_path(ns_path):
 
 # Trig helpers
 
-try:
-    # Faster C versions.
-    from _plotdevice import fast_inverse_sqrt, angle, distance, coordinates
-    isqrt = inverse_sqrt = fast_inverse_sqrt
-except ImportError:
-    from math import degrees, atan2
-    from math import sqrt, pow
-    from math import radians, sin, cos
+def inverse_sqrt(x):
+    return 1.0 / sqrt(x)
 
-    def inverse_sqrt(x):
-        return 1.0 / sqrt(x)
+isqrt = inverse_sqrt
 
-    isqrt = inverse_sqrt
+def angle(x0, y0, x1, y1):
+    a = degrees( atan2(y1-y0, x1-x0) )
+    return a
 
-    def angle(x0, y0, x1, y1):
-        a = degrees( atan2(y1-y0, x1-x0) )
-        return a
+def distance(x0, y0, x1, y1):
+    return sqrt(pow(x1-x0, 2) + pow(y1-y0, 2))
 
-    def distance(x0, y0, x1, y1):
-        return sqrt(pow(x1-x0, 2) + pow(y1-y0, 2))
-
-    def coordinates(x0, y0, distance, angle):
-        x1 = x0 + cos(radians(angle)) * distance
-        y1 = y0 + sin(radians(angle)) * distance
-        return x1, y1
+def coordinates(x0, y0, distance, angle):
+    x1 = x0 + cos(radians(angle)) * distance
+    y1 = y0 + sin(radians(angle)) * distance
+    return x1, y1
 
 def reflect(x0, y0, x1, y1, d=1.0, a=180):
     d *= distance(x0, y0, x1, y1)

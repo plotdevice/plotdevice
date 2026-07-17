@@ -20,11 +20,6 @@ PyMethodDef methods[] = {
   {"area", cPathmatics_area, METH_VARARGS, "Calculates the fill area enclosed by an NSBezierPath."},
   {"pdf_outline", cPathmatics_pdfOutline, METH_VARARGS, "Traces the vector shapes in a PDF's content stream into an NSBezierPath."},
   {"stroke_to_fill", cPathmatics_strokeToFill, METH_VARARGS, "Converts a stroked NSBezierPath into its equivalent fill-only outline."},
-  // trig
-  {"fast_inverse_sqrt", fast_inverse_sqrt, METH_VARARGS },
-  {"angle", angle, METH_VARARGS },
-  {"distance", distance, METH_VARARGS },
-  {"coordinates", coordinates, METH_VARARGS },
   {NULL, NULL, 0, NULL} /* Sentinel */
 };
 

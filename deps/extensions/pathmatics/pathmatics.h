@@ -23,10 +23,6 @@ PyObject * cPathmatics_simplify(PyObject *self, PyObject *args);
 PyObject * cPathmatics_area(PyObject *self, PyObject *args);
 PyObject * cPathmatics_pdfOutline(PyObject *self, PyObject *args);
 PyObject * cPathmatics_strokeToFill(PyObject *self, PyObject *args);
-PyObject * fast_inverse_sqrt(PyObject *self, PyObject *args);
-PyObject * angle(PyObject *self, PyObject *args);
-PyObject * distance(PyObject *self, PyObject *args);
-PyObject * coordinates(PyObject *self, PyObject *args);
 
 // Shared NSBezierPath <-> CGPathRef conversion (used by the boolean-op backend
 // and cPathmatics_strokeToFill in pathmatics.m, and by the PDF content-stream
