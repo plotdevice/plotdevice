@@ -1,6 +1,6 @@
 import objc
 from collections import namedtuple
-from .cocoa import CGPathRelease
+from .cocoa import CGPathRelease, NSBezierPath
 from ..gfx.geometry import Point
 from ..gfx.bezier import Bezier, Curve
 
@@ -52,6 +52,12 @@ def reflect(x0, y0, x1, y1, d=1.0, a=180):
 # Ye olde polymagic
 
 from _plotdevice import intersects, union, intersect, difference, xor
+from _plotdevice import pdf_outline as _pdf_outline
+def pdf_outline(pdf_data):
+    """Traces the vector shapes in `pdf_data` (raw bytes of a PDF file, page 1
+    only) into a single NSBezierPath, in the page's own (y-up) coordinates."""
+    return _pdf_outline(pdf_data, NSBezierPath.bezierPath())
+
 try:
     from _plotdevice import linepoint, linelength, curvepoint, curvelength
 except ImportError:

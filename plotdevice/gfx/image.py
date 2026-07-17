@@ -299,6 +299,35 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
         return max(1, round(src_w * scale)), max(1, round(src_h * scale))
 
+    @property
+    def _outline(self):
+        """A Bezier in the image's local pixel space tracing its shape(s), for use
+        as a vector clip()/mask() stencil (channel='outline').
+
+        Raster images get a rect matching their dimensions. PDF/SVG images get
+        the union of every shape in the graphic (PDFs are traced from their raw
+        content stream; SVGs are traced from the parsed shape/command list)."""
+        from .bezier import Bezier
+        from ..lib import pathmatics
+
+        w, h = self._nsImage.size()
+        for bitmap in self._nsImage.representations():
+            if isinstance(bitmap, NSBitmapImageRep):
+                outline = Bezier()
+                outline.rect(0, 0, w, h)
+                return outline
+            if isinstance(bitmap, NSPDFImageRep):
+                ns_path = pathmatics.pdf_outline(bitmap.PDFRepresentation())
+                # pdf content streams are y-up/bottom-left; flip to match our y-down convention
+                flip = Transform()
+                flip.translate(0, h)
+                flip.scale(1, -1)
+                return flip.apply(Bezier(ns_path))
+
+        # no bitmap/pdf rep found -> svg
+        ns_path = self._nsImage.plotdeviceOutline()
+        return Bezier(ns_path) if ns_path is not None else Bezier()
+
     def _draw(self):
         """Draw an image on the given coordinates."""
 

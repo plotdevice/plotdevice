@@ -3,14 +3,6 @@
 #include <stdio.h>
 #include "gpc.h"
 
-// the macOS 14 SDK renamed NSBezierPathElementCurveTo to ...CubicCurveTo and
-// added a new ...QuadraticCurveTo element type
-#if defined(MAC_OS_VERSION_14_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_14_0
-  #define HAS_QUADRATIC_PATH_ELEMENTS 1
-#else
-  #define HAS_QUADRATIC_PATH_ELEMENTS 0
-#endif
-
 void _linepoint(double t, double x0, double y0, double x1, double y1,
                 double *out_x, double *out_y
                 )

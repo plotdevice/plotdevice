@@ -1011,7 +1011,10 @@ class Context(object):
         With an image mask, drawing operations will have high opacity in places where
         the mask value is *low*. The `channel` arg specifies which component of the mask
         image should be used for this calculation. If omitted it defaults to 'alpha'
-        (if available) or 'black' level (if the image is opaque).
+        (if available) or 'black' level (if the image is opaque). If `channel` is
+        'outline', the image's vector shapes are traced into a Bezier path (or, for
+        a raster image, a rect the size of the image) and used as the mask directly,
+        rather than rasterizing a bitmap mask.
 
         See also: clip()
         """
@@ -1032,7 +1035,10 @@ class Context(object):
         With an image mask, drawing operations will have high opacity in places where
         the mask value is also high. The `channel` arg specifies which component of
         the mask image should be used for this calculation. If omitted it defaults
-        to 'alpha' (if available) or 'black' level (if the image is opaque).
+        to 'alpha' (if available) or 'black' level (if the image is opaque). If
+        `channel` is 'outline', the image's vector shapes are traced into a Bezier
+        path (or, for a raster image, a rect the size of the image) and used as the
+        clip directly, rather than rasterizing a bitmap mask.
 
         See also: mask()
         """

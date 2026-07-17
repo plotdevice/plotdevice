@@ -7,7 +7,7 @@ from .. import DeviceError
 from ..lib.foundry import fontspec
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
-from .geometry import Transform, Dimension, Region, Pair
+from .geometry import Transform, Dimension, Region, Pair, CENTER, CORNER
 from .effects import Effect
 
 _ctx = None
@@ -242,7 +242,7 @@ class TransformMixin(Grob):
     def _get_transformmode(self):
         return self._transformmode
     def _set_transformmode(self, mode):
-        if style not in (CENTER, CORNER):
+        if mode not in (CENTER, CORNER):
             badmode = 'Transform mode should be CENTER or CORNER.'
             raise DeviceError(badmode)
         self._transformmode = mode

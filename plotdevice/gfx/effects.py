@@ -7,7 +7,7 @@ from ..lib.cocoa import *
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, numlike
 from .colors import Color
-from .geometry import Point
+from .geometry import Point, CORNER
 from . import _cg_context, _cg_layer, _cg_port
 
 _ctx = None
@@ -289,14 +289,24 @@ class Stencil(Frob):
             self.path = stencil.copy()
             self.evenodd = invert
         elif isinstance(stencil, Image):
-            # default to using alpha if available and darkness if not
-            if not channel:
-                channel = 'alpha' if stencil._nsBitmap.hasAlpha() else 'black'
-            if channel=='black':
-                invert = not invert
-            self.channel = channel
-            self.invert = invert
-            self.bmp = stencil
+            if channel == 'outline':
+                # trace the image's vector shapes (or its bounding rect, if raster)
+                # into a Bezier and clip/mask against that directly, rather than
+                # rasterizing a bitmap mask
+                outline = stencil._outline
+                outline.transformmode = CORNER
+                outline.transform = stencil._screen_transform
+                self.path = outline
+                self.evenodd = invert
+            else:
+                # default to using alpha if available and darkness if not
+                if not channel:
+                    channel = 'alpha' if stencil._nsBitmap.hasAlpha() else 'black'
+                if channel=='black':
+                    invert = not invert
+                self.channel = channel
+                self.invert = invert
+                self.bmp = stencil
 
     def set(self):
         port = _cg_port()

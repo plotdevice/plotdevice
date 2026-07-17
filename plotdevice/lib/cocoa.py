@@ -40,7 +40,7 @@ from AppKit import NSAlert, NSApp, NSAppearance, NSApplication, NSApplicationAct
                    NSMoveToBezierPathElement, NSMutableParagraphStyle, NSNib, NSOffState, NSOnState, \
                    NSParagraphStyleAttributeName, NSPasteboard, NSPasteboardTypePDF, NSPasteboardTypeTIFF, \
                    NSPasteboardURLReadingContentsConformToTypesKey, NSPasteboardURLReadingFileURLsOnlyKey, \
-                   NSPNGFileType, NSPrintOperation, NSRectFill, NSRectFillUsingOperation, NSResponder, \
+                   NSPDFImageRep, NSPNGFileType, NSPrintOperation, NSRectFill, NSRectFillUsingOperation, NSResponder, \
                    NSRightTextAlignment, NSSavePanel, NSScreen, NSShadow, NSSlider, NSSmallControlSize, NSSplitView, \
                    NSStringPboardType, NSSwitch, NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, \
                    NSTextView, NSTIFFFileType, NSToolbarItem, NSTrackingActiveInActiveApp, \
