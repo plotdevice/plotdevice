@@ -297,37 +297,30 @@ def _curve_at(seg_t, x0, y0, p1, closeto):
     else:
         raise DeviceError("Unknown cmd for p1 %s" % p1)
 
-def _locate(path, t, segments=None, elements=None):
+def _locate(path, t, lengths=None, segments=None):
 
-    """Locates t on a specific segment in the path.
+    """Finds which segment of the path a path-wide t (0.0 to 1.0) falls
+    within, and how far along just that one segment it is.
 
-    Returns (index, t, Curve)
+    Returns (index, t_segment, closeto).
 
-    A path is a combination of lines and curves (segments).
-    The returned index indicates the start of the segment
-    that contains point t.
+    A path is a sequence of lines and curves (segments). The returned `index` 
+    indicates which segment in the patch contains the target point `t` 
+    (a fraction of the path's total length, 0–1). The returned  `t_segment` 
+    is also a 0–1 value but identifies where the target point lies on this 
+    particular segment (i.e., at path[index]).
 
-    The returned t is the absolute time on that segment,
-    in contrast to the relative t on the whole of the path.
-    The returned point is the last MOVETO,
-    any subsequent CLOSETO after i closes to that point.
+    `closeto` is the current contour's starting coordinate. It's needed because 
+    a CLOSE segment's own stored coordinates are just a placeholder; the
+    point it actually closes back to is `closeto`.
 
-    When you supply the list of segment lengths yourself,
-    as returned from length(path, segmented=True),
-    point() works about thirty times faster in a for-loop,
-    since it doesn't need to recalculate the length
-    during each iteration. Note that this has been deprecated:
-    the Bezier now caches the segment lengths the moment you use
-    them.
+    Zero length segment (e.g., MOVETO) are skipped over or rounded down to 
+    the previous 'real' segment if at t=1.0.
 
-    Similarly, `elements` lets a caller that's already materialized
-    list(path) (e.g. points(), sampling many t's off the same path) pass it
-    in so this walks a plain list instead of re-crossing the PyObjC bridge
-    (elementAtIndex:associatedPoints:) for every element on every call. Left
-    unset, this walks `path` directly and stops as soon as it finds the
-    target segment -- better when only a single t is being looked up, since
-    it avoids materializing elements past that point.
-
+    To speed up repeated calls for the same path, you can pass in:
+        lengths = path.segmentlengths(relative=True)
+        segments = list(path)
+    
     >>> path = Bezier(None)
     >>> _locate(path, 0.0)
     Traceback (most recent call last):
@@ -345,27 +338,47 @@ def _locate(path, t, segments=None, elements=None):
     (0, 1.0, Point(x=0.0, y=0.0))
     """
 
-    if segments == None:
-        segments = path.segmentlengths(relative=True)
+    if segments is None:
+        segments = list(path)
+        
+    if lengths is None:
+        lengths = path.segmentlengths(relative=True)
 
-    if len(segments) == 0:
-        raise DeviceError("The given path is empty")
+    if len(lengths) == 0:
+        raise DeviceError("The path is empty")
 
-    for i, el in enumerate(path if elements is None else elements):
+    for i, el in enumerate(segments):
         if i == 0 or el.cmd == MOVETO:
             closeto = Point(el.x, el.y)
 
-        if segments[i] == 0:
-            # A zero-length "segment" marks either a jump between contours
-            # or the phantom trailing MOVETO NSBezierPath appends after
-            # closePath() -- there's no real segment here to place a t
-            # along, so it's never eligible to land on. Mid-path, `continue`
-            # skips forward to the start of the next contour; at the very
-            # end of the path (nothing left to skip to), stop here and
-            # resolve to the end of the path below instead.
-            if i < len(segments)-1:
-                continue
+        if lengths[i] == 0:
+            # A zero-length segment marks either a MOVETO jump between contours
+            # or the meaningless MOVETO NSBezierPath appends after closePath()
+            if i < len(lengths)-1:
+                continue # mid-path, just move on to the next segment
             else:
+                # at the end, with nothing left to skip to -- resolve to the
+                # end of the path instead: t=1.0 on the preceding, real
+                # segment. A single step back isn't always enough -- e.g. a
+                # CLOSE (or LINETO) that's already at its destination is
+                # *also* zero-length, and can cascade with the trailing
+                # MOVETO -- so walk backward until segments[i+1] (the
+                # segment's own endpoint) isn't itself a MOVETO (the only
+                # element type _curve_at() can't resolve; a zero-length
+                # CLOSE/LINETO/CURVETO is harmless, since its start and end
+                # coincide). Bounded at i>=0: segments[0] is always a MOVETO
+                # (every path starts with one), so checking segments[i+1]
+                # at i==-1 could only ever come back true, which would just
+                # drive the next step to i==-2 -- and segments[-1] in
+                # Python silently wraps around to the *end* of the list
+                # instead of erroring. Since that always-true check can't
+                # tell us anything we don't already know, treat needing it
+                # as having run out of real content instead of making it.
+                while i >= 0 and segments[i+1].cmd == MOVETO:
+                    i -= 1
+                if i < 0:
+                    raise DeviceError("The path has no non-empty contours")
+                t_segment = 1.0
                 break
 
         # Strict `<` (not `<=`) so an exact tie -- t landing precisely at a
@@ -373,18 +386,15 @@ def _locate(path, t, segments=None, elements=None):
         # than stopping here; that's what lets a tie that lands on a
         # following zero-length marker actually reach the skip-forward
         # handling above instead of resolving to this segment's t=1.0.
-        if t < segments[i] or i == len(segments)-1: break
-        else: t -= segments[i]
+        if t < lengths[i] or i == len(lengths)-1:
+            t_segment = t / lengths[i]
+            break
+        else:
+            t -= lengths[i]
 
-    if segments[i] == 0:
-        i -= 1
-        t = 1.0
-    else:
-        t /= segments[i]
+    return (i, t_segment, closeto)
 
-    return (i, t, closeto)
-
-def point(path, t, segments=None, elements=None):
+def point(path, t, lengths=None, segments=None):
 
     """Returns coordinates for point at t on the path.
 
@@ -399,7 +409,7 @@ def point(path, t, segments=None, elements=None):
     since it doesn't need to recalculate the length
     during each iteration.
 
-    `elements` is passed straight through to _locate() -- see its
+    `segments` is passed straight through to _locate() -- see its
     docstring -- and, when given, is also used here in place of `path` to
     look up the segment's own endpoints.
 
@@ -423,9 +433,9 @@ def point(path, t, segments=None, elements=None):
     if len(path) == 0:
         raise DeviceError("The given path is empty")
 
-    i, t, closeto = _locate(path, t, segments=segments, elements=elements)
+    i, t, closeto = _locate(path, t, lengths=lengths, segments=segments)
 
-    src = path if elements is None else elements
+    src = path if segments is None else segments
     x0, y0 = src[i].x, src[i].y
     p1 = src[i+1]
 
@@ -476,14 +486,14 @@ def points(path, amount=100, start=0, end=1):
     # (elementAtIndex:associatedPoints:) -- fine for a single lookup, but
     # this generator calls point() `amount` times, which made the naive
     # `[point(path, delta*i) for i in range(amount)]` cost O(amount x
-    # len(path)) bridge crossings. Materialize the elements once and hand
-    # them to point() so every one of those calls indexes a plain list
+    # len(path)) bridge crossings. Materialize the path's segments once and
+    # hand them to point() so every one of those calls indexes a plain list
     # instead, and the segment lengths so they aren't recomputed each time.
-    elements = list(path)
-    segments = path.segmentlengths(relative=True)
+    segments = list(path)
+    lengths = path.segmentlengths(relative=True)
 
     for step in range(amount):
-        yield point(path, start + delta*step, segments=segments, elements=elements)
+        yield point(path, start + delta*step, lengths=lengths, segments=segments)
 
 def contours(path):
     """Returns a list of contours in the path.
