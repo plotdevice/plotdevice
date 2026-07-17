@@ -492,14 +492,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         return pathmatics.point(self, t)
 
     def points(self, amount=100):
-        if len(self) == 0:
-            empty = "The given path is empty"
-            raise DeviceError(empty)
-
-        count = int(amount) # make sure we don't choke on a float
-        delta = 1.0/max(1, count-1) # div by count-1 so the last point is at t=1.0
-        for i in range(count):
-            yield pathmatics.point(self, delta*i)
+        return pathmatics.points(self, int(amount)) # int() so we don't choke on a float
 
     def addpoint(self, t):
         self._nsBezierPath = pathmatics.insert_point(self, t)._nsBezierPath

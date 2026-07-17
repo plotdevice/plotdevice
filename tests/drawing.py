@@ -284,6 +284,79 @@ class DrawingTests(PlotDeviceTestCase):
         simplified = multi.simplify(1.0)
         self.assertEqual(len(simplified.contours), 2)
 
+    def test_points_terminal_closed(self):
+        # points()'s (and point()'s) final sample -- t=1.0 -- on a closed
+        # path should deterministically land back at the contour's start,
+        # not depend on which way floating-point rounding happens to fall
+        # while walking through the segment lengths
+        size(50, 50)
+        path = Bezier()
+        path.moveto(10, 10)
+        path.lineto(40, 10)
+        path.lineto(40, 40)
+        path.lineto(10, 40)
+        path.closepath()
+
+        for amount in (2, 3, 10, 50):
+            last = list(path.points(amount))[-1]
+            self.assertAlmostEqual(last.x, 10)
+            self.assertAlmostEqual(last.y, 10)
+
+        last = path.point(1.0)
+        self.assertAlmostEqual(last.x, 10)
+        self.assertAlmostEqual(last.y, 10)
+
+    def test_points_terminal_closed_regression(self):
+        # concrete case that used to fail: a closed single-contour path
+        # whose curve segment lengths (computed via curvelength()'s
+        # numerical integration) don't sum back to exactly 1.0 after
+        # normalization, so walking to t=1.0 via sequential float
+        # subtraction landed one segment short of the true end -- returning
+        # that segment's *start* point (36.4, 81.6) instead of the path's
+        # closing point (88.3, 121.3)
+        size(300, 300)
+        path = Bezier()
+        path.moveto(88.27067439614919, 121.32033860337843)
+        path.curveto(104.66667655583079, 108.22238366948213,
+                      93.61796989717415, 105.69607801799869,
+                      137.93382079208237, 126.3591858790463)
+        path.curveto(158.21931501065927, 103.45082857666593,
+                      113.07418841217653, 88.42477435427688,
+                      107.19225013723411, 88.31466000455157)
+        path.lineto(76.34634743828859, 112.17512535544664)
+        path.curveto(98.80484754759375, 159.83582764375234,
+                      78.81003434914938, 90.47499568294214,
+                      36.398958247367666, 81.58688316455398)
+        path.closepath()
+
+        last = path.point(1.0)
+        self.assertAlmostEqual(last.x, 88.27067439614919)
+        self.assertAlmostEqual(last.y, 121.32033860337843)
+
+        last2 = list(path.points(2))[-1]
+        self.assertAlmostEqual(last2.x, 88.27067439614919)
+        self.assertAlmostEqual(last2.y, 121.32033860337843)
+
+    def test_points_contour_boundary(self):
+        # a t landing exactly on the seam between two contours (rather than
+        # within either one) used to resolve to the *end of the previous*
+        # contour (100, 0); it should resolve to the *start of the next*
+        # contour (500, 500) instead
+        size(700, 700)
+        path = Bezier()
+        path.moveto(0, 0)
+        path.lineto(100, 0)     # contour 1: length 100, open
+        path.moveto(500, 500)
+        path.lineto(600, 500)   # contour 2: length 100, open
+
+        mid = path.point(0.5)
+        self.assertAlmostEqual(mid.x, 500)
+        self.assertAlmostEqual(mid.y, 500)
+
+        pts = list(path.points(3)) # t = 0.0, 0.5, 1.0
+        self.assertAlmostEqual(pts[1].x, 500)
+        self.assertAlmostEqual(pts[1].y, 500)
+
     def test_area(self):
         size(50, 50)
         path = rect(0, 0, 40, 25, plot=False)
