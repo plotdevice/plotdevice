@@ -1,5 +1,6 @@
 #import <Python.h>
 #import "pathmatics/pathmatics.h"
+#import "clipper2/bridge.h"
 
 // Pathmatics routines written for NodeBox by Tom De Smedt and Frederik De Bleser
 PyMethodDef methods[] = {
@@ -14,6 +15,9 @@ PyMethodDef methods[] = {
   {"intersect", cPathmatics_intersect, METH_VARARGS, "Calculates the intersection of two NSBezierPaths."},
   {"difference", cPathmatics_difference, METH_VARARGS, "Calculates the difference of two NSBezierPaths."},
   {"xor", cPathmatics_xor, METH_VARARGS, "Calculates the exclusive or of two NSBezierPaths."},
+  {"offset", cPathmatics_offset, METH_VARARGS, "Grows or shrinks an NSBezierPath's boundary."},
+  {"simplify", cPathmatics_simplify, METH_VARARGS, "Reduces an NSBezierPath's point count within a tolerance."},
+  {"area", cPathmatics_area, METH_VARARGS, "Calculates the fill area enclosed by an NSBezierPath."},
   {"pdf_outline", cPathmatics_pdfOutline, METH_VARARGS, "Traces the vector shapes in a PDF's content stream into an NSBezierPath."},
   {"stroke_to_fill", cPathmatics_strokeToFill, METH_VARARGS, "Converts a stroked NSBezierPath into its equivalent fill-only outline."},
   // trig

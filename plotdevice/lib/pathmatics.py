@@ -64,6 +64,22 @@ def stroke_to_fill(ns_path, width, cap, join, miter=10.0):
     (in the same local coordinate space as ns_path itself)."""
     return _stroke_to_fill(ns_path, width, cap, join, miter)
 
+from _plotdevice import offset as _offset
+def offset(ns_path, delta, join, miter=2.0, flatness=0.6):
+    """Grows (delta > 0) or shrinks (delta < 0) an NSBezierPath's boundary."""
+    return _offset(ns_path, delta, join, miter, flatness)
+
+from _plotdevice import simplify as _simplify
+def simplify(ns_path, epsilon, flatness=0.6):
+    """Reduces an NSBezierPath's point count, keeping every remaining point
+    within epsilon of the original boundary."""
+    return _simplify(ns_path, epsilon, flatness)
+
+from _plotdevice import area as _area
+def area(ns_path, flatness=0.6):
+    """Returns the total unsigned fill area enclosed by an NSBezierPath."""
+    return _area(ns_path, flatness)
+
 try:
     from _plotdevice import linepoint, linelength, curvepoint, curvelength
 except ImportError:

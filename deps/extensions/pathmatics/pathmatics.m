@@ -321,6 +321,33 @@ path_to_polygon(NSBezierPath *path, float flatness)
         }
     }
 
+    // Filter out degenerate contours (fewer than 3 vertices can't enclose any
+    // area). bezierPathByFlatteningPath appends a trailing empty moveto after
+    // the final closepath, which the counting pass above sees as its own
+    // 1-vertex contour. Harmless for boolean ops (a zero-area contour is a
+    // no-op there) but visible/wrong for offset/simplify/area, which each
+    // process or report per-contour results directly.
+    int validCount = 0;
+    for (i = 0; i < poly->count; i++) {
+        if (poly->contours[i].count >= 3) validCount++;
+    }
+    if (validCount != poly->count) {
+        PDPolygon *filtered = malloc( sizeof( PDPolygon ));
+        filtered->count = validCount;
+        filtered->contours = malloc( sizeof( PDContour ) * validCount );
+        int j = 0;
+        for (i = 0; i < poly->count; i++) {
+            if (poly->contours[i].count >= 3) {
+                filtered->contours[j++] = poly->contours[i];
+            } else {
+                free(poly->contours[i].points);
+            }
+        }
+        free(poly->contours);
+        free(poly);
+        poly = filtered;
+    }
+
     return poly;
 }
 
@@ -535,6 +562,106 @@ PyObject *
 cPathmatics_xor(PyObject *self, PyObject *args)
 {
     return cPathmatics_operation(self, args, PD_XOR);
+}
+
+// Returns a new NSBezierPath with its boundary grown (delta > 0) or shrunk
+// (delta < 0) by delta.
+PyObject *
+cPathmatics_offset(PyObject *self, PyObject *args)
+{
+    PyObject *pyObject;
+    double delta, miter = 2.0;
+    int join;
+    float flatness = 0.6;
+
+    if (!PyArg_ParseTuple(args, "Odi|df", &pyObject, &delta, &join, &miter, &flatness))
+        return NULL;
+
+    if (flatness < 0.1) {
+        flatness = 0.1;
+    } else if (flatness > 5.0) {
+        flatness = 5.0;
+    }
+
+    if (strcmp("NSBezierPath", pyObject->ob_type->tp_name) != 0) {
+        PyErr_SetString(PyExc_TypeError, "first argument is not a NSBezierPath");
+        return NULL;
+    }
+
+    NSBezierPath *path = ((PyObjCObject *) pyObject)->objc_object;
+    PDPolygon *poly = path_to_polygon(path, flatness);
+    PDPolygon *resultPoly = pd_polygon_offset(poly, delta, (CGLineJoin)join, miter);
+    NSBezierPath *resultPath = polygon_to_path(resultPoly);
+
+    pd_free_polygon(poly);
+    pd_free_polygon(resultPoly);
+    [resultPath retain];
+
+    return build_objc_instance(pyObject->ob_type, resultPath);
+}
+
+// Returns a new NSBezierPath with redundant points removed (Douglas-Peucker-
+// style), keeping every remaining point within epsilon of the original.
+PyObject *
+cPathmatics_simplify(PyObject *self, PyObject *args)
+{
+    PyObject *pyObject;
+    double epsilon;
+    float flatness = 0.6;
+
+    if (!PyArg_ParseTuple(args, "Od|f", &pyObject, &epsilon, &flatness))
+        return NULL;
+
+    if (flatness < 0.1) {
+        flatness = 0.1;
+    } else if (flatness > 5.0) {
+        flatness = 5.0;
+    }
+
+    if (strcmp("NSBezierPath", pyObject->ob_type->tp_name) != 0) {
+        PyErr_SetString(PyExc_TypeError, "first argument is not a NSBezierPath");
+        return NULL;
+    }
+
+    NSBezierPath *path = ((PyObjCObject *) pyObject)->objc_object;
+    PDPolygon *poly = path_to_polygon(path, flatness);
+    PDPolygon *resultPoly = pd_polygon_simplify(poly, epsilon);
+    NSBezierPath *resultPath = polygon_to_path(resultPoly);
+
+    pd_free_polygon(poly);
+    pd_free_polygon(resultPoly);
+    [resultPath retain];
+
+    return build_objc_instance(pyObject->ob_type, resultPath);
+}
+
+// Returns the total unsigned fill area enclosed by an NSBezierPath.
+PyObject *
+cPathmatics_area(PyObject *self, PyObject *args)
+{
+    PyObject *pyObject;
+    float flatness = 0.6;
+
+    if (!PyArg_ParseTuple(args, "O|f", &pyObject, &flatness))
+        return NULL;
+
+    if (flatness < 0.1) {
+        flatness = 0.1;
+    } else if (flatness > 5.0) {
+        flatness = 5.0;
+    }
+
+    if (strcmp("NSBezierPath", pyObject->ob_type->tp_name) != 0) {
+        PyErr_SetString(PyExc_TypeError, "first argument is not a NSBezierPath");
+        return NULL;
+    }
+
+    NSBezierPath *path = ((PyObjCObject *) pyObject)->objc_object;
+    PDPolygon *poly = path_to_polygon(path, flatness);
+    double area = pd_polygon_area(poly);
+    pd_free_polygon(poly);
+
+    return Py_BuildValue("d", area);
 }
 
 

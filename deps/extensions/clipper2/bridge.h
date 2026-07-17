@@ -29,6 +29,23 @@ PDPolygon *pd_polygon_boolean(PDBooleanOp op, const PDPolygon *a, const PDPolygo
 
 void pd_free_polygon(PDPolygon *poly);
 
+// Grows (delta > 0) or shrinks (delta < 0) poly's boundary by delta, treating
+// every contour as a closed polygon (matching polygon_to_path's own
+// unconditional closePath -- every path this bridge sees is already treated
+// as closed elsewhere in this codebase). Returns a newly-allocated polygon,
+// or NULL on failure; caller must free a non-NULL result via pd_free_polygon.
+PDPolygon *pd_polygon_offset(const PDPolygon *poly, double delta,
+                             CGLineJoin join, double miterLimit);
+
+// Reduces poly's point count (Douglas-Peucker-style) while keeping every
+// remaining point within epsilon of the original boundary. Returns a newly-
+// allocated polygon; caller must free via pd_free_polygon.
+PDPolygon *pd_polygon_simplify(const PDPolygon *poly, double epsilon);
+
+// The area poly will fill under the nonzero rule: holes subtract, but all
+// non-overlapping contours add.
+double pd_polygon_area(const PDPolygon *poly);
+
 #ifdef __cplusplus
 }
 #endif

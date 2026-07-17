@@ -1,7 +1,9 @@
 #include "bridge.h"
 #include "clipper2/clipper.core.h"
 #include "clipper2/clipper.engine.h"
+#include "clipper2/clipper.h"
 #include <cstdlib>
+#include <cmath>
 
 using namespace Clipper2Lib;
 
@@ -76,4 +78,37 @@ pd_free_polygon(PDPolygon *poly)
     }
     free(poly->contours);
     free(poly);
+}
+
+PDPolygon *
+pd_polygon_offset(const PDPolygon *poly, double delta, CGLineJoin join, double miterLimit)
+{
+    PathsD paths = to_paths(poly);
+
+    JoinType jt;
+    switch (join) {
+        case kCGLineJoinMiter: jt = JoinType::Miter; break;
+        case kCGLineJoinRound: jt = JoinType::Round; break;
+        case kCGLineJoinBevel: jt = JoinType::Bevel; break;
+        default:               return NULL;
+    }
+
+    PathsD result = InflatePaths(paths, delta, jt, EndType::Polygon, miterLimit);
+    return from_paths(result);
+}
+
+PDPolygon *
+pd_polygon_simplify(const PDPolygon *poly, double epsilon)
+{
+    PathsD paths = to_paths(poly);
+    PathsD result = SimplifyPaths(paths, epsilon, /*isClosedPath=*/true);
+    return from_paths(result);
+}
+
+double
+pd_polygon_area(const PDPolygon *poly)
+{
+    // union the contours (at top precision) so the winding rule is applied before calculating area
+    PathsD filled = Union(to_paths(poly), FillRule::NonZero, 8);
+    return std::fabs(Area(filled));
 }

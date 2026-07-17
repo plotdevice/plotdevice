@@ -543,6 +543,32 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             raise DeviceError(badstyle)
         return Bezier(pathmatics.stroke_to_fill(self._nsBezierPath, nib, _CAPSTYLE[cap], _JOINSTYLE[join]))
 
+    def offset(self, delta, join=None, miter=2.0):
+        """Returns a new Bezier with this path's boundary grown (delta > 0)
+        or shrunk (delta < 0) by delta canvas units.
+
+        join (omitted defaults to the canvas's current pen() join) controls
+        the corner style where the offset boundary bends: MITER, ROUND, or
+        BEVEL.
+        """
+        if join is None:
+            join = _ctx._penstyle.join
+        if join not in _JOINSTYLE:
+            badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
+            raise DeviceError(badstyle)
+        return Bezier(pathmatics.offset(self._nsBezierPath, delta, _JOINSTYLE[join], miter))
+
+    def simplify(self, epsilon=1.0):
+        """Returns a new Bezier with redundant points removed -- every
+        remaining point stays within epsilon canvas units of the original
+        boundary."""
+        return Bezier(pathmatics.simplify(self._nsBezierPath, epsilon))
+
+    @property
+    def area(self):
+        """The total filled area enclosed by this path, in canvas units squared."""
+        return pathmatics.area(self._nsBezierPath)
+
 class Curve(object):
 
     def __init__(self, cmd=None, pts=None):

@@ -1,7 +1,9 @@
 # encoding: utf-8
+import math
 import unittest
 from . import PlotDeviceTestCase, reference
 from plotdevice import *
+from plotdevice import DeviceError
 
 class DrawingTests(PlotDeviceTestCase):
     @reference('drawing/paths-transform-pre.png')
@@ -181,6 +183,141 @@ class DrawingTests(PlotDeviceTestCase):
         combined = path.union(path.trace())
         with stroke(None), fill(0):
             bezier(combined)
+
+    @reference('drawing/paths-offset.png')
+    def test_paths_offset(self):
+        # offset() grows/shrinks a path's own boundary -- distinct from
+        # trace(), which converts an existing stroke into fill geometry
+        size(175, 109)
+        path = oval(47, 34, 80, 40, plot=False)
+        with stroke(None), fill(0.85):
+            bezier(path.offset(10))
+        with stroke(None), fill(0.3):
+            bezier(path)
+        with stroke(None), fill(0):
+            bezier(path.offset(-10))
+
+    @reference('drawing/paths-offset-join.png')
+    def test_paths_offset_join(self):
+        # a sharply-pointed star exercises offset()'s corner styles at acute
+        # angles -- the same kind of sharp/concave-corner edge case that
+        # exposed the even-odd/gpc bug for trace()+union(), just reaching
+        # Clipper2's offsetting code path (ClipperOffset) instead of its
+        # boolean-op engine this time. Should render as three cleanly
+        # offset stars with visibly different (but artifact-free) corners.
+        size(175, 109)
+        for x, j in ((30, MITER), (87, ROUND), (144, BEVEL)):
+            star_path = star(x, 58, points=5, outer=25, inner=11, plot=False)
+            with stroke(None), fill(0.2):
+                bezier(star_path.offset(6, join=j))
+
+    def test_paths_offset_collapse(self):
+        # shrinking by more than the shape can support should collapse
+        # cleanly to an empty path, not crash or produce garbage geometry
+        size(50, 50)
+        path = oval(5, 5, 40, 40, plot=False)
+        collapsed = path.offset(-100)
+        self.assertEqual(len(collapsed), 0)
+        self.assertEqual(collapsed.area, 0)
+
+    def test_paths_offset_bad_join(self):
+        path = oval(0, 0, 40, 40, plot=False)
+        with self.assertRaises(DeviceError):
+            path.offset(5, join="bogus")
+
+    @reference('drawing/paths-simplify.png')
+    def test_paths_simplify(self):
+        # a dense, noisy polyline (the kind of thing simplify() is actually
+        # for -- traced/scanned artwork, mouse input -- not a smooth curve
+        # primitive, which is already maximally compact in its native
+        # bezier-curve form) should lose most of its redundant points while
+        # keeping its overall silhouette
+        size(175, 109)
+        dense = Bezier()
+        n = 120
+        for i in range(n):
+            t = i / n * 2 * math.pi
+            r = 40 + 2 * math.sin(t * 7)  # slight wobble, not a perfect circle
+            x, y = 87 + r * math.cos(t), 55 + r * math.sin(t)
+            if i == 0:
+                dense.moveto(x, y)
+            else:
+                dense.lineto(x, y)
+        dense.closepath()
+        simplified = dense.simplify(5.0)
+        self.assertLess(len(simplified), len(dense))
+        with stroke(0), nofill(), pen(1):
+            bezier(dense)
+        with stroke(None), fill(0.3):
+            bezier(simplified)
+
+    def test_paths_simplify_degenerate(self):
+        # a path that's already minimal shouldn't gain points -- regression
+        # check for a bug where bezierPathByFlatteningPath's trailing empty
+        # moveto leaked through path_to_polygon as a spurious zero-area
+        # contour, which simplify() (unlike the boolean ops) then faithfully
+        # preserved and returned as extra output
+        size(50, 50)
+        tri = Bezier()
+        tri.moveto(0, 0)
+        tri.lineto(40, 0)
+        tri.lineto(20, 40)
+        tri.closepath()
+        simplified = tri.simplify(1.0)
+        self.assertEqual(len(simplified.contours), 1)
+        self.assertLessEqual(len(simplified), len(tri) + 1)
+
+    def test_paths_simplify_multicontour(self):
+        # simplify() must simplify each contour independently, not merge or
+        # drop any of them
+        size(50, 50)
+        multi = Bezier()
+        multi.moveto(0, 0)
+        multi.lineto(20, 0)
+        multi.lineto(10, 20)
+        multi.closepath()
+        multi.moveto(30, 0)
+        multi.lineto(50, 0)
+        multi.lineto(50, 20)
+        multi.lineto(30, 20)
+        multi.closepath()
+        simplified = multi.simplify(1.0)
+        self.assertEqual(len(simplified.contours), 2)
+
+    def test_area(self):
+        size(50, 50)
+        path = rect(0, 0, 40, 25, plot=False)
+        self.assertAlmostEqual(path.area, 40 * 25)
+
+    def test_area_hole(self):
+        # area() must net out holes correctly for boolean-op-produced shapes
+        # (whose contours are already consistently wound by Clipper2 itself)
+        # -- an annulus's area should be pi*r_outer^2 - pi*r_inner^2, not the
+        # sum of both circles' areas
+        size(120, 120)
+        outer = oval(0, 0, 100, 100, plot=False)
+        inner = oval(25, 25, 50, 50, plot=False)
+        annulus = outer.difference(inner)
+        expected = math.pi * 50**2 - math.pi * 25**2
+        self.assertAlmostEqual(annulus.area, expected, delta=expected * 0.02)
+
+    def test_area_opposite_windings(self):
+        # contours wound the other way add where they don't overlap (star winds clockwise, rect counterclockwise)
+        size(150, 50)
+        with bezier(plot=False) as path:
+            rect(0, 0, 30, 30)
+            star(100, 15, 5, 15, 6)
+        self.assertAlmostEqual(path.area, 900 + star(100, 15, 5, 15, 6, plot=False).area, places=4)
+
+        # and a hand-made hole still subtracts
+        path = Bezier()
+        path.extend([(0, 0), (30, 0), (30, 30), (0, 30)])
+        path.closepath()
+        path.moveto(10, 10)
+        for pt in [(10, 20), (20, 20), (20, 10)]:
+            path.lineto(*pt)
+        path.closepath()
+        self.assertAlmostEqual(path.area, 800, places=4)
 
     @reference('drawing/color-gradients1.png')
     def test_color_gradients1(self):
