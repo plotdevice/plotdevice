@@ -127,6 +127,46 @@ class DrawingTests(PlotDeviceTestCase):
         with stroke(0), fill(0.8):
             bezier(compound)
 
+    @reference('drawing/paths-trace.png')
+    def test_paths_trace(self):
+        # trace() converts a path's stroke footprint into an equivalent,
+        # independently-fillable outline -- here a ring twice as wide as the
+        # source circle's own outline
+        size(175, 109)
+        path = arc(87, 55, 40, plot=False)
+        outline = path.trace(nib=16, cap=BUTT, join=MITER)
+        with stroke(None), fill(0.2):
+            bezier(outline)
+
+    @reference('drawing/paths-trace-default-pen.png')
+    def test_paths_trace_default_pen(self):
+        # omitted nib/cap/join fall back to the canvas's current pen() settings
+        size(175, 109)
+        pen(12, cap=ROUND, join=ROUND)
+        path = arc(87, 55, 40, plot=False)
+        outline = path.trace()
+        with stroke(None), fill(0.2):
+            bezier(outline)
+
+    @reference('drawing/paths-trace-union.png')
+    def test_paths_trace_union(self):
+        # trace() + union() composes into a stroke-aware clip/mask stencil,
+        # without clip()/mask() needing any special-case stroke handling.
+        # (a smooth, convex shape is used here -- a sharply-pointed star's
+        # narrow arms can trip up gpc's polygon union with tiny sliver
+        # artifacts where the fill and stroke-outline edges nearly coincide;
+        # that's an unrelated gpc robustness limitation, not something to
+        # paper over by tuning the miter limit)
+        size(175, 109)
+        pen(14)
+        path = arc(87, 55, 30, plot=False)
+        combined = path.union(path.trace())
+        with stroke(None), fill(0.7):
+            bezier(combined)
+        # outline the original (un-widened) shape on top for visual contrast
+        with stroke(0), nofill(), pen(1):
+            bezier(path)
+
     @reference('drawing/color-gradients1.png')
     def test_color_gradients1(self):
         # tut/Color (11)
