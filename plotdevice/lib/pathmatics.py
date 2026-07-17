@@ -397,9 +397,7 @@ def point(path, t, segments=None, elements=None):
     as returned from length(path, segmented=True),
     point() works about thirty times faster in a for-loop,
     since it doesn't need to recalculate the length
-    during each iteration. Note that this has been deprecated:
-    the Bezier now caches the segment lengths the moment you use
-    them.
+    during each iteration.
 
     `elements` is passed straight through to _locate() -- see its
     docstring -- and, when given, is also used here in place of `path` to

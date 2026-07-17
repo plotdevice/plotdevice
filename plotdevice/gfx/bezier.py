@@ -47,7 +47,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
     def __init__(self, path=None, **kwargs):
         super(Bezier, self).__init__(**kwargs)
-        self._segment_cache = {} # used by pathmatics
         self._fulcrum = None # centerpoint (set only for center-based primitives)
 
         # path arg might contain a list of point tuples, a bezier to copy, or a raw
@@ -455,7 +454,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         t.translate(-px, -py)
         self._nsBezierPath = t.apply(self)._nsBezierPath
         self._fulcrum = t.apply(self._fulcrum) if self._fulcrum else None
-        self._segment_cache = {}
 
     def _get_x(self):
         return getattr(self._fulcrum or self.bounds.origin.x, 'x')
@@ -476,13 +474,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     ### Mathematics ###
 
     def segmentlengths(self, relative=False, n=10):
-        if relative: # Use the opportunity to store the segment cache.
-            key = (len(self), self.bounds)
-            if key not in self._segment_cache:
-                self._segment_cache = {key:pathmatics.segment_lengths(self, relative=True, n=n)}
-            return self._segment_cache[key]
-        else:
-            return pathmatics.segment_lengths(self, relative=False, n=n)
+        return pathmatics.segment_lengths(self, relative=relative, n=n)
 
     @property
     def length(self, segmented=False, n=10):
@@ -491,8 +483,8 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def point(self, t):
         return pathmatics.point(self, t)
 
-    def points(self, amount=100):
-        return pathmatics.points(self, int(amount)) # int() so we don't choke on a float
+    def points(self, amount=100, start=0, end=1):
+        return pathmatics.points(self, int(amount), start=start, end=end) # int() so we don't choke on a float
 
     def addpoint(self, t):
         self._nsBezierPath = pathmatics.insert_point(self, t)._nsBezierPath
