@@ -521,6 +521,28 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def xor(self, other, flatness=0.6):
         return Bezier(pathmatics.xor(self._nsBezierPath, other._nsBezierPath, flatness))
 
+    def trace(self, nib=None, join=None, cap=None):
+        """Returns a new Bezier representing this path's outline as though it
+        were stroked with the given weight and line style -- converting what
+        would be painted as a stroke into ordinary fillable geometry.
+
+        Any of nib/join/cap that are omitted default to the canvas's current
+        pen settings (see pen()).
+        """
+        if nib is None:
+            nib = _ctx._penstyle.nib
+        if join is None:
+            join = _ctx._penstyle.join
+        if cap is None:
+            cap = _ctx._penstyle.cap
+        if join not in _JOINSTYLE:
+            badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
+            raise DeviceError(badstyle)
+        if cap not in _CAPSTYLE:
+            badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
+            raise DeviceError(badstyle)
+        return Bezier(pathmatics.stroke_to_fill(self._nsBezierPath, nib, _CAPSTYLE[cap], _JOINSTYLE[join]))
+
 class Curve(object):
 
     def __init__(self, cmd=None, pts=None):

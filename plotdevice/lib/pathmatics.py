@@ -58,6 +58,12 @@ def pdf_outline(pdf_data):
     only) into a single NSBezierPath, in the page's own (y-up) coordinates."""
     return _pdf_outline(pdf_data, NSBezierPath.bezierPath())
 
+from _plotdevice import stroke_to_fill as _stroke_to_fill
+def stroke_to_fill(ns_path, width, cap, join, miter=10.0):
+    """Converts a stroked NSBezierPath into its equivalent fill-only outline
+    (in the same local coordinate space as ns_path itself)."""
+    return _stroke_to_fill(ns_path, width, cap, join, miter)
+
 try:
     from _plotdevice import linepoint, linelength, curvepoint, curvelength
 except ImportError:
@@ -623,4 +629,3 @@ def insert_point(path, t):
             if path[j].cmd == CLOSE:
                 new_path.closepath()
     return new_path
-

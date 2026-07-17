@@ -666,10 +666,8 @@ coordinates(PyObject *self, PyObject *args) {
 }
 
 
-// NSBezierPath -> CGPathRef conversion
-@interface Pathmatician : NSObject
-+ (CGPathRef)cgPath:(NSBezierPath *)nsPath;
-@end
+// NSBezierPath <-> CGPathRef conversion (interface declared in pathmatics.h
+// so pdftrace.m can use it too)
 @implementation Pathmatician
 + (CGPathRef)cgPath:(NSBezierPath *)nsPath{
     CGPathRef immutablePath = NULL;
@@ -706,4 +704,81 @@ coordinates(PyObject *self, PyObject *args) {
     }
     return immutablePath;
 }
+
+// Replays a CGPath's segments onto a fresh NSBezierPath (the reverse of
+// cgPath: above) -- needed to fold CGPathCreateCopyByStrokingPath/
+// CGPathCreateCopyByTransformingPath output back into an NSBezierPath.
+static void
+_bezierPathApplier(void *info, const CGPathElement *element)
+{
+    NSBezierPath *path = (NSBezierPath *)info;
+    CGPoint *pts = element->points;
+    switch (element->type) {
+        case kCGPathElementMoveToPoint:
+            [path moveToPoint:NSMakePoint(pts[0].x, pts[0].y)];
+            break;
+        case kCGPathElementAddLineToPoint:
+            [path lineToPoint:NSMakePoint(pts[0].x, pts[0].y)];
+            break;
+        case kCGPathElementAddQuadCurveToPoint: {
+            // elevate quadratic to cubic (NSBezierPath has no quad primitive)
+            NSPoint cur = [path currentPoint];
+            CGPoint c = pts[0], p = pts[1];
+            NSPoint c1 = NSMakePoint(cur.x + (c.x - cur.x) * (2.0/3.0), cur.y + (c.y - cur.y) * (2.0/3.0));
+            NSPoint c2 = NSMakePoint(p.x + (c.x - p.x) * (2.0/3.0), p.y + (c.y - p.y) * (2.0/3.0));
+            [path curveToPoint:NSMakePoint(p.x, p.y) controlPoint1:c1 controlPoint2:c2];
+            break;
+        }
+        case kCGPathElementAddCurveToPoint:
+            [path curveToPoint:NSMakePoint(pts[2].x, pts[2].y)
+                  controlPoint1:NSMakePoint(pts[0].x, pts[0].y)
+                  controlPoint2:NSMakePoint(pts[1].x, pts[1].y)];
+            break;
+        case kCGPathElementCloseSubpath:
+            [path closePath];
+            break;
+    }
+}
+
++ (NSBezierPath *)bezierPath:(CGPathRef)cgPath{
+    NSBezierPath *path = [NSBezierPath bezierPath];
+    if (cgPath) {
+        CGPathApply(cgPath, path, _bezierPathApplier);
+    }
+    return path;
+}
 @end
+
+// Converts a stroked NSBezierPath into its equivalent fill-only outline, in
+// the same local coordinate space as the input path (no transform is applied
+// -- the caller is responsible for staying in local/pre-transform units, same
+// requirement as CGPathCreateCopyByStrokingPath's own `transform` argument,
+// which is applied to the already-stroked output rather than the input).
+PyObject *
+cPathmatics_strokeToFill(PyObject *self, PyObject *args)
+{
+    PyObject *pyObject;
+    double width, miter = 10.0;
+    int cap, join;
+
+    if (!PyArg_ParseTuple(args, "Odii|d", &pyObject, &width, &cap, &join, &miter))
+        return NULL;
+
+    if (strcmp("NSBezierPath", pyObject->ob_type->tp_name) != 0) {
+        PyErr_SetString(PyExc_TypeError, "first argument is not a NSBezierPath");
+        return NULL;
+    }
+
+    NSBezierPath *path = ((PyObjCObject *) pyObject)->objc_object;
+    CGPathRef cgPath = [Pathmatician cgPath:path];
+    CGPathRef strokedPath = CGPathCreateCopyByStrokingPath(cgPath, NULL, width,
+        (CGLineCap)cap, (CGLineJoin)join, miter);
+    CGPathRelease(cgPath);
+
+    NSBezierPath *result = [Pathmatician bezierPath:strokedPath];
+    CGPathRelease(strokedPath);
+    [result retain];
+    [result setWindingRule:NSWindingRuleNonZero];
+
+    return build_objc_instance(pyObject->ob_type, result);
+}

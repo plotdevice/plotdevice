@@ -273,85 +273,6 @@ op_M(CGPDFScannerRef scanner, void *info)
     st->gs.miterLimit = limit;
 }
 
-// Replays a CGPath's segments onto a fresh NSBezierPath (the reverse of
-// `bezier_to_cgpath` below) -- needed to fold CGPathCreateCopyByStrokingPath/
-// CGPathCreateCopyByTransformingPath's output back into `committed`.
-static void
-_apply_cgpath_element(void *info, const CGPathElement *element)
-{
-    NSBezierPath *path = (NSBezierPath *)info;
-    CGPoint *pts = element->points;
-    switch (element->type) {
-        case kCGPathElementMoveToPoint:
-            [path moveToPoint:NSMakePoint(pts[0].x, pts[0].y)];
-            break;
-        case kCGPathElementAddLineToPoint:
-            [path lineToPoint:NSMakePoint(pts[0].x, pts[0].y)];
-            break;
-        case kCGPathElementAddQuadCurveToPoint: {
-            // elevate quadratic to cubic (NSBezierPath has no quad primitive)
-            NSPoint cur = [path currentPoint];
-            CGPoint c = pts[0], p = pts[1];
-            NSPoint c1 = NSMakePoint(cur.x + (c.x - cur.x) * (2.0/3.0), cur.y + (c.y - cur.y) * (2.0/3.0));
-            NSPoint c2 = NSMakePoint(p.x + (c.x - p.x) * (2.0/3.0), p.y + (c.y - p.y) * (2.0/3.0));
-            [path curveToPoint:NSMakePoint(p.x, p.y) controlPoint1:c1 controlPoint2:c2];
-            break;
-        }
-        case kCGPathElementAddCurveToPoint:
-            [path curveToPoint:NSMakePoint(pts[2].x, pts[2].y)
-                  controlPoint1:NSMakePoint(pts[0].x, pts[0].y)
-                  controlPoint2:NSMakePoint(pts[1].x, pts[1].y)];
-            break;
-        case kCGPathElementCloseSubpath:
-            [path closePath];
-            break;
-    }
-}
-
-static NSBezierPath *
-cgpath_to_bezier(CGPathRef cgPath)
-{
-    NSBezierPath *path = [NSBezierPath bezierPath];
-    if (cgPath) {
-        CGPathApply(cgPath, path, _apply_cgpath_element);
-    }
-    return path;
-}
-
-// NSBezierPath -> CGPathRef (the reverse direction of the above), needed so
-// local-space chunk geometry can be fed to CGPathCreateCopyByStrokingPath/
-// CGPathCreateCopyByTransformingPath.
-static CGPathRef
-bezier_to_cgpath(NSBezierPath *nsPath)
-{
-    CGMutablePathRef path = CGPathCreateMutable();
-    NSInteger numElements = [nsPath elementCount];
-    NSPoint points[3];
-    for (NSInteger i = 0; i < numElements; i++) {
-        NSBezierPathElement elt = [nsPath elementAtIndex:i associatedPoints:points];
-        if (elt == NSBezierPathElementMoveTo) {
-            CGPathMoveToPoint(path, NULL, points[0].x, points[0].y);
-        } else if (elt == NSBezierPathElementLineTo) {
-            CGPathAddLineToPoint(path, NULL, points[0].x, points[0].y);
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunguarded-availability-new"
-#if HAS_QUADRATIC_PATH_ELEMENTS
-        } else if (elt == NSBezierPathElementCubicCurveTo) {
-            CGPathAddCurveToPoint(path, NULL, points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
-        } else if (elt == NSBezierPathElementQuadraticCurveTo) {
-            CGPathAddQuadCurveToPoint(path, NULL, points[0].x, points[0].y, points[1].x, points[1].y);
-#else
-        } else if (elt == NSBezierPathElementCurveTo) {
-            CGPathAddCurveToPoint(path, NULL, points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
-#endif
-#pragma clang diagnostic pop
-        } else if (elt == NSBezierPathElementClosePath) {
-            CGPathCloseSubpath(path);
-        }
-    }
-    return path;
-}
-
 // Closes out any in-progress chunk, then folds every accumulated chunk's fill
 // and/or stroke contribution (as applicable) into `committed`, each
 // transformed by its own chunk's ctm. `shouldClose` mirrors the implicit
@@ -371,12 +292,12 @@ commit_paint(PDFTraceState *st, BOOL doFill, BOOL doStroke, BOOL shouldClose)
         NSBezierPath *localPath = st->chunkPaths[i];
         CGAffineTransform chunkCTM;
         [st->chunkCTMs[i] getValue:&chunkCTM];
-        CGPathRef localCGPath = bezier_to_cgpath(localPath);
+        CGPathRef localCGPath = [Pathmatician cgPath:localPath];
 
         if (doFill) {
             CGPathRef filledCGPath = CGPathCreateCopyByTransformingPath(localCGPath, &chunkCTM);
             if (filledCGPath) {
-                [st->committed appendBezierPath:cgpath_to_bezier(filledCGPath)];
+                [st->committed appendBezierPath:[Pathmatician bezierPath:filledCGPath]];
                 CGPathRelease(filledCGPath);
             }
         }
@@ -385,7 +306,7 @@ commit_paint(PDFTraceState *st, BOOL doFill, BOOL doStroke, BOOL shouldClose)
             CGPathRef strokedCGPath = CGPathCreateCopyByStrokingPath(localCGPath, &chunkCTM,
                 st->gs.lineWidth, (CGLineCap)st->gs.lineCap, (CGLineJoin)st->gs.lineJoin, st->gs.miterLimit);
             if (strokedCGPath) {
-                [st->committed appendBezierPath:cgpath_to_bezier(strokedCGPath)];
+                [st->committed appendBezierPath:[Pathmatician bezierPath:strokedCGPath]];
                 CGPathRelease(strokedCGPath);
             }
         }

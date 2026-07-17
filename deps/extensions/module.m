@@ -15,6 +15,7 @@ PyMethodDef methods[] = {
   {"difference", cPathmatics_difference, METH_VARARGS, "Calculates the difference of two NSBezierPaths."},
   {"xor", cPathmatics_xor, METH_VARARGS, "Calculates the exclusive or of two NSBezierPaths."},
   {"pdf_outline", cPathmatics_pdfOutline, METH_VARARGS, "Traces the vector shapes in a PDF's content stream into an NSBezierPath."},
+  {"stroke_to_fill", cPathmatics_strokeToFill, METH_VARARGS, "Converts a stroked NSBezierPath into its equivalent fill-only outline."},
   // trig
   {"fast_inverse_sqrt", fast_inverse_sqrt, METH_VARARGS },
   {"angle", angle, METH_VARARGS },
