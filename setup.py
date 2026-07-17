@@ -1,5 +1,5 @@
 # encoding: utf-8
-"""setup.py for building the mixed C/Objective-C/Swift `_plotdevice` extension
+"""setup.py for building the mixed C/Objective-C/Swift/C++ `_plotdevice` extension
 
 This file exists only for the things `pyproject.toml` can't handle, in particular
 the prebuild and compilation steps necessary for setuptools to package the module.
@@ -27,6 +27,7 @@ class BuildExtCommand(build_ext):
 
     def run(self):
         call('cd deps/extensions/svg && make', shell=True, cwd=ROOT)
+        call('cd deps/extensions/clipper2 && make', shell=True, cwd=ROOT)
         build_ext.run(self)
 
         # include some ui resources for running a script from the command line
@@ -55,6 +56,7 @@ class SdistPrepCommand(sdist):
                 include app/plotdevice
                 include deps/extensions/*/*.h
                 recursive-include deps/extensions/svg *.swift Makefile
+                recursive-include deps/extensions/clipper2 *
                 include tests/*.py
                 graft tests/_in
                 graft examples
@@ -80,7 +82,9 @@ setup(
     ext_modules=[Extension(
         '_plotdevice',
         sources=['deps/extensions/module.m', *glob('deps/extensions/*/*.[cm]')],
-        extra_objects=['deps/extensions/svg/SwiftDraw.o'],
+        extra_objects=['deps/extensions/svg/SwiftDraw.o',
+                       'deps/extensions/clipper2/clipper.engine.o',
+                       'deps/extensions/clipper2/bridge.o'],
         extra_link_args=sum((['-framework', fmwk] for fmwk in
             ['AppKit', 'Foundation', 'Quartz', 'Security', 'AVFoundation', 'CoreMedia', 'CoreVideo', 'CoreText']
         ), []),

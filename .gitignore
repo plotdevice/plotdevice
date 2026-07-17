@@ -18,6 +18,7 @@ deps/local
 deps/frameworks/*.framework
 deps/frameworks/relocatable-python
 deps/extensions/svg/SwiftDraw*
+deps/extensions/clipper2/*.o
 
 # cds garbage
 related/

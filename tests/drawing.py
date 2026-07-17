@@ -167,6 +167,21 @@ class DrawingTests(PlotDeviceTestCase):
         with stroke(0), nofill(), pen(1):
             bezier(path)
 
+    @reference('drawing/paths-trace-union-sharp.png')
+    def test_paths_trace_union_sharp(self):
+        # a sharply-pointed star's narrow arms make path.trace()'s stroke
+        # outline self-overlap at the concave notches between points -- under
+        # an even-odd fill rule that self-overlap reads as a hole, carving
+        # spurious sliver notches out of path.union(path.trace()). This is
+        # the exact case that exposed that bug; it should render as a clean,
+        # fully-filled star with no notches.
+        size(175, 109)
+        pen(10)
+        path = star(87, 55, points=5, outer=45, inner=20, plot=False)
+        combined = path.union(path.trace())
+        with stroke(None), fill(0):
+            bezier(combined)
+
     @reference('drawing/color-gradients1.png')
     def test_color_gradients1(self):
         # tut/Color (11)

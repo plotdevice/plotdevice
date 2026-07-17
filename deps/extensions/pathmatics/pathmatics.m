@@ -1,7 +1,7 @@
 #import "pathmatics.h"
 #include <math.h>
 #include <stdio.h>
-#include "gpc.h"
+#import "../clipper2/bridge.h"
 
 void _linepoint(double t, double x0, double y0, double x1, double y1,
                 double *out_x, double *out_y
@@ -218,43 +218,41 @@ contours_in_path_from_el(NSBezierPath *path, int se)
     return sp;
 }
 
-static gpc_polygon*
+static PDPolygon*
 path_to_polygon(NSBezierPath *path, float flatness)
 {
     [NSBezierPath setDefaultFlatness: flatness];
     [path setFlatness: flatness];
-    //printf("setFlatness %.2f\n", flatness);
 
     NSBezierPath*            flat = [path bezierPathByFlatteningPath];
     NSBezierPathElement      elem;
     NSPoint                  ap[3];
     int                      i, ec = (int)[flat elementCount];
-    gpc_polygon*             poly;
+    PDPolygon*               poly;
 
     [flat setWindingRule:[path windingRule]];
 
     // allocate memory for the poly.
 
-    poly = malloc( sizeof( gpc_polygon ));
+    poly = malloc( sizeof( PDPolygon ));
 
     // how many contours do we need?
 
-    poly->num_contours = contours_in_path(flat);
-    poly->contour = malloc( sizeof( gpc_vertex_list ) * poly->num_contours );
+    poly->count = contours_in_path(flat);
+    poly->contours = malloc( sizeof( PDContour ) * poly->count );
 
     // how many elements in each contour?
 
     int es = 0;
 
-    for( i = 0; i < poly->num_contours; ++i )
+    for( i = 0; i < poly->count; ++i )
     {
         int spc = contours_in_path_from_el(flat, es);
-        //printf("contours_in_path_from_el: %i\n", spc);
 
         // allocate enough memory to hold this many points
 
-        poly->contour[i].num_vertices = spc;
-        poly->contour[i].vertex = malloc( sizeof( gpc_vertex ) * spc );
+        poly->contours[i].count = spc;
+        poly->contours[i].points = malloc( sizeof( PDPoint ) * spc );
 
         es += spc;
     }
@@ -278,8 +276,8 @@ path_to_polygon(NSBezierPath *path, float flatness)
             {
                 // close the previous contour by adding a vertex with the subpath start
 
-                poly->contour[es].vertex[k].x = spStart.x;
-                poly->contour[es].vertex[k].y = spStart.y;
+                poly->contours[es].points[k].x = spStart.x;
+                poly->contours[es].points[k].y = spStart.y;
             }
             // next contour:
             ++es;
@@ -289,11 +287,11 @@ path_to_polygon(NSBezierPath *path, float flatness)
 
             // sanity check es - must not exceed contour count - 1
 
-            if ( es >= poly->num_contours )
+            if ( es >= poly->count )
             {
                 printf("discrepancy in contour count versus number of subpaths encountered - bailing\n");
 
-                gpc_free_polygon( poly );
+                pd_free_polygon( poly );
                 return NULL;
             }
 
@@ -301,8 +299,8 @@ path_to_polygon(NSBezierPath *path, float flatness)
 
             case NSBezierPathElementLineTo:
             // add a vertex to the list
-            poly->contour[es].vertex[k].x = ap[0].x;
-            poly->contour[es].vertex[k].y = ap[0].y;
+            poly->contours[es].points[k].x = ap[0].x;
+            poly->contours[es].points[k].y = ap[0].y;
             ++k;
             break;
 
@@ -314,7 +312,7 @@ path_to_polygon(NSBezierPath *path, float flatness)
 #endif
                 // should never happen - we have already converted the path to a flat version. Bail.
                 printf("Got a curveto unexpectedly - bailing.\n");
-                gpc_free_polygon( poly );
+                pd_free_polygon( poly );
                 return NULL;
 
             case NSBezierPathElementClosePath:
@@ -327,7 +325,7 @@ path_to_polygon(NSBezierPath *path, float flatness)
 }
 
 static NSBezierPath *
-polygon_to_path(gpc_polygon *poly)
+polygon_to_path(PDPolygon *poly)
 {
     // returns a new NSBezierPath object equivalent to the polygon passed to it. The caller is responsible for freeing
     // the polygon. The returned path is autoreleased as per usual cocoa rules.
@@ -336,18 +334,18 @@ polygon_to_path(gpc_polygon *poly)
     NSPoint            p;
     int                cont;
 
-    for( cont = 0; cont < poly->num_contours; ++cont )
+    for( cont = 0; cont < poly->count; ++cont )
     {
-        p.x = poly->contour[cont].vertex[0].x;
-        p.y = poly->contour[cont].vertex[0].y;
+        p.x = poly->contours[cont].points[0].x;
+        p.y = poly->contours[cont].points[0].y;
         [path moveToPoint:p];
 
         int vert;
 
-        for( vert = 1; vert < poly->contour[cont].num_vertices; ++vert )
+        for( vert = 1; vert < poly->contours[cont].count; ++vert )
         {
-            p.x = poly->contour[cont].vertex[vert].x;
-            p.y = poly->contour[cont].vertex[vert].y;
+            p.x = poly->contours[cont].points[vert].x;
+            p.y = poly->contours[cont].points[vert].y;
             [path lineToPoint:p];
         }
 
@@ -363,24 +361,22 @@ polygon_to_path(gpc_polygon *poly)
 }
 
 static NSBezierPath *
-path_operation(NSBezierPath* p1, NSBezierPath* p2, gpc_op op, float flatness)
+path_operation(NSBezierPath* p1, NSBezierPath* p2, PDBooleanOp op, float flatness)
 {
     NSBezierPath*    resultPath;
-    gpc_polygon        *poly1, *poly2, *resultPoly;
+    PDPolygon        *poly1, *poly2, *resultPoly;
 
     poly1 = path_to_polygon(p1, flatness);
     poly2 = path_to_polygon(p2, flatness);
 
-    resultPoly = malloc( sizeof( gpc_polygon ));
-
     // this line does all the really hard work:
-    gpc_polygon_clip( op, poly1, poly2, resultPoly );
+    resultPoly = pd_polygon_boolean( op, poly1, poly2 );
 
     resultPath = polygon_to_path( resultPoly );
 
-    gpc_free_polygon( poly1 );
-    gpc_free_polygon( poly2 );
-    gpc_free_polygon( resultPoly );
+    pd_free_polygon( poly1 );
+    pd_free_polygon( poly2 );
+    pd_free_polygon( resultPoly );
 
     return resultPath;
 }
@@ -392,7 +388,7 @@ intersects_path(NSBezierPath* p1, NSBezierPath* p2)
     if ( NSIntersectsRect( bbox, [p1 bounds]))
     {
         // bounds intersect, so it's a possibility - find the intersection and see if it's empty.
-        NSBezierPath* ip = path_operation(p1, p2, GPC_INT, 0.1);
+        NSBezierPath* ip = path_operation(p1, p2, PD_INTERSECT, 0.1);
         return ![ip isEmpty];
     }
     else
@@ -517,28 +513,28 @@ cPathmatics_operation(PyObject *self, PyObject *args, int op)
 PyObject *
 cPathmatics_union(PyObject *self, PyObject *args)
 {
-    return cPathmatics_operation(self, args, GPC_UNION);
+    return cPathmatics_operation(self, args, PD_UNION);
 }
 
 // Returns the intersection of two NSBezierPaths as a new NSBezierPath.
 PyObject *
 cPathmatics_intersect(PyObject *self, PyObject *args)
 {
-    return cPathmatics_operation(self, args, GPC_INT);
+    return cPathmatics_operation(self, args, PD_INTERSECT);
 }
 
 // Returns the difference of two NSBezierPaths as a new NSBezierPath.
 PyObject *
 cPathmatics_difference(PyObject *self, PyObject *args)
 {
-    return cPathmatics_operation(self, args, GPC_DIFF);
+    return cPathmatics_operation(self, args, PD_DIFFERENCE);
 }
 
 // Returns the exclusive or of two NSBezierPaths as a new NSBezierPath.
 PyObject *
 cPathmatics_xor(PyObject *self, PyObject *args)
 {
-    return cPathmatics_operation(self, args, GPC_XOR);
+    return cPathmatics_operation(self, args, PD_XOR);
 }
 
 
