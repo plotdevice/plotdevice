@@ -71,6 +71,95 @@ class CompositingTests(PlotDeviceTestCase):
         with clip(image('tests/_in/tiny-triangle.pdf', width=83, height=83)):
             image('tests/_in/plaid.png')
 
+    @reference('compositing/clip-outline-pdf.png')
+    def test_clip_image_outline_pdf(self):
+        # channel='outline' traces the pdf's vector shapes into a Bezier and
+        # clips against that directly, rather than rasterizing a bitmap mask
+        size(125, 125)
+        with clip(image('tests/_in/tiny-triangle.pdf', width=125, height=125), channel='outline'):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/clip-outline-pdf-transform.png')
+    def test_clip_image_outline_pdf_transform(self):
+        # same as test_clip_image_outline_pdf but under canvas transforms, to
+        # confirm the traced path is positioned via the image's _screen_transform
+        size(125, 125)
+        translate(20, 40)
+        scale(1.3)
+        rotate(20)
+        with clip(image('tests/_in/tiny-triangle.pdf', width=83, height=83), channel='outline'):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/clip-outline-svg.png')
+    def test_clip_image_outline_svg(self):
+        # vector-fill.svg has two overlapping shapes (a circle and a rect) --
+        # the outline should be their union, not two independently-clipped shapes
+        size(125, 125)
+        with clip(image('tests/_in/vector-fill.svg', width=125, height=125), channel='outline'):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/clip-outline-svg-stroke.png')
+    def test_clip_image_outline_svg_stroke(self):
+        # vector-stroke.svg is a stroke-only (unfilled) ring -- without
+        # converting the stroke to its equivalent fill outline, this shape
+        # would contribute a zero-width centerline (i.e. no clippable area)
+        size(125, 125)
+        with clip(image('tests/_in/vector-stroke.svg', width=125, height=125), channel='outline'):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/clip-outline-pdf-stroke.png')
+    def test_clip_image_outline_pdf_stroke(self):
+        # skewed-stroke.pdf is a stroke-only (unfilled) ring drawn under a
+        # rotated, non-uniformly-scaled `cm` in its own content stream --
+        # exercises stroke-to-fill conversion under an anisotropic transform,
+        # not just the identity/uniform-scale case the _transform test covers
+        size(125, 125)
+        with clip(image('tests/_in/skewed-stroke.pdf', width=125, height=125), channel='outline'):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/clip-outline-pdf-xobject.png')
+    def test_clip_image_outline_pdf_xobject(self):
+        # xobject.pdf's only geometry is a filled square inside a Form
+        # XObject, invoked via `Do` from the page's content stream (which
+        # itself draws nothing directly) -- without recursing into Form
+        # XObjects, the traced outline would be empty
+        size(125, 125)
+        with clip(image('tests/_in/xobject.pdf', width=125, height=125), channel='outline'):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/clip-outline-pdf-xobject-transform.png')
+    def test_clip_image_outline_pdf_xobject_transform(self):
+        # the Form XObject here has its own /Matrix (a 90-degree rotation)
+        # and is also invoked under a non-trivial `cm` at the `Do` call site --
+        # exercises the concatenation order (Matrix applied first, then the
+        # invoking CTM)
+        size(125, 125)
+        with clip(image('tests/_in/xobject-transform.pdf', width=125, height=125), channel='outline'):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/clip-outline-pdf-xobject-nested.png')
+    def test_clip_image_outline_pdf_xobject_nested(self):
+        # the page's Form XObject itself invokes a second, nested Form XObject
+        # via its own `Do` -- exercises formDepth > 1 and a Form resolving
+        # `Do` against its own /Resources dict rather than the page's
+        size(125, 125)
+        with clip(image('tests/_in/xobject-nested.pdf', width=125, height=125), channel='outline'):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/clip-outline-raster.png')
+    def test_clip_image_outline_raster(self):
+        # channel='outline' on a raster (non-vector) image just falls back to
+        # a rect the size of the image, since there's no vector geometry to trace
+        size(125, 125)
+        with clip(image('tests/_in/plaid.png', 10, 10, 80, 80), channel='outline'):
+            image('tests/_in/plaid.png')
+
+    @reference('compositing/mask-outline-pdf.png')
+    def test_mask_image_outline_pdf(self):
+        size(125, 125)
+        with mask(image('tests/_in/tiny-triangle.pdf', width=125, height=125), channel='outline'):
+            image('tests/_in/plaid.png')
+
     @reference('compositing/mask.png')
     def test_mask(self):
         # ref/Compositing/commands/mask()
