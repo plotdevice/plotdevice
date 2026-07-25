@@ -28,22 +28,16 @@
                     <scrollView fixedFrame="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" verticalScrollElasticity="none" translatesAutoresizingMaskIntoConstraints="NO" id="U9m-0Q-49M">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="485"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <clipView key="contentView" drawsBackground="NO" id="8kr-Id-LqZ">
+                        <clipView key="contentView" drawsBackground="NO" id="8kr-Id-LqZ" customClass="CenteringClipView">
                             <rect key="frame" x="0.0" y="0.0" width="600" height="485"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="haD-l0-piW" customClass="GraphicsBackdrop">
-                                    <rect key="frame" x="0.0" y="0.0" width="600" height="485"/>
-                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                    <subviews>
-                                        <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vrd-6s-Y5i" customClass="GraphicsView">
-                                            <rect key="frame" x="200" y="185" width="200" height="39"/>
-                                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                            <connections>
-                                                <outlet property="script" destination="Krd-r8-qxe" id="nmo-v1-4qb"/>
-                                            </connections>
-                                        </customView>
-                                    </subviews>
+                                <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vrd-6s-Y5i" customClass="GraphicsView">
+                                    <rect key="frame" x="0.0" y="0.0" width="200" height="39"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <connections>
+                                        <outlet property="script" destination="Krd-r8-qxe" id="nmo-v1-4qb"/>
+                                    </connections>
                                 </customView>
                             </subviews>
                         </clipView>

@@ -23,5 +23,5 @@ def next_tick(target, sel):
 
 from .document import PlotDeviceDocument, PythonScriptDocument, ScriptController
 from .app import PlotDeviceAppDelegate
-from .views import GraphicsBackdrop, GraphicsView, FullscreenView
+from .views import CenteringClipView, GraphicsView, FullscreenView
 from .widgets import StatusView, DashboardController, ExportSheet

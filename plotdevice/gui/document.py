@@ -285,11 +285,12 @@ class ScriptController(NSWindowController):
             set_timeout(self.editorView, 'focus', 0.1)
 
     def windowWillUseStandardFrame_defaultFrame_(self, win, rect):
-        container = self.graphicsView.superview().superview().superview().superview() # nssplitview or nsview
+        scroll = self.graphicsView.enclosingScrollView()
+        container = scroll.superview() # nssplitview or nsview
         frame = win.frame()
         current = frame.size
         gworld = self.graphicsView.frame().size
-        scrollview = self.graphicsView.superview().superview().superview().frame().size
+        scrollview = scroll.frame().size
         thumb_w = 1 if type(container) is NSSplitView else 0 # no thumb when running from command line
 
         gfx_share = scrollview.width / (current.width-thumb_w)
