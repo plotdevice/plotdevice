@@ -25,7 +25,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    kCGImagePropertyDPIHeight, kCGImagePropertyDPIWidth, kCGLineCapButt, kCGLineCapRound, \
                    kCGLineCapSquare, kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, kCGPathFill, \
                    kCGPathFillStroke, kCGPathStroke, kCIInputImageKey
-from AppKit import NSAlert, NSApp, NSAppearance, NSApplication, NSApplicationActivationPolicyAccessory, \
+from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplication, NSApplicationActivationPolicyAccessory, \
                    NSBackingStoreBuffered, NSBeep, NSBezierPath, NSBitmapImageRep, NSBorderlessWindowMask, NSButton, \
                    NSCenterTextAlignment, NSChangeAutosaved, NSChangeCleared, NSChangeDone, NSChangeReadOtherContents, \
                    NSChangeRedone, NSChangeUndone, NSClipView, NSClosePathBezierPathElement, NSColor, NSColorSpace, \
@@ -41,7 +41,8 @@ from AppKit import NSAlert, NSApp, NSAppearance, NSApplication, NSApplicationAct
                    NSParagraphStyleAttributeName, NSPasteboard, NSPasteboardTypePDF, NSPasteboardTypeTIFF, \
                    NSPasteboardURLReadingContentsConformToTypesKey, NSPasteboardURLReadingFileURLsOnlyKey, \
                    NSPDFImageRep, NSPNGFileType, NSPrintOperation, NSRectFill, NSRectFillUsingOperation, NSResponder, \
-                   NSRightTextAlignment, NSSavePanel, NSScreen, NSShadow, NSSlider, NSSmallControlSize, NSSplitView, \
+                   NSRightTextAlignment, NSSavePanel, NSScreen, NSScrollViewDidEndLiveMagnifyNotification, \
+                   NSShadow, NSSlider, NSSmallControlSize, NSSplitView, \
                    NSStringPboardType, NSSwitch, NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, \
                    NSTextView, NSTIFFFileType, NSToolbarItem, NSTrackingActiveInActiveApp, \
                    NSTrackingActiveInKeyWindow, NSTrackingArea, NSTrackingArea, NSTrackingMouseEnteredAndExited, \

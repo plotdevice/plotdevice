@@ -82,6 +82,8 @@ class GraphicsView(NSView):
         self.keycode = None
         self._zoom = 1.0
         self._dpr = self.window().backingScaleFactor()
+        self._magnifyReady = False
+        self._zoomApply = None
         # self.scrollwheel = False
         # self.wheeldelta = 0.0
 
@@ -111,6 +113,8 @@ class GraphicsView(NSView):
         is_dark = bool(isinstance(bg, Color) and bg.brightness <= .5)
         scrollview = self.superview().superview().superview()
         scrollview.setScrollerKnobStyle_(2 if is_dark else 1) # NSScrollerKnobStyleDark/Light
+
+        self._configureMagnification(scrollview)
 
         # find the centerpoint of the visible region
         visible = scrollview.documentVisibleRect()
@@ -150,6 +154,55 @@ class GraphicsView(NSView):
         if self.canvas is not None:
             self.setCanvas(self.canvas)
     zoom = property(_get_zoom, _set_zoom)
+
+    @objc.python_method
+    def _configureMagnification(self, scrollview):
+        if self._magnifyReady:
+            return
+        scrollview.setAllowsMagnification_(True)
+        scrollview.setMinMagnification_(self.zoomLevels[0])
+        scrollview.setMaxMagnification_(self.zoomLevels[-1])
+        nc = NSNotificationCenter.defaultCenter()
+        nc.addObserver_selector_name_object_(self, "scrollViewDidEndLiveMagnify:",
+                                             NSScrollViewDidEndLiveMagnifyNotification, scrollview)
+        self._magnifyReady = True
+
+    @objc.python_method
+    def _applyMagnification(self, scrollview):
+        mag = scrollview.magnification()
+        if abs(mag - 1.0) < 1e-3:
+            return
+        target = self._zoom * mag
+        target = max(self.zoomLevels[0], min(self.zoomLevels[-1], target))
+        scrollview.setMagnification_(1.0)
+        self.zoom = target
+
+    def scrollViewDidEndLiveMagnify_(self, note):
+        # trackpad pinch gesture settled
+        self._applyMagnification(note.object())
+
+    def viewDidChangeBackingProperties(self):
+        super(GraphicsView, self).viewDidChangeBackingProperties()
+        win = self.window()
+        if win is None:
+            return
+        dpr = win.backingScaleFactor()
+        if not dpr or getattr(self, '_dpr', None) == dpr:
+            return
+        self._dpr = dpr
+        if getattr(self, 'canvas', None) is not None:
+            self.setCanvas(self.canvas)
+
+    def viewWillMoveToWindow_(self, window):
+        super(GraphicsView, self).viewWillMoveToWindow_(window)
+        if window is None:
+            if self._zoomApply is not None:
+                self._zoomApply.invalidate()
+                self._zoomApply = None
+            if self._magnifyReady:
+                nc = NSNotificationCenter.defaultCenter()
+                nc.removeObserver_name_object_(self, NSScrollViewDidEndLiveMagnifyNotification, None)
+                self._magnifyReady = False
 
     @objc.python_method
     def findNearestZoomIndex(self, zoom):
@@ -237,10 +290,29 @@ class GraphicsView(NSView):
         self.key = event.characters()
         self.keycode = event.keyCode()
 
-    # def scrollWheel_(self, event):
-    #     NSResponder.scrollWheel_(self, event)
-    #     self.scrollwheel = True
-    #     self.wheeldelta = event.scrollingDeltaY()
+    def scrollWheel_(self, event):
+        scrollview = self.enclosingScrollView()
+        if not (event.modifierFlags() & NSAlternateKeyMask) or self.canvas is None or scrollview is None:
+            super(GraphicsView, self).scrollWheel_(event)
+            return
+
+        dy = event.scrollingDeltaY()
+        factor = 0.004 if event.hasPreciseScrollingDeltas() else 0.05
+        step = 1.0 + max(-15.0, min(15.0, dy)) * factor
+        if step != 1.0:
+            mag = scrollview.magnification() * step
+            center = scrollview.contentView().convertPoint_fromView_(event.locationInWindow(), None)
+            scrollview.setMagnification_centeredAtPoint_(mag, center)
+
+        if self._zoomApply is not None:
+            self._zoomApply.invalidate()
+        self._zoomApply = set_timeout(self, 'applyMagnification:', 0.2)
+
+    def applyMagnification_(self, timer):
+        self._zoomApply = None
+        scrollview = self.enclosingScrollView()
+        if scrollview is not None:
+            self._applyMagnification(scrollview)
 
     def canBecomeKeyView(self):
         return True
