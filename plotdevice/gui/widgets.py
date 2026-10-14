@@ -454,6 +454,9 @@ class ExportSheet(NSObject):
             self.last = os.path.split(fname) # save the path we exported to
             self.script.exportInit(kind, fname, opts)
 
+    exportPanelDidEnd_returnCode_contextInfo_ = objc.selector(
+        exportPanelDidEnd_returnCode_contextInfo_, signature=b'v@:@q^v')
+
     def movieState(self, key=None):
         fmts = self.formats['movie']
         fmt_idx = self.movieFormat.indexOfSelectedItem()
@@ -533,4 +536,3 @@ class ExportSheet(NSObject):
         self.movieLoop.setState_(NSOnState if is_gif else NSOffState)
         self.movieLoop.setEnabled_(is_gif)
         self.movieBitrate.setEnabled_(not is_gif)
-
