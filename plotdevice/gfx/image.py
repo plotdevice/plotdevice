@@ -27,7 +27,7 @@ __all__ = ("Image", 'ImageWriter')
 
 class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
     stateAttrs = ('_nsImage',)
-    opts = ('data',)
+    opts = ('data', 'src', 'image')
 
     def __init__(self, *args, **kwargs):
         """

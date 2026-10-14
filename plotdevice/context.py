@@ -1364,6 +1364,7 @@ class Context(object):
             be overridden via the corresponding keyword arguments.
         """
         draw = self._should_plot(kwargs)
+        Image.validate(kwargs)
         img = Image(*args, **kwargs)
         if draw:
             img.draw()
