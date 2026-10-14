@@ -204,6 +204,8 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             # create an offscreen bitmap context and rasterize the scaled image into it
             bitmap_opts = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
             bitmap_ctx = CGBitmapContextCreate(None, w, h, 8, w*4, CGColorSpaceCreateDeviceRGB(), bitmap_opts)
+            CGContextTranslateCTM(bitmap_ctx, 0, h)
+            CGContextScaleCTM(bitmap_ctx, 1, -1)
             NSGraphicsContext.saveGraphicsState()
             NSGraphicsContext.setCurrentContext_(
               NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmap_ctx, True)

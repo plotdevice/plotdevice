@@ -4,10 +4,10 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGContextAddPath, CGContextAddRect, \
                    CGContextBeginPath, CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, \
                    CGContextClearRect, CGContextClearRect, CGContextClip, CGContextClipToMask, CGContextDrawPath, \
-                   CGContextEndTransparencyLayer, CGContextEOClip, CGContextGetCTM, CGContextRestoreGState, CGContextSaveGState, \
+                   CGContextEndTransparencyLayer, CGContextEOClip, CGContextGetCTM, CGContextRestoreGState, CGContextSaveGState, CGContextScaleCTM, \
                    CGContextSetAlpha, CGContextSetBlendMode, CGContextSetFillColorWithColor, CGContextSetLineCap, \
                    CGContextSetLineDash, CGContextSetLineJoin, CGContextSetLineWidth, \
-                   CGContextSetStrokeColorWithColor, CGDataConsumerCreateWithCFData, CGImageDestinationAddImage, \
+                   CGContextSetStrokeColorWithColor, CGContextTranslateCTM, CGDataConsumerCreateWithCFData, CGImageDestinationAddImage, \
                    CGImageDestinationCreateWithData, CGImageDestinationFinalize, CGImageDestinationSetProperties, \
                    CGImageGetBitsPerComponent, CGImageGetBitsPerPixel, CGImageGetBytesPerRow, CGImageGetDataProvider, \
                    CGImageGetHeight, CGImageGetWidth, CGImageMaskCreate, CGPathAddCurveToPoint, CGPathAddLineToPoint, \
