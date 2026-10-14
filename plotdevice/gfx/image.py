@@ -4,6 +4,7 @@ import re
 import json
 import warnings
 import math
+import objc
 from contextlib import contextmanager
 from urllib.parse import urlparse
 from ..lib.cocoa import *
@@ -16,6 +17,8 @@ from .geometry import Region, Size, Point, Transform, CENTER
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
 from .colors import CMYK
 from . import _ns_context, _cg_port
+
+PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
 
 _ctx = None
 __all__ = ("Image", 'ImageWriter')
@@ -323,10 +326,12 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                 flip.translate(0, h)
                 flip.scale(1, -1)
                 return flip.apply(Bezier(ns_path))
+            if isinstance(bitmap, PDSVGImageRep):
+                # svg paths are already y-down
+                return Bezier(bitmap.outline())
 
-        # no bitmap/pdf rep found -> svg
-        ns_path = self._nsImage.plotdeviceOutline()
-        return Bezier(ns_path) if ns_path is not None else Bezier()
+        # no rep we know how to trace
+        return Bezier()
 
     def _draw(self):
         """Draw an image on the given coordinates."""

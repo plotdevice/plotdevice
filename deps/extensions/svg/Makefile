@@ -1,11 +1,13 @@
 REPO := https://github.com/swhitty/SwiftDraw.git
-TAG := 0.9.3
+TAG := 0.21.0
 .PHONY: all
 
 all: SwiftDraw.o
 	@:
 
-SwiftDraw.o: SwiftDraw
+SwiftDraw.o: SwiftDraw PDSVGImageRep.swift Package.swift.tmpl
+	cp PDSVGImageRep.swift SwiftDraw/SwiftDraw
+	cp Package.swift.tmpl SwiftDraw/Package.swift
 	cd SwiftDraw && swift build -c release --target SwiftDraw --arch arm64 --arch x86_64
 	cp SwiftDraw/.build/apple/Products/Release/SwiftDraw*.o $@
 
@@ -14,10 +16,8 @@ SwiftDraw:
 	rm -r SwiftDraw/CommandLine
 	rm -r SwiftDraw/SwiftDrawTests
 	rm -r SwiftDraw/Examples
-	rm SwiftDraw/*.*
-
-	cp NSImage+PlotDevice.swift SwiftDraw/SwiftDraw
-	cp Package.swift.tmpl SwiftDraw/Package.swift
+	rm SwiftDraw/SwiftDraw/SVGView.swift
+	rm -r SwiftDraw/*.*
 
 clean:
 	rm -rf SwiftDraw

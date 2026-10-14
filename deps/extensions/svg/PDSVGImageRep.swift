@@ -1,67 +1,89 @@
 import AppKit
 import CoreGraphics
-import ObjectiveC
 
-public extension NSImage {
+@objc(PDSVGImageRep)
+public final class SVGImageRep: NSImageRep {
 
-  convenience init?(svgData data: Data) {
-    guard let image = Image(data: data) else { return nil }
+  private let svg: SVG
+  private var cachedOutline: NSBezierPath?
 
-    self.init(size: image.size, flipped: true) { rect in
-      guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
-      ctx.draw(image, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
-      return true
+  init(svg: SVG) {
+    self.svg = svg
+    super.init()
+    size = svg.size
+    hasAlpha = true
+    isOpaque = false
+  }
+
+  @objc public convenience init?(data: Data) {
+    guard let svg = SVG(data: data) else { return nil }
+    self.init(svg: svg)
+  }
+
+  @objc public convenience init?(fileURL url: URL) {
+    guard let svg = SVG(fileURL: url) else { return nil }
+    self.init(svg: svg)
+  }
+
+  required init?(coder: NSCoder) {
+    return nil
+  }
+
+  public override func copy(with zone: NSZone? = nil) -> Any {
+    let copy = SVGImageRep(svg: svg)
+    copy.size = size
+    copy.cachedOutline = cachedOutline
+    return copy
+  }
+
+  public override func draw() -> Bool {
+    guard let gc = NSGraphicsContext.current else { return false }
+    let ctx = gc.cgContext
+    ctx.saveGState()
+    if !gc.isFlipped {
+      ctx.translateBy(x: 0, y: size.height)
+      ctx.scaleBy(x: 1, y: -1)
     }
-    objc_setAssociatedObject(self, &plotdeviceSVGKey, image, .OBJC_ASSOCIATION_RETAIN)
+    ctx.draw(svg, in: CGRect(origin: .zero, size: size))
+    ctx.restoreGState()
+    return true
   }
 
-  convenience init?(svgFileURL url: URL) {
-    guard let image = Image(fileURL: url) else { return nil }
-
-    self.init(size: image.size, flipped: true) { rect in
-      guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
-      ctx.draw(image, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
-      return true
-    }
-    objc_setAssociatedObject(self, &plotdeviceSVGKey, image, .OBJC_ASSOCIATION_RETAIN)
-  }
-
-  @objc
-  static func svgFromData(_ data: Data) -> NSImage? {
-      NSImage(svgData: data)
-  }
-
-  @objc
-  static func svgFromURL(_ url: URL) -> NSImage? {
-      NSImage(svgFileURL: url)
-  }
-
-  // Traces the union of every shape in the SVG into a single NSBezierPath, for
-  // use as a vector clip()/mask() outline (as opposed to a rasterized one).
-  // Computed lazily on first access and cached, since most SVGs are only ever
-  // drawn, not traced. Returns nil for images that weren't loaded via
-  // svgFromData_/svgFromURL_.
-  @objc
-  func plotdeviceOutline() -> NSBezierPath? {
-    if let cached = objc_getAssociatedObject(self, &plotdeviceOutlineKey) as? NSBezierPath {
+  @objc public func outline() -> NSBezierPath {
+    if let cached = cachedOutline {
       return cached
     }
-    guard let svg = objc_getAssociatedObject(self, &plotdeviceSVGKey) as? Image else {
-      return nil
-    }
     let outline = svg.plotdeviceOutlinePath()
-    objc_setAssociatedObject(self, &plotdeviceOutlineKey, outline, .OBJC_ASSOCIATION_RETAIN)
+    cachedOutline = outline
     return outline
   }
 }
 
-private var plotdeviceSVGKey: UInt8 = 0
-private var plotdeviceOutlineKey: UInt8 = 0
+public extension NSImage {
 
-private extension Image {
+  private static func plotdeviceSVG(_ rep: SVGImageRep?) -> NSImage? {
+    guard let rep = rep else { return nil }
+    let image = NSImage(size: rep.size)
+    image.cacheMode = .never
+    image.addRepresentation(rep)
+    return image
+  }
+
+  @objc
+  static func svgFromData(_ data: Data) -> NSImage? {
+    plotdeviceSVG(SVGImageRep(data: data))
+  }
+
+  @objc
+  static func svgFromURL(_ url: URL) -> NSImage? {
+    plotdeviceSVG(SVGImageRep(fileURL: url))
+  }
+}
+
+private extension SVG {
 
   // Walks the flat list of draw commands SwiftDraw generated from the SVG
-  // (see Image.swift/Renderer.swift), tracking a CTM stack the same way a
+  // (see SVG.swift/Renderer.swift), tracking a CTM stack the same way a
   // real CGContext-backed renderer would (see CGRenderer in
   // Renderer.CoreGraphics.swift), and merges every filled/stroked shape's
   // path -- transformed into its final position -- into one accumulated

@@ -85,6 +85,53 @@ class PrimitivesTests(PlotDeviceTestCase):
         size(135, 135)
         image("tests/_in/superfolia.jpg", 0, 0)
 
+    @reference('primitives/svg-fill-rule.png')
+    def test_svg_fill_rule(self):
+        # two nested, same-direction subpaths with no fill-rule attribute: the
+        # SVG default is nonzero, so this is a solid square (an evenodd default
+        # would punch a hole in the middle)
+        size(120, 120)
+        image("tests/_in/svg-fill-rule.svg", 0, 0)
+
+    @reference('primitives/svg-radial-gradient.png')
+    def test_svg_radial_gradient(self):
+        # yellow center fading to orange at the rim (not a flat black disc)
+        size(120, 120)
+        image("tests/_in/svg-radial-gradient.svg", 0, 0)
+
+    @reference('primitives/svg-stylesheet.png')
+    def test_svg_stylesheet(self):
+        # fills come from a <style> block via class & id selectors: blue
+        # left, orange right (not black)
+        size(120, 120)
+        image("tests/_in/svg-stylesheet.svg", 0, 0)
+
+    @reference('primitives/svg-currentcolor.png')
+    def test_svg_currentcolor(self):
+        # fill="currentColor" resolves to the root's color attribute: a green
+        # disc with a black outline
+        size(120, 120)
+        image("tests/_in/svg-currentcolor.svg", 0, 0)
+
+    @reference('primitives/svg-hex3.png')
+    def test_svg_hex3(self):
+        # 3-digit hex is expanded per-digit: #c3f == #cc33ff
+        size(120, 120)
+        image("tests/_in/svg-hex3.svg", 0, 0)
+
+    @reference('primitives/svg-nested.png')
+    def test_svg_nested(self):
+        # an inner <svg> with its own viewBox, positioned and scaled within
+        # the outer one: an orange disc centered on the grey square
+        size(120, 120)
+        image("tests/_in/svg-nested.svg", 0, 0)
+
+    @reference('primitives/svg-no-xmlns.png')
+    def test_svg_no_xmlns(self):
+        # a root <svg> without the xmlns attribute should still load
+        size(120, 120)
+        image("tests/_in/svg-no-xmlns.svg", 0, 0)
+
     @reference('primitives/line.jpg')
     def test_line(self):
         # ref/Primitives/commands/line()
