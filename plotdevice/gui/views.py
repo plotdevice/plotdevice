@@ -12,56 +12,25 @@ from objc import super
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
 
-class GraphicsBackdrop(NSView):
-    """A container that sits between the NSClipView and GraphicsView
+class CenteringClipView(NSClipView):
 
-       It resizes to fit the size of the canvas and centers it when the canvas
-       is smaller than the display space in the NSSplitView.
-    """
-    gfxView = None
+    def constrainBoundsRect_(self, proposed):
+        rect = super(CenteringClipView, self).constrainBoundsRect_(proposed)
+        doc = self.documentView()
+        if doc is not None:
+            d = doc.frame().size
+            if rect.size.width > d.width:
+                rect.origin.x = (d.width - rect.size.width) / 2.0
+            if rect.size.height > d.height:
+                rect.origin.y = (d.height - rect.size.height) / 2.0
+        return rect
 
-    def isFlipped(self):
-        return True
-
-    def setFrame_(self, frame):
-        if self.gfxView:
-            scrollview = self.superview().superview()
-            visible = scrollview.documentVisibleRect()
-            minsize = self.gfxView.bounds().size
-            frame.size.width = max(visible.size.width, minsize.width)
-            frame.size.height = max(visible.size.height, minsize.height)
-            scrollview.horizontalScroller().setControlSize_(1) #NSSmallControlSize
-            scrollview.verticalScroller().setControlSize_(1)
-        self = super(GraphicsBackdrop, self).setFrame_(frame)
-
-    def didAddSubview_(self, subview):
-        if isinstance(subview, GraphicsView):
-            self.gfxView = subview
-            nc = NSNotificationCenter.defaultCenter()
-            nc.addObserver_selector_name_object_(self, "viewFrameDidChange:", NSViewFrameDidChangeNotification, subview)
-
-    def __del__(self):
-        nc = NSNotificationCenter.defaultCenter()
-        nc.removeObserver_(self)
-
-    def willRemoveSubview_(self, subview):
-        if isinstance(subview, GraphicsView):
-            nc = NSNotificationCenter.defaultCenter()
-            nc.removeObserver_name_object_(self, NSViewFrameDidChangeNotification, subview)
-
-    def viewFrameDidChange_(self, note):
-        self.setFrame_(self.frame())
-        newframe = self.frame()
-        gfxframe = self.gfxView.frame()
-        if newframe.size.width > gfxframe.size.width:
-            gfxframe.origin.x = (newframe.size.width-gfxframe.size.width)//2
+    def scrollWheel_(self, event):
+        doc = self.documentView()
+        if (event.modifierFlags() & NSAlternateKeyMask) and isinstance(doc, GraphicsView) and doc.canvas is not None:
+            doc.scrollWheel_(event)
         else:
-            gfxframe.origin.x = 0
-        if newframe.size.height > gfxframe.size.height:
-            gfxframe.origin.y = (newframe.size.height-gfxframe.size.height)//2
-        else:
-            gfxframe.origin.y = 0
-        self.gfxView.setFrame_(gfxframe)
+            super(CenteringClipView, self).scrollWheel_(event)
 
 class GraphicsView(NSView):
     script = IBOutlet()
@@ -82,6 +51,8 @@ class GraphicsView(NSView):
         self.keycode = None
         self._zoom = 1.0
         self._dpr = self.window().backingScaleFactor()
+        self._magnifyReady = False
+        self._zoomApply = None
         # self.scrollwheel = False
         # self.wheeldelta = 0.0
 
@@ -105,35 +76,37 @@ class GraphicsView(NSView):
                 self.layer().setContents_(placeholder)
 
     @objc.python_method
-    def setCanvas(self, canvas):
+    def setCanvas(self, canvas, focus=None):
         # set the scroller color based on the background
         bg = canvas.background
         is_dark = bool(isinstance(bg, Color) and bg.brightness <= .5)
-        scrollview = self.superview().superview().superview()
+        scrollview = self.enclosingScrollView()
         scrollview.setScrollerKnobStyle_(2 if is_dark else 1) # NSScrollerKnobStyleDark/Light
 
-        # find the centerpoint of the visible region
-        visible = scrollview.documentVisibleRect()
-        oldframe = self.frame()
-        x_pct = NSMidX(visible) / NSWidth(oldframe)
-        y_pct = NSMidY(visible) / NSHeight(oldframe)
+        self._configureMagnification(scrollview)
+
+        if focus is None:
+            visible = scrollview.documentVisibleRect()
+            oldframe = self.frame()
+            focus = (NSMidX(visible) / NSWidth(oldframe), NSMidY(visible) / NSHeight(oldframe))
 
         # render (and possibly bomb...)
         ns_image = canvas._render_to_image(self.zoom)
         bitmap = ns_image.layerContentsForContentsScale_(self._dpr)
 
-        # resize
         w, h = [s*self.zoom for s in canvas.pagesize]
-        self.setFrameSize_([w, h])
+        self.setFrame_(((0, 0), (w, h)))
+
+        if self._magnifyReady:
+            scrollview.setMinMagnification_(self.zoomLevels[0] / self._zoom)
+            scrollview.setMaxMagnification_(self.zoomLevels[-1] / self._zoom)
 
         if self.canvas is None:
             # draw from top-left corner if first-run
             self.scrollPoint_( (0,0) )
         else:
-            # otherwise preserve the prior scrollpoint
-            half_w = NSWidth(visible) / 2.0
-            half_h = NSHeight(visible) / 2.0
-            self.scrollPoint_( (x_pct*w-half_w, y_pct*h-half_h) )
+            vw, vh = scrollview.contentView().frame().size
+            self.scrollPoint_( (focus[0]*w - vw/2.0, focus[1]*h - vh/2.0) )
 
         # cache the canvas image
         self.layer().setContents_(bitmap)
@@ -150,6 +123,59 @@ class GraphicsView(NSView):
         if self.canvas is not None:
             self.setCanvas(self.canvas)
     zoom = property(_get_zoom, _set_zoom)
+
+    @objc.python_method
+    def _configureMagnification(self, scrollview):
+        if self._magnifyReady:
+            return
+        scrollview.horizontalScroller().setControlSize_(NSSmallControlSize)
+        scrollview.verticalScroller().setControlSize_(NSSmallControlSize)
+        scrollview.setAllowsMagnification_(True)
+        nc = NSNotificationCenter.defaultCenter()
+        nc.addObserver_selector_name_object_(self, "scrollViewDidEndLiveMagnify:",
+                                             NSScrollViewDidEndLiveMagnifyNotification, scrollview)
+        self._magnifyReady = True
+
+    @objc.python_method
+    def _applyMagnification(self, scrollview):
+        mag = scrollview.magnification()
+        if abs(mag - 1.0) < 1e-3:
+            return
+        vis = scrollview.documentVisibleRect()
+        oldframe = self.frame()
+        focus = (NSMidX(vis) / NSWidth(oldframe), NSMidY(vis) / NSHeight(oldframe))
+        target = self._zoom * mag
+        target = max(self.zoomLevels[0], min(self.zoomLevels[-1], target))
+        scrollview.setMagnification_(1.0)
+        self._zoom = target
+        self.setCanvas(self.canvas, focus=focus)
+
+    def scrollViewDidEndLiveMagnify_(self, note):
+        # trackpad pinch gesture settled
+        self._applyMagnification(note.object())
+
+    def viewDidChangeBackingProperties(self):
+        super(GraphicsView, self).viewDidChangeBackingProperties()
+        win = self.window()
+        if win is None:
+            return
+        dpr = win.backingScaleFactor()
+        if not dpr or getattr(self, '_dpr', None) == dpr:
+            return
+        self._dpr = dpr
+        if getattr(self, 'canvas', None) is not None:
+            self.setCanvas(self.canvas)
+
+    def viewWillMoveToWindow_(self, window):
+        super(GraphicsView, self).viewWillMoveToWindow_(window)
+        if window is None:
+            if self._zoomApply is not None:
+                self._zoomApply.invalidate()
+                self._zoomApply = None
+            if self._magnifyReady:
+                nc = NSNotificationCenter.defaultCenter()
+                nc.removeObserver_name_object_(self, NSScrollViewDidEndLiveMagnifyNotification, None)
+                self._magnifyReady = False
 
     @objc.python_method
     def findNearestZoomIndex(self, zoom):
@@ -197,7 +223,7 @@ class GraphicsView(NSView):
         if not self.canvas:
             return
         w, h = self.canvas.pagesize
-        fw, fh = self.superview().superview().frame()[1]
+        fw, fh = self.enclosingScrollView().contentView().frame().size
         factor = min(fw / w, fh / h)
         self.zoom = factor
 
@@ -237,10 +263,29 @@ class GraphicsView(NSView):
         self.key = event.characters()
         self.keycode = event.keyCode()
 
-    # def scrollWheel_(self, event):
-    #     NSResponder.scrollWheel_(self, event)
-    #     self.scrollwheel = True
-    #     self.wheeldelta = event.scrollingDeltaY()
+    def scrollWheel_(self, event):
+        scrollview = self.enclosingScrollView()
+        if not (event.modifierFlags() & NSAlternateKeyMask) or self.canvas is None or scrollview is None:
+            super(GraphicsView, self).scrollWheel_(event)
+            return
+
+        dy = event.scrollingDeltaY()
+        factor = 0.004 if event.hasPreciseScrollingDeltas() else 0.05
+        step = 1.0 + max(-15.0, min(15.0, dy)) * factor
+        if step != 1.0:
+            mag = scrollview.magnification() * step
+            center = scrollview.contentView().convertPoint_fromView_(event.locationInWindow(), None)
+            scrollview.setMagnification_centeredAtPoint_(mag, center)
+
+        if self._zoomApply is not None:
+            self._zoomApply.invalidate()
+        self._zoomApply = set_timeout(self, 'applyMagnification:', 0.2)
+
+    def applyMagnification_(self, timer):
+        self._zoomApply = None
+        scrollview = self.enclosingScrollView()
+        if scrollview is not None:
+            self._applyMagnification(scrollview)
 
     def canBecomeKeyView(self):
         return True
