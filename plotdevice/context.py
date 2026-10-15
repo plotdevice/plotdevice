@@ -1830,6 +1830,16 @@ class Frame(object):
         self._render_to_context(bitmapContext, scale)
         return CGBitmapContextCreateImage(bitmapContext)
 
+    def _render_to_surface(self, surface, scale):
+        surface.lock()
+        try:
+            port = surface.context()
+            CGContextClearRect(port, ((0, 0), (surface.width(), surface.height())))
+            self._render_to_context(port, scale)
+            CGContextFlush(port)
+        finally:
+            surface.unlock()
+
     def _render_to_context(self, cgContext, zoom):
         ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(cgContext, True)
         NSGraphicsContext.saveGraphicsState()

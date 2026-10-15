@@ -5,6 +5,7 @@ from collections import UserDict
 from . import PlotDeviceTestCase
 from plotdevice import *
 from plotdevice import _ctx, gfx, lib
+import objc
 
 class _Poison(object):
     def __getattr__(self, attr):
@@ -26,6 +27,12 @@ def _scene():
 
 def _png(frame):
     return bytes(frame._getImageData('png'))
+
+def _pixels(cgimage):
+    from Quartz import CGImageGetDataProvider, CGDataProviderCopyData, CGImageGetBytesPerRow, CGImageGetWidth, CGImageGetHeight
+    raw = bytes(CGDataProviderCopyData(CGImageGetDataProvider(cgimage)))
+    stride, width = CGImageGetBytesPerRow(cgimage), CGImageGetWidth(cgimage) * 4
+    return b''.join(raw[row * stride:row * stride + width] for row in range(CGImageGetHeight(cgimage)))
 
 class FrameTests(PlotDeviceTestCase):
     def test_frame_renders_without_the_context(self):
@@ -159,6 +166,16 @@ class FrameTests(PlotDeviceTestCase):
         self.assertEqual(set(vars(clone)), set(Image._state))
         for attr in ('_frame', '_transform', '_effects'):
             self.assertIsNot(getattr(clone, attr), getattr(img, attr))
+
+    def test_frame_renders_to_a_surface_identically(self):
+        from Quartz import CGBitmapContextCreateImage
+        frame = _scene()
+        width, height = [max(int(dim * 2.0), 1) for dim in frame.pagesize]
+        surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(width, height)
+        for _ in range(2): # a surface is drawn into repeatedly, so the second frame matters too
+            frame._render_to_surface(surface, 2.0)
+        self.assertEqual(_pixels(CGBitmapContextCreateImage(surface.context())),
+                         _pixels(frame._render_to_cgimage(1.0, 2.0)))
 
 class CanvasTests(PlotDeviceTestCase):
     def test_rendering_does_not_leak(self):

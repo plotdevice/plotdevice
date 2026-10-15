@@ -10,6 +10,28 @@ from ..gfx import Color
 from ..gfx.atoms import KEY_ESC
 from objc import super
 
+class SurfaceRing(object):
+    DEPTH = 3
+
+    def __init__(self, width, height):
+        PDSurface = objc.lookUpClass('PDSurface')
+        self.size = (width, height)
+        self._surfaces = [PDSurface.surfaceWithWidth_height_(width, height) for _ in range(self.DEPTH)]
+        self._next = 0
+
+    def render(self, frame, scale):
+        surface = self._surfaces[self._next]
+        self._next = (self._next + 1) % self.DEPTH
+        frame._render_to_surface(surface, scale)
+        return surface.surface()
+
+def _rendered(view, frame, scale):
+    width, height = [max(int(dim * scale), 1) for dim in frame.pagesize]
+    ring = getattr(view, '_ring', None)
+    if ring is None or ring.size != (width, height):
+        ring = view._ring = SurfaceRing(width, height)
+    return ring.render(frame, scale)
+
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
 
 class CenteringClipView(NSClipView):
@@ -91,7 +113,7 @@ class GraphicsView(NSView):
             focus = (NSMidX(visible) / NSWidth(oldframe), NSMidY(visible) / NSHeight(oldframe))
 
         # render (and possibly bomb...)
-        bitmap = canvas.commit()._render_to_cgimage(self.zoom, self._dpr)
+        surface = _rendered(self, canvas.commit(), self.zoom * self._dpr)
 
         w, h = [s*self.zoom for s in canvas.pagesize]
         self.setFrame_(((0, 0), (w, h)))
@@ -108,7 +130,7 @@ class GraphicsView(NSView):
             self.scrollPoint_( (focus[0]*w - vw/2.0, focus[1]*h - vh/2.0) )
 
         self.layer().setContentsScale_(self._dpr)
-        self.layer().setContents_(bitmap)
+        self.layer().setContents_(surface)
 
         # keep a reference to the canvas so we can zoom later on
         self.canvas = canvas
@@ -337,8 +359,8 @@ class FullscreenView(NSView):
             self.dy = (sh - nh) / 2.0
         win = self.window()
         dpr = win.backingScaleFactor() if win else NSScreen.mainScreen().backingScaleFactor()
-        bitmap = canvas.commit()._render_to_cgimage(self.scalingFactor, dpr or 1.0)
-        self.layer().setContents_(bitmap)
+        surface = _rendered(self, canvas.commit(), self.scalingFactor * (dpr or 1.0))
+        self.layer().setContents_(surface)
 
     def updateTrackingAreas(self):
         for area in self.trackingAreas():
