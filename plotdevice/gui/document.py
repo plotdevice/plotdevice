@@ -17,7 +17,7 @@ from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
 from ..run import Sandbox, encoded
 from .. import DeviceError
-from . import set_timeout
+from . import set_timeout, FrameClock, FRAMELOG
 
 NSEventGestureAxisVertical = 2
 
@@ -167,6 +167,8 @@ class ScriptController(NSWindowController):
         self.currentView = None
         self.stationery = None
         self.is_tab = False
+        self._fps_shown = False # whether the toolbar readout is currently visible
+        self._fps_stamp = 0     # when it was last refreshed
 
     def setPath_source_(self, path, source):
         self.vm.path = path
@@ -348,6 +350,7 @@ class ScriptController(NSWindowController):
                 toolbar = self.imageToolbar
             else:
                 toolbar = self.animToolbar
+                self.window().setToolbar_(toolbar)  # items don't exist until it's attached
                 for item in toolbar.items():
                     if item.itemIdentifier() == 'run-script':
                         action = dict(play='pause', pause='forward.frame', stop='play')[mode]
@@ -380,7 +383,7 @@ class ScriptController(NSWindowController):
             if self.animationTimer.isValid():
                 self.animationTimer.invalidate()
             else:
-                self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
+                self.animationTimer = FrameClock(self.currentView, self, 'tick:', self.vm.speed)
             self.setToolbarMode_("play" if self.animationTimer.isValid() else "pause")
         else:
             self.setToolbarMode_("play")
@@ -470,10 +473,17 @@ class ScriptController(NSWindowController):
                 window.makeFirstResponder_(self.currentView)
 
                 # Start the timer
-                self.animationTimer = set_timeout(self, 'step', 1.0/self.vm.speed, repeat=True)
+                self.animationTimer = FrameClock(self.currentView, self, 'tick:', self.vm.speed)
 
                 # enable the stop button in the toolbar
                 self.setToolbarMode_("play")
+
+    def tick_(self, sender):
+        clock = self.animationTimer
+        if clock and clock.should_draw():
+            self.step()
+            clock.frame_done()   # no-op if step() stopped the script (the clock is invalidated)
+            self._update_fps(clock)
 
     def step(self):
         """Keep calling the script's draw method until an error occurs or the animation complete."""
@@ -481,13 +491,20 @@ class ScriptController(NSWindowController):
         if not ok:
             self.stopScript()
 
-        # if not hasattr(self, '_step_times'):
-        #     self._step_times = []
-        # self._step_times.append(time.time())
-        # if len(self._step_times) == 10:
-        #     fps = sum([1.0/(t1-t0) for t0, t1 in zip(self._step_times, self._step_times[1:])]) / len(self._step_times)
-        #     print(fps)
-        #     self._step_times = []
+    @objc.python_method
+    def _update_fps(self, clock):
+        if not self.statusView:
+            return
+        if clock is not None and self.animationTimer is clock and clock.lagging:
+            now = time.time()
+            if now - self._fps_stamp >= 0.5:
+                self._fps_stamp = now
+                self.statusView.showFPS_(clock.fps)
+                self._fps_shown = True
+        elif self._fps_shown:
+            self.statusView.hideFPS()
+            self._fps_shown = False
+            self._fps_stamp = 0
 
     @objc.python_method
     def invoke(self, method):
@@ -501,7 +518,9 @@ class ScriptController(NSWindowController):
         """
         # Run the script
         self.vm.state = self._ui_state()
+        t0 = time.perf_counter()
         result = self.vm.run(method=method)
+        t1 = time.perf_counter()
         self.echo(result.output)
 
         # only update the view during animations after the script's draw()
@@ -515,6 +534,8 @@ class ScriptController(NSWindowController):
                 self.currentView.setCanvas(self.vm.canvas)
             except DeviceError as e:
                 return self.crash()
+        if FRAMELOG and self.animationTimer is not None:
+            self.animationTimer._parts = (t1 - t0, time.perf_counter() - t1)
         if not result.ok and method in (None, "setup"):
             self.stopScript()
         if result.ok=='HALTED':
@@ -656,6 +677,7 @@ class ScriptController(NSWindowController):
         if self.animationTimer:
             self.animationTimer.invalidate()
             self.animationTimer = None
+            self._update_fps(None)
 
             # run stop() method if the script defines one
             result = self.vm.stop()

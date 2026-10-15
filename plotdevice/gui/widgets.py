@@ -61,6 +61,15 @@ class StatusView(NSView):
         self.counter.setHidden_(True)
         self._state = 'idle'
 
+    def showFPS_(self, fps):
+        if self._state == 'idle':
+            self.counter.setStringValue_("%.0f fps" % fps)
+            self.counter.setHidden_(False)
+
+    def hideFPS(self):
+        if self._state == 'idle':
+            self.counter.setHidden_(True)
+
     def mouseEntered_(self, e):
         if self._state == 'run':
             self.cancel.setHidden_(False)
