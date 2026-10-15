@@ -60,7 +60,10 @@ def editor_info(name=None):
         if THEMES is None:
             THEMES = json.load(open(bundle_path(rsrc='ui/themes.json')))
         info = dict(family=get_default('font-name'), px=get_default('font-size'))
-        info.update(THEMES.get(get_default('theme')))
+        theme = get_default('theme')
+        if theme not in THEMES:
+            theme = defaultDefaults()['plotdevice:theme']
+        info.update(THEMES[theme])
         info['colors'] = {k:_hex_to_nscolor(v) for k,v in info['colors'].items()}
         fm = NSFontManager.sharedFontManager()
         info['font'] = fm.fontWithFamily_traits_weight_size_(
