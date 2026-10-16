@@ -276,6 +276,21 @@ class CanvasTests(PlotDeviceTestCase):
         gc.collect(); retained = sum(1 for o in gc.get_objects() if isinstance(o, Color)) - before
         self.assertEqual(retained, 0, '%d Colors survived their texts' % retained)
 
+    def test_state_does_not_chain_across_frames(self):
+        def depth(obj):
+            n = 0
+            while hasattr(obj, '_rollback'):
+                obj = obj._rollback
+                obj = next(iter(obj.values())) if isinstance(obj, dict) else obj
+                n += 1
+            return n
+        size(100, 100)
+        for frame in range(10):
+            clear()
+            for i in range(10):
+                fill(i / 10.0); stroke(0); font('Avenir', 10 + i); rect(0, 0, 10, 10)
+        self.assertEqual([depth(_ctx._fillcolor), depth(_ctx._strokecolor), depth(_ctx._font)], [0, 0, 0])
+
     def test_ordered_by_dotted_attr(self):
         size(100, 100)
         positions = [80, 20, 50]

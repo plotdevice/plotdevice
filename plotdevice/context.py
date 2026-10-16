@@ -816,13 +816,14 @@ class Context(object):
             else:
                 clr = Color(*args)
             setattr(clr, '_rollback', dict(fill=self._fillcolor))
-            self._fillcolor = clr
+            self._fillcolor = clr.copy()
+            return clr
         return self._fillcolor
 
     def nostroke(self):
         """Set the stroke color to None"""
         clr = Color(None)
-        setattr(clr, '_rollback', dict(fill=self._strokecolor))
+        setattr(clr, '_rollback', dict(stroke=self._strokecolor))
         self._strokecolor = None
         return clr
 
@@ -845,7 +846,8 @@ class Context(object):
 
             annotated = Color(*args)
             setattr(annotated, '_rollback', dict(stroke=self._strokecolor))
-            self._strokecolor = annotated
+            self._strokecolor = annotated.copy()
+            return annotated
         return self._strokecolor
 
     ### Pen Commands ###
@@ -1112,7 +1114,8 @@ class Context(object):
         if args or kwargs:
             newfont = Font(*args, **kwargs)
             newfont._rollback = self._font
-            self._font = newfont
+            self._font = newfont.copy()
+            return newfont
         return self._font
 
     def layout(self, **kwargs):

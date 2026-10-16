@@ -522,6 +522,20 @@ class DrawingTests(PlotDeviceTestCase):
         self.assertIs(plot(r, live=True, fill='red'), r)
         self.assertEqual(tuple(r.fill.rgba), tuple(Color('red').rgba))
 
+    def test_with_state_restores(self):
+        fill('red'); stroke('blue'); font('Avenir', 12); font('Baskerville', 30)
+        with fill('green'):
+            with fill('yellow'):
+                fill('purple')
+            self.assertEqual(fill().hex, '#008000')
+        self.assertEqual(fill().hex, '#f00')
+        with nostroke():
+            self.assertIsNone(stroke())
+        self.assertEqual((fill().hex, stroke().hex), ('#f00', '#00f'))
+        with font():
+            font('Futura', 50)
+        self.assertEqual((font().family, font().size), ('Baskerville', 30))
+
     @unittest.skip("fix colors library first")
     @reference('drawing/ximport-colors.png')
     def test_ximport_colors(self):
