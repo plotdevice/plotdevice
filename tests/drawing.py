@@ -515,6 +515,13 @@ class DrawingTests(PlotDeviceTestCase):
             o = oval(0,0,100,100)   # not drawn
             s = rect(100,100,10,10) # same here
 
+    def test_plot_live(self):
+        # live=True plots the object itself rather than a copy (and isn't a property to validate)
+        size(125, 125)
+        r = rect(20,20,40,40, plot=False)
+        self.assertIs(plot(r, live=True, fill='red'), r)
+        self.assertEqual(tuple(r.fill.rgba), tuple(Color('red').rgba))
+
     @unittest.skip("fix colors library first")
     @reference('drawing/ximport-colors.png')
     def test_ximport_colors(self):

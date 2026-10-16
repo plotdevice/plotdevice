@@ -1439,7 +1439,7 @@ class Context(object):
         # by default, plot a copy of the grob and return a reference to that new copy.
         # if live=True, the obj itself will be added to the canvas and the caller can
         # make additional modifications on that instance
-        grob = obj if kwargs.get('live') else obj.copy()
+        grob = obj if kwargs.pop('live', False) else obj.copy()
 
         # if there are any positional args following the grob, assign a new x/y (and possibly w/h)
         plain_numbers = len(coords) in (2, 3) and all(numlike(c) for c in coords)
