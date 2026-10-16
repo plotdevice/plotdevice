@@ -14,7 +14,7 @@ import argparse, os, sys, json, plistlib, tempfile
 from glob import glob
 from shutil import rmtree, copy
 from subprocess import call, run, Popen, PIPE
-from os.path import join, exists, dirname, basename, abspath, getsize
+from os.path import join, exists, dirname, basename, abspath, getsize, realpath
 
 ROOT = dirname(abspath(__file__))
 sys.path.insert(0, ROOT)
@@ -70,15 +70,18 @@ def spawn(cmd, **kwargs):
 
 def cmd_dev(args):
     # install pyobjc, requests and the other pypi dependencies in deps/local
-    import platform, venv
-    venv_dir = join('deps/local', platform.python_version())
+    import platform
+    venv_dir = join('deps/local', platform.python_version() + sys.abiflags)
     if not exists(venv_dir):
-        venv.create(venv_dir, symlinks=True, with_pip=True)
+        spawn([realpath(sys.executable), '-m', 'venv', venv_dir])
         PIP = join(venv_dir, 'bin/pip3')
         call([PIP, 'install', '-q', '--upgrade', 'pip', 'setuptools', 'wheel', 'py2app', 'twine'])
         call([PIP, 'install', '-q', '-e', ROOT])
+        print("\nA local development environment has been set up in %s" % venv_dir)
 
-    print("\nA local development environment has been set up in %s" % venv_dir)
+    shell = basename(os.environ.get('SHELL', ''))
+    activate = {'fish':'activate.fish', 'csh':'activate.csh', 'tcsh':'activate.csh'}.get(shell, 'activate')
+    print("Activate the venv with: \033[1msource %s\033[0m" % join(venv_dir, 'bin', activate))
 
 
 def cmd_icon(args):

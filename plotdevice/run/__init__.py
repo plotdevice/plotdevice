@@ -13,7 +13,7 @@ except ImportError:
     if exists(make_py):
         from platform import python_version
         from sysconfig import get_config_var
-        local_libs = '%s/deps/local/%s/lib/python%s/site-packages' % (repo, python_version(), get_config_var('py_version_short'))
+        local_libs = '%s/deps/local/%s%s/lib/python%s%s/site-packages' % (repo, python_version(), sys.abiflags, get_config_var('py_version_short'), sys.abiflags)
         if not exists(local_libs):
             call([sys.executable, make_py, 'dev'])
         site.addsitedir(local_libs)

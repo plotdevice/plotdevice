@@ -42,6 +42,7 @@ class ScriptApp(NSApplication):
         if mode=='headless':
             app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         elif mode=='windowed':
+            app.setActivationPolicy_(NSApplicationActivationPolicyRegular)
             icon = NSImage.alloc().initWithContentsOfFile_(rsrc_path('PlotDeviceFile.icns'))
             app.setApplicationIconImage_(icon)
         return app
