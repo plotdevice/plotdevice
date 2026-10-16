@@ -274,7 +274,7 @@ class Sandbox(object):
         os.chdir(scriptDir)
 
         try:
-            # run the code object we were passed
+            self.context._activate()
             method()
         except Halted:
             return Outcome('HALTED', output.data)

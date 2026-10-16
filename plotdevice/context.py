@@ -1,5 +1,6 @@
 # encoding: utf-8
-import os, re, types
+import os, re, sys, types
+from copy import copy
 from contextlib import contextmanager
 from collections import namedtuple, OrderedDict
 from os.path import exists, expanduser
@@ -10,6 +11,7 @@ from .lib import pathmatics
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
 from .gfx.geometry import Dimension, parse_coords
 from .gfx.typography import Layout
+from .gfx.effects import Frob
 from .gfx import *
 from . import gfx, lib, util, Halted, DeviceError
 
@@ -33,6 +35,7 @@ class Context(object):
         ximport's _ctx-passing magic.
         """
         self.canvas = Canvas() if canvas is None else canvas
+        self.canvas._ctx = self
         self._ns = {} if ns is None else ns
         self._imagecache = {}
         self._statestack = []
@@ -872,7 +875,9 @@ class Context(object):
 
         # validate the line-dash stepsize (if any)
         if numlike(spec.get('dash',None)):
-            spec['dash'] = [spec['dash']]
+            spec['dash'] = (spec['dash'],)
+        elif spec.get('dash') is not None:
+            spec['dash'] = tuple(spec['dash'])
         if len(spec.get('dash') or []) % 2:
             spec['dash'] += spec['dash'][-1:] # assume even spacing for omitted skip sizes
 
@@ -1659,6 +1664,7 @@ class _PostScriptView(NSView):
         return True
 
 class Canvas(object):
+    _ctx = None # the Context drawing into us (set by Context.__init__)
 
     def __init__(self, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, unit=px):
         self.unit = unit
@@ -1740,24 +1746,69 @@ class Canvas(object):
         except IndexError as e:
             raise DeviceError("pop: too many canvas pops!")
 
-    def draw(self):
-        if self.background is not None:
-            rect = ((0,0), self.pagesize)
-            if isinstance(self.background, Gradient):
-                self.background.fill(rect)
-            else:
-                self.background.set()
-                NSRectFillUsingOperation(rect, NSCompositeSourceOver)
-
-        with autorelease():
-            for grob in self._grobs:
-                grob._draw()
-        # import cProfile
-        # cProfile.runctx('[grob._draw() for grob in self._grobs*10]', globals(), {"self":self}, sort='cumulative')
+    def commit(self):
+        return Frame(self)
 
     @property
     def _nsImage(self):
         # Allow the canvas to be used with the image() command
+        return self.commit()._render_to_image()
+
+    def _getImageData(self, format, zoom=1.0, cmyk=False):
+        return self.commit()._getImageData(format, zoom, cmyk)
+
+    def save(self, fname, format=None, zoom=1.0, cmyk=False):
+        """Write the current graphics objects to an image file"""
+        self.commit().save(fname, format, zoom, cmyk)
+
+
+def _unheld(grobs):
+    for grob in grobs:
+        return sys.getrefcount(grob)
+_UNHELD = _unheld([object()])
+
+def _committed(grobs):
+    committed = []
+    for grob in grobs:
+        if isinstance(grob, Frob):
+            grob = copy(grob)
+            grob._grobs = _committed(grob.contents)
+        else:
+            held = sys.getrefcount(grob) > _UNHELD
+            for part in grob._parts:
+                held = held or sys.getrefcount(part) > _UNHELD
+            if held:
+                grob = grob.copy()
+            grob._commit()
+        committed.append(grob)
+    return tuple(committed)
+
+class Frame(object):
+
+    def __init__(self, canvas):
+        self.grobs = _committed(canvas._grobs)
+        self.width, self.height = canvas.width, canvas.height
+        self.pagesize = canvas.pagesize
+        self.background = canvas.background
+        self.outputmode = canvas._ctx._outputmode if canvas._ctx else RGB
+
+    def draw(self):
+        """Render the frame into the current graphics context"""
+        with gfx._rendering(self):
+            if self.background is not None:
+                rect = ((0,0), self.pagesize)
+                if isinstance(self.background, Gradient):
+                    self.background.fill(rect)
+                else:
+                    self.background.set()
+                    NSRectFillUsingOperation(rect, NSCompositeSourceOver)
+
+            with autorelease():
+                for grob in self.grobs:
+                    grob._draw()
+
+    @property
+    def _nsImage(self):
         return self._render_to_image()
 
     def _render_to_image(self, zoom=1.0):
@@ -1770,6 +1821,14 @@ class Canvas(object):
         self.draw()
         img.unlockFocus()
         return img
+
+    def _render_to_cgimage(self, zoom=1.0, dpr=1.0):
+        scale = zoom * dpr
+        size = Size(*[max(int(dim*scale), 1) for dim in self.pagesize])
+        colorspace, opts = CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
+        bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
+        self._render_to_context(bitmapContext, scale)
+        return CGBitmapContextCreateImage(bitmapContext)
 
     def _render_to_context(self, cgContext, zoom):
         ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(cgContext, True)

@@ -91,8 +91,7 @@ class GraphicsView(NSView):
             focus = (NSMidX(visible) / NSWidth(oldframe), NSMidY(visible) / NSHeight(oldframe))
 
         # render (and possibly bomb...)
-        ns_image = canvas._render_to_image(self.zoom)
-        bitmap = ns_image.layerContentsForContentsScale_(self._dpr)
+        bitmap = canvas.commit()._render_to_cgimage(self.zoom, self._dpr)
 
         w, h = [s*self.zoom for s in canvas.pagesize]
         self.setFrame_(((0, 0), (w, h)))
@@ -108,7 +107,7 @@ class GraphicsView(NSView):
             vw, vh = scrollview.contentView().frame().size
             self.scrollPoint_( (focus[0]*w - vw/2.0, focus[1]*h - vh/2.0) )
 
-        # cache the canvas image
+        self.layer().setContentsScale_(self._dpr)
         self.layer().setContents_(bitmap)
 
         # keep a reference to the canvas so we can zoom later on
@@ -307,6 +306,7 @@ class FullscreenView(NSView):
 
     def init(self):
         super(FullscreenView, self).init()
+        self.canvas = None
         self.mousedown = False
         self.keydown = False
         self.key = None
@@ -314,12 +314,18 @@ class FullscreenView(NSView):
         self.mousehide = None
         # self.scrollwheel = False
         # self.wheeldelta = 0.0
+
+        self.setLayer_(CALayer.new())
+        self.setWantsLayer_(True)
+        self.layer().setBackgroundColor_(NSColor.blackColor().CGColor())
+        self.layer().setContentsGravity_(kCAGravityResizeAspect)
+        inaction = {k:None for k in ["onOrderOut", "sublayers", "contents", "position", "bounds"]}
+        self.layer().setActions_(inaction)
         return self
 
     @objc.python_method
     def setCanvas(self, canvas):
         self.canvas = canvas
-        self.setNeedsDisplay_(True)
         if not hasattr(self, "screenRect"):
             self.screenRect = NSScreen.mainScreen().frame()
             cw, ch = self.canvas.pagesize
@@ -329,20 +335,10 @@ class FullscreenView(NSView):
             self.scaledSize = nw, nh
             self.dx = (sw - nw) / 2.0
             self.dy = (sh - nh) / 2.0
-
-    def drawRect_(self, rect):
-        NSGraphicsContext.currentContext().saveGraphicsState()
-        NSColor.blackColor().set()
-        NSRectFill(rect)
-        if self.canvas is not None:
-            t = NSAffineTransform.transform()
-            t.translateXBy_yBy_(self.dx, self.dy)
-            t.scaleBy_(self.scalingFactor)
-            t.concat()
-            clip = NSBezierPath.bezierPathWithRect_( ((0, 0), self.canvas.pagesize) )
-            clip.addClip()
-            self.canvas.draw()
-        NSGraphicsContext.currentContext().restoreGraphicsState()
+        win = self.window()
+        dpr = win.backingScaleFactor() if win else NSScreen.mainScreen().backingScaleFactor()
+        bitmap = canvas.commit()._render_to_cgimage(self.scalingFactor, dpr or 1.0)
+        self.layer().setContents_(bitmap)
 
     def updateTrackingAreas(self):
         for area in self.trackingAreas():

@@ -64,9 +64,13 @@ class Bequest(type):
 class Grob(object, metaclass=Bequest):
     """A GRaphic OBject is the base class for all drawing primitives."""
     ctxAttrs = ('_grid',)
+    _parts = () # sub-objects a script can hold that reach back into the grob (e.g. a Text's blocks)
 
     def __init__(self, **kwargs):
         self.inherit() # copy over every _ctx attribute we're interested in
+
+    def _commit(self):
+        pass
 
     def draw(self):
         """Adds the grob to the canvas. This will result in a _draw later on, when the
@@ -323,7 +327,7 @@ class PenMixin(Grob):
         if None in segments:
             steps = None
         else:
-            steps = list(map(int, _flatten(segments)))
+            steps = tuple(map(int, _flatten(segments)))
             if len(steps)%2:
                 steps += steps[-1:] # assume even spacing for omitted skip sizes
         self._penstyle = self._penstyle._replace(dash=steps)

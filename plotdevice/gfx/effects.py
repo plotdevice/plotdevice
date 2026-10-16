@@ -8,7 +8,7 @@ from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, numlike
 from .colors import Color
 from .geometry import Point, CORNER
-from . import _cg_context, _cg_layer, _cg_port
+from . import _cg_context, _cg_layer, _cg_port, _canvas_dims
 
 _ctx = None
 __all__ = ("Effect", "Shadow", "Stencil",)
@@ -317,7 +317,7 @@ class Stencil(Frob):
             CGContextBeginPath(port)
             if self.evenodd:
                 # if inverted, knock the path out of a full-screen rect and clip with that
-                CGContextAddRect(port, ((0,0),(_ctx.WIDTH, _ctx.HEIGHT)))
+                CGContextAddRect(port, ((0,0), _canvas_dims()))
                 CGContextAddPath(port, cg_path)
                 CGContextEOClip(port)
             else:

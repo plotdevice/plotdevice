@@ -84,8 +84,15 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             setattr(_ctx, attr, val)
 
     def copy(self):
-        clone = Bezier()
-        clone.inherit(self)
+        clone = Bezier.__new__(Bezier)
+        clone._nsBezierPath = self._nsBezierPath.copy()
+        clone._transform = self._transform.copy()
+        clone._effects = self._effects.copy()
+        clone._fillcolor = _copy_attr(self._fillcolor)
+        clone._strokecolor = _copy_attr(self._strokecolor)
+        clone._grid, clone._penstyle = self._grid, self._penstyle
+        clone._fulcrum, clone._transformmode = self._fulcrum, self._transformmode
+        clone._needs_closure = False
         return clone
 
     ### Path methods ###

@@ -14,7 +14,7 @@ from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, FrameMixin, Grob
 from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, Element, read
 from ..lib import foundry
-from . import _ns_context
+from . import _ns_context, _outputmode
 
 _ctx = None
 __all__ = ("Text", "LEFT", "RIGHT", "CENTER", "JUSTIFY",)
@@ -48,6 +48,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         self._engine = NSLayoutManager.alloc().init()
         self._engine.setUsesScreenFonts_(False)
         self._engine.setUsesFontLeading_(False)
+        self._engine.setBackgroundLayoutEnabled_(False) # layout happens at commit, and drawing may be off the main thread
         self._store = NSTextStorage.alloc().init()
         self._store.addLayoutManager_(self._engine)
         self._nsmode = None # the output mode the store's NSColors were resolved for
@@ -198,7 +199,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             self._store.endEditing()
 
             if self._nsmode is None:
-                self._nsmode = _ctx._outputmode
+                self._nsmode = _outputmode()
             self._colorize()
             self._resized()
 
@@ -214,7 +215,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         color = Color(fill)
         head, tail = map(self._to_px, margin)
-        key = (_ctx._outputmode, color._src, head, tail, self._font._key)
+        key = (_outputmode(), color._src, head, tail, self._font._key)
         key += tuple(tuple(sorted((k, v) for k, v in layer.items() if k not in ('fill', 'margin'))) for layer in layers)
         attrs = foundry.LIBRARY.recall(key)
         if attrs is not None:
@@ -269,7 +270,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
     def _colorize(self):
         """Updates the TextStorage, rewriting Colors as rgb or cmyk NSColors based on the current output mode"""
-        mode = _ctx._outputmode
+        mode = _outputmode()
         if self._nsmode != mode:
             at = 0
             end = self._store.length()
@@ -581,10 +582,18 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             xf.translate(x, y-baseline) # then move to the baseline origin point
         return xf
 
+    @property
+    def _parts(self):
+        return self._blocks
+
+    def _commit(self):
+        self._colorize()
+        for block in self._blocks:
+            self._engine.glyphRangeForTextContainer_(block._block)
+
     def _draw(self):
         with _ns_context():                  # save and restore the gstate
             self._screen_transform.concat()  # transform so text can be drawn at the origin
-            self._colorize()                 # re-resolve NSColors if the output mode changed since build
             with self.effects.applied():     # apply any blend/alpha/shadow effects
                 for block in self._blocks:
                     px_offset = self._to_px(block.offset)
