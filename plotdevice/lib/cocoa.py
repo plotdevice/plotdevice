@@ -52,7 +52,7 @@ from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplicati
                    NSWindowTabbingModePreferred, NSWorkspace
 from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, CIVector, Foundation, NO, \
                        NSAffineTransform, NSAffineTransformStruct, NSArray, NSAttributedString, NSAutoreleasePool, \
-                       NSBundle, NSData, NSDate, NSDateFormatter, NSFileCoordinator, NSFileHandle, \
+                       NSBundle, NSData, NSDate, NSDateFormatter, NSDictionary, NSFileCoordinator, NSFileHandle, \
                        NSFileHandleDataAvailableNotification, NSHeight, NSInsetRect, NSIntersectionRange, \
                        NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, NSMakeRange, NSMidX, NSMidY, \
                        NSMutableAttributedString, NSMutableData, NSNotificationCenter, NSObject, NSOffsetRect, \

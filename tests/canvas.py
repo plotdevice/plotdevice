@@ -6,6 +6,33 @@ from . import PlotDeviceTestCase
 from plotdevice import *
 
 class CanvasTests(PlotDeviceTestCase):
+    def test_rendering_does_not_leak(self):
+        import sys, gc, objc
+        if objc.__version__.startswith('11.'):
+            self.skipTest('PyObjC 11 (the last release supporting Python 3.9) leaks on struct- and object-returning calls')
+        size(100, 100)
+        for i in range(200):
+            fill(i / 200.0, .2, .4); rect(i % 10 * 10, i // 10 * 5, 8, 4)
+        canvas = _ctx.canvas
+        canvas._getImageData('png')
+        gc.collect(); before = sys.getallocatedblocks()
+        for _ in range(30):
+            canvas._getImageData('png')
+        gc.collect(); grown = sys.getallocatedblocks() - before
+        self.assertLess(grown, 1000, 'rendering grew the heap by %d blocks over 30 frames' % grown)
+
+    def test_text_does_not_leak_colors(self):
+        import gc
+        from plotdevice.gfx.colors import Color
+        size(100, 100); font('Avenir', 12); fill(.2, .3, .4)
+        text('warm up', 10, 50); clear()
+        gc.collect(); before = sum(1 for o in gc.get_objects() if isinstance(o, Color))
+        for i in range(50):
+            text('line %d' % i, 10, 50)
+        _ctx.canvas._getImageData('png'); clear()
+        gc.collect(); retained = sum(1 for o in gc.get_objects() if isinstance(o, Color)) - before
+        self.assertEqual(retained, 0, '%d Colors survived their texts' % retained)
+
     def test_ordered_by_dotted_attr(self):
         size(100, 100)
         positions = [80, 20, 50]

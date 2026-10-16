@@ -4,7 +4,7 @@ from math import floor
 from collections import namedtuple, defaultdict
 
 from .. import DeviceError
-from ..lib.foundry import fontspec
+from ..lib.foundry import fontspec, LIBRARY
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
 from .colors import Color
 from .geometry import Transform, Dimension, Region, Pair, CENTER, CORNER
@@ -42,6 +42,7 @@ class Bequest(type):
         _inherit: attrs to copy from the _ctx when creating a new grob
         _state:   attrs to copy from instance to instance when making a copy
         _opts:    valid keyword arguments (for setting inline styles)
+        _shared:  inherited attrs that are never modified in place, so needn't be copied
 
     The tuples are added as class variables and can be accessed as attributes on any
     instance of Bezier, Image, or Text.
@@ -55,6 +56,7 @@ class Bequest(type):
                 info['_inherit'].update(getattr(typ,'ctxAttrs',[]))
                 info['_state'].update(getattr(typ,'stateAttrs',[]))
                 info['_opts'].update(getattr(typ,'opts',[]))
+                info['_shared'].update(getattr(typ,'sharedAttrs',[]))
             info['_state'].update(info['_inherit'])
             for attr, val in info.items():
                 setattr(cls, attr, val)
@@ -83,7 +85,9 @@ class Grob(object, metaclass=Bequest):
             src, attrs = _ctx, self._inherit
         else:
             attrs = set(src._state).intersection(self._state)
-        _copy_attrs(src, self, attrs)
+        for attr in self._shared.intersection(attrs):
+            setattr(self, attr, getattr(src, attr))
+        _copy_attrs(src, self, attrs.difference(self._shared))
 
     def update(self, mapping=None, **kwargs):
         """Assign new values to one or more properties
@@ -329,6 +333,7 @@ class StyleMixin(Grob):
     """Mixin class for text-styling support.
     Adds the stylesheet, fill, and font attributes to the class."""
     ctxAttrs = ('_font', '_stylesheet', '_fillcolor')
+    sharedAttrs = ('_font',)
     layoutOpts = ('leading','spacing','margin','indent','align','hyphenate','lineheight')
     fontOpts = ('face','family','size','weight','width','variant','italic','tracking','fontname','fontsize','font')
     aatOpts = ('lig','sc','osf','tab','vpos','frac', 'ss')
@@ -342,15 +347,18 @@ class StyleMixin(Grob):
             kwargs = dict(kwargs)
             del kwargs['width']
 
-        self._update_style(**kwargs)
+        if any(k in StyleMixin.opts for k in kwargs):
+            self._update_style(**kwargs)
 
     def _parse_style(self, *args, **opts):
+        if not args and not opts:
+            return {}
         fontopts = {k:v for k,v in opts.items() if k in StyleMixin.opts}
         fontargs = opts.get('font', args)
         if not isinstance(fontargs, (list,tuple)):
             fontargs = [fontargs]
 
-        spec = self.stylesheet._styles.get( opts.get('style'), {} )
+        spec = dict(self.stylesheet._styles.get( opts.get('style'), {} ))
         spec.update(fontspec(*fontargs, **fontopts))
         if 'fill' in opts:
             spec['fill'] = Color(opts['fill'])
@@ -363,7 +371,8 @@ class StyleMixin(Grob):
         spec.update(self._parse_style(*args, **kwargs)) # merge in any modifications from the text() call
 
         # update the font & fill references to reflect kwarg styling (if any)
-        self._font = self._font.__class__(**spec)
+        key = ('font',) + tuple(sorted((k, v) for k, v in spec.items() if k != 'fill'))
+        self._font = LIBRARY.recall(key) or LIBRARY.remember(key, self._font.__class__(**spec))
         self._fillcolor = spec.get('fill', self._fillcolor)
 
     def font(self, *args, **kwargs):

@@ -4,6 +4,7 @@ import re
 import sys
 import objc
 import difflib
+from time import monotonic
 from operator import itemgetter, attrgetter
 from collections import namedtuple, OrderedDict as odict, defaultdict as ddict
 from .cocoa import *
@@ -269,6 +270,7 @@ def trace_text(txt_obj, rng=None):
     nspath = NSBezierPath.bezierPath()
     for block in txt_obj.blocks:
         offset = block._to_px(block.offset)
+        offset.x -= block._shift # from container- to block-relative coords
         block_rng = NSIntersectionRange(rng, block._chars)
         if block_rng.length:
             subpath = Vandercook.traceGlyphs_atOffset_withLayout_(block_rng, offset, txt_obj._engine)
@@ -296,12 +298,16 @@ def line_slugs(txt_obj, rng=None):
     for frag in Vandercook.lineFragmentsInRange_withLayout_(rng, txt_obj._engine):
         # convert to local units & types
         block = txt_obj._blocks[frag['block']]
-        frame = block._from_px(frag['frame'].rectValue())
+        frame = frag['frame'].rectValue()
+        if not block._frame.size.w:
+            frame.origin.x, frame.size.width = block._shift, block._fit.width
+        frame = block._from_px(frame)
         bounds = block._from_px(frag['bounds'].rectValue())
         baseline = block._from_px(frag['baseline'].pointValue())
 
         # shift from container- to canvas-relative coords
         offset = block.offset + txt_obj.baseline
+        offset.x -= block._from_px(block._shift)
         baseline += offset
         bounds.origin += offset
         frame.origin += offset
@@ -523,11 +529,30 @@ class Librarian(object):
         self._enc = {}     # psname -> encoding
         self._specs = {}   # spec_dict -> psname
         self._fuzzy = {}   # fammy name -> famname
+        self._styled = odict() # style key -> text attrs (least recently used first)
+        self._checked = monotonic() # when the installed-font list was last compared
         self._mgr.setUsesFontLeading_(False)
 
     def refresh(self):
+        now = monotonic()
+        if now - self._checked < 1.0:
+            return
+        self._checked = now
         if self._fonts != _fm.availableFonts():
             self.__init__()
+
+    def recall(self, key):
+        self.refresh()
+        val = self._styled.get(key)
+        if val is not None:
+            self._styled.move_to_end(key)
+        return val
+
+    def remember(self, key, val):
+        self._styled[key] = val
+        if len(self._styled) > 2048:
+            self._styled.popitem(last=False)
+        return val
 
     @property
     def font_names(self):

@@ -13,7 +13,7 @@ from plotdevice import DeviceError
 from ..util import _copy_attrs, autorelease
 from ..util.readers import get_http_session, last_modified
 from ..lib.io import MovieExportSession, ImageExportSession
-from .geometry import Region, Size, Point, Transform, CENTER
+from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
 from .colors import CMYK
 from . import _ns_context, _cg_port
@@ -269,15 +269,14 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         dx, dy = self._to_px(Point(self.x, self.y))
         w, h = self._to_px(self.size)
 
-        # calculate the translation offset for centering (if any)
-        nudge = Transform()
-        if self._transformmode == CENTER:
-            nudge.translate(w*factor/2, h*factor/2)
-
         xf.translate(dx, dy)       # set the position before applying transforms
-        xf.prepend(nudge)          # nudge the image to its center (or not)
-        xf.prepend(self.transform) # add context's CTM.
-        xf.prepend(nudge.inverse)  # Move back to the real origin.
+        if self._transformmode == CENTER and tuple(self.transform.matrix) != IDENTITY:
+            nudge = Transform().translate(w*factor/2, h*factor/2)
+            xf.prepend(nudge)          # nudge the image to its center
+            xf.prepend(self.transform) # add context's CTM.
+            xf.prepend(nudge.inverse)  # Move back to the real origin.
+        else:
+            xf.prepend(self.transform) # in CORNER mode (or if untransformed) simply apply the CTM
         xf.scale(factor)           # scale to fit size constraints (if any)
         return xf
 

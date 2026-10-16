@@ -410,6 +410,20 @@ class TypographyTests(PlotDeviceTestCase):
         with font("Avenir", 18), fill('red'):
             text(20,80, xml=markup)
 
+    def test_stylesheet_unchanged_by_text(self):
+        stylesheet('b', weight='bold', size=12)
+        text('x', 10, 10, style='b', size=30, plot=False)
+        self.assertEqual(stylesheet()['b']['size'], 12)
+
+    def test_stylesheet_copy_independent(self):
+        stylesheet('b', weight='bold')
+        t = text(10, 10, xml='<b>x</b>', plot=False)
+        t.stylesheet['b'] = dict(italic=True)
+        del t.stylesheet['b']
+        stylesheet('i', italic=True)
+        self.assertEqual(list(t.stylesheet), [])
+        self.assertEqual(sorted(stylesheet()), ['b', 'i'])
+
     @reference('typography/textpath.png')
     def test_textpath(self):
         # ref/Typography/commands/textpath()
@@ -491,6 +505,13 @@ class TypographyTests(PlotDeviceTestCase):
             rect(slug.bounds, stroke=.6) # dark
             arc(slug.baseline, 4, fill='red')
 
+    def test_copy_keeps_fit(self):
+        # a copy of a shrink-to-fit text (like the one a frame draws of a text the script holds) isn't narrowed to its fit
+        size(300, 100)
+        t = text('Hamburg 12,7\nand more', 140, 40, margin=(10, 5), plot=False)
+        copied = t.copy()
+        self.assertEqual([line.text for line in copied.lines], [line.text for line in t.lines])
+        self.assertEqual(copied.frame, t.frame)
 
 def suite():
   suite = unittest.TestSuite()

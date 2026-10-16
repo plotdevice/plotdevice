@@ -4,10 +4,10 @@ from ..lib.cocoa import *
 from math import pi, sin, cos, sqrt
 
 from plotdevice import DeviceError
-from . import _cg_context
+from . import _cg_port
 from .atoms import PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .colors import Color, Gradient, Pattern
-from .geometry import CENTER, DEGREES, Transform, Region, Point
+from .geometry import CENTER, DEGREES, IDENTITY, Transform, Region, Point
 from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten, numlike
 from ..lib import pathmatics
 
@@ -367,6 +367,9 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def _screen_transform(self):
         """Returns the Transform object that will be used to draw the path."""
 
+        if tuple(self.transform.matrix) == IDENTITY:
+            return Transform()
+
         nudge = Transform()
         if (self.transformmode == CENTER):
             # if center-based, sandwich transform with a scoot out/in to the origin
@@ -382,18 +385,24 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     @property
     def cgPath(self):
         # transform the path's points from canvas- to postscript-units and return a CGPathRef
-        return pathmatics.convert_path(self._to_px(self._nsBezierPath))
+        path = self._nsBezierPath if self._grid.dpx == 1 else self._to_px(self._nsBezierPath)
+        return pathmatics.convert_path(path)
 
     def _draw(self):
-        with _cg_context() as port:
-            # modify the context's CTM to reflect our final resting place
-            self._screen_transform.concat()
+        port = _cg_port()
+        CGContextSaveGState(port)
+        try:
+            if tuple(self.transform.matrix) != IDENTITY:
+                self._screen_transform.concat()
 
             # apply blend/alpha/shadow (and any associated transparency layers)
             with self.effects.applied():
                 # prepare to stroke, fill, or both
                 ink = None
-                if isinstance(self._fillcolor, Color):
+                path = self._nsBezierPath
+                filled = isinstance(self._fillcolor, Color)
+                lone_segment = filled and path.elementCount() == 2 and path.elementAtIndex_(1) == NSLineToBezierPathElement
+                if filled and not lone_segment:
                     ink = kCGPathFill
                     CGContextSetFillColorWithColor(port, self._fillcolor.cgColor)
                 if (self._strokecolor):
@@ -414,6 +423,8 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                     CGContextBeginPath(port)
                     CGContextAddPath(port, self.cgPath)
                     CGContextDrawPath(port, ink)
+        finally:
+            CGContextRestoreGState(port)
 
     ### Geometry ###
 

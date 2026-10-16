@@ -19,7 +19,7 @@ def _ns_context():
 
 @contextmanager
 def _cg_context():
-    port = NSGraphicsContext.currentContext().graphicsPort()
+    port = NSGraphicsContext.currentContext().CGContext()
     CGContextSaveGState(port)
     yield port
     CGContextRestoreGState(port)
@@ -32,7 +32,7 @@ def _cg_layer():
     CGContextEndTransparencyLayer(_cg_port())
 
 def _cg_port():
-    return NSGraphicsContext.currentContext().graphicsPort()
+    return NSGraphicsContext.currentContext().CGContext()
 
 ### submodule init ###
 

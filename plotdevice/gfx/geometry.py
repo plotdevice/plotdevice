@@ -23,6 +23,8 @@ __all__ = [
 CENTER = "center"
 CORNER = "corner"
 
+IDENTITY = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+
 # rotation modes
 DEGREES = "degrees"
 RADIANS = "radians"
@@ -249,6 +251,14 @@ class Region(object):
         if coords:
             if isinstance(coords[0], (Region, NSRect)):
                 self.origin, self.size = coords[0]
+                return
+
+            plain_numbers = len(coords) in (2, 3) and all(numlike(c) for c in coords)
+            if plain_numbers and len(coords) == 2:
+                self.origin = parse_coords(coords, [Point])
+                return
+            if plain_numbers and len(coords) == 3:
+                self.origin, self.width = parse_coords(coords, [Point,float])
                 return
 
             # try to unpack a full rect or at least an origin from the args

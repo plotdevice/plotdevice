@@ -43,14 +43,13 @@ class Color(object):
         if params == 1 and args[0] is None:                 # None -> transparent
             clr = Color._nscolor(GREY, 0, 0)
         elif params == 1 and isinstance(args[0], Color):    # Color object
-            _copy_attrs(args[0], self, ['_rgb','_cmyk'])
+            self._share(args[0])
             return
         elif params == 1 and isinstance(args[0], Pattern):  # Pattern object
             self._cmyk = self._rgb = args[0]._nsColor
             return
         elif params == 1 and isinstance(args[0], Gradient): # Gradient (use first shade)
-            first_clr = args[0]._colors[0]
-            _copy_attrs(first_clr, self, ['_rgb','_cmyk'])
+            self._share(args[0]._colors[0])
             return
         elif params == 1 and isinstance(args[0], NSColor):  # NSColor object
             clr = args[0]
@@ -77,8 +76,8 @@ class Color(object):
         else:                                               # default is the new black
             clr = Color._nscolor(GREY, 0, 1)
 
-        self._cmyk = clr.colorUsingColorSpaceName_(NSDeviceCMYKColorSpace)
         self._rgb = clr.colorUsingColorSpaceName_(NSDeviceRGBColorSpace)
+        self._cmyk_src, self._cmyk_ = clr, None # converted on demand (see _cmyk)
 
     @trim_zeroes
     def __repr__(self):
@@ -106,11 +105,17 @@ class Color(object):
         return self._rgb if _ctx._outputmode==RGB else self._cmyk
 
     @property
+    def _src(self):
+        return getattr(self, '_cmyk_src', self._rgb_)
+
+    @property
     def cgColor(self):
         mode = _ctx._outputmode
-        components = self._values(mode)
-        space = (self._rgb if mode==RGB else self._cmyk).colorSpace().CGColorSpace()
-        return CGColorCreate(space, components)
+        try:
+            return self._cg[mode]
+        except KeyError:
+            cg = self._cg[mode] = (self._rgb if mode==RGB else self._cmyk).CGColor()
+            return cg
 
     def _values(self, mode):
         outargs = [None] * 4
@@ -124,13 +129,36 @@ class Color(object):
                     self._cmyk.alphaComponent())
 
     def copy(self):
-        new = self.__class__()
-        new._rgb = self._rgb.copy()
-        new._cmyk = self._cmyk.copy()
+        new = self.__class__.__new__(self.__class__)
+        new._share(self)
         return new
 
+    def _share(self, other):
+        self._rgb_ = other._rgb_
+        self._cmyk_ = other._cmyk_
+        self._cmyk_src = getattr(other, '_cmyk_src', other._rgb_)
+        self._cg = other._cg
+
+    @property
+    def _rgb(self):
+        return self._rgb_
+
+    @_rgb.setter
+    def _rgb(self, clr):
+        self._rgb_, self._cg = clr, {}
+
+    @property
+    def _cmyk(self):
+        if self._cmyk_ is None:
+            self._cmyk_ = self._cmyk_src.colorUsingColorSpaceName_(NSDeviceCMYKColorSpace)
+        return self._cmyk_
+
+    @_cmyk.setter
+    def _cmyk(self, clr):
+        self._cmyk_, self._cg = clr, {}
+
     def _updateCmyk(self):
-        self._cmyk = self._rgb.colorUsingColorSpaceName_(NSDeviceCMYKColorSpace)
+        self._cmyk_src, self._cmyk_ = self._rgb, None
 
     def _updateRgb(self):
         self._rgb = self._cmyk.colorUsingColorSpace_(NSColorSpace.sRGBColorSpace())

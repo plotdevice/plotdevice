@@ -1,5 +1,6 @@
 # encoding: utf-8
 import os
+import objc
 import sys
 import re
 import json
@@ -209,6 +210,10 @@ def trim_zeroes(func):
 ### Dimension-aware number detector (replacement for isintance) ###
 
 def numlike(obj):
+    if isinstance(obj, (int, float)):
+        return True
+    if isinstance(obj, objc.objc_object):
+        return False
     return hasattr(obj, '__int__') or hasattr(obj, '__float__')
 
 ### give ordered- and default-dict a nicer repr ###
