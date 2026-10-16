@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Makes a Python.framework or PythonT.framework extracted from python.org's installer
-relocatable. Safe to re-run, e.g. to fix the shebangs of scripts pip has since installed.
+relocatable. Safe to re-run, e.g. to fix the shebangs and bytecode of whatever pip has since installed.
 
 usage: relocate.py <Python.framework | PythonT.framework>
 """
@@ -131,6 +131,33 @@ def fix_shebangs(framework, name, version):
                     % (relative.encode(), relative.encode()) + rest)
 
 
+def hash_bytecode(framework, name, version):
+    """Recompiles timestamp-based .pyc files as hash-based ones, which stay valid when Xcode's copy
+    into the app gives every .py a new mtime"""
+    pycs = []
+    for dirpath, _dirs, files in os.walk(os.path.join(framework, 'Versions', version, 'lib')):
+        for filename in files:
+            path = os.path.join(dirpath, filename)
+            if filename.endswith('.pyc') and not os.path.islink(path):
+                with open(path, 'rb') as f:
+                    flags = struct.unpack('<I', f.read(8)[4:8])[0]
+                if flags == 0:
+                    pycs.append(path)
+    if not pycs:
+        return
+    print('Recompiling %d .pyc files in %s as hash-based...' % (len(pycs), framework))
+    # only the framework's own interpreter writes bytecode it can read
+    interpreter = os.path.join(framework, 'Versions', version, 'bin', 'python%s%s' % (version, 't' if name == 'PythonT' else ''))
+    subprocess.check_call([interpreter, '-B', '-c', """if 1:
+        import os, py_compile, sys
+        for pyc in sys.argv[1:]:
+            pycache, filename = os.path.split(pyc)
+            src = os.path.join(os.path.dirname(pycache), filename.split('.')[0] + '.py')
+            if os.path.exists(src):
+                py_compile.compile(src, cfile=pyc, doraise=True, invalidation_mode=py_compile.PycInvalidationMode.CHECKED_HASH)
+        """, *pycs])
+
+
 def main(framework):
     framework = os.path.abspath(framework.rstrip('/'))
     name = os.path.splitext(os.path.basename(framework))[0]
@@ -154,6 +181,7 @@ def main(framework):
         run('codesign', '-s', '-', '--force', '--preserve-metadata=identifier,entitlements,flags,runtime', path)
 
     fix_shebangs(framework, name, version)
+    hash_bytecode(framework, name, version)
     if not os.path.exists(os.path.join(versions, 'Current')):
         os.symlink(version, os.path.join(versions, 'Current'))
 

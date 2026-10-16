@@ -17,9 +17,10 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        char **py_argv = (char **)calloc(argc + 4, sizeof(char *));
+        char **py_argv = (char **)calloc(argc + 5, sizeof(char *));
         int py_argc = 0;
         py_argv[py_argc++] = (char *)[interpreter fileSystemRepresentation];
+        py_argv[py_argc++] = "-B";
         if (freeThreaded && !getenv("PYTHON_GIL")){
             py_argv[py_argc++] = "-X";
             py_argv[py_argc++] = "gil=0";

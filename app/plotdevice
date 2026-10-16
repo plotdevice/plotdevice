@@ -15,6 +15,10 @@ if [ ! -x $PYTHON ]; then
     PIP=pip3
 fi
 
+case "$env" in
+    *.app/Contents/*) export PYTHONDONTWRITEBYTECODE=1 ;;
+esac
+
 export _p_l_o_t_d_e_v_i_c_e_=$(basename ${0})
 export _p_l_o_t_d_e_v_i_c_e___p_i_p_=$PIP
 $PYTHON -m plotdevice $@

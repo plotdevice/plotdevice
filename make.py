@@ -69,14 +69,29 @@ def spawn(cmd, **kwargs):
 ## Subcommands ##
 
 def cmd_dev(args):
+    if args.frameworks:
+        spawn(['make', '-C', 'deps/frameworks', 'Python.framework', 'PythonT.framework'])
+        spawn(['deps/frameworks/Python.framework/Versions/Current/bin/python3', '-B', 'make.py', 'dev'])
+        spawn(['deps/frameworks/PythonT.framework/Versions/Current/bin/python3t', '-B', 'make.py', 'dev'])
+        return
+
     # install pyobjc, requests and the other pypi dependencies in deps/local
     import platform
-    venv_dir = join('deps/local', platform.python_version() + sys.abiflags)
+    venv_name = platform.python_version() + sys.abiflags
+    in_frameworks = realpath(sys.executable).startswith(join(ROOT, 'deps/frameworks', ''))
+    if in_frameworks:
+        venv_name += '-fmwk'
+        os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+    venv_dir = join('deps/local', venv_name)
     if not exists(venv_dir):
         spawn([realpath(sys.executable), '-m', 'venv', venv_dir])
         PIP = join(venv_dir, 'bin/pip3')
-        call([PIP, 'install', '-q', '--upgrade', 'pip', 'setuptools', 'wheel', 'py2app', 'twine'])
-        call([PIP, 'install', '-q', '-e', ROOT])
+        call([PIP, 'install', '--upgrade', 'pip', 'setuptools', 'wheel', 'py2app', 'twine'])
+        call([PIP, 'install', '-e', ROOT])
+        if in_frameworks:
+            site_packages = glob(join(venv_dir, 'lib/python3*/site-packages'))[0]
+            with open(join(site_packages, '00-pycache-prefix.pth'), 'w') as f:
+                f.write('import sys; sys.pycache_prefix = %r\n' % join(ROOT, venv_dir, 'pycache'))
         print("\nA local development environment has been set up in %s" % venv_dir)
 
     shell = basename(os.environ.get('SHELL', ''))
@@ -177,6 +192,10 @@ def cmd_py2app(args):
   > python3 make.py dev
   > ./deps/local/<python-version>/bin/python3 make.py py2app""")
         sys.exit(1)
+
+    in_frameworks = realpath(sys.executable).startswith(join(ROOT, 'deps/frameworks', ''))
+    if in_frameworks:
+        spawn(['make', '-C', 'deps/frameworks'])
 
     from py2app.build_app import py2app as build_py2app
 
@@ -335,6 +354,7 @@ def main():
     sub = parser.add_subparsers(dest='command', required=True)
 
     p_dev = sub.add_parser('dev', help='set up virtualenv in deps/local with required dependencies')
+    p_dev.add_argument('--frameworks', action='store_true', help='set up venvs over the Python frameworks in deps/frameworks (building them if needed) rather than the interpreter running make.py')
     p_dev.set_defaults(func=cmd_dev)
 
     p_icon = sub.add_parser('icon', help='regenerate app/Resources/Assets.car from app/art/PlotDevice-app.icon')

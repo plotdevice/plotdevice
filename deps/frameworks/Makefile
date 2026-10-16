@@ -44,4 +44,4 @@ Python.framework PythonT.framework: %.framework:
 	cd $@/Versions/Current && rm -rf $(UNUSED_FILES)
 
 clean:
-	rm -rf Python.framework PythonT.framework *.framework.pkg
+	rm -rf Python.framework PythonT.framework *.framework.pkg ../local/*-fmwk
