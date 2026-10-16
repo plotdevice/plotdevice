@@ -536,6 +536,37 @@ class DrawingTests(PlotDeviceTestCase):
             font('Futura', 50)
         self.assertEqual((font().family, font().size), ('Baskerville', 30))
 
+    def test_with_pen_restores(self):
+        fill('blue'); stroke('red')
+        with pen(2, stroke=None):
+            self.assertIsNone(stroke())
+        with pen(2, fill=fill('green')):
+            self.assertEqual(fill().hex, '#008000')
+        self.assertEqual((fill().hex, stroke().hex), ('#00f', '#f00'))
+        with self.assertRaises(DeviceError):
+            pen(2, foo=1)
+
+    def test_with_state_set_earlier(self):
+        # entered after the state has moved on, a fill()/stroke()/font()/layout() applies itself
+        # for the block and then restores the state it found
+        fill('black'); red = fill('red'); fill('blue')
+        for _ in range(2):
+            with red:
+                self.assertEqual(fill().hex, '#f00')
+            self.assertEqual(fill().hex, '#00f')
+        stroke('blue'); off = nostroke(); stroke('green')
+        with off:
+            self.assertIsNone(stroke())
+        self.assertEqual(stroke().hex, '#008000')
+        font('Avenir', 12); baskerville = font('Baskerville', 20); font(size=30)
+        with baskerville:
+            self.assertEqual((font().family, font().size), ('Baskerville', 20))
+        self.assertEqual((font().family, font().size), ('Baskerville', 30))
+        centered = layout(align=CENTER); layout(align=LEFT)
+        with centered:
+            self.assertEqual(font().align, CENTER)
+        self.assertEqual(font().align, LEFT)
+
     @unittest.skip("fix colors library first")
     @reference('drawing/ximport-colors.png')
     def test_ximport_colors(self):

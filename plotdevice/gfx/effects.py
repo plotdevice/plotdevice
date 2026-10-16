@@ -92,7 +92,7 @@ class Effect(Frob):
         self._fx = {}
 
         if kwargs.pop('rollback', False):
-            self._rollback = {eff:getattr(_ctx._effects, eff) for eff in kwargs}
+            self._rollback = {eff:_ctx._effects._fx.get(eff) for eff in kwargs}
 
         for eff, val in kwargs.items():
             self._fx[eff] = Effect._validate(eff, val)

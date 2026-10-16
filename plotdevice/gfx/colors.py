@@ -94,6 +94,11 @@ class Color(object):
         if not hasattr(self, '_rollback'):
             badcontext = 'the with-statement can only be used with fill() and stroke(), not arbitrary colors'
             raise DeviceError(badcontext)
+        param = next(iter(self._rollback))
+        statevar = {"fill":"_fillcolor", "stroke":"_strokecolor"}[param]
+        if getattr(_ctx, statevar) is not self._installed:
+            self._rollback = {param:getattr(_ctx, statevar)}
+            setattr(_ctx, statevar, self._installed)
         return self
 
     def __exit__(self, type, value, tb):
@@ -391,6 +396,11 @@ class Pattern(object):
         if not hasattr(self, '_rollback'):
             badcontext = 'the with-statement can only be used with fill() and stroke(), not arbitrary colors'
             raise DeviceError(badcontext)
+        param = next(iter(self._rollback))
+        statevar = {"fill":"_fillcolor", "stroke":"_strokecolor"}[param]
+        if getattr(_ctx, statevar) is not self._installed:
+            self._rollback = {param:getattr(_ctx, statevar)}
+            setattr(_ctx, statevar, self._installed)
         return self
 
     def __exit__(self, type, value, tb):
@@ -448,6 +458,11 @@ class Gradient(object):
         if not hasattr(self, '_rollback'):
             badcontext = 'the with-statement can only be used with fill() and stroke(), not arbitrary colors'
             raise DeviceError(badcontext)
+        param = next(iter(self._rollback))
+        statevar = {"fill":"_fillcolor", "stroke":"_strokecolor"}[param]
+        if getattr(_ctx, statevar) is not self._installed:
+            self._rollback = {param:getattr(_ctx, statevar)}
+            setattr(_ctx, statevar, self._installed)
         return self
 
     def __exit__(self, type, value, tb):

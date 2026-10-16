@@ -4,6 +4,12 @@ from . import PlotDeviceTestCase, reference
 from plotdevice import *
 
 class CompositingTests(PlotDeviceTestCase):
+    def test_effects_restore_to_unset(self):
+        from plotdevice import _ctx
+        with alpha(.5), blend('multiply'), shadow('red'):
+            pass
+        self.assertEqual(_ctx._effects._fx, {})
+
     @reference('compositing/alpha.png')
     def test_alpha(self):
         # ref/Compositing/commands/alpha()

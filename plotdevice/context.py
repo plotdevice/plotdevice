@@ -772,7 +772,7 @@ class Context(object):
         """Set the fill color to None"""
         clr = Color(None)
         setattr(clr, '_rollback', dict(fill=self._fillcolor))
-        self._fillcolor = None
+        self._fillcolor = clr._installed = None
         return clr
 
     def fill(self, *args, **kwargs):
@@ -816,7 +816,7 @@ class Context(object):
             else:
                 clr = Color(*args)
             setattr(clr, '_rollback', dict(fill=self._fillcolor))
-            self._fillcolor = clr.copy()
+            self._fillcolor = clr._installed = clr.copy()
             return clr
         return self._fillcolor
 
@@ -824,7 +824,7 @@ class Context(object):
         """Set the stroke color to None"""
         clr = Color(None)
         setattr(clr, '_rollback', dict(stroke=self._strokecolor))
-        self._strokecolor = None
+        self._strokecolor = clr._installed = None
         return clr
 
     def stroke(self, *args):
@@ -846,7 +846,7 @@ class Context(object):
 
             annotated = Color(*args)
             setattr(annotated, '_rollback', dict(stroke=self._strokecolor))
-            self._strokecolor = annotated.copy()
+            self._strokecolor = annotated._installed = annotated.copy()
             return annotated
         return self._strokecolor
 
@@ -1114,7 +1114,7 @@ class Context(object):
         if args or kwargs:
             newfont = Font(*args, **kwargs)
             newfont._rollback = self._font
-            self._font = newfont.copy()
+            self._font = newfont._installed = newfont.copy()
             return newfont
         return self._font
 
@@ -1157,7 +1157,7 @@ class Context(object):
             newfont = Font(**kwargs)
             layout = Layout(newfont)
             layout._rollback = self._font
-            self._font = newfont
+            self._font = layout._installed = newfont
         else:
             layout = Layout(self._font)
         return layout
@@ -1599,15 +1599,21 @@ class PlotContext(object):
                       mode='_colormode', range='_colorrange', auto='_autoplot')
 
     def __init__(self, ctx, restore=None, **spec):
+        unknown = [k for k in spec if k not in self._statevars]
+        if unknown:
+            badarg = 'Unknown argument%s: %s' % ('' if len(unknown)==1 else 's', ", ".join(unknown))
+            raise DeviceError(badarg)
+
         # start with the current context state as a baseline
         prior = {k:getattr(ctx, v) for k,v in self._statevars.items() if k in spec or restore==all}
-        snapshots = {k:v._rollback for k,v in spec.items() if hasattr(v, '_rollback')}
-        prior.update(snapshots)
+        for param, val in spec.items():
+            rollback = getattr(val, '_rollback', {})
+            if param in rollback:
+                prior[param] = rollback[param]
 
         for param, val in spec.items():
             # make sure fill & stroke are Color objects (or None)
-            if param in ('stroke','fill'):
-                if val is None: continue
+            if param in ('stroke','fill') and val is not None:
                 val = Color(val)
                 spec[param] = val
             setattr(ctx, self._statevars[param], val)

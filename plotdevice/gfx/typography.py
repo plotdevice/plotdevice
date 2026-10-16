@@ -78,14 +78,13 @@ class Font(object):
         return ('Font(%s)'%" ".join(spec))
 
     def __enter__(self):
-        if not hasattr(self, '_rollback'):
-            self._rollback = _ctx._font
-        _ctx._font = self
+        if _ctx._font is not getattr(self, '_installed', None):
+            self._rollback, self._installed = _ctx._font, self.copy()
+            _ctx._font = self._installed
         return self
 
     def __exit__(self, type, value, tb):
         _ctx._font = self._rollback
-        del self._rollback
 
     def copy(self):
         return Font(self)
@@ -230,13 +229,13 @@ class Layout(LineLayout):
         return self
 
     def __enter__(self):
-        if not hasattr(self, '_rollback'):
+        if _ctx._font is not getattr(self, '_installed', None):
             self._rollback = _ctx._font
+            _ctx._font = self._installed = Font(**self._asdict())
         return self
 
     def __exit__(self, type, value, tb):
         _ctx._font = self._rollback
-        del self._rollback
 
     @classmethod
     def validate(cls, kwargs):
