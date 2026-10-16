@@ -36,6 +36,7 @@ called_from = getattr(sys.modules['__main__'], '__file__', '<interactive>')
 in_app = called_from.endswith('plotdevice-app.py')
 in_setup = called_from.endswith('setup.py')
 in_cli = sys.argv[0] == '-m' and __name__ in getattr(sys, 'orig_argv', [])
+in_bundle = '.app/Contents/' in sys.executable # the app, or the command line tool in its bundle
 free_threaded = bool(get_config_var('Py_GIL_DISABLED'))
 gil_chosen = 'PYTHON_GIL' in os.environ or 'gil' in sys._xoptions
 
@@ -46,9 +47,6 @@ elif in_cli and free_threaded and not gil_chosen:
     # disable the GIL on free-threaded builds (unless the user already chose otherwise)
     os.execv(sys.executable, [sys.orig_argv[0], '-X', 'gil=0', *sys.orig_argv[1:]])
 else:
-    # add the shared directory (for Libraries) to the path
-    sys.path.append(os.path.expanduser('~/Library/Application Support/PlotDevice'))
-
     # use the bundled copy of PyObjC rather than the system version
     from .run import objc
 

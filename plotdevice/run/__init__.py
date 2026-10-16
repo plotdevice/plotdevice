@@ -1,6 +1,31 @@
 import sys, site
-from os.path import abspath, dirname, exists, join
+from glob import glob
+from importlib.machinery import PathFinder
+from os.path import abspath, dirname, exists, expanduser, join
 from subprocess import call
+from sysconfig import get_path
+from .. import in_bundle
+
+lib_dir = expanduser('~/Library/Application Support/PlotDevice')
+interpreter_lib_dir = join(lib_dir, 'python%d.%d%s' % (*sys.version_info[:2], sys.abiflags))
+
+class BundledFinder:
+    def __init__(self, site_dir):
+        self.site_dir = site_dir
+        self.names = {'plotdevice', '_plotdevice'}
+        for top_level in glob(join(site_dir, 'pyobjc*.dist-info', 'top_level.txt')):
+            with open(top_level) as f:
+                self.names.update(f.read().split())
+
+    def find_spec(self, name, path=None, target=None):
+        if path is None and name in self.names:
+            return PathFinder.find_spec(name, [self.site_dir])
+
+if in_bundle:
+    site_dir = get_path('purelib')
+    site_index = sys.path.index(site_dir) if site_dir in sys.path else len(sys.path)
+    sys.path[site_index:site_index] = [interpreter_lib_dir, lib_dir]
+    sys.meta_path.insert(0, BundledFinder(site_dir))
 
 try:
     # test the sys.path by attempting to load a PyObjC submodule...
