@@ -1,27 +1,33 @@
 #import <Cocoa/Cocoa.h>
-#import <Python.h>
-
-#define str(s) #s
+#include <dlfcn.h>
 
 int main(int argc, char *argv[])
 {
     @autoreleasepool{
-        NSProcessInfo *proc = [NSProcessInfo processInfo];
+        BOOL freeThreaded = [[NSUserDefaults standardUserDefaults] boolForKey:@"plotdevice:free-threading"];
+        NSString *name = freeThreaded ? @"PythonT" : @"Python";
+        NSString *version = [[[NSBundle mainBundle] privateFrameworksPath] stringByAppendingFormat:@"/%@.framework/Versions/Current", name];
+        NSString *interpreter = [version stringByAppendingString:freeThreaded ? @"/bin/python3t" : @"/bin/python3"];
         NSString *mainFilePath = [[NSBundle mainBundle] pathForResource:@"plotdevice-app" ofType:@"py"];
-        NSString *interpreter = [NSString stringWithUTF8String:str(PYTHON_BIN)];
-#ifdef PY3K
-        wchar_t *py_bin = (wchar_t *)[interpreter cStringUsingEncoding:NSUTF32LittleEndianStringEncoding];
-        wchar_t **py_argv = (wchar_t **)calloc(argc, sizeof(wchar_t *));
-        for (int i=0; i<argc; i++){
-          py_argv[i] = (wchar_t *)[proc.arguments[i] cStringUsingEncoding:NSUTF32LittleEndianStringEncoding];
+
+        void *libpython = dlopen([[version stringByAppendingPathComponent:name] fileSystemRepresentation], RTLD_NOW | RTLD_GLOBAL);
+        int (*Py_BytesMain)(int, char **) = libpython ? dlsym(libpython, "Py_BytesMain") : NULL;
+        if (!Py_BytesMain){
+            NSLog(@"Could not load %@: %s", name, dlerror());
+            return 1;
         }
-#else
-        char *py_bin = (char *)[interpreter UTF8String];
-        char **py_argv = argv;
-#endif
-        Py_SetProgramName(py_bin);
-        Py_Initialize();
-        PySys_SetArgv(argc, py_argv);
-        return PyRun_SimpleFile(fopen([mainFilePath UTF8String], "r"), (char *)[mainFilePath UTF8String]);
+
+        char **py_argv = (char **)calloc(argc + 4, sizeof(char *));
+        int py_argc = 0;
+        py_argv[py_argc++] = (char *)[interpreter fileSystemRepresentation];
+        if (freeThreaded && !getenv("PYTHON_GIL")){
+            py_argv[py_argc++] = "-X";
+            py_argv[py_argc++] = "gil=0";
+        }
+        py_argv[py_argc++] = (char *)[mainFilePath fileSystemRepresentation];
+        for (int i=1; i<argc; i++){
+            py_argv[py_argc++] = argv[i];
+        }
+        return Py_BytesMain(py_argc, py_argv);
     }
 }

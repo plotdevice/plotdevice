@@ -8,7 +8,7 @@ Subcommands:
     dist         build app (codesigned, notarized, & zipped) and update release.json
     icon         regenerate app/Resources/Assets.car from app/art/PlotDevice-app.icon
     clean        remove build artifacts
-    distclean    also remove the embedded Python.framework and deps/local
+    distclean    also remove the embedded Python frameworks and deps/local
 """
 import argparse, os, sys, json, plistlib, tempfile
 from glob import glob
@@ -131,7 +131,7 @@ def cmd_clean(args):
         paths.extend([
             'deps/local',
             'deps/frameworks/Python.framework',
-            'deps/frameworks/relocatable-python',
+            'deps/frameworks/PythonT.framework',
         ])
 
     for path_pattern in paths:
@@ -153,8 +153,8 @@ def cmd_distclean(args):
 
 
 def cmd_app(args):
-    # make sure the embedded framework exists (and has updated app/python.xcconfig)
-    print("Set up Python.framework for app build")
+    # make sure the embedded frameworks exist
+    print("Set up Python.framework & PythonT.framework for app build")
     env = os.environ.copy()
     if args.no_cache:
         env['PIP_NO_CACHE_DIR'] = '1'
@@ -288,15 +288,16 @@ def cmd_dist(args):
         else:
             spawn([*codesign_cmd, root])
 
-    PYTHON = join(APP, 'Contents/Frameworks/Python.framework')
-    codesign('%s/Versions/Current/lib' % PYTHON, name="*.dylib")
-    codesign('%s/Versions/Current/lib' % PYTHON, name="*.o")
-    codesign('%s/Versions/Current/lib' % PYTHON, name="*.a")
-    codesign('%s/Versions/Current/lib' % PYTHON, exec_=True)
-    codesign('%s/Versions/Current/bin' % PYTHON, exec_=True)
-    codesign('%s/Versions/Current/bin' % PYTHON, name="python3.*", entitlement=True)
-    codesign('%s/Versions/Current/Resources/Python.app' % PYTHON, entitlement=True)
-    codesign(PYTHON)
+    for framework in ('Python', 'PythonT'):
+        PYTHON = join(APP, 'Contents/Frameworks/%s.framework' % framework)
+        codesign('%s/Versions/Current/lib' % PYTHON, name="*.dylib")
+        codesign('%s/Versions/Current/lib' % PYTHON, name="*.o")
+        codesign('%s/Versions/Current/lib' % PYTHON, name="*.a")
+        codesign('%s/Versions/Current/lib' % PYTHON, exec_=True)
+        codesign('%s/Versions/Current/bin' % PYTHON, exec_=True)
+        codesign('%s/Versions/Current/bin' % PYTHON, name="python3.*", entitlement=True)
+        codesign('%s/Versions/Current/Resources/Python.app' % PYTHON, entitlement=True)
+        codesign(PYTHON)
 
     codesign('%s/Versions/Current/Updater.app' % SPARKLE)
     codesign(SPARKLE)
@@ -340,10 +341,10 @@ def main():
     p_icon.set_defaults(func=cmd_icon)
 
     p_clean = sub.add_parser('clean', help='remove build artifacts')
-    p_clean.add_argument('--dist', action='store_true', help='also remove Python.framework and deps/local')
+    p_clean.add_argument('--dist', action='store_true', help='also remove the Python frameworks and deps/local')
     p_clean.set_defaults(func=cmd_clean)
 
-    p_distclean = sub.add_parser('distclean', help='also remove the embedded Python.framework and deps/local')
+    p_distclean = sub.add_parser('distclean', help='also remove the embedded Python frameworks and deps/local')
     p_distclean.set_defaults(func=cmd_distclean)
 
     p_app = sub.add_parser('app', help='build PlotDevice.app (requires full Xcode install')
