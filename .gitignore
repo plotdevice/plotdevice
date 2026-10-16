@@ -17,7 +17,7 @@ deps/local
 
 # external dependencies
 deps/frameworks/*.framework
-deps/frameworks/relocatable-python
+deps/frameworks/*.framework.pkg
 deps/extensions/svg/SwiftDraw*
 deps/extensions/clipper2/*.o
 

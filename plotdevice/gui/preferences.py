@@ -2,8 +2,10 @@ import re
 import os
 import json
 import objc
+import platform
 from io import open
 from subprocess import Popen, PIPE
+from sysconfig import get_config_var
 
 from ..lib.cocoa import *
 from plotdevice.gui import bundle_path, set_timeout
@@ -26,10 +28,16 @@ def defaultDefaults():
         "plotdevice:bindings":"mac",
         "plotdevice:font-name":"Menlo",
         "plotdevice:font-size":11,
-        "plotdevice:autosave":True
+        "plotdevice:autosave":True,
+        "plotdevice:free-threading":False # read by main.m to pick which Python framework to start
     }
 NSUserDefaults.standardUserDefaults().registerDefaults_(defaultDefaults())
 THEMES = None # to be filled in as needed
+
+PYTHON_MODE_NOTE_LINKS = {
+    'in parallel': 'https://docs.python.org/3/howto/free-threading-python.html',
+    'yet': 'https://py-free-threading.github.io/tracking/',
+}
 
 def dev_extras():
     """Should the editor's web inspector be enabled?
@@ -102,6 +110,39 @@ def possibleToolLocations():
 
 
 
+class PlotDeviceLinkField(NSTextField):
+    @objc.python_method
+    def links(self):
+        """The (rect, url) of each link in the label's text"""
+        title_rect = self.cell().titleRectForBounds_(self.bounds())
+        text = NSTextStorage.alloc().initWithAttributedString_(self.attributedStringValue())
+        layout = NSLayoutManager.alloc().init()
+        container = NSTextContainer.alloc().initWithSize_((title_rect.size.width, title_rect.size.height))
+        container.setLineFragmentPadding_(2)  # what the cell draws with
+        layout.addTextContainer_(container)
+        text.addLayoutManager_(layout)
+        links, i = [], 0
+        while i < text.length():
+            url, link_range = text.attribute_atIndex_effectiveRange_(NSLinkAttributeName, i, None)
+            if url:
+                glyphs, _ = layout.glyphRangeForCharacterRange_actualCharacterRange_(link_range, None)
+                rect = layout.boundingRectForGlyphRange_inTextContainer_(glyphs, container)
+                links.append((NSOffsetRect(rect, title_rect.origin.x, title_rect.origin.y), url))
+            i = link_range.location + link_range.length
+        return links
+
+    def resetCursorRects(self):
+        for rect, url in self.links():
+            self.addCursorRect_cursor_(rect, NSCursor.pointingHandCursor())
+
+    def mouseDown_(self, event):
+        point = self.convertPoint_fromView_(event.locationInWindow(), None)
+        for rect, url in self.links():
+            if NSPointInRect(point, rect):
+                NSWorkspace.sharedWorkspace().openURL_(url)
+                return
+        objc.super(PlotDeviceLinkField, self).mouseDown_(event)
+
 # class defined in PlotDevicePreferences.xib
 class PlotDevicePreferencesController(NSWindowController):
     themeMenu = IBOutlet()
@@ -110,6 +151,11 @@ class PlotDevicePreferencesController(NSWindowController):
     fontSizeMenu = IBOutlet()
     autosaveEnabledRadio = IBOutlet()
     autosaveDisabledRadio = IBOutlet()
+    pythonVersion = IBOutlet()
+    pythonModeStandardRadio = IBOutlet()
+    pythonModeFreeRadio = IBOutlet()
+    pythonModeNote = IBOutlet()
+    pythonModeNoteAsterisk = IBOutlet()
     toolPath = IBOutlet()
     toolAction = IBOutlet()
     toolBoilerplate = IBOutlet()
@@ -130,6 +176,7 @@ class PlotDevicePreferencesController(NSWindowController):
         self.checkFonts()
         self.checkBindings()
         self.checkAutosave()
+        self.checkPythonMode()
         self.checkUpdater()
 
     @objc.python_method
@@ -184,6 +231,42 @@ class PlotDevicePreferencesController(NSWindowController):
     def autosaveChanged_(self, sender):
         enabled = sender.tag() == 1
         set_default('autosave', enabled)
+
+    def checkPythonMode(self):
+        self.pythonVersion.setStringValue_(platform.python_version())
+        note = self.pythonModeNote.attributedStringValue().mutableCopy()
+        for phrase, url in PYTHON_MODE_NOTE_LINKS.items():
+            phrase_range = note.string().rangeOfString_(phrase)
+            if phrase_range.location != NSNotFound:
+                note.addAttribute_value_range_(NSLinkAttributeName, NSURL.URLWithString_(url), phrase_range)
+        self.pythonModeNote.setAttributedStringValue_(note)
+        self.pythonModeNoteText = note
+        running_free_threaded = bool(get_config_var('Py_GIL_DISABLED'))
+        if os.path.exists(bundle_path(fmwk='PythonT')):
+            free_threaded = get_default('free-threading')
+        else:
+            free_threaded = running_free_threaded
+            unavailable = self.pythonModeStandardRadio if free_threaded else self.pythonModeFreeRadio
+            unavailable.setEnabled_(False)
+        radio = self.pythonModeFreeRadio if free_threaded else self.pythonModeStandardRadio
+        radio.setState_(NSOnState)
+        self._updatePythonModeNote(free_threaded)
+
+    @IBAction
+    def pythonModeChanged_(self, sender):
+        free_threaded = sender.tag() == 1
+        set_default('free-threading', free_threaded)
+        self._updatePythonModeNote(free_threaded)
+
+    @objc.python_method
+    def _updatePythonModeNote(self, free_threaded):
+        running_free_threaded = bool(get_config_var('Py_GIL_DISABLED'))
+        if free_threaded == running_free_threaded:
+            self.pythonModeNote.setAttributedStringValue_(self.pythonModeNoteText)
+        else:
+            self.pythonModeNote.setStringValue_("Settings will take effect the next time you launch PlotDevice")
+        self.pythonModeNoteAsterisk.setHidden_(free_threaded != running_free_threaded)
+        self.window().invalidateCursorRectsForView_(self.pythonModeNote)
 
     def checkThemes(self):
         light = sorted([t for t,m in THEMES.items() if not m['dark']], reverse=True)

@@ -189,6 +189,7 @@ class FrameClock:
 
 class FrameRenderer:
 
+    # if the GIL is disabled, allow drawing and rendering to overlap
     DEPTH = 1 if getattr(sys, '_is_gil_enabled', lambda: True)() else 2
 
     def __init__(self):

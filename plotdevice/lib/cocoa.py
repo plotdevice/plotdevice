@@ -26,6 +26,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    kCGLineCapSquare, kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, kCGPathFill, \
                    kCGPathFillStroke, kCGPathStroke, kCAGravityCenter, kCAGravityResizeAspect, kCIInputImageKey
 from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplication, NSApplicationActivationPolicyAccessory, \
+                   NSApplicationActivationPolicyRegular, \
                    NSApplicationPresentationAutoHideMenuBar, NSApplicationPresentationAutoHideToolbar, \
                    NSApplicationPresentationFullScreen, \
                    NSBackingStoreBuffered, NSBeep, NSBezierPath, NSBitmapImageRep, NSBorderlessWindowMask, NSButton, \
@@ -38,7 +39,7 @@ from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplicati
                    NSGraphicsContext, NSGraphiteControlTint, NSImage, NSImageCacheNever, NSImageCompressionFactor, \
                    NSImageInterpolationHigh, NSItalicFontMask, NSJPEGFileType, NSJustifiedTextAlignment, \
                    NSKernAttributeName, NSKeyValueObservingOptionNew, NSLayoutConstraint, NSLayoutManager, NSLeftTextAlignment, \
-                   NSLineBreakByWordWrapping, NSLineToBezierPathElement, NSMenu, NSMenuItem, NSMiniControlSize, \
+                   NSLineBreakByWordWrapping, NSLineToBezierPathElement, NSLinkAttributeName, NSMenu, NSMenuItem, NSMiniControlSize, \
                    NSMoveToBezierPathElement, NSMutableParagraphStyle, NSNib, NSOffState, NSOnState, \
                    NSParagraphStyleAttributeName, NSPasteboard, NSPasteboardTypePDF, NSPasteboardTypeTIFF, \
                    NSPasteboardURLReadingContentsConformToTypesKey, NSPasteboardURLReadingFileURLsOnlyKey, \
@@ -60,8 +61,8 @@ from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CI
                        NSBundle, NSData, NSDate, NSDateFormatter, NSDictionary, NSFileCoordinator, NSFileHandle, \
                        NSFileHandleDataAvailableNotification, NSHeight, NSInsetRect, NSIntersectionRange, \
                        NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, NSMakeRange, NSMidX, NSMidY, \
-                       NSMutableAttributedString, NSMutableData, NSNotificationCenter, NSObject, NSOffsetRect, \
-                       NSOperationQueue, NSPoint, NSRect, NSRectFromString, NSSelectorFromString, NSSize, NSString, \
+                       NSMutableAttributedString, NSMutableData, NSNotFound, NSNotificationCenter, NSObject, NSOffsetRect, \
+                       NSOperationQueue, NSPoint, NSPointInRect, NSRect, NSRectFromString, NSSelectorFromString, NSSize, NSString, \
                        NSStringFromRect, NSTimer, NSTimeZone, NSURL, NSUserDefaults, NSUTF8StringEncoding, NSWidth, \
                        NSZeroRect
 from CoreServices import kUTTypePNG, kUTTypeJPEG, kUTTypeGIF, kUTTypeTIFF

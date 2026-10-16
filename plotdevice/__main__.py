@@ -32,6 +32,7 @@ Installing Libraries:
 
 import sys, os, re
 import argparse
+from glob import glob
 from os.path import exists, islink, dirname, basename, abspath, realpath, join, splitext
 
 
@@ -51,6 +52,8 @@ def main():
   o.add_argument('-f', dest='fullscreen', action='store_const', const=True, default=False, help='run full-screen')
   o.add_argument('-b', dest='activate', action='store_const', const=False, default=True, help='run PlotDevice in the background (i.e., leave focus in the active application)')
   o.add_argument('-q', dest='mode', action='store_const', const='headless', default='windowed', help='run a PlotDevice script ‘quietly’ (without opening a window)')
+  if plotdevice.in_bundle:
+    o.add_argument('-t', '--free-threaded', action='store_true', help='run the script with the app’s free-threaded Python (with the GIL off unless PYTHON_GIL=1)')
   o.add_argument('--virtualenv', metavar='PATH', help='path to virtualenv whose libraries you want to use (this should point to the top-level virtualenv directory; a folder containing a lib/python3.x/site-packages subdirectory)')
   o.add_argument('--frames', metavar='N or M-N', help='number of frames to render or a range specifying the first and last frames (default "1-")')
   o.add_argument('--fps', metavar='N', default=30, type=int, help='frames per second in exported video (default 30)')
@@ -76,24 +79,24 @@ def main():
     parser.print_usage()
     print('for more detail:\n  %s --help' % parser.prog)
     return
-  elif sys.argv[1] == '--install':
-    # --install has to be the first argument (in which case we can handle it now and bail)
-    libDir = os.path.join(os.getenv("HOME"), "Library", "Application Support", "PlotDevice")
-    if not os.path.exists(libDir):
-        os.mkdir(libDir)
+  elif sys.argv[1] == '--install' or sys.argv[1:3] in (['-t', '--install'], ['--free-threaded', '--install']):
+    if not plotdevice.in_bundle:
+      parser.exit(1, "--install is only available in the PlotDevice app's command line tool; install packages with pip (or uv)\nin the Python environment you run PlotDevice from instead\n")
 
     from subprocess import call
-    PIP = os.environ.pop('_p_l_o_t_d_e_v_i_c_e___p_i_p_', 'pip3')
-    sys.exit(call([PIP, 'install', '--isolated', '--target', libDir, *sys.argv[2:]]))
+    from .run import interpreter_lib_dir
+    os.makedirs(interpreter_lib_dir, exist_ok=True)
+    packages = sys.argv[sys.argv.index('--install')+1:]
+    sys.exit(call([sys.executable, '-m', 'pip', 'install', '--isolated', '--target', interpreter_lib_dir, *packages]))
 
   opts = parser.parse_args()
 
   if opts.virtualenv:
     libdirs = glob('%s/lib/python3.*/site-packages'%opts.virtualenv)
-    if len(libdirs) and exists(libdir[0]):
-      opts.virtualenv = abspath(libdir[0])
+    if len(libdirs) and exists(libdirs[0]):
+      opts.virtualenv = abspath(libdirs[0])
     else:
-      parser.exit(1, "bad argument [--virtualenv]\nvirtualenv site-packages dir not found: %s\n"%libdir)
+      parser.exit(1, "bad argument [--virtualenv]\nvirtualenv site-packages dir not found in: %s\n"%opts.virtualenv)
 
   if opts.script:
     opts.script = abspath(opts.script)

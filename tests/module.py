@@ -1,7 +1,9 @@
 import os, sys
+import sysconfig
 import unittest
 from . import PlotDeviceTestCase, reference
-from subprocess import check_output, STDOUT
+from subprocess import check_output, run, STDOUT
+import plotdevice
 from plotdevice import *
 
 sdist_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -31,6 +33,33 @@ class ModuleTests(PlotDeviceTestCase):
         output = '%s/tests/_out/%s'%(sdist_path, self._image)
         check_output([sys.executable, '-m', 'plotdevice', script, '--export', output], stderr=STDOUT, cwd=sdist_path)
         self.render(save_output=False)
+
+    @unittest.skipUnless(sysconfig.get_config_var('Py_GIL_DISABLED'), 'needs a free-threaded build')
+    def test_cli_gil(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            script = os.path.join(tmp, 'gil.pv')
+            with open(script, 'w') as f:
+                f.write("import sys\nprint('gil=%s xgil=%s' % (sys._is_gil_enabled(), sys._xoptions.get('gil')))\nsize(10, 10)\n")
+            def gil(**env):
+                env = {k: v for k, v in os.environ.items() if k != 'PYTHON_GIL'} | env
+                out = check_output([sys.executable, '-m', 'plotdevice', script, '--export', os.path.join(tmp, 'gil.png')],
+                                   stderr=STDOUT, cwd=sdist_path, env=env, text=True)
+                return out
+            self.assertIn('gil=False xgil=0', gil())                     # relaunched with -X gil=0
+            self.assertIn('gil=True xgil=None', gil(PYTHON_GIL='1'))     # the user's choice wins, no relaunch
+
+
+    @unittest.skipIf(plotdevice.in_bundle, 'only applies outside the app')
+    def test_cli_app_only_options(self):
+        # outside the app, --install points to pip/uv and -t doesn't exist
+        install = run([sys.executable, '-m', 'plotdevice', '--install', 'six'], capture_output=True, text=True, cwd=sdist_path)
+        self.assertEqual(install.returncode, 1)
+        self.assertIn('only available in the PlotDevice app', install.stderr)
+        script = '%s/tests/_in/cli.pv'%sdist_path
+        free_threaded = run([sys.executable, '-m', 'plotdevice', '-t', script], capture_output=True, text=True, cwd=sdist_path)
+        self.assertEqual(free_threaded.returncode, 2)
+        self.assertIn('unrecognized arguments: -t', free_threaded.stderr)
 
 
 def suite():

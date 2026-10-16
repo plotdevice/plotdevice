@@ -8,13 +8,13 @@ Subcommands:
     dist         build app (codesigned, notarized, & zipped) and update release.json
     icon         regenerate app/Resources/Assets.car from app/art/PlotDevice-app.icon
     clean        remove build artifacts
-    distclean    also remove the embedded Python.framework and deps/local
+    distclean    also remove the embedded Python frameworks and deps/local
 """
 import argparse, os, sys, json, plistlib, tempfile
 from glob import glob
 from shutil import rmtree, copy
 from subprocess import call, run, Popen, PIPE
-from os.path import join, exists, dirname, basename, abspath, getsize
+from os.path import join, exists, dirname, basename, abspath, getsize, realpath
 
 ROOT = dirname(abspath(__file__))
 sys.path.insert(0, ROOT)
@@ -69,16 +69,34 @@ def spawn(cmd, **kwargs):
 ## Subcommands ##
 
 def cmd_dev(args):
-    # install pyobjc, requests and the other pypi dependencies in deps/local
-    import platform, venv
-    venv_dir = join('deps/local', platform.python_version())
-    if not exists(venv_dir):
-        venv.create(venv_dir, symlinks=True, with_pip=True)
-        PIP = join(venv_dir, 'bin/pip3')
-        call([PIP, 'install', '-q', '--upgrade', 'pip', 'setuptools', 'wheel', 'py2app', 'twine'])
-        call([PIP, 'install', '-q', '-e', ROOT])
+    if args.frameworks:
+        spawn(['make', '-C', 'deps/frameworks', 'Python.framework', 'PythonT.framework'])
+        spawn(['deps/frameworks/Python.framework/Versions/Current/bin/python3', '-B', 'make.py', 'dev'])
+        spawn(['deps/frameworks/PythonT.framework/Versions/Current/bin/python3t', '-B', 'make.py', 'dev'])
+        return
 
-    print("\nA local development environment has been set up in %s" % venv_dir)
+    # install pyobjc, requests and the other pypi dependencies in deps/local
+    import platform
+    venv_name = platform.python_version() + sys.abiflags
+    in_frameworks = realpath(sys.executable).startswith(join(ROOT, 'deps/frameworks', ''))
+    if in_frameworks:
+        venv_name += '-fmwk'
+        os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+    venv_dir = join('deps/local', venv_name)
+    if not exists(venv_dir):
+        spawn([realpath(sys.executable), '-m', 'venv', venv_dir])
+        PIP = join(venv_dir, 'bin/pip3')
+        call([PIP, 'install', '--upgrade', 'pip', 'setuptools', 'wheel', 'py2app', 'twine'])
+        call([PIP, 'install', '-e', ROOT])
+        if in_frameworks:
+            site_packages = glob(join(venv_dir, 'lib/python3*/site-packages'))[0]
+            with open(join(site_packages, '00-pycache-prefix.pth'), 'w') as f:
+                f.write('import sys; sys.pycache_prefix = %r\n' % join(ROOT, venv_dir, 'pycache'))
+        print("\nA local development environment has been set up in %s" % venv_dir)
+
+    shell = basename(os.environ.get('SHELL', ''))
+    activate = {'fish':'activate.fish', 'csh':'activate.csh', 'tcsh':'activate.csh'}.get(shell, 'activate')
+    print("Activate the venv with: \033[1msource %s\033[0m" % join(venv_dir, 'bin', activate))
 
 
 def cmd_icon(args):
@@ -128,7 +146,7 @@ def cmd_clean(args):
         paths.extend([
             'deps/local',
             'deps/frameworks/Python.framework',
-            'deps/frameworks/relocatable-python',
+            'deps/frameworks/PythonT.framework',
         ])
 
     for path_pattern in paths:
@@ -150,8 +168,8 @@ def cmd_distclean(args):
 
 
 def cmd_app(args):
-    # make sure the embedded framework exists (and has updated app/python.xcconfig)
-    print("Set up Python.framework for app build")
+    # make sure the embedded frameworks exist
+    print("Set up Python.framework & PythonT.framework for app build")
     env = os.environ.copy()
     if args.no_cache:
         env['PIP_NO_CACHE_DIR'] = '1'
@@ -174,6 +192,10 @@ def cmd_py2app(args):
   > python3 make.py dev
   > ./deps/local/<python-version>/bin/python3 make.py py2app""")
         sys.exit(1)
+
+    in_frameworks = realpath(sys.executable).startswith(join(ROOT, 'deps/frameworks', ''))
+    if in_frameworks:
+        spawn(['make', '-C', 'deps/frameworks'])
 
     from py2app.build_app import py2app as build_py2app
 
@@ -285,15 +307,16 @@ def cmd_dist(args):
         else:
             spawn([*codesign_cmd, root])
 
-    PYTHON = join(APP, 'Contents/Frameworks/Python.framework')
-    codesign('%s/Versions/Current/lib' % PYTHON, name="*.dylib")
-    codesign('%s/Versions/Current/lib' % PYTHON, name="*.o")
-    codesign('%s/Versions/Current/lib' % PYTHON, name="*.a")
-    codesign('%s/Versions/Current/lib' % PYTHON, exec_=True)
-    codesign('%s/Versions/Current/bin' % PYTHON, exec_=True)
-    codesign('%s/Versions/Current/bin' % PYTHON, name="python3.*", entitlement=True)
-    codesign('%s/Versions/Current/Resources/Python.app' % PYTHON, entitlement=True)
-    codesign(PYTHON)
+    for framework in ('Python', 'PythonT'):
+        PYTHON = join(APP, 'Contents/Frameworks/%s.framework' % framework)
+        codesign('%s/Versions/Current/lib' % PYTHON, name="*.dylib")
+        codesign('%s/Versions/Current/lib' % PYTHON, name="*.o")
+        codesign('%s/Versions/Current/lib' % PYTHON, name="*.a")
+        codesign('%s/Versions/Current/lib' % PYTHON, exec_=True)
+        codesign('%s/Versions/Current/bin' % PYTHON, exec_=True)
+        codesign('%s/Versions/Current/bin' % PYTHON, name="python3.*", entitlement=True)
+        codesign('%s/Versions/Current/Resources/Python.app' % PYTHON, entitlement=True)
+        codesign(PYTHON)
 
     codesign('%s/Versions/Current/Updater.app' % SPARKLE)
     codesign(SPARKLE)
@@ -331,16 +354,17 @@ def main():
     sub = parser.add_subparsers(dest='command', required=True)
 
     p_dev = sub.add_parser('dev', help='set up virtualenv in deps/local with required dependencies')
+    p_dev.add_argument('--frameworks', action='store_true', help='set up venvs over the Python frameworks in deps/frameworks (building them if needed) rather than the interpreter running make.py')
     p_dev.set_defaults(func=cmd_dev)
 
     p_icon = sub.add_parser('icon', help='regenerate app/Resources/Assets.car from app/art/PlotDevice-app.icon')
     p_icon.set_defaults(func=cmd_icon)
 
     p_clean = sub.add_parser('clean', help='remove build artifacts')
-    p_clean.add_argument('--dist', action='store_true', help='also remove Python.framework and deps/local')
+    p_clean.add_argument('--dist', action='store_true', help='also remove the Python frameworks and deps/local')
     p_clean.set_defaults(func=cmd_clean)
 
-    p_distclean = sub.add_parser('distclean', help='also remove the embedded Python.framework and deps/local')
+    p_distclean = sub.add_parser('distclean', help='also remove the embedded Python frameworks and deps/local')
     p_distclean.set_defaults(func=cmd_distclean)
 
     p_app = sub.add_parser('app', help='build PlotDevice.app (requires full Xcode install')

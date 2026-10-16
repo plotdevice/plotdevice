@@ -474,7 +474,12 @@ cPathmatics_intersects(PyObject *self, PyObject *args)
     if (!parse_double_path_args(self, args, &path1, &path2))
         return NULL;
 
-    if (intersects_path(path1, path2)) {
+    bool hit;
+    Py_BEGIN_ALLOW_THREADS
+    hit = intersects_path(path1, path2);
+    Py_END_ALLOW_THREADS
+
+    if (hit) {
         Py_INCREF(Py_True);
         result = Py_True;
     } else {
@@ -525,7 +530,9 @@ cPathmatics_operation(PyObject *self, PyObject *args, int op)
     path1 = ((PyObjCObject *) pyObject1)->objc_object;
     path2 = ((PyObjCObject *) pyObject2)->objc_object;
 
+    Py_BEGIN_ALLOW_THREADS
     pathResult = path_operation(path1, path2, op, flatness);
+    Py_END_ALLOW_THREADS
     [pathResult retain];
 
     // To get access to a NSBezierPath ObjC instance, we use an
@@ -589,12 +596,15 @@ cPathmatics_offset(PyObject *self, PyObject *args)
     }
 
     NSBezierPath *path = ((PyObjCObject *) pyObject)->objc_object;
+    NSBezierPath *resultPath;
+    Py_BEGIN_ALLOW_THREADS
     PDPolygon *poly = path_to_polygon(path, flatness);
     PDPolygon *resultPoly = pd_polygon_offset(poly, delta, (CGLineJoin)join, miter);
-    NSBezierPath *resultPath = polygon_to_path(resultPoly);
+    resultPath = polygon_to_path(resultPoly);
 
     pd_free_polygon(poly);
     pd_free_polygon(resultPoly);
+    Py_END_ALLOW_THREADS
     [resultPath retain];
 
     return build_objc_instance(pyObject->ob_type, resultPath);
@@ -830,13 +840,16 @@ cPathmatics_strokeToFill(PyObject *self, PyObject *args)
     }
 
     NSBezierPath *path = ((PyObjCObject *) pyObject)->objc_object;
+    NSBezierPath *result;
+    Py_BEGIN_ALLOW_THREADS
     CGPathRef cgPath = [Pathmatician cgPath:path];
     CGPathRef strokedPath = CGPathCreateCopyByStrokingPath(cgPath, NULL, width,
         (CGLineCap)cap, (CGLineJoin)join, miter);
     CGPathRelease(cgPath);
 
-    NSBezierPath *result = [Pathmatician bezierPath:strokedPath];
+    result = [Pathmatician bezierPath:strokedPath];
     CGPathRelease(strokedPath);
+    Py_END_ALLOW_THREADS
     [result retain];
     [result setWindingRule:NSWindingRuleNonZero];
 

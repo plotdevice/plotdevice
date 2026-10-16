@@ -62,7 +62,7 @@ exclude = ["tests*"]
 plotdevice = ["rsrc/*"]
 
 [tool.cibuildwheel]
-build = "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+build = "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-* cp314t-*"
 
 [tool.cibuildwheel.macos]
 archs = ["universal2"]

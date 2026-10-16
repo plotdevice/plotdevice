@@ -13,8 +13,8 @@
 		2A15C45618A48770006BDFF0 /* autocomplete.css in Copy Editor Assets */ = {isa = PBXBuildFile; fileRef = 2A15C45418A48765006BDFF0 /* autocomplete.css */; };
 		2A2EFF223005C16B000B4593 /* Assets.car in Resources */ = {isa = PBXBuildFile; fileRef = 2A2EFF213005C16B000B4593 /* Assets.car */; };
 		2A2EFF2430073AE1000B4593 /* symbols.js in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A2EFF2330073AE1000B4593 /* symbols.js */; };
-		2A36AE2D2868B4E50088976E /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; };
 		2A36AE2E2868B4F30088976E /* Python.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2A36AE2C2868B4E50088976E /* Python.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2AF7C1D02F7A3B0000E1F001 /* PythonT.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2AF7C1D12F7A3B0000E1F001 /* PythonT.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2A36AE58286CA75B0088976E /* placeholder-light.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A36AE54286CA75B0088976E /* placeholder-light.pdf */; };
 		2A36AE59286CA75B0088976E /* placeholder-dark.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 2A36AE56286CA75B0088976E /* placeholder-dark.pdf */; };
 		2A36AE5E287210C70088976E /* ace in Copy Editor Scripts */ = {isa = PBXBuildFile; fileRef = 2A36AE5D287210C70088976E /* ace */; };
@@ -75,6 +75,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				2A36AE2E2868B4F30088976E /* Python.framework in Embed Frameworks */,
+				2AF7C1D02F7A3B0000E1F001 /* PythonT.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -99,6 +100,7 @@
 		2A32957718C59D0A00EEDD1C /* io.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = io.py; sourceTree = "<group>"; };
 		2A32957918C59D0A00EEDD1C /* pathmatics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = pathmatics.py; sourceTree = "<group>"; };
 		2A36AE2C2868B4E50088976E /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = deps/frameworks/Python.framework; sourceTree = "<group>"; };
+		2AF7C1D12F7A3B0000E1F001 /* PythonT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PythonT.framework; path = deps/frameworks/PythonT.framework; sourceTree = "<group>"; };
 		2A36AE55286CA75B0088976E /* en */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = en; path = "Resources/en.lproj/placeholder-light.pdf"; sourceTree = "<group>"; };
 		2A36AE57286CA75B0088976E /* en */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = en; path = "Resources/en.lproj/placeholder-dark.pdf"; sourceTree = "<group>"; };
 		2A36AE5C2870AE8E0088976E /* PlotDevice.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = PlotDevice.entitlements; path = app/PlotDevice.entitlements; sourceTree = "<group>"; };
@@ -118,7 +120,6 @@
 		2A79B13F2864FDAE0074E96A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = Resources/en.lproj/PlotDeviceScript.xib; sourceTree = "<group>"; };
 		2A7AF5C718D2AFAA00F8FFC2 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		2A827CC91859E9FE00A126BA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
-		2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = python.xcconfig; path = app/python.xcconfig; sourceTree = "<group>"; };
 		2ABBB2F91854018B001C4E0A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		2ABBB2FB18540246001C4E0A /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		2ABBB2FD185402AC001C4E0A /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
@@ -163,7 +164,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2A36AE2D2868B4E50088976E /* Python.framework in Frameworks */,
 				2ABBB2FC18540246001C4E0A /* CoreVideo.framework in Frameworks */,
 				2ABBB2FE185402AC001C4E0A /* CoreMedia.framework in Frameworks */,
 				2ABBB2FA1854018B001C4E0A /* AVFoundation.framework in Frameworks */,
@@ -258,7 +258,6 @@
 			children = (
 				2ABDB7671867D8160069EFC3 /* plotdevice-app.py */,
 				2ABDB7681867D8160069EFC3 /* main.m */,
-				2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */,
 				2ABDB7721867D9920069EFC3 /* plotdevice */,
 			);
 			name = "Other Sources";
@@ -290,6 +289,7 @@
 			isa = PBXGroup;
 			children = (
 				2A36AE2C2868B4E50088976E /* Python.framework */,
+				2AF7C1D12F7A3B0000E1F001 /* PythonT.framework */,
 				2AEE843D18B5603900CF91D4 /* CoreText.framework */,
 				2A15C42C18A1FA14006BDFF0 /* WebKit.framework */,
 				2A591FEF185C17D200D1833D /* Security.framework */,
@@ -464,7 +464,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# build a relocatable Python.framework with our dependencies pre-installed\ncd deps/frameworks\nmake\n";
+			shellScript = "# have the build fail if setup.py isn't successful\nset -e\n\n# build relocatable Python.framework & PythonT.framework with our dependencies pre-installed\ncd deps/frameworks\nmake\n";
 			showEnvVarsInLog = 0;
 		};
 		2A36AE34286B81290088976E /* Symlink Command Line Tool */ = {
@@ -656,7 +656,6 @@
 		};
 		C05733CC08A9546B00998B17 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -695,7 +694,6 @@
 		};
 		C05733CD08A9546B00998B17 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2A98FCAD1B3C6BFC00ABF2C9 /* python.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;

@@ -9,12 +9,26 @@ env=$(
 )
 
 PYTHON="$env/python3"
-PIP="$env/pip3"
-if [ ! -x $PYTHON ]; then
+if [ ! -x "$PYTHON" ]; then
     PYTHON=python3
-    PIP=pip3
 fi
 
+case "$env" in
+    *.app/Contents/*)
+        export PYTHONDONTWRITEBYTECODE=1
+        for arg in "$@"; do
+            case "$arg" in
+                --fre*) free_threaded=1 ;; # no other long option starts with --fre
+                --*) ;;
+                -*) case "${arg%%o*}" in *t*) free_threaded=1 ;; esac ;; # -o takes the rest as its value
+            esac
+        done
+        if [ -n "$free_threaded" ]; then
+            PYTHON="${env%/Python.framework/*}/PythonT.framework/Versions/Current/bin/python3t"
+            [ -z "${PYTHON_GIL+set}" ] && GIL_OFF="-X gil=0"
+        fi
+        ;;
+esac
+
 export _p_l_o_t_d_e_v_i_c_e_=$(basename ${0})
-export _p_l_o_t_d_e_v_i_c_e___p_i_p_=$PIP
-$PYTHON -m plotdevice $@
+"$PYTHON" $GIL_OFF -m plotdevice "$@"
