@@ -1,6 +1,7 @@
 # encoding: utf-8
 import re
 import sys
+import weakref
 from unicodedata import normalize
 from collections import namedtuple
 from ..lib.cocoa import *
@@ -211,10 +212,9 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             fill = layer.get('fill', fill)
             margin = layer.get('margin', margin)
 
-        color = Color(fill).copy()
+        color = Color(fill)
         head, tail = map(self._to_px, margin)
-        src = getattr(color, '_cmyk_src', color._rgb_)
-        key = (_ctx._outputmode, src, head, tail, self._font._key)
+        key = (_ctx._outputmode, color._src, head, tail, self._font._key)
         key += tuple(tuple(sorted((k, v) for k, v in layer.items() if k not in ('fill', 'margin'))) for layer in layers)
         attrs = foundry.LIBRARY.recall(key)
         if attrs is not None:
@@ -245,7 +245,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         indent = font.size * spec['indent']
         tabs = abs(indent or font.size)
         top, bot = [font.size*font.leading*d for d in spec['spacing']]
-        graf.setTabStops_([])
+        graf.setTabStops_(NSArray.array()) # not a python list: the style must stay bridge-free (see below)
         graf.setDefaultTabInterval_(tabs)
         graf.setParagraphSpacingBefore_(top)
         graf.setParagraphSpacing_(bot)
@@ -264,7 +264,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             # convert the em-based tracking val to a point-based kerning val
             kern = (spec['tracking'] * font.size)/1000.0
 
-        attrs = dict(NSFont=font._nsFont, PDColor=color, NSColor=color.nsColor, NSParagraphStyle=graf.copy(), NSKern=kern)
+        attrs = dict(NSFont=font._nsFont, PDColor=color._src, NSColor=color.nsColor, NSParagraphStyle=graf.copy(), NSKern=kern)
         return foundry.LIBRARY.remember(key, NSDictionary.dictionaryWithDictionary_(attrs))
 
     def _colorize(self):
@@ -275,7 +275,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             end = self._store.length()
             while at < end:
                 clr, rng = self._store.attribute_atIndex_effectiveRange_('PDColor', at, None)
-                self._store.addAttribute_value_range_('NSColor', clr.nsColor, rng)
+                self._store.addAttribute_value_range_('NSColor', Color(clr).nsColor, rng)
                 at += rng.length
             self._nsmode = mode
 
@@ -819,6 +819,12 @@ class TextBlock(FrameMixin, Grob):
         `lines` - a list of LineFragments contained in the block
         `path` - a Bezier object with all the visible glyphs in the block
     """
+    def _get_parent(self):
+        return self._parent_ref() if self._parent_ref is not None else None
+    def _set_parent(self, parent):
+        self._parent_ref = None if parent is None else weakref.ref(parent)
+    _parent = property(_get_parent, _set_parent)
+
     def __init__(self, parent):
         # inherit the canvas-unit methods and a _frame
         self._frame = Region((0,0), (None,None))

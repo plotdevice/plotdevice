@@ -105,6 +105,10 @@ class Color(object):
         return self._rgb if _ctx._outputmode==RGB else self._cmyk
 
     @property
+    def _src(self):
+        return getattr(self, '_cmyk_src', self._rgb_)
+
+    @property
     def cgColor(self):
         mode = _ctx._outputmode
         try:

@@ -1821,7 +1821,7 @@ class Canvas(object):
             cgProperies = {kCGImagePropertyDPIWidth: 72*zoom, kCGImagePropertyDPIHeight: 72*zoom}
             if format in ('jpg', 'jpeg'):
                 cgProperies[kCGImageDestinationLossyCompressionQuality] = 1.0
-            CGImageDestinationAddImage(cgDest, cgImage, cgProperies)
+            CGImageDestinationAddImage(cgDest, cgImage, NSDictionary.dictionaryWithDictionary_(cgProperies))
             CGImageDestinationFinalize(cgDest)
             return cgData
 
