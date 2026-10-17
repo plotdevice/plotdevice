@@ -38,18 +38,45 @@ def _show(view, surface):
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
 
+def _confine(origin, extent, inset, canvas, document):
+    if extent >= canvas:
+        return inset + (canvas - extent) / 2.0
+    if canvas < document:
+        return min(max(origin, inset), inset + canvas - extent)
+    return origin
+
 class CenteringClipView(NSClipView):
+
+    def awakeFromNib(self):
+        scrollview = self.enclosingScrollView()
+        if scrollview is not None:
+            scrollview.setWantsLayer_(True)
+
+    def setFrameSize_(self, size):
+        super(CenteringClipView, self).setFrameSize_(size)
+        doc = self.documentView()
+        if isinstance(doc, GraphicsView):
+            doc._fitToViewport()
 
     def constrainBoundsRect_(self, proposed):
         rect = super(CenteringClipView, self).constrainBoundsRect_(proposed)
         doc = self.documentView()
-        if doc is not None:
-            d = doc.frame().size
-            if rect.size.width > d.width:
-                rect.origin.x = (d.width - rect.size.width) / 2.0
-            if rect.size.height > d.height:
-                rect.origin.y = (d.height - rect.size.height) / 2.0
+        if isinstance(doc, GraphicsView) and doc._canvasSize is not None:
+            (ox, oy, cw, ch), (W, H) = doc._canvasRect(), doc.frame().size
+            rect.origin.x = _confine(rect.origin.x, rect.size.width, ox, cw, W)
+            rect.origin.y = _confine(rect.origin.y, rect.size.height, oy, ch, H)
         return rect
+
+    def scrollToPoint_(self, point):
+        doc = self.documentView()
+        if isinstance(doc, GraphicsView) and doc._canvasSize is not None:
+            (vw, vh), (W, H) = self.bounds().size, doc.frame().size
+            x, y = point
+            centered = self.constrainBoundsRect_(((x, y), (vw, vh))).origin
+            x = min(max(x, -vw / 4), W - vw + vw / 4) if W > vw else centered.x
+            y = min(max(y, -vh / 4), H - vh + vh / 4) if H > vh else centered.y
+            point = (x, y)
+        super(CenteringClipView, self).scrollToPoint_(point)
 
     def scrollWheel_(self, event):
         doc = self.documentView()
@@ -62,6 +89,7 @@ class GraphicsView(NSView):
     renderer = None # the window's FrameRenderer, set by the ScriptController that owns the view
     script = IBOutlet()
     canvas = None
+    _canvasSize = None # the canvas at the displayed zoom, in points (class-level: the clip view may ask before awakeFromNib)
 
     # The zoom levels are 10%, 25%, 50%, 75%, 100%, 200% and so on up to 2000%.
     zoomLevels = [0.1, 0.25, 0.5, 0.75]
@@ -89,7 +117,9 @@ class GraphicsView(NSView):
         # set up layer `hosting' and disable implicit anims
         self.setLayer_(CALayer.new())
         self.setWantsLayer_(True)
-        inaction = {k:None for k in ["onOrderOut", "sublayers", "contents", "position", "bounds"]}
+        self.layer().setContentsGravity_(kCAGravityCenter)
+        self.layer().setContentsScale_(self._dpr)
+        inaction = {k:None for k in ["onOrderOut", "sublayers", "contents", "contentsScale", "position", "bounds"]}
         self.layer().setActions_(inaction)
 
         # display the placeholder image until we're passed a canvas (and keep it in sync with appearance)
@@ -102,7 +132,8 @@ class GraphicsView(NSView):
                 mode = 'dark' if 'Dark' in appearance.name() else 'light'
             ))
             if placeholder:
-                self.setFrameSize_(placeholder.size())
+                self._canvasSize = tuple(placeholder.size())
+                self._fitToViewport()
                 self.layer().setContents_(placeholder)
 
     @objc.python_method
@@ -146,13 +177,13 @@ class GraphicsView(NSView):
 
         self._configureMagnification(scrollview)
 
+        focused = focus is not None
         if focus is None:
-            visible = scrollview.documentVisibleRect()
-            oldframe = self.frame()
-            focus = (NSMidX(visible) / NSWidth(oldframe), NSMidY(visible) / NSHeight(oldframe))
+            focus = self._focus()
 
-        w, h = [s*self.zoom for s in frame.pagesize]
-        self.setFrame_(((0, 0), (w, h)))
+        size = [s*self.zoom for s in frame.pagesize]
+        resized, self._canvasSize = size != self._canvasSize, size
+        self._fitToViewport()
 
         if self._magnifyReady:
             scrollview.setMinMagnification_(self.zoomLevels[0] / self._zoom)
@@ -162,12 +193,50 @@ class GraphicsView(NSView):
             # draw from top-left corner if first-run
             self.scrollPoint_( (0,0) )
             self._displayed = True
-        else:
-            vw, vh = scrollview.contentView().frame().size
-            self.scrollPoint_( (focus[0]*w - vw/2.0, focus[1]*h - vh/2.0) )
+        elif focused or resized:
+            vw, vh = scrollview.contentView().bounds().size
+            ox, oy, w, h = self._canvasRect()
+            self.scrollPoint_( (ox + focus[0]*w - vw/2.0, oy + focus[1]*h - vh/2.0) )
 
         self.layer().setContentsScale_(self._dpr)
         _show(self, surface)
+
+    @objc.python_method
+    def _canvasRect(self):
+        W, H = self.frame().size
+        cw, ch = self._canvasSize or (W, H)
+        return ((W - cw) / 2.0, (H - ch) / 2.0, cw, ch)
+
+    @objc.python_method
+    def _fitToViewport(self):
+        if self._canvasSize is None:
+            return
+        cw, ch = self._canvasSize
+        scrollview = self.enclosingScrollView()
+        if scrollview is None:
+            w, h = cw, ch
+        else:
+            vw, vh = scrollview.contentView().frame().size
+            w, h = max(cw, vw), max(ch, vh)
+            scrollview.setHorizontalScrollElasticity_(NSScrollElasticityAllowed if cw > vw else NSScrollElasticityNone)
+            scrollview.setVerticalScrollElasticity_(NSScrollElasticityAllowed if ch > vh else NSScrollElasticityNone)
+        if (w, h) != tuple(self.frame().size):
+            self.setFrameSize_((w, h))
+
+    @objc.python_method
+    def _focus(self):
+        if self._canvasSize is None:
+            return (0.5, 0.5)
+        vis = self.enclosingScrollView().documentVisibleRect()
+        ox, oy, cw, ch = self._canvasRect()
+        clamp = lambda v: max(0.0, min(1.0, v))
+        return (clamp((NSMidX(vis) - ox) / cw), clamp((NSMidY(vis) - oy) / ch))
+
+    @objc.python_method
+    def canvasPoint(self, pt):
+        """A point in the view's coordinates, in canvas units"""
+        ox, oy, _, _ = self._canvasRect()
+        return ((pt[0] - ox) / self._zoom, (pt[1] - oy) / self._zoom)
 
     def _get_zoom(self):
         return self._zoom
@@ -195,13 +264,11 @@ class GraphicsView(NSView):
         mag = scrollview.magnification()
         if abs(mag - 1.0) < 1e-3:
             return
-        vis = scrollview.documentVisibleRect()
-        oldframe = self.frame()
-        focus = (NSMidX(vis) / NSWidth(oldframe), NSMidY(vis) / NSHeight(oldframe))
+        focus = self._focus()
         target = self._zoom * mag
         target = max(self.zoomLevels[0], min(self.zoomLevels[-1], target))
         self._wantZoom = target
-        self.rerender(focus=focus, finish=lambda: scrollview.setMagnification_(1.0))
+        self.rerender(focus=focus, finish=lambda: scrollview.setMagnification_(scrollview.magnification() / mag))
 
     def scrollViewDidEndLiveMagnify_(self, note):
         # trackpad pinch gesture settled

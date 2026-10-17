@@ -24,7 +24,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    kCGImageAlphaPremultipliedFirst, kCGImageDestinationLossyCompressionQuality, \
                    kCGImagePropertyDPIHeight, kCGImagePropertyDPIWidth, kCGLineCapButt, kCGLineCapRound, \
                    kCGLineCapSquare, kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, kCGPathFill, \
-                   kCGPathFillStroke, kCGPathStroke, kCAGravityResizeAspect, kCIInputImageKey
+                   kCGPathFillStroke, kCGPathStroke, kCAGravityCenter, kCAGravityResizeAspect, kCIInputImageKey
 from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplication, NSApplicationActivationPolicyAccessory, \
                    NSApplicationPresentationAutoHideMenuBar, NSApplicationPresentationAutoHideToolbar, \
                    NSApplicationPresentationFullScreen, \
@@ -44,7 +44,7 @@ from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplicati
                    NSPasteboardURLReadingContentsConformToTypesKey, NSPasteboardURLReadingFileURLsOnlyKey, \
                    NSPDFImageRep, NSPNGFileType, NSPrintOperation, NSRectFill, NSRectFillUsingOperation, NSResponder, \
                    NSRightTextAlignment, NSSavePanel, NSScreen, NSScrollViewDidEndLiveMagnifyNotification, \
-                   NSShadow, NSSlider, NSSmallControlSize, NSSplitView, \
+                   NSScrollElasticityAllowed, NSScrollElasticityNone, NSShadow, NSSlider, NSSmallControlSize, NSSplitView, \
                    NSStringPboardType, NSSwitch, NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, \
                    NSTextView, NSTIFFFileType, NSToolbarItem, NSTrackingActiveInActiveApp, \
                    NSTrackingActiveInKeyWindow, NSTrackingArea, NSTrackingArea, NSTrackingMouseEnteredAndExited, \

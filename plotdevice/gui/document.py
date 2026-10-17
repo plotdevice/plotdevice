@@ -618,8 +618,7 @@ class ScriptController(NSWindowController):
         if isinstance(self.currentView, FullscreenView):
             my = self.currentView.bounds()[1][1] - my
         if self.fullScreen is None:
-            mx /= self.currentView.zoom
-            my /= self.currentView.zoom
+            mx, my = self.currentView.canvasPoint((mx, my))
 
         return dict(
             # UI events
