@@ -248,6 +248,86 @@ class RendererTests(PlotDeviceTestCase):
         _ctx.canvas.commit()._render_to_surface(surface, 1.0)
         self.assertEqual(partial, _pixels(CGBitmapContextCreateImage(surface.context())))
 
+    def test_culled_render_matches_unculled(self):
+        from Quartz import CGBitmapContextCreateImage
+        from plotdevice import context
+        size(400, 300)
+        background('white')
+        with shadow('black', blur=10, offset=(20, 0)):
+            rect(170, 100, 10, 40, fill='red')
+            with clip(oval(20, 20, 100, 100, plot=False)):
+                for x in range(0, 400, 20):
+                    rect(x, 0, 10, 300, fill='green')
+        rect(170, 200, 20, 20, fill='blue', shadow=Shadow('black', blur=4, offset=(25, 0)))
+        with transform(CENTER), rotate(60):
+            text('rotated text', 120, 280, font='Avenir', size=30)
+        oval(20, 250, 30, 30, fill=(0, 0, 0, .8), blend='destinationin')
+        rect(20, 150, 30, 30, fill='orange')
+        frame = _ctx.canvas.commit()
+
+        def render(cull):
+            within = context.Frame._within
+            if not cull:
+                context.Frame._within = lambda self, rect, grobs: grobs
+            try:
+                surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(400, 600)
+                frame._render_to_surface(surface, 2.0, origin=(400, 0))
+                return _pixels(CGBitmapContextCreateImage(surface.context()))
+            finally:
+                context.Frame._within = within
+        self.assertEqual(render(True), render(False))
+
+        group = frame.grobs[0]
+        self.assertEqual(frame._within((200, 0, 200, 300), group.contents), [group.contents[0]])
+        self.assertLess(len(frame._within((200, 0, 200, 300), frame.grobs)), len(frame.grobs))
+
+    def test_layers_sized_to_their_contents_match_full_ones(self):
+        from Quartz import CGBitmapContextCreateImage
+        from plotdevice.gfx import effects
+        size(500, 400)
+        background('white')
+        text('Zapfino', 40, 120, font='Zapfino', size=40, fill='purple', alpha=.6)
+        text('ƒjord', 300, 120, font='Avenir', size=48, italic=True, shadow=Shadow('black', blur=5, offset=8))
+        with transform(CENTER), rotate(30), shadow('red', blur=8, offset=(10, -5)):
+            rect(100, 250, 120, 60, fill='orange')
+            image('tests/_in/plaid.png', 250, 240, width=80)
+        with alpha(.5), blend('multiply'):
+            oval(320, 260, 120, 120, fill='teal')
+        frame = _ctx.canvas.commit()
+
+        def render(sized):
+            layer_box = effects._layer_box
+            if not sized:
+                effects._layer_box = lambda grob: None
+            try:
+                frame._layers = {}
+                return _pixels(frame._render_to_cgimage(1.0, 2.0))
+            finally:
+                effects._layer_box = layer_box
+        self.assertEqual(render(True), render(False))
+        render(True)
+        self.assertTrue(any(box is not None for box in frame._layers.values()))
+
+    def test_one_paint_alpha_skips_its_layer(self):
+        from plotdevice.gfx.bezier import Bezier
+        size(200, 200)
+        background(.9)
+        for i in range(4):
+            oval(20 + i * 30, 20, 80, 80, fill=(.2, .3, .7), alpha=.5, blend='multiply')
+        star(100, 140, 7, 50, 20, fill=None, stroke='black', strokewidth=6, dash=[9, 4], alpha=.5)
+        oval(120, 120, 60, 60, fill='teal', stroke='black', strokewidth=10, alpha=.5)
+        frame = _ctx.canvas.commit()
+        self.assertEqual([g._one_paint for g in frame.grobs], [True] * 5 + [False])
+
+        direct = _pixels(frame._render_to_cgimage(1.0, 2.0))
+        one_paint = Bezier._one_paint
+        Bezier._one_paint = property(lambda self: False)
+        try:
+            layered = _pixels(frame._render_to_cgimage(1.0, 2.0))
+        finally:
+            Bezier._one_paint = one_paint
+        self.assertLessEqual(max(abs(a - b) for a, b in zip(direct, layered)), 3)
+
 class CanvasTests(PlotDeviceTestCase):
     def test_rendering_does_not_leak(self):
         import sys, gc, objc

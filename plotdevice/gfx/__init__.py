@@ -26,11 +26,15 @@ def _cg_context():
     CGContextRestoreGState(port)
 
 @contextmanager
-def _cg_layer():
-    # CGContextBeginTransparencyLayerWithRect(_cg_port(), <bounds>, None)
-    CGContextBeginTransparencyLayer(_cg_port(), None)
+def _cg_layer(box=None):
+    port = _cg_port()
+    if box is None:
+        CGContextBeginTransparencyLayer(port, None)
+    else:
+        to_user = CGAffineTransformConcat(_base_ctm.get(), CGAffineTransformInvert(CGContextGetCTM(port)))
+        CGContextBeginTransparencyLayerWithRect(port, CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), to_user), None)
     yield
-    CGContextEndTransparencyLayer(_cg_port())
+    CGContextEndTransparencyLayer(port)
 
 def _cg_port():
     return NSGraphicsContext.currentContext().CGContext()
@@ -40,13 +44,29 @@ def _cg_port():
 _frame = ContextVar('frame', default=None)
 _ctx = None
 
+_base_ctm = ContextVar('base_ctm', default=(1, 0, 0, -1, 0, 0))
+
+_culling = ContextVar('culling', default=None)
+
 @contextmanager
-def _rendering(frame):
+def _rendering(frame, within=None):
     token = _frame.set(frame)
+    ctm_token = _base_ctm.set(CGContextGetCTM(_cg_port()))
+    cull_token = _culling.set(within)
     try:
         yield
     finally:
+        _culling.reset(cull_token)
+        _base_ctm.reset(ctm_token)
         _frame.reset(token)
+
+def _layer_box(grob):
+    frame = _frame.get()
+    return None if frame is None or grob is None else frame._layer_box(grob)
+
+def _visible(grobs):
+    within = _culling.get()
+    return grobs if within is None else _frame.get()._within(within, grobs)
 
 def _outputmode():
     frame = _frame.get()

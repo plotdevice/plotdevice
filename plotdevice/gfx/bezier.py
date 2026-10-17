@@ -395,6 +395,10 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         path = self._nsBezierPath if self._grid.dpx == 1 else self._to_px(self._nsBezierPath)
         return pathmatics.convert_path(path)
 
+    @property
+    def _one_paint(self):
+        return self._fillcolor is None or not self._strokecolor
+
     def _draw(self):
         port = _cg_port()
         CGContextSaveGState(port)
@@ -403,7 +407,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 self._screen_transform.concat()
 
             # apply blend/alpha/shadow (and any associated transparency layers)
-            with self.effects.applied():
+            with self.effects.applied(self):
                 # prepare to stroke, fill, or both
                 ink = None
                 path = self._nsBezierPath

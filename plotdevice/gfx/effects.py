@@ -8,7 +8,7 @@ from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, numlike
 from .colors import Color
 from .geometry import Point, CORNER
-from . import _cg_context, _cg_layer, _cg_port, _canvas_dims
+from . import _cg_context, _cg_layer, _cg_port, _canvas_dims, _visible, _layer_box
 
 _ctx = None
 __all__ = ("Effect", "Shadow", "Stencil",)
@@ -75,10 +75,10 @@ class Frob(object):
 
     def _draw(self):
         # apply state changes only to contained grobs
-        with _cg_context(), self.applied():
+        with _cg_context(), self.applied(self):
             if not self._grobs:
                 return
-            for grob in self._grobs:
+            for grob in _visible(self._grobs):
                 grob._draw()
 
     @property
@@ -146,20 +146,24 @@ class Effect(Frob):
         # return bool(fx) # return whether any state was just changed
 
     @contextmanager
-    def applied(self):
+    def applied(self, owner=None):
         """Apply compositing effects (if any) to any drawing inside the `with` block"""
         if self._fx:
+            box = _layer_box(owner)
             if self.set('blend', 'alpha'):
-                with _cg_layer():
-                    if not self.set('shadow'):
-                        yield # if there's no shadow, we don't need a second layer
-                    else:
-                        with _cg_layer():
-                            yield # if there is, we do
+                if 'shadow' not in self._fx and getattr(owner, '_one_paint', False):
+                    yield # a lone fill or stroke takes the alpha and blend as exactly as a layer would
+                else:
+                    with _cg_layer(box):
+                        if not self.set('shadow'):
+                            yield # if there's no shadow, we don't need a second layer
+                        else:
+                            with _cg_layer(box):
+                                yield # if there is, we do
             else:
                 # no blend or alpha changes, but since _fx exists there must be a shadow
                 self.set('shadow')
-                with _cg_layer():
+                with _cg_layer(box):
                     yield
         else:
             # nothing to be done
@@ -347,7 +351,7 @@ class Stencil(Frob):
             xf.inverse.concat() # ...restore the previous state after
 
     @contextmanager
-    def applied(self):
+    def applied(self, owner=None):
         self.set()
         yield
 

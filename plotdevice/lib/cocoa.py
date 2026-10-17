@@ -2,6 +2,7 @@
 
 from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorCreate, \
                    CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGContextAddPath, CGContextAddRect, \
+                   CGAffineTransformConcat, CGAffineTransformInvert, CGRectApplyAffineTransform, \
                    CGContextBeginPath, CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, \
                    CGContextClearRect, CGContextClearRect, CGContextClip, CGContextClipToMask, CGContextDrawPath, \
                    CGContextEndTransparencyLayer, CGContextEOClip, CGContextFlush, CGContextGetCTM, CGContextRestoreGState, CGContextSaveGState, CGContextScaleCTM, \

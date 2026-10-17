@@ -348,7 +348,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
         with _ns_context() as ns_ctx:
             self._screen_transform.concat() # move the image into place via transforms
-            with self.effects.applied():    # apply any blend/alpha/shadow effects
+            with self.effects.applied(self):  # apply any blend/alpha/shadow effects
                 ns_ctx.setImageInterpolation_(NSImageInterpolationHigh)
                 bounds = ((0,0), self._nsImage.size()) # draw the image at (0,0)
                 self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
