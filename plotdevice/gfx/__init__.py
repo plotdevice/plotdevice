@@ -48,6 +48,11 @@ _base_ctm = ContextVar('base_ctm', default=(1, 0, 0, -1, 0, 0))
 
 _culling = ContextVar('culling', default=None)
 
+# how many clip() or mask() stencils the drawing is inside
+_clips = ContextVar('clips', default=0)
+
+_bare = ContextVar('bare', default=None)
+
 @contextmanager
 def _rendering(frame, within=None):
     token = _frame.set(frame)

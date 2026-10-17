@@ -328,6 +328,35 @@ class RendererTests(PlotDeviceTestCase):
             Bezier._one_paint = one_paint
         self.assertLessEqual(max(abs(a - b) for a, b in zip(direct, layered)), 3)
 
+    def test_wide_shadow_blurs_match_core_graphics(self):
+        from plotdevice.gfx import effects
+        size(400, 300)
+        background('white')
+        rect(40, 40, 120, 90, fill='crimson', shadow=Shadow('black', blur=60, offset=(20, 15)))
+        with shadow(('navy', .6), blur=40, offset=(-10, 25)):
+            star(280, 120, 6, 70, 30, fill='orange')
+            oval(220, 180, 80, 60, fill='teal')
+        with clip(rect(40, 170, 150, 110, plot=False)):
+            oval(60, 180, 100, 80, fill='plum', shadow=Shadow('black', blur=50, offset=30))
+        text('Shadowed', 220, 285, font='Avenir', size=30, shadow=Shadow('purple', blur=40, offset=(10, -15)))
+        with transform(CENTER), rotate(25):
+            image('tests/_in/plaid.png', 300, 200, width=60, shadow=Shadow('black', blur=35, offset=12))
+        frame = _ctx.canvas.commit()
+
+        def render(downsampled):
+            quick = effects._QUICK_BLUR
+            if not downsampled:
+                effects._QUICK_BLUR = float('inf')
+            try:
+                return _pixels(frame._render_to_cgimage(1.0, 2.0))
+            finally:
+                effects._QUICK_BLUR = quick
+        cg, ours = render(False), render(True)
+        self.assertNotEqual(cg, ours)
+        diffs = [abs(a - b) for a, b in zip(cg, ours)]
+        self.assertLessEqual(max(diffs), 8)
+        self.assertGreater(sum(d <= 3 for d in diffs) / len(diffs), .995)
+
 class CanvasTests(PlotDeviceTestCase):
     def test_rendering_does_not_leak(self):
         import sys, gc, objc

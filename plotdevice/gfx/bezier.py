@@ -408,6 +408,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
             # apply blend/alpha/shadow (and any associated transparency layers)
             with self.effects.applied(self):
+                target = _cg_port() # (a shadow may have the drawing go to a bitmap of its own)
                 # prepare to stroke, fill, or both
                 ink = None
                 path = self._nsBezierPath
@@ -415,15 +416,15 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 lone_segment = filled and path.elementCount() == 2 and path.elementAtIndex_(1) == NSLineToBezierPathElement
                 if filled and not lone_segment:
                     ink = kCGPathFill
-                    CGContextSetFillColorWithColor(port, self._fillcolor.cgColor)
+                    CGContextSetFillColorWithColor(target, self._fillcolor.cgColor)
                 if (self._strokecolor):
                     ink = kCGPathStroke if ink is None else kCGPathFillStroke
-                    CGContextSetStrokeColorWithColor(port, self._strokecolor.cgColor)
-                    CGContextSetLineWidth(port, self.nib)
-                    CGContextSetLineCap(port, _CAPSTYLE[self.cap])
-                    CGContextSetLineJoin(port, _JOINSTYLE[self.join])
+                    CGContextSetStrokeColorWithColor(target, self._strokecolor.cgColor)
+                    CGContextSetLineWidth(target, self.nib)
+                    CGContextSetLineCap(target, _CAPSTYLE[self.cap])
+                    CGContextSetLineJoin(target, _JOINSTYLE[self.join])
                     if self.dash:
-                        CGContextSetLineDash(port, 0, self.dash, len(self.dash))
+                        CGContextSetLineDash(target, 0, self.dash, len(self.dash))
 
                 # use cocoa for patterns/gradients
                 if isinstance(self._fillcolor, (Gradient, Pattern)):
@@ -431,9 +432,9 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
                 # use cg for stroke & fill
                 if ink is not None:
-                    CGContextBeginPath(port)
-                    CGContextAddPath(port, self.cgPath)
-                    CGContextDrawPath(port, ink)
+                    CGContextBeginPath(target)
+                    CGContextAddPath(target, self.cgPath)
+                    CGContextDrawPath(target, ink)
         finally:
             CGContextRestoreGState(port)
 

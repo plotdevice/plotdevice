@@ -346,10 +346,10 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
     def _draw(self):
         """Draw an image on the given coordinates."""
 
-        with _ns_context() as ns_ctx:
+        with _ns_context():
             self._screen_transform.concat() # move the image into place via transforms
             with self.effects.applied(self):  # apply any blend/alpha/shadow effects
-                ns_ctx.setImageInterpolation_(NSImageInterpolationHigh)
+                NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
                 bounds = ((0,0), self._nsImage.size()) # draw the image at (0,0)
                 self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
                 # NB: the nodebox source warns about quartz bugs triggered by drawing
