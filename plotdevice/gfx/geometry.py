@@ -23,6 +23,8 @@ __all__ = [
 CENTER = "center"
 CORNER = "corner"
 
+IDENTITY = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+
 # rotation modes
 DEGREES = "degrees"
 RADIANS = "radians"

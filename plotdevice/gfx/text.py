@@ -7,7 +7,7 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from .typography import *
-from .geometry import Transform, Region, Size, Point, Pair
+from .geometry import Transform, Region, Size, Point, Pair, IDENTITY
 from .colors import Color
 from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, FrameMixin, Grob
@@ -551,7 +551,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         # accumulate transformations in a fresh matrix
         xf = Transform()
 
-        if self._transformmode == CENTER:
+        if self._transformmode == CENTER and tuple(self.transform.matrix) != IDENTITY:
             # calculate the (reversible) translation offset for centering (in px)
             bounds = self._to_px(self.frame)
             shift = bounds.origin + bounds.size/2.0 - (x, y-baseline)
