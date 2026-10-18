@@ -304,8 +304,10 @@ class adict(BetterRepr, dict):
 @contextmanager
 def autorelease():
     pool = NSAutoreleasePool.alloc().init()
-    yield
-    del pool
+    try:
+        yield
+    finally:
+        del pool
 
 
 ### module data dir ###

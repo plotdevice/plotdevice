@@ -4,7 +4,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGContextAddPath, CGContextAddRect, \
                    CGContextBeginPath, CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, \
                    CGContextClearRect, CGContextClearRect, CGContextClip, CGContextClipToMask, CGContextDrawPath, \
-                   CGContextEndTransparencyLayer, CGContextEOClip, CGContextGetCTM, CGContextRestoreGState, CGContextSaveGState, CGContextScaleCTM, \
+                   CGContextEndTransparencyLayer, CGContextEOClip, CGContextFlush, CGContextGetCTM, CGContextRestoreGState, CGContextSaveGState, CGContextScaleCTM, \
                    CGContextSetAlpha, CGContextSetBlendMode, CGContextSetFillColorWithColor, CGContextSetLineCap, \
                    CGContextSetLineDash, CGContextSetLineJoin, CGContextSetLineWidth, \
                    CGContextSetStrokeColorWithColor, CGContextTranslateCTM, CGDataConsumerCreateWithCFData, CGImageDestinationAddImage, \
@@ -24,7 +24,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    kCGImageAlphaPremultipliedFirst, kCGImageDestinationLossyCompressionQuality, \
                    kCGImagePropertyDPIHeight, kCGImagePropertyDPIWidth, kCGLineCapButt, kCGLineCapRound, \
                    kCGLineCapSquare, kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, kCGPathFill, \
-                   kCGPathFillStroke, kCGPathStroke, kCIInputImageKey
+                   kCGPathFillStroke, kCGPathStroke, kCAGravityResizeAspect, kCIInputImageKey
 from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplication, NSApplicationActivationPolicyAccessory, \
                    NSBackingStoreBuffered, NSBeep, NSBezierPath, NSBitmapImageRep, NSBorderlessWindowMask, NSButton, \
                    NSCenterTextAlignment, NSChangeAutosaved, NSChangeCleared, NSChangeDone, NSChangeReadOtherContents, \

@@ -7,6 +7,7 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path, numlike
+from . import _outputmode
 _ctx = None
 __all__ = ("RGB", "HSV", "HSB", "CMYK", "GREY",
            "Color", "Pattern", "Gradient",)
@@ -102,7 +103,7 @@ class Color(object):
 
     @property
     def nsColor(self):
-        return self._rgb if _ctx._outputmode==RGB else self._cmyk
+        return self._rgb if _outputmode()==RGB else self._cmyk
 
     @property
     def _src(self):
@@ -110,7 +111,7 @@ class Color(object):
 
     @property
     def cgColor(self):
-        mode = _ctx._outputmode
+        mode = _outputmode()
         try:
             return self._cg[mode]
         except KeyError:
@@ -413,7 +414,7 @@ class Gradient(object):
 
     def __init__(self, *colors, **kwargs):
         if colors and isinstance(colors[0], Gradient):
-            _copy_attrs(colors[0], self, ('_gradient', '_steps', '_colors', '_center', '_angle'))
+            _copy_attrs(colors[0], self, ('_gradient', '_outputmode', '_steps', '_colors', '_center', '_angle'))
             return
 
         # parse colors and assemble an NSGradient
@@ -459,7 +460,7 @@ class Gradient(object):
 
     @property
     def nsGradient(self):
-        c_mode = _ctx._outputmode
+        c_mode = _outputmode()
         if not self._gradient or self._outputmode!=c_mode:
             c_space = getattr(NSColorSpace, 'deviceRGBColorSpace' if c_mode==RGB else 'deviceCMYKColorSpace')
             ns_clrs = [c.nsColor for c in self._colors]

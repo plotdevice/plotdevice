@@ -281,10 +281,7 @@ class DashboardController(NSObject):
         result = self.script.vm.call(var.name)
         self.script.echo(result.output)
         if result.ok:
-            try:
-                self.script.currentView.setCanvas(self.script.vm.canvas)
-            except DeviceError as e:
-                return self.script.crash()
+            self.script.currentView.render(self.script.vm.canvas, onerror=self.script._renderCrashed)
 
 
     @objc.python_method

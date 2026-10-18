@@ -1,5 +1,6 @@
 # encoding: utf-8
 from contextlib import contextmanager
+from contextvars import ContextVar
 from ..lib.cocoa import *
 
 ### graphics context mgmt ###
@@ -34,6 +35,29 @@ def _cg_layer():
 def _cg_port():
     return NSGraphicsContext.currentContext().CGContext()
 
+### render-time state ###
+
+_frame = ContextVar('frame', default=None)
+_ctx = None
+
+@contextmanager
+def _rendering(frame):
+    token = _frame.set(frame)
+    try:
+        yield
+    finally:
+        _frame.reset(token)
+
+def _outputmode():
+    frame = _frame.get()
+    return _ctx._outputmode if frame is None else frame.outputmode
+
+def _canvas_dims():
+    frame = _frame.get()
+    if frame is None:
+        return _ctx.canvas.width, _ctx.canvas.height
+    return frame.width, frame.height
+
 ### submodule init ###
 
 # pool the submodules' __all__ namespaces into our own
@@ -47,6 +71,8 @@ __all__ = list(ns.keys())
 
 # called by a Context to do the dependency injection™
 def bind(ctx):
+  global _ctx
+  _ctx = ctx
   for module in modules:
     # all of the gfx.* submodules refer to a global called _ctx to access the
     # parent context. before a user script is interpreted, the sandbox resets the

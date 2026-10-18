@@ -4,11 +4,37 @@ import os
 import traceback
 import objc
 
-from . import set_timeout
+from . import set_timeout, FrameRenderer
 from ..lib.cocoa import *
 from ..gfx import Color
 from ..gfx.atoms import KEY_ESC
 from objc import super
+
+class SurfaceRing(object):
+    DEPTH = FrameRenderer.DEPTH + 2
+
+    def __init__(self, width, height):
+        PDSurface = objc.lookUpClass('PDSurface')
+        self.size = (width, height)
+        self._surfaces = [PDSurface.surfaceWithWidth_height_(width, height) for _ in range(self.DEPTH)]
+
+    def render(self, frame, scale, cancelled=None, onscreen=()):
+        surface = next(s for s in self._surfaces if s.surface() not in onscreen)
+        self._surfaces.remove(surface)
+        self._surfaces.append(surface)
+        frame._render_to_surface(surface, scale, cancelled)
+        return surface.surface()
+
+def _rendered(view, frame, scale, cancelled=None):
+    width, height = [max(int(dim * scale), 1) for dim in frame.pagesize]
+    ring = getattr(view, '_ring', None)
+    if ring is None or ring.size != (width, height):
+        ring = view._ring = SurfaceRing(width, height)
+    return ring.render(frame, scale, cancelled, onscreen=getattr(view, '_onscreen', ()))
+
+def _show(view, surface):
+    view.layer().setContents_(surface)
+    view._onscreen = (surface,) + getattr(view, '_onscreen', ())[:1]
 
 DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
 
@@ -33,6 +59,7 @@ class CenteringClipView(NSClipView):
             super(CenteringClipView, self).scrollWheel_(event)
 
 class GraphicsView(NSView):
+    renderer = None # the window's FrameRenderer, set by the ScriptController that owns the view
     script = IBOutlet()
     canvas = None
 
@@ -50,6 +77,9 @@ class GraphicsView(NSView):
         self.key = None
         self.keycode = None
         self._zoom = 1.0
+        self._wantZoom = self._zoom  # zoom to render at (adopted as _zoom once displayed)
+        self._displayed = False   # whether a frame has been shown yet
+        self._seq = self._shownSeq = 0  # sequence number of the latest committed / displayed frame
         self._dpr = self.window().backingScaleFactor()
         self._magnifyReady = False
         self._zoomApply = None
@@ -76,9 +106,40 @@ class GraphicsView(NSView):
                 self.layer().setContents_(placeholder)
 
     @objc.python_method
-    def setCanvas(self, canvas, focus=None):
+    def render(self, canvas, focus=None, onerror=None, ondone=None):
+        self.canvas = canvas
+        self._committed = canvas.commit()
+        self._seq += 1
+        self._submit(focus, onerror=onerror, ondone=ondone)
+
+    @objc.python_method
+    def rerender(self, focus=None, finish=None):
+        if getattr(self, '_committed', None) is not None:
+            self._submit(focus, finish=finish)
+
+    @objc.python_method
+    def _submit(self, focus=None, onerror=None, ondone=None, finish=None):
+        frame, seq, zoom, dpr = self._committed, self._seq, self._wantZoom, self._dpr
+        def work(cancelled):
+            return _rendered(self, frame, zoom * dpr, cancelled)
+        def deliver(surface, err):
+            if err is not None:
+                if onerror is not None:
+                    onerror(err)
+            elif seq >= self._shownSeq and (zoom, dpr) == (self._wantZoom, self._dpr) and self.window() is not None:
+                if finish is not None:
+                    finish()
+                self._zoom = zoom
+                self._shownSeq = seq
+                self._applyFrame(frame, surface, focus)
+            if ondone is not None:
+                ondone()
+        self.renderer.submit(work, deliver)
+
+    @objc.python_method
+    def _applyFrame(self, frame, surface, focus=None):
         # set the scroller color based on the background
-        bg = canvas.background
+        bg = frame.background
         is_dark = bool(isinstance(bg, Color) and bg.brightness <= .5)
         scrollview = self.enclosingScrollView()
         scrollview.setScrollerKnobStyle_(2 if is_dark else 1) # NSScrollerKnobStyleDark/Light
@@ -90,38 +151,31 @@ class GraphicsView(NSView):
             oldframe = self.frame()
             focus = (NSMidX(visible) / NSWidth(oldframe), NSMidY(visible) / NSHeight(oldframe))
 
-        # render (and possibly bomb...)
-        ns_image = canvas._render_to_image(self.zoom)
-        bitmap = ns_image.layerContentsForContentsScale_(self._dpr)
-
-        w, h = [s*self.zoom for s in canvas.pagesize]
+        w, h = [s*self.zoom for s in frame.pagesize]
         self.setFrame_(((0, 0), (w, h)))
 
         if self._magnifyReady:
             scrollview.setMinMagnification_(self.zoomLevels[0] / self._zoom)
             scrollview.setMaxMagnification_(self.zoomLevels[-1] / self._zoom)
 
-        if self.canvas is None:
+        if not self._displayed:
             # draw from top-left corner if first-run
             self.scrollPoint_( (0,0) )
+            self._displayed = True
         else:
             vw, vh = scrollview.contentView().frame().size
             self.scrollPoint_( (focus[0]*w - vw/2.0, focus[1]*h - vh/2.0) )
 
-        # cache the canvas image
-        self.layer().setContents_(bitmap)
-
-        # keep a reference to the canvas so we can zoom later on
-        self.canvas = canvas
+        self.layer().setContentsScale_(self._dpr)
+        _show(self, surface)
 
     def _get_zoom(self):
         return self._zoom
 
     @objc.python_method
     def _set_zoom(self, zoom):
-        self._zoom = zoom
-        if self.canvas is not None:
-            self.setCanvas(self.canvas)
+        self._wantZoom = zoom
+        self.rerender()
     zoom = property(_get_zoom, _set_zoom)
 
     @objc.python_method
@@ -146,9 +200,8 @@ class GraphicsView(NSView):
         focus = (NSMidX(vis) / NSWidth(oldframe), NSMidY(vis) / NSHeight(oldframe))
         target = self._zoom * mag
         target = max(self.zoomLevels[0], min(self.zoomLevels[-1], target))
-        scrollview.setMagnification_(1.0)
-        self._zoom = target
-        self.setCanvas(self.canvas, focus=focus)
+        self._wantZoom = target
+        self.rerender(focus=focus, finish=lambda: scrollview.setMagnification_(1.0))
 
     def scrollViewDidEndLiveMagnify_(self, note):
         # trackpad pinch gesture settled
@@ -163,8 +216,7 @@ class GraphicsView(NSView):
         if not dpr or getattr(self, '_dpr', None) == dpr:
             return
         self._dpr = dpr
-        if getattr(self, 'canvas', None) is not None:
-            self.setCanvas(self.canvas)
+        self.rerender()
 
     def viewWillMoveToWindow_(self, window):
         super(GraphicsView, self).viewWillMoveToWindow_(window)
@@ -304,22 +356,31 @@ class FullscreenWindow(NSWindow):
         return True
 
 class FullscreenView(NSView):
+    renderer = None # the window's FrameRenderer, set by the ScriptController that owns the view
 
     def init(self):
         super(FullscreenView, self).init()
+        self.canvas = None
         self.mousedown = False
         self.keydown = False
         self.key = None
         self.keycode = None
         self.mousehide = None
+        self._seq = self._shownSeq = 0  # sequence number of the latest committed / displayed frame
         # self.scrollwheel = False
         # self.wheeldelta = 0.0
+
+        self.setLayer_(CALayer.new())
+        self.setWantsLayer_(True)
+        self.layer().setBackgroundColor_(NSColor.blackColor().CGColor())
+        self.layer().setContentsGravity_(kCAGravityResizeAspect)
+        inaction = {k:None for k in ["onOrderOut", "sublayers", "contents", "position", "bounds"]}
+        self.layer().setActions_(inaction)
         return self
 
     @objc.python_method
-    def setCanvas(self, canvas):
+    def render(self, canvas, focus=None, onerror=None, ondone=None):
         self.canvas = canvas
-        self.setNeedsDisplay_(True)
         if not hasattr(self, "screenRect"):
             self.screenRect = NSScreen.mainScreen().frame()
             cw, ch = self.canvas.pagesize
@@ -329,20 +390,24 @@ class FullscreenView(NSView):
             self.scaledSize = nw, nh
             self.dx = (sw - nw) / 2.0
             self.dy = (sh - nh) / 2.0
-
-    def drawRect_(self, rect):
-        NSGraphicsContext.currentContext().saveGraphicsState()
-        NSColor.blackColor().set()
-        NSRectFill(rect)
-        if self.canvas is not None:
-            t = NSAffineTransform.transform()
-            t.translateXBy_yBy_(self.dx, self.dy)
-            t.scaleBy_(self.scalingFactor)
-            t.concat()
-            clip = NSBezierPath.bezierPathWithRect_( ((0, 0), self.canvas.pagesize) )
-            clip.addClip()
-            self.canvas.draw()
-        NSGraphicsContext.currentContext().restoreGraphicsState()
+        win = self.window()
+        dpr = win.backingScaleFactor() if win else NSScreen.mainScreen().backingScaleFactor()
+        frame = self._committed = canvas.commit()
+        self._seq += 1
+        seq = self._seq
+        scale = self.scalingFactor * (dpr or 1.0)
+        def work(cancelled):
+            return _rendered(self, frame, scale, cancelled)
+        def deliver(surface, err):
+            if err is not None:
+                if onerror is not None:
+                    onerror(err)
+            elif seq >= self._shownSeq:
+                self._shownSeq = seq
+                _show(self, surface)
+            if ondone is not None:
+                ondone()
+        self.renderer.submit(work, deliver)
 
     def updateTrackingAreas(self):
         for area in self.trackingAreas():

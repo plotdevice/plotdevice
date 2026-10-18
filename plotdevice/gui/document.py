@@ -17,7 +17,7 @@ from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
 from ..run import Sandbox, encoded
 from .. import DeviceError
-from . import set_timeout, FrameClock, FRAMELOG
+from . import set_timeout, FrameClock, FrameRenderer, FRAMELOG
 
 NSEventGestureAxisVertical = 2
 
@@ -213,6 +213,9 @@ class ScriptController(NSWindowController):
         # always a reference to either the in-window view or a fullscreen view
         self.currentView = self.graphicsView
 
+        self.renderer = FrameRenderer()
+        self.graphicsView.renderer = self.renderer
+
         # watch for changes in light/dark-mode and pass them along to subviews
         from AppKit import NSKeyValueObservingOptionInitial
         NSApp.addObserver_forKeyPath_options_context_(self,
@@ -318,6 +321,9 @@ class ScriptController(NSWindowController):
 
     def windowWillClose_(self, note):
         self.stopScript()
+        if self.renderer is not None:
+            self.renderer.shutdown()
+            self.renderer = None
 
         # break some retain cycles on our way out
         self.vm._cleanup()
@@ -397,6 +403,7 @@ class ScriptController(NSWindowController):
             self.stopScript()
             self.currentView = FullscreenView.alloc().init()
             self.currentView.canvas = None
+            self.currentView.renderer = self.renderer
             fullRect = NSScreen.mainScreen().frame()
             if not self.offscreen:
                 self.offscreen = FullscreenWindow.alloc().initWithRect_(fullRect)
@@ -419,10 +426,11 @@ class ScriptController(NSWindowController):
         call self.invoke('draw') until cancelled by the user.
         """
 
-        # ihalt any animation that was already running
         if self.animationTimer:
             self.animationTimer.invalidate()
             self.animationTimer = None
+        if self.renderer is not None:
+            self.renderer.cancel()
 
         # clear out any key/mousedown state from previous run
         self.reset_ui()
@@ -480,10 +488,22 @@ class ScriptController(NSWindowController):
 
     def tick_(self, sender):
         clock = self.animationTimer
-        if clock and clock.should_draw():
+        if clock and self.renderer.ready and clock.should_draw():
             self.step()
             clock.frame_done()   # no-op if step() stopped the script (the clock is invalidated)
             self._update_fps(clock)
+
+    @objc.python_method
+    def _frameDelivered(self):
+        if self.animationTimer is not None:
+            self.tick_(None)
+
+    @objc.python_method
+    def _renderCrashed(self, err):
+        try:
+            raise err
+        except Exception:
+            self.crash()
 
     def step(self):
         """Keep calling the script's draw method until an error occurs or the animation complete."""
@@ -530,10 +550,7 @@ class ScriptController(NSWindowController):
 
         # Display the output of the script
         if result.ok and redraw:
-            try:
-                self.currentView.setCanvas(self.vm.canvas)
-            except DeviceError as e:
-                return self.crash()
+            self.currentView.render(self.vm.canvas, onerror=self._renderCrashed, ondone=self._frameDelivered)
         if FRAMELOG and self.animationTimer is not None:
             self.animationTimer._parts = (t1 - t0, time.perf_counter() - t1)
         if not result.ok and method in (None, "setup"):
@@ -636,7 +653,7 @@ class ScriptController(NSWindowController):
 
         if canvas and self.window() and self.vm._meta.frame % 2:
             # blit the canvas to the graphics view            ^ (but only every other frame)
-            self.currentView.setCanvas(canvas)
+            self.currentView.render(canvas)
 
     @objc.python_method
     def exportProgress(self, written, total, cancelled):
@@ -695,7 +712,7 @@ class ScriptController(NSWindowController):
         needs_focus = False
         if self.fullScreen is not None:
             # copy the final frame back to the window's view
-            self.graphicsView.setCanvas(self.vm.canvas)
+            self.graphicsView.render(self.vm.canvas)
             self.currentView = self.graphicsView
 
             # close the fullscreen window

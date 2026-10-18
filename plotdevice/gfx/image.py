@@ -98,6 +98,15 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                 if k in FrameMixin.opts:
                     setattr(self, k, v)
 
+    def copy(self):
+        clone = Image.__new__(Image)
+        clone._nsImage = self._nsImage # never edited in place, so copies share it
+        clone._frame = self._frame.copy()
+        clone._transform = self._transform.copy()
+        clone._effects = self._effects.copy()
+        clone._grid, clone._transformmode = self._grid, self._transformmode
+        return clone
+
     def _lazyload(self, path=None, data=None):
         # loads either a `path` or `data` kwarg and returns an NSImage
         # `path` should be the path of a valid image file
