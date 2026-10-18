@@ -29,6 +29,9 @@ PyMODINIT_FUNC PyInit__plotdevice(void){
     };
 
     PyObject *m = PyModule_Create(&moduledef);
+#ifdef Py_GIL_DISABLED
+    PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED);
+#endif
     PyObject *err = PyErr_NewException("cPathmatics.error", NULL, NULL);
     Py_INCREF(err);
     PyModule_AddObject(m, "error", err);

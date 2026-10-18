@@ -518,7 +518,10 @@ cPathmatics_pdfOutline(PyObject *self, PyObject *args)
     }
 
     NSData *pdfData = ((PDFTracePyObjCObject *) pyData)->objc_object;
-    NSBezierPath *outline = trace_pdf_outline(pdfData);
+    NSBezierPath *outline;
+    Py_BEGIN_ALLOW_THREADS
+    outline = trace_pdf_outline(pdfData);
+    Py_END_ALLOW_THREADS
     if (!outline) {
         outline = [NSBezierPath bezierPath];
     }

@@ -5,7 +5,8 @@ import CoreGraphics
 public final class SVGImageRep: NSImageRep {
 
   private let svg: SVG
-  private var cachedOutline: NSBezierPath?
+  private var cachedOutline: NSBezierPath?   // guarded by outlineLock
+  private let outlineLock = NSLock()
 
   init(svg: SVG) {
     self.svg = svg
@@ -32,7 +33,9 @@ public final class SVGImageRep: NSImageRep {
   public override func copy(with zone: NSZone? = nil) -> Any {
     let copy = SVGImageRep(svg: svg)
     copy.size = size
+    outlineLock.lock()
     copy.cachedOutline = cachedOutline
+    outlineLock.unlock()
     return copy
   }
 
@@ -50,6 +53,8 @@ public final class SVGImageRep: NSImageRep {
   }
 
   @objc public func outline() -> NSBezierPath {
+    outlineLock.lock()
+    defer { outlineLock.unlock() }
     if let cached = cachedOutline {
       return cached
     }
