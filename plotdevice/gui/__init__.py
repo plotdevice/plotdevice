@@ -11,8 +11,10 @@ def bundle_path(subpath=None, rsrc=None, fmwk=None):
         return join(bundle, subpath)
     return bundle
 
-import os, sys
+import os, sys, queue, threading
 from Foundation import NSTimer, NSRunLoop, NSRunLoopCommonModes
+from PyObjCTools import AppHelper
+from ..util import autorelease
 from AppKit import (NSApplication, NSDate, NSEventMaskAny,
                     NSEventMaskMouseMoved, NSEventMaskMouseEntered, NSEventMaskMouseExited,
                     NSEventMaskCursorUpdate, NSEventMaskPeriodic, NSEventMaskAppKitDefined,
@@ -55,6 +57,7 @@ class FrameClock:
         self._restarted = False   # whether the in-flight frame was started by the restart timer
         self._late = 0.0          # if so, how long after its due time the timer fired
         self._yielded = 0         # frames held back for the run loop to deliver queued input
+        self._due = None          # when the next frame is due (NSTimer path only)
         if view is not None and hasattr(view, 'displayLinkWithTarget_selector_'):
             link = view.displayLinkWithTarget_selector_(target, sel)
             link.addToRunLoop_forMode_(NSRunLoop.mainRunLoop(), NSRunLoopCommonModes)
@@ -68,7 +71,15 @@ class FrameClock:
             return False  # invalidated (paused or stopped): no frame is ever due again
         if self._started is not None:
             return False  # a frame is already in flight (re-entered from inside it)
+        fired = self._restart is not None and now >= self._restart_at - 1e-5
+        if fired:
+            self._late = now - self._restart_at  # how long after its due time it fired
+            self._restart = None
         if self._link is None:
+            if self._due is not None and now < self._due - 0.25 * self._period:
+                return False
+            scheduled = now if self._due is None else self._due
+            self._due = max(scheduled, now - self._period) + self._period
             self._started = now
             return True
         t = self._link.timestamp()
@@ -89,9 +100,9 @@ class FrameClock:
             self._yielded += 1
             self._schedule_restart(now, now + self.MIN_IDLE)
             return False
-        self._restarted = self._restart is not None
-        if self._restarted:
-            self._late = now - self._restart_at  # how long after its due time the timer fired
+        self._restarted = fired
+        if self._restart is not None:
+            # a vblank beat a pending restart to the punch
             self._restart.invalidate()
             self._restart = None
         self._credit = min(self._credit - 1.0, 1.0)
@@ -152,7 +163,7 @@ class FrameClock:
         cols = list(zip(*log))
         ms = lambda vals: sum(vals) / len(vals) * 1e3 if vals else 0.0
         late = [l for l in cols[6] if l is not None]
-        sys.stderr.write('frames %d | fps %.1f | refresh %.1f ms | frame %.1f ms (max %.1f) = draw %.1f + render %.1f | '
+        sys.stderr.write('frames %d | fps %.1f | refresh %.1f ms | main-thread frame %.1f ms (max %.1f) = draw %.1f + commit %.1f | '
                          'over budget %d/%d | gap %.1f ms | restarted %d (timer late by %.1f ms, max %.1f) | '
                          'yielded for input %d | callback latency %.1f ms\n' % (
             len(log), self.fps, self._refresh * 1e3, ms(cols[1]), max(cols[1]) * 1e3, ms(cols[3]), ms(cols[4]),
@@ -175,6 +186,64 @@ class FrameClock:
         elif self._timer is not None:
             self._timer.invalidate()
             self._timer = None
+
+class FrameRenderer:
+
+    DEPTH = 1 if getattr(sys, '_is_gil_enabled', lambda: True)() else 2
+
+    def __init__(self):
+        self._jobs = queue.Queue()
+        self._generation = 0   # of the most recent submission (main thread only)
+        self._cancelled = 0    # generations up to this one are dropped (read by the worker)
+        self._pending = 0      # submitted but not yet delivered (main thread only)
+        self._dead = False
+        self._thread = threading.Thread(target=self._loop, daemon=True, name='frame-renderer')
+        self._thread.start()
+
+    @property
+    def idle(self):
+        return self._pending == 0
+
+    @property
+    def ready(self):
+        return self._pending < self.DEPTH
+
+    def submit(self, work, deliver):
+        self._generation += 1
+        self._pending += 1
+        self._jobs.put((self._generation, work, deliver))
+
+    def cancel(self):
+        self._cancelled = self._generation
+
+    def shutdown(self, wait=1.0):
+        self.cancel()
+        self._dead = True
+        self._jobs.put(None)
+        if wait:
+            self._thread.join(wait)
+
+    def _loop(self):
+        while True:
+            with autorelease():
+                job = self._jobs.get()
+                if job is None:
+                    return
+                generation, work, deliver = job
+                cancelled = lambda: generation <= self._cancelled
+                result = err = None
+                if not cancelled():
+                    try:
+                        result = work(cancelled)
+                    except Exception as e:
+                        err = e
+                AppHelper.callAfter(self._deliver, generation, deliver, result, err)
+                del job, work, deliver, result, err, cancelled
+
+    def _deliver(self, generation, deliver, result, err):
+        self._pending -= 1
+        if not self._dead and generation > self._cancelled:
+            deliver(result, err)
 
 from .document import PlotDeviceDocument, PythonScriptDocument, ScriptController
 from .app import PlotDeviceAppDelegate

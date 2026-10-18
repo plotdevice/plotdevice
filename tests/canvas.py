@@ -177,6 +177,77 @@ class FrameTests(PlotDeviceTestCase):
         self.assertEqual(_pixels(CGBitmapContextCreateImage(surface.context())),
                          _pixels(frame._render_to_cgimage(1.0, 2.0)))
 
+def _pump(until, timeout=5.0):
+    from Foundation import NSRunLoop, NSDate, NSDefaultRunLoopMode
+    import time
+    deadline = time.time() + timeout
+    while not until() and time.time() < deadline:
+        NSRunLoop.currentRunLoop().runMode_beforeDate_(NSDefaultRunLoopMode, NSDate.dateWithTimeIntervalSinceNow_(0.01))
+    return until()
+
+class RendererTests(PlotDeviceTestCase):
+    def test_renderer_delivers_in_order_and_drops_cancelled_jobs(self):
+        from plotdevice.gui import FrameRenderer
+        import threading
+        renderer = FrameRenderer()
+        try:
+            delivered, gate = [], threading.Event()
+            def job(n):
+                def work(cancelled):
+                    gate.wait(2.0)   # hold the first job so the rest queue up behind it
+                    return n
+                return work
+            for n in range(4):
+                renderer.submit(job(n), lambda result, err, n=n: delivered.append((n, result, err)))
+            self.assertFalse(renderer.ready)  # one in flight is the limit with the GIL
+            renderer.cancel()                 # ...so cancelling now drops all four
+            gate.set()
+            self.assertTrue(_pump(lambda: renderer.idle))
+            self.assertEqual(delivered, [])
+            gate.clear()
+            for n in range(4, 7):
+                renderer.submit(job(n), lambda result, err, n=n: delivered.append((n, result, err)))
+            gate.set()
+            self.assertTrue(_pump(lambda: renderer.idle))
+            self.assertEqual(delivered, [(4, 4, None), (5, 5, None), (6, 6, None)])
+            self.assertTrue(renderer.ready)
+        finally:
+            renderer.shutdown()
+
+    def test_renderer_delivers_errors(self):
+        from plotdevice.gui import FrameRenderer
+        renderer = FrameRenderer()
+        try:
+            got = []
+            def work(cancelled):
+                raise ValueError('bad grob')
+            renderer.submit(work, lambda result, err: got.append((result, err)))
+            self.assertTrue(_pump(lambda: got))
+            self.assertIsNone(got[0][0])
+            self.assertIsInstance(got[0][1], ValueError)
+        finally:
+            renderer.shutdown()
+
+    def test_frame_draw_stops_when_cancelled(self):
+        size(40, 40)
+        background(None)
+        fill(1, 0, 0); rect(0, 0, 20, 20)
+        fill(0, 0, 1); rect(20, 20, 20, 20)
+        frame = _ctx.canvas.commit()
+        calls = [0]
+        def cancelled():
+            calls[0] += 1
+            return calls[0] > 1   # true from the second grob on
+        from Quartz import CGBitmapContextCreateImage
+        surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(40, 40)
+        frame._render_to_surface(surface, 1.0, cancelled)
+        partial = _pixels(CGBitmapContextCreateImage(surface.context()))
+        clear()
+        size(40, 40); background(None); fill(1, 0, 0); rect(0, 0, 20, 20)
+        surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(40, 40)
+        _ctx.canvas.commit()._render_to_surface(surface, 1.0)
+        self.assertEqual(partial, _pixels(CGBitmapContextCreateImage(surface.context())))
+
 class CanvasTests(PlotDeviceTestCase):
     def test_rendering_does_not_leak(self):
         import sys, gc, objc
@@ -279,4 +350,5 @@ def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(CanvasTests))
     suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FrameTests))
+    suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(RendererTests))
     return suite

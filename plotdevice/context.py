@@ -1792,8 +1792,7 @@ class Frame(object):
         self.background = canvas.background
         self.outputmode = canvas._ctx._outputmode if canvas._ctx else RGB
 
-    def draw(self):
-        """Render the frame into the current graphics context"""
+    def draw(self, cancelled=None):
         with gfx._rendering(self):
             if self.background is not None:
                 rect = ((0,0), self.pagesize)
@@ -1805,6 +1804,8 @@ class Frame(object):
 
             with autorelease():
                 for grob in self.grobs:
+                    if cancelled is not None and cancelled():
+                        return
                     grob._draw()
 
     @property
@@ -1830,17 +1831,17 @@ class Frame(object):
         self._render_to_context(bitmapContext, scale)
         return CGBitmapContextCreateImage(bitmapContext)
 
-    def _render_to_surface(self, surface, scale):
+    def _render_to_surface(self, surface, scale, cancelled=None):
         surface.lock()
         try:
             port = surface.context()
             CGContextClearRect(port, ((0, 0), (surface.width(), surface.height())))
-            self._render_to_context(port, scale)
+            self._render_to_context(port, scale, cancelled)
             CGContextFlush(port)
         finally:
             surface.unlock()
 
-    def _render_to_context(self, cgContext, zoom):
+    def _render_to_context(self, cgContext, zoom, cancelled=None):
         ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(cgContext, True)
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.setCurrentContext_(ns_ctx)
@@ -1849,7 +1850,7 @@ class Frame(object):
         trans.translateXBy_yBy_(0, self.pagesize.height*zoom)
         trans.scaleXBy_yBy_(zoom,-zoom)
         trans.concat()
-        self.draw()
+        self.draw(cancelled)
         NSGraphicsContext.restoreGraphicsState()
         NSGraphicsContext.restoreGraphicsState()
 
