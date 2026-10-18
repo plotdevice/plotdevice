@@ -180,6 +180,8 @@ class ScriptController(NSWindowController):
         self.is_tab = False
         self._fps_shown = False # whether the toolbar readout is currently visible
         self._fps_stamp = 0     # when it was last refreshed
+        self._rendering = False # whether the latest frame invoke() rendered has yet to land
+        self._rerun = False     # whether runScript() was called while it was rendering
 
     def setPath_source_(self, path, source):
         self.vm.path = path
@@ -473,11 +475,16 @@ class ScriptController(NSWindowController):
         call self.invoke('draw') until cancelled by the user.
         """
 
+        if self._rendering and self.animationTimer is None:
+            self._rerun = True
+            return
+
         if self.animationTimer:
             self.animationTimer.invalidate()
             self.animationTimer = None
         if self.queue is not None:
             self.queue.cancel()
+            self._rendering = False
 
         # clear out any key/mousedown state from previous run
         self.reset_ui()
@@ -542,8 +549,12 @@ class ScriptController(NSWindowController):
 
     @objc.python_method
     def _frameDelivered(self):
+        self._rendering = False
+        rerun, self._rerun = self._rerun, False
         if self.animationTimer is not None:
             self.tick_(None)
+        elif rerun and not self.vm.session:
+            self.runScript()
 
     @objc.python_method
     def _renderCrashed(self, err):
@@ -592,12 +603,13 @@ class ScriptController(NSWindowController):
 
         # only update the view during animations after the script's draw()
         # method is called (otherwise a blank canvas flashes on the screen
-        # during the compilation and setup() calls.
-        redraw = not self.vm.animated or method=='draw'
+        last_pass = 'draw' if self.vm.animated else 'setup'
+        redraw = method == last_pass
 
         # Display the output of the script
         if result.ok and redraw:
             self.currentView.render(self.vm.canvas, onerror=self._renderCrashed, ondone=self._frameDelivered)
+            self._rendering = True
         if FRAMELOG and self.animationTimer is not None:
             self.animationTimer._parts = (t1 - t0, time.perf_counter() - t1)
         if not result.ok and method in (None, "setup"):
