@@ -1,18 +1,20 @@
 # encoding: utf-8
 import sys
 import os
+import math
 import bisect
 import traceback
 import objc
 
 from . import set_timeout, FrameQueue
 from ..lib.cocoa import *
-from ..gfx.colors import Color
+from ..gfx.colors import Color, RGB
 from ..gfx.atoms import KEY_ESC
 from objc import super
 
 class Rasterizer(object):
     DEPTH = FrameQueue.DEPTH + 2
+    BACKDROP = 2048  # longest side, in pixels, of the low-res frame shown during a zoom gesture
 
     def __init__(self):
         self._size = None
@@ -31,8 +33,27 @@ class Rasterizer(object):
         frame._render_to_surface(surface, scale, cancelled)
         return surface.surface()
 
+    def render_tiles(self, tiles, coords, cancelled=None):
+        self._size, self._surfaces = None, []
+        rendered = []
+        for tile in coords:
+            if cancelled is not None and cancelled():
+                break
+            x, y, w, h = tiles.rect(tile)
+            rendered.append((tile, self._render_once(tiles.frame, tiles.scale, (w, h), cancelled, (x, y))))
+        return rendered
+
+    def render_backdrop(self, frame, cancelled=None):
+        scale = self.BACKDROP / max(frame.pagesize)
+        return self._render_once(frame, scale, frame._raster_size(scale), cancelled)
+
     def shown(self, surface):
         self._onscreen = (surface,) + self._onscreen[:1]
+
+    def _render_once(self, frame, scale, size, cancelled=None, origin=None):
+        surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(*size)
+        frame._render_to_surface(surface, scale, cancelled, origin)
+        return surface.surface()
 
 class CenteringClipView(NSClipView):
 
@@ -82,6 +103,91 @@ class CenteringClipView(NSClipView):
         else:
             super(CenteringClipView, self).scrollWheel_(event)
 
+class FrameTiles(object):
+    TILE = 1024             # tile edge, in pixels
+    BLEED = 2               # pixels each tile overlaps its neighbors, so no seams show when scaled
+    BUDGET = 4096 * 4096    # still frames whose full raster has more pixels than this are tiled
+    CACHE = 256 * 2**20     # bytes of rendered tiles to keep for a frame (least recently used go first)
+
+    def __init__(self, frame, key):
+        self.frame, self.key = frame, key  # key: (seq, zoom, dpr)
+        self.scale = key[1] * key[2]
+        self._full = frame._raster_size(self.scale)
+        self._holder = None
+        self.layers = {}  # tile -> its layer, least recently used first
+        self._jobs = {}   # tile -> the RenderJob of its in-flight render
+
+    def covering(self, rect):
+        """The tiles a pixel rect touches"""
+        x, y, w, h = rect
+        T, full = self.TILE, self._full
+        cols = range(max(0, int(x // T)), min(math.ceil(full[0] / T), math.ceil((x + w) / T)))
+        rows = range(max(0, int(y // T)), min(math.ceil(full[1] / T), math.ceil((y + h) / T)))
+        return [(i, j) for j in rows for i in cols]
+
+    def rect(self, tile):
+        T, B, full = self.TILE, self.BLEED, self._full
+        x, y = tile[0] * T, tile[1] * T
+        x0, y0 = max(0, x - B), max(0, y - B)
+        return (x0, y0, min(full[0], x + T + B) - x0, min(full[1], y + T + B) - y0)
+
+    def add(self, rendered):
+        """Display rendered (tile, surface) pairs"""
+        dpr = self.key[2]
+        for tile, surface in rendered:
+            if tile in self.layers:
+                continue
+            x, y, w, h = self.rect(tile)
+            layer = CALayer.new()
+            layer.setActions_({k:None for k in ["onOrderIn", "contents", "position", "bounds"]})
+            layer.setContentsScale_(dpr)
+            layer.setContents_(surface)
+            layer.setFrame_(((x / dpr, y / dpr), (w / dpr, h / dpr)))
+            self._holder.addSublayer_(layer)
+            self.layers[tile] = layer
+
+    def attach(self, holder):
+        self._holder = holder
+
+    def detach(self):
+        self._holder, self.layers = None, {}
+
+    def delivered(self, tile):
+        """A render of `tile` has been delivered"""
+        self._jobs.pop(tile, None)
+
+    def request(self, visible, submit):
+        self._jobs = {t: job for t, job in self._jobs.items() if job.pending}
+
+        vx, vy, vw, vh = visible
+        mx, my = max(vw / 2, self.TILE), max(vh / 2, self.TILE)
+        margin_rect = (vx - mx, vy - my, vw + 2 * mx, vh + 2 * my)
+
+        for tile in self.covering(visible):
+            if tile in self.layers:
+                self.layers[tile] = self.layers.pop(tile)
+        keep = set(self.covering(margin_rect))
+        size = lambda t: self.rect(t)[2] * self.rect(t)[3] * 4
+        cached = sum(size(t) for t in self.layers)
+        for tile in [t for t in self.layers if t not in keep]:
+            if cached <= self.CACHE:
+                break
+            cached -= size(tile)
+            self.layers.pop(tile).removeFromSuperlayer()
+
+        unrendered = lambda rect: [t for t in self.covering(rect) if t not in self.layers and t not in self._jobs]
+        for tile in unrendered(visible):
+            self._jobs[tile] = submit(tile)
+        if self._jobs:
+            return
+        margin = unrendered(margin_rect)
+        if margin:
+            cx, cy = vx + vw / 2, vy + vh / 2
+            T = self.TILE
+            distance = lambda t: (((t[0] + .5) * T - cx) ** 2 + ((t[1] + .5) * T - cy) ** 2)
+            tile = min(margin, key=distance)
+            self._jobs[tile] = submit(tile)
+
 class FramePresenter(object):
 
     def __init__(self, root):
@@ -89,15 +195,79 @@ class FramePresenter(object):
         self.attached = True           # whether the view is in a window (renders landing while it isn't are dropped)
         self._root = root              # the view's layer
         self._raster = Rasterizer()    # what draws the renders it presents
+        self._holder = None            # layer over the canvas, while a frame is shown in tiles
+        self._backdrop_layer = None    # the bottom layer in the holder
+        self._tiles = None             # the FrameTiles on display, if the frame is tiled
+        self._frame = None             # the frame on display
+        self._backdrop = None          # (frame, surface) for a zoom gesture, see _show_backdrop()
+        self._rect = None              # the canvas's rect in the root layer
+        self._visible = None           # the edges (x0, y0, x1, y1) of what's in view, from moved()
+        self._canvas_size = None       # the canvas's size, in points
         self._wanted = None            # (zoom, dpr) of the latest frame asked for
         self._shown = (0, None, None)  # (seq, zoom, dpr) of the frame on display
+        self._gesture = False          # whether a zoom gesture's preview is on screen
+        self._landing = False          # whether the view is laying itself out for a frame being presented
 
-    def render(self, frame, seq, zoom, dpr, on_land=None, onerror=None, ondone=None):
+    def _show_backdrop(self, backdrop):
+        self._backdrop = backdrop
+        if self._backdrop_layer is None:
+            return
+        if backdrop is None:
+            self._backdrop_layer.setContents_(None)
+        elif self._frame is backdrop[0]:
+            self._backdrop_layer.setContents_(backdrop[1])
+
+    def render(self, frame, seq, zoom, dpr, period=None, landing=None, on_land=None, onerror=None, ondone=None):
         self._wanted = (zoom, dpr)
-        self._submit(frame, seq, zoom, dpr, on_land, onerror, ondone)
+        width, height = frame._raster_size(zoom * dpr)
+        if self._visible is None or period is not None:
+            mode = 'full'
+        else:
+            mode = 'tiles' if width * height > FrameTiles.BUDGET else 'full'
+        self._submit(frame, seq, zoom, dpr, mode, landing, on_land, onerror, ondone)
 
-    def _submit(self, frame, seq, zoom, dpr, on_land=None, onerror=None, ondone=None):
-        work = lambda raster, cancelled: raster.render(frame, zoom * dpr, cancelled)
+    def moved(self, visible, canvas_size):
+        self._visible, self._canvas_size = visible, canvas_size
+        self._request_tiles()
+
+    def gesture_began(self):
+        self._gesture = True
+        frame, backdrop = self._frame, self._backdrop
+        if frame is not None and (backdrop is None or backdrop[0] is not frame):
+            def work(raster, cancelled):
+                return raster.render_backdrop(frame, cancelled)
+            def deliver(surface, err):
+                if err is None and self._gesture:
+                    self._show_backdrop((frame, surface))
+            self._job(work, deliver)
+
+    def gesture_ended(self):
+        self._gesture = False
+        self._request_tiles()
+
+    def place(self, rect):
+        self._rect = rect
+        if self._holder is not None:
+            self._holder.setFrame_(rect)
+            self._backdrop_layer.setFrame_(self._holder.bounds())
+
+    def _clear(self):
+        if self._holder is None:
+            return
+        self._holder.removeFromSuperlayer()
+        if self._tiles is not None:
+            self._tiles.detach()
+        self._holder = self._backdrop_layer = self._tiles = self._frame = None
+
+    def _submit(self, frame, seq, zoom, dpr, mode, landing=None, on_land=None, onerror=None, ondone=None):
+        if mode == 'tiles':
+            tiles = self._tiles
+            if tiles is None or tiles.key != (seq, zoom, dpr):
+                tiles = FrameTiles(frame, (seq, zoom, dpr))
+            coords = [t for t in tiles.covering(landing or self._in_view(zoom * dpr)) if t not in tiles.layers]
+            work = lambda raster, cancelled: (tiles, raster.render_tiles(tiles, coords, cancelled))
+        else:
+            work = lambda raster, cancelled: raster.render(frame, zoom * dpr, cancelled)
 
         def deliver(result, err):
             if err is not None:
@@ -107,21 +277,91 @@ class FramePresenter(object):
                 current = seq >= self._shown[0] and (zoom, dpr) == self._wanted and self.attached
                 if current:
                     self._shown = (seq, zoom, dpr)
-                    if on_land is not None:
-                        on_land()
-                    self._present(result, dpr)
+                    self._prepare(mode, result)
+                    self._landing = True
+                    try:
+                        if on_land is not None:
+                            on_land()
+                    finally:
+                        self._landing = False
+                    self._present(mode, frame, result, dpr)
+                    if mode == 'tiles':
+                        self._request_tiles()
             if ondone is not None:
                 ondone()
         self._job(work, deliver)
 
+    def _request_tiles(self):
+        tiles = self._tiles
+        if tiles is None or self._visible is None or self._gesture or self._landing:
+            return  # (mid-gesture, applying it renders at the new zoom; mid-landing, this runs once it's presented)
+        def submit(tile):
+            def work(raster, cancelled):
+                return raster.render_tiles(tiles, [tile], cancelled)
+            def deliver(rendered, err):
+                if self._tiles is not tiles:
+                    return
+                tiles.delivered(tile)
+                if err is None and self.attached:
+                    tiles.add(rendered)
+                    self._request_tiles()
+            return self._job(work, deliver)
+        tiles.request(self._in_view(tiles.key[2]), submit)
+
+    def _in_view(self, scale):
+        (x0, y0, x1, y1), (cw, ch) = self._visible, self._canvas_size
+        x0, y0 = min(max(x0, 0), cw), min(max(y0, 0), ch)
+        x1, y1 = max(min(x1, cw), x0), max(min(y1, ch), y0)
+        return (x0 * scale, y0 * scale, (x1 - x0) * scale, (y1 - y0) * scale)
+
     def _job(self, work, deliver):
         raster = self._raster
-        self.queue.submit(lambda cancelled: work(raster, cancelled), deliver)
+        return self.queue.submit(lambda cancelled: work(raster, cancelled), deliver)
 
-    def _present(self, surface, dpr):
-        self._root.setContentsScale_(dpr)
-        self._root.setContents_(surface)
-        self._raster.shown(surface)
+    def _prepare(self, mode, result):
+        if not (mode == 'tiles' and self._tiles is result[0]):
+            self._clear()
+        if mode == 'full':
+            self._show_backdrop(None)
+
+    def _present(self, mode, frame, result, dpr):
+        if mode == 'tiles':
+            tiles, rendered = result
+            if self._tiles is not tiles:
+                self._hold(frame)
+                tiles.attach(self._holder)
+                self._tiles = tiles
+            tiles.add(rendered)
+        else:
+            self._root.setContentsScale_(dpr)
+            self._root.setContents_(result)
+            self._raster.shown(result)
+
+    def _hold(self, frame):
+        self._clear()
+        self._root.setContents_(None)
+        holder = CALayer.new()
+        holder.setGeometryFlipped_(not self._root.contentsAreFlipped())
+        holder.setActions_({k:None for k in ["sublayers", "position", "bounds", "backgroundColor"]})
+        holder.setBackgroundColor_(self._fill(frame))
+        backdrop = CALayer.new()
+        backdrop.setActions_({k:None for k in ["contents", "position", "bounds"]})
+        backdrop.setContentsGravity_(kCAGravityResize)
+        if self._backdrop is not None and self._backdrop[0] is frame:
+            backdrop.setContents_(self._backdrop[1])
+        holder.addSublayer_(backdrop)
+        self._root.addSublayer_(holder)
+        self._holder, self._backdrop_layer, self._frame = holder, backdrop, frame
+        if self._rect is not None:
+            self.place(self._rect)
+
+    @staticmethod
+    def _fill(frame):
+        bg = frame.background
+        if not isinstance(bg, Color) or bg.alpha < 1:
+            return None
+        color = (bg._rgb if frame.outputmode == RGB else bg._cmyk).CGColor()
+        return CGColorCreateCopyByMatchingToColorSpace(CGColorSpaceCreateDeviceRGB(), kCGRenderingIntentDefault, color, None)
 
 class GraphicsView(NSView):
     script = IBOutlet()
@@ -204,12 +444,30 @@ class GraphicsView(NSView):
         frame, seq, zoom, dpr = self._committed, self._seq, self._wantZoom, self._dpr
         if finish is None:
             finish = self._pendingFinish
+        if not self._displayed:
+            self._moved()
+        settled = finish is None and self._displayed and zoom == self._zoom
+        scrollview = self.enclosingScrollView()
+        landing = None
+        if not settled and scrollview is not None:
+            cw, ch = [dim * zoom for dim in frame.pagesize]
+            vw, vh = scrollview.contentView().frame().size
+            vw, vh = min(vw, cw), min(vh, ch)
+            if not self._displayed:
+                x, y = 0, 0
+            else:
+                fx, fy = focus if focus is not None else self._focus()
+                x = min(max(fx * cw - vw / 2.0, 0), cw - vw)
+                y = min(max(fy * ch - vh / 2.0, 0), ch - vh)
+            landing = (x * dpr, y * dpr, vw * dpr, vh * dpr)
+        live = self.script is not None and self.script.live
+        period = self.script.framePeriod if live else None
         def on_land():
             if finish is not None:
                 finish()
             self._zoom = zoom
             self._land(frame, focus)
-        self._presenter.render(frame, seq, zoom, dpr, on_land=on_land, onerror=onerror, ondone=ondone)
+        self._presenter.render(frame, seq, zoom, dpr, period, landing, on_land, onerror, ondone)
 
     @objc.python_method
     def _land(self, frame, focus):
@@ -243,6 +501,22 @@ class GraphicsView(NSView):
             self.scrollPoint_( (ox + focus[0]*w - vw/2.0, oy + focus[1]*h - vh/2.0) )
 
     @objc.python_method
+    def _moved(self):
+        scrollview = self.enclosingScrollView()
+        if scrollview is None:
+            return
+        (vx, vy), (vw, vh) = scrollview.documentVisibleRect()
+        ox, oy, cw, ch = self.canvasRect()
+        visible = (vx - ox, vy - oy, vx - ox + vw, vy - oy + vh)
+        self._presenter.moved(visible, (cw, ch))
+
+    def scrollViewWillStartLiveMagnify_(self, note):
+        self._presenter.gesture_began()
+
+    def clipBoundsChanged_(self, note):
+        self._moved()
+
+    @objc.python_method
     def canvasRect(self):
         W, H = self.frame().size
         cw, ch = self.canvasSize or (W, H)
@@ -263,6 +537,11 @@ class GraphicsView(NSView):
             scrollview.setVerticalScrollElasticity_(NSScrollElasticityAllowed if ch > vh else NSScrollElasticityNone)
         if (w, h) != tuple(self.frame().size):
             self.setFrameSize_((w, h))
+        ox, oy, cw, ch = self.canvasRect()
+        if not self.layer().contentsAreFlipped():
+            oy = self.frame().size.height - oy - ch
+        self._presenter.place(((ox, oy), (cw, ch)))
+        self._moved()
 
     @objc.python_method
     def _focus(self):
@@ -298,12 +577,18 @@ class GraphicsView(NSView):
         nc = NSNotificationCenter.defaultCenter()
         nc.addObserver_selector_name_object_(self, "scrollViewDidEndLiveMagnify:",
                                              NSScrollViewDidEndLiveMagnifyNotification, scrollview)
+        nc.addObserver_selector_name_object_(self, "scrollViewWillStartLiveMagnify:",
+                                             NSScrollViewWillStartLiveMagnifyNotification, scrollview)
+        scrollview.contentView().setPostsBoundsChangedNotifications_(True)
+        nc.addObserver_selector_name_object_(self, "clipBoundsChanged:",
+                                             NSViewBoundsDidChangeNotification, scrollview.contentView())
         self._magnifyReady = True
 
     @objc.python_method
     def _applyMagnification(self, scrollview):
         mag = scrollview.magnification()
         if abs(mag - 1.0) < 1e-3:
+            self._presenter.gesture_ended()
             return
         focus = self._focus()
         target = self._zoom * mag
@@ -314,6 +599,7 @@ class GraphicsView(NSView):
                 return  # folded in already, by an earlier frame (or replaced by a newer one)
             self._pendingFinish = None
             scrollview.setMagnification_(scrollview.magnification() / mag)
+            self._presenter.gesture_ended()
         self._pendingFinish = finish
         self._rerender(focus=focus, finish=finish)
 
@@ -343,6 +629,8 @@ class GraphicsView(NSView):
             if self._magnifyReady:
                 nc = NSNotificationCenter.defaultCenter()
                 nc.removeObserver_name_object_(self, NSScrollViewDidEndLiveMagnifyNotification, None)
+                nc.removeObserver_name_object_(self, NSScrollViewWillStartLiveMagnifyNotification, None)
+                nc.removeObserver_name_object_(self, NSViewBoundsDidChangeNotification, None)
                 self._magnifyReady = False
 
     @IBAction
@@ -417,6 +705,8 @@ class GraphicsView(NSView):
         factor = 0.004 if event.hasPreciseScrollingDeltas() else 0.05
         step = 1.0 + max(-15.0, min(15.0, dy)) * factor
         if step != 1.0:
+            if abs(scrollview.magnification() - 1.0) < 1e-3:
+                self._presenter.gesture_began()
             mag = scrollview.magnification() * step
             center = scrollview.contentView().convertPoint_fromView_(event.locationInWindow(), None)
             scrollview.setMagnification_centeredAtPoint_(mag, center)

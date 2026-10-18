@@ -153,6 +153,16 @@ class ScriptController(NSWindowController):
             self.editorView.source = src
     source = property(_get_source, _set_source)
 
+    @property
+    def live(self):
+        animating = self.animationTimer is not None and self.animationTimer.isValid()
+        exporting = self.vm is not None and self.vm.session is not None and self.vm.session.running
+        return animating or exporting
+
+    @property
+    def framePeriod(self):
+        return self.animationTimer.period if self.animationTimer is not None else 1 / 60.0
+
     ## Initializers
 
     def initWithWindowNibName_(self, nib):

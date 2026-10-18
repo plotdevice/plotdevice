@@ -1,6 +1,6 @@
 # all the NSBits and NSPieces
 
-from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorCreate, \
+from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorCreate, CGColorCreateCopyByMatchingToColorSpace, \
                    CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGContextAddPath, CGContextAddRect, \
                    CGAffineTransformConcat, CGAffineTransformInvert, CGRectApplyAffineTransform, \
                    CGAffineTransformMakeScale, CGAffineTransformMakeTranslation, CGBitmapContextGetAlphaInfo, CGBitmapContextGetColorSpace, \
@@ -30,7 +30,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    kCGImageAlphaPremultipliedFirst, kCGImageDestinationLossyCompressionQuality, \
                    kCGImagePropertyDPIHeight, kCGImagePropertyDPIWidth, kCGLineCapButt, kCGLineCapRound, \
                    kCGLineCapSquare, kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, kCGPathFill, \
-                   kCGPathFillStroke, kCGPathStroke, kCAGravityCenter, kCAGravityResizeAspect, kCIInputImageKey
+                   kCGPathFillStroke, kCGPathStroke, kCGRenderingIntentDefault, kCAGravityCenter, kCAGravityResize, kCAGravityResizeAspect, kCIInputImageKey
 from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplication, NSApplicationActivationPolicyAccessory, \
                    NSApplicationActivationPolicyRegular, \
                    NSApplicationPresentationAutoHideMenuBar, NSApplicationPresentationAutoHideToolbar, \
@@ -51,12 +51,13 @@ from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplicati
                    NSPasteboardURLReadingContentsConformToTypesKey, NSPasteboardURLReadingFileURLsOnlyKey, \
                    NSPDFImageRep, NSPNGFileType, NSPrintOperation, NSRectFill, NSRectFillUsingOperation, NSResponder, \
                    NSRightTextAlignment, NSSavePanel, NSScreen, NSScrollViewDidEndLiveMagnifyNotification, \
+                   NSScrollViewWillStartLiveMagnifyNotification, \
                    NSScrollElasticityAllowed, NSScrollElasticityNone, NSShadow, NSSlider, NSSmallControlSize, NSSplitView, \
                    NSStringPboardType, NSSwitch, NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, \
                    NSTextView, NSTIFFFileType, NSToolbarItem, NSTrackingActiveInActiveApp, \
                    NSTrackingActiveInKeyWindow, NSTrackingArea, NSTrackingArea, NSTrackingMouseEnteredAndExited, \
                    NSTrackingMouseMoved, NSUnboldFontMask, NSUnionRect, NSUnitalicFontMask, NSView, \
-                   NSViewFrameDidChangeNotification, NSViewMinXMargin, NSViewWidthSizable, \
+                   NSViewBoundsDidChangeNotification, NSViewFrameDidChangeNotification, NSViewMinXMargin, NSViewWidthSizable, \
                    NSVisualEffectMaterialHUDWindow, NSVisualEffectMaterialTitlebar, NSVisualEffectMaterialUnderWindowBackground, \
                    NSVisualEffectView, NSWindow, \
                    NSWindowBackingLocationVideoMemory, NSWindowController, NSWindowStyleMaskFullSizeContentView, \

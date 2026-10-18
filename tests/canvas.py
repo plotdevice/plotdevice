@@ -281,6 +281,24 @@ class RendererTests(PlotDeviceTestCase):
         self.assertEqual(frame._within((200, 0, 200, 300), group.contents), [group.contents[0]])
         self.assertLess(len(frame._within((200, 0, 200, 300), frame.grobs)), len(frame.grobs))
 
+    def test_tiles_reassemble_into_the_full_render(self):
+        from Quartz import CGBitmapContextCreateImage
+        frame = _scene()
+        scale, tile = 8.0, 100  # 640×480 px: 7×5 tiles, the last column and row partial
+        width, height = [max(int(dim * scale), 1) for dim in frame.pagesize]
+        PDSurface = objc.lookUpClass('PDSurface')
+        surface = PDSurface.surfaceWithWidth_height_(width, height)
+        frame._render_to_surface(surface, scale)
+        whole = _pixels(CGBitmapContextCreateImage(surface.context()))
+        for y in range(0, height, tile):
+            for x in range(0, width, tile):
+                w, h = min(tile, width - x), min(tile, height - y)
+                part = PDSurface.surfaceWithWidth_height_(w, h)
+                frame._render_to_surface(part, scale, origin=(x, y))
+                got = _pixels(CGBitmapContextCreateImage(part.context()))
+                crop = b''.join(whole[(y + row) * width * 4 + x * 4:(y + row) * width * 4 + (x + w) * 4] for row in range(h))
+                self.assertLessEqual(max(abs(p - q) for p, q in zip(got, crop)), 2, 'the tile at %r differs' % ((x, y),))
+
     def test_layers_sized_to_their_contents_match_full_ones(self):
         from Quartz import CGBitmapContextCreateImage
         from plotdevice.gfx import effects

@@ -137,6 +137,11 @@ class FrameClock:
             self._framelog(now, drew)
 
     @property
+    def period(self):
+        """The time between frames at the requested fps"""
+        return self._period
+
+    @property
     def fps(self):
         return 1.0 / self._gap if self._gap else 1.0 / self._period
 
@@ -187,6 +192,17 @@ class FrameClock:
             self._timer.invalidate()
             self._timer = None
 
+class RenderJob:
+
+    def __init__(self, queue):
+        self._queue = queue
+        self._generation = queue._generation
+        self._delivered = False
+
+    @property
+    def pending(self):
+        return not self._delivered and self._generation > self._queue._cancelled
+
 class FrameQueue:
 
     # if the GIL is disabled, allow drawing and rendering to overlap
@@ -212,7 +228,9 @@ class FrameQueue:
     def submit(self, work, deliver):
         self._generation += 1
         self._pending += 1
-        self._jobs.put((self._generation, work, deliver))
+        job = RenderJob(self)
+        self._jobs.put((job, work, deliver))
+        return job
 
     def cancel(self):
         self._cancelled = self._generation
@@ -230,21 +248,22 @@ class FrameQueue:
                 job = self._jobs.get()
                 if job is None:
                     return
-                generation, work, deliver = job
-                cancelled = lambda: generation <= self._cancelled
+                handle, work, deliver = job
+                cancelled = lambda: handle._generation <= self._cancelled
                 result = err = None
                 if not cancelled():
                     try:
                         result = work(cancelled)
                     except Exception as e:
                         err = e
-                AppHelper.callAfter(self._deliver, generation, deliver, result, err)
-                del job, work, deliver, result, err, cancelled
+                AppHelper.callAfter(self._deliver, handle, deliver, result, err)
+                del job, handle, work, deliver, result, err, cancelled
 
-    def _deliver(self, generation, deliver, result, err):
+    def _deliver(self, handle, deliver, result, err):
         self._pending -= 1
-        if not self._dead and generation > self._cancelled:
+        if not self._dead and handle._generation > self._cancelled:
             deliver(result, err)
+        handle._delivered = True
 
 from .document import PlotDeviceDocument, PythonScriptDocument, ScriptController
 from .app import PlotDeviceAppDelegate
