@@ -1948,9 +1948,12 @@ class Frame(object):
         img.unlockFocus()
         return img
 
+    def _raster_size(self, scale):
+        return tuple(max(int(dim * scale), 1) for dim in self.pagesize)
+
     def _render_to_cgimage(self, zoom=1.0, dpr=1.0):
         scale = zoom * dpr
-        size = Size(*[max(int(dim*scale), 1) for dim in self.pagesize])
+        size = Size(*self._raster_size(scale))
         colorspace, opts = CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
         bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
         self._render_to_context(bitmapContext, scale)

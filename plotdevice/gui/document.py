@@ -17,7 +17,7 @@ from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
 from ..run import Sandbox, encoded
 from .. import DeviceError
-from . import set_timeout, FrameClock, FrameRenderer, FRAMELOG
+from . import set_timeout, FrameClock, FrameQueue, FRAMELOG
 
 NSEventGestureAxisVertical = 2
 
@@ -234,8 +234,8 @@ class ScriptController(NSWindowController):
         # always a reference to either the in-window view or a fullscreen view
         self.currentView = self.graphicsView
 
-        self.renderer = FrameRenderer()
-        self.graphicsView.renderer = self.renderer
+        self.queue = FrameQueue()
+        self.graphicsView.queue = self.queue
 
         # watch for changes in light/dark-mode and pass them along to subviews
         from AppKit import NSKeyValueObservingOptionInitial
@@ -356,9 +356,9 @@ class ScriptController(NSWindowController):
 
     def windowWillClose_(self, note):
         self.stopScript()
-        if self.renderer is not None:
-            self.renderer.shutdown()
-            self.renderer = None
+        if self.queue is not None:
+            self.queue.shutdown()
+            self.queue = None
 
         # break some retain cycles on our way out
         self.vm._cleanup()
@@ -438,7 +438,7 @@ class ScriptController(NSWindowController):
             self.stopScript()
             self.currentView = FullscreenView.alloc().init()
             self.currentView.canvas = None
-            self.currentView.renderer = self.renderer
+            self.currentView.queue = self.queue
             fullRect = NSScreen.mainScreen().frame()
             if not self.offscreen:
                 self.offscreen = FullscreenWindow.alloc().initWithRect_(fullRect)
@@ -464,8 +464,8 @@ class ScriptController(NSWindowController):
         if self.animationTimer:
             self.animationTimer.invalidate()
             self.animationTimer = None
-        if self.renderer is not None:
-            self.renderer.cancel()
+        if self.queue is not None:
+            self.queue.cancel()
 
         # clear out any key/mousedown state from previous run
         self.reset_ui()
@@ -523,7 +523,7 @@ class ScriptController(NSWindowController):
 
     def tick_(self, sender):
         clock = self.animationTimer
-        if clock and self.renderer.ready and clock.should_draw():
+        if clock and self.queue.ready and clock.should_draw():
             self.step()
             clock.frame_done()   # no-op if step() stopped the script (the clock is invalidated)
             self._update_fps(clock)

@@ -186,10 +186,10 @@ def _pump(until, timeout=5.0):
     return until()
 
 class RendererTests(PlotDeviceTestCase):
-    def test_renderer_delivers_in_order_and_drops_cancelled_jobs(self):
-        from plotdevice.gui import FrameRenderer
+    def test_queue_delivers_in_order_and_drops_cancelled_jobs(self):
+        from plotdevice.gui import FrameQueue
         import threading
-        renderer = FrameRenderer()
+        queue = FrameQueue()
         try:
             delivered, gate = [], threading.Event()
             def job(n):
@@ -198,35 +198,35 @@ class RendererTests(PlotDeviceTestCase):
                     return n
                 return work
             for n in range(4):
-                renderer.submit(job(n), lambda result, err, n=n: delivered.append((n, result, err)))
-            self.assertFalse(renderer.ready)  # one in flight is the limit with the GIL
-            renderer.cancel()                 # ...so cancelling now drops all four
+                queue.submit(job(n), lambda result, err, n=n: delivered.append((n, result, err)))
+            self.assertFalse(queue.ready)  # one in flight is the limit with the GIL
+            queue.cancel()                 # ...so cancelling now drops all four
             gate.set()
-            self.assertTrue(_pump(lambda: renderer.idle))
+            self.assertTrue(_pump(lambda: queue.idle))
             self.assertEqual(delivered, [])
             gate.clear()
             for n in range(4, 7):
-                renderer.submit(job(n), lambda result, err, n=n: delivered.append((n, result, err)))
+                queue.submit(job(n), lambda result, err, n=n: delivered.append((n, result, err)))
             gate.set()
-            self.assertTrue(_pump(lambda: renderer.idle))
+            self.assertTrue(_pump(lambda: queue.idle))
             self.assertEqual(delivered, [(4, 4, None), (5, 5, None), (6, 6, None)])
-            self.assertTrue(renderer.ready)
+            self.assertTrue(queue.ready)
         finally:
-            renderer.shutdown()
+            queue.shutdown()
 
-    def test_renderer_delivers_errors(self):
-        from plotdevice.gui import FrameRenderer
-        renderer = FrameRenderer()
+    def test_queue_delivers_errors(self):
+        from plotdevice.gui import FrameQueue
+        queue = FrameQueue()
         try:
             got = []
             def work(cancelled):
                 raise ValueError('bad grob')
-            renderer.submit(work, lambda result, err: got.append((result, err)))
+            queue.submit(work, lambda result, err: got.append((result, err)))
             self.assertTrue(_pump(lambda: got))
             self.assertIsNone(got[0][0])
             self.assertIsInstance(got[0][1], ValueError)
         finally:
-            renderer.shutdown()
+            queue.shutdown()
 
     def test_frame_draw_stops_when_cancelled(self):
         size(40, 40)

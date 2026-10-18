@@ -1,49 +1,38 @@
 # encoding: utf-8
 import sys
 import os
+import bisect
 import traceback
 import objc
 
-from . import set_timeout, FrameRenderer
+from . import set_timeout, FrameQueue
 from ..lib.cocoa import *
-from ..gfx import Color
+from ..gfx.colors import Color
 from ..gfx.atoms import KEY_ESC
 from objc import super
 
-class SurfaceRing(object):
-    DEPTH = FrameRenderer.DEPTH + 2
+class Rasterizer(object):
+    DEPTH = FrameQueue.DEPTH + 2
 
-    def __init__(self, width, height):
-        PDSurface = objc.lookUpClass('PDSurface')
-        self.size = (width, height)
-        self._surfaces = [PDSurface.surfaceWithWidth_height_(width, height) for _ in range(self.DEPTH)]
+    def __init__(self):
+        self._size = None
+        self._surfaces = []
+        self._onscreen = ()  # the surface on screen and the one it replaced
 
-    def render(self, frame, scale, cancelled=None, onscreen=()):
-        surface = next(s for s in self._surfaces if s.surface() not in onscreen)
+    def render(self, frame, scale, cancelled=None):
+        size = frame._raster_size(scale)
+        if size != self._size:
+            PDSurface = objc.lookUpClass('PDSurface')
+            self._size = size
+            self._surfaces = [PDSurface.surfaceWithWidth_height_(*size) for _ in range(self.DEPTH)]
+        surface = next(s for s in self._surfaces if s.surface() not in self._onscreen)
         self._surfaces.remove(surface)
         self._surfaces.append(surface)
         frame._render_to_surface(surface, scale, cancelled)
         return surface.surface()
 
-def _rendered(view, frame, scale, cancelled=None):
-    width, height = [max(int(dim * scale), 1) for dim in frame.pagesize]
-    ring = getattr(view, '_ring', None)
-    if ring is None or ring.size != (width, height):
-        ring = view._ring = SurfaceRing(width, height)
-    return ring.render(frame, scale, cancelled, onscreen=getattr(view, '_onscreen', ()))
-
-def _show(view, surface):
-    view.layer().setContents_(surface)
-    view._onscreen = (surface,) + getattr(view, '_onscreen', ())[:1]
-
-DARK_GREY = NSColor.blackColor().blendedColorWithFraction_ofColor_(0.7, NSColor.whiteColor())
-
-def _confine(origin, extent, inset, canvas, document):
-    if extent >= canvas:
-        return inset + (canvas - extent) / 2.0
-    if canvas < document:
-        return min(max(origin, inset), inset + canvas - extent)
-    return origin
+    def shown(self, surface):
+        self._onscreen = (surface,) + self._onscreen[:1]
 
 class CenteringClipView(NSClipView):
 
@@ -56,20 +45,28 @@ class CenteringClipView(NSClipView):
         super(CenteringClipView, self).setFrameSize_(size)
         doc = self.documentView()
         if isinstance(doc, GraphicsView):
-            doc._fitToViewport()
+            doc.fitToViewport()
+
+    @objc.python_method
+    def _confine(self, origin, extent, inset, canvas, document):
+        if extent >= canvas:
+            return inset + (canvas - extent) / 2.0
+        if canvas < document:
+            return min(max(origin, inset), inset + canvas - extent)
+        return origin
 
     def constrainBoundsRect_(self, proposed):
         rect = super(CenteringClipView, self).constrainBoundsRect_(proposed)
         doc = self.documentView()
-        if isinstance(doc, GraphicsView) and doc._canvasSize is not None:
-            (ox, oy, cw, ch), (W, H) = doc._canvasRect(), doc.frame().size
-            rect.origin.x = _confine(rect.origin.x, rect.size.width, ox, cw, W)
-            rect.origin.y = _confine(rect.origin.y, rect.size.height, oy, ch, H)
+        if isinstance(doc, GraphicsView) and doc.canvasSize is not None:
+            (ox, oy, cw, ch), (W, H) = doc.canvasRect(), doc.frame().size
+            rect.origin.x = self._confine(rect.origin.x, rect.size.width, ox, cw, W)
+            rect.origin.y = self._confine(rect.origin.y, rect.size.height, oy, ch, H)
         return rect
 
     def scrollToPoint_(self, point):
         doc = self.documentView()
-        if isinstance(doc, GraphicsView) and doc._canvasSize is not None:
+        if isinstance(doc, GraphicsView) and doc.canvasSize is not None:
             (vw, vh), (W, H) = self.bounds().size, doc.frame().size
             x, y = point
             centered = self.constrainBoundsRect_(((x, y), (vw, vh))).origin
@@ -85,11 +82,53 @@ class CenteringClipView(NSClipView):
         else:
             super(CenteringClipView, self).scrollWheel_(event)
 
+class FramePresenter(object):
+
+    def __init__(self, root):
+        self.queue = None              # the window's FrameQueue (set through the view)
+        self.attached = True           # whether the view is in a window (renders landing while it isn't are dropped)
+        self._root = root              # the view's layer
+        self._raster = Rasterizer()    # what draws the renders it presents
+        self._wanted = None            # (zoom, dpr) of the latest frame asked for
+        self._shown = (0, None, None)  # (seq, zoom, dpr) of the frame on display
+
+    def render(self, frame, seq, zoom, dpr, on_land=None, onerror=None, ondone=None):
+        self._wanted = (zoom, dpr)
+        self._submit(frame, seq, zoom, dpr, on_land, onerror, ondone)
+
+    def _submit(self, frame, seq, zoom, dpr, on_land=None, onerror=None, ondone=None):
+        work = lambda raster, cancelled: raster.render(frame, zoom * dpr, cancelled)
+
+        def deliver(result, err):
+            if err is not None:
+                if onerror is not None:
+                    onerror(err)
+            else:
+                current = seq >= self._shown[0] and (zoom, dpr) == self._wanted and self.attached
+                if current:
+                    self._shown = (seq, zoom, dpr)
+                    if on_land is not None:
+                        on_land()
+                    self._present(result, dpr)
+            if ondone is not None:
+                ondone()
+        self._job(work, deliver)
+
+    def _job(self, work, deliver):
+        raster = self._raster
+        self.queue.submit(lambda cancelled: work(raster, cancelled), deliver)
+
+    def _present(self, surface, dpr):
+        self._root.setContentsScale_(dpr)
+        self._root.setContents_(surface)
+        self._raster.shown(surface)
+
 class GraphicsView(NSView):
-    renderer = None # the window's FrameRenderer, set by the ScriptController that owns the view
     script = IBOutlet()
     canvas = None
-    _canvasSize = None # the canvas at the displayed zoom, in points (class-level: the clip view may ask before awakeFromNib)
+    _queue = None      # the window's FrameQueue (class-level: the ScriptController may set it before awakeFromNib)
+    _presenter = None
+    canvasSize = None # the canvas at the displayed zoom, in points (class-level: the clip view may ask before awakeFromNib)
 
     # The zoom levels are 10%, 25%, 50%, 75%, 100%, 200% and so on up to 2000%.
     zoomLevels = [0.1, 0.25, 0.5, 0.75]
@@ -107,23 +146,35 @@ class GraphicsView(NSView):
         self._zoom = 1.0
         self._wantZoom = self._zoom  # zoom to render at (adopted as _zoom once displayed)
         self._displayed = False   # whether a frame has been shown yet
-        self._seq = self._shownSeq = 0  # sequence number of the latest committed / displayed frame
+        self._seq = 0             # sequence number of the latest committed frame
         self._dpr = self.window().backingScaleFactor()
         self._magnifyReady = False
         self._zoomApply = None
+        self._pendingFinish = None  # an applied magnification's finish(), until the zoom it asked for lands
         # self.scrollwheel = False
         # self.wheeldelta = 0.0
 
-        # set up layer `hosting' and disable implicit anims
         self.setLayer_(CALayer.new())
         self.setWantsLayer_(True)
         self.layer().setContentsGravity_(kCAGravityCenter)
         self.layer().setContentsScale_(self._dpr)
         inaction = {k:None for k in ["onOrderOut", "sublayers", "contents", "contentsScale", "position", "bounds"]}
         self.layer().setActions_(inaction)
+        self._presenter = FramePresenter(self.layer())  # what renders and presents the frames it asks for
+        self._presenter.queue = self._queue
 
         # display the placeholder image until we're passed a canvas (and keep it in sync with appearance)
         self.updatePlaceholder(NSAppearance.currentDrawingAppearance())
+
+    def _get_queue(self):
+        return self._queue
+
+    @objc.python_method
+    def _set_queue(self, queue):
+        self._queue = queue
+        if self._presenter is not None:
+            self._presenter.queue = queue
+    queue = property(_get_queue, _set_queue)
 
     @objc.python_method
     def updatePlaceholder(self, appearance):
@@ -132,8 +183,8 @@ class GraphicsView(NSView):
                 mode = 'dark' if 'Dark' in appearance.name() else 'light'
             ))
             if placeholder:
-                self._canvasSize = tuple(placeholder.size())
-                self._fitToViewport()
+                self.canvasSize = tuple(placeholder.size())
+                self.fitToViewport()
                 self.layer().setContents_(placeholder)
 
     @objc.python_method
@@ -141,34 +192,27 @@ class GraphicsView(NSView):
         self.canvas = canvas
         self._committed = canvas.commit()
         self._seq += 1
-        self._submit(focus, onerror=onerror, ondone=ondone)
+        self._request(focus, onerror=onerror, ondone=ondone)
 
     @objc.python_method
-    def rerender(self, focus=None, finish=None):
+    def _rerender(self, focus=None, finish=None):
         if getattr(self, '_committed', None) is not None:
-            self._submit(focus, finish=finish)
+            self._request(focus, finish=finish)
 
     @objc.python_method
-    def _submit(self, focus=None, onerror=None, ondone=None, finish=None):
+    def _request(self, focus=None, onerror=None, ondone=None, finish=None):
         frame, seq, zoom, dpr = self._committed, self._seq, self._wantZoom, self._dpr
-        def work(cancelled):
-            return _rendered(self, frame, zoom * dpr, cancelled)
-        def deliver(surface, err):
-            if err is not None:
-                if onerror is not None:
-                    onerror(err)
-            elif seq >= self._shownSeq and (zoom, dpr) == (self._wantZoom, self._dpr) and self.window() is not None:
-                if finish is not None:
-                    finish()
-                self._zoom = zoom
-                self._shownSeq = seq
-                self._applyFrame(frame, surface, focus)
-            if ondone is not None:
-                ondone()
-        self.renderer.submit(work, deliver)
+        if finish is None:
+            finish = self._pendingFinish
+        def on_land():
+            if finish is not None:
+                finish()
+            self._zoom = zoom
+            self._land(frame, focus)
+        self._presenter.render(frame, seq, zoom, dpr, on_land=on_land, onerror=onerror, ondone=ondone)
 
     @objc.python_method
-    def _applyFrame(self, frame, surface, focus=None):
+    def _land(self, frame, focus):
         # set the scroller color based on the background
         bg = frame.background
         is_dark = bool(isinstance(bg, Color) and bg.brightness <= .5)
@@ -182,8 +226,8 @@ class GraphicsView(NSView):
             focus = self._focus()
 
         size = [s*self.zoom for s in frame.pagesize]
-        resized, self._canvasSize = size != self._canvasSize, size
-        self._fitToViewport()
+        resized, self.canvasSize = size != self.canvasSize, size
+        self.fitToViewport()
 
         if self._magnifyReady:
             scrollview.setMinMagnification_(self.zoomLevels[0] / self._zoom)
@@ -195,23 +239,20 @@ class GraphicsView(NSView):
             self._displayed = True
         elif focused or resized:
             vw, vh = scrollview.contentView().bounds().size
-            ox, oy, w, h = self._canvasRect()
+            ox, oy, w, h = self.canvasRect()
             self.scrollPoint_( (ox + focus[0]*w - vw/2.0, oy + focus[1]*h - vh/2.0) )
 
-        self.layer().setContentsScale_(self._dpr)
-        _show(self, surface)
-
     @objc.python_method
-    def _canvasRect(self):
+    def canvasRect(self):
         W, H = self.frame().size
-        cw, ch = self._canvasSize or (W, H)
+        cw, ch = self.canvasSize or (W, H)
         return ((W - cw) / 2.0, (H - ch) / 2.0, cw, ch)
 
     @objc.python_method
-    def _fitToViewport(self):
-        if self._canvasSize is None:
+    def fitToViewport(self):
+        if self.canvasSize is None:
             return
-        cw, ch = self._canvasSize
+        cw, ch = self.canvasSize
         scrollview = self.enclosingScrollView()
         if scrollview is None:
             w, h = cw, ch
@@ -225,17 +266,17 @@ class GraphicsView(NSView):
 
     @objc.python_method
     def _focus(self):
-        if self._canvasSize is None:
+        if self.canvasSize is None:
             return (0.5, 0.5)
         vis = self.enclosingScrollView().documentVisibleRect()
-        ox, oy, cw, ch = self._canvasRect()
+        ox, oy, cw, ch = self.canvasRect()
         clamp = lambda v: max(0.0, min(1.0, v))
         return (clamp((NSMidX(vis) - ox) / cw), clamp((NSMidY(vis) - oy) / ch))
 
     @objc.python_method
     def canvasPoint(self, pt):
         """A point in the view's coordinates, in canvas units"""
-        ox, oy, _, _ = self._canvasRect()
+        ox, oy, _, _ = self.canvasRect()
         return ((pt[0] - ox) / self._zoom, (pt[1] - oy) / self._zoom)
 
     def _get_zoom(self):
@@ -244,7 +285,7 @@ class GraphicsView(NSView):
     @objc.python_method
     def _set_zoom(self, zoom):
         self._wantZoom = zoom
-        self.rerender()
+        self._rerender()
     zoom = property(_get_zoom, _set_zoom)
 
     @objc.python_method
@@ -268,7 +309,13 @@ class GraphicsView(NSView):
         target = self._zoom * mag
         target = max(self.zoomLevels[0], min(self.zoomLevels[-1], target))
         self._wantZoom = target
-        self.rerender(focus=focus, finish=lambda: scrollview.setMagnification_(scrollview.magnification() / mag))
+        def finish():
+            if self._pendingFinish is not finish:
+                return  # folded in already, by an earlier frame (or replaced by a newer one)
+            self._pendingFinish = None
+            scrollview.setMagnification_(scrollview.magnification() / mag)
+        self._pendingFinish = finish
+        self._rerender(focus=focus, finish=finish)
 
     def scrollViewDidEndLiveMagnify_(self, note):
         # trackpad pinch gesture settled
@@ -283,10 +330,12 @@ class GraphicsView(NSView):
         if not dpr or getattr(self, '_dpr', None) == dpr:
             return
         self._dpr = dpr
-        self.rerender()
+        self._rerender()
 
     def viewWillMoveToWindow_(self, window):
         super(GraphicsView, self).viewWillMoveToWindow_(window)
+        if getattr(self, '_presenter', None) is not None:
+            self._presenter.attached = window is not None
         if window is None:
             if self._zoomApply is not None:
                 self._zoomApply.invalidate()
@@ -296,39 +345,15 @@ class GraphicsView(NSView):
                 nc.removeObserver_name_object_(self, NSScrollViewDidEndLiveMagnifyNotification, None)
                 self._magnifyReady = False
 
-    @objc.python_method
-    def findNearestZoomIndex(self, zoom):
-        """Returns the nearest zoom level, and whether we found a direct, exact
-        match or a fuzzy match."""
-        try: # Search for a direct hit first.
-            idx = self.zoomLevels.index(zoom)
-            return idx, True
-        except ValueError: # Can't find the zoom level, try looking at the indexes.
-            idx = 0
-            try:
-                while self.zoomLevels[idx] < zoom:
-                    idx += 1
-            except KeyError: # End of the list
-                idx = len(self.zoomLevels) - 1 # Just return the last index.
-            return idx, False
-
     @IBAction
     def zoomIn_(self, sender):
-        idx, direct = self.findNearestZoomIndex(self.zoom)
-        # Direct hits are perfect, but indirect hits require a bit of help.
-        # Because of the way indirect hits are calculated, they are already
-        # rounded up to the upper zoom level; this means we don't need to add 1.
-        if direct:
-            idx += 1
-        idx = max(min(idx, len(self.zoomLevels)-1), 0)
-        self.zoom = self.zoomLevels[idx]
+        idx = bisect.bisect_right(self.zoomLevels, self.zoom)
+        self.zoom = self.zoomLevels[min(idx, len(self.zoomLevels) - 1)]
 
     @IBAction
     def zoomOut_(self, sender):
-        idx, direct = self.findNearestZoomIndex(self.zoom)
-        idx -= 1
-        idx = max(min(idx, len(self.zoomLevels)-1), 0)
-        self.zoom = self.zoomLevels[idx]
+        idx = bisect.bisect_left(self.zoomLevels, self.zoom) - 1
+        self.zoom = self.zoomLevels[max(idx, 0)]
 
     @IBAction
     def resetZoom_(self, sender):
@@ -344,7 +369,7 @@ class GraphicsView(NSView):
         w, h = self.canvas.pagesize
         fw, fh = self.enclosingScrollView().contentView().frame().size
         factor = min(fw / w, fh / h)
-        self.zoom = factor
+        self.zoom = max(self.zoomLevels[0], min(self.zoomLevels[-1], factor))
 
     def isOpaque(self):
         return False
@@ -423,7 +448,6 @@ class FullscreenWindow(NSWindow):
         return True
 
 class FullscreenView(NSView):
-    renderer = None # the window's FrameRenderer, set by the ScriptController that owns the view
 
     def init(self):
         super(FullscreenView, self).init()
@@ -432,8 +456,8 @@ class FullscreenView(NSView):
         self.keydown = False
         self.key = None
         self.keycode = None
-        self.mousehide = None
-        self._seq = self._shownSeq = 0  # sequence number of the latest committed / displayed frame
+        self._mousehide = None
+        self._seq = 0  # sequence number of the latest committed frame
         # self.scrollwheel = False
         # self.wheeldelta = 0.0
 
@@ -443,38 +467,29 @@ class FullscreenView(NSView):
         self.layer().setContentsGravity_(kCAGravityResizeAspect)
         inaction = {k:None for k in ["onOrderOut", "sublayers", "contents", "position", "bounds"]}
         self.layer().setActions_(inaction)
+        self._presenter = FramePresenter(self.layer())  # what renders and presents the frames it asks for
         return self
+
+    def _get_queue(self):
+        return self._presenter.queue
+
+    @objc.python_method
+    def _set_queue(self, queue):
+        self._presenter.queue = queue
+    queue = property(_get_queue, _set_queue)
 
     @objc.python_method
     def render(self, canvas, focus=None, onerror=None, ondone=None):
         self.canvas = canvas
-        if not hasattr(self, "screenRect"):
-            self.screenRect = NSScreen.mainScreen().frame()
+        if not hasattr(self, "_scalingFactor"):
             cw, ch = self.canvas.pagesize
-            sw, sh = self.screenRect[1]
-            self.scalingFactor = calc_scaling_factor(cw, ch, sw, sh)
-            nw, nh = cw * self.scalingFactor, ch * self.scalingFactor
-            self.scaledSize = nw, nh
-            self.dx = (sw - nw) / 2.0
-            self.dy = (sh - nh) / 2.0
+            sw, sh = NSScreen.mainScreen().frame().size
+            self._scalingFactor = min(sw / cw, sh / ch)
         win = self.window()
         dpr = win.backingScaleFactor() if win else NSScreen.mainScreen().backingScaleFactor()
         frame = self._committed = canvas.commit()
         self._seq += 1
-        seq = self._seq
-        scale = self.scalingFactor * (dpr or 1.0)
-        def work(cancelled):
-            return _rendered(self, frame, scale, cancelled)
-        def deliver(surface, err):
-            if err is not None:
-                if onerror is not None:
-                    onerror(err)
-            elif seq >= self._shownSeq:
-                self._shownSeq = seq
-                _show(self, surface)
-            if ondone is not None:
-                ondone()
-        self.renderer.submit(work, deliver)
+        self._presenter.render(frame, self._seq, self._scalingFactor, dpr or 1.0, onerror=onerror, ondone=ondone)
 
     def updateTrackingAreas(self):
         for area in self.trackingAreas():
@@ -488,14 +503,14 @@ class FullscreenView(NSView):
         self.addTrackingArea_(track)
 
     def mouseMoved_(self, event):
-        if self.mousehide:
-            self.mousehide.invalidate()
+        if self._mousehide:
+            self._mousehide.invalidate()
         else:
             NSCursor.unhide()
-        self.mousehide = set_timeout(self, 'hideMouse:', 1)
+        self._mousehide = set_timeout(self, 'hideMouse:', 1)
 
     def hideMouse_(self, timer):
-        self.mousehide = None
+        self._mousehide = None
         NSCursor.hide()
 
     def isFlipped(self):
@@ -529,7 +544,4 @@ class FullscreenView(NSView):
 
     def acceptsFirstResponder(self):
         return True
-
-def calc_scaling_factor(width, height, maxwidth, maxheight):
-    return min(float(maxwidth) / width, float(maxheight) / height)
 

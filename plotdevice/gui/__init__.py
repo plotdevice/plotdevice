@@ -187,7 +187,7 @@ class FrameClock:
             self._timer.invalidate()
             self._timer = None
 
-class FrameRenderer:
+class FrameQueue:
 
     # if the GIL is disabled, allow drawing and rendering to overlap
     DEPTH = 1 if getattr(sys, '_is_gil_enabled', lambda: True)() else 2
@@ -198,7 +198,7 @@ class FrameRenderer:
         self._cancelled = 0    # generations up to this one are dropped (read by the worker)
         self._pending = 0      # submitted but not yet delivered (main thread only)
         self._dead = False
-        self._thread = threading.Thread(target=self._loop, daemon=True, name='frame-renderer')
+        self._thread = threading.Thread(target=self._loop, daemon=True, name='frame-queue')
         self._thread.start()
 
     @property
