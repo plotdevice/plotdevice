@@ -1,7 +1,10 @@
 # encoding: utf-8
 import os
 import re
+import sys
 import json
+import queue
+import threading
 import warnings
 import math
 import objc
@@ -359,6 +362,40 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
 import time
 re_padded = re.compile(r'{(\d+)}')
+free_threaded = not getattr(sys, '_is_gil_enabled', lambda: True)()
+
+class SequenceRenderer(object):
+    def __init__(self):
+        self.error = None
+        self._failed = False
+        self._jobs = queue.Queue(maxsize=1)
+        self._thread = threading.Thread(target=self._loop, daemon=True, name='export-render')
+        self._thread.start()
+
+    def __call__(self, frame, work):
+        self.check()
+        self._jobs.put((frame, work))
+
+    def check(self):
+        if self.error is not None:
+            error, self.error = self.error, None
+            raise error
+
+    def stop(self):
+        self._jobs.put(None)
+        self._thread.join()
+
+    def _loop(self):
+        while (job := self._jobs.get()) is not None:
+            frame, work = job
+            if self._failed and frame is not None:
+                continue
+            try:
+                with autorelease():
+                    work(None)
+            except Exception as err:
+                self._failed, self.error = True, err
+
 class ImageWriter(object):
     def __init__(self, fname, format, **opts):
         self.mode = CMYK if opts['cmyk'] else _ctx._outputmode
@@ -369,6 +406,7 @@ class ImageWriter(object):
         if format == 'pdf' and not self.anim:
             self.opts['single'] = not re_padded.search(self.fname)
         self.session = None
+        self.renderer = None # with the GIL off, renders the frames added to a sequence on a thread of their own
 
     def __enter__(self):
         self._pool = NSAutoreleasePool.alloc().init()
@@ -383,9 +421,13 @@ class ImageWriter(object):
             #     ... # draw a single frame
             #
             self.opts['single'] = True
-            self.add()
+            self._session().add(_ctx.canvas)
         _ctx._restoreContext()
-        self.finish()
+        try:
+            self.finish()
+        except Exception:
+            if type is None:
+                raise # (else the script's own exception is the one to report)
         del self._pool
 
 
@@ -479,19 +521,28 @@ class ImageWriter(object):
 
     def add(self):
         """Add a new frame or page with the current contents of the canvas."""
+        if self.renderer is None and free_threaded:
+            self.renderer = SequenceRenderer()
+        self._session().add(_ctx.canvas, self.renderer)
+
+    def _session(self):
         if not self.session:
             if self.anim:
                 self.session = MovieExportSession(self.fname, self.format, **self.opts)
             else:
                 self.session = ImageExportSession(self.fname, self.format, **self.opts)
-        self.session.add(_ctx.canvas)
+        return self.session
 
     def finish(self):
         """Blocks until disk I/O is complete"""
-        self.session.done()
+        self.session.done(self.renderer)
+        if self.renderer is not None:
+            self.renderer.stop()
         while True:
             if self.session.writer.doneWriting():
                 break
             time.sleep(0.1)
+        if self.renderer is not None:
+            self.renderer.check()
         if isinstance(self.session, MovieExportSession) and self.session.writer_failed():
             raise DeviceError("Export failed: encoding error")

@@ -730,12 +730,15 @@ class ScriptController(NSWindowController):
 
     @objc.python_method
     def exportRender(self, frame, work):
-        if self.queue is None:
-            return work(None)
         def crashed(err):
             if self.vm.session:
                 self.vm.session.cancel()
             self._renderCrashed(err)
+        if self.queue is None:
+            try:
+                return work(None)
+            except Exception as err:
+                return crashed(err)
         shown = frame is not None and self.vm.session.presents
         if shown and hasattr(self.currentView, 'present'):
             self.currentView.present(frame, work, crashed)

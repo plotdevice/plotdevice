@@ -27,7 +27,7 @@ from ..run import objc, encoded
 from ..lib.cocoa import *
 from ..lib.io import SysAdmin, ExportSession
 from ..util import rsrc_path
-from ..gui import ScriptController, next_tick, set_timeout
+from ..gui import ScriptController, FrameQueue, next_tick, set_timeout
 
 from PyObjCTools import AppHelper
 from AppKit import NSRunningApplication
@@ -89,6 +89,11 @@ class ScriptAppDelegate(NSObject):
                 opts['last'] = opts.get('first', 1)
 
             if opts['export']:
+                gil = getattr(sys, '_is_gil_enabled', lambda: True)()
+                several = opts['last'] > opts['first']
+                if several and not gil:
+                    self.script.queue = FrameQueue()
+
                 # kick off an export session
                 format = opts['export'].rsplit('.',1)[1]
                 kind = 'movie' if format in ('mov','gif') else 'image'
@@ -220,6 +225,10 @@ class ConsoleScript(ScriptController):
         if self._buf:
             STDERR.write(self._buf)
             STDERR.flush()
+
+    def crash(self):
+        super(ConsoleScript, self).crash()
+        NSApp().delegate().done(ok=False)
 
     @objc.python_method
     def exportFrame(self, status, canvas=None):
