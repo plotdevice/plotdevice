@@ -55,7 +55,7 @@ from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplicati
                    NSScrollViewWillStartLiveMagnifyNotification, \
                    NSScrollElasticityAllowed, NSScrollElasticityNone, NSShadow, NSSlider, NSSmallControlSize, NSSplitView, \
                    NSStringPboardType, NSSwitch, NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, \
-                   NSTextView, NSTIFFFileType, NSToolbarItem, NSTrackingActiveInActiveApp, \
+                   NSTerminateLater, NSTerminateNow, NSTextView, NSTIFFFileType, NSToolbarItem, NSTrackingActiveInActiveApp, \
                    NSTrackingActiveInKeyWindow, NSTrackingArea, NSTrackingArea, NSTrackingMouseEnteredAndExited, \
                    NSTrackingMouseMoved, NSUnboldFontMask, NSUnionRect, NSUnitalicFontMask, NSView, \
                    NSViewBoundsDidChangeNotification, NSViewFrameDidChangeNotification, NSViewMinXMargin, NSViewWidthSizable, \

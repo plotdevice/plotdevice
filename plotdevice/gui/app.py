@@ -1,6 +1,7 @@
 # encoding: utf-8
 import sys
 import os
+import time
 import objc
 from glob import glob
 from ..lib.cocoa import *
@@ -118,6 +119,27 @@ class PlotDeviceAppDelegate(NSObject):
     def showSite_(self, sender):
         url = NSURL.URLWithString_("http://plotdevice.io/")
         NSWorkspace.sharedWorkspace().openURL_(url)
+
+    def applicationShouldTerminate_(self, app):
+        from .document import ScriptController
+        from ..lib.io import ExportSession
+        for win in app.windows():
+            controller = win.windowController()
+            exporting = isinstance(controller, ScriptController) and controller.vm is not None and controller.vm.session
+            if exporting:
+                controller.finishExport()
+        if not ExportSession.unfinished:
+            return NSTerminateNow
+        self._quitBy = time.time() + 10
+        set_timeout(self, 'quitOnceWritten:', 0.1, repeat=True)
+        return NSTerminateLater
+
+    def quitOnceWritten_(self, timer):
+        from ..lib.io import ExportSession
+        writing = [s for s in ExportSession.unfinished if s.writer is not None and not s.writer.doneWriting()]
+        if not writing or time.time() > self._quitBy:
+            timer.invalidate()
+            NSApplication.sharedApplication().replyToApplicationShouldTerminate_(True)
 
     def applicationWillTerminate_(self, note):
         import atexit

@@ -34,14 +34,19 @@ class PDFBook(object):
 ### Session objects which wrap the GCD-based export managers ###
 
 class ExportSession(object):
+    unfinished = set() # the sessions whose files are still being written (the app waits for them to quit)
 
     def __init__(self):
         # state flags
         self.running = True
         self.cancelled = False
+        self.closing = False # whether done() has been called
+        self.closed = False  # and has closed the writer's file
         self.added = 0
+        self.rendered = 0 # frames handed to the writer (not those dropped by a cancel)
         self.written = 0
         self.total = 0
+        self.failed = False # whether the writer gave up, leaving no file
 
         # callbacks
         self._complete = None
@@ -65,12 +70,13 @@ class ExportSession(object):
         from plotdevice.gui import set_timeout
         self.total = frames if frames is not None else pages
         self.poll = set_timeout(self, "update:", 0.1, repeat=True)
+        ExportSession.unfinished.add(self)
 
     def update_(self, note):
         self.written = self.writer.framesWritten()
         if self._progress:
             # let the delegate update the progress bar
-            goal = self.added if self.cancelled else self.total
+            goal = self.rendered if self.cancelled else self.total
             self._progress(self.written, goal, self.cancelled)
 
         if self.writer.doneWriting():
@@ -81,29 +87,37 @@ class ExportSession(object):
             return None
         return self.added + 1
 
-    def cancel(self):
+    def cancel(self, drop=None):
         if self.cancelled:
             return # be idem potent
 
         self.cancelled = True
+        if drop is not None and not self.closing:
+            drop()
         if self._status:
             self._status('cancelled')
 
     def done(self, render=None):
         # if self._status:
         #     self._status('finishing')
-        if self.writer:
+        self.closing = True
+        if self.writer and not self.closed:
             writer = self.writer
+            def close(cancelled=None):
+                if not self.closed:
+                    self.closed = True
+                    writer.closeFile()
             if render is None or self.on_main:
-                writer.closeFile()
+                close()
             else:
-                render(None, lambda cancelled: writer.closeFile())
+                render(None, close)
 
     def shutdown(self):
         self.running = False
+        ExportSession.unfinished.discard(self)
         self._progress = None
         if self._status:
-            self._status('complete')
+            self._status('failed' if self.failed else 'complete')
             self._status = None
         if self.poll:
             self.poll.invalidate()
@@ -159,10 +173,12 @@ class ImageExportSession(ExportSession):
         def work(cancelled):
             if isinstance(writer, PDFBook):
                 writer.addPage_(frame)
+                self.rendered += 1
                 return None
             image, surface = frame._encode(format, zoom, cmyk, cancelled)
             if image is not None:
                 writer.addPage_(image)
+                self.rendered += 1
             return surface
         if render is None or self.on_main:
             work(None)
@@ -189,6 +205,16 @@ class MovieExportSession(ExportSession):
         self.codec = codec
         self.cmyk = False
         self.presents = True
+
+    def writer_failed(self):
+        failed = self.format == 'mov' and self.writer is not None and self.writer.failed()
+        if failed and os.path.exists(self.fname):
+            os.unlink(self.fname)
+        return failed
+
+    def shutdown(self):
+        self.failed = self.failed or self.writer_failed()
+        super(MovieExportSession, self).shutdown()
 
     def add(self, canvas, render=None):
         if self.format not in ('mov', 'gif'):
@@ -233,6 +259,7 @@ class MovieExportSession(ExportSession):
                 if cancelled is not None and cancelled():
                     return None # (half-drawn, so never encoded)
                 writer.addSurface_(surface)
+                self.rendered += 1
                 return surface
         else:
             def work(cancelled):
@@ -244,6 +271,7 @@ class MovieExportSession(ExportSession):
                 image = CGBitmapContextCreateImage(surface.context())
                 surface.unlock()
                 writer.addFrame_(NSBitmapImageRep.alloc().initWithCGImage_(image))
+                self.rendered += 1
                 return surface
         if render is None:
             work(None)

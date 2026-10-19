@@ -69,6 +69,7 @@ class Sandbox(object):
         self.crashed = False    # flag whether the script exited abnormally
         self.live = False       # whether to keep the output pipe open between runs
         self.session = None     # the image/movie export session (if any)
+        self._stopped = False   # whether the export was ended early by stopExport()
         self.delegate = None    # object with exportFrame and exportProgress methods
 
 
@@ -349,9 +350,17 @@ class Sandbox(object):
 
         # start looping through frames, calling draw() and adding the canvas
         # to the export-session on each iteration
+        self._stopped = False
         self._exportFrame()
 
+    def stopExport(self):
+        self._stopped = True
+        self.session.cancel()
+        self.call("stop")
+
     def _exportFrame(self):
+        if self._stopped:
+            return
         if self.session.next():
             # wait for the render thread to have room for another frame
             if not self.delegate.exportReady():

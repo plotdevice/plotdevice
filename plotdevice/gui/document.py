@@ -369,6 +369,8 @@ class ScriptController(NSWindowController):
             self.graphicsView.enclosingScrollView().setDrawsBackground_(False)
 
     def windowWillClose_(self, note):
+        if self.vm.session:
+            self.finishExport()
         self.stopScript()
         if self.queue is not None:
             self.queue.shutdown()
@@ -385,6 +387,17 @@ class ScriptController(NSWindowController):
 
         # stop tracking appearance changes
         NSApp.removeObserver_forKeyPath_(self, "effectiveAppearance")
+
+    @objc.python_method
+    def finishExport(self):
+        session = self.vm.session
+        session.on(progress=None, status=None)
+        if not session.closing:
+            self.vm.stopExport()
+        if self.queue is not None:
+            self.queue.shutdown()
+            self.queue = None
+        session.done()
 
     def shouldCloseDocument(self):
         return True
@@ -753,9 +766,12 @@ class ScriptController(NSWindowController):
         if self.statusView:
             # give ui feedback for export state
             if event=='cancelled': self.statusView.finishExport()
-            elif event=='complete': self.statusView.endExport()
+            elif event in ('complete', 'failed'): self.statusView.endExport()
 
-        if event=='complete':
+        if event=='failed':
+            self.echo([(True, "Export failed: encoding error\n")])
+
+        if event in ('complete', 'failed'):
             # shut down the export ui
             self.stopScript()
 
@@ -766,7 +782,8 @@ class ScriptController(NSWindowController):
     def stopScript_(self, sender=None):
         # catch command-period
         if self.vm.session:
-            self.vm.session.cancel()
+            drop = self.queue.cancel if self.queue is not None else None
+            self.vm.session.cancel(drop)
         else:
             self.stopScript()
 

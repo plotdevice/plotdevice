@@ -493,3 +493,5 @@ class ImageWriter(object):
             if self.session.writer.doneWriting():
                 break
             time.sleep(0.1)
+        if isinstance(self.session, MovieExportSession) and self.session.writer_failed():
+            raise DeviceError("Export failed: encoding error")

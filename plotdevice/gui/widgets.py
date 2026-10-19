@@ -282,7 +282,9 @@ class DashboardController(NSObject):
     def setVariable_to_(self, name, val):
         var = self.script.vm.params[name]
         var.value = val
-        if self.script.animationTimer is None:
+        animating = self.script.animationTimer is not None
+        exporting = self.script.vm.session is not None
+        if not animating and not exporting:
             now = time.perf_counter()
             self.editing = self.editing or now - self._lastEdit < BURST
             self._lastEdit = now
