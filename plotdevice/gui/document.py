@@ -850,11 +850,7 @@ class ScriptController(NSWindowController):
     #
     @IBAction
     def copyImageAsPDF_(self, sender):
-        pboard = NSPasteboard.generalPasteboard()
-        # graphicsView implements the pboard delegate method to provide the data
-        pboard.declareTypes_owner_([
-            NSPasteboardTypePDF, NSPasteboardTypeTIFF,"com.adobe.encapsulated-postscript"
-        ], self.graphicsView)
+        self.graphicsView.copyImageAsPDF_(sender)
 
 
     #

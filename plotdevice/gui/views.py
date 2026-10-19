@@ -866,16 +866,24 @@ class GraphicsView(NSView):
     def isFlipped(self):
         return True
 
-    ### pasteboard delegate method ###
+    ### pasteboard ###
+
+    @IBAction
+    def copyImageAsPDF_(self, sender):
+        self._copied = getattr(self, '_committed', None)
+        if self._copied is not None:
+            pboard = NSPasteboard.generalPasteboard()
+            pboard.declareTypes_owner_([NSPasteboardTypePDF, NSPasteboardTypeTIFF], self)
 
     def pasteboard_provideDataForType_(self, pboard, type):
         formats = {NSPasteboardTypePDF:"pdf",
-                   "com.adobe.encapsulated-postscript":"eps",
                    NSPasteboardTypeTIFF:"tiff"}
-        if self.canvas and type in formats:
+        frame = getattr(self, '_copied', None)
+        if frame is not None and type in formats:
             img_type = formats[type]
-            mag = self.window().backingScaleFactor() if img_type=='tiff' else 1.0
-            pboard.setData_forType_(self.canvas._getImageData(img_type, mag), type)
+            screen = self.window() or NSScreen.mainScreen()
+            mag = screen.backingScaleFactor() if img_type=='tiff' else 1.0
+            pboard.setData_forType_(frame._getImageData(img_type, mag), type)
 
     def mouseDown_(self, event):
         self.mousedown = True
