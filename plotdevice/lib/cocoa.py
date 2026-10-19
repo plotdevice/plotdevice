@@ -19,6 +19,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    CGImageGetHeight, CGImageGetWidth, CGImageMaskCreate, CGPathAddCurveToPoint, CGPathAddLineToPoint, \
                    CGPathCloseSubpath, CGPathCreateCopy, CGPathCreateMutable, CGPathMoveToPoint, CGPathRelease, \
                    CGPDFContextBeginPage, CGPDFContextClose, CGPDFContextCreate, CGPDFContextEndPage, CGRectMake, \
+                   CGContextBeginPage, CGContextEndPage, CGPDFContextCreateWithURL, \
                    CGSizeMake, kCGBitmapByteOrder32Host, kCGBlendModeClear, kCGBlendModeColor, kCGBlendModeColorBurn, \
                    kCGBlendModeColorDodge, kCGBlendModeCopy, kCGBlendModeDarken, kCGBlendModeDestinationAtop, \
                    kCGBlendModeDestinationIn, kCGBlendModeDestinationOut, kCGBlendModeDestinationOver, \
@@ -54,7 +55,7 @@ from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplicati
                    NSScrollViewWillStartLiveMagnifyNotification, \
                    NSScrollElasticityAllowed, NSScrollElasticityNone, NSShadow, NSSlider, NSSmallControlSize, NSSplitView, \
                    NSStringPboardType, NSSwitch, NSTextContainer, NSTextField, NSTextFinder, NSTextStorage, \
-                   NSTextView, NSTIFFFileType, NSToolbarItem, NSTrackingActiveInActiveApp, \
+                   NSTerminateLater, NSTerminateNow, NSTextView, NSTIFFFileType, NSToolbarItem, NSTrackingActiveInActiveApp, \
                    NSTrackingActiveInKeyWindow, NSTrackingArea, NSTrackingArea, NSTrackingMouseEnteredAndExited, \
                    NSTrackingMouseMoved, NSUnboldFontMask, NSUnionRect, NSUnitalicFontMask, NSView, \
                    NSViewBoundsDidChangeNotification, NSViewFrameDidChangeNotification, NSViewMinXMargin, NSViewWidthSizable, \

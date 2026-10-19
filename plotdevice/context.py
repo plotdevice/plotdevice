@@ -4,10 +4,12 @@ from copy import copy
 from contextlib import contextmanager
 from collections import namedtuple, OrderedDict
 from os.path import exists, expanduser
+import objc
 from objc import super
 
 from .lib.cocoa import *
 from .lib import pathmatics
+from .lib.io import MovieExportSession
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
 from .gfx.geometry import Dimension, parse_coords, IDENTITY
 from .gfx.typography import Layout
@@ -1490,7 +1492,7 @@ class Context(object):
         else:
             self.canvas.clear(*grobs)
 
-    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=1.0, cmyk=False):
+    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=None, cmyk=False, codec='hevc'):
         """Write single images or manage batch exports for animations.
 
         To write the canvas's current contents to a file, simply call export("~/somefile.png")
@@ -1517,10 +1519,10 @@ class Context(object):
         from the fname are optional and default to:
             fps: 30      (relevant for both gif and mov exports)
             loop: False  (set to True to loop forever or an integer for a fixed number of repetitions)
-            bitrate: 1.0 (in megabits per second)
+            bitrate: None (in megabits per second; by default, picked from the canvas size)
 
-        Note that the `loop` argument only applies to animated gifs and `bitrate` is used in the H.264
-        encoding of `mov` files.
+        Note that the `loop` argument only applies to animated gifs, and `bitrate` and `codec` to `mov`
+        files (a ProRes movie keeps the canvas's transparency and has a fixed quality rather than a bitrate).
         """
 
         # determine the format by normalizing the file extension
@@ -1529,12 +1531,16 @@ class Context(object):
             badform = 'Unknown export format "%s"'%format
             raise DeviceError(badform)
 
+        if codec not in MovieExportSession.CODECS:
+            badcodec = 'Unknown video codec "%s" (should be one of %s)' % (codec, ', '.join(MovieExportSession.CODECS))
+            raise DeviceError(badcodec)
+
         # build up opts based on type of output file (anim vs static)
         opts = {"cmyk":cmyk, "zoom":zoom}
         if format=='mov' or (format=='gif' and fps or loop is not None):
             opts.update(fps=fps or 30, # set a default for .mov exports
                         loop={True:-1, False:0, None:0}.get(loop, loop), # convert bool args to int
-                        bitrate=bitrate)
+                        bitrate=bitrate, codec=codec)
 
         return ImageWriter(fname, format, **opts)
 
@@ -1918,7 +1924,7 @@ class Frame(object):
                 box[0] > x + w or box[1] > y + h or box[0] + box[2] < x or box[1] + box[3] < y)]
 
     def draw(self, cancelled=None, within=None):
-        with gfx._rendering(self, within):
+        with gfx._render_lock, gfx._rendering(self, within):
             if self.background is not None:
                 rect = ((0,0), self.pagesize)
                 if isinstance(self.background, Gradient):
@@ -1931,6 +1937,7 @@ class Frame(object):
                 for grob in gfx._visible(self.grobs):
                     if cancelled is not None and cancelled():
                         return
+                    gfx._render_lock.checkpoint()
                     grob._draw()
 
     @property
@@ -1940,12 +1947,13 @@ class Frame(object):
     def _render_to_image(self, zoom=1.0):
         size = Size(*[int(dim*zoom) for dim in self.pagesize])
         img = NSImage.alloc().initWithSize_(size)
-        img.lockFocusFlipped_(True)
-        trans = NSAffineTransform.transform()
-        trans.scaleXBy_yBy_(zoom,zoom)
-        trans.concat()
-        self.draw()
-        img.unlockFocus()
+        with autorelease():
+            img.lockFocusFlipped_(True)
+            trans = NSAffineTransform.transform()
+            trans.scaleXBy_yBy_(zoom,zoom)
+            trans.concat()
+            self.draw()
+            img.unlockFocus()
         return img
 
     def _raster_size(self, scale):
@@ -1979,22 +1987,26 @@ class Frame(object):
             surface.unlock()
 
     def _render_to_context(self, cgContext, zoom, cancelled=None, offset=None, within=None):
-        ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(cgContext, True)
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.setCurrentContext_(ns_ctx)
-        NSGraphicsContext.saveGraphicsState()
-        trans = NSAffineTransform.transform()
-        trans.translateXBy_yBy_(*(offset or (0, self.pagesize.height*zoom)))
-        trans.scaleXBy_yBy_(zoom,-zoom)
-        trans.concat()
-        self.draw(cancelled, within)
-        NSGraphicsContext.restoreGraphicsState()
-        NSGraphicsContext.restoreGraphicsState()
+        with autorelease():
+            ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(cgContext, True)
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.setCurrentContext_(ns_ctx)
+            NSGraphicsContext.saveGraphicsState()
+            trans = NSAffineTransform.transform()
+            trans.translateXBy_yBy_(*(offset or (0, self.pagesize.height*zoom)))
+            trans.scaleXBy_yBy_(zoom,-zoom)
+            trans.concat()
+            self.draw(cancelled, within)
+            NSGraphicsContext.restoreGraphicsState()
+            NSGraphicsContext.restoreGraphicsState()
 
     def _getImageData(self, format, zoom=1.0, cmyk=False):
+        return self._encode(format, zoom, cmyk)[0]
+
+    def _encode(self, format, zoom=1.0, cmyk=False, cancelled=None):
         if format == 'pdf':
             w, h = self.pagesize
-            cgData = NSMutableData.data()
+            cgData = NSMutableData.alloc().init() # (owned, as the surface)
             dataConsumer = CGDataConsumerCreateWithCFData(cgData)
             pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w*zoom, h*zoom), None)
             CGPDFContextBeginPage(pdfContext, None)
@@ -2002,10 +2014,11 @@ class Frame(object):
             CGPDFContextEndPage(pdfContext)
             CGPDFContextClose(pdfContext)
             pdfContext = None
-            return cgData
+            return cgData, None
         elif format == 'eps':
-            view = _PostScriptView.alloc().initWithCanvas_(self)
-            return view.dataWithEPSInsideRect_(view.bounds())
+            with autorelease():
+                view = _PostScriptView.alloc().initWithCanvas_(self)
+                return view.dataWithEPSInsideRect_(view.bounds()), None
         else:
             cgTypes = {"gif":  kUTTypeGIF,
                        "jpg":  kUTTypeJPEG,
@@ -2014,23 +2027,30 @@ class Frame(object):
                        "tiff": kUTTypeTIFF,
                        "heic": 'public.heic'}
 
+            size = Size(*[int(dim*zoom) for dim in self.pagesize])
+            surface = None
             if format in ('jpeg', 'jpg', 'tiff') and cmyk:
                 colorspace, opts = CGColorSpaceCreateDeviceCMYK(), kCGImageAlphaNone
+                bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
+                self._render_to_context(bitmapContext, zoom, cancelled)
+                cgImage = CGBitmapContextCreateImage(bitmapContext)
             else:
-                colorspace, opts = CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
+                surface = objc.lookUpClass('PDSurface').alloc().initWithWidth_height_(size.width, size.height)
+                self._render_to_surface(surface, zoom, cancelled)
+                surface.lock()
+                cgImage = CGBitmapContextCreateImage(surface.context())
+                surface.unlock()
+            if cancelled is not None and cancelled():
+                return None, None
 
-            size = Size(*[int(dim*zoom) for dim in self.pagesize])
-            bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
-            self._render_to_context(bitmapContext, zoom)
-            cgImage = CGBitmapContextCreateImage(bitmapContext)
-            cgData = NSMutableData.data()
+            cgData = NSMutableData.alloc().init() # (owned, as the surface)
             cgDest = CGImageDestinationCreateWithData(cgData, cgTypes[format], 1, None)
             cgProperies = {kCGImagePropertyDPIWidth: 72*zoom, kCGImagePropertyDPIHeight: 72*zoom}
             if format in ('jpg', 'jpeg'):
                 cgProperies[kCGImageDestinationLossyCompressionQuality] = 1.0
             CGImageDestinationAddImage(cgDest, cgImage, NSDictionary.dictionaryWithDictionary_(cgProperies))
             CGImageDestinationFinalize(cgDest)
-            return cgData
+            return cgData, surface
 
     def save(self, fname, format=None, zoom=1.0, cmyk=False):
         """Write the current graphics objects to an image file"""

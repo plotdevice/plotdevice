@@ -8,11 +8,13 @@
 
 #import "Video.h"
 
+#define kPoolThreshold 8
+
 @interface FrameWriter : NSOperation{
     Video *delegate;
     NSInteger frameNum;
     NSInteger frameRate;
-    NSImage *frame;
+    PDSurface *surface;
     AVAssetWriter *videoWriter;
     AVAssetWriterInput* videoWriterInput;
     AVAssetWriterInputPixelBufferAdaptor *adaptor;
@@ -20,79 +22,54 @@
 @property (nonatomic, assign) Video *delegate;
 @property (nonatomic, assign) NSInteger frameNum;
 @property (nonatomic, assign) NSInteger frameRate;
-@property (nonatomic, retain) NSImage *frame;
+@property (nonatomic, retain) PDSurface *surface;
 @property (nonatomic, retain) AVAssetWriter *videoWriter;
 @property (nonatomic, retain) AVAssetWriterInput* videoWriterInput;
 @property (nonatomic, retain) AVAssetWriterInputPixelBufferAdaptor *adaptor;
 @end
 
 @implementation FrameWriter
-@synthesize delegate, frame, frameNum, frameRate, videoWriter, videoWriterInput, adaptor;
+@synthesize delegate, surface, frameNum, frameRate, videoWriter, videoWriterInput, adaptor;
 -(void) main{
     @autoreleasepool{
-        if (self.isCancelled || !frame){
+        if (self.isCancelled || !surface){
+            if (videoWriter.status != AVAssetWriterStatusWriting){
+                NSLog(@"Video export failed: %@", videoWriter.error);
+                [self.delegate wroteLast];
+                return;
+            }
             [videoWriterInput markAsFinished];
             [videoWriter finishWritingWithCompletionHandler:^{
+                if (videoWriter.status != AVAssetWriterStatusCompleted){
+                    NSLog(@"Video export failed: %@", videoWriter.error);
+                }
                 [self.delegate wroteLast];
             }];
             return;
         }
 
+        while (!videoWriterInput.readyForMoreMediaData && videoWriter.status == AVAssetWriterStatusWriting){
+            [NSThread sleepForTimeInterval:0.005];
+        }
         BOOL ok = NO;
-        int retry = 30;
-        CVPixelBufferRef buffer = [self _pixelBufferFromNSImage:frame];
-        while (!ok && retry-->0){
-            if (adaptor.assetWriterInput.readyForMoreMediaData) {
-                CMTime frameTime = CMTimeMake(frameNum, (int32_t)frameRate);
-                ok = [adaptor appendPixelBuffer:buffer withPresentationTime:frameTime];
-                ok = YES;
-                if(buffer) CVBufferRelease(buffer);
-            }
-            [NSThread sleepForTimeInterval: (ok) ? 0.0 : 0.05];
+        if (videoWriter.status == AVAssetWriterStatusWriting){
+            CMTime frameTime = CMTimeMake(frameNum, (int32_t)frameRate);
+            ok = [adaptor appendPixelBuffer:surface.pixelBuffer withPresentationTime:frameTime];
         }
-        if (!ok) {
-            NSLog(@"Video export failed: couldn't write frame %li", (long)frameNum);
+        if (ok){
+            [self.delegate wroteFrame];
+        }else{
+            [self.delegate droppedFrame:frameNum];
         }
-        [self.delegate wroteFrame];
     }
 }
 
 - (void)dealloc{
-    self.frame = nil;
+    self.surface = nil;
     self.videoWriter = nil;
     self.videoWriterInput = nil;
     self.adaptor = nil;
     [super dealloc];
-}
-
-- (CVPixelBufferRef)_pixelBufferFromNSImage:(NSImage*)image
-{
-    // config
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-    NSDictionary* pixelBufferProperties = @{(id)kCVPixelBufferCGImageCompatibilityKey:@YES, (id)kCVPixelBufferCGBitmapContextCompatibilityKey:@YES};
-
-    // create pixel buffer
-    CVPixelBufferRef pixelBuffer = NULL;
-    CVPixelBufferCreate(kCFAllocatorDefault, [image size].width, [image size].height, k32ARGBPixelFormat, (__bridge CFDictionaryRef)pixelBufferProperties, &pixelBuffer);
-    CVPixelBufferLockBaseAddress(pixelBuffer, 0);
-
-    // context to draw in, set to pixel buffer's address
-    void* baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
-    size_t bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
-    CGContextRef context = CGBitmapContextCreate(baseAddress, [image size].width, [image size].height, 8, bytesPerRow, colorSpace, (CGBitmapInfo)kCGImageAlphaNoneSkipFirst);
-
-    // draw
-    NSGraphicsContext* imageContext = [NSGraphicsContext graphicsContextWithCGContext:context flipped:NO];
-    [NSGraphicsContext saveGraphicsState];
-    [NSGraphicsContext setCurrentContext:imageContext];
-    [image drawAtPoint:NSMakePoint(0.0, 0.0) fromRect:NSZeroRect operation:NSCompositingOperationCopy fraction:1.0];
-    [NSGraphicsContext restoreGraphicsState];
-    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
-
-    // cleanup
-    CFRelease(context);
-    CGColorSpaceRelease(colorSpace);
-    return pixelBuffer;
 }
 
 @end
@@ -111,19 +88,35 @@
 
         videoWriter = [[AVAssetWriter alloc] initWithURL: [NSURL fileURLWithPath:fileName] fileType:AVFileTypeQuickTimeMovie error:&error];
         NSParameterAssert(videoWriter);
-        NSDictionary *videoSettings = @{ AVVideoCodecKey: (codec == 0) ? AVVideoCodecTypeHEVC : AVVideoCodecTypeH264,
+        transferFunction = AVVideoTransferFunction_ITU_R_709_2;
+        if (@available(macOS 15.0, *)) transferFunction = AVVideoTransferFunction_IEC_sRGB;
+        [transferFunction retain];
+        NSArray *codecs = @[AVVideoCodecTypeHEVC, AVVideoCodecTypeH264, AVVideoCodecTypeAppleProRes4444];
+        straightAlpha = codec == 2;
+        NSMutableDictionary *videoSettings = [NSMutableDictionary dictionaryWithDictionary:@{
+                                         AVVideoCodecKey: codecs[codec],
                                          AVVideoWidthKey: @(aSize.width),
                                          AVVideoHeightKey: [NSNumber numberWithInt:aSize.height],
-                                         AVVideoCompressionPropertiesKey: @{
-                                            AVVideoAverageBitRateKey:@((int)(mbps*1000000))
-                                            /*AVVideoMaxKeyFrameIntervalKey: @1*/}
-                                         };
+                                         AVVideoColorPropertiesKey: @{
+                                            AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2,
+                                            AVVideoTransferFunctionKey: transferFunction,
+                                            AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2}
+                                         }];
+        if (codec != 2){
+            videoSettings[AVVideoCompressionPropertiesKey] = @{
+                AVVideoAverageBitRateKey:@((int)(mbps*1000000))
+                /*AVVideoMaxKeyFrameIntervalKey: @1*/};
+        }
         videoWriterInput = [[AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo
                                                                outputSettings:videoSettings] retain];
 
+        NSDictionary *bufferAttributes = @{ (id)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA),
+                                            (id)kCVPixelBufferWidthKey: @(aSize.width),
+                                            (id)kCVPixelBufferHeightKey: @(aSize.height),
+                                            (id)kCVPixelBufferIOSurfacePropertiesKey: @{} };
         adaptor = [[AVAssetWriterInputPixelBufferAdaptor
                     assetWriterInputPixelBufferAdaptorWithAssetWriterInput:videoWriterInput
-                    sourcePixelBufferAttributes:nil] retain];
+                    sourcePixelBufferAttributes:bufferAttributes] retain];
 
         NSParameterAssert(videoWriterInput);
         NSParameterAssert([videoWriter canAddInput:videoWriterInput]);
@@ -139,9 +132,31 @@
     return self;
 }
 
-- (void)addFrame:(NSImage *)frame{
+- (BOOL)failed{
+    return videoWriter.status == AVAssetWriterStatusFailed;
+}
+
+- (PDSurface *)nextSurface{
+    CVPixelBufferPoolRef pool = adaptor.pixelBufferPool;
+    if (!pool) return nil;
+    NSDictionary *aux = @{ (id)kCVPixelBufferPoolAllocationThresholdKey: @(kPoolThreshold) };
+    CVPixelBufferRef buffer = NULL;
+    CVReturn err = CVPixelBufferPoolCreatePixelBufferWithAuxAttributes(NULL, pool, (CFDictionaryRef)aux, &buffer);
+    if (err != kCVReturnSuccess || !buffer) return nil;
+    CVBufferSetAttachment(buffer, kCVImageBufferColorPrimariesKey, kCVImageBufferColorPrimaries_ITU_R_709_2, kCVAttachmentMode_ShouldPropagate);
+    CVBufferSetAttachment(buffer, kCVImageBufferYCbCrMatrixKey, kCVImageBufferYCbCrMatrix_ITU_R_709_2, kCVAttachmentMode_ShouldPropagate);
+    CVBufferSetAttachment(buffer, kCVImageBufferTransferFunctionKey, (CFStringRef)transferFunction, kCVAttachmentMode_ShouldPropagate);
+    CVBufferSetAttachment(buffer, kCVImageBufferAlphaChannelModeKey,
+                          straightAlpha ? kCVImageBufferAlphaChannelMode_StraightAlpha : kCVImageBufferAlphaChannelMode_PremultipliedAlpha,
+                          kCVAttachmentMode_ShouldPropagate);
+    PDSurface *surface = [PDSurface surfaceWithPixelBuffer:buffer];
+    CVPixelBufferRelease(buffer);
+    return surface;
+}
+
+- (void)addSurface:(PDSurface *)surface{
     FrameWriter *fw = [[[FrameWriter alloc] init] autorelease];
-    fw.frame = frame;
+    fw.surface = surface;
     fw.frameNum = frameCount++;
     fw.frameRate = frameRate;
     fw.videoWriter = videoWriter;
@@ -149,6 +164,20 @@
     fw.adaptor = adaptor;
     fw.delegate = self;
     [frames addOperation:fw];
+}
+
+- (BOOL)addUnpremultiplied:(PDSurface *)rendered{
+    PDSurface *surface = [self nextSurface];
+    if (!surface) return NO;
+    [rendered lock];
+    [surface lock];
+    vImage_Buffer src = {rendered.surface.baseAddress, rendered.height, rendered.width, rendered.surface.bytesPerRow};
+    vImage_Buffer dst = {surface.surface.baseAddress, surface.height, surface.width, surface.surface.bytesPerRow};
+    vImageUnpremultiplyData_BGRA8888(&src, &dst, kvImageNoFlags);
+    [surface unlock];
+    [rendered unlock];
+    [self addSurface:surface];
+    return YES;
 }
 
 - (void)closeFile{
@@ -163,6 +192,15 @@
     @synchronized(self){ self.framesWritten++; }
 }
 
+- (void)droppedFrame:(NSInteger)frameNum{
+    @synchronized(self){
+        if (!reported){
+            NSLog(@"Video export failed: couldn't write frame %li (%@)", (long)frameNum, videoWriter.error);
+            reported = YES;
+        }
+    }
+}
+
 - (void)wroteLast{
     @synchronized(self){ self.doneWriting = YES; }
 }
@@ -172,6 +210,7 @@
     [videoWriter release];
     [videoWriterInput release];
     [adaptor release];
+    [transferFunction release];
     [super dealloc];
 }
 

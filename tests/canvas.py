@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from collections import UserDict
 from . import PlotDeviceTestCase
 from plotdevice import *
-from plotdevice import _ctx, gfx, lib
+from plotdevice import _ctx, gfx, lib, DeviceError
 import objc
 
 class _Poison(object):
@@ -390,6 +390,47 @@ class CanvasTests(PlotDeviceTestCase):
             canvas._getImageData('png')
         gc.collect(); grown = sys.getallocatedblocks() - before
         self.assertLess(grown, 1000, 'rendering grew the heap by %d blocks over 30 frames' % grown)
+
+    def test_pdf_exports_are_documents_unless_numbered(self):
+        import os, tempfile
+        from Foundation import NSURL
+        from Quartz import CGPDFDocumentCreateWithURL, CGPDFDocumentGetNumberOfPages
+        tmp = tempfile.mkdtemp()
+        def written(stem):
+            names = sorted(n for n in os.listdir(tmp) if n.startswith(stem))
+            return [(n, CGPDFDocumentGetNumberOfPages(CGPDFDocumentCreateWithURL(NSURL.fileURLWithPath_(os.path.join(tmp, n)))))
+                    for n in names]
+        def three(pdf, how):
+            for i in range(3):
+                if how == 'add':
+                    clear(all)
+                    rect(10 * i, 0, 10, 10)
+                    pdf.add()
+                else:
+                    with getattr(pdf, how):
+                        rect(10 * i, 0, 10, 10)
+        size(40, 10)
+        for how in ('add', 'frame', 'page'):
+            with export(os.path.join(tmp, how + '.pdf')) as pdf:
+                three(pdf, how)
+            self.assertEqual(written(how), [(how + '.pdf', 3)], how)
+        # the manual's form, without a with-block
+        pdf = export(os.path.join(tmp, 'manual.pdf'))
+        three(pdf, 'add')
+        pdf.finish()
+        self.assertEqual(written('manual'), [('manual.pdf', 3)])
+        with export(os.path.join(tmp, 'mixed.pdf')) as pdf:
+            three(pdf, 'add')
+            three(pdf, 'page')
+        self.assertEqual(written('mixed'), [('mixed.pdf', 6)])
+        for how in ('add', 'frame'):
+            with export(os.path.join(tmp, 'seq-%s-{2}.pdf' % how)) as pdf:
+                three(pdf, how)
+            self.assertEqual(written('seq-' + how), [('seq-%s-%02d.pdf' % (how, n), 1) for n in (1, 2, 3)], how)
+        with self.assertRaisesRegex(DeviceError, 'numbered'):
+            with export(os.path.join(tmp, 'seq-page-{2}.pdf')) as pdf:
+                with pdf.page:
+                    pass
 
     def test_text_does_not_leak_colors(self):
         import gc

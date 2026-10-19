@@ -17,6 +17,7 @@ import sys
 import json
 import select
 import signal
+import time
 from objc import super
 from math import floor, ceil
 from os.path import dirname, abspath, exists, join
@@ -24,9 +25,9 @@ from io import open
 
 from ..run import objc, encoded
 from ..lib.cocoa import *
-from ..lib.io import SysAdmin
+from ..lib.io import SysAdmin, ExportSession
 from ..util import rsrc_path
-from ..gui import ScriptController, next_tick
+from ..gui import ScriptController, FrameQueue, next_tick, set_timeout
 
 from PyObjCTools import AppHelper
 from AppKit import NSRunningApplication
@@ -88,6 +89,11 @@ class ScriptAppDelegate(NSObject):
                 opts['last'] = opts.get('first', 1)
 
             if opts['export']:
+                gil = getattr(sys, '_is_gil_enabled', lambda: True)()
+                several = opts['last'] > opts['first']
+                if several and not gil:
+                    self.script.queue = FrameQueue()
+
                 # kick off an export session
                 format = opts['export'].rsplit('.',1)[1]
                 kind = 'movie' if format in ('mov','gif') else 'image'
@@ -108,6 +114,21 @@ class ScriptAppDelegate(NSObject):
                 os._exit(1)
             else:
                 NSApp().terminate_(None)
+
+    def applicationShouldTerminate_(self, app):
+        if self.script.vm is not None and self.script.vm.session:
+            self.script.finishExport()
+        if not ExportSession.unfinished:
+            return NSTerminateNow
+        self._quitBy = time.time() + 10
+        set_timeout(self, 'quitOnceWritten:', 0.1, repeat=True)
+        return NSTerminateLater
+
+    def quitOnceWritten_(self, timer):
+        writing = [s for s in ExportSession.unfinished if s.writer is not None and not s.writer.doneWriting()]
+        if not writing or time.time() > self._quitBy:
+            timer.invalidate()
+            NSApp().replyToApplicationShouldTerminate_(True)
 
 class ScriptWatcher(NSObject):
     def initWithScript_(self, script):
@@ -169,6 +190,8 @@ class ConsoleScript(ScriptController):
         super(ConsoleScript, self).runFullscreen_(sender)
 
     def windowWillClose_(self, note):
+        if self.vm.session:
+            self.finishExport()
         NSApp().terminate_(self)
 
     @objc.python_method
@@ -203,6 +226,10 @@ class ConsoleScript(ScriptController):
             STDERR.write(self._buf)
             STDERR.flush()
 
+    def crash(self):
+        super(ConsoleScript, self).crash()
+        NSApp().delegate().done(ok=False)
+
     @objc.python_method
     def exportFrame(self, status, canvas=None):
         super(ConsoleScript, self).exportFrame(status, canvas)
@@ -214,16 +241,16 @@ class ConsoleScript(ScriptController):
         super(ConsoleScript, self).exportStatus(event)
 
         if event == 'cancelled':
-            msg = 'Halted after %i frames. Finishing file I/O...\n' % self.vm.session.added
+            msg = 'Halted after %i frames. Finishing file I/O...\n' % self.vm.session.rendered
         else:
             msg = ''
         STDOUT.flush()
         STDERR.write(ERASER + msg)
         STDERR.flush()
 
-        if event=='complete':
+        if event in ('complete', 'failed'):
             self._buf = ''
-            NSApp().delegate().done()
+            NSApp().delegate().done(event == 'complete')
 
     @objc.python_method
     def exportProgress(self, written, total, cancelled):

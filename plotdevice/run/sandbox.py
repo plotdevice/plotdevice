@@ -27,6 +27,9 @@ class Metadata(object):
 
 class Delegate(object):
     """No-op sandbox delegate that will be used by default if a delegate isn't specified"""
+    exportRender = None # export jobs are run as soon as they're made
+    def exportReady(self):
+        return True
     def exportFrame(self, status, canvas=None):
         pass
     def exportStatus(self, status):
@@ -66,6 +69,7 @@ class Sandbox(object):
         self.crashed = False    # flag whether the script exited abnormally
         self.live = False       # whether to keep the output pipe open between runs
         self.session = None     # the image/movie export session (if any)
+        self._stopped = False   # whether the export was ended early by stopExport()
         self.delegate = None    # object with exportFrame and exportProgress methods
 
 
@@ -125,6 +129,10 @@ class Sandbox(object):
         self.context._params.clear()
         self.context._params.update(new_params)
     params = property(_get_params, _set_params)
+
+    @property
+    def ran(self):
+        return self._code is not None and not self.crashed
 
     @property
     def vars(self):
@@ -346,10 +354,23 @@ class Sandbox(object):
 
         # start looping through frames, calling draw() and adding the canvas
         # to the export-session on each iteration
+        self._stopped = False
         self._exportFrame()
 
+    def stopExport(self):
+        self._stopped = True
+        self.session.cancel()
+        self.call("stop")
+
     def _exportFrame(self):
+        if self._stopped:
+            return
         if self.session.next():
+            # wait for the render thread to have room for another frame
+            if not self.delegate.exportReady():
+                AppHelper.callLater(0.005, self._exportFrame)
+                return
+
             # step to the proper FRAME value
             self._meta.frame = self.session.next()
 
@@ -361,11 +382,13 @@ class Sandbox(object):
                 result = Outcome(True, StdIO().data)
 
             # let the delegate draw to the screen
-            self.delegate.exportFrame(result, self.canvas)
+            # pass the frame content to the file-writer
+            preview = None if self.session.presents else self.canvas
+            self.delegate.exportFrame(result, preview)
 
             # pass the frame content to the file-writer
             if result.ok:
-                self.session.add(self.canvas)
+                self.session.add(self.canvas, self.delegate.exportRender)
 
             # know when to fold 'em
             if result.ok in (False, 'HALTED'):
@@ -377,7 +400,7 @@ class Sandbox(object):
             # we've drawn the final frame in the export
             result = self.call("stop")
             self.delegate.exportFrame(result, canvas=None)
-            self.session.done()
+            self.session.done(self.delegate.exportRender)
 
     def _exportComplete(self):
         self.session = None

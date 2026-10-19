@@ -10,6 +10,8 @@
 #import <AppKit/AppKit.h>
 #import <AVFoundation/AVFoundation.h>
 #import <CoreVideo/CoreVideo.h>
+#import "Surface.h"
+#import <Accelerate/Accelerate.h>
 
 @interface Video : NSObject{
     AVAssetWriter *videoWriter;
@@ -20,16 +22,22 @@
     NSOperationQueue *frames;
     NSInteger framesWritten;
     BOOL doneWriting;
+    BOOL reported;
+    NSString *transferFunction; // the movie's (and its buffers')
+    BOOL straightAlpha;         // whether the movie stores alpha unpremultiplied (ProRes)
 }
 @property NSInteger framesWritten;
 @property BOOL doneWriting;
+@property (readonly) BOOL failed; // whether the writer has given up (frames are no longer appended)
 
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec;
-- (void)addFrame:(NSImage *)frame;
+- (PDSurface *)nextSurface; // one over a free buffer of the encoder's, or nil while it's using them all
+- (void)addSurface:(PDSurface *)surface;
+- (BOOL)addUnpremultiplied:(PDSurface *)rendered; // copied into a free buffer with straight alpha (NO while there's none)
 - (void)closeFile;
 
 // internal callbacks
 - (void)wroteFrame;
+- (void)droppedFrame:(NSInteger)frameNum;
 - (void)wroteLast;
 @end
-

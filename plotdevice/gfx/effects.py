@@ -9,7 +9,8 @@ from plotdevice import DeviceError
 from ..util import numlike
 from .colors import Color
 from .geometry import Point, CORNER
-from . import _cg_context, _cg_layer, _cg_port, _canvas_dims, _base_ctm, _visible, _layer_box, _clips, _frame, _bare
+from . import _cg_context, _cg_layer, _cg_port, _canvas_dims, _base_ctm, _visible, _layer_box, _clips, _frame, _bare, \
+              _render_lock
 
 _ctx = None
 __all__ = ("Effect", "Shadow", "Stencil",)
@@ -84,6 +85,7 @@ class Frob(object):
             if not self._grobs:
                 return
             for grob in _visible(self._grobs):
+                _render_lock.checkpoint()
                 grob._draw()
 
     @property

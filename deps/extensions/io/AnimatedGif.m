@@ -15,12 +15,12 @@
 @interface GifWriter : NSOperation{
 	AnimatedGif *delegate;
 	NSFileHandle *fileHandle;
-	NSImage *frame;
+	NSBitmapImageRep *frame;
 	double frameRate;
 }
 @property (nonatomic, assign) AnimatedGif *delegate;
 @property (nonatomic, assign) NSFileHandle *fileHandle;
-@property (nonatomic, retain) NSImage *frame;
+@property (nonatomic, retain) NSBitmapImageRep *frame;
 @property (nonatomic, assign) double frameRate;
 @end
 
@@ -39,9 +39,8 @@
 			return;
 		}
 
-		// have CG render the frame and extract the gif89 data
-		NSBitmapImageRep *imRep = [NSBitmapImageRep imageRepWithData:[self.frame TIFFRepresentation]];
-		NSData *gifData = [imRep representationUsingType:NSBitmapImageFileTypeGIF properties:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:NSImageDitherTransparency]];
+		// encode the frame as a gif and extract the gif89 data
+		NSData *gifData = [self.frame representationUsingType:NSBitmapImageFileTypeGIF properties:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:NSImageDitherTransparency]];
 		UInt8 *gif = (UInt8 *)[gifData bytes];
 		GifMap map = [self _getOffsets:gifData]; // find the offsets for the important data blocks in the gif
 
@@ -213,7 +212,7 @@
 	return self;
 }
 
-- (void) addFrame:(NSImage *)gifImage{
+- (void) addFrame:(NSBitmapImageRep *)gifImage{
 	GifWriter *gw = [[[GifWriter alloc] init] autorelease];
 	gw.delegate = self;
 	gw.fileHandle = fileHandle;
