@@ -1,4 +1,4 @@
-import objc, os, re, time
+import objc, os, re, time, math
 from ..util import autorelease
 from .cocoa import CGBitmapContextCreateImage, CGContextBeginPage, CGContextEndPage, CGPDFContextClose, \
                    CGPDFContextCreateWithURL, CGRectMake, NSBitmapImageRep, NSURL
@@ -190,8 +190,15 @@ class ImageExportSession(ExportSession):
 
 class MovieExportSession(ExportSession):
     CODECS = ('hevc', 'h264', 'prores') # a .mov's (in Video's numbering), ProRes being 4444 with alpha
+    BITRATES = (1, 2, 4, 8, 16, 32)     # the Export sheet's choices, in Mbit/s
 
-    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=1, loop=0, codec='hevc', **rest):
+    @staticmethod
+    def auto_bitrate(width, height, fps=30):
+        wanted = 8 * math.sqrt(width * height / (1280 * 720.0)) * math.sqrt(fps / 30.0)
+        bigger = [rate for rate in MovieExportSession.BITRATES if rate >= wanted]
+        return bigger[0] if bigger else MovieExportSession.BITRATES[-1]
+
+    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=None, loop=0, codec='hevc', zoom=1.0, **rest):
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
@@ -203,8 +210,9 @@ class MovieExportSession(ExportSession):
         self.format = format
         self.fps = fps
         self.loop = loop
-        self.bitrate = bitrate
+        self.bitrate = bitrate # (None to pick one from the movie's size)
         self.codec = codec
+        self.zoom = zoom
         self.cmyk = False
         self.presents = True
 
@@ -225,12 +233,13 @@ class MovieExportSession(ExportSession):
 
         frame = canvas.commit()
         if not self.writer:
-            size = frame._raster_size(1)
+            size = self.size = frame._raster_size(self.zoom)
             if self.format == 'mov':
                 size = self.size = tuple(dim - dim % 2 for dim in size)
                 self.writer = Video.alloc()
                 codec = MovieExportSession.CODECS.index(self.codec)
-                self.writer.initWithFile_size_fps_bitrate_codec_(self.fname, size, self.fps, self.bitrate, codec)
+                bitrate = self.bitrate or MovieExportSession.auto_bitrate(size[0], size[1], self.fps)
+                self.writer.initWithFile_size_fps_bitrate_codec_(self.fname, size, self.fps, bitrate, codec)
             else:
                 self.writer = AnimatedGif.alloc()
                 self.writer.initWithFile_size_fps_loop_(self.fname, size, self.fps, self.loop)
@@ -240,7 +249,7 @@ class MovieExportSession(ExportSession):
             def work(cancelled):
                 if straight:
                     rendered = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(*self.size)
-                    frame._render_to_surface(rendered, 1, cancelled, origin=(0, 0))
+                    frame._render_to_surface(rendered, self.zoom, cancelled, origin=(0, 0))
                     if cancelled is not None and cancelled():
                         return None
                     while not writer.addUnpremultiplied_(rendered):
@@ -257,7 +266,7 @@ class MovieExportSession(ExportSession):
                         return None
                     time.sleep(0.002)
                     surface = writer.nextSurface()
-                frame._render_to_surface(surface, 1, cancelled, origin=(0, 0)) # (from the top-left, so a bottom row is what's lost)
+                frame._render_to_surface(surface, self.zoom, cancelled, origin=(0, 0)) # (from the top-left, so a bottom row is what's lost)
                 if cancelled is not None and cancelled():
                     return None # (half-drawn, so never encoded)
                 writer.addSurface_(surface)
@@ -265,8 +274,8 @@ class MovieExportSession(ExportSession):
                 return surface
         else:
             def work(cancelled):
-                surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(*frame._raster_size(1))
-                frame._render_to_surface(surface, 1, cancelled)
+                surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(*self.size)
+                frame._render_to_surface(surface, self.zoom, cancelled, origin=(0, 0))
                 if cancelled is not None and cancelled():
                     return None
                 surface.lock()

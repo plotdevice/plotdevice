@@ -57,7 +57,7 @@ def main():
   o.add_argument('--virtualenv', metavar='PATH', help='path to virtualenv whose libraries you want to use (this should point to the top-level virtualenv directory; a folder containing a lib/python3.x/site-packages subdirectory)')
   o.add_argument('--frames', metavar='N or M-N', help='number of frames to render or a range specifying the first and last frames (default "1-")')
   o.add_argument('--fps', metavar='N', default=30, type=int, help='frames per second in exported video (default 30)')
-  o.add_argument('--rate', metavar='N', default=1.0, type=float, dest='bitrate', help='bitrate in megabits per second (video only)')
+  o.add_argument('--rate', metavar='N', default=None, type=float, dest='bitrate', help='bitrate in megabits per second (video only; picked from the canvas size by default)')
   o.add_argument('--codec', metavar='NAME', default='hevc', choices=('hevc', 'h264', 'prores'), help='codec for an exported video: hevc (default), h264, or prores (ProRes 4444, for editing elsewhere)')
   o.add_argument('--loop', metavar='N', default=0, nargs='?', const=-1, help='number of times to loop an exported animated gif (omit N to loop forever)')
   o.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
@@ -66,7 +66,7 @@ def main():
 
   x = parser.add_argument_group("Export Options")
   x.add_argument('--export', '-o', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, heic, gif, or mov')
-  x.add_argument('--zoom', metavar='PERCENT', default=100, type=int, help='scale of the output image (100 = regular size) unless specified by a filename ending in @2x/@3x/etc')
+  x.add_argument('--zoom', metavar='PERCENT', default=100, type=int, help='scale of the output image or movie (100 = regular size); an image\'s can also be given by a filename ending in @2x/@3x/etc')
   x.add_argument('--cmyk', action='store_const', const=True, default=False, help='convert colors to c/m/y/k during exports')
 
   i = parser.add_argument_group("PlotDevice Script File", None)
@@ -149,7 +149,9 @@ def main():
     # it's a `single' doc or a sequence of numbered pdf files
     opts.single = bool(ext=='pdf' and not re.search(r'{\d+}', opts.export) and opts.last and opts.first < opts.last)
 
-    if m:= re.search(r'@(\d+)[xX]$', outname):
+    m = re.search(r'@(\d+)[xX]$', outname)
+    still = ext not in ('mov', 'gif')
+    if m and still:
       opts.zoom = float(m.group(1))
     else:
       opts.zoom = max(0.01, opts.zoom/100)

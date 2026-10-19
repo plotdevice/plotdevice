@@ -131,6 +131,10 @@ class Sandbox(object):
     params = property(_get_params, _set_params)
 
     @property
+    def ran(self):
+        return self._code is not None and not self.crashed
+
+    @property
     def vars(self):
         """Script variables added through the var() method in the last run (r)"""
         return self.context._vars

@@ -371,6 +371,7 @@ class DashboardController(NSObject):
 
 
 from ..context import RGB, CMYK
+from ..lib.io import MovieExportSession
 class ExportSheet(NSObject):
     # the script whose doExportAsImage and doExportAsMovie methods will be called
     script = IBOutlet()
@@ -390,13 +391,16 @@ class ExportSheet(NSObject):
     movieFps = IBOutlet()
     movieLoop = IBOutlet()
     movieBitrate = IBOutlet()
+    movieZoom = IBOutlet()
 
     def awakeFromNib(self):
         self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'heic', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'mov', 'mov', 'gif'))
         self.codecs = ('hevc', 'h264', 'prores', None) # the movie formats' codecs
-        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, codec='hevc')
+        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=None, loop=0, codec='hevc', zoom=1.0)
         self.image = dict(format='pdf', zoom=1.0, first=1, last=1, cmyk=False, single=True)
         self.last = None
+        self.canvasSize = None # (w, h) the script last ran with, to preview the automatic bitrate
+        self.movieFps.setDelegate_(self)
 
     @objc.python_method
     def beginExport(self, kind):
@@ -426,7 +430,12 @@ class ExportSheet(NSObject):
             self.movieLoop.setState_(NSOnState if should_loop else NSOffState)
             self.movieLoop.setEnabled_(format=='gif')
             self.movieBitrate.setEnabled_(self.movie['codec'] in ('hevc', 'h264'))
-            self.movieBitrate.selectItemWithTag_(self.movie['bitrate'])
+            self.movieBitrate.selectItemWithTag_(self.movie['bitrate'] or 0)
+            self.canvasSize = None
+            if self.script.vm.ran:
+                w, h = self.script.vm.canvas.pagesize
+                self.canvasSize = (int(w), int(h))
+            self.updateBitrate()
 
         # set the default filename and save dir
         # path = self.script.fileName()
@@ -486,8 +495,9 @@ class ExportSheet(NSObject):
                      last=self.movieFrames.intValue(),
                      fps=self.movieFps.floatValue(),
                      loop=-1 if self.movieLoop.state()==NSOnState else 0,
-                     bitrate=self.movieBitrate.selectedItem().tag(),
-                     codec=self.codecs[fmt_idx] )
+                     bitrate=self.movieBitrate.selectedItem().tag() or None,
+                     codec=self.codecs[fmt_idx],
+                     zoom=self.movie['zoom'] )
         if key:
             return state[key]
         return state
@@ -508,6 +518,19 @@ class ExportSheet(NSObject):
     def updatePagination(self):
         label = 'Pages:' if self.imageState('single') else 'Files:'
         self.imagePagination.setStringValue_(label)
+
+    def updateBitrate(self):
+        automatic = 'Automatic'
+        fps = self.movieFps.floatValue()
+        if self.canvasSize is not None and fps > 0:
+            w, h = [int(dim * self.movie['zoom']) for dim in self.canvasSize]
+            automatic += ' (%i Mbit/s)' % MovieExportSession.auto_bitrate(w, h, fps)
+        self.movieBitrate.menu().itemWithTag_(0).setTitle_(automatic)
+        self.movieBitrate.synchronizeTitleAndSelectedItem()
+
+    def controlTextDidChange_(self, note):
+        if note.object() == self.movieFps:
+            self.updateBitrate()
 
     def updateColorMode(self):
         format = self.imageState('format')
@@ -548,6 +571,34 @@ class ExportSheet(NSObject):
         else:
             pct = self.image['zoom'] * 100
         self.imageZoom.setStringValue_("%i%%" % pct)
+
+    @IBAction
+    def movieZoomStepped_(self, sender):
+        step = sender.intValue()
+        sender.setIntValue_(0)
+
+        self.movieZoomChanged_(None) # reflect any editing in text field
+        pct = self.movie['zoom'] * 100
+
+        if step > 0:
+            pct = 100 * ceil((pct + 1) / 100)
+        elif step < 0:
+            pct = 100 * floor((pct - 1) / 100)
+
+        if 0 < pct < 10000:
+            self.movie['zoom'] = pct / 100
+            self.movieZoom.setStringValue_("%i%%" % pct)
+        self.updateBitrate()
+
+    @IBAction
+    def movieZoomChanged_(self, sender):
+        pct = self.movieZoom.intValue()
+        if pct > 0:
+            self.movie['zoom'] = pct / 100
+        else:
+            pct = self.movie['zoom'] * 100
+        self.movieZoom.setStringValue_("%i%%" % pct)
+        self.updateBitrate()
 
     @IBAction
     def movieFormatChanged_(self, sender):

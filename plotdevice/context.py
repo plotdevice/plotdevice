@@ -1492,7 +1492,7 @@ class Context(object):
         else:
             self.canvas.clear(*grobs)
 
-    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=1.0, cmyk=False, codec='hevc'):
+    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=None, cmyk=False, codec='hevc'):
         """Write single images or manage batch exports for animations.
 
         To write the canvas's current contents to a file, simply call export("~/somefile.png")
@@ -1519,7 +1519,7 @@ class Context(object):
         from the fname are optional and default to:
             fps: 30      (relevant for both gif and mov exports)
             loop: False  (set to True to loop forever or an integer for a fixed number of repetitions)
-            bitrate: 1.0 (in megabits per second)
+            bitrate: None (in megabits per second; by default, picked from the canvas size)
 
         Note that the `loop` argument only applies to animated gifs, and `bitrate` and `codec` to `mov`
         files (a ProRes movie keeps the canvas's transparency and has a fixed quality rather than a bitrate).
