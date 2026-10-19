@@ -1924,7 +1924,7 @@ class Frame(object):
                 box[0] > x + w or box[1] > y + h or box[0] + box[2] < x or box[1] + box[3] < y)]
 
     def draw(self, cancelled=None, within=None):
-        with gfx._rendering(self, within):
+        with gfx._render_lock, gfx._rendering(self, within):
             if self.background is not None:
                 rect = ((0,0), self.pagesize)
                 if isinstance(self.background, Gradient):
@@ -1937,6 +1937,7 @@ class Frame(object):
                 for grob in gfx._visible(self.grobs):
                     if cancelled is not None and cancelled():
                         return
+                    gfx._render_lock.checkpoint()
                     grob._draw()
 
     @property
@@ -1946,12 +1947,13 @@ class Frame(object):
     def _render_to_image(self, zoom=1.0):
         size = Size(*[int(dim*zoom) for dim in self.pagesize])
         img = NSImage.alloc().initWithSize_(size)
-        img.lockFocusFlipped_(True)
-        trans = NSAffineTransform.transform()
-        trans.scaleXBy_yBy_(zoom,zoom)
-        trans.concat()
-        self.draw()
-        img.unlockFocus()
+        with autorelease():
+            img.lockFocusFlipped_(True)
+            trans = NSAffineTransform.transform()
+            trans.scaleXBy_yBy_(zoom,zoom)
+            trans.concat()
+            self.draw()
+            img.unlockFocus()
         return img
 
     def _raster_size(self, scale):
@@ -1985,17 +1987,18 @@ class Frame(object):
             surface.unlock()
 
     def _render_to_context(self, cgContext, zoom, cancelled=None, offset=None, within=None):
-        ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(cgContext, True)
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.setCurrentContext_(ns_ctx)
-        NSGraphicsContext.saveGraphicsState()
-        trans = NSAffineTransform.transform()
-        trans.translateXBy_yBy_(*(offset or (0, self.pagesize.height*zoom)))
-        trans.scaleXBy_yBy_(zoom,-zoom)
-        trans.concat()
-        self.draw(cancelled, within)
-        NSGraphicsContext.restoreGraphicsState()
-        NSGraphicsContext.restoreGraphicsState()
+        with autorelease():
+            ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(cgContext, True)
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.setCurrentContext_(ns_ctx)
+            NSGraphicsContext.saveGraphicsState()
+            trans = NSAffineTransform.transform()
+            trans.translateXBy_yBy_(*(offset or (0, self.pagesize.height*zoom)))
+            trans.scaleXBy_yBy_(zoom,-zoom)
+            trans.concat()
+            self.draw(cancelled, within)
+            NSGraphicsContext.restoreGraphicsState()
+            NSGraphicsContext.restoreGraphicsState()
 
     def _getImageData(self, format, zoom=1.0, cmyk=False):
         return self._encode(format, zoom, cmyk)[0]
@@ -2003,7 +2006,7 @@ class Frame(object):
     def _encode(self, format, zoom=1.0, cmyk=False, cancelled=None):
         if format == 'pdf':
             w, h = self.pagesize
-            cgData = NSMutableData.data()
+            cgData = NSMutableData.alloc().init() # (owned, as the surface)
             dataConsumer = CGDataConsumerCreateWithCFData(cgData)
             pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w*zoom, h*zoom), None)
             CGPDFContextBeginPage(pdfContext, None)
@@ -2013,8 +2016,9 @@ class Frame(object):
             pdfContext = None
             return cgData, None
         elif format == 'eps':
-            view = _PostScriptView.alloc().initWithCanvas_(self)
-            return view.dataWithEPSInsideRect_(view.bounds()), None
+            with autorelease():
+                view = _PostScriptView.alloc().initWithCanvas_(self)
+                return view.dataWithEPSInsideRect_(view.bounds()), None
         else:
             cgTypes = {"gif":  kUTTypeGIF,
                        "jpg":  kUTTypeJPEG,
@@ -2031,7 +2035,7 @@ class Frame(object):
                 self._render_to_context(bitmapContext, zoom, cancelled)
                 cgImage = CGBitmapContextCreateImage(bitmapContext)
             else:
-                surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(size.width, size.height)
+                surface = objc.lookUpClass('PDSurface').alloc().initWithWidth_height_(size.width, size.height)
                 self._render_to_surface(surface, zoom, cancelled)
                 surface.lock()
                 cgImage = CGBitmapContextCreateImage(surface.context())
@@ -2039,7 +2043,7 @@ class Frame(object):
             if cancelled is not None and cancelled():
                 return None, None
 
-            cgData = NSMutableData.data()
+            cgData = NSMutableData.alloc().init() # (owned, as the surface)
             cgDest = CGImageDestinationCreateWithData(cgData, cgTypes[format], 1, None)
             cgProperies = {kCGImagePropertyDPIWidth: 72*zoom, kCGImagePropertyDPIHeight: 72*zoom}
             if format in ('jpg', 'jpeg'):

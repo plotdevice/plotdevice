@@ -380,13 +380,11 @@ class Sandbox(object):
             # let the delegate draw to the screen
             # pass the frame content to the file-writer
             preview = None if self.session.presents else self.canvas
-            preview_after = self.session.on_main
-            if not preview_after:
-                self.delegate.exportFrame(result, preview)
+            self.delegate.exportFrame(result, preview)
+
+            # pass the frame content to the file-writer
             if result.ok:
                 self.session.add(self.canvas, self.delegate.exportRender)
-            if preview_after:
-                self.delegate.exportFrame(result, preview)
 
             # know when to fold 'em
             if result.ok in (False, 'HALTED'):

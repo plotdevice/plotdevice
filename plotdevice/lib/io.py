@@ -1,4 +1,5 @@
 import objc, os, re, time
+from ..util import autorelease
 from .cocoa import CGBitmapContextCreateImage, CGContextBeginPage, CGContextEndPage, CGPDFContextClose, \
                    CGPDFContextCreateWithURL, CGRectMake, NSBitmapImageRep, NSURL
 
@@ -181,7 +182,8 @@ class ImageExportSession(ExportSession):
                 self.rendered += 1
             return surface
         if render is None or self.on_main:
-            work(None)
+            with autorelease():
+                work(None)
         else:
             render(frame, work)
         self.added += 1
@@ -274,7 +276,8 @@ class MovieExportSession(ExportSession):
                 self.rendered += 1
                 return surface
         if render is None:
-            work(None)
+            with autorelease():
+                work(None)
         else:
             render(frame, work)
         self.added += 1

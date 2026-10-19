@@ -746,11 +746,8 @@ class ScriptController(NSWindowController):
     def exportReady(self):
         if self.queue is None:
             return True
-        session = self.vm.session
-        if session.backlogged:
+        if self.vm.session.backlogged:
             return False
-        if session.on_main:
-            return self.queue.idle
         return self.queue.ready
 
     @objc.python_method

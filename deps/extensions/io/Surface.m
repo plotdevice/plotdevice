@@ -19,13 +19,15 @@
 }
 
 - (instancetype)initWithWidth:(NSInteger)width height:(NSInteger)height{
-    IOSurface *surface = [[[IOSurface alloc] initWithProperties:@{
+    IOSurface *surface = [[IOSurface alloc] initWithProperties:@{
         IOSurfacePropertyKeyWidth: @(width),
         IOSurfacePropertyKeyHeight: @(height),
         IOSurfacePropertyKeyBytesPerElement: @4,
         IOSurfacePropertyKeyPixelFormat: @(kCVPixelFormatType_32BGRA),
-    }] autorelease];
-    return [self initWithSurface:surface pixelBuffer:NULL];
+    }];
+    self = [self initWithSurface:surface pixelBuffer:NULL];
+    [surface release];
+    return self;
 }
 
 - (instancetype)initWithPixelBuffer:(CVPixelBufferRef)buffer{

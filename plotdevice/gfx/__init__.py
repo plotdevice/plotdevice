@@ -1,4 +1,5 @@
 # encoding: utf-8
+import threading, time
 from contextlib import contextmanager
 from contextvars import ContextVar
 from ..lib.cocoa import *
@@ -64,6 +65,49 @@ def _rendering(frame, within=None):
         _culling.reset(cull_token)
         _base_ctm.reset(ctm_token)
         _frame.reset(token)
+
+class _RenderLock(object):
+    QUANTUM = 0.003 # (3 ms)
+
+    def __init__(self):
+        self._cond = threading.Condition()
+        self._owner = None # thread holding it
+        self._depth = 0    # how many times it's been taken without being let go
+        self._since = 0.0  # when it was taken
+        self._issued = 0   # tickets handed out (one per waiting or holding thread)
+        self._serving = 0  # the ticket whose thread holds it
+
+    def __enter__(self):
+        me = threading.get_ident()
+        with self._cond:
+            if self._owner == me:
+                self._depth += 1
+                return
+            ticket = self._issued
+            self._issued += 1
+            while self._serving != ticket:
+                self._cond.wait()
+            self._owner, self._depth, self._since = me, 1, time.perf_counter()
+
+    def __exit__(self, *exc):
+        with self._cond:
+            self._depth -= 1
+            if not self._depth:
+                self._owner = None
+                self._serving += 1
+                self._cond.notify_all()
+
+    def checkpoint(self):
+        if self._owner != threading.get_ident():
+            return
+        waiting = self._issued - self._serving > 1
+        if waiting and time.perf_counter() - self._since >= self.QUANTUM:
+            depth, self._depth = self._depth, 1
+            self.__exit__()
+            self.__enter__()
+            self._depth = depth
+
+_render_lock = _RenderLock()
 
 def _layer_box(grob):
     frame = _frame.get()
