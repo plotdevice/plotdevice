@@ -91,17 +91,22 @@
         transferFunction = AVVideoTransferFunction_ITU_R_709_2;
         if (@available(macOS 15.0, *)) transferFunction = AVVideoTransferFunction_IEC_sRGB;
         [transferFunction retain];
-        NSDictionary *videoSettings = @{ AVVideoCodecKey: (codec == 0) ? AVVideoCodecTypeHEVC : AVVideoCodecTypeH264,
+        NSArray *codecs = @[AVVideoCodecTypeHEVC, AVVideoCodecTypeH264, AVVideoCodecTypeAppleProRes4444];
+        straightAlpha = codec == 2;
+        NSMutableDictionary *videoSettings = [NSMutableDictionary dictionaryWithDictionary:@{
+                                         AVVideoCodecKey: codecs[codec],
                                          AVVideoWidthKey: @(aSize.width),
                                          AVVideoHeightKey: [NSNumber numberWithInt:aSize.height],
-                                         AVVideoCompressionPropertiesKey: @{
-                                            AVVideoAverageBitRateKey:@((int)(mbps*1000000))
-                                            /*AVVideoMaxKeyFrameIntervalKey: @1*/},
                                          AVVideoColorPropertiesKey: @{
                                             AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2,
                                             AVVideoTransferFunctionKey: transferFunction,
                                             AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2}
-                                         };
+                                         }];
+        if (codec != 2){
+            videoSettings[AVVideoCompressionPropertiesKey] = @{
+                AVVideoAverageBitRateKey:@((int)(mbps*1000000))
+                /*AVVideoMaxKeyFrameIntervalKey: @1*/};
+        }
         videoWriterInput = [[AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo
                                                                outputSettings:videoSettings] retain];
 
@@ -141,6 +146,9 @@
     CVBufferSetAttachment(buffer, kCVImageBufferColorPrimariesKey, kCVImageBufferColorPrimaries_ITU_R_709_2, kCVAttachmentMode_ShouldPropagate);
     CVBufferSetAttachment(buffer, kCVImageBufferYCbCrMatrixKey, kCVImageBufferYCbCrMatrix_ITU_R_709_2, kCVAttachmentMode_ShouldPropagate);
     CVBufferSetAttachment(buffer, kCVImageBufferTransferFunctionKey, (CFStringRef)transferFunction, kCVAttachmentMode_ShouldPropagate);
+    CVBufferSetAttachment(buffer, kCVImageBufferAlphaChannelModeKey,
+                          straightAlpha ? kCVImageBufferAlphaChannelMode_StraightAlpha : kCVImageBufferAlphaChannelMode_PremultipliedAlpha,
+                          kCVAttachmentMode_ShouldPropagate);
     PDSurface *surface = [PDSurface surfaceWithPixelBuffer:buffer];
     CVPixelBufferRelease(buffer);
     return surface;
@@ -156,6 +164,20 @@
     fw.adaptor = adaptor;
     fw.delegate = self;
     [frames addOperation:fw];
+}
+
+- (BOOL)addUnpremultiplied:(PDSurface *)rendered{
+    PDSurface *surface = [self nextSurface];
+    if (!surface) return NO;
+    [rendered lock];
+    [surface lock];
+    vImage_Buffer src = {rendered.surface.baseAddress, rendered.height, rendered.width, rendered.surface.bytesPerRow};
+    vImage_Buffer dst = {surface.surface.baseAddress, surface.height, surface.width, surface.surface.bytesPerRow};
+    vImageUnpremultiplyData_BGRA8888(&src, &dst, kvImageNoFlags);
+    [surface unlock];
+    [rendered unlock];
+    [self addSurface:surface];
+    return YES;
 }
 
 - (void)closeFile{

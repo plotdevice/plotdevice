@@ -171,7 +171,9 @@ class ImageExportSession(ExportSession):
         self.added += 1
 
 class MovieExportSession(ExportSession):
-    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=1, loop=0, codec=0, **rest):
+    CODECS = ('hevc', 'h264', 'prores') # a .mov's (in Video's numbering), ProRes being 4444 with alpha
+
+    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=1, loop=0, codec='hevc', **rest):
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
@@ -197,16 +199,29 @@ class MovieExportSession(ExportSession):
         if not self.writer:
             size = frame._raster_size(1)
             if self.format == 'mov':
-                size = tuple(dim - dim % 2 for dim in size)
+                size = self.size = tuple(dim - dim % 2 for dim in size)
                 self.writer = Video.alloc()
-                self.writer.initWithFile_size_fps_bitrate_codec_(self.fname, size, self.fps, self.bitrate, self.codec)
+                codec = MovieExportSession.CODECS.index(self.codec)
+                self.writer.initWithFile_size_fps_bitrate_codec_(self.fname, size, self.fps, self.bitrate, codec)
             else:
                 self.writer = AnimatedGif.alloc()
                 self.writer.initWithFile_size_fps_loop_(self.fname, size, self.fps, self.loop)
-        writer = self.writer
+        writer, straight = self.writer, self.codec == 'prores'
 
         if self.format == 'mov':
             def work(cancelled):
+                if straight:
+                    rendered = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(*self.size)
+                    frame._render_to_surface(rendered, 1, cancelled, origin=(0, 0))
+                    if cancelled is not None and cancelled():
+                        return None
+                    while not writer.addUnpremultiplied_(rendered):
+                        stopped = cancelled is not None and cancelled()
+                        if stopped or writer.failed():
+                            return None
+                        time.sleep(0.002)
+                    return rendered
+
                 surface = writer.nextSurface()
                 while surface is None:
                     stopped = cancelled is not None and cancelled()

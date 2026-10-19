@@ -90,7 +90,7 @@ setup(
                        'deps/extensions/clipper2/clipper.offset.o',
                        'deps/extensions/clipper2/bridge.o'],
         extra_link_args=sum((['-framework', fmwk] for fmwk in
-            ['AppKit', 'Foundation', 'Quartz', 'Security', 'AVFoundation', 'CoreMedia', 'CoreVideo', 'CoreText', 'IOSurface']
+            ['AppKit', 'Foundation', 'Quartz', 'Security', 'AVFoundation', 'CoreMedia', 'CoreVideo', 'CoreText', 'IOSurface', 'Accelerate']
         ), []),
     )],
     cmdclass={

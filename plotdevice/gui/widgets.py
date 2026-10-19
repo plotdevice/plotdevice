@@ -390,8 +390,9 @@ class ExportSheet(NSObject):
     movieBitrate = IBOutlet()
 
     def awakeFromNib(self):
-        self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'heic', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'mov', 'gif'))
-        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, codec=0)
+        self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'heic', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'mov', 'mov', 'gif'))
+        self.codecs = ('hevc', 'h264', 'prores', None) # the movie formats' codecs
+        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, codec='hevc')
         self.image = dict(format='pdf', zoom=1.0, first=1, last=1, cmyk=False, single=True)
         self.last = None
 
@@ -415,14 +416,14 @@ class ExportSheet(NSObject):
         elif kind=='movie':
             format = self.movie['format']
             accessory = self.movieAccessory
-            format_idx = self.formats['movie'].index(self.movie['format'])
+            format_idx = self.codecs.index(self.movie['codec'])
             should_loop = self.movie['format']=='gif' and self.movie['loop']==-1
             self.movieFrames.setIntValue_(self.movie['last'])
             self.movieFps.setIntValue_(self.movie['fps'])
             self.movieFormat.selectItemAtIndex_(format_idx)
             self.movieLoop.setState_(NSOnState if should_loop else NSOffState)
             self.movieLoop.setEnabled_(format=='gif')
-            self.movieBitrate.setEnabled_(format!='gif')
+            self.movieBitrate.setEnabled_(self.movie['codec'] in ('hevc', 'h264'))
             self.movieBitrate.selectItemWithTag_(self.movie['bitrate'])
 
         # set the default filename and save dir
@@ -484,7 +485,7 @@ class ExportSheet(NSObject):
                      fps=self.movieFps.floatValue(),
                      loop=-1 if self.movieLoop.state()==NSOnState else 0,
                      bitrate=self.movieBitrate.selectedItem().tag(),
-                     codec=fmt_idx ) # 0=h265 1=h264
+                     codec=self.codecs[fmt_idx] )
         if key:
             return state[key]
         return state
@@ -553,4 +554,4 @@ class ExportSheet(NSObject):
         is_gif = format=='gif'
         self.movieLoop.setState_(NSOnState if is_gif else NSOffState)
         self.movieLoop.setEnabled_(is_gif)
-        self.movieBitrate.setEnabled_(not is_gif)
+        self.movieBitrate.setEnabled_(self.codecs[sender.indexOfSelectedItem()] in ('hevc', 'h264'))

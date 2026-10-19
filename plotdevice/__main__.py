@@ -58,6 +58,7 @@ def main():
   o.add_argument('--frames', metavar='N or M-N', help='number of frames to render or a range specifying the first and last frames (default "1-")')
   o.add_argument('--fps', metavar='N', default=30, type=int, help='frames per second in exported video (default 30)')
   o.add_argument('--rate', metavar='N', default=1.0, type=float, dest='bitrate', help='bitrate in megabits per second (video only)')
+  o.add_argument('--codec', metavar='NAME', default='hevc', choices=('hevc', 'h264', 'prores'), help='codec for an exported video: hevc (default), h264, or prores (ProRes 4444, for editing elsewhere)')
   o.add_argument('--loop', metavar='N', default=0, nargs='?', const=-1, help='number of times to loop an exported animated gif (omit N to loop forever)')
   o.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
   o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='arguments to be passed to the script as sys.argv')

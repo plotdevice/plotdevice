@@ -365,13 +365,14 @@
                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bLs-eY-UUK">
                     <rect key="frame" x="86" y="105" width="178" height="26"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <popUpButtonCell key="cell" type="push" title="Video (H.265)" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="Cvh-QF-iVX" id="OsZ-kx-6Dp">
+                    <popUpButtonCell key="cell" type="push" title="H.265 (HEVC)" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="Cvh-QF-iVX" id="OsZ-kx-6Dp">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="menu"/>
                         <menu key="menu" title="OtherViews" id="va3-SP-NrG">
                             <items>
-                                <menuItem title="Video (H.265)" state="on" id="Cvh-QF-iVX"/>
-                                <menuItem title="Video (H.264)" id="GC8-34-yqY"/>
+                                <menuItem title="H.265 (HEVC)" state="on" id="Cvh-QF-iVX"/>
+                                <menuItem title="H.264" id="GC8-34-yqY"/>
+                                <menuItem title="ProRes 4444" id="Pr4-44-qXd"/>
                                 <menuItem title="Animated Gif" id="dWa-X7-Ox4"/>
                             </items>
                         </menu>

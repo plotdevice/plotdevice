@@ -9,6 +9,7 @@ from objc import super
 
 from .lib.cocoa import *
 from .lib import pathmatics
+from .lib.io import MovieExportSession
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
 from .gfx.geometry import Dimension, parse_coords, IDENTITY
 from .gfx.typography import Layout
@@ -1491,7 +1492,7 @@ class Context(object):
         else:
             self.canvas.clear(*grobs)
 
-    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=1.0, cmyk=False):
+    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=1.0, cmyk=False, codec='hevc'):
         """Write single images or manage batch exports for animations.
 
         To write the canvas's current contents to a file, simply call export("~/somefile.png")
@@ -1520,8 +1521,8 @@ class Context(object):
             loop: False  (set to True to loop forever or an integer for a fixed number of repetitions)
             bitrate: 1.0 (in megabits per second)
 
-        Note that the `loop` argument only applies to animated gifs and `bitrate` is used in the H.264
-        encoding of `mov` files.
+        Note that the `loop` argument only applies to animated gifs, and `bitrate` and `codec` to `mov`
+        files (a ProRes movie keeps the canvas's transparency and has a fixed quality rather than a bitrate).
         """
 
         # determine the format by normalizing the file extension
@@ -1530,12 +1531,16 @@ class Context(object):
             badform = 'Unknown export format "%s"'%format
             raise DeviceError(badform)
 
+        if codec not in MovieExportSession.CODECS:
+            badcodec = 'Unknown video codec "%s" (should be one of %s)' % (codec, ', '.join(MovieExportSession.CODECS))
+            raise DeviceError(badcodec)
+
         # build up opts based on type of output file (anim vs static)
         opts = {"cmyk":cmyk, "zoom":zoom}
         if format=='mov' or (format=='gif' and fps or loop is not None):
             opts.update(fps=fps or 30, # set a default for .mov exports
                         loop={True:-1, False:0, None:0}.get(loop, loop), # convert bool args to int
-                        bitrate=bitrate)
+                        bitrate=bitrate, codec=codec)
 
         return ImageWriter(fname, format, **opts)
 
