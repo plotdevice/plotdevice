@@ -226,6 +226,8 @@ class FramePresenter(object):
         self._gesture = False          # whether a zoom gesture's preview is on screen
         self._landing = False          # whether the view is laying itself out for a frame being presented
         self._patch = None             # RenderJob rendering the frame on screen again, for where the view has moved
+        self._held = ()                # an export's surfaces on screen and the one they replaced (see present())
+        self._exported = False         # whether what's on display is an export's render at another scale than the view's
 
     def _show_backdrop(self, backdrop):
         self._backdrop = backdrop
@@ -239,6 +241,40 @@ class FramePresenter(object):
     @property
     def viewport_only(self):
         return self._viewport is not None or self._wanted_mode == 'viewport'
+
+    @property
+    def exported(self):
+        return self._exported
+
+    def present(self, frame, seq, zoom, dpr, work, landing=None, on_land=None, onerror=None, fallback=None):
+        self._wanted, self._wanted_mode = (zoom, dpr), 'full'
+        def deliver(surface, err):
+            if err is not None:
+                if onerror is not None:
+                    onerror(err)
+                return
+            if surface is None or surface.width() * surface.height() > FrameTiles.BUDGET:
+                if fallback is not None:
+                    fallback()
+                return
+            current = seq >= self._shown[0] and (zoom, dpr) == self._wanted and self.attached
+            if not current:
+                return
+            self._shown = (seq, zoom, dpr)
+            self._prepare('full', surface)
+            self._landing = True
+            try:
+                if on_land is not None:
+                    on_land()
+            finally:
+                self._landing = False
+            scale = surface.width() / frame.pagesize.width
+            self._root.setContentsScale_(scale / zoom)
+            self._root.setContents_(surface.surface())
+            self._raster.shown(surface.surface())
+            self._held = (surface,) + self._held[:1]
+            self._exported = abs(scale - zoom * dpr) > 1e-6
+        self.queue.submit(work, deliver)
 
     def render(self, frame, seq, zoom, dpr, period=None, landing=None, on_land=None, onerror=None, ondone=None):
         self._wanted, self._period = (zoom, dpr), period
@@ -390,6 +426,7 @@ class FramePresenter(object):
             self._show_backdrop(None)
 
     def _present(self, mode, frame, result, dpr):
+        self._held, self._exported = (), False
         if mode == 'tiles':
             tiles, rendered = result
             if self._tiles is not tiles:
@@ -584,12 +621,18 @@ class GraphicsView(NSView):
         self._request(focus, onerror=onerror, ondone=ondone)
 
     @objc.python_method
+    def present(self, frame, work, onerror=None):
+        self._committed = frame
+        self._seq += 1
+        self._request(onerror=onerror, work=work)
+
+    @objc.python_method
     def _rerender(self, focus=None, finish=None):
         if getattr(self, '_committed', None) is not None:
             self._request(focus, finish=finish)
 
     @objc.python_method
-    def _request(self, focus=None, onerror=None, ondone=None, finish=None):
+    def _request(self, focus=None, onerror=None, ondone=None, finish=None, work=None):
         frame, seq, zoom, dpr = self._committed, self._seq, self._wantZoom, self._dpr
         if finish is None:
             finish = self._pendingFinish
@@ -616,7 +659,10 @@ class GraphicsView(NSView):
                 finish()
             self._zoom = zoom
             self._land(frame, focus)
-        self._presenter.render(frame, seq, zoom, dpr, period, landing, on_land, onerror, ondone)
+        if work is not None:
+            self._presenter.present(frame, seq, zoom, dpr, work, landing, on_land, onerror, self._rerender)
+        else:
+            self._presenter.render(frame, seq, zoom, dpr, period, landing, on_land, onerror, ondone)
 
     @objc.python_method
     def _land(self, frame, focus):
@@ -651,7 +697,7 @@ class GraphicsView(NSView):
 
     @objc.python_method
     def liveEnded(self):
-        if self._presenter.viewport_only:
+        if self._presenter.viewport_only or self._presenter.exported:
             self._rerender()
 
     @objc.python_method

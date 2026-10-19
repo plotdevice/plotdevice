@@ -8,26 +8,43 @@
 
 @implementation PDSurface
 
+@synthesize pixelBuffer=_pixelBuffer;
+
 + (instancetype)surfaceWithWidth:(NSInteger)width height:(NSInteger)height{
     return [[[self alloc] initWithWidth:width height:height] autorelease];
 }
 
++ (instancetype)surfaceWithPixelBuffer:(CVPixelBufferRef)buffer{
+    return [[[self alloc] initWithPixelBuffer:buffer] autorelease];
+}
+
 - (instancetype)initWithWidth:(NSInteger)width height:(NSInteger)height{
+    IOSurface *surface = [[[IOSurface alloc] initWithProperties:@{
+        IOSurfacePropertyKeyWidth: @(width),
+        IOSurfacePropertyKeyHeight: @(height),
+        IOSurfacePropertyKeyBytesPerElement: @4,
+        IOSurfacePropertyKeyPixelFormat: @(kCVPixelFormatType_32BGRA),
+    }] autorelease];
+    return [self initWithSurface:surface pixelBuffer:NULL];
+}
+
+- (instancetype)initWithPixelBuffer:(CVPixelBufferRef)buffer{
+    IOSurface *surface = buffer ? (IOSurface *)CVPixelBufferGetIOSurface(buffer) : nil;
+    return [self initWithSurface:surface pixelBuffer:buffer];
+}
+
+- (instancetype)initWithSurface:(IOSurface *)surface pixelBuffer:(CVPixelBufferRef)buffer{
     if ((self = [super init])){
-        _width = width;
-        _height = height;
-        _surface = [[IOSurface alloc] initWithProperties:@{
-            IOSurfacePropertyKeyWidth: @(width),
-            IOSurfacePropertyKeyHeight: @(height),
-            IOSurfacePropertyKeyBytesPerElement: @4,
-            IOSurfacePropertyKeyPixelFormat: @(kCVPixelFormatType_32BGRA),
-        }];
-        if (!_surface){
+        if (!surface){
             [self release];
             return nil;
         }
+        _surface = [surface retain];
+        _pixelBuffer = buffer ? CVPixelBufferRetain(buffer) : NULL;
+        _width = surface.width;
+        _height = surface.height;
         _space = CGColorSpaceCreateDeviceRGB();
-        _context = CGBitmapContextCreate(_surface.baseAddress, width, height, 8, _surface.bytesPerRow, _space,
+        _context = CGBitmapContextCreate(_surface.baseAddress, _width, _height, 8, _surface.bytesPerRow, _space,
                                          kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
     }
     return self;
@@ -37,6 +54,7 @@
     CGContextRelease(_context);
     CGColorSpaceRelease(_space);
     [_surface release];
+    if (_pixelBuffer) CVPixelBufferRelease(_pixelBuffer);
     [super dealloc];
 }
 

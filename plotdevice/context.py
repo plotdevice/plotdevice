@@ -4,6 +4,7 @@ from copy import copy
 from contextlib import contextmanager
 from collections import namedtuple, OrderedDict
 from os.path import exists, expanduser
+import objc
 from objc import super
 
 from .lib.cocoa import *
@@ -1992,6 +1993,9 @@ class Frame(object):
         NSGraphicsContext.restoreGraphicsState()
 
     def _getImageData(self, format, zoom=1.0, cmyk=False):
+        return self._encode(format, zoom, cmyk)[0]
+
+    def _encode(self, format, zoom=1.0, cmyk=False, cancelled=None):
         if format == 'pdf':
             w, h = self.pagesize
             cgData = NSMutableData.data()
@@ -2002,10 +2006,10 @@ class Frame(object):
             CGPDFContextEndPage(pdfContext)
             CGPDFContextClose(pdfContext)
             pdfContext = None
-            return cgData
+            return cgData, None
         elif format == 'eps':
             view = _PostScriptView.alloc().initWithCanvas_(self)
-            return view.dataWithEPSInsideRect_(view.bounds())
+            return view.dataWithEPSInsideRect_(view.bounds()), None
         else:
             cgTypes = {"gif":  kUTTypeGIF,
                        "jpg":  kUTTypeJPEG,
@@ -2014,15 +2018,22 @@ class Frame(object):
                        "tiff": kUTTypeTIFF,
                        "heic": 'public.heic'}
 
+            size = Size(*[int(dim*zoom) for dim in self.pagesize])
+            surface = None
             if format in ('jpeg', 'jpg', 'tiff') and cmyk:
                 colorspace, opts = CGColorSpaceCreateDeviceCMYK(), kCGImageAlphaNone
+                bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
+                self._render_to_context(bitmapContext, zoom, cancelled)
+                cgImage = CGBitmapContextCreateImage(bitmapContext)
             else:
-                colorspace, opts = CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
+                surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(size.width, size.height)
+                self._render_to_surface(surface, zoom, cancelled)
+                surface.lock()
+                cgImage = CGBitmapContextCreateImage(surface.context())
+                surface.unlock()
+            if cancelled is not None and cancelled():
+                return None, None
 
-            size = Size(*[int(dim*zoom) for dim in self.pagesize])
-            bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
-            self._render_to_context(bitmapContext, zoom)
-            cgImage = CGBitmapContextCreateImage(bitmapContext)
             cgData = NSMutableData.data()
             cgDest = CGImageDestinationCreateWithData(cgData, cgTypes[format], 1, None)
             cgProperies = {kCGImagePropertyDPIWidth: 72*zoom, kCGImagePropertyDPIHeight: 72*zoom}
@@ -2030,7 +2041,7 @@ class Frame(object):
                 cgProperies[kCGImageDestinationLossyCompressionQuality] = 1.0
             CGImageDestinationAddImage(cgDest, cgImage, NSDictionary.dictionaryWithDictionary_(cgProperies))
             CGImageDestinationFinalize(cgDest)
-            return cgData
+            return cgData, surface
 
     def save(self, fname, format=None, zoom=1.0, cmyk=False):
         """Write the current graphics objects to an image file"""

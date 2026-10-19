@@ -27,6 +27,9 @@ class Metadata(object):
 
 class Delegate(object):
     """No-op sandbox delegate that will be used by default if a delegate isn't specified"""
+    exportRender = None # export jobs are run as soon as they're made
+    def exportReady(self):
+        return True
     def exportFrame(self, status, canvas=None):
         pass
     def exportStatus(self, status):
@@ -350,6 +353,11 @@ class Sandbox(object):
 
     def _exportFrame(self):
         if self.session.next():
+            # wait for the render thread to have room for another frame
+            if not self.delegate.exportReady():
+                AppHelper.callLater(0.005, self._exportFrame)
+                return
+
             # step to the proper FRAME value
             self._meta.frame = self.session.next()
 
@@ -361,11 +369,15 @@ class Sandbox(object):
                 result = Outcome(True, StdIO().data)
 
             # let the delegate draw to the screen
-            self.delegate.exportFrame(result, self.canvas)
-
             # pass the frame content to the file-writer
+            preview = None if self.session.presents else self.canvas
+            preview_after = self.session.on_main
+            if not preview_after:
+                self.delegate.exportFrame(result, preview)
             if result.ok:
-                self.session.add(self.canvas)
+                self.session.add(self.canvas, self.delegate.exportRender)
+            if preview_after:
+                self.delegate.exportFrame(result, preview)
 
             # know when to fold 'em
             if result.ok in (False, 'HALTED'):
@@ -377,7 +389,7 @@ class Sandbox(object):
             # we've drawn the final frame in the export
             result = self.call("stop")
             self.delegate.exportFrame(result, canvas=None)
-            self.session.done()
+            self.session.done(self.delegate.exportRender)
 
     def _exportComplete(self):
         self.session = None

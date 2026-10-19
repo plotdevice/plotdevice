@@ -1,5 +1,6 @@
-import objc, os, re
-from .cocoa import CGContextBeginPage, CGContextEndPage, CGPDFContextClose, CGPDFContextCreateWithURL, CGRectMake, NSURL
+import objc, os, re, time
+from .cocoa import CGBitmapContextCreateImage, CGContextBeginPage, CGContextEndPage, CGPDFContextClose, \
+                   CGPDFContextCreateWithURL, CGRectMake, NSBitmapImageRep, NSURL
 
 for cls in ["AnimatedGif", "Pages", "SysAdmin", "Video"]:
     globals()[cls] = objc.lookUpClass(cls)
@@ -12,8 +13,7 @@ class PDFBook(object):
         self.closed = False
         self.context = CGPDFContextCreateWithURL(NSURL.fileURLWithPath_(fname), None, None)
 
-    def addPage_(self, canvas):
-        frame = canvas.commit()
+    def addPage_(self, frame):
         w, h = frame.pagesize
         CGContextBeginPage(self.context, CGRectMake(0, 0, w * self.zoom, h * self.zoom))
         frame._render_to_context(self.context, self.zoom)
@@ -51,6 +51,16 @@ class ExportSession(object):
         # one of the cIO classes
         self.writer = None
 
+        self.on_main = False
+
+        self.presents = False
+
+    @property
+    def backlogged(self):
+        if self.writer is None:
+            return False
+        return self.added - self.writer.framesWritten() > 4
+
     def begin(self, frames=None, pages=None):
         from plotdevice.gui import set_timeout
         self.total = frames if frames is not None else pages
@@ -79,11 +89,15 @@ class ExportSession(object):
         if self._status:
             self._status('cancelled')
 
-    def done(self):
+    def done(self, render=None):
         # if self._status:
         #     self._status('finishing')
         if self.writer:
-            self.writer.closeFile()
+            writer = self.writer
+            if render is None or self.on_main:
+                writer.closeFile()
+            else:
+                render(None, lambda cancelled: writer.closeFile())
 
     def shutdown(self):
         self.running = False
@@ -115,6 +129,9 @@ class ImageExportSession(ExportSession):
         self.format = format
         self.zoom = zoom
         self.cmyk = rest.get('cmyk', False)
+        self.on_main = format == 'eps' # (it's drawn through an NSView)
+        cmyk_bitmap = self.cmyk and format in ('jpeg', 'jpg', 'tiff')
+        self.presents = format not in ('pdf', 'eps') and not cmyk_bitmap
 
         m = re_padded.search(fname)
         pad = '%%0%id' % int(m.group(1)) if m else None
@@ -136,12 +153,21 @@ class ImageExportSession(ExportSession):
                 name_tmpl = "".join([basename, '-%04d', ext])
             self.writer = Pages.alloc().initWithPattern_(name_tmpl)
 
-    def add(self, canvas):
-        if isinstance(self.writer, PDFBook):
-            self.writer.addPage_(canvas)
+    def add(self, canvas, render=None):
+        frame = canvas.commit()
+        writer, format, zoom, cmyk = self.writer, self.format, self.zoom, self.cmyk
+        def work(cancelled):
+            if isinstance(writer, PDFBook):
+                writer.addPage_(frame)
+                return None
+            image, surface = frame._encode(format, zoom, cmyk, cancelled)
+            if image is not None:
+                writer.addPage_(image)
+            return surface
+        if render is None or self.on_main:
+            work(None)
         else:
-            image = canvas._getImageData(self.format, self.zoom, self.cmyk)
-            self.writer.addPage_(image)
+            render(frame, work)
         self.added += 1
 
 class MovieExportSession(ExportSession):
@@ -160,20 +186,53 @@ class MovieExportSession(ExportSession):
         self.bitrate = bitrate
         self.codec = codec
         self.cmyk = False
+        self.presents = True
 
-    def add(self, canvas):
-        image = canvas._nsImage
+    def add(self, canvas, render=None):
+        if self.format not in ('mov', 'gif'):
+            print('unrecognized output format: %s' % self.format)
+            return self.shutdown()
+
+        frame = canvas.commit()
         if not self.writer:
-            dims = image.size()
+            size = frame._raster_size(1)
             if self.format == 'mov':
+                size = tuple(dim - dim % 2 for dim in size)
                 self.writer = Video.alloc()
-                self.writer.initWithFile_size_fps_bitrate_codec_(self.fname, dims, self.fps, self.bitrate, self.codec)
-            elif self.format == 'gif':
-                self.writer = AnimatedGif.alloc()
-                self.writer.initWithFile_size_fps_loop_(self.fname, dims, self.fps, self.loop)
+                self.writer.initWithFile_size_fps_bitrate_codec_(self.fname, size, self.fps, self.bitrate, self.codec)
             else:
-                print('unrecognized output format: %s' % self.format)
-                return self.shutdown()
-        self.writer.addFrame_(image)
+                self.writer = AnimatedGif.alloc()
+                self.writer.initWithFile_size_fps_loop_(self.fname, size, self.fps, self.loop)
+        writer = self.writer
+
+        if self.format == 'mov':
+            def work(cancelled):
+                surface = writer.nextSurface()
+                while surface is None:
+                    stopped = cancelled is not None and cancelled()
+                    if stopped or writer.failed():
+                        return None
+                    time.sleep(0.002)
+                    surface = writer.nextSurface()
+                frame._render_to_surface(surface, 1, cancelled, origin=(0, 0)) # (from the top-left, so a bottom row is what's lost)
+                if cancelled is not None and cancelled():
+                    return None # (half-drawn, so never encoded)
+                writer.addSurface_(surface)
+                return surface
+        else:
+            def work(cancelled):
+                surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(*frame._raster_size(1))
+                frame._render_to_surface(surface, 1, cancelled)
+                if cancelled is not None and cancelled():
+                    return None
+                surface.lock()
+                image = CGBitmapContextCreateImage(surface.context())
+                surface.unlock()
+                writer.addFrame_(NSBitmapImageRep.alloc().initWithCGImage_(image))
+                return surface
+        if render is None:
+            work(None)
+        else:
+            render(frame, work)
         self.added += 1
 
