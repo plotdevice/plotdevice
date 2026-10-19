@@ -260,6 +260,7 @@ class DashboardController(NSObject):
 
     def awakeFromNib(self):
         self.panel.contentView().setFlipped_(True)
+        self.panel.contentView().setMaterial_(NSVisualEffectMaterialHUDWindow)
         self.rows = OrderedDict()
         self.positioned = False
 

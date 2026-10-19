@@ -26,6 +26,8 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    kCGLineCapSquare, kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, kCGPathFill, \
                    kCGPathFillStroke, kCGPathStroke, kCAGravityResizeAspect, kCIInputImageKey
 from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplication, NSApplicationActivationPolicyAccessory, \
+                   NSApplicationPresentationAutoHideMenuBar, NSApplicationPresentationAutoHideToolbar, \
+                   NSApplicationPresentationFullScreen, \
                    NSBackingStoreBuffered, NSBeep, NSBezierPath, NSBitmapImageRep, NSBorderlessWindowMask, NSButton, \
                    NSCenterTextAlignment, NSChangeAutosaved, NSChangeCleared, NSChangeDone, NSChangeReadOtherContents, \
                    NSChangeRedone, NSChangeUndone, NSClipView, NSClosePathBezierPathElement, NSColor, NSColorSpace, \
@@ -35,7 +37,7 @@ from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplicati
                    NSFontDescriptor, NSFontManager, NSForegroundColorAttributeName, NSGIFFileType, NSGradient, \
                    NSGraphicsContext, NSGraphiteControlTint, NSImage, NSImageCacheNever, NSImageCompressionFactor, \
                    NSImageInterpolationHigh, NSItalicFontMask, NSJPEGFileType, NSJustifiedTextAlignment, \
-                   NSKernAttributeName, NSKeyValueObservingOptionNew, NSLayoutManager, NSLeftTextAlignment, \
+                   NSKernAttributeName, NSKeyValueObservingOptionNew, NSLayoutConstraint, NSLayoutManager, NSLeftTextAlignment, \
                    NSLineBreakByWordWrapping, NSLineToBezierPathElement, NSMenu, NSMenuItem, NSMiniControlSize, \
                    NSMoveToBezierPathElement, NSMutableParagraphStyle, NSNib, NSOffState, NSOnState, \
                    NSParagraphStyleAttributeName, NSPasteboard, NSPasteboardTypePDF, NSPasteboardTypeTIFF, \
@@ -47,8 +49,11 @@ from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplicati
                    NSTextView, NSTIFFFileType, NSToolbarItem, NSTrackingActiveInActiveApp, \
                    NSTrackingActiveInKeyWindow, NSTrackingArea, NSTrackingArea, NSTrackingMouseEnteredAndExited, \
                    NSTrackingMouseMoved, NSUnboldFontMask, NSUnionRect, NSUnitalicFontMask, NSView, \
-                   NSViewFrameDidChangeNotification, NSViewMinXMargin, NSViewWidthSizable, NSWindow, \
-                   NSWindowBackingLocationVideoMemory, NSWindowController, NSWindowTabbingModeAutomatic, \
+                   NSViewFrameDidChangeNotification, NSViewMinXMargin, NSViewWidthSizable, \
+                   NSVisualEffectMaterialHUDWindow, NSVisualEffectMaterialTitlebar, NSVisualEffectMaterialUnderWindowBackground, \
+                   NSVisualEffectView, NSWindow, \
+                   NSWindowBackingLocationVideoMemory, NSWindowController, NSWindowStyleMaskFullSizeContentView, \
+                   NSWindowTabbingModeAutomatic, \
                    NSWindowTabbingModePreferred, NSWorkspace
 from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CIImage, CIVector, Foundation, NO, \
                        NSAffineTransform, NSAffineTransformStruct, NSArray, NSAttributedString, NSAutoreleasePool, \

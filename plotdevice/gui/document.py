@@ -201,6 +201,27 @@ class ScriptController(NSWindowController):
         win.setTabbingMode_(NSWindowTabbingModePreferred if self.is_tab else NSWindowTabbingModeAutomatic)
         win.setPreferredBackingLocation_(NSWindowBackingLocationVideoMemory)
         win.useOptimizedDrawing_(True)
+        win.setTitlebarAppearsTransparent_(True)
+        win.setStyleMask_(win.styleMask() | NSWindowStyleMaskFullSizeContentView)
+        content = win.contentView()
+        content.setMaterial_(NSVisualEffectMaterialUnderWindowBackground)
+        body = content.subviews()[0] # the split view (the viewer's scroll view)
+        titlebar = NSVisualEffectView.alloc().init()
+        titlebar.setMaterial_(NSVisualEffectMaterialTitlebar)
+        titlebar.setTranslatesAutoresizingMaskIntoConstraints_(False)
+        body.setTranslatesAutoresizingMaskIntoConstraints_(False)
+        content.addSubview_(titlebar)
+        below = win.contentLayoutGuide().topAnchor()
+        NSLayoutConstraint.activateConstraints_([
+            titlebar.topAnchor().constraintEqualToAnchor_(content.topAnchor()),
+            titlebar.bottomAnchor().constraintEqualToAnchor_(below),
+            titlebar.leadingAnchor().constraintEqualToAnchor_(content.leadingAnchor()),
+            titlebar.trailingAnchor().constraintEqualToAnchor_(content.trailingAnchor()),
+            body.topAnchor().constraintEqualToAnchor_(below),
+            body.bottomAnchor().constraintEqualToAnchor_(content.bottomAnchor()),
+            body.leadingAnchor().constraintEqualToAnchor_(content.leadingAnchor()),
+            body.trailingAnchor().constraintEqualToAnchor_(content.trailingAnchor()),
+        ])
 
         # wire up the export-status widget in the title bar
         self.statusViewItem.setView_(self.statusView)
@@ -318,6 +339,20 @@ class ScriptController(NSWindowController):
     def windowShouldZoom_toFrame_(self, win, rect):
         # catch the occasions where we don't modify the size and cancel the zoom
         return win.frame().size != rect.size
+
+    def window_willUseFullScreenPresentationOptions_(self, win, proposed):
+        return proposed | NSApplicationPresentationFullScreen \
+                        | NSApplicationPresentationAutoHideMenuBar \
+                        | NSApplicationPresentationAutoHideToolbar
+
+    def windowWillEnterFullScreen_(self, note):
+        scroll = self.graphicsView.enclosingScrollView()
+        scroll.setBackgroundColor_(NSColor.blackColor())
+        scroll.setDrawsBackground_(True)
+
+    def windowWillExitFullScreen_(self, note):
+        if self.graphicsView:
+            self.graphicsView.enclosingScrollView().setDrawsBackground_(False)
 
     def windowWillClose_(self, note):
         self.stopScript()
