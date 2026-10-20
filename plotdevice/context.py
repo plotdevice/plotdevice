@@ -1437,7 +1437,12 @@ class Context(object):
         grob = obj if kwargs.get('live') else obj.copy()
 
         # if there are any positional args following the grob, assign a new x/y (and possibly w/h)
-        if coords:
+        plain_numbers = len(coords) in (2, 3) and all(numlike(c) for c in coords)
+        if plain_numbers and len(coords) == 2:
+            grob.x, grob.y = parse_coords(coords, [Point])
+        elif plain_numbers and len(coords) == 3:
+            (grob.x, grob.y), grob.width = parse_coords(coords, [Point,float])
+        elif coords:
             try:
                 (grob.x, grob.y), (grob.width, grob.height) = parse_coords(coords, [Point,Size])
             except:

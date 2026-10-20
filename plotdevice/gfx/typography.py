@@ -208,6 +208,12 @@ class Font(object):
         spec.update(self._metrics)
         return spec
 
+    @property
+    def _key(self):
+        if not hasattr(self, '_sorted'):
+            self._sorted = tuple(sorted((k, v) for k, v in self._spec.items() if k != 'margin'))
+        return self._sorted
+
     @classmethod
     def validate(cls, kwargs):
         known = StyleMixin.fontOpts + StyleMixin.aatOpts
@@ -360,10 +366,12 @@ class Stylesheet(object):
 
     def __delitem__(self, key):
         if key in self._styles:
-            del self._styles[key]
+            self._styles = {k:v for k,v in self._styles.items() if k != key}
 
     def copy(self):
-        return Stylesheet(self._styles)
+        new = Stylesheet.__new__(Stylesheet)
+        new._styles = self._styles
+        return new
 
     @property
     def styles(self):
@@ -383,5 +391,6 @@ class Stylesheet(object):
                 color = Color(*color)
             if color:
                 spec['fill'] = color
+            self._styles = dict(self._styles)
             self._styles[name] = spec
         return self[name]
