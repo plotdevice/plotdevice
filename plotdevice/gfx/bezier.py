@@ -7,7 +7,7 @@ from plotdevice import DeviceError
 from . import _cg_port
 from .atoms import PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .colors import Color, Gradient, Pattern
-from .geometry import CENTER, DEGREES, IDENTITY, Transform, Region, Point
+from .geometry import CENTER, DEGREES, IDENTITY, Transform, Region, Point, _pivot
 from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten, numlike
 from ..lib import pathmatics
 
@@ -371,23 +371,19 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         return self._nsBezierPath.containsPoint_((x,y))
 
     @property
+    def _screen_matrix(self):
+
+        matrix = tuple(self.transform.matrix)
+        if matrix == IDENTITY or self.transformmode != CENTER:
+            return matrix
+
+        cx, cy = self._to_px(self.center)
+        return _pivot(matrix, cx, cy)
+
+    @property
     def _screen_transform(self):
         """Returns the Transform object that will be used to draw the path."""
-
-        if tuple(self.transform.matrix) == IDENTITY:
-            return Transform()
-
-        nudge = Transform()
-        if (self.transformmode == CENTER):
-            # if center-based, sandwich transform with a scoot out/in to the origin
-            dx, dy = self._to_px(self.center)
-            nudge.translate(dx, dy)
-
-        xf = Transform()
-        xf.prepend(nudge)
-        xf.prepend(self.transform)
-        xf.prepend(nudge.inverse)
-        return xf
+        return Transform(self._screen_matrix)
 
     @property
     def cgPath(self):

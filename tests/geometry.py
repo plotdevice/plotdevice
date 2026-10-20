@@ -120,6 +120,15 @@ class GeometryTests(PlotDeviceTestCase):
         with pen(dash=3), stroke(.5), nofill():
             arc(origin, 25, range=45)
 
+    def test_pair_arithmetic(self):
+        p = Point(4, 8)
+        self.assertEqual(2 / p, Point(0.5, 0.25))
+        self.assertEqual(p / 2, Point(2, 4))
+        self.assertEqual(20 // p, Point(5, 2))
+        self.assertEqual(10 - p, Point(6, 2))
+        self.assertEqual((1, 2) + p, Point(5, 10))
+        self.assertEqual(Size(4, 6) * Size(2, 3), Size(8, 18))
+
     @reference('geometry/region-intersect.png')
     def test_region_intersect(self):
         # ref/Misc/types/Region

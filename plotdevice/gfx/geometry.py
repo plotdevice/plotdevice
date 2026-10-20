@@ -4,7 +4,7 @@ import re
 import json
 import warnings
 import math
-from operator import neg
+import operator
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
@@ -25,6 +25,10 @@ CORNER = "corner"
 
 IDENTITY = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
 
+def _pivot(matrix, cx, cy, tx=0.0, ty=0.0):
+    a, b, c, d, mx, my = matrix
+    return (a, b, c, d, mx + cx + tx - (a * cx + c * cy), my + cy + ty - (b * cx + d * cy))
+
 # rotation modes
 DEGREES = "degrees"
 RADIANS = "radians"
@@ -36,21 +40,18 @@ tau = 2*pi
 
 ### tuple-like objects for grid dimensions ###
 
-def paired(func):
-    def to_pair(self, other=None):
-        if other is None:
-            return self.__class__(func(self))
-        if numlike(other):
-            other = self.__class__(other, other)
-        elif not isinstance(other, self.__class__):
-            other = self.__class__(other)
-        return self.__class__(func(self, other))
-    return to_pair
-
 class Pair(object):
     """Base class for Point & Size objects (with basic arithmetic support)"""
     __slots__ = '_a', '_b'
     __hash__ = None
+
+    def _arith(self, op, other, reflected=False):
+        if type(other) is not self.__class__:
+            other = self.__class__(other, other) if numlike(other) else self.__class__(other)
+        oa, ob = other._a, other._b
+        if reflected:
+            return self.__class__(op(oa, self._a), op(ob, self._b))
+        return self.__class__(op(self._a, oa), op(self._b, ob))
 
     def __iter__(self):
         # allow for assignments like: x,y = Point()
@@ -66,36 +67,19 @@ class Pair(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    @paired
-    def __abs__(self): return list(map(abs, self))
-    @paired
-    def __pos__(self): return self
-    @paired
-    def __neg__(self): return list(map(neg, self))
-    @paired
-    def __add__(self, other):  return list(map(sum, list(zip(self, other))))
-    @paired
-    def __radd__(self, other): return list(map(sum, list(zip(self, other))))
-    @paired
-    def __sub__(self, other):  return list(map(sum, list(zip(self, -other))))
-    @paired
-    def __rsub__(self, other): return list(map(sum, list(zip(other, -self))))
-    @paired
-    def __mul__(self, other):  return [a * b for a,b in zip(self, other)]
-    @paired
-    def __rmul__(self, other): return [b * a for a,b in zip(self, other)]
-    @paired
-    def __div__(self, other):  return [a / b for a,b in zip(self, other)]
-    @paired
-    def __rdiv__(self, other): return [b / a for a,b in zip(self, other)]
-    @paired
-    def __floordiv__(self, other): return [a // b for a,b in zip(self, other)]
-    @paired
-    def __rfloordiv__(self, other): return [b // a for a,b in zip(self, other)]
-    @paired
-    def __truediv__(self, other):  return [a / b for a,b in zip(self, other)]
-    @paired
-    def __rtruediv__(self, other):  return [a / b for a,b in zip(self, other)]
+    def __abs__(self): return self.__class__(abs(self._a), abs(self._b))
+    def __pos__(self): return self.__class__(self._a, self._b)
+    def __neg__(self): return self.__class__(-self._a, -self._b)
+    def __add__(self, other):  return self._arith(operator.add, other)
+    def __radd__(self, other): return self._arith(operator.add, other, reflected=True)
+    def __sub__(self, other):  return self._arith(operator.sub, other)
+    def __rsub__(self, other): return self._arith(operator.sub, other, reflected=True)
+    def __mul__(self, other):  return self._arith(operator.mul, other)
+    def __rmul__(self, other): return self._arith(operator.mul, other, reflected=True)
+    def __floordiv__(self, other): return self._arith(operator.floordiv, other)
+    def __rfloordiv__(self, other): return self._arith(operator.floordiv, other, reflected=True)
+    def __truediv__(self, other):  return self._arith(operator.truediv, other)
+    def __rtruediv__(self, other): return self._arith(operator.truediv, other, reflected=True)
 
     def copy(self):
         return self.__class__(self)
@@ -106,7 +90,12 @@ class Point(Pair):
     __slots__ = ()
 
     def __init__(self, *vals, **kwargs):
-        if len(vals) == 2:
+        plain = len(vals) == 2 and type(vals[0]) in (int, float) and type(vals[1]) in (int, float)
+        if plain:
+            self._a, self._b = float(vals[0]), float(vals[1])
+        elif len(vals) == 1 and type(vals[0]) is Point:
+            self._a, self._b = vals[0]._a, vals[0]._b
+        elif len(vals) == 2:
             self.x, self.y = vals
         elif vals:
             try:
@@ -114,6 +103,8 @@ class Point(Pair):
             except:
                 baddims = 'Point requires a single coordinate pair'
                 raise DeviceError(baddims)
+        elif not kwargs:
+            self._a = self._b = 0.0
         else:
             # kwargs will only be used if there are no positional args
             self.x = kwargs.get('x', 0)
@@ -176,7 +167,14 @@ class Size(Pair):
     __slots__ = ()
 
     def __init__(self, *vals, **kwargs):
-        if len(vals) == 2:
+        plain = len(vals) == 2 and (vals[0] is None or type(vals[0]) in (int, float)) and \
+                (vals[1] is None or type(vals[1]) in (int, float))
+        if plain:
+            w, h = vals
+            self._a, self._b = (float(w) if w else w), (float(h) if h else h)
+        elif len(vals) == 1 and type(vals[0]) is Size:
+            self._a, self._b = vals[0]._a, vals[0]._b
+        elif len(vals) == 2:
             self.w, self.h = vals
         elif vals:
             try:
@@ -184,6 +182,8 @@ class Size(Pair):
             except:
                 baddims = 'Size requires a single coordinate pair'
                 raise DeviceError(baddims)
+        elif not kwargs:
+            self._a = self._b = 0
         else:
             # kwargs will only be used if there are no positional args
             kwargs = {k[0]:v for k,v in kwargs.items()}
@@ -228,6 +228,29 @@ class Region(object):
     opts = ('x','y','w','h','width','height')
 
     def __init__(self, *args, **kwargs):
+        count = 0 if kwargs else len(args)
+        if count == 1 and type(args[0]) is Region:
+            self._origin, self._size = Point(args[0]._origin), Size(args[0]._size)
+            return
+        if count == 1 and isinstance(args[0], NSRect):
+            (x, y), (w, h) = args[0]
+            self._origin, self._size = Point(x, y), Size(w, h)
+            return
+        if 2 <= count <= 4 and type(args[0]) in (int, float) and type(args[1]) in (int, float):
+            w, h = (args[2:] + (0, 0))[:2]
+            plain_w = type(w) in (int, float) or (w is None and count == 4)
+            plain_h = type(h) in (int, float) or (h is None and count == 4)
+            if plain_w and plain_h:
+                self._origin, self._size = Point(args[0], args[1]), Size(w, h)
+                return
+        if count == 2 and type(args[0]) in (tuple, Point) and type(args[1]) in (tuple, Size):
+            origin, size = args
+            plain_origin = type(origin) is Point or (len(origin) == 2 and all(type(v) in (int, float) for v in origin))
+            plain_size = type(size) is Size or (len(size) == 2 and all(v is None or type(v) in (int, float) for v in size))
+            if plain_origin and plain_size:
+                self._origin, self._size = Point(*origin), Size(*size)
+                return
+
         self._origin = Point()
         self._size = Size()
 
@@ -253,7 +276,7 @@ class Region(object):
                 self.origin, self.size = coords[0]
                 return
 
-            plain_numbers = len(coords) in (2, 3) and all(numlike(c) for c in coords)
+            plain_numbers = len(coords) in (2, 3) and all(type(c) in (int, float) for c in coords)
             if plain_numbers and len(coords) == 2:
                 self.origin = parse_coords(coords, [Point])
                 return
@@ -297,12 +320,27 @@ class Region(object):
     def union(self, *args):
         """Return a new Region which fully encloses the existing Region and the arguments"""
         other = Region(*args)
-        return Region(NSUnionRect(self, other))
+        (x0, y0), (w0, h0) = self._origin, self._size
+        (x1, y1), (w1, h1) = other._origin, other._size
+        empty, other_empty = w0 <= 0 or h0 <= 0, w1 <= 0 or h1 <= 0
+        if empty and other_empty:
+            return Region(0.0, 0.0, 0.0, 0.0)
+        if empty or other_empty:
+            return Region(self if other_empty else other)
+        left, top = min(x0, x1), min(y0, y1)
+        return Region(left, top, max(x0 + w0, x1 + w1) - left, max(y0 + h0, y1 + h1) - top)
 
     def intersect(self, *args):
         """Return a new Region with the in-common portion of this Region and the arguments"""
         other = Region(*args)
-        return Region(NSIntersectionRect(self, other))
+        (x0, y0), (w0, h0) = self._origin, self._size
+        (x1, y1), (w1, h1) = other._origin, other._size
+        left, top = max(x0, x1), max(y0, y1)
+        right, bottom = min(x0 + w0, x1 + w1), min(y0 + h0, y1 + h1)
+        overlap = w0 > 0 and h0 > 0 and w1 > 0 and h1 > 0 and right > left and bottom > top
+        if not overlap:
+            return Region(0.0, 0.0, 0.0, 0.0)
+        return Region(left, top, right - left, bottom - top)
 
     def shift(self, dx, dy=None):
         """Return a new Region whose origin is shifted by dx/dy or a Point object"""
@@ -397,6 +435,18 @@ def parse_coords(coords, types):
     and coerced into the specified types. If the coords list can't be pattern-matched
     precisely into the given sequence of types, an exception is raised.
     """
+
+    needed = sum(1 if cls is float else 2 for cls in types)
+    if len(coords) == needed and all(type(c) in (int, float) for c in coords):
+        objs, at = [], 0
+        for cls in types:
+            if cls is float:
+                objs.append(float(coords[at]))
+                at += 1
+            else:
+                objs.append(cls(coords[at], coords[at + 1]))
+                at += 2
+        return objs[0] if len(types) == 1 else objs
 
     # make a mutable copy we can traverse and an output list to shift into
     stream = list(coords)

@@ -1447,7 +1447,7 @@ class Context(object):
         grob = obj if kwargs.pop('live', False) else obj.copy()
 
         # if there are any positional args following the grob, assign a new x/y (and possibly w/h)
-        plain_numbers = len(coords) in (2, 3) and all(numlike(c) for c in coords)
+        plain_numbers = len(coords) in (2, 3) and all(type(c) in (int, float) for c in coords)
         if plain_numbers and len(coords) == 2:
             grob.x, grob.y = parse_coords(coords, [Point])
         elif plain_numbers and len(coords) == 3:
@@ -1815,7 +1815,7 @@ def _path_box(path):
         return (0, 0, 0, 0) # an empty path
     if tuple(path.transform.matrix) == IDENTITY:
         return (x * dpx, y * dpx, w * dpx, h * dpx)
-    return _hull(path._screen_transform.matrix, x * dpx, y * dpx, w * dpx, h * dpx)
+    return _hull(path._screen_matrix, x * dpx, y * dpx, w * dpx, h * dpx)
 
 def _with_effects(box, fx):
     if box is None or fx.get('blend') in _UNBOUNDED_BLENDS:
@@ -1873,7 +1873,7 @@ def _render_bounds(grob, boxes):
         if untransformed:
             x, y, w, h = x0 + grob.x * dpx, y0 + (grob.y - grob._headroom) * dpx, w0, h0
         else:
-            x, y, w, h = _hull(grob._screen_transform.matrix, x0, y0, w0, h0)
+            x, y, w, h = _hull(grob._screen_matrix, x0, y0, w0, h0)
         reach, at, end = 0, 0, grob._store.length()
         while at < end:
             font, run = grob._store.attribute_atIndex_effectiveRange_('NSFont', at, None)
@@ -1888,7 +1888,7 @@ def _render_bounds(grob, boxes):
             factor = grob._scalefactor
             x, y, w, h = grob.x * dpx, grob.y * dpx, w0 * factor, h0 * factor
         else:
-            x, y, w, h = _hull(grob._screen_transform.matrix, 0, 0, w0, h0)
+            x, y, w, h = _hull(grob._screen_matrix, 0, 0, w0, h0)
     else:
         x, y, w, h = _path_box(grob)
     pad = (getattr(grob, 'strokewidth', 0) or 0) * dpx * 5 + 2

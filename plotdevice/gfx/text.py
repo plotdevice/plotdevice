@@ -8,7 +8,7 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from .typography import *
-from .geometry import Transform, Region, Size, Point, Pair, IDENTITY
+from .geometry import Transform, Region, Size, Point, Pair, IDENTITY, _pivot
 from .colors import Color
 from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, FrameMixin, Grob
@@ -552,35 +552,44 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         return xf
 
     @property
-    def _screen_transform(self):
-        """Returns the Transform object that will be used to draw the text block.
-
-        The transform incorporates the global context state but also accounts for
+    def _screen_matrix(self):
+        """The transform incorporates the global context state but also accounts for
         the column-width/height constraints set in the constructor. If the text
         has been flowed to multiple TextBlocks, dimensions are calculated based on
         the union of the various bounds boxes."""
 
         # gather the relevant text metrics (and convert them from canvas- to pixel-units)
-        x, y = self._to_px(Point(self.x, self.y))
-        baseline = self._to_px(self._headroom)
+        dpx = self._grid.dpx
+        x, y = self.x * dpx, self.y * dpx
+        top = y - self._headroom * dpx
 
-        # accumulate transformations in a fresh matrix
-        xf = Transform()
+        matrix = tuple(self.transform.matrix)
+        if self._transformmode != CENTER or matrix == IDENTITY:
+            a, b, c, d, mx, my = matrix
+            return (a, b, c, d, mx + a * x + c * top, my + b * x + d * top)
 
-        if self._transformmode == CENTER and tuple(self.transform.matrix) != IDENTITY:
-            # calculate the (reversible) translation offset for centering (in px)
-            bounds = self._to_px(self.frame)
-            shift = bounds.origin + bounds.size/2.0 - (x, y-baseline)
-            nudge = Transform().translate(*shift)
+        x0 = y0 = x1 = y1 = 0.0
+        for block in self._blocks:
+            w, h = block._frame.size
+            if not (w and h):
+                fit = block._fit
+            bw = w * dpx if w else fit.width
+            bh = h * dpx if h else fit.height
+            if bw <= 0 or bh <= 0:
+                continue
+            bx = (self.x + block._frame.origin.x) * dpx
+            by = (self.y + block._frame.origin.y) * dpx - block._headroom
+            if x1 - x0 <= 0 or y1 - y0 <= 0:
+                x0, y0, x1, y1 = bx, by, bx + bw, by + bh
+            else:
+                x0, y0, x1, y1 = min(x0, bx), min(y0, by), max(x1, bx + bw), max(y1, by + bh)
 
-            xf.translate(x, y-baseline) # set the position before applying transforms
-            xf.prepend(nudge)           # nudge the block to its center
-            xf.prepend(self.transform)  # add context's CTM.
-            xf.prepend(nudge.inverse)   # Move back to the real origin.
-        else:
-            xf.prepend(self.transform)  # in CORNER mode simply apply the CTM
-            xf.translate(x, y-baseline) # then move to the baseline origin point
-        return xf
+        return _pivot(matrix, (x0 + x1) / 2.0 - x, (y0 + y1) / 2.0 - top, x, top)
+
+    @property
+    def _screen_transform(self):
+        """Returns the Transform object that will be used to draw the text block."""
+        return Transform(self._screen_matrix)
 
     @property
     def _parts(self):

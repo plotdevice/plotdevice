@@ -16,7 +16,7 @@ from plotdevice import DeviceError
 from ..util import _copy_attrs, autorelease
 from ..util.readers import get_http_session, last_modified
 from ..lib.io import MovieExportSession, ImageExportSession
-from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY
+from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
 from .colors import CMYK
 from . import _ns_context, _cg_port
@@ -265,32 +265,30 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         return factor
 
     @property
-    def _screen_transform(self):
-        """Returns the Transform object that will be used to draw the image.
-
-        The transform incorporates the global context state but also accounts for
+    def _screen_matrix(self):
+        """The transform incorporates the global context state but also accounts for
         centering and max width/height values set in the constructor."""
-
-        # accumulate transformations in a fresh matrix
-        xf = Transform()
 
         # set scale factor so entire image fits in the given rect or dimension
         factor = self._scalefactor
 
         # calculate the pixel dimensions (accounting for the canvas's units)
         dx, dy = self._to_px(Point(self.x, self.y))
-        w, h = self._to_px(self.size)
 
-        xf.translate(dx, dy)       # set the position before applying transforms
-        if self._transformmode == CENTER and tuple(self.transform.matrix) != IDENTITY:
-            nudge = Transform().translate(w*factor/2, h*factor/2)
-            xf.prepend(nudge)          # nudge the image to its center
-            xf.prepend(self.transform) # add context's CTM.
-            xf.prepend(nudge.inverse)  # Move back to the real origin.
+        matrix = tuple(self.transform.matrix)
+        if self._transformmode == CENTER and matrix != IDENTITY:
+            w, h = self._to_px(self.size)
+            a, b, c, d, tx, ty = _pivot(matrix, w * factor / 2, h * factor / 2, dx, dy)
         else:
-            xf.prepend(self.transform) # in CORNER mode (or if untransformed) simply apply the CTM
-        xf.scale(factor)           # scale to fit size constraints (if any)
-        return xf
+            # in CORNER mode (or if untransformed) simply apply the CTM
+            a, b, c, d, mx, my = matrix
+            tx, ty = mx + dx, my + dy
+        return (a * factor, b * factor, c * factor, d * factor, tx, ty) # scale to fit size constraints (if any)
+
+    @property
+    def _screen_transform(self):
+        """Returns the Transform object that will be used to draw the image."""
+        return Transform(self._screen_matrix)
 
     @property
     def _screen_size(self):
@@ -308,7 +306,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         # determine its 'actual' size (rather than just using its mediabox 1:1)
         ctm = CGContextGetCTM(_cg_port())
         ctm_scale = max(math.hypot(ctm.a, ctm.b), math.hypot(ctm.c, ctm.d))
-        xf_a, xf_b, xf_c, xf_d, _, _ = self._screen_transform.matrix
+        xf_a, xf_b, xf_c, xf_d, _, _ = self._screen_matrix
         xf_scale = max(math.hypot(xf_a, xf_b), math.hypot(xf_c, xf_d))
         scale = max(ctm_scale * xf_scale, 1.0)
         src_w, src_h = self._nsImage.size()

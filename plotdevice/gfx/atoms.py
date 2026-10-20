@@ -118,12 +118,18 @@ class Grob(object, metaclass=Bequest):
         """Convert from canvas units to postscript points"""
         if numlike(unit) or isinstance(unit, Pair):
             return unit * self._grid.dpx
+        if type(unit) is Region:
+            dpx = self._grid.dpx
+            return Region(unit.x * dpx, unit.y * dpx, unit.w * dpx, unit.h * dpx)
         return self._grid.to_px.apply(unit)
 
     def _from_px(self, px):
         """Convert from postscript points to canvas units"""
         if numlike(px) or isinstance(px, Pair):
             return px / self._grid.dpx
+        if type(px) is Region:
+            dpx = self._grid.dpx
+            return Region(px.x / dpx, px.y / dpx, px.w / dpx, px.h / dpx)
         return self._grid.from_px.apply(px)
 
 
