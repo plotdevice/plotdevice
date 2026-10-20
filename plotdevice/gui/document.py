@@ -17,7 +17,7 @@ from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
 from ..run import Sandbox, encoded
 from .. import DeviceError
-from . import set_timeout, FrameClock, FrameRenderer, FRAMELOG
+from . import set_timeout, FrameClock, FrameQueue, FRAMELOG
 
 NSEventGestureAxisVertical = 2
 
@@ -153,6 +153,17 @@ class ScriptController(NSWindowController):
             self.editorView.source = src
     source = property(_get_source, _set_source)
 
+    @property
+    def live(self):
+        animating = self.animationTimer is not None and self.animationTimer.isValid()
+        exporting = self.vm is not None and self.vm.session is not None and self.vm.session.running
+        editing = self.dashboardController is not None and self.dashboardController.editing
+        return animating or exporting or editing
+
+    @property
+    def framePeriod(self):
+        return self.animationTimer.period if self.animationTimer is not None else 1 / 60.0
+
     ## Initializers
 
     def initWithWindowNibName_(self, nib):
@@ -234,8 +245,8 @@ class ScriptController(NSWindowController):
         # always a reference to either the in-window view or a fullscreen view
         self.currentView = self.graphicsView
 
-        self.renderer = FrameRenderer()
-        self.graphicsView.renderer = self.renderer
+        self.queue = FrameQueue()
+        self.graphicsView.queue = self.queue
 
         # watch for changes in light/dark-mode and pass them along to subviews
         from AppKit import NSKeyValueObservingOptionInitial
@@ -356,9 +367,9 @@ class ScriptController(NSWindowController):
 
     def windowWillClose_(self, note):
         self.stopScript()
-        if self.renderer is not None:
-            self.renderer.shutdown()
-            self.renderer = None
+        if self.queue is not None:
+            self.queue.shutdown()
+            self.queue = None
 
         # break some retain cycles on our way out
         self.vm._cleanup()
@@ -423,6 +434,7 @@ class ScriptController(NSWindowController):
         if self.animationTimer and not isinstance(sender, NSMenuItem):
             if self.animationTimer.isValid():
                 self.animationTimer.invalidate()
+                self.graphicsView.liveEnded()
             else:
                 self.animationTimer = FrameClock(self.currentView, self, 'tick:', self.vm.speed)
             self.setToolbarMode_("play" if self.animationTimer.isValid() else "pause")
@@ -438,7 +450,7 @@ class ScriptController(NSWindowController):
             self.stopScript()
             self.currentView = FullscreenView.alloc().init()
             self.currentView.canvas = None
-            self.currentView.renderer = self.renderer
+            self.currentView.queue = self.queue
             fullRect = NSScreen.mainScreen().frame()
             if not self.offscreen:
                 self.offscreen = FullscreenWindow.alloc().initWithRect_(fullRect)
@@ -464,8 +476,8 @@ class ScriptController(NSWindowController):
         if self.animationTimer:
             self.animationTimer.invalidate()
             self.animationTimer = None
-        if self.renderer is not None:
-            self.renderer.cancel()
+        if self.queue is not None:
+            self.queue.cancel()
 
         # clear out any key/mousedown state from previous run
         self.reset_ui()
@@ -523,7 +535,7 @@ class ScriptController(NSWindowController):
 
     def tick_(self, sender):
         clock = self.animationTimer
-        if clock and self.renderer.ready and clock.should_draw():
+        if clock and self.queue.ready and clock.should_draw():
             self.step()
             clock.frame_done()   # no-op if step() stopped the script (the clock is invalidated)
             self._update_fps(clock)
@@ -736,6 +748,9 @@ class ScriptController(NSWindowController):
 
         # re-enable the play button
         self.setToolbarMode_("stop")
+
+        if self.graphicsView:
+            self.graphicsView.liveEnded()
 
         # relay any errors to the text panes (if we're in the app)
         if self.editorView:

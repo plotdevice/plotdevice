@@ -186,10 +186,10 @@ def _pump(until, timeout=5.0):
     return until()
 
 class RendererTests(PlotDeviceTestCase):
-    def test_renderer_delivers_in_order_and_drops_cancelled_jobs(self):
-        from plotdevice.gui import FrameRenderer
+    def test_queue_delivers_in_order_and_drops_cancelled_jobs(self):
+        from plotdevice.gui import FrameQueue
         import threading
-        renderer = FrameRenderer()
+        queue = FrameQueue()
         try:
             delivered, gate = [], threading.Event()
             def job(n):
@@ -198,35 +198,35 @@ class RendererTests(PlotDeviceTestCase):
                     return n
                 return work
             for n in range(4):
-                renderer.submit(job(n), lambda result, err, n=n: delivered.append((n, result, err)))
-            self.assertFalse(renderer.ready)  # one in flight is the limit with the GIL
-            renderer.cancel()                 # ...so cancelling now drops all four
+                queue.submit(job(n), lambda result, err, n=n: delivered.append((n, result, err)))
+            self.assertFalse(queue.ready)  # one in flight is the limit with the GIL
+            queue.cancel()                 # ...so cancelling now drops all four
             gate.set()
-            self.assertTrue(_pump(lambda: renderer.idle))
+            self.assertTrue(_pump(lambda: queue.idle))
             self.assertEqual(delivered, [])
             gate.clear()
             for n in range(4, 7):
-                renderer.submit(job(n), lambda result, err, n=n: delivered.append((n, result, err)))
+                queue.submit(job(n), lambda result, err, n=n: delivered.append((n, result, err)))
             gate.set()
-            self.assertTrue(_pump(lambda: renderer.idle))
+            self.assertTrue(_pump(lambda: queue.idle))
             self.assertEqual(delivered, [(4, 4, None), (5, 5, None), (6, 6, None)])
-            self.assertTrue(renderer.ready)
+            self.assertTrue(queue.ready)
         finally:
-            renderer.shutdown()
+            queue.shutdown()
 
-    def test_renderer_delivers_errors(self):
-        from plotdevice.gui import FrameRenderer
-        renderer = FrameRenderer()
+    def test_queue_delivers_errors(self):
+        from plotdevice.gui import FrameQueue
+        queue = FrameQueue()
         try:
             got = []
             def work(cancelled):
                 raise ValueError('bad grob')
-            renderer.submit(work, lambda result, err: got.append((result, err)))
+            queue.submit(work, lambda result, err: got.append((result, err)))
             self.assertTrue(_pump(lambda: got))
             self.assertIsNone(got[0][0])
             self.assertIsInstance(got[0][1], ValueError)
         finally:
-            renderer.shutdown()
+            queue.shutdown()
 
     def test_frame_draw_stops_when_cancelled(self):
         size(40, 40)
@@ -247,6 +247,133 @@ class RendererTests(PlotDeviceTestCase):
         surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(40, 40)
         _ctx.canvas.commit()._render_to_surface(surface, 1.0)
         self.assertEqual(partial, _pixels(CGBitmapContextCreateImage(surface.context())))
+
+    def test_culled_render_matches_unculled(self):
+        from Quartz import CGBitmapContextCreateImage
+        from plotdevice import context
+        size(400, 300)
+        background('white')
+        with shadow('black', blur=10, offset=(20, 0)):
+            rect(170, 100, 10, 40, fill='red')
+            with clip(oval(20, 20, 100, 100, plot=False)):
+                for x in range(0, 400, 20):
+                    rect(x, 0, 10, 300, fill='green')
+        rect(170, 200, 20, 20, fill='blue', shadow=Shadow('black', blur=4, offset=(25, 0)))
+        with transform(CENTER), rotate(60):
+            text('rotated text', 120, 280, font='Avenir', size=30)
+        oval(20, 250, 30, 30, fill=(0, 0, 0, .8), blend='destinationin')
+        rect(20, 150, 30, 30, fill='orange')
+        frame = _ctx.canvas.commit()
+
+        def render(cull):
+            within = context.Frame._within
+            if not cull:
+                context.Frame._within = lambda self, rect, grobs: grobs
+            try:
+                surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(400, 600)
+                frame._render_to_surface(surface, 2.0, origin=(400, 0))
+                return _pixels(CGBitmapContextCreateImage(surface.context()))
+            finally:
+                context.Frame._within = within
+        self.assertEqual(render(True), render(False))
+
+        group = frame.grobs[0]
+        self.assertEqual(frame._within((200, 0, 200, 300), group.contents), [group.contents[0]])
+        self.assertLess(len(frame._within((200, 0, 200, 300), frame.grobs)), len(frame.grobs))
+
+    def test_tiles_reassemble_into_the_full_render(self):
+        from Quartz import CGBitmapContextCreateImage
+        frame = _scene()
+        scale, tile = 8.0, 100  # 640×480 px: 7×5 tiles, the last column and row partial
+        width, height = [max(int(dim * scale), 1) for dim in frame.pagesize]
+        PDSurface = objc.lookUpClass('PDSurface')
+        surface = PDSurface.surfaceWithWidth_height_(width, height)
+        frame._render_to_surface(surface, scale)
+        whole = _pixels(CGBitmapContextCreateImage(surface.context()))
+        for y in range(0, height, tile):
+            for x in range(0, width, tile):
+                w, h = min(tile, width - x), min(tile, height - y)
+                part = PDSurface.surfaceWithWidth_height_(w, h)
+                frame._render_to_surface(part, scale, origin=(x, y))
+                got = _pixels(CGBitmapContextCreateImage(part.context()))
+                crop = b''.join(whole[(y + row) * width * 4 + x * 4:(y + row) * width * 4 + (x + w) * 4] for row in range(h))
+                self.assertLessEqual(max(abs(p - q) for p, q in zip(got, crop)), 2, 'the tile at %r differs' % ((x, y),))
+
+    def test_layers_sized_to_their_contents_match_full_ones(self):
+        from Quartz import CGBitmapContextCreateImage
+        from plotdevice.gfx import effects
+        size(500, 400)
+        background('white')
+        text('Zapfino', 40, 120, font='Zapfino', size=40, fill='purple', alpha=.6)
+        text('ƒjord', 300, 120, font='Avenir', size=48, italic=True, shadow=Shadow('black', blur=5, offset=8))
+        with transform(CENTER), rotate(30), shadow('red', blur=8, offset=(10, -5)):
+            rect(100, 250, 120, 60, fill='orange')
+            image('tests/_in/plaid.png', 250, 240, width=80)
+        with alpha(.5), blend('multiply'):
+            oval(320, 260, 120, 120, fill='teal')
+        frame = _ctx.canvas.commit()
+
+        def render(sized):
+            layer_box = effects._layer_box
+            if not sized:
+                effects._layer_box = lambda grob: None
+            try:
+                frame._layers = {}
+                return _pixels(frame._render_to_cgimage(1.0, 2.0))
+            finally:
+                effects._layer_box = layer_box
+        self.assertEqual(render(True), render(False))
+        render(True)
+        self.assertTrue(any(box is not None for box in frame._layers.values()))
+
+    def test_one_paint_alpha_skips_its_layer(self):
+        from plotdevice.gfx.bezier import Bezier
+        size(200, 200)
+        background(.9)
+        for i in range(4):
+            oval(20 + i * 30, 20, 80, 80, fill=(.2, .3, .7), alpha=.5, blend='multiply')
+        star(100, 140, 7, 50, 20, fill=None, stroke='black', strokewidth=6, dash=[9, 4], alpha=.5)
+        oval(120, 120, 60, 60, fill='teal', stroke='black', strokewidth=10, alpha=.5)
+        frame = _ctx.canvas.commit()
+        self.assertEqual([g._one_paint for g in frame.grobs], [True] * 5 + [False])
+
+        direct = _pixels(frame._render_to_cgimage(1.0, 2.0))
+        one_paint = Bezier._one_paint
+        Bezier._one_paint = property(lambda self: False)
+        try:
+            layered = _pixels(frame._render_to_cgimage(1.0, 2.0))
+        finally:
+            Bezier._one_paint = one_paint
+        self.assertLessEqual(max(abs(a - b) for a, b in zip(direct, layered)), 3)
+
+    def test_wide_shadow_blurs_match_core_graphics(self):
+        from plotdevice.gfx import effects
+        size(400, 300)
+        background('white')
+        rect(40, 40, 120, 90, fill='crimson', shadow=Shadow('black', blur=60, offset=(20, 15)))
+        with shadow(('navy', .6), blur=40, offset=(-10, 25)):
+            star(280, 120, 6, 70, 30, fill='orange')
+            oval(220, 180, 80, 60, fill='teal')
+        with clip(rect(40, 170, 150, 110, plot=False)):
+            oval(60, 180, 100, 80, fill='plum', shadow=Shadow('black', blur=50, offset=30))
+        text('Shadowed', 220, 285, font='Avenir', size=30, shadow=Shadow('purple', blur=40, offset=(10, -15)))
+        with transform(CENTER), rotate(25):
+            image('tests/_in/plaid.png', 300, 200, width=60, shadow=Shadow('black', blur=35, offset=12))
+        frame = _ctx.canvas.commit()
+
+        def render(downsampled):
+            quick = effects._QUICK_BLUR
+            if not downsampled:
+                effects._QUICK_BLUR = float('inf')
+            try:
+                return _pixels(frame._render_to_cgimage(1.0, 2.0))
+            finally:
+                effects._QUICK_BLUR = quick
+        cg, ours = render(False), render(True)
+        self.assertNotEqual(cg, ours)
+        diffs = [abs(a - b) for a, b in zip(cg, ours)]
+        self.assertLessEqual(max(diffs), 8)
+        self.assertGreater(sum(d <= 3 for d in diffs) / len(diffs), .995)
 
 class CanvasTests(PlotDeviceTestCase):
     def test_rendering_does_not_leak(self):

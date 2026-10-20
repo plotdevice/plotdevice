@@ -230,6 +230,20 @@ class CompositingTests(PlotDeviceTestCase):
         with shadow('blue', blur=20, offset=0):
             poly(90,90, 15)
 
+    def test_shadow_scales_with_zoom(self):
+        from plotdevice import _ctx
+        from Quartz import CGImageGetDataProvider, CGDataProviderCopyData, CGImageGetBytesPerRow
+        size(40, 40)
+        background('white')
+        shadow('black', blur=0, offset=10)
+        rect(5, 5, 10, 10, fill='red')
+        frame = _ctx.canvas.commit()
+        for zoom in (1, 4):
+            img = frame._render_to_cgimage(zoom)
+            raw = bytes(CGDataProviderCopyData(CGImageGetDataProvider(img)))
+            px = raw[20*zoom * CGImageGetBytesPerRow(img) + 20*zoom * 4:][:3]
+            self.assertEqual(px, b'\0\0\0', 'no shadow at (20,20) when zoomed %ix' % zoom)
+
     @reference('compositing/beginclip.jpg')
     def test_beginclip(self):
         # ref/Compositing/compat/beginclip()

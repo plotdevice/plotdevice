@@ -1,9 +1,13 @@
 # encoding: utf-8
 import os, re
+import time
 from collections import OrderedDict
 from ..lib.cocoa import *
 from math import floor, ceil
 import objc
+from . import set_timeout
+
+BURST = 0.25  # seconds between edits that make them a burst (and of quiet that ends one)
 
 ## classes instantiated by PlotDeviceDocument.xib & PlotDeviceScript.xib
 
@@ -263,8 +267,12 @@ class DashboardController(NSObject):
         self.panel.contentView().setMaterial_(NSVisualEffectMaterialHUDWindow)
         self.rows = OrderedDict()
         self.positioned = False
+        self.editing = False  # whether edits are arriving in a burst (as while dragging a slider)
+        self._lastEdit, self._settle = 0, None
 
     def shutdown(self):
+        if self._settle is not None:
+            self._settle.invalidate()
         self.panel.close()
         for row in self.rows.values():
             row.delegate = None
@@ -275,7 +283,19 @@ class DashboardController(NSObject):
         var = self.script.vm.params[name]
         var.value = val
         if self.script.animationTimer is None:
+            now = time.perf_counter()
+            self.editing = self.editing or now - self._lastEdit < BURST
+            self._lastEdit = now
+            if self._settle is not None:
+                self._settle.invalidate()
+            self._settle = set_timeout(self, 'settle:', BURST)
             self.script.runScript()
+
+    def settle_(self, timer):
+        self._settle = None
+        if self.editing:
+            self.editing = False
+            self.script.graphicsView.liveEnded()
 
     def callHandler_(self, name):
         var = self.script.vm.params[name]

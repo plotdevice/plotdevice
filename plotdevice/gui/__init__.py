@@ -11,7 +11,7 @@ def bundle_path(subpath=None, rsrc=None, fmwk=None):
         return join(bundle, subpath)
     return bundle
 
-import os, sys, queue, threading
+import os, sys, time, queue, threading
 from Foundation import NSTimer, NSRunLoop, NSRunLoopCommonModes
 from PyObjCTools import AppHelper
 from ..util import autorelease
@@ -137,6 +137,11 @@ class FrameClock:
             self._framelog(now, drew)
 
     @property
+    def period(self):
+        """The time between frames at the requested fps"""
+        return self._period
+
+    @property
     def fps(self):
         return 1.0 / self._gap if self._gap else 1.0 / self._period
 
@@ -187,7 +192,19 @@ class FrameClock:
             self._timer.invalidate()
             self._timer = None
 
-class FrameRenderer:
+class RenderJob:
+
+    def __init__(self, queue):
+        self._queue = queue
+        self._generation = queue._generation
+        self._delivered = False
+        self.elapsed = None  # how long its work took (set before it's delivered)
+
+    @property
+    def pending(self):
+        return not self._delivered and self._generation > self._queue._cancelled
+
+class FrameQueue:
 
     # if the GIL is disabled, allow drawing and rendering to overlap
     DEPTH = 1 if getattr(sys, '_is_gil_enabled', lambda: True)() else 2
@@ -198,7 +215,7 @@ class FrameRenderer:
         self._cancelled = 0    # generations up to this one are dropped (read by the worker)
         self._pending = 0      # submitted but not yet delivered (main thread only)
         self._dead = False
-        self._thread = threading.Thread(target=self._loop, daemon=True, name='frame-renderer')
+        self._thread = threading.Thread(target=self._loop, daemon=True, name='frame-queue')
         self._thread.start()
 
     @property
@@ -212,7 +229,9 @@ class FrameRenderer:
     def submit(self, work, deliver):
         self._generation += 1
         self._pending += 1
-        self._jobs.put((self._generation, work, deliver))
+        job = RenderJob(self)
+        self._jobs.put((job, work, deliver))
+        return job
 
     def cancel(self):
         self._cancelled = self._generation
@@ -230,21 +249,24 @@ class FrameRenderer:
                 job = self._jobs.get()
                 if job is None:
                     return
-                generation, work, deliver = job
-                cancelled = lambda: generation <= self._cancelled
+                handle, work, deliver = job
+                cancelled = lambda: handle._generation <= self._cancelled
                 result = err = None
                 if not cancelled():
                     try:
+                        started = time.perf_counter()
                         result = work(cancelled)
+                        handle.elapsed = time.perf_counter() - started
                     except Exception as e:
                         err = e
-                AppHelper.callAfter(self._deliver, generation, deliver, result, err)
-                del job, work, deliver, result, err, cancelled
+                AppHelper.callAfter(self._deliver, handle, deliver, result, err)
+                del job, handle, work, deliver, result, err, cancelled
 
-    def _deliver(self, generation, deliver, result, err):
+    def _deliver(self, handle, deliver, result, err):
         self._pending -= 1
-        if not self._dead and generation > self._cancelled:
+        if not self._dead and handle._generation > self._cancelled:
             deliver(result, err)
+        handle._delivered = True
 
 from .document import PlotDeviceDocument, PythonScriptDocument, ScriptController
 from .app import PlotDeviceAppDelegate

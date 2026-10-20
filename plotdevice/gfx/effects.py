@@ -1,17 +1,22 @@
 # encoding: utf-8
 import os
 import re
+import math
 from contextlib import contextmanager
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
-from ..util import _copy_attr, _copy_attrs, numlike
+from ..util import numlike
 from .colors import Color
 from .geometry import Point, CORNER
-from . import _cg_context, _cg_layer, _cg_port, _canvas_dims
+from . import _cg_context, _cg_layer, _cg_port, _canvas_dims, _base_ctm, _visible, _layer_box, _clips, _frame, _bare
 
 _ctx = None
 __all__ = ("Effect", "Shadow", "Stencil",)
+
+_QUICK_BLUR = 32  # widest shadow blur (in device px) left to Core Graphics; wider ones are downsampled
+_OPAQUE = (kCGImageAlphaNone, kCGImageAlphaNoneSkipFirst, kCGImageAlphaNoneSkipLast)
+_ARGB = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
 
 # blend modes
 _BLEND=dict(
@@ -75,10 +80,10 @@ class Frob(object):
 
     def _draw(self):
         # apply state changes only to contained grobs
-        with _cg_context(), self.applied():
+        with _cg_context(), self.applied(self):
             if not self._grobs:
                 return
-            for grob in self._grobs:
+            for grob in _visible(self._grobs):
                 grob._draw()
 
     @property
@@ -138,7 +143,7 @@ class Effect(Frob):
             CGContextSetBlendMode(_cg_port(), _BLEND[fx['blend']])
         if 'shadow' in fx:
             shadow = Shadow(None) if fx['shadow'] is None else fx['shadow']
-            shadow._nsShadow.set() # don't mess with cg for shadows
+            shadow._set()
 
         # i *think* it's better to skip the transparency layer when only blending,
         # but am bracing for the discovery that it's not...
@@ -146,24 +151,33 @@ class Effect(Frob):
         # return bool(fx) # return whether any state was just changed
 
     @contextmanager
-    def applied(self):
+    def applied(self, owner=None):
         """Apply compositing effects (if any) to any drawing inside the `with` block"""
-        if self._fx:
+        if self._fx and (owner is None or _bare.get() is not owner):
+            box = _layer_box(owner)
             if self.set('blend', 'alpha'):
-                with _cg_layer():
-                    if not self.set('shadow'):
-                        yield # if there's no shadow, we don't need a second layer
-                    else:
-                        with _cg_layer():
-                            yield # if there is, we do
+                if 'shadow' not in self._fx and getattr(owner, '_one_paint', False):
+                    yield # a lone fill or stroke takes the alpha and blend as exactly as a layer would
+                else:
+                    with _cg_layer(box):
+                        if 'shadow' not in self._fx:
+                            yield # if there's no shadow, we don't need a second layer
+                        else:
+                            with self._shadowed(box, owner):
+                                yield # if there is, it needs one of its own
             else:
                 # no blend or alpha changes, but since _fx exists there must be a shadow
-                self.set('shadow')
-                with _cg_layer():
+                with self._shadowed(box, owner):
                     yield
         else:
-            # nothing to be done
             yield
+
+    def _shadowed(self, box, owner):
+        shadow = self._fx.get('shadow')
+        if shadow is None:
+            self.set('shadow') # (a shadow of None turns an inherited one off)
+            return _cg_layer(box)
+        return shadow._cast(box, owner)
 
     def copy(self):
         new = Effect()
@@ -223,12 +237,11 @@ class Shadow(object):
     def __init__(self, *args, **kwargs):
         super(Shadow, self).__init__()
         if args and isinstance(args[0], Shadow):
-            self._nsShadow = _copy_attr(args[0]._nsShadow)
+            self._color, self._blur, self._offset = args[0]._color, args[0]._blur, args[0]._offset
             for attr, val in kwargs.items():
                 if attr not in Shadow.kwargs: continue
                 setattr(self, attr, val)
         else:
-            self._nsShadow = NSShadow.alloc().init()
             for attr, val in zip(Shadow.kwargs, args):
                 kwargs.setdefault(attr, val)
 
@@ -247,35 +260,112 @@ class Shadow(object):
     def copy(self):
         return Shadow(self)
 
+    def _device(self):
+        a, b, c, d, _, _ = _base_ctm.get()
+        x, y = self._offset
+        return (a*x + c*y, b*x + d*y), self._blur * abs(a*d - b*c) ** .5
+
+    def _set(self):
+        offset, blur = self._device()
+        CGContextSetShadowWithColor(_cg_port(), offset, blur, self._color.cgColor)
+
+    @contextmanager
+    def _cast(self, box, owner):
+        port = _cg_port()
+        (dx, dy), blur = self._device()
+        bitmap = CGBitmapContextGetWidth(port) > 0 and CGBitmapContextGetAlphaInfo(port) not in _OPAQUE \
+                 and CGColorSpaceGetModel(CGBitmapContextGetColorSpace(port)) == kCGColorSpaceModelRGB
+        reach = None
+        if blur > _QUICK_BLUR and box is not None and owner is not None and bitmap and not _clips.get() and _frame.get() is not None:
+            whole = ((0, 0), (CGBitmapContextGetWidth(port), CGBitmapContextGetHeight(port)))
+            clip = CGRectApplyAffineTransform(CGContextGetClipBoundingBox(port), CGContextGetCTM(port))
+            target = CGRectIntegral(CGRectIntersection(whole, clip))
+            drawn = CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), _base_ctm.get())
+            reach = CGRectIntegral(CGRectIntersection(drawn, CGRectInset(target, -(blur + abs(dx)), -(blur + abs(dy)))))
+        if reach is None or CGRectIsEmpty(reach):
+            self._set()
+            with _cg_layer(box):
+                yield
+            return
+
+        shown = CGRectIntegral(CGRectIntersection(drawn, target))
+        with _drawing_into(port, shown if not CGRectIsEmpty(shown) else ((0, 0), (1, 1)), 1.0, CGContextGetCTM(port)) as full:
+            yield
+        drawing = CGBitmapContextCreateImage(full)
+
+        k = _QUICK_BLUR / blur
+        with _drawing_into(port, reach, k, _base_ctm.get()) as shrunk:
+            bare = _bare.set(owner)
+            try:
+                owner._draw()
+            finally:
+                _bare.reset(bare)
+        silhouette = CGBitmapContextCreateImage(shrunk)
+
+        (rx, ry), (rw, rh) = reach
+        sx, sy, sw, sh = rx + dx - blur, ry + dy - blur, rw + 2 * blur, rh + 2 * blur
+        small_w, small_h = int(math.ceil(sw * k)), int(math.ceil(sh * k))
+        small = CGBitmapContextCreate(None, small_w, small_h, 8, 0, CGBitmapContextGetColorSpace(port), _ARGB)
+        CGContextSetShadowWithColor(small, (small_w, 0), _QUICK_BLUR, self._color.cgColor)
+        silhouette_size = (CGBitmapContextGetWidth(shrunk), CGBitmapContextGetHeight(shrunk))
+        CGContextDrawImage(small, ((blur * k - small_w, blur * k), silhouette_size), silhouette)
+        shadow = CGBitmapContextCreateImage(small)
+
+        CGContextSaveGState(port)
+        CGContextConcatCTM(port, CGAffineTransformInvert(CGContextGetCTM(port)))
+        CGContextSetInterpolationQuality(port, kCGInterpolationHigh)
+        CGContextDrawImage(port, ((sx, sy), (small_w / k, small_h / k)), shadow)
+        if not CGRectIsEmpty(shown):
+            CGContextDrawImage(port, shown, drawing)
+        CGContextRestoreGState(port)
+
     def _get_color(self):
-        return Color(self._nsShadow.shadowColor())
+        return Color(self._color)
     def _set_color(self, spec):
         if isinstance(spec, Color):
-            self._nsShadow.setShadowColor_(spec.nsColor)
+            self._color = Color(spec)
         elif spec is None:
-            self._nsShadow.setShadowColor_(None)
+            self._color = Color(None)
         else:
             if not isinstance(spec, (tuple,list)):
                 spec = tuple([spec])
-            self._nsShadow.setShadowColor_(Color(*spec).nsColor)
+            self._color = Color(*spec)
     color = property(_get_color, _set_color)
 
     def _get_blur(self):
-        return self._nsShadow.shadowBlurRadius()
+        return self._blur
     def _set_blur(self, blur):
-        self._nsShadow.setShadowBlurRadius_(blur)
+        self._blur = float(blur)
     blur = property(_get_blur, _set_blur)
 
     def _get_offset(self):
-        x,y = self._nsShadow.shadowOffset()
-        return Point(x,-y)
+        return Point(self._offset)
     def _set_offset(self, offset):
         if numlike(offset):
             x = y = offset
         else:
             x,y = offset
-        self._nsShadow.setShadowOffset_((x,-y))
+        self._offset = Point(float(x), float(y))
     offset = property(_get_offset, _set_offset)
+
+@contextmanager
+def _drawing_into(port, rect, scale, ctm):
+    (x, y), (w, h) = rect
+    bitmap = CGBitmapContextCreate(None, int(math.ceil(w * scale)), int(math.ceil(h * scale)), 8, 0,
+                                   CGBitmapContextGetColorSpace(port), _ARGB)
+    CGContextScaleCTM(bitmap, scale, scale)
+    CGContextTranslateCTM(bitmap, -x, -y)
+    CGContextConcatCTM(bitmap, ctm)
+    flipped = NSGraphicsContext.currentContext().isFlipped()
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmap, flipped))
+    to_bitmap = CGAffineTransformConcat(CGAffineTransformMakeTranslation(-x, -y), CGAffineTransformMakeScale(scale, scale))
+    moved = _base_ctm.set(CGAffineTransformConcat(_base_ctm.get(), to_bitmap))
+    try:
+        yield bitmap
+    finally:
+        _base_ctm.reset(moved)
+        NSGraphicsContext.restoreGraphicsState()
 
 class Stencil(Frob):
     def __init__(self, stencil, invert=False, channel=None):
@@ -347,9 +437,13 @@ class Stencil(Frob):
             xf.inverse.concat() # ...restore the previous state after
 
     @contextmanager
-    def applied(self):
+    def applied(self, owner=None):
         self.set()
-        yield
+        token = _clips.set(_clips.get() + 1)
+        try:
+            yield
+        finally:
+            _clips.reset(token)
 
 class ClippingPath(Stencil):
     pass # NodeBox compat...

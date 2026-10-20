@@ -594,7 +594,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     def _draw(self):
         with _ns_context():                  # save and restore the gstate
             self._screen_transform.concat()  # transform so text can be drawn at the origin
-            with self.effects.applied():     # apply any blend/alpha/shadow effects
+            with self.effects.applied(self): # apply any blend/alpha/shadow effects
                 for block in self._blocks:
                     px_offset = self._to_px(block.offset)
                     px_offset.x -= block._shift

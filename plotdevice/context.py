@@ -9,7 +9,7 @@ from objc import super
 from .lib.cocoa import *
 from .lib import pathmatics
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
-from .gfx.geometry import Dimension, parse_coords
+from .gfx.geometry import Dimension, parse_coords, IDENTITY
 from .gfx.typography import Layout
 from .gfx.effects import Frob
 from .gfx import *
@@ -1792,6 +1792,103 @@ def _committed(grobs):
         committed.append(grob)
     return tuple(committed)
 
+_UNBOUNDED_BLENDS = {'clear', 'copy', 'sourcein', 'sourceout', 'destinationin', 'destinationatop'}
+
+def _hull(matrix, x0, y0, w0, h0):
+    a, b, c, d, tx, ty = matrix
+    corners = [(cx, cy) for cx in (x0, x0 + w0) for cy in (y0, y0 + h0)]
+    xs = [a * cx + c * cy + tx for cx, cy in corners]
+    ys = [b * cx + d * cy + ty for cx, cy in corners]
+    return (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
+
+def _path_box(path):
+    dpx = path._grid.dpx
+    try:
+        (x, y), (w, h) = path._nsBezierPath.bounds()
+    except Exception:
+        return (0, 0, 0, 0) # an empty path
+    if tuple(path.transform.matrix) == IDENTITY:
+        return (x * dpx, y * dpx, w * dpx, h * dpx)
+    return _hull(path._screen_transform.matrix, x * dpx, y * dpx, w * dpx, h * dpx)
+
+def _with_effects(box, fx):
+    if box is None or fx.get('blend') in _UNBOUNDED_BLENDS:
+        return None
+    shadow = fx.get('shadow')
+    if shadow is not None:
+        x, y, w, h = box
+        (dx, dy), reach = shadow.offset, shadow.blur + 2
+        x0, y0 = min(x, x + dx - reach), min(y, y + dy - reach)
+        x1, y1 = max(x + w, x + w + dx + reach), max(y + h, y + h + dy + reach)
+        box = (x0, y0, x1 - x0, y1 - y0)
+    return box
+
+def _render_bounds(grob, boxes):
+    if isinstance(grob, Frob):
+        contents = grob.contents
+        for g in contents:
+            boxes[id(g)] = _render_bounds(g, boxes)
+        inner = [boxes[id(g)] for g in contents]
+        box = None
+        if inner and None not in inner:
+            x0, y0 = min(b[0] for b in inner), min(b[1] for b in inner)
+            x1, y1 = max(b[0] + b[2] for b in inner), max(b[1] + b[3] for b in inner)
+            box = (x0, y0, x1 - x0, y1 - y0)
+        if isinstance(grob, Effect):
+            if grob._fx.get('shadow') is not None:
+                nested = list(contents)
+                while nested:
+                    g = nested.pop()
+                    boxes[id(g)] = _with_effects(boxes[id(g)], grob._fx)
+                    if isinstance(g, Frob):
+                        nested.extend(g.contents)
+            return _with_effects(box, grob._fx)
+        path = getattr(grob, 'path', None)
+        if path is not None and not grob.evenodd:
+            cx, cy, cw, ch = _path_box(path)
+            if box is None:
+                return (cx - 2, cy - 2, cw + 4, ch + 4)
+            x0, y0 = max(box[0], cx - 2), max(box[1], cy - 2)
+            x1, y1 = min(box[0] + box[2], cx + cw + 2), min(box[1] + box[3], cy + ch + 2)
+            return (x0, y0, max(x1 - x0, 0), max(y1 - y0, 0))
+        return box
+
+    dpx = grob._grid.dpx
+    untransformed = tuple(grob.transform.matrix) == IDENTITY
+    if hasattr(grob, '_blocks'):
+        xs, ys = [], []
+        for block in grob._blocks:
+            (ux, uy), (uw, uh) = grob._engine.usedRectForTextContainer_(block._block)
+            ox, oy = block._frame.origin
+            bx, by = ox * dpx - block._shift + ux, oy * dpx + uy
+            xs += [bx, bx + uw]
+            ys += [by, by + uh]
+        x0, y0, w0, h0 = min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)
+        if untransformed:
+            x, y, w, h = x0 + grob.x * dpx, y0 + (grob.y - grob._headroom) * dpx, w0, h0
+        else:
+            x, y, w, h = _hull(grob._screen_transform.matrix, x0, y0, w0, h0)
+        reach, at, end = 0, 0, grob._store.length()
+        while at < end:
+            font, run = grob._store.attribute_atIndex_effectiveRange_('NSFont', at, None)
+            if font is not None:
+                (gx, gy), (gw, gh) = font.boundingRectForFont()
+                reach = max(reach, -gx, -gy, gx + gw, gy + gh)
+            at += run.length
+        x, y, w, h = x - reach, y - reach, w + 2 * reach, h + 2 * reach
+    elif hasattr(grob, '_nsImage'):
+        w0, h0 = grob._nsImage.size()
+        if untransformed:
+            factor = grob._scalefactor
+            x, y, w, h = grob.x * dpx, grob.y * dpx, w0 * factor, h0 * factor
+        else:
+            x, y, w, h = _hull(grob._screen_transform.matrix, 0, 0, w0, h0)
+    else:
+        x, y, w, h = _path_box(grob)
+    pad = (getattr(grob, 'strokewidth', 0) or 0) * dpx * 5 + 2
+    fx = getattr(grob, '_effects', None)
+    return _with_effects((x - pad, y - pad, w + 2 * pad, h + 2 * pad), {} if fx is None else fx._fx)
+
 class Frame(object):
 
     def __init__(self, canvas):
@@ -1800,9 +1897,28 @@ class Frame(object):
         self.pagesize = canvas.pagesize
         self.background = canvas.background
         self.outputmode = canvas._ctx._outputmode if canvas._ctx else RGB
+        self._bounds = None  # each grob's _render_bounds, computed by the first culled render
+        self._layers = {}    # the bounds of grobs drawn in transparency layers, as they're drawn
 
-    def draw(self, cancelled=None):
-        with gfx._rendering(self):
+    def _layer_box(self, grob):
+        key = id(grob)
+        if key not in self._layers:
+            self._layers[key] = _render_bounds(grob, {})
+        return self._layers[key]
+
+    def _within(self, rect, grobs):
+        if self._bounds is None:
+            bounds = {}
+            for grob in self.grobs:
+                bounds[id(grob)] = _render_bounds(grob, bounds)
+            self._bounds = bounds
+        x, y, w, h = rect
+        boxes = [self._bounds[id(grob)] for grob in grobs]
+        return [grob for grob, box in zip(grobs, boxes) if box is None or not (
+                box[0] > x + w or box[1] > y + h or box[0] + box[2] < x or box[1] + box[3] < y)]
+
+    def draw(self, cancelled=None, within=None):
+        with gfx._rendering(self, within):
             if self.background is not None:
                 rect = ((0,0), self.pagesize)
                 if isinstance(self.background, Gradient):
@@ -1812,7 +1928,7 @@ class Frame(object):
                     NSRectFillUsingOperation(rect, NSCompositeSourceOver)
 
             with autorelease():
-                for grob in self.grobs:
+                for grob in gfx._visible(self.grobs):
                     if cancelled is not None and cancelled():
                         return
                     grob._draw()
@@ -1832,34 +1948,46 @@ class Frame(object):
         img.unlockFocus()
         return img
 
+    def _raster_size(self, scale):
+        return tuple(max(int(dim * scale), 1) for dim in self.pagesize)
+
     def _render_to_cgimage(self, zoom=1.0, dpr=1.0):
         scale = zoom * dpr
-        size = Size(*[max(int(dim*scale), 1) for dim in self.pagesize])
+        size = Size(*self._raster_size(scale))
         colorspace, opts = CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
         bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
         self._render_to_context(bitmapContext, scale)
         return CGBitmapContextCreateImage(bitmapContext)
 
-    def _render_to_surface(self, surface, scale, cancelled=None):
+    def _render_to_surface(self, surface, scale, cancelled=None, origin=None, size=None):
+        w, h = size or (surface.width(), surface.height())
+        H = surface.height()
         surface.lock()
+        port = surface.context()
+        CGContextSaveGState(port)
         try:
-            port = surface.context()
-            CGContextClearRect(port, ((0, 0), (surface.width(), surface.height())))
-            self._render_to_context(port, scale, cancelled)
+            CGContextClipToRect(port, ((0, H - h), (w, h)))
+            CGContextClearRect(port, ((0, H - h), (w, h)))
+            offset = within = None
+            if origin is not None:
+                offset = (-origin[0], origin[1] + H)
+                within = (origin[0] / scale, origin[1] / scale, w / scale, h / scale)
+            self._render_to_context(port, scale, cancelled, offset, within)
             CGContextFlush(port)
         finally:
+            CGContextRestoreGState(port)
             surface.unlock()
 
-    def _render_to_context(self, cgContext, zoom, cancelled=None):
+    def _render_to_context(self, cgContext, zoom, cancelled=None, offset=None, within=None):
         ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(cgContext, True)
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.setCurrentContext_(ns_ctx)
         NSGraphicsContext.saveGraphicsState()
         trans = NSAffineTransform.transform()
-        trans.translateXBy_yBy_(0, self.pagesize.height*zoom)
+        trans.translateXBy_yBy_(*(offset or (0, self.pagesize.height*zoom)))
         trans.scaleXBy_yBy_(zoom,-zoom)
         trans.concat()
-        self.draw(cancelled)
+        self.draw(cancelled, within)
         NSGraphicsContext.restoreGraphicsState()
         NSGraphicsContext.restoreGraphicsState()
 
