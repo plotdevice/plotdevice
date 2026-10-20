@@ -11,7 +11,7 @@ def bundle_path(subpath=None, rsrc=None, fmwk=None):
         return join(bundle, subpath)
     return bundle
 
-import os, sys, queue, threading
+import os, sys, time, queue, threading
 from Foundation import NSTimer, NSRunLoop, NSRunLoopCommonModes
 from PyObjCTools import AppHelper
 from ..util import autorelease
@@ -198,6 +198,7 @@ class RenderJob:
         self._queue = queue
         self._generation = queue._generation
         self._delivered = False
+        self.elapsed = None  # how long its work took (set before it's delivered)
 
     @property
     def pending(self):
@@ -253,7 +254,9 @@ class FrameQueue:
                 result = err = None
                 if not cancelled():
                     try:
+                        started = time.perf_counter()
                         result = work(cancelled)
+                        handle.elapsed = time.perf_counter() - started
                     except Exception as e:
                         err = e
                 AppHelper.callAfter(self._deliver, handle, deliver, result, err)

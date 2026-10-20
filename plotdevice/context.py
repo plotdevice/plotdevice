@@ -1959,18 +1959,23 @@ class Frame(object):
         self._render_to_context(bitmapContext, scale)
         return CGBitmapContextCreateImage(bitmapContext)
 
-    def _render_to_surface(self, surface, scale, cancelled=None, origin=None):
+    def _render_to_surface(self, surface, scale, cancelled=None, origin=None, size=None):
+        w, h = size or (surface.width(), surface.height())
+        H = surface.height()
         surface.lock()
+        port = surface.context()
+        CGContextSaveGState(port)
         try:
-            port = surface.context()
-            CGContextClearRect(port, ((0, 0), (surface.width(), surface.height())))
+            CGContextClipToRect(port, ((0, H - h), (w, h)))
+            CGContextClearRect(port, ((0, H - h), (w, h)))
             offset = within = None
             if origin is not None:
-                offset = (-origin[0], origin[1] + surface.height())
-                within = (origin[0] / scale, origin[1] / scale, surface.width() / scale, surface.height() / scale)
+                offset = (-origin[0], origin[1] + H)
+                within = (origin[0] / scale, origin[1] / scale, w / scale, h / scale)
             self._render_to_context(port, scale, cancelled, offset, within)
             CGContextFlush(port)
         finally:
+            CGContextRestoreGState(port)
             surface.unlock()
 
     def _render_to_context(self, cgContext, zoom, cancelled=None, offset=None, within=None):

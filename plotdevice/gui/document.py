@@ -157,7 +157,8 @@ class ScriptController(NSWindowController):
     def live(self):
         animating = self.animationTimer is not None and self.animationTimer.isValid()
         exporting = self.vm is not None and self.vm.session is not None and self.vm.session.running
-        return animating or exporting
+        editing = self.dashboardController is not None and self.dashboardController.editing
+        return animating or exporting or editing
 
     @property
     def framePeriod(self):
@@ -433,6 +434,7 @@ class ScriptController(NSWindowController):
         if self.animationTimer and not isinstance(sender, NSMenuItem):
             if self.animationTimer.isValid():
                 self.animationTimer.invalidate()
+                self.graphicsView.liveEnded()
             else:
                 self.animationTimer = FrameClock(self.currentView, self, 'tick:', self.vm.speed)
             self.setToolbarMode_("play" if self.animationTimer.isValid() else "pause")
@@ -746,6 +748,9 @@ class ScriptController(NSWindowController):
 
         # re-enable the play button
         self.setToolbarMode_("stop")
+
+        if self.graphicsView:
+            self.graphicsView.liveEnded()
 
         # relay any errors to the text panes (if we're in the app)
         if self.editorView:

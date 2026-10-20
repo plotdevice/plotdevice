@@ -9,7 +9,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    CGRectInset, CGRectIntegral, CGRectIntersection, CGRectIsEmpty, kCGColorSpaceModelRGB, \
                    kCGImageAlphaNone, kCGImageAlphaNoneSkipFirst, kCGImageAlphaNoneSkipLast, kCGInterpolationHigh, \
                    CGContextBeginPath, CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, \
-                   CGContextClearRect, CGContextClearRect, CGContextClip, CGContextClipToMask, CGContextDrawPath, \
+                   CGContextClearRect, CGContextClearRect, CGContextClip, CGContextClipToMask, CGContextClipToRect, CGContextGetClipBoundingBox, CGContextDrawPath, \
                    CGContextEndTransparencyLayer, CGContextEOClip, CGContextFlush, CGContextGetCTM, CGContextRestoreGState, CGContextSaveGState, CGContextScaleCTM, \
                    CGContextSetAlpha, CGContextSetBlendMode, CGContextSetFillColorWithColor, CGContextSetLineCap, \
                    CGContextSetLineDash, CGContextSetLineJoin, CGContextSetLineWidth, CGContextSetShadowWithColor, \

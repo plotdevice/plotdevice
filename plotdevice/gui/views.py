@@ -3,6 +3,7 @@ import sys
 import os
 import math
 import bisect
+import time
 import traceback
 import objc
 
@@ -15,14 +16,25 @@ from objc import super
 class Rasterizer(object):
     DEPTH = FrameQueue.DEPTH + 2
     BACKDROP = 2048  # longest side, in pixels, of the low-res frame shown during a zoom gesture
+    HEADROOM = 1.15  # a ring made for a viewport render fits ones up to this much bigger each way
+    SHRINK = 0.5     # and is made afresh once they need less than this share of it
 
     def __init__(self):
         self._size = None
         self._surfaces = []
         self._onscreen = ()  # the surface on screen and the one it replaced
 
-    def render(self, frame, scale, cancelled=None):
-        size = frame._raster_size(scale)
+    def render(self, frame, scale, cancelled=None, rect=None):
+        if rect is None:
+            origin, need = None, frame._raster_size(scale)
+            size = need
+        else:
+            origin, need = rect[:2], tuple(rect[2:])
+            fits = self._size is not None and need[0] <= self._size[0] and need[1] <= self._size[1]
+            if fits and need[0] * need[1] >= self.SHRINK * self._size[0] * self._size[1]:
+                size = self._size
+            else:
+                size = tuple(int(math.ceil(v * self.HEADROOM)) for v in need)
         if size != self._size:
             PDSurface = objc.lookUpClass('PDSurface')
             self._size = size
@@ -30,7 +42,7 @@ class Rasterizer(object):
         surface = next(s for s in self._surfaces if s.surface() not in self._onscreen)
         self._surfaces.remove(surface)
         self._surfaces.append(surface)
-        frame._render_to_surface(surface, scale, cancelled)
+        frame._render_to_surface(surface, scale, cancelled, origin, need)
         return surface.surface()
 
     def render_tiles(self, tiles, coords, cancelled=None):
@@ -195,18 +207,25 @@ class FramePresenter(object):
         self.attached = True           # whether the view is in a window (renders landing while it isn't are dropped)
         self._root = root              # the view's layer
         self._raster = Rasterizer()    # what draws the renders it presents
-        self._holder = None            # layer over the canvas, while a frame is shown in tiles
+        self._holder = None            # layer over the canvas, while a frame is shown in parts
         self._backdrop_layer = None    # the bottom layer in the holder
+        self._viewport = None          # layer showing an animation frame rendered for the viewport only
         self._tiles = None             # the FrameTiles on display, if the frame is tiled
         self._frame = None             # the frame on display
         self._backdrop = None          # (frame, surface) for a zoom gesture, see _show_backdrop()
         self._rect = None              # the canvas's rect in the root layer
+        self._physics = ViewportPhysics()
         self._visible = None           # the edges (x0, y0, x1, y1) of what's in view, from moved()
         self._canvas_size = None       # the canvas's size, in points
+        self._viewport_size = None     # the view's size, in points
+        self._magnification = 1.0      # a zoom gesture's magnification
         self._wanted = None            # (zoom, dpr) of the latest frame asked for
+        self._wanted_mode = None       # and the mode it's rendered in
         self._shown = (0, None, None)  # (seq, zoom, dpr) of the frame on display
+        self._period = None            # the time between frames while they're live, else None
         self._gesture = False          # whether a zoom gesture's preview is on screen
         self._landing = False          # whether the view is laying itself out for a frame being presented
+        self._patch = None             # RenderJob rendering the frame on screen again, for where the view has moved
 
     def _show_backdrop(self, backdrop):
         self._backdrop = backdrop
@@ -214,21 +233,33 @@ class FramePresenter(object):
             return
         if backdrop is None:
             self._backdrop_layer.setContents_(None)
-        elif self._frame is backdrop[0]:
+        elif self._viewport is not None or self._frame is backdrop[0]:
             self._backdrop_layer.setContents_(backdrop[1])
 
+    @property
+    def viewport_only(self):
+        return self._viewport is not None or self._wanted_mode == 'viewport'
+
     def render(self, frame, seq, zoom, dpr, period=None, landing=None, on_land=None, onerror=None, ondone=None):
-        self._wanted = (zoom, dpr)
+        self._wanted, self._period = (zoom, dpr), period
         width, height = frame._raster_size(zoom * dpr)
-        if self._visible is None or period is not None:
+        if self._visible is None:
             mode = 'full'
+        elif period is not None:
+            vw, vh = self._viewport_size
+            mode = 'viewport' if width * height > ViewportPhysics.RATIO * vw * vh * dpr ** 2 else 'full'
         else:
             mode = 'tiles' if width * height > FrameTiles.BUDGET else 'full'
+        self._wanted_mode = mode
         self._submit(frame, seq, zoom, dpr, mode, landing, on_land, onerror, ondone)
 
-    def moved(self, visible, canvas_size):
-        self._visible, self._canvas_size = visible, canvas_size
+    def moved(self, visible, canvas_size, viewport_size, magnification):
+        if visible != self._visible:
+            self._physics.moved(visible)
+        self._visible, self._canvas_size, self._viewport_size = visible, canvas_size, viewport_size
+        self._magnification = magnification
         self._request_tiles()
+        self._request_viewport()
 
     def gesture_began(self):
         self._gesture = True
@@ -243,6 +274,8 @@ class FramePresenter(object):
 
     def gesture_ended(self):
         self._gesture = False
+        if self._viewport is not None:
+            self._show_backdrop(None)
         self._request_tiles()
 
     def place(self, rect):
@@ -257,15 +290,27 @@ class FramePresenter(object):
         self._holder.removeFromSuperlayer()
         if self._tiles is not None:
             self._tiles.detach()
-        self._holder = self._backdrop_layer = self._tiles = self._frame = None
+        self._holder = self._backdrop_layer = self._viewport = self._tiles = self._frame = None
 
-    def _submit(self, frame, seq, zoom, dpr, mode, landing=None, on_land=None, onerror=None, ondone=None):
+    def _submit(self, frame, seq, zoom, dpr, mode, landing=None, on_land=None, onerror=None, ondone=None, again=False):
         if mode == 'tiles':
             tiles = self._tiles
             if tiles is None or tiles.key != (seq, zoom, dpr):
                 tiles = FrameTiles(frame, (seq, zoom, dpr))
             coords = [t for t in tiles.covering(landing or self._in_view(zoom * dpr)) if t not in tiles.layers]
             work = lambda raster, cancelled: (tiles, raster.render_tiles(tiles, coords, cancelled))
+        elif mode == 'viewport':
+            settled = landing is None
+            if settled:
+                edges = self._visible
+            else:
+                x0, y0, w, h = [v / dpr for v in landing]
+                edges = (x0, y0, x0 + w, y0 + h)
+            vw, vh = self._viewport_size
+            rect, density = self._physics.region(frame, zoom, dpr, edges, settled, self._magnification,
+                                                   vw * vh * dpr * dpr, self._period or 0.0)
+            scale = zoom * density
+            work = lambda raster, cancelled: (rect, raster.render(frame, scale, cancelled, rect), density)
         else:
             work = lambda raster, cancelled: raster.render(frame, zoom * dpr, cancelled)
 
@@ -274,8 +319,10 @@ class FramePresenter(object):
                 if onerror is not None:
                     onerror(err)
             else:
+                if mode == 'viewport':
+                    self._physics.landed(job.elapsed, rect[2] * rect[3])
                 current = seq >= self._shown[0] and (zoom, dpr) == self._wanted and self.attached
-                if current:
+                if current and (not again or self._viewport is not None):
                     self._shown = (seq, zoom, dpr)
                     self._prepare(mode, result)
                     self._landing = True
@@ -287,9 +334,12 @@ class FramePresenter(object):
                     self._present(mode, frame, result, dpr)
                     if mode == 'tiles':
                         self._request_tiles()
+                    elif mode == 'viewport':
+                        self._request_viewport(landed=True)
             if ondone is not None:
                 ondone()
-        self._job(work, deliver)
+        job = self._job(work, deliver)
+        return job
 
     def _request_tiles(self):
         tiles = self._tiles
@@ -308,6 +358,19 @@ class FramePresenter(object):
             return self._job(work, deliver)
         tiles.request(self._in_view(tiles.key[2]), submit)
 
+    def _request_viewport(self, landed=False):
+        patching = self._patch is not None and self._patch.pending
+        seq, zoom, dpr = self._shown
+        if self._viewport is None or self._visible is None or self._landing or patching or self._wanted != (zoom, dpr):
+            return
+        if not landed and not self.queue.ready:
+            return
+        x, y, w, h = self._in_view(1.0)
+        (lx, ly), (lw, lh) = self._viewport.frame()
+        if w <= 0 or h <= 0 or (lx <= x + .5 and ly <= y + .5 and lx + lw >= x + w - .5 and ly + lh >= y + h - .5):
+            return
+        self._patch = self._submit(self._frame, seq, zoom, dpr, 'viewport', again=True)
+
     def _in_view(self, scale):
         (x0, y0, x1, y1), (cw, ch) = self._visible, self._canvas_size
         x0, y0 = min(max(x0, 0), cw), min(max(y0, 0), ch)
@@ -319,7 +382,9 @@ class FramePresenter(object):
         return self.queue.submit(lambda cancelled: work(raster, cancelled), deliver)
 
     def _prepare(self, mode, result):
-        if not (mode == 'tiles' and self._tiles is result[0]):
+        same_tiles = mode == 'tiles' and self._tiles is result[0]
+        same_viewport = mode == 'viewport' and self._viewport is not None
+        if not (same_tiles or same_viewport):
             self._clear()
         if mode == 'full':
             self._show_backdrop(None)
@@ -332,6 +397,23 @@ class FramePresenter(object):
                 tiles.attach(self._holder)
                 self._tiles = tiles
             tiles.add(rendered)
+        elif mode == 'viewport':
+            rect, surface, density = result
+            if self._viewport is None:
+                self._hold(frame)
+                self._viewport = CALayer.new()
+                self._viewport.setActions_({k:None for k in ["contents", "contentsRect", "contentsScale", "position", "bounds"]})
+                self._holder.addSublayer_(self._viewport)
+            self._frame = frame
+            self._holder.setBackgroundColor_(self._fill(frame))
+            x, y, w, h = rect
+            W, H = surface.width(), surface.height()
+            self._viewport.setContentsScale_(density)
+            self._viewport.setContents_(surface)
+            top = 0 if self._viewport.contentsAreFlipped() else 1 - h / H
+            self._viewport.setContentsRect_(((0, top), (w / W, h / H)))
+            self._viewport.setFrame_(((x / density, y / density), (w / density, h / density)))
+            self._raster.shown(surface)
         else:
             self._root.setContentsScale_(dpr)
             self._root.setContents_(result)
@@ -362,6 +444,73 @@ class FramePresenter(object):
             return None
         color = (bg._rgb if frame.outputmode == RGB else bg._cmyk).CGColor()
         return CGColorCreateCopyByMatchingToColorSpace(CGColorSpaceCreateDeviceRGB(), kCGRenderingIntentDefault, color, None)
+
+class ViewportPhysics(object):
+    RATIO = 1.5         # animation frames whose full raster is this many times the viewport's render just the viewport
+    START_SPEED = 3000  # points per second a scroll (a fling, say) may reach before the next animation frame lands
+    MARGIN = 0.25       # most an animation frame renders past each side of the view, as a fraction of it
+    PREDICT_CAP = 2     # most pixels an animation frame renders to cover the view's motion, in viewports' worth
+    RENDER_CAP = 3      # most it renders with a margin too, if there's time for it in a frame
+
+    def __init__(self):
+        self._scrolls = []        # recent (time, edges) of the visible rect, for how fast they're moving
+        self._renderTime = 0.0    # smoothed time to render a frame for the viewport
+        self._pixelTime = 0.0     # smoothed time those renders take per pixel
+        self._frameGap = 0.0      # smoothed time between those frames landing
+        self._frameShown = None   # when the last one landed
+
+    def moved(self, edges):
+        now = time.perf_counter()
+        self._scrolls = [(t, e) for t, e in self._scrolls if now - t < .12] + [(now, edges)]
+
+    def landed(self, elapsed, pixels):
+        now = time.perf_counter()
+        self._renderTime += .3 * (elapsed - self._renderTime)
+        self._pixelTime += .3 * (elapsed / pixels - self._pixelTime)
+        if self._frameShown is not None:
+            self._frameGap += .3 * (min(now - self._frameShown, .5) - self._frameGap)
+        self._frameShown = now
+
+    def region(self, frame, zoom, dpr, edges, moving, mag, viewport, period):
+        x0, y0, x1, y1 = edges
+        if moving:
+            vw, vh = x1 - x0, y1 - y0
+            ahead = self._renderTime + self._frameGap
+            dx0, dy0, dx1, dy1 = [v * ahead for v in self._edgeVelocity()]
+            density = dpr * min(1.0, mag * min(1.0, vw / max(vw + dx1 - dx0, 1.0)))
+            margin_x = min(self.START_SPEED * ahead / mag, self.MARGIN * vw)
+            margin_y = min(self.START_SPEED * ahead / mag, self.MARGIN * vh)
+        else:
+            dx0 = dy0 = dx1 = dy1 = margin_x = margin_y = 0
+            density = dpr
+
+        spare = viewport * max(1.0, min(self.RENDER_CAP, period / max(self._pixelTime * viewport, 1e-9)))
+        lead = (-min(dx0, 0), -min(dy0, 0), max(dx1, 0), max(dy1, 0))  # left, top, right, bottom
+        margin = (margin_x, margin_y, margin_x, margin_y)
+        pixels = lambda k, j: (x1 - x0 + k * (lead[0] + lead[2]) + j * 2 * margin_x) * \
+                              (y1 - y0 + k * (lead[1] + lead[3]) + j * 2 * margin_y) * density ** 2
+        k = 1.0
+        while k > 0 and pixels(k, 0) > self.PREDICT_CAP * viewport:
+            k = max(k - .1, 0)
+        j = 1.0
+        while j > 0 and pixels(k, j) > spare:
+            j = max(j - .1, 0)
+        density = min(density, math.sqrt(self.PREDICT_CAP * viewport / max((x1 - x0) * (y1 - y0), 1.0)))
+        left, top, right, bottom = [k * a + j * b for a, b in zip(lead, margin)]
+
+        full = frame._raster_size(zoom * density)
+        x, y = max(int((x0 - left) * density), 0), max(int((y0 - top) * density), 0)
+        w = int(math.ceil((x1 + right) * density)) - x
+        h = int(math.ceil((y1 + bottom) * density)) - y
+        return (x, y, max(min(w, full[0] - x), 1), max(min(h, full[1] - y), 1)), density
+
+    def _edgeVelocity(self):
+        now = time.perf_counter()
+        recent = [(t, edges) for t, edges in self._scrolls if now - t < .12]
+        if len(recent) < 2 or now - recent[-1][0] > .08:
+            return 0.0, 0.0, 0.0, 0.0
+        (t0, before), (t1, after) = recent[0], recent[-1]
+        return tuple((b - a) / (t1 - t0) for a, b in zip(before, after))
 
 class GraphicsView(NSView):
     script = IBOutlet()
@@ -501,6 +650,11 @@ class GraphicsView(NSView):
             self.scrollPoint_( (ox + focus[0]*w - vw/2.0, oy + focus[1]*h - vh/2.0) )
 
     @objc.python_method
+    def liveEnded(self):
+        if self._presenter.viewport_only:
+            self._rerender()
+
+    @objc.python_method
     def _moved(self):
         scrollview = self.enclosingScrollView()
         if scrollview is None:
@@ -508,7 +662,8 @@ class GraphicsView(NSView):
         (vx, vy), (vw, vh) = scrollview.documentVisibleRect()
         ox, oy, cw, ch = self.canvasRect()
         visible = (vx - ox, vy - oy, vx - ox + vw, vy - oy + vh)
-        self._presenter.moved(visible, (cw, ch))
+        viewport_size = tuple(scrollview.contentView().frame().size)
+        self._presenter.moved(visible, (cw, ch), viewport_size, scrollview.magnification())
 
     def scrollViewWillStartLiveMagnify_(self, note):
         self._presenter.gesture_began()

@@ -277,7 +277,9 @@ class Shadow(object):
                  and CGColorSpaceGetModel(CGBitmapContextGetColorSpace(port)) == kCGColorSpaceModelRGB
         reach = None
         if blur > _QUICK_BLUR and box is not None and owner is not None and bitmap and not _clips.get() and _frame.get() is not None:
-            target = ((0, 0), (CGBitmapContextGetWidth(port), CGBitmapContextGetHeight(port)))
+            whole = ((0, 0), (CGBitmapContextGetWidth(port), CGBitmapContextGetHeight(port)))
+            clip = CGRectApplyAffineTransform(CGContextGetClipBoundingBox(port), CGContextGetCTM(port))
+            target = CGRectIntegral(CGRectIntersection(whole, clip))
             drawn = CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), _base_ctm.get())
             reach = CGRectIntegral(CGRectIntersection(drawn, CGRectInset(target, -(blur + abs(dx)), -(blur + abs(dy)))))
         if reach is None or CGRectIsEmpty(reach):
