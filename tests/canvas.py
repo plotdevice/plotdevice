@@ -76,7 +76,10 @@ class FrameTests(PlotDeviceTestCase):
         frame = _ctx.canvas.commit()
         committed = frame.grobs[0] # a copy, since `t` is still held
         self.assertEqual(committed._nsmode, CMYK)
-        self.assertEqual(committed._engine.firstUnlaidCharacterIndex(), len(committed.text))
+        if committed._engine is not None:
+            self.assertEqual(committed._engine.firstUnlaidCharacterIndex(), len(committed.text))
+        else:
+            self.assertIsNotNone(committed._line) # laid out by CoreText
         def forbidden(text):
             raise AssertionError('rendering wrote to the text storage')
         orig, Text._colorize = Text._colorize, forbidden

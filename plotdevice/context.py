@@ -1861,26 +1861,33 @@ def _render_bounds(grob, boxes):
 
     dpx = grob._grid.dpx
     untransformed = tuple(grob.transform.matrix) == IDENTITY
-    if hasattr(grob, '_blocks'):
-        xs, ys = [], []
-        for block in grob._blocks:
-            (ux, uy), (uw, uh) = grob._engine.usedRectForTextContainer_(block._block)
-            ox, oy = block._frame.origin
-            bx, by = ox * dpx - block._shift + ux, oy * dpx + uy
-            xs += [bx, bx + uw]
-            ys += [by, by + uh]
-        x0, y0, w0, h0 = min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)
+    if hasattr(grob, '_engine'):
+        if grob._engine is None:
+            line = grob._ct
+            x0, y0, w0, h0 = line.x, 0.0, line.width, line.height
+        else:
+            xs, ys = [], []
+            for block in grob._blocks:
+                (ux, uy), (uw, uh) = grob._engine.usedRectForTextContainer_(block._block)
+                ox, oy = block._frame.origin
+                bx, by = ox * dpx - block._shift + ux, oy * dpx + uy
+                xs += [bx, bx + uw]
+                ys += [by, by + uh]
+            x0, y0, w0, h0 = min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)
         if untransformed:
             x, y, w, h = x0 + grob.x * dpx, y0 + (grob.y - grob._headroom) * dpx, w0, h0
         else:
             x, y, w, h = _hull(grob._screen_matrix, x0, y0, w0, h0)
         reach, at, end = 0, 0, grob._store.length()
-        while at < end:
+        fonts = list(grob._line.fonts) if grob._engine is None else []
+        while at < end and grob._engine is not None:
             font, run = grob._store.attribute_atIndex_effectiveRange_('NSFont', at, None)
             if font is not None:
-                (gx, gy), (gw, gh) = font.boundingRectForFont()
-                reach = max(reach, -gx, -gy, gx + gw, gy + gh)
+                fonts.append(font)
             at += run.length
+        for font in fonts:
+            (gx, gy), (gw, gh) = font.boundingRectForFont()
+            reach = max(reach, -gx, -gy, gx + gw, gy + gh)
         x, y, w, h = x - reach, y - reach, w + 2 * reach, h + 2 * reach
     elif hasattr(grob, '_nsImage'):
         w0, h0 = grob._nsImage.size()

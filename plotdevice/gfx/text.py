@@ -1,9 +1,11 @@
 # encoding: utf-8
 import re
 import sys
+import objc
 import weakref
 from unicodedata import normalize
 from collections import namedtuple
+from Quartz import CGContextSetTextMatrix, CGContextSetTextPosition, CGAffineTransformMake
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
@@ -33,6 +35,51 @@ _TEXT=dict(
 
 _UNBOUNDED = 1000000
 
+_CT = {}
+objc.loadBundleFunctions(NSBundle.bundleWithPath_('/System/Library/Frameworks/CoreText.framework'), _CT, [
+    ('CTLineCreateWithAttributedString', b'@@', '', {'retval': {'already_retained': True}}),
+    ('CTLineGetTypographicBounds', b'd@o^do^do^d'),
+    ('CTLineGetTrailingWhitespaceWidth', b'd@'),
+    ('CTLineGetGlyphRuns', b'@@'),
+    ('CTRunGetAttributes', b'@@'),
+    ('CTRunGetStringRange', b'{CFRange=qq}@'),
+    ('CTLineDraw', b'v@^{CGContext=}'),
+    ('CTTypesetterCreateWithAttributedString', b'@@', '', {'retval': {'already_retained': True}}),
+    ('CTTypesetterSuggestLineBreak', b'q@qd'),
+])
+
+CTLayout = namedtuple('CTLayout', ['line', 'x', 'baseline', 'width', 'height', 'frame_x', 'fit', 'ascender', 'fonts'])
+
+_METRICS = NSLayoutManager.alloc().init()
+_METRICS.setUsesScreenFonts_(False)
+_METRICS.setUsesFontLeading_(False)
+
+_BREAKS = re.compile('[\x00-\x08\x0a-\x1f\x7f\x85\u2028\u2029]')
+
+_RTL = re.compile('[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufeff\U00010800-\U00010fff\U0001e800-\U0001efff]')
+
+_ASCII = NSCharacterSet.characterSetWithRange_((0x20, 0x5f))
+
+def _font_metrics(font):
+    key = ('line metrics', font.fontName(), font.pointSize())
+    metrics = foundry.LIBRARY.recall(key)
+    if metrics is None:
+        charset = font.coveredCharacterSet()
+        metrics = foundry.LIBRARY.remember(key, (_METRICS.defaultLineHeightForFont_(font),
+            _METRICS.defaultBaselineOffsetForFont_(font), font.ascender(), charset, bool(charset.isSupersetOfSet_(_ASCII)), {}))
+    return metrics
+
+def _coverage(metrics, chars):
+    _, _, _, charset, covers_ascii, known = metrics
+    every, some = True, False
+    for char in chars:
+        covered = known.get(char)
+        if covered is None:
+            free = char == '\t' or (covers_ascii and ' ' <= char <= '~')
+            covered = known[char] = free or bool(charset.longCharacterIsMember_(ord(char)))
+        every, some = every and covered, some or covered
+    return every, some
+
 
 class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     # from TransformMixin: transform transformmode translate() rotate() scale() skew() reset()
@@ -44,13 +91,9 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
     def __init__(self, *args, **kwargs):
 
-        # assemble the NSMachinery
-        self._engine = NSLayoutManager.alloc().init()
-        self._engine.setUsesScreenFonts_(False)
-        self._engine.setUsesFontLeading_(False)
-        self._engine.setBackgroundLayoutEnabled_(False) # layout happens at commit, and drawing may be off the main thread
-        self._store = NSTextStorage.alloc().init()
-        self._store.addLayoutManager_(self._engine)
+        self._store = NSMutableAttributedString.alloc().init()
+        self._engine = None # TextKit's layout manager, if it lays the text out
+        self._line = None   # the CTLayout, if CoreText does
         self._nsmode = None # the output mode the store's NSColors were resolved for
 
         if args and isinstance(args[0], Text):
@@ -58,17 +101,16 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             # then bail out immediately (ignoring any other args)
             orig = args[0]
             self.inherit(orig)
-            self._blocks = [TextBlock(self) for f in orig._blocks]
-            for src, dst in zip(orig._blocks, self._blocks):
-                dst.offset, dst.size = src.offset, src._frame.size # (the dims it was given: unset ones still fit the text)
             self._store.appendAttributedString_(orig._store)
+            if orig._engine is not None:
+                self._typeset()
+                self._blocks += [TextBlock(self) for f in orig._blocks[1:]]
+                for src, dst in zip(orig._blocks, self._blocks):
+                    dst.offset, dst.size = src.offset, src._frame.size # (the dims it was given: unset ones still fit the text)
             return
 
         # let the various mixins have a crack at the kwargs
         super(Text, self).__init__(**kwargs)
-
-        # create a text block to manage layout and glyph-drawing
-        self._blocks = [TextBlock(self)]
 
         # maintain a lookup table of nodes within xml input
         self._nodes = {}
@@ -86,10 +128,12 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         # fontify the str/xml/src arg and store it in the TextBlock
         self.append(**{k:v for k,v in kwargs.items() if k in self.opts})
+        if not self._store.length():
+            self._typeset()
 
     def __repr__(self):
         total = len(self.text)
-        displayed = sum(self.blocks[-1]._chars)
+        displayed = total if self._engine is None else sum(self.blocks[-1]._chars)
         msg = 'chars=%i'%displayed
         if displayed < total:
             msg += ' overflow=%i'%(total-displayed)
@@ -201,7 +245,112 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             if self._nsmode is None:
                 self._nsmode = _outputmode()
             self._colorize()
-            self._resized()
+
+            if self._engine is None:
+                self._line = self._one_line()
+                if self._line is None:
+                    self._typeset()
+            else:
+                self._resized()
+
+    def _typeset(self):
+        if self._engine is not None:
+            return
+        self._engine = NSLayoutManager.alloc().init()
+        self._engine.setUsesScreenFonts_(False)
+        self._engine.setUsesFontLeading_(False)
+        self._engine.setBackgroundLayoutEnabled_(False) # layout happens at commit, and drawing may be off the main thread
+        store = NSTextStorage.alloc().initWithAttributedString_(self._store)
+        store.addLayoutManager_(self._engine)
+        self._store, self._line = store, None
+        self._blocks = [TextBlock(self)]
+        self._resized()
+
+    def _one_line(self):
+        store, length = self._store, self._store.length()
+        string = store.string()
+        width, height = self._frame.size
+        if not length or height is not None or _BREAKS.search(string) or _RTL.search(string):
+            return None
+
+        dpx = self._grid.dpx
+        if width is not None and len(string.rstrip()) * 0.15 * self._font.size > width * dpx:
+            return None
+
+        attrs, run = store.attributesAtIndex_effectiveRange_(0, None)
+        graf = attrs['NSParagraphStyle']
+        cached = foundry.LIBRARY.recall(('paragraph', id(graf)))
+        if cached is None or cached[0] is not graf:
+            flush = {NSCenterTextAlignment: 0.5, NSRightTextAlignment: 1.0}.get(graf.alignment(), 0.0)
+            cached = foundry.LIBRARY.remember(('paragraph', id(graf)), (graf, (graf.firstLineHeadIndent(), -graf.tailIndent(),
+                flush, graf.lineHeightMultiple() or 1.0, graf.maximumLineHeight(), graf.minimumLineHeight())))
+        head, tail, flush, multiple, most, least = cached[1]
+        if head and '\t' in string:
+            return None # TextKit's tab stops start at the margin's edge, CoreText's at the line's
+
+        above, below, at, ascii, fallback, fonts = 0.0, 0.0, 0, string.isascii(), False, []
+        single = run.length == length # (one style, so one font asked for)
+        while True:
+            font = attrs['NSFont']
+            metrics = _font_metrics(font)
+            natural, offset, ascender, charset, covers_ascii, known = metrics
+            if not (ascii and covers_ascii):
+                fallback = fallback or not _coverage(metrics, string.nsstring().substringWithRange_((at, run.length)))[0]
+            fonts.append(font)
+            above, below = max(above, offset), max(below, natural - offset)
+            if at == 0:
+                first_ascender = ascender
+            at += run.length
+            if at >= length:
+                break
+            attrs, run = store.attributesAtIndex_effectiveRange_(at, None)
+
+        line = _CT['CTLineCreateWithAttributedString'](store)
+        full = _CT['CTLineGetTypographicBounds'](line, None, None, None)[0]
+        visible = full - _CT['CTLineGetTrailingWhitespaceWidth'](line)
+        if width is not None:
+            room = width * dpx - head - tail
+            borderline = room - 0.01 < visible <= room + 0.01
+            if visible > room + 0.01:
+                return None
+            if borderline and _CT['CTTypesetterSuggestLineBreak'](_CT['CTTypesetterCreateWithAttributedString'](store), 0, room) < length:
+                return None
+
+        if fallback:
+            seen = {} # (each font's metrics, looked up once a call: by id, since hashing an NSFont is slow)
+            metrics_of = lambda font: seen.get(id(font)) or seen.setdefault(id(font), _font_metrics(font))
+            bmp = len(string) == length # (UTF-16 offsets are the string's own indices)
+            above = below = 0.0
+            fonts = []
+            for glyphs in _CT['CTLineGetGlyphRuns'](line):
+                drawn = _CT['CTRunGetAttributes'](glyphs)['NSFont']
+                start, count = _CT['CTRunGetStringRange'](glyphs)
+                asked = font if single else store.attribute_atIndex_effectiveRange_('NSFont', start, None)[0]
+                chars = string[start:start + count] if bmp else string.nsstring().substringWithRange_((start, count))
+                same = drawn is asked or (drawn.fontName() == asked.fontName() and drawn.pointSize() == asked.pointSize())
+                every, some = _coverage(metrics_of(asked), chars)
+                if same != every:
+                    return None
+                for counted in ([asked] if same or some else []) + ([] if same else [drawn]):
+                    natural, offset = metrics_of(counted)[:2]
+                    fonts.append(counted)
+                    above, below = max(above, offset), max(below, natural - offset)
+                if start == 0:
+                    first_ascender = metrics_of(asked if _coverage(metrics_of(asked), chars[0])[0] else drawn)[2]
+        line_height = (above + below) * multiple
+        if most:
+            line_height = min(line_height, most)
+        line_height = max(line_height, least)
+
+        used = visible if flush == 1.0 else full
+        if width is None:
+            x = head * (1 - flush) - flush * (tail + visible)
+            frame_x, fit = -flush * (used + 1), used + 1
+        else:
+            x = head + (width * dpx - head - tail - visible) * flush
+            used = min(used, width * dpx - tail - x) # (trailing spaces hang past the edge, but don't count)
+            frame_x, fit = 0.0, width * dpx
+        return CTLayout(line, x, line_height - below, used, line_height, frame_x, fit, first_ascender, fonts)
 
     ### NSAttributedString de/manglers ###
 
@@ -229,34 +378,35 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         # assign a font based on the coalesced spec
         font = Font({k:v for k,v in spec.items() if k in Stylesheet.kwargs})
 
-        # factor the relevant attrs into a paragraph style
-        graf = NSMutableParagraphStyle.alloc().init()
-        graf.setLineBreakMode_(NSLineBreakByWordWrapping)
-        graf.setAlignment_(_TEXT[spec['align']])
-        graf.setHyphenationFactor_(spec['hyphenate'])
-
         eps = sys.float_info.epsilon
 
         # force the typesetter to deal with real leading rather than `lineheight'
         face_height = eps + font.size * (font._face.ascent - font._face.descent) / 1000.0
-        graf.setLineHeightMultiple_(spec['leading'] * font.size / face_height)
-        graf.setMaximumLineHeight_(font.size*spec['leading'] + eps)
+        multiple, maximum = spec['leading'] * font.size / face_height, font.size*spec['leading'] + eps
 
         # handle indentation, horizontal margins, and vertical graf spacing
         indent = font.size * spec['indent']
         tabs = abs(indent or font.size)
         top, bot = [font.size*font.leading*d for d in spec['spacing']]
-        graf.setTabStops_(NSArray.array()) # not a python list: the style must stay bridge-free (see below)
-        graf.setDefaultTabInterval_(tabs)
-        graf.setParagraphSpacingBefore_(top)
-        graf.setParagraphSpacing_(bot)
-        graf.setTailIndent_(-tail)
-        if indent > 0:
-            graf.setFirstLineHeadIndent_(indent + head)
-            graf.setHeadIndent_(head)
-        else:
-            graf.setFirstLineHeadIndent_(head)
-            graf.setHeadIndent_(abs(indent) + head)
+        first, rest = (indent + head, head) if indent > 0 else (head, abs(indent) + head)
+
+        values = (spec['align'], spec['hyphenate'], multiple, maximum, tabs, top, bot, tail, first, rest)
+        graf = foundry.LIBRARY.recall(('paragraph style', values))
+        if graf is None:
+            graf = NSMutableParagraphStyle.alloc().init()
+            graf.setLineBreakMode_(NSLineBreakByWordWrapping)
+            graf.setAlignment_(_TEXT[spec['align']])
+            graf.setHyphenationFactor_(spec['hyphenate'])
+            graf.setLineHeightMultiple_(multiple)
+            graf.setMaximumLineHeight_(maximum)
+            graf.setTabStops_(NSArray.array()) # not a python list: the style must stay bridge-free (see below)
+            graf.setDefaultTabInterval_(tabs)
+            graf.setParagraphSpacingBefore_(top)
+            graf.setParagraphSpacing_(bot)
+            graf.setTailIndent_(-tail)
+            graf.setFirstLineHeadIndent_(first)
+            graf.setHeadIndent_(rest)
+            graf = foundry.LIBRARY.remember(('paragraph style', values), graf.copy())
 
         if not spec['tracking']:
             # None means `kerning off entirely', 0 means `default letterspacing'
@@ -265,7 +415,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             # convert the em-based tracking val to a point-based kerning val
             kern = (spec['tracking'] * font.size)/1000.0
 
-        attrs = dict(NSFont=font._nsFont, PDColor=color._src, NSColor=color.nsColor, NSParagraphStyle=graf.copy(), NSKern=kern)
+        attrs = dict(NSFont=font._nsFont, PDColor=color._src, NSColor=color.nsColor, NSParagraphStyle=graf, NSKern=kern)
         return foundry.LIBRARY.remember(key, NSDictionary.dictionaryWithDictionary_(attrs))
 
     def _colorize(self):
@@ -279,6 +429,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
                 self._store.addAttribute_value_range_('NSColor', Color(clr).nsColor, rng)
                 at += rng.length
             self._nsmode = mode
+            self._line = None # its colors are the old ones
 
     @classmethod
     def _dedent(cls, attrib_txt, idx=0, inherit=False):
@@ -296,8 +447,12 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         old_graf, _ = attrib_txt.attribute_atIndex_effectiveRange_("NSParagraphStyle", idx, None);
         first, rest = old_graf.firstLineHeadIndent(), old_graf.headIndent()
         if first > rest or inherit: # leave negative-indentations alone
-            graf = old_graf.mutableCopy()
-            graf.setFirstLineHeadIndent_(rest)
+            cached = foundry.LIBRARY.recall(('dedented', id(old_graf), rest))
+            if cached is None or cached[0] is not old_graf:
+                graf = old_graf.mutableCopy()
+                graf.setFirstLineHeadIndent_(rest)
+                cached = foundry.LIBRARY.remember(('dedented', id(old_graf), rest), (old_graf, graf.copy()))
+            graf = cached[1]
             attrib_txt.beginEditing()
             attrib_txt.addAttribute_value_range_("NSParagraphStyle", graf, (idx, 1))
             attrib_txt.endEditing()
@@ -307,6 +462,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     def overleaf(self):
         """Returns a Text object containing any characters that did not fit within this object's bounds.
         If the entire string fits within the current object, returns None."""
+        self._typeset()
         seen = "".join(getattr(f, 'text') for f in self._blocks)
         full = self.text
         if full not in seen:
@@ -357,6 +513,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     def _reflow(self, count):
         # wipe out any previously set blocks then keep adding new ones until
         # the glyphs are fully laid out
+        self._typeset()
         while self._blocks[1:]:
             self._blocks.pop()._eject()
         block = self._blocks[0]
@@ -370,6 +527,9 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     @property
     def frame(self):
         """Returns the bounding box in which the text will be laid out"""
+        if self._engine is None:
+            line, dpx = self._ct, self._grid.dpx
+            return Region(self.x + line.frame_x / dpx, self.y - line.ascender / dpx, line.fit / dpx, line.height / dpx)
         box = Region()
         for block in self._blocks:
             box = box.union(block.frame)
@@ -378,6 +538,10 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     @property
     def bounds(self):
         """Returns the size & position of the actual text (typically a subset of the bounds)"""
+        if self._engine is None:
+            line, dpx = self._ct, self._grid.dpx
+            x = line.x - line.frame_x + line.frame_x / dpx + self.x
+            return Region(x / dpx, (self.y - line.ascender) / dpx, line.width / dpx, line.height / dpx)
         box = Region()
         for block in self._blocks:
             box = box.union(block.bounds)
@@ -490,21 +654,25 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     @property
     def words(self):
         """Returns a TextFragment for each word in the text string (whitespace separated)"""
+        self._typeset()
         return [TextFragment(self, w) for w in self._store.words()]
 
     @property
     def paragraphs(self):
         """Returns a TextFragment for each `line' in the text string (newline separated)"""
+        self._typeset()
         return [TextFragment(self, w) for w in self._store.paragraphs()]
 
     @property
     def blocks(self):
         """Returns a list of one or more TextBlocks defining the bounding box for layout"""
+        self._typeset()
         return list(self._blocks)
 
     @property
     def lines(self):
         """Returns a list of TextFragments, one for each line across all child TextBlocks"""
+        self._typeset()
         return [TextFragment(self, slug) for slug in foundry.line_slugs(self)]
 
     ### Calculating dimensions & rendering ###
@@ -513,7 +681,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         """Ensure that the first TextBlock's bounds are kept in sync with the Text's.
         Called by the FrameMixin when the width or size is reassigned."""
 
-        # start with the max w/h passed by the Text object
+        self._typeset()
         dims = self._frame.size
         block = self._blocks[0]
 
@@ -541,6 +709,8 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         """Returns the distance between the Text's origin and the top of its bounds box"""
         if not self._store.length():
             return 0
+        if self._engine is None:
+            return self._from_px(self._ct.baseline)
         return self._blocks[0]._from_px(self._engine.locationForGlyphAtIndex_(0).y)
 
     @property
@@ -569,7 +739,11 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             return (a, b, c, d, mx + a * x + c * top, my + b * x + d * top)
 
         x0 = y0 = x1 = y1 = 0.0
-        for block in self._blocks:
+        if self._engine is None:
+            line = self._ct
+            x0, y0 = x + line.frame_x, y - line.ascender
+            x1, y1 = x0 + line.fit, y0 + line.height
+        for block in self._blocks if self._engine is not None else ():
             w, h = block._frame.size
             if not (w and h):
                 fit = block._fit
@@ -593,18 +767,32 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
     @property
     def _parts(self):
-        return self._blocks
+        return self._blocks if self._engine is not None else ()
 
     def _commit(self):
         self._colorize()
-        for block in self._blocks:
-            self._engine.glyphRangeForTextContainer_(block._block)
+        if self._engine is None and self._ct is None:
+            self._typeset()
+        if self._engine is not None:
+            for block in self._blocks:
+                self._engine.glyphRangeForTextContainer_(block._block)
+
+    @property
+    def _ct(self):
+        if self._line is None:
+            self._line = self._one_line()
+        return self._line
 
     def _draw(self):
         with _ns_context():                  # save and restore the gstate
             self._screen_transform.concat()  # transform so text can be drawn at the origin
             with self.effects.applied(self): # apply any blend/alpha/shadow effects
-                for block in self._blocks:
+                if self._engine is None:
+                    port = NSGraphicsContext.currentContext().CGContext()
+                    CGContextSetTextMatrix(port, CGAffineTransformMake(1, 0, 0, -1, 0, 0))
+                    CGContextSetTextPosition(port, self._line.x, self._line.baseline)
+                    _CT['CTLineDraw'](self._line.line, port)
+                for block in self._blocks if self._engine is not None else ():
                     px_offset = self._to_px(block.offset)
                     px_offset.x -= block._shift
                     self._engine.drawGlyphsForGlyphRange_atPoint_(block._glyphs, px_offset)
@@ -618,6 +806,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         """Traces the laid-out glyphs and returns them as a single Bezier object"""
 
         # generate an unflipped bezier with all the glyphs
+        self._typeset()
         path = Bezier(foundry.trace_text(self))
         path.inherit(self)
 
@@ -653,6 +842,7 @@ class TextFragment(object):
       `groupdict()` - returns a dictionary mapping captured group names to TextFragment objects
     """
     def __init__(self, parent, match=None):
+        parent._typeset() # (its geometry comes from TextKit's layout)
         self._parent = parent
         self.tag, self.attrs, self.parents = None, {}, ()
         self.m = None
@@ -844,9 +1034,10 @@ class TextBlock(FrameMixin, Grob):
     _parent = property(_get_parent, _set_parent)
 
     def __init__(self, parent):
-        # inherit the canvas-unit methods and a _frame
         self._frame = Region((0,0), (None,None))
         self.inherit()
+        if isinstance(parent, Text):
+            self._grid = parent._grid
 
         # create a new container
         self._block = NSTextContainer.alloc().init()
