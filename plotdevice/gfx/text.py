@@ -16,7 +16,7 @@ from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, FrameMixin, Grob
 from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, Element, read
 from ..lib import foundry
-from . import _ns_context, _outputmode
+from . import _ns_context, _inkmode
 
 _ctx = None
 __all__ = ("Text", "LEFT", "RIGHT", "CENTER", "JUSTIFY",)
@@ -243,7 +243,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             self._store.endEditing()
 
             if self._nsmode is None:
-                self._nsmode = _outputmode()
+                self._nsmode = _inkmode()
             self._colorize()
 
             if self._engine is None:
@@ -364,7 +364,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         color = Color(fill)
         head, tail = map(self._to_px, margin)
-        key = (_outputmode(), color._src, head, tail, self._font._key)
+        key = (_inkmode(), color._src, head, tail, self._font._key)
         key += tuple(tuple(sorted((k, v) for k, v in layer.items() if k not in ('fill', 'margin'))) for layer in layers)
         attrs = foundry.LIBRARY.recall(key)
         if attrs is not None:
@@ -420,7 +420,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
     def _colorize(self):
         """Updates the TextStorage, rewriting Colors as rgb or cmyk NSColors based on the current output mode"""
-        mode = _outputmode()
+        mode = _inkmode()
         if self._nsmode != mode:
             at = 0
             end = self._store.length()

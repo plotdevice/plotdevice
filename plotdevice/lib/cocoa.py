@@ -1,7 +1,12 @@
 # all the NSBits and NSPieces
 
 from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorCreate, CGColorCreateCopyByMatchingToColorSpace, \
-                   CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGContextAddPath, CGContextAddRect, \
+                   CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, \
+                   CGColorSpaceCopyICCData, \
+                   CGColorRef, CGColorGetColorSpace, CGColorGetComponents, CGColorGetNumberOfComponents, CGColorSpaceCopyName, \
+                   kCGColorSpaceExtendedDisplayP3, kCGColorSpaceExtendedSRGB, kCGColorSpaceGenericCMYK, kCGColorSpaceSRGB, \
+                   kCGColorSpaceModelCMYK, \
+                   CGContextAddPath, CGContextAddRect, \
                    CGAffineTransformConcat, CGAffineTransformInvert, CGRectApplyAffineTransform, \
                    CGAffineTransformMakeScale, CGAffineTransformMakeTranslation, CGBitmapContextGetAlphaInfo, CGBitmapContextGetColorSpace, \
                    CGBitmapContextGetHeight, CGBitmapContextGetWidth, CGColorCreateCopyWithAlpha, CGColorGetAlpha, \

@@ -45,7 +45,10 @@
         _pixelBuffer = buffer ? CVPixelBufferRetain(buffer) : NULL;
         _width = surface.width;
         _height = surface.height;
-        _space = CGColorSpaceCreateDeviceRGB();
+        _space = CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3);
+        CFPropertyListRef plist = CGColorSpaceCopyPropertyList(_space);
+        IOSurfaceSetValue((IOSurfaceRef)_surface, kIOSurfaceColorSpace, plist);
+        CFRelease(plist);
         _context = CGBitmapContextCreate(_surface.baseAddress, _width, _height, 8, _surface.bytesPerRow, _space,
                                          kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
     }

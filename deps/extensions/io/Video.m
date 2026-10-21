@@ -98,7 +98,7 @@
                                          AVVideoWidthKey: @(aSize.width),
                                          AVVideoHeightKey: [NSNumber numberWithInt:aSize.height],
                                          AVVideoColorPropertiesKey: @{
-                                            AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2,
+                                            AVVideoColorPrimariesKey: AVVideoColorPrimaries_P3_D65,
                                             AVVideoTransferFunctionKey: transferFunction,
                                             AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2}
                                          }];
@@ -143,7 +143,7 @@
     CVPixelBufferRef buffer = NULL;
     CVReturn err = CVPixelBufferPoolCreatePixelBufferWithAuxAttributes(NULL, pool, (CFDictionaryRef)aux, &buffer);
     if (err != kCVReturnSuccess || !buffer) return nil;
-    CVBufferSetAttachment(buffer, kCVImageBufferColorPrimariesKey, kCVImageBufferColorPrimaries_ITU_R_709_2, kCVAttachmentMode_ShouldPropagate);
+    CVBufferSetAttachment(buffer, kCVImageBufferColorPrimariesKey, kCVImageBufferColorPrimaries_P3_D65, kCVAttachmentMode_ShouldPropagate);
     CVBufferSetAttachment(buffer, kCVImageBufferYCbCrMatrixKey, kCVImageBufferYCbCrMatrix_ITU_R_709_2, kCVAttachmentMode_ShouldPropagate);
     CVBufferSetAttachment(buffer, kCVImageBufferTransferFunctionKey, (CFStringRef)transferFunction, kCVAttachmentMode_ShouldPropagate);
     CVBufferSetAttachment(buffer, kCVImageBufferAlphaChannelModeKey,

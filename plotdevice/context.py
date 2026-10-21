@@ -9,12 +9,13 @@ from objc import super
 
 from .lib.cocoa import *
 from .lib import pathmatics
-from .lib.io import MovieExportSession
+from .lib.io import MovieExportSession, pdf_update
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
 from .gfx.geometry import Dimension, parse_coords, IDENTITY
 from .gfx.typography import Layout
 from .gfx.effects import Frob
 from .gfx import *
+from .gfx.colors import _named
 from . import gfx, lib, util, Halted, DeviceError
 
 __all__ = ('Context', 'Canvas')
@@ -28,7 +29,7 @@ GridUnits = namedtuple('GridUnits', ['unit', 'dpx', 'to_px', 'from_px'])
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_params', '_vars'
+    _state_vars = '_outputmode', '_colormode', '_colorrange', '_colorspace', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_params', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -82,6 +83,7 @@ class Context(object):
         # color state
         self._colormode = RGB
         self._colorrange = 1.0
+        self._colorspace = P3
         self._fillcolor = Color() # can also be a Gradient or Pattern
         self._strokecolor = None
 
@@ -748,9 +750,12 @@ class Context(object):
             kwargs.setdefault('mode', mode)
 
         if not args:
-            # if called without any component values update the global mode/range,
+            # if called without any component values update the global mode/range/space,
             # and return a context manager for `with color(mode=...)` usage
-            if {'range', 'mode'}.intersection(kwargs):
+            if {'range', 'mode', 'space'}.intersection(kwargs):
+                for kind in ('mode', 'space'):
+                    if kind in kwargs:
+                        kwargs[kind] = _named(kind, kwargs[kind])
                 return PlotContext(self, **kwargs)
 
         # if we got at least one numerical/string arg, parse it
@@ -759,7 +764,7 @@ class Context(object):
     def colormode(self, mode=None, range=None):
         """Legacy command. Equivalent to: color(mode=...)"""
         if mode is not None:
-            self._colormode = mode
+            self._colormode = _named('mode', mode)
         if range is not None:
             self._colorrange = float(range)
         return self._colormode
@@ -1602,7 +1607,7 @@ class Context(object):
 class PlotContext(object):
     """Performs the setup/cleanup for a `with pen()/stroke()/fill()/color(mode,range)` block"""
     _statevars = dict(pen='_penstyle', stroke='_strokecolor', fill='_fillcolor',
-                      mode='_colormode', range='_colorrange', auto='_autoplot')
+                      mode='_colormode', range='_colorrange', space='_colorspace', auto='_autoplot')
 
     def __init__(self, ctx, restore=None, **spec):
         unknown = [k for k in spec if k not in self._statevars]
@@ -1670,7 +1675,11 @@ class _PostScriptView(NSView):
         return self
 
     def drawRect_(self, rect):
-        self.canvas.draw()
+        token = gfx._eps.set(True)
+        try:
+            self.canvas.draw()
+        finally:
+            gfx._eps.reset(token)
 
     def isOpaque(self):
         return False
@@ -1761,8 +1770,8 @@ class Canvas(object):
         except IndexError as e:
             raise DeviceError("pop: too many canvas pops!")
 
-    def commit(self):
-        return Frame(self)
+    def commit(self, eps=False):
+        return Frame(self, eps)
 
     @property
     def _nsImage(self):
@@ -1770,11 +1779,12 @@ class Canvas(object):
         return self.commit()._render_to_image()
 
     def _getImageData(self, format, zoom=1.0, cmyk=False):
-        return self.commit()._getImageData(format, zoom, cmyk)
+        return self.commit(format == 'eps')._getImageData(format, zoom, cmyk)
 
     def save(self, fname, format=None, zoom=1.0, cmyk=False):
         """Write the current graphics objects to an image file"""
-        self.commit().save(fname, format, zoom, cmyk)
+        eps = (format or fname.rsplit('.',1)[-1]).lower() == 'eps'
+        self.commit(eps).save(fname, format, zoom, cmyk)
 
 
 def _unheld(grobs):
@@ -1904,8 +1914,12 @@ def _render_bounds(grob, boxes):
 
 class Frame(object):
 
-    def __init__(self, canvas):
-        self.grobs = _committed(canvas._grobs)
+    def __init__(self, canvas, eps=False):
+        token = gfx._eps.set(eps)
+        try:
+            self.grobs = _committed(canvas._grobs)
+        finally:
+            gfx._eps.reset(token)
         self.width, self.height = canvas.width, canvas.height
         self.pagesize = canvas.pagesize
         self.background = canvas.background
@@ -1969,7 +1983,7 @@ class Frame(object):
     def _render_to_cgimage(self, zoom=1.0, dpr=1.0):
         scale = zoom * dpr
         size = Size(*self._raster_size(scale))
-        colorspace, opts = CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
+        colorspace, opts = CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
         bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
         self._render_to_context(bitmapContext, scale)
         return CGBitmapContextCreateImage(bitmapContext)
@@ -2007,6 +2021,10 @@ class Frame(object):
             NSGraphicsContext.restoreGraphicsState()
             NSGraphicsContext.restoreGraphicsState()
 
+    @property
+    def _blend_space(self):
+        return CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3) if self.outputmode != CMYK else None
+
     def _getImageData(self, format, zoom=1.0, cmyk=False):
         return self._encode(format, zoom, cmyk)[0]
 
@@ -2021,6 +2039,9 @@ class Frame(object):
             CGPDFContextEndPage(pdfContext)
             CGPDFContextClose(pdfContext)
             pdfContext = None
+            if self._blend_space is not None:
+                update = pdf_update(bytes(cgData), self._blend_space)
+                cgData.appendBytes_length_(update, len(update))
             return cgData, None
         elif format == 'eps':
             with autorelease():

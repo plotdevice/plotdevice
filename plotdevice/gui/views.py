@@ -479,8 +479,8 @@ class FramePresenter(object):
         bg = frame.background
         if not isinstance(bg, Color) or bg.alpha < 1:
             return None
-        color = (bg._rgb if frame.outputmode == RGB else bg._cmyk).CGColor()
-        return CGColorCreateCopyByMatchingToColorSpace(CGColorSpaceCreateDeviceRGB(), kCGRenderingIntentDefault, color, None)
+        color = bg._rgb if frame.outputmode == RGB else bg._cmyk
+        return CGColorCreateCopyByMatchingToColorSpace(CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGRenderingIntentDefault, color, None)
 
 class ViewportPhysics(object):
     RATIO = 1.5         # animation frames whose full raster is this many times the viewport's render just the viewport

@@ -2,14 +2,15 @@
 import os
 import re
 import json
+import colorsys
 import warnings
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path, numlike
-from . import _outputmode
+from . import _inkmode
 _ctx = None
-__all__ = ("RGB", "HSV", "HSB", "CMYK", "GREY",
+__all__ = ("RGB", "HSV", "HSB", "CMYK", "GREY", "P3", "SRGB",
            "Color", "Pattern", "Gradient",)
 
 # color/output modes
@@ -18,7 +19,46 @@ HSV = HSB = "hsv"
 CMYK = "cmyk"
 GREY = "greyscale"
 
+P3 = "p3"
+SRGB = "srgb"
+
+_SPACES = {P3: CGColorSpaceCreateWithName(kCGColorSpaceExtendedDisplayP3),
+           SRGB: CGColorSpaceCreateWithName(kCGColorSpaceExtendedSRGB)}
+_SPACE_NAMES = {kCGColorSpaceExtendedDisplayP3:P3, kCGColorSpaceDisplayP3:P3,
+                kCGColorSpaceExtendedSRGB:SRGB, kCGColorSpaceSRGB:SRGB}
+_GENERIC_CMYK = CGColorSpaceCreateWithName(kCGColorSpaceGenericCMYK)
+_DEVICE_CMYK = CGColorSpaceCreateDeviceCMYK()
+_EPS_SPACE = CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
+
+_NAMES = dict(mode={RGB:RGB, HSV:HSV, 'hsb':HSV, CMYK:CMYK, GREY:GREY},
+              space={P3:P3, SRGB:SRGB})
+
 _CSS_COLORS = json.load(open(rsrc_path('colors.json')))
+
+def _named(kind, val):
+    if val is None:
+        return None
+    names = _NAMES[kind]
+    key = val.lower() if isinstance(val, str) else val
+    if key not in names:
+        unknown = 'Unknown color %s %r (should be one of: %s)' % (kind, val, ', '.join(sorted(set(names.values()))))
+        raise DeviceError(unknown)
+    return names[key]
+
+def _clamp(v):
+    return min(max(v, 0.0), 1.0)
+
+def _components(cg):
+    return CGColorGetComponents(cg).as_tuple(CGColorGetNumberOfComponents(cg))
+
+def _matched(cg, space):
+    return CGColorCreateCopyByMatchingToColorSpace(space, kCGRenderingIntentDefault, cg, None)
+
+def _hexstring(r, g, b):
+    s = "".join('%02x'%round(255*_clamp(c)) for c in (r,g,b))
+    if all([len(set(pair))==1 for pair in zip(s[::2], s[1::2])]):
+        s = "".join(s[::2])
+    return "#"+s
 
 class Color(object):
 
@@ -31,59 +71,112 @@ class Color(object):
         if args and args[0] in (RGB, HSV, CMYK, GREY):
             mode, args = args[0], args[1:]
         else:
-            mode=kwargs.get('mode')
+            mode = _named('mode', kwargs.get('mode'))
 
-        if mode not in (RGB, HSV, CMYK, GREY):
+        if mode is None:
             # if no mode was specified, interpret the components in the context's current mode
             mode = _ctx._colormode
+
+        converting = kwargs.get('space') is not None
+        space = _named('space', kwargs.get('space')) or _ctx._colorspace
 
         # use the specified range for int values, or leave it as None to use the default 0-1 scale
         rng = kwargs.get('range')
 
         params = len(args)
+        cmyk, values = False, None # whether it's a cmyk color, and its components if they're known
         if params == 1 and args[0] is None:                 # None -> transparent
-            clr = Color._nscolor(GREY, 0, 0)
+            clr, values = Color._cgcolor(GREY, space, 0, 0)
         elif params == 1 and isinstance(args[0], Color):    # Color object
             self._share(args[0])
+            if converting and self.space != space:
+                if self._from_cmyk:
+                    self._cmyk = self._cmyk_src
+                    self._cache['space'], self._rgb_ = space, None # (converted on demand, see _rgb)
+                else:
+                    self._rgb = _matched(self._rgb, _SPACES[space])
+                    self._cache['space'] = space
+                    self._updateCmyk()
             return
         elif params == 1 and isinstance(args[0], Pattern):  # Pattern object
-            self._cmyk = self._rgb = args[0]._nsColor
+            pattern = args[0]._nsColor
+            self._rgb_ = self._cmyk_ = self._cmyk_src = pattern.CGColor()
+            self._cache = {('ns', mode):pattern for mode in (RGB, CMYK, 'eps')}
+            self._cache['space'] = space
             return
         elif params == 1 and isinstance(args[0], Gradient): # Gradient (use first shade)
             self._share(args[0]._colors[0])
             return
-        elif params == 1 and isinstance(args[0], NSColor):  # NSColor object
-            clr = args[0]
+        elif params == 1 and isinstance(args[0], (NSColor, CGColorRef)): # NSColor or CGColor object
+            clr = args[0].CGColor() if isinstance(args[0], NSColor) else args[0]
+            own = _SPACE_NAMES.get(CGColorSpaceCopyName(CGColorGetColorSpace(clr)))
+            if own is not None:
+                clr = CGColorCreate(_SPACES[own], _components(clr))
+                if converting and own != space:
+                    clr = _matched(clr, _SPACES[space])
+                else:
+                    space = own
+            elif CGColorSpaceGetModel(CGColorGetColorSpace(clr)) == kCGColorSpaceModelCMYK:
+                clr, cmyk = CGColorCreate(_GENERIC_CMYK, _components(clr)), True
+            else:
+                clr = _matched(clr, _SPACES[space])
         elif params>=1 and isinstance(args[0], str):
             r, g, b, a = Color._parse(args[0])              # Hex string or named color
             if args[1:]:
                 a = args[1]
-            clr = Color._nscolor(RGB, r, g, b, a)
+            clr, values = Color._cgcolor(RGB, space, r, g, b, a)
         elif 1<=params<=2:                                  # Greyscale (+ alpha)
             gscale = self._normalizeList(args, rng)
             if params<2:
                 gscale += (1,)
-            clr = Color._nscolor(GREY, *gscale)
+            clr, values = Color._cgcolor(GREY, space, *gscale)
         elif 3<=params<=4 and mode in (RGB, HSV):           # RGB(a) & HSV(a)
             rgba_hsba = self._normalizeList(args, rng)
             if params<4:
                 rgba_hsba += (1,)
-            clr = Color._nscolor(mode, *rgba_hsba)
+            clr, values = Color._cgcolor(mode, space, *rgba_hsba)
         elif 4<=params<=5 and mode==CMYK:                   # CMYK(a)
             cmyka = self._normalizeList(args, rng)
             if params<5:
                 cmyka += (1,)
-            clr = Color._nscolor(CMYK, *cmyka)
+            (clr, values), cmyk = Color._cgcolor(CMYK, space, *cmyka), True
         else:                                               # default is the new black
-            clr = Color._nscolor(GREY, 0, 1)
+            clr, values = Color._cgcolor(GREY, space, 0, 1)
 
-        self._rgb = clr.colorUsingColorSpaceName_(NSDeviceRGBColorSpace)
-        self._cmyk_src, self._cmyk_ = clr, None # converted on demand (see _cmyk)
+        self._cache = {'space':space}
+        if cmyk:
+            self._rgb_, self._cmyk_src = None, clr
+            self._cmyk = clr
+            if values is not None:
+                self._cache['cmyka'] = values
+        else:
+            self._rgb = clr
+            self._cmyk_src, self._cmyk_ = clr, None # converted on demand (see _cmyk)
+            if values is not None:
+                self._cache['rgba'] = values
 
     @trim_zeroes
     def __repr__(self):
-        args = repr(self.hexa) if self.a!=1.0 else '(%r)'%self.hex
-        return '%s%s'%(self.__class__.__name__, args)
+        r, g, b, a = self._values(RGB)
+        args = [repr(_hexstring(r, g, b))]
+        if a != 1.0:
+            args.append(repr(a))
+        if self.space != _ctx._colorspace:
+            args.append('space=%s' % self.space.upper())
+        return '%s(%s)'%(self.__class__.__name__, ', '.join(args))
+
+    def _key(self):
+        return (self.space,) + tuple(round(v, 5) for v in self._values(RGB))
+
+    def __eq__(self, other):
+        if not isinstance(other, Color):
+            return NotImplemented
+        if self._key() != other._key():
+            return False
+        return [round(v, 5) for v in self.cmyka] == [round(v, 5) for v in other.cmyka]
+
+    def __hash__(self):
+        return hash(self._key())
 
     def set(self):
         self.nsColor.set()
@@ -107,32 +200,63 @@ class Color(object):
             setattr(_ctx, statevar, val)
 
     @property
+    def space(self):
+        return self._cache['space']
+
+    @property
     def nsColor(self):
-        return self._rgb if _outputmode()==RGB else self._cmyk
+        mode = _inkmode()
+        try:
+            return self._cache['ns', mode]
+        except KeyError:
+            if mode == RGB:
+                ns = NSColor.colorWithCGColor_(self._rgb_as(P3))
+            elif mode == CMYK:
+                ns = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(*self._values(CMYK))
+            else:
+                ns = NSColor.colorWithCGColor_(_matched(self._rgb, _EPS_SPACE))
+            self._cache['ns', mode] = ns
+            return ns
 
     @property
     def _src(self):
-        return getattr(self, '_cmyk_src', self._rgb_)
+        return self._cmyk_src
 
     @property
     def cgColor(self):
-        mode = _outputmode()
+        mode = _inkmode()
         try:
-            return self._cg[mode]
+            return self._cache['cg', mode]
         except KeyError:
-            cg = self._cg[mode] = (self._rgb if mode==RGB else self._cmyk).CGColor()
+            if mode == RGB:
+                cg = self._rgb
+            elif mode == CMYK:
+                cg = CGColorCreate(_DEVICE_CMYK, self._values(CMYK))
+            else:
+                cg = _matched(self._rgb, _EPS_SPACE)
+            self._cache['cg', mode] = cg
             return cg
 
+    def _rgb_as(self, space):
+        return self._rgb if self.space == space else _matched(self._rgb, _SPACES[space])
+
     def _values(self, mode):
-        outargs = [None] * 4
         if mode is RGB:
-            return self._rgb.getRed_green_blue_alpha_(*outargs)
+            try:
+                return self._cache['rgba']
+            except KeyError:
+                rgba = self._cache['rgba'] = _components(self._rgb)
+                return rgba
         elif mode is HSV:
-            return self._rgb.getHue_saturation_brightness_alpha_(*outargs)
+            r, g, b, a = self._values(RGB)
+            hsv = colorsys.rgb_to_hsv(r, g, b) if max(r, g, b) > 0 else (0.0, 0.0, max(r, g, b))
+            return hsv + (a,)
         elif mode is CMYK:
-            return (self._cmyk.cyanComponent(), self._cmyk.magentaComponent(),
-                    self._cmyk.yellowComponent(), self._cmyk.blackComponent(),
-                    self._cmyk.alphaComponent())
+            try:
+                return self._cache['cmyka']
+            except KeyError:
+                cmyka = self._cache['cmyka'] = _components(self._cmyk)
+                return cmyka
 
     def copy(self):
         new = self.__class__.__new__(self.__class__)
@@ -142,57 +266,69 @@ class Color(object):
     def _share(self, other):
         self._rgb_ = other._rgb_
         self._cmyk_ = other._cmyk_
-        self._cmyk_src = getattr(other, '_cmyk_src', other._rgb_)
-        self._cg = other._cg
+        self._cmyk_src = other._cmyk_src
+        self._cache = other._cache
 
     @property
     def _rgb(self):
+        if self._rgb_ is None:
+            cache = self._cache
+            if 'rgb' not in cache:
+                cache['rgb'] = _matched(self._cmyk_src, _SPACES[cache['space']])
+            self._rgb_ = cache['rgb']
         return self._rgb_
 
     @_rgb.setter
     def _rgb(self, clr):
-        self._rgb_, self._cg = clr, {}
+        self._rgb_, self._cache = clr, {'space':self._cache['space']}
 
     @property
     def _cmyk(self):
         if self._cmyk_ is None:
-            self._cmyk_ = self._cmyk_src.colorUsingColorSpaceName_(NSDeviceCMYKColorSpace)
+            cache = self._cache
+            if 'cmyk' not in cache:
+                cache['cmyk'] = _matched(self._cmyk_src, _GENERIC_CMYK)
+            self._cmyk_ = cache['cmyk']
         return self._cmyk_
 
     @_cmyk.setter
     def _cmyk(self, clr):
-        self._cmyk_, self._cg = clr, {}
+        self._cmyk_, self._cache = clr, {'space':self._cache['space']}
+
+    @property
+    def _from_cmyk(self):
+        return CGColorSpaceGetModel(CGColorGetColorSpace(self._cmyk_src)) == kCGColorSpaceModelCMYK
 
     def _updateCmyk(self):
         self._cmyk_src, self._cmyk_ = self._rgb, None
 
     def _updateRgb(self):
-        self._rgb = self._cmyk.colorUsingColorSpace_(NSColorSpace.sRGBColorSpace())
+        self._cmyk_src, self._rgb_ = self._cmyk, None
 
     def _get_hue(self):
-        return self._rgb.hueComponent()
+        return self._values(HSV)[0]
     def _set_hue(self, val):
         val = self._normalize(val)
         h, s, b, a = self._values(HSV)
-        self._rgb = Color._nscolor(HSV, val, s, b, a)
+        self._rgb, self._cache['rgba'] = Color._cgcolor(HSV, self.space, val, s, b, a)
         self._updateCmyk()
     h = hue = property(_get_hue, _set_hue, doc="the hue of the color")
 
     def _get_saturation(self):
-        return self._rgb.saturationComponent()
+        return self._values(HSV)[1]
     def _set_saturation(self, val):
         val = self._normalize(val)
         h, s, b, a = self._values(HSV)
-        self._rgb = Color._nscolor(HSV, h, val, b, a)
+        self._rgb, self._cache['rgba'] = Color._cgcolor(HSV, self.space, h, val, b, a)
         self._updateCmyk()
     s = saturation = property(_get_saturation, _set_saturation, doc="the saturation of the color")
 
     def _get_brightness(self):
-        return self._rgb.brightnessComponent()
+        return self._values(HSV)[2]
     def _set_brightness(self, val):
         val = self._normalize(val)
         h, s, b, a = self._values(HSV)
-        self._rgb = Color._nscolor(HSV, h, s, val, a)
+        self._rgb, self._cache['rgba'] = Color._cgcolor(HSV, self.space, h, s, val, a)
         self._updateCmyk()
     v = value = brightness = property(_get_brightness, _set_brightness, doc="the brightness of the color")
 
@@ -200,123 +336,125 @@ class Color(object):
         return self._values(HSV)
     def _set_hsba(self, values):
         h, s, b, a = self._normalizeList(values)
-        self._rgb = Color._nscolor(HSV, h, s, b, a)
+        self._rgb, self._cache['rgba'] = Color._cgcolor(HSV, self.space, h, s, b, a)
         self._updateCmyk()
     hsba = property(_get_hsba, _set_hsba, doc="the hue, saturation, brightness and alpha of the color")
 
     def _get_red(self):
-        return self._rgb.redComponent()
+        return self._values(RGB)[0]
     def _set_red(self, val):
         val = self._normalize(val)
         r, g, b, a = self._values(RGB)
-        self._rgb = Color._nscolor(RGB, val, g, b, a)
+        self._rgb, self._cache['rgba'] = Color._cgcolor(RGB, self.space, val, g, b, a)
         self._updateCmyk()
     r = red = property(_get_red, _set_red, doc="the red component of the color")
 
     def _get_green(self):
-        return self._rgb.greenComponent()
+        return self._values(RGB)[1]
     def _set_green(self, val):
         val = self._normalize(val)
         r, g, b, a = self._values(RGB)
-        self._rgb = Color._nscolor(RGB, r, val, b, a)
+        self._rgb, self._cache['rgba'] = Color._cgcolor(RGB, self.space, r, val, b, a)
         self._updateCmyk()
     g = green = property(_get_green, _set_green, doc="the green component of the color")
 
     def _get_blue(self):
-        return self._rgb.blueComponent()
+        return self._values(RGB)[2]
     def _set_blue(self, val):
         val = self._normalize(val)
         r, g, b, a = self._values(RGB)
-        self._rgb = Color._nscolor(RGB, r, g, val, a)
+        self._rgb, self._cache['rgba'] = Color._cgcolor(RGB, self.space, r, g, val, a)
         self._updateCmyk()
     b = blue = property(_get_blue, _set_blue, doc="the blue component of the color")
 
     def _get_alpha(self):
-        return self._rgb.alphaComponent()
+        return self._values(RGB)[3]
     def _set_alpha(self, val):
-        val = self._normalize(val)
-        r, g, b, a = self._values(RGB)
-        self._rgb = Color._nscolor(RGB, r, g, b, val)
-        self._updateCmyk()
+        val = _clamp(self._normalize(val))
+        if self._from_cmyk:
+            self._cmyk = CGColorCreateCopyWithAlpha(self._cmyk_src, val)
+            self._updateRgb()
+        else:
+            self._rgb = CGColorCreateCopyWithAlpha(self._rgb, val)
+            self._updateCmyk()
     a = alpha = property(_get_alpha, _set_alpha, doc="the alpha component of the color")
 
     def _get_rgba(self):
         return self._values(RGB)
     def _set_rgba(self, values):
         r, g, b, a = self._normalizeList(values)
-        self._rgb = Color._nscolor(RGB, r, g, b, a)
+        self._rgb, self._cache['rgba'] = Color._cgcolor(RGB, self.space, r, g, b, a)
         self._updateCmyk()
     rgba = property(_get_rgba, _set_rgba, doc="the red, green, blue and alpha values of the color")
 
     def _get_cyan(self):
-        return self._cmyk.cyanComponent()
+        return self._values(CMYK)[0]
     def _set_cyan(self, val):
         val = self._normalize(val)
         c, m, y, k, a = self.cmyka
-        self._cmyk = Color._nscolor(CMYK, val, m, y, k, a)
+        self._cmyk, self._cache['cmyka'] = Color._cgcolor(CMYK, None, val, m, y, k, a)
         self._updateRgb()
     c = cyan = property(_get_cyan, _set_cyan, doc="the cyan component of the color")
 
     def _get_magenta(self):
-        return self._cmyk.magentaComponent()
+        return self._values(CMYK)[1]
     def _set_magenta(self, val):
         val = self._normalize(val)
         c, m, y, k, a = self.cmyka
-        self._cmyk = Color._nscolor(CMYK, c, val, y, k, a)
+        self._cmyk, self._cache['cmyka'] = Color._cgcolor(CMYK, None, c, val, y, k, a)
         self._updateRgb()
     m = magenta = property(_get_magenta, _set_magenta, doc="the magenta component of the color")
 
     def _get_yellow(self):
-        return self._cmyk.yellowComponent()
+        return self._values(CMYK)[2]
     def _set_yellow(self, val):
         val = self._normalize(val)
         c, m, y, k, a = self.cmyka
-        self._cmyk = Color._nscolor(CMYK, c, m, val, k, a)
+        self._cmyk, self._cache['cmyka'] = Color._cgcolor(CMYK, None, c, m, val, k, a)
         self._updateRgb()
     y = yellow = property(_get_yellow, _set_yellow, doc="the yellow component of the color")
 
     def _get_black(self):
-        return self._cmyk.blackComponent()
+        return self._values(CMYK)[3]
     def _set_black(self, val):
         val = self._normalize(val)
         c, m, y, k, a = self.cmyka
-        self._cmyk = Color._nscolor(CMYK, c, m, y, val, a)
+        self._cmyk, self._cache['cmyka'] = Color._cgcolor(CMYK, None, c, m, y, val, a)
         self._updateRgb()
     k = black = property(_get_black, _set_black, doc="the black component of the color")
 
     def _get_cmyka(self):
-        return (self._cmyk.cyanComponent(), self._cmyk.magentaComponent(), self._cmyk.yellowComponent(), self._cmyk.blackComponent(), self._cmyk.alphaComponent())
+        return self._values(CMYK)
     cmyka = property(_get_cmyka, doc="a tuple containing the CMYKA values for this color")
 
     def _get_hex(self):
-        r, g, b, a = self._values(RGB)
-        s = "".join('%02x'%int(255*c) for c in (r,g,b))
-        if all([len(set(pair))==1 for pair in zip(s[::2], s[1::2])]):
-            s = "".join(s[::2])
-        return "#"+s
+        r, g, b, a = _components(self._rgb_as(_ctx._colorspace))
+        return _hexstring(r, g, b)
     def _set_hex(self, val):
-        r, g, b, a = Color._parse(clr)
-        self._rgb = Color._nscolor(RGB, r, g, b, a)
+        r, g, b, a = Color._parse(val)
+        self._rgb, self._cache['rgba'] = Color._cgcolor(RGB, _ctx._colorspace, r, g, b, self.a)
         self._updateCmyk()
-    hex = property(_get_hex, _set_hex, doc="the rgb hex string for the color")
+    hex = property(_get_hex, _set_hex, doc="the rgb hex string for the color (in the current color space)")
 
     def _get_hexa(self):
         return (self.hex, self.a)
-    def _set_hexa(self, clr, alpha):
-        a = self._normalize(alpha)
+    def _set_hexa(self, hexa):
+        clr, alpha = hexa
         r, g, b, _ = Color._parse(clr)
-        self._rgb = Color._nscolor(RGB, r, g, b, a)
+        self._rgb, self._cache['rgba'] = Color._cgcolor(RGB, _ctx._colorspace, r, g, b, self._normalize(alpha))
         self._updateCmyk()
     hexa = property(_get_hexa, _set_hexa, doc="a tuple containing the color's rgb hex string and an alpha float")
 
     def blend(self, otherColor, factor):
         """Blend the color with otherColor with a factor; return the new color. Factor
-        is a float between 0.0 and 1.0.
+        is a float between 0.0 and 1.0. The blend is made component by component in the
+        current color space (whatever spaces the two colors are in) and returned in it.
         """
-        if hasattr(otherColor, "color"):
-            otherColor = otherColor._rgb
-        return self.__class__(self._rgb.blendedColorWithFraction_ofColor_(
-                factor, otherColor._rgb))
+        space = _ctx._colorspace
+        ours = _components(self._rgb_as(space))
+        theirs = _components(Color(otherColor)._rgb_as(space))
+        mixed = [v + (w - v) * factor for v, w in zip(ours, theirs)]
+        return self.__class__(mixed, mode=RGB, space=space, range=1)
 
     def _normalize(self, v, rng=None):
         """Bring the color into the 0-1 scale for the current colorrange"""
@@ -352,12 +490,18 @@ class Color(object):
             return valid_str(blob)
 
     @classmethod
-    def _nscolor(cls, scheme, *components):
-        factory = {RGB: NSColor.colorWithSRGBRed_green_blue_alpha_,
-                   HSV: NSColor.colorWithHue_saturation_brightness_alpha_,
-                   CMYK: NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_,
-                   GREY: NSColor.colorWithGenericGamma22White_alpha_}
-        return factory[scheme](*components)
+    def _cgcolor(cls, scheme, space, *components):
+        if scheme == CMYK:
+            values = tuple(_clamp(float(v)) for v in components)
+            return CGColorCreate(_GENERIC_CMYK, values), values
+        *values, alpha = components
+        if scheme == HSV:
+            h, s, v = values
+            values = colorsys.hsv_to_rgb(h % 1.0, s, v)
+        elif scheme == GREY:
+            values = values * 3
+        values = (*map(float, values), _clamp(float(alpha)))
+        return CGColorCreate(_SPACES[space], values), values
 
     @classmethod
     def _parse(cls, clrstr):
@@ -424,7 +568,7 @@ class Gradient(object):
 
     def __init__(self, *colors, **kwargs):
         if colors and isinstance(colors[0], Gradient):
-            _copy_attrs(colors[0], self, ('_gradient', '_outputmode', '_steps', '_colors', '_center', '_angle'))
+            _copy_attrs(colors[0], self, ('_gradient', '_outputmode', '_space', '_steps', '_colors', '_center', '_angle'))
             return
 
         # parse colors and assemble an NSGradient
@@ -446,6 +590,8 @@ class Gradient(object):
         self._center = center
         self._outputmode = None
         self._gradient = None
+
+        self._space = _ctx._colorspace
 
         # radial if None, otherwise convert angle from context units to degrees
         self._angle = None
@@ -475,17 +621,21 @@ class Gradient(object):
 
     @property
     def nsGradient(self):
-        c_mode = _outputmode()
+        c_mode = _inkmode()
         if not self._gradient or self._outputmode!=c_mode:
-            c_space = getattr(NSColorSpace, 'deviceRGBColorSpace' if c_mode==RGB else 'deviceCMYKColorSpace')
-            ns_clrs = [c.nsColor for c in self._colors]
-            ns_gradient = NSGradient.alloc().initWithColors_atLocations_colorSpace_(ns_clrs, self._steps, c_space())
+            if c_mode == RGB:
+                c_space = NSColorSpace.alloc().initWithCGColorSpace_(_SPACES[self._space])
+                ns_clrs = [NSColor.colorWithCGColor_(c._rgb_as(self._space)) for c in self._colors]
+            else:
+                c_space = NSColorSpace.deviceCMYKColorSpace() if c_mode==CMYK else NSColorSpace.sRGBColorSpace()
+                ns_clrs = [c.nsColor for c in self._colors]
+            ns_gradient = NSGradient.alloc().initWithColors_atLocations_colorSpace_(ns_clrs, self._steps, c_space)
             self._gradient, self._outputmode = ns_gradient, c_mode
         return self._gradient
 
     @property
     def brightness(self):
-        return max(clr._rgb.brightnessComponent() for clr in self._colors)
+        return max(clr.brightness for clr in self._colors)
 
     def copy(self):
         return self.__class__(self)

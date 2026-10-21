@@ -1,20 +1,122 @@
-import objc, os, re, time, math
+import objc, os, re, time, math, zlib
 from ..util import autorelease
 from .cocoa import CGBitmapContextCreateImage, CGContextBeginPage, CGContextEndPage, CGPDFContextClose, \
-                   CGPDFContextCreateWithURL, CGRectMake, NSBitmapImageRep, NSURL
+                   CGPDFContextCreateWithURL, CGRectMake, NSBitmapImageRep, NSURL, CGColorSpaceCopyICCData
 
 for cls in ["AnimatedGif", "Pages", "SysAdmin", "Video"]:
     globals()[cls] = objc.lookUpClass(cls)
 
+re_obj = re.compile(rb'(\d+) 0 obj\s*(.*?)\s*(stream\r?\n|endobj)', re.S)
+re_group_cs = re.compile(rb'(/Group\s*<<[^>]*?/S\s*/Transparency[^>]*?/CS\s+)(\d+)(\s+0\s+R)')
+re_icc_space = re.compile(rb'\[\s*/ICCBased\s+(\d+)\s+0\s+R\s*\]')
+re_length = re.compile(rb'/Length\s+(\d+)\b(?!\s+\d+\s+R)')
+
+def pdf_update(pdf, blend_space):
+    tail = re.search(rb'startxref\s+(\d+)\s+%%EOF\s*$', pdf)
+    xref = tail and re.compile(rb'xref\s+0 (\d+)\s+').match(pdf, int(tail.group(1)))
+    if not xref:
+        return b''
+    count, table = int(xref.group(1)), xref.end()
+    trailer = re.compile(rb'\s*trailer\s*<<(.*?)>>\s*startxref', re.S).match(pdf, table + 20 * count)
+    if not trailer:
+        return b''
+
+    objs = {}
+    for offset in re.findall(rb'(\d{10}) \d{5} n', pdf[table:table + 20 * count]):
+        m = re_obj.match(pdf, int(offset))
+        if not m:
+            continue
+        head, start, length = m.group(2), None, None
+        if m.group(3) != b'endobj':
+            length = re_length.search(head)
+            if not length:
+                return b'' # (a length in an object of its own)
+            start, length = m.end(), int(length.group(1))
+        objs[int(m.group(1))] = (head, start, length)
+
+    def stream(n):
+        head, start, length = objs[n]
+        return pdf[start:start + length]
+
+    def profile(n):
+        m = re_icc_space.fullmatch(objs[n][0]) if n in objs else None
+        icc = int(m.group(1)) if m else None
+        if icc not in objs or objs[icc][1] is None:
+            return None, None
+        data = stream(icc)
+        return icc, zlib.decompress(data) if b'/FlateDecode' in objs[icc][0] else data
+
+    target = bytes(CGColorSpaceCopyICCData(blend_space))
+    holders = {}
+    for n, (head, _, _) in objs.items():
+        for m in re_group_cs.finditer(head):
+            holders.setdefault(int(m.group(2)), set()).add(n)
+    relabel = [g for g in holders if profile(g)[1] not in (None, target)]
+    if not relabel:
+        return b''
+
+    added, heads, size = {}, {}, count # (heads: the rewritten objects' dictionaries)
+    found = [(n, icc) for n in objs for icc, data in [profile(n)] if data == target]
+    if found:
+        space, icc = found[0]
+    else:
+        data = zlib.compress(target)
+        icc, space, size = size, size + 1, size + 2
+        added[icc] = b'<< /N 3 /Alternate /DeviceRGB /Length %d /Filter /FlateDecode >>\nstream\n%s\nendstream' % (len(data), data)
+        added[space] = b'[ /ICCBased %d 0 R ]' % icc
+
+    def cost(ns):
+        return sum(len(objs[n][0]) + (objs[n][2] or 0) for n in ns)
+
+    def regroup(head, old, new):
+        return re_group_cs.sub(lambda m: m.group(1) + (b'%d' % new if int(m.group(2)) == old else m.group(2)) + m.group(3), head)
+
+    for g in relabel:
+        ref = re.compile(rb'(?<![\d.])%d\s+0\s+R' % g)
+        others = []
+        for n in objs:
+            head = heads.get(n, objs[n][0])
+            group_refs = sum(int(m.group(2)) == g for m in re_group_cs.finditer(head))
+            if len(ref.findall(head)) > group_refs:
+                others.append(n)
+        if others and cost(holders[g]) < cost(others):
+            for n in holders[g]:
+                heads[n] = regroup(heads.get(n, objs[n][0]), g, space)
+        else:
+            added[g] = b'[ /ICCBased %d 0 R ]' % icc
+            if others:
+                copy, size = size, size + 1
+                added[copy] = objs[g][0]
+                for n in others:
+                    heads[n] = regroup(ref.sub(b'%d 0 R' % copy, heads.get(n, objs[n][0])), copy, g)
+    updates = dict(added)
+    for n, head in heads.items():
+        updates[n] = head if objs[n][1] is None else head + b'\nstream\n' + stream(n) + b'\nendstream'
+
+    update, offsets = [b'' if pdf.endswith(b'\n') else b'\n'], {}
+    pos = len(pdf) + len(update[0])
+    for n in sorted(updates):
+        obj = b'%d 0 obj\n%s\nendobj\n' % (n, updates[n])
+        update.append(obj)
+        offsets[n], pos = pos, pos + len(obj)
+    keep = b' '.join(re.findall(rb'/(?:Root|Info) \d+ 0 R|/ID\s*\[[^\]]*\]', trailer.group(1)))
+    update.append(b'xref\n' + b''.join(b'%d 1\n%010d 00000 n \n' % (n, offsets[n]) for n in sorted(offsets)))
+    update.append(b'trailer\n<< /Size %d %s /Prev %d >>\nstartxref\n%d\n%%%%EOF\n' % (size, keep, int(tail.group(1)), pos))
+    return b''.join(update)
+
 class PDFBook(object):
 
     def __init__(self, fname, zoom=1.0):
+        self.fname = fname
         self.zoom = zoom
         self.pages = 0
         self.closed = False
+        self.blend_space = None # the space its groups blend in, from its first page's output mode
         self.context = CGPDFContextCreateWithURL(NSURL.fileURLWithPath_(fname), None, None)
 
     def addPage_(self, frame):
+        if not self.pages:
+            self.blend_space = frame._blend_space
         w, h = frame.pagesize
         CGContextBeginPage(self.context, CGRectMake(0, 0, w * self.zoom, h * self.zoom))
         frame._render_to_context(self.context, self.zoom)
@@ -24,6 +126,11 @@ class PDFBook(object):
     def closeFile(self):
         CGPDFContextClose(self.context)
         self.context = None
+        if self.blend_space is not None:
+            with open(self.fname, 'rb') as f:
+                update = pdf_update(f.read(), self.blend_space)
+            with open(self.fname, 'ab') as f:
+                f.write(update)
         self.closed = True
 
     def framesWritten(self):
@@ -169,7 +276,7 @@ class ImageExportSession(ExportSession):
             self.writer = Pages.alloc().initWithPattern_(name_tmpl)
 
     def add(self, canvas, render=None):
-        frame = canvas.commit()
+        frame = canvas.commit(self.format == 'eps')
         writer, format, zoom, cmyk = self.writer, self.format, self.zoom, self.cmyk
         def work(cancelled):
             if isinstance(writer, PDFBook):

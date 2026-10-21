@@ -179,7 +179,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
     @property
     def image(self):
-        warnings.warn("The 'image' attribute is deprecated. Please use _nsImage instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn("The 'image' attribute is deprecated. Please use _nsImage instead.", FutureWarning, stacklevel=2)
         return self._nsImage
 
     @property
@@ -215,7 +215,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
             # create an offscreen bitmap context and rasterize the scaled image into it
             bitmap_opts = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
-            bitmap_ctx = CGBitmapContextCreate(None, w, h, 8, w*4, CGColorSpaceCreateDeviceRGB(), bitmap_opts)
+            bitmap_ctx = CGBitmapContextCreate(None, w, h, 8, w*4, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), bitmap_opts)
             CGContextTranslateCTM(bitmap_ctx, 0, h)
             CGContextScaleCTM(bitmap_ctx, 1, -1)
             NSGraphicsContext.saveGraphicsState()
@@ -437,8 +437,11 @@ class ImageWriter(object):
             #
             m = re_padded.search(self.fname)
             fn = re_padded.sub('0'*int(m.group(1)), self.fname, count=1) if m else self.fname
-            _ctx._outputmode = self.mode
-            _ctx.canvas.save(fn, self.format, self.opts['zoom'], self.mode==CMYK)
+            prev_mode, _ctx._outputmode = _ctx._outputmode, self.mode
+            try:
+                _ctx.canvas.save(fn, self.format, self.opts['zoom'], self.mode==CMYK)
+            finally:
+                _ctx._outputmode = prev_mode # don't leave later exports in cmyk mode
 
     @property
     def page(self):

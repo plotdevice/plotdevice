@@ -49,6 +49,17 @@ class ModuleTests(PlotDeviceTestCase):
             self.assertIn('gil=False xgil=0', gil())                     # relaunched with -X gil=0
             self.assertIn('gil=True xgil=None', gil(PYTHON_GIL='1'))     # the user's choice wins, no relaunch
 
+    def test_cli_shows_deprecation_warnings(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            script = os.path.join(tmp, 'deprecated.pv')
+            with open(script, 'w') as f:
+                f.write("size(10, 10)\n"
+                        "Transform().transform\n"
+                        "image('%s/tests/_in/plaid.png', plot=False).image\n" % sdist_path)
+            out = run([sys.executable, '-m', 'plotdevice', '-q', script], capture_output=True, text=True, cwd=sdist_path)
+            self.assertIn('%s:2: FutureWarning: The \'transform\' attribute is deprecated' % script, out.stderr)
+            self.assertIn('%s:3: FutureWarning: The \'image\' attribute is deprecated' % script, out.stderr)
 
     @unittest.skipIf(plotdevice.in_bundle, 'only applies outside the app')
     def test_cli_app_only_options(self):
