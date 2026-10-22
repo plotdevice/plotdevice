@@ -182,7 +182,7 @@ class ScriptController(NSWindowController):
         self._fps_shown = False # whether the toolbar readout is currently visible
         self._fps_stamp = 0     # when it was last refreshed
         self.queue = None       # the window's FrameQueue (once it has one)
-        self.proof = None       # View > Proof Colors' choice: None for the screen, ('rgb', SRGB), ('press', key) or ('printer', path)
+        self.proof = None       # View > Proof Colors' choice: None for the screen, ('rgb', SRGB or a path) or ('press', key)
         self._rendering = False # whether the latest frame invoke() rendered has yet to land
         self._rerun = False     # whether runScript() was called while it was rendering
 
@@ -867,12 +867,12 @@ class ScriptController(NSWindowController):
         kind, value = proof or (None, None)
         try:
             press = _output_colors(value, 'tiff') if kind == 'press' else None
-            printer = CGColorSpaceCreateWithICCData(open(value, 'rb').read()) if kind == 'printer' else None
-        except (OSError, DeviceError):
+            rgb = _output_colors(value, 'png') if kind == 'rgb' else None # (loading the space a profile's path names)
+        except DeviceError:
             return NSBeep()
         self.proof = proof
-        self.graphicsView.press, self.graphicsView.printer = press, printer
-        self.graphicsView.rgb = value if kind == 'rgb' else None
+        self.graphicsView.press = press
+        self.graphicsView.rgb = rgb
         self.exportSheet.proofed(proof)
         if self.graphicsView.canvas is not None:
             self.graphicsView.render(self.graphicsView.canvas)

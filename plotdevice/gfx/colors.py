@@ -3,7 +3,6 @@ import os
 import re
 import json
 import zlib
-from glob import glob
 import colorsys
 import warnings
 from array import array
@@ -43,12 +42,15 @@ _PRESS_CONDITIONS = {GRACOL: ('CGATS21-2-CRPC6', 'Universal Premium Coated (GRAC
 _PRESS_LABELS = {GRACOL: 'GRACoL 2013 Coated (CRPC6)', GRACOL_UNCOATED: 'GRACoL 2013 Uncoated (CRPC3)', SWOP: 'SWOP 2013 (CRPC5)',
                  FOGRA39: 'ISO Coated v2 (FOGRA39)', FOGRA47: 'PSO Uncoated (FOGRA47)'}
 
-_PROFILE_FOLDERS = ['/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles/Profiles', '/Library/ColorSync/Profiles/Recommended',
-                    '~/Library/ColorSync/Profiles', '/Library/Application Support/Adobe/Color/Profiles',
+_PROFILE_FOLDERS = ['~/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles/Profiles',
+                    '/Library/ColorSync/Profiles/Recommended', '/Library/Application Support/Adobe/Color/Profiles',
                     '/Library/Application Support/Adobe/Color/Profiles/Recommended']
-_CANON_PROFILES = '/Library/Printers/Canon/BJPrinter/Resources/ICCProfiles'
+
+_SYSTEM_PROFILES = '/System/Library/ColorSync/Profiles'
+_SYSTEM_RGB = {'AdobeRGB1998.icc': 'Adobe RGB (1998)', 'ROMM RGB.icc': 'ROMM RGB (ProPhoto)', 'DCI(P3) RGB.icc': 'DCI-P3',
+               'ITU-709.icc': 'Rec. 709', 'ITU-2020.icc': 'Rec. 2020'}
 _PROFILE_HEADERS = {} # path -> (mtime, (class, data space, description)), see _profile_header
-_PROFILE_LISTS = {}   # function -> (the folders' & PPDs' mtimes, the list), see _profile_sources
+_PROFILE_LISTS = {}   # function -> (the folders' mtimes, the list), see _profile_sources
 
 _PRESS_SPACES = {}
 _PRESS_NS_SPACES = {}
@@ -88,9 +90,9 @@ def _output_colors(val, format):
     if val is None:
         return _FORMAT_DEFAULTS.get(format, P3)
     if not isinstance(val, str):
-        notpalette = 'colors= is the color space, press or profile to export in: P3, SRGB, CMYK, a press like GRACOL, or an .icc file (not %r)' % (val,)
+        notpalette = "colors=%r isn't a built-in color space or ICC profile filename" % (val,)
         if numlike(val):
-            notpalette += "; it isn't a gif's palette size"
+            notpalette += " (it isn't a gif's palette size)"
         raise DeviceError(notpalette)
     key = val.lower().replace('-', '_')
     if key in (P3, SRGB, CMYK):
@@ -101,17 +103,23 @@ def _output_colors(val, format):
             _PRESS_SPACES[key] = CGColorSpaceCreateWithICCData(_press_profile(key))
     else:
         key = os.path.abspath(os.path.expanduser(val))
+        if not os.path.exists(key):
+            key = _profile_names().get(val.lower(), key)
         try:
             icc = open(key, 'rb').read()
         except OSError:
-            unknown = 'colors= should be P3, SRGB, CMYK, a press (GRACOL, GRACOL_UNCOATED, SWOP, FOGRA39 or FOGRA47), or the path to an .icc profile (%r is none of them)' % val
+            searched = ', '.join(_PROFILE_FOLDERS + [_SYSTEM_PROFILES])
+            unknown = "%r isn't a built-in color space or ICC profile filename (searched in: %s)" % (val, searched)
             raise DeviceError(unknown)
         model = icc[16:20] if icc[36:40] == b'acsp' else None
         space = CGColorSpaceCreateWithICCData(icc) if model in (b'RGB ', b'CMYK') else None
         if space is None:
-            notrgb = 'colors= needs an RGB or CMYK .icc profile (%s is neither)' % val
+            notrgb = "%r isn't an RGB or CMYK ICC profile" % val
             raise DeviceError(notrgb)
-        if model == b'CMYK':
+        generic = os.path.join(_SYSTEM_PROFILES, 'Generic CMYK Profile.icc')
+        if model == b'CMYK' and os.path.exists(generic) and icc == open(generic, 'rb').read():
+            key = kind = CMYK
+        elif model == b'CMYK':
             _PRESS_SPACES.setdefault(key, space)
             kind = 'press'
         else:
@@ -120,11 +128,11 @@ def _output_colors(val, format):
     allowed = _FORMAT_COLORS[format]
     fits = kind in allowed or (kind in (P3, SRGB) and 'rgb' in allowed) or (kind == 'press' and CMYK in allowed)
     if not fits:
-        options = ', '.join('an RGB .icc profile' if opt == 'rgb' else opt.upper() for opt in allowed)
+        options = ', '.join('an RGB ICC profile' if opt == 'rgb' else opt.upper() for opt in allowed)
         if 'rgb' in allowed:
             options = 'P3, SRGB, ' + options
         if CMYK in allowed:
-            options += ', a press'
+            options += ', GRACOL, GRACOL_UNCOATED, SWOP, FOGRA39, FOGRA47, a CMYK ICC profile'
         cantfit = "%s %s file can't be exported with colors=%r (it takes %s)" % ('An' if format == 'eps' else 'A', format.upper(), val, options)
         raise DeviceError(cantfit)
     return key
@@ -178,7 +186,7 @@ def _profile_header(path):
     return header
 
 def _profile_sources():
-    paths = [os.path.expanduser(folder) for folder in _PROFILE_FOLDERS] + ['/etc/cups/ppd'] + glob('/etc/cups/ppd/*.ppd')
+    paths = [os.path.expanduser(folder) for folder in _PROFILE_FOLDERS]
     return tuple(os.path.getmtime(path) if os.path.exists(path) else None for path in paths)
 
 def _installed_presses():
@@ -197,34 +205,21 @@ def _installed_presses():
     _PROFILE_LISTS['presses'] = (sources, presses)
     return presses
 
-def _printer_profiles():
+def _profile_names():
     sources = _profile_sources()
-    if _PROFILE_LISTS.get('printers', (None,))[0] == sources:
-        return _PROFILE_LISTS['printers'][1]
-    found, seen = [], set()
-    for ppd in sorted(glob(os.path.join('/etc/cups/ppd', '*.ppd'))):
-        printer = os.path.splitext(os.path.basename(ppd))[0].replace('_', ' ')
-        try:
-            text = open(ppd, encoding='latin-1').read()
-        except OSError:
-            continue
-        paths = re.findall(r'^\*cupsICCProfile [^:]*:\s*"([^"]+)"', text, re.M)
-        if '*cupsICCQualifier2: CNIJProfileID' in text:
-            paths += [os.path.join(_CANON_PROFILES, name) for name in re.findall(r'^\*CNIJProfileID \d+/([^:]+):', text, re.M)]
-        for path in paths:
-            header = None if path.startswith('/System/Library/') else _profile_header(path)
-            if header and header[0] == b'prtr' and (printer, path) not in seen:
-                seen.add((printer, path))
-                found.append((printer, header[2], path))
-    for folder in _PROFILE_FOLDERS:
-        folder = os.path.expanduser(folder)
+    if _PROFILE_LISTS.get('names', (None,))[0] == sources:
+        return _PROFILE_LISTS['names'][1]
+    names = {}
+    folders = [os.path.expanduser(folder) for folder in _PROFILE_FOLDERS]
+    for folder in folders + [_SYSTEM_PROFILES]:
         for name in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
-            path = os.path.join(folder, name)
-            header = _profile_header(path) if os.path.splitext(name)[1].lower() in ('.icc', '.icm') else None
-            if header and header[:2] == (b'prtr', b'RGB ') and not any(path == p for _, _, p in found):
-                found.append((None, header[2], path))
-    _PROFILE_LISTS['printers'] = (sources, found)
-    return found
+            stem, ext = os.path.splitext(name)
+            path = os.path.realpath(os.path.join(folder, name)) # (Adobe links its folder into ColorSync's)
+            if ext.lower() in ('.icc', '.icm') and os.path.isfile(path):
+                names.setdefault(name.lower(), path)
+                names.setdefault(stem.lower(), path)
+    _PROFILE_LISTS['names'] = (sources, names)
+    return names
 
 def _output_intent(press):
     if press not in _PRESS_INTENTS:

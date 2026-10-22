@@ -2007,7 +2007,7 @@ class Frame(object):
         self.background = canvas.background
         self._bounds = None  # each grob's _render_bounds, computed by the first culled render
         self._layers = {}    # the bounds of grobs drawn in transparency layers, as they're drawn
-        self.proof = None    # a printer profile's space the window shows it through (View > Proof Colors)
+        self.proof = None    # an rgb space the window shows it through (View > Proof Colors' sRGB, Adobe RGB, ...)
 
     def _layer_box(self, grob):
         key = id(grob)

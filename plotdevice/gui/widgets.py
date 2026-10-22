@@ -371,7 +371,8 @@ class DashboardController(NSObject):
 
 
 from ..context import RGB, CMYK
-from ..gfx.colors import P3, SRGB, _PRESS_LABELS, _FORMAT_COLORS, _FORMAT_DEFAULTS, _installed_presses, _printer_profiles
+from ..gfx.colors import P3, SRGB, _PRESS_LABELS, _FORMAT_COLORS, _FORMAT_DEFAULTS, _SYSTEM_PROFILES, _SYSTEM_RGB, \
+                         _installed_presses
 from ..lib.io import MovieExportSession
 
 SECTION_HEADERS = hasattr(NSMenuItem, 'sectionHeaderWithTitle_')
@@ -383,33 +384,30 @@ def fill_sections(menu, sections, action=None):
             menu.addItem_(NSMenuItem.sectionHeaderWithTitle_(header))
         elif menu.numberOfItems():
             menu.addItem_(NSMenuItem.separatorItem())
-        for title, value in items:
+        for entry in items:
+            if entry is None:
+                menu.addItem_(NSMenuItem.separatorItem())
+                continue
+            title, value = entry
             item = menu.addItemWithTitle_action_keyEquivalent_(title, None, '')
-            if isinstance(value, list):
-                item.setSubmenu_(NSMenu.alloc().initWithTitle_(title))
-                fill_sections(item.submenu(), [(None, value)], action)
-            else:
-                item.setRepresentedObject_(value)
-                item.setAction_(action)
+            item.setRepresentedObject_(value)
+            item.setAction_(action)
 
-def press_items():
-    return [(label, press) for press, label in _PRESS_LABELS.items()] + _installed_presses()
+def system_rgb():
+    return [(label, os.path.join(_SYSTEM_PROFILES, name)) for name, label in _SYSTEM_RGB.items()
+            if os.path.exists(os.path.join(_SYSTEM_PROFILES, name))]
 
 class ProofColorsMenu(NSObject):
 
     def menuNeedsUpdate_(self, menu):
         win = NSApp().mainWindow()
         screen = win.screen() if win else NSScreen.mainScreen()
-        printers, unnamed = {}, []
-        for printer, desc, path in _printer_profiles():
-            if printer:
-                printers.setdefault(printer, []).append((desc, ('printer', path)))
-            else:
-                unnamed.append((desc, ('printer', path)))
-        presses = [(title, ('press', press)) for title, press in press_items()]
-        fill_sections(menu, [(None, [(screen.localizedName(), None), ('sRGB', ('rgb', SRGB))]),
-                             ('Prepress', presses),
-                             ('Printers', sorted(printers.items()) + unnamed)], 'proofColors:')
+        spaces = [(label, ('rgb', path)) for label, path in system_rgb()]
+        bundled = [(label, ('press', press)) for press, label in _PRESS_LABELS.items()]
+        installed = [(desc, ('press', path)) for desc, path in _installed_presses()]
+        rgb = [(screen.localizedName(), None), ('sRGB', ('rgb', SRGB))] + ([None] + spaces if spaces else [])
+        cmyk = bundled + ([None] + installed if installed else [])
+        fill_sections(menu, [('RGB', rgb), ('CMYK', cmyk)], 'proofColors:')
 
 class ExportSheet(NSObject):
     # the script whose doExportAsImage and doExportAsMovie methods will be called
@@ -578,15 +576,17 @@ class ExportSheet(NSObject):
     def proofed(self, proof):
         kind, value = proof or (None, None)
         self.image['colors'] = value if kind in ('press', 'rgb') else P3
-        self.movie['colors'] = value if kind == 'rgb' else P3
+        self.movie['colors'] = value if value == SRGB else P3
 
     @objc.python_method
     def fillColors(self, popup, colors):
+        system = system_rgb()
+        rgb = [('Display P3', P3), ('sRGB', SRGB)] + ([None] + system if system else [])
         installed = _installed_presses()
         bundled = [(label, press) for press, label in _PRESS_LABELS.items()]
         cmyk = [('Generic CMYK', CMYK)] + bundled + ([None] + installed if installed else [])
         popup.removeAllItems()
-        for header, items in [('RGB', [('Display P3', P3), ('sRGB', SRGB)]), ('CMYK', cmyk)]:
+        for header, items in [('RGB', rgb), ('CMYK', cmyk)]:
             if SECTION_HEADERS:
                 popup.menu().addItem_(NSMenuItem.sectionHeaderWithTitle_(header))
             elif popup.numberOfItems():
@@ -609,12 +609,20 @@ class ExportSheet(NSObject):
             format = self.formats['movie'][self.movieFormat.indexOfSelectedItem()]
         allowed = _FORMAT_COLORS[format]
         holds_cmyk = CMYK in allowed
+        system = [os.path.join(_SYSTEM_PROFILES, name) for name in _SYSTEM_RGB]
+        in_cmyk = False # (whether the items so far are past the CMYK section's start)
         for idx, item in enumerate(popup.itemArray()):
             colors = item.representedObject()
+            if colors == CMYK:
+                in_cmyk = True
             if colors is None:
-                item.setHidden_(idx > 0 and not holds_cmyk)
+                next_item = popup.itemAtIndex_(idx + 1) if idx + 1 < popup.numberOfItems() else None
+                starts_cmyk = next_item is not None and next_item.representedObject() == CMYK
+                item.setHidden_((in_cmyk or starts_cmyk) and not holds_cmyk)
             elif colors in (P3, SRGB):
                 item.setEnabled_(colors in allowed or 'rgb' in allowed)
+            elif colors in system:
+                item.setEnabled_('rgb' in allowed)
             else:
                 item.setHidden_(not holds_cmyk)
         chosen = popup.selectedItem()

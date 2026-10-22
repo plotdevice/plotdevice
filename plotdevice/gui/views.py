@@ -553,8 +553,7 @@ class GraphicsView(NSView):
     script = IBOutlet()
     canvas = None
     press = None      # View > Proof Colors' press, which the window shows its frames as a press TIFF holds them in
-    rgb = None        # or rgb colors (SRGB), shown as a PNG exported in them holds them
-    printer = None    # or the printer profile's space it shows them through
+    rgb = None        # or rgb colors (SRGB or a profile's path), shown as a PNG exported in them holds them
     _queue = None      # the window's FrameQueue (class-level: the ScriptController may set it before awakeFromNib)
     _presenter = None
     canvasSize = None # the canvas at the displayed zoom, in points (class-level: the clip view may ask before awakeFromNib)
@@ -626,7 +625,6 @@ class GraphicsView(NSView):
             self._committed.proof = _INKS[self.rgb]
         else:
             self._committed = canvas.commit()
-            self._committed.proof = self.printer
         self._seq += 1
         self._request(focus, onerror=onerror, ondone=ondone)
 

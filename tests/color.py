@@ -581,6 +581,48 @@ class ColorTests(PlotDeviceTestCase):
         finally:
             util.__file__ = real
 
+    def test_installed_profiles_by_file_name(self):
+        from Quartz import CGColorSpaceCopyICCData, CGColorSpaceCreateWithName, kCGColorSpaceSRGB
+        from plotdevice.gfx import colors
+        from plotdevice.gfx.colors import _output_colors, _press_profile
+        cmyk, rgb = _press_profile(FOGRA47), bytes(CGColorSpaceCopyICCData(CGColorSpaceCreateWithName(kCGColorSpaceSRGB)))
+        user, other = join(self.tmp, 'user'), join(self.tmp, 'other')
+        os.makedirs(user)
+        os.makedirs(other)
+        for folder, name, icc in ((user, 'My Press.icc', cmyk), (other, 'My Press.icc', cmyk), (other, 'Lab Proof.ICM', rgb),
+                                  (user, 'Shadowed.icc', rgb), (other, 'Shadowed.icc', cmyk)):
+            open(join(folder, name), 'wb').write(icc)
+        saved = colors._PROFILE_FOLDERS
+        colors._PROFILE_FOLDERS = [user, other]
+        try:
+            for name in ('My Press', 'my press.icc', 'MY PRESS'):
+                self.assertEqual(_output_colors(name, 'pdf'), os.path.realpath(join(user, 'My Press.icc')))
+            self.assertEqual(_output_colors('lab proof', 'png'), os.path.realpath(join(other, 'Lab Proof.ICM')))
+            with self.assertRaisesRegex(DeviceError, "can't be exported"):
+                _output_colors('My Press', 'png')
+            with self.assertRaisesRegex(DeviceError, "'Nothing Here' isn't a built-in color space or ICC profile filename"):
+                _output_colors('Nothing Here', 'pdf')
+            here = os.getcwd()
+            os.chdir(other)
+            try:
+                self.assertEqual(_output_colors('Shadowed.icc', 'pdf'), join(os.path.realpath(other), 'Shadowed.icc'))
+                self.assertEqual(_output_colors('Shadowed', 'png'), os.path.realpath(join(user, 'Shadowed.icc')))
+            finally:
+                os.chdir(here)
+            if os.path.exists('/System/Library/ColorSync/Profiles/ITU-2020.icc'):
+                self.assertEqual(_output_colors('ITU-2020', 'png'), '/System/Library/ColorSync/Profiles/ITU-2020.icc')
+                self.assertEqual(_output_colors('generic rgb profile', 'png'), '/System/Library/ColorSync/Profiles/Generic RGB Profile.icc')
+                generic = '/System/Library/ColorSync/Profiles/Generic CMYK Profile.icc'
+                copy = join(user, 'Copy.icc')
+                open(copy, 'wb').write(open(generic, 'rb').read())
+                for val in ('Generic CMYK Profile', generic, copy):
+                    self.assertEqual(_output_colors(val, 'pdf'), CMYK, val)
+                with self.assertRaisesRegex(DeviceError, "can't be exported"):
+                    _output_colors('Generic CMYK Profile', 'png')
+        finally:
+            colors._PROFILE_FOLDERS = saved
+            colors._PROFILE_LISTS.clear()
+
     def test_presses_resolve_where_cmyk_fits(self):
         from plotdevice.gfx.colors import _output_colors, _output_mode, _press_profile
         path = join(self.tmp, 'press.icc')
@@ -791,7 +833,7 @@ class ColorTests(PlotDeviceTestCase):
                     draw()
         self.assertEqual([updates(name) for name in ('plain', 'cmyk', 'cmyk_book', 'rgb', 'rgb_book')], [0, 0, 0, 1, 1])
 
-    def test_proofs_render_through_the_press_or_printer(self):
+    def test_proofs_render_through_the_press_or_srgb(self):
         import objc
         from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGContextDrawImage, CGDataProviderCopyData,
                             CGImageGetDataProvider, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, kCGColorSpaceSRGB,
@@ -821,10 +863,11 @@ class ColorTests(PlotDeviceTestCase):
         self.assertNotEqual(proofed[5 * 40 + 25], shown(_ctx.canvas.commit())[5 * 40 + 25]) # (p3 red, out of the press's gamut)
         tile = shown(_ctx.canvas.commit(press, 'tiff'), 20, 10, origin=(20, 10))
         close(tile, [proofed[y * 40 + x] for y in range(10, 20) for x in range(20, 40)], "a tile shows its part of the raster")
+        # a frame proofed through sRGB clips p3 red to sRGB's
         frame = _ctx.canvas.commit()
         frame.proof = CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
         red = tuple(round(v * 255) for v in SRGB_RED_IN_P3)
-        close([shown(frame)[5 * 40 + 25]], [red], 'p3 red through an sRGB printer')
+        close([shown(frame)[5 * 40 + 25]], [red], 'p3 red through sRGB')
         close([shown(frame)[15 * 40 + 5]], [(255, 255, 255)], 'the background stays white')
         from plotdevice.gfx.colors import _INKS
         export(join(self.tmp, 'srgb.png'), colors=SRGB)
@@ -834,6 +877,14 @@ class ColorTests(PlotDeviceTestCase):
         proofed = shown(frame)
         close(proofed, pixels(png), 'an sRGB proof shows the sRGB png')
         close([proofed[5 * 40 + 25]], [red], 'p3 red clipped to sRGB')
+        from plotdevice.gfx.colors import _output_colors
+        adobe = '/System/Library/ColorSync/Profiles/AdobeRGB1998.icc'
+        if os.path.exists(adobe):
+            export(join(self.tmp, 'adobe.png'), colors=adobe)
+            png = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(join(self.tmp, 'adobe.png')), None), 0, None)
+            frame = _ctx.canvas.commit(_output_colors(adobe, 'png'), 'png')
+            frame.proof = _INKS[adobe]
+            close(shown(frame), pixels(png), 'an Adobe RGB proof shows the Adobe RGB png')
 
     def test_window_surfaces_are_tagged_p3(self):
         import objc
