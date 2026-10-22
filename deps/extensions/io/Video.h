@@ -25,12 +25,14 @@
     BOOL reported;
     NSString *transferFunction; // the movie's (and its buffers')
     BOOL straightAlpha;         // whether the movie stores alpha unpremultiplied (ProRes)
+    BOOL srgb;                  // whether it's in srgb (Rec.709 primaries) rather than display p3
 }
 @property NSInteger framesWritten;
 @property BOOL doneWriting;
 @property (readonly) BOOL failed; // whether the writer has given up (frames are no longer appended)
 
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec;
+- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec srgb:(BOOL)inSRGB;
 - (PDSurface *)nextSurface; // one over a free buffer of the encoder's, or nil while it's using them all
 - (void)addSurface:(PDSurface *)surface;
 - (BOOL)addUnpremultiplied:(PDSurface *)rendered; // copied into a free buffer with straight alpha (NO while there's none)

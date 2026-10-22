@@ -18,8 +18,8 @@ from ..util.readers import get_http_session, last_modified
 from ..lib.io import MovieExportSession, ImageExportSession
 from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
-from .colors import CMYK
-from . import _ns_context, _cg_port
+from .colors import RGB, CMYK, _output_mode, _PRESS_SPACES
+from . import _ns_context, _cg_port, _frame
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
 
@@ -179,7 +179,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
     @property
     def image(self):
-        warnings.warn("The 'image' attribute is deprecated. Please use _nsImage instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn("The 'image' attribute is deprecated. Please use _nsImage instead.", FutureWarning, stacklevel=2)
         return self._nsImage
 
     @property
@@ -215,7 +215,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
             # create an offscreen bitmap context and rasterize the scaled image into it
             bitmap_opts = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
-            bitmap_ctx = CGBitmapContextCreate(None, w, h, 8, w*4, CGColorSpaceCreateDeviceRGB(), bitmap_opts)
+            bitmap_ctx = CGBitmapContextCreate(None, w, h, 8, w*4, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), bitmap_opts)
             CGContextTranslateCTM(bitmap_ctx, 0, h)
             CGContextScaleCTM(bitmap_ctx, 1, -1)
             NSGraphicsContext.saveGraphicsState()
@@ -351,8 +351,18 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             self._screen_transform.concat() # move the image into place via transforms
             with self.effects.applied(self):  # apply any blend/alpha/shadow effects
                 NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
-                bounds = ((0,0), self._nsImage.size()) # draw the image at (0,0)
-                self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
+                image = self._nsImage
+                frame = _frame.get()
+                if frame is not None and frame.outputmode == CMYK and frame.colors is not None:
+                    rep = next((r for r in image.representations() if isinstance(r, NSBitmapImageRep)), None)
+                    cg = rep.CGImage() if rep is not None else None
+                    if cg is not None and CGColorSpaceGetModel(CGImageGetColorSpace(cg)) == kCGColorSpaceModelCMYK:
+                        in_space = frame.press and frame.ink[1]
+                        space = _PRESS_SPACES[frame.press] if in_space else CGColorSpaceCreateDeviceCMYK()
+                        image = NSImage.alloc().initWithCGImage_size_(CGImageCreateCopyWithColorSpace(cg, space), image.size())
+                        image.setFlipped_(True)
+                bounds = ((0,0), image.size()) # draw the image at (0,0)
+                image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
                 # NB: the nodebox source warns about quartz bugs triggered by drawing
                 # EPSs to other origin points. no clue whether this still applies...
 
@@ -396,7 +406,8 @@ class SequenceRenderer(object):
 
 class ImageWriter(object):
     def __init__(self, fname, format, **opts):
-        self.mode = CMYK if opts['cmyk'] else _ctx._outputmode
+        self.mode = _output_mode(opts['colors'])
+        self.press = opts['colors'] if self.mode == CMYK and opts['colors'] != CMYK else None
         self.fname = os.path.expanduser(fname)
         self.format = format
         self.opts = opts
@@ -410,6 +421,7 @@ class ImageWriter(object):
         self._pool = NSAutoreleasePool.alloc().init()
         _ctx._saveContext()
         _ctx._outputmode = self.mode
+        _ctx._press = self.press # (scripts' reads of cmyk colors as rgb go through it in the block)
         return self
 
     def __exit__(self, type, value, tb):
@@ -437,8 +449,7 @@ class ImageWriter(object):
             #
             m = re_padded.search(self.fname)
             fn = re_padded.sub('0'*int(m.group(1)), self.fname, count=1) if m else self.fname
-            _ctx._outputmode = self.mode
-            _ctx.canvas.save(fn, self.format, self.opts['zoom'], self.mode==CMYK)
+            _ctx.canvas.save(fn, self.format, self.opts['zoom'], colors=self.opts['colors'])
 
     @property
     def page(self):

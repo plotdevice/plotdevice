@@ -1,7 +1,13 @@
 # all the NSBits and NSPieces
 
 from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorCreate, CGColorCreateCopyByMatchingToColorSpace, \
-                   CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGContextAddPath, CGContextAddRect, \
+                   CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, \
+                   CGColorSpaceCopyICCData, CGColorSpaceCreateWithICCData, kCGRenderingIntentRelativeColorimetric, CGContextSetRenderingIntent, \
+                   CGColorSpaceGetNumberOfComponents, CGContextFillRect, CGContextSetRGBFillColor, \
+                   CGColorRef, CGColorGetColorSpace, CGColorGetComponents, CGColorGetNumberOfComponents, CGColorSpaceCopyName, \
+                   kCGColorSpaceExtendedDisplayP3, kCGColorSpaceExtendedSRGB, kCGColorSpaceGenericCMYK, kCGColorSpaceSRGB, \
+                   kCGColorSpaceModelCMYK, \
+                   CGContextAddPath, CGContextAddRect, \
                    CGAffineTransformConcat, CGAffineTransformInvert, CGRectApplyAffineTransform, \
                    CGAffineTransformMakeScale, CGAffineTransformMakeTranslation, CGBitmapContextGetAlphaInfo, CGBitmapContextGetColorSpace, \
                    CGBitmapContextGetHeight, CGBitmapContextGetWidth, CGColorCreateCopyWithAlpha, CGColorGetAlpha, \
@@ -16,6 +22,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    CGContextSetStrokeColorWithColor, CGContextTranslateCTM, CGDataConsumerCreateWithCFData, CGImageDestinationAddImage, \
                    CGImageDestinationCreateWithData, CGImageDestinationFinalize, CGImageDestinationSetProperties, \
                    CGImageGetBitsPerComponent, CGImageGetBitsPerPixel, CGImageGetBytesPerRow, CGImageGetDataProvider, \
+                   CGImageCreateCopyWithColorSpace, CGImageGetColorSpace, \
                    CGImageGetHeight, CGImageGetWidth, CGImageMaskCreate, CGPathAddCurveToPoint, CGPathAddLineToPoint, \
                    CGPathCloseSubpath, CGPathCreateCopy, CGPathCreateMutable, CGPathMoveToPoint, CGPathRelease, \
                    CGPDFContextBeginPage, CGPDFContextClose, CGPDFContextCreate, CGPDFContextEndPage, CGRectMake, \
@@ -75,4 +82,8 @@ from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CI
                        NSZeroRect
 from CoreServices import kUTTypePNG, kUTTypeJPEG, kUTTypeGIF, kUTTypeTIFF
 from WebKit import WKWebView, WKWebViewConfiguration, WKUserScript, WKUserScriptInjectionTimeAtDocumentStart
+from ColorSync import ColorSyncProfileCreate, ColorSyncProfileCreateWithName, ColorSyncTransformCreate, ColorSyncTransformConvert, \
+                      kColorSyncDisplayP3Profile, kColorSyncProfile, kColorSyncRenderingIntent, kColorSyncRenderingIntentRelative, \
+                      kColorSyncTransformTag, kColorSyncTransformDeviceToPCS, kColorSyncTransformPCSToDevice, \
+                      kColorSyncBlackPointCompensation, kColorSync16BitInteger, kColorSyncAlphaNone
 from objc import IBOutlet, IBAction

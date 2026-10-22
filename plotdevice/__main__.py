@@ -67,7 +67,8 @@ def main():
   x = parser.add_argument_group("Export Options")
   x.add_argument('--export', '-o', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, heic, gif, or mov')
   x.add_argument('--zoom', metavar='PERCENT', default=100, type=int, help='scale of the output image or movie (100 = regular size); an image\'s can also be given by a filename ending in @2x/@3x/etc')
-  x.add_argument('--cmyk', action='store_const', const=True, default=False, help='convert colors to c/m/y/k during exports')
+  x.add_argument('--colors', metavar='NAME', help='the colors exports are written in: p3 (the default), srgb, cmyk, a press (gracol, gracol_uncoated, swop, fogra39 or fogra47), or the path to an .icc profile (with --export or -q; the script\'s own export()s use it too unless they choose their own)')
+  x.add_argument('--cmyk', action='store_const', const=True, default=False, help='the same as --colors cmyk (deprecated)')
 
   i = parser.add_argument_group("PlotDevice Script File", None)
   i.add_argument('script', help='the python script to be rendered')
@@ -155,6 +156,23 @@ def main():
       opts.zoom = float(m.group(1))
     else:
       opts.zoom = max(0.01, opts.zoom/100)
+
+  if opts.cmyk:
+    if opts.colors:
+      parser.exit(1, 'bad argument [--cmyk]\nuse --colors or the older --cmyk, not both\n')
+    sys.stderr.write('warning: --cmyk is deprecated, use --colors cmyk instead\n')
+    opts.colors = 'cmyk'
+  del opts.cmyk
+
+  if opts.colors:
+    if opts.mode != 'headless':
+      parser.exit(1, 'bad argument [--colors]\n--colors applies only with --export or -q\n')
+    from plotdevice import DeviceError
+    from .gfx.colors import _output_colors
+    try:
+      opts.colors = _output_colors(opts.colors, ext if opts.export else 'pdf')
+    except DeviceError as e:
+      parser.exit(1, 'bad argument [--colors]\n%s\n' % e)
 
   if opts.install:
     print("The --install option must be used on its own, not in combination with other flags")

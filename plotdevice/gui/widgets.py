@@ -371,7 +371,46 @@ class DashboardController(NSObject):
 
 
 from ..context import RGB, CMYK
+from ..gfx.colors import P3, SRGB, _PRESS_LABELS, _FORMAT_COLORS, _FORMAT_DEFAULTS, _installed_presses, _printer_profiles
 from ..lib.io import MovieExportSession
+
+SECTION_HEADERS = hasattr(NSMenuItem, 'sectionHeaderWithTitle_')
+
+def fill_sections(menu, sections, action=None):
+    menu.removeAllItems()
+    for header, items in sections:
+        if header and SECTION_HEADERS:
+            menu.addItem_(NSMenuItem.sectionHeaderWithTitle_(header))
+        elif menu.numberOfItems():
+            menu.addItem_(NSMenuItem.separatorItem())
+        for title, value in items:
+            item = menu.addItemWithTitle_action_keyEquivalent_(title, None, '')
+            if isinstance(value, list):
+                item.setSubmenu_(NSMenu.alloc().initWithTitle_(title))
+                fill_sections(item.submenu(), [(None, value)], action)
+            else:
+                item.setRepresentedObject_(value)
+                item.setAction_(action)
+
+def press_items():
+    return [(label, press) for press, label in _PRESS_LABELS.items()] + _installed_presses()
+
+class ProofColorsMenu(NSObject):
+
+    def menuNeedsUpdate_(self, menu):
+        win = NSApp().mainWindow()
+        screen = win.screen() if win else NSScreen.mainScreen()
+        printers, unnamed = {}, []
+        for printer, desc, path in _printer_profiles():
+            if printer:
+                printers.setdefault(printer, []).append((desc, ('printer', path)))
+            else:
+                unnamed.append((desc, ('printer', path)))
+        presses = [(title, ('press', press)) for title, press in press_items()]
+        fill_sections(menu, [(None, [(screen.localizedName(), None), ('sRGB', ('rgb', SRGB))]),
+                             ('Prepress', presses),
+                             ('Printers', sorted(printers.items()) + unnamed)], 'proofColors:')
+
 class ExportSheet(NSObject):
     # the script whose doExportAsImage and doExportAsMovie methods will be called
     script = IBOutlet()
@@ -382,7 +421,7 @@ class ExportSheet(NSObject):
     imageZoom = IBOutlet()
     imagePageCount = IBOutlet()
     imagePagination = IBOutlet()
-    imageCMYK = IBOutlet()
+    imageColors = IBOutlet()
 
     # Movie export settings
     movieAccessory = IBOutlet()
@@ -392,12 +431,13 @@ class ExportSheet(NSObject):
     movieLoop = IBOutlet()
     movieBitrate = IBOutlet()
     movieZoom = IBOutlet()
+    movieColors = IBOutlet()
 
     def awakeFromNib(self):
         self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'heic', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'mov', 'mov', 'gif'))
         self.codecs = ('hevc', 'h264', 'prores', None) # the movie formats' codecs
-        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=None, loop=0, codec='hevc', zoom=1.0)
-        self.image = dict(format='pdf', zoom=1.0, first=1, last=1, cmyk=False, single=True)
+        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=None, loop=0, codec='hevc', zoom=1.0, colors=P3)
+        self.image = dict(format='pdf', zoom=1.0, first=1, last=1, colors=P3, single=True)
         self.last = None
         self.canvasSize = None # (w, h) the script last ran with, to preview the automatic bitrate
         self.movieFps.setDelegate_(self)
@@ -417,7 +457,7 @@ class ExportSheet(NSObject):
             self.imagePageCount.setIntValue_(self.image['last'])
 
             self.updatePagination()
-            self.updateColorMode()
+            self.fillColors(self.imageColors, self.image['colors'])
 
         elif kind=='movie':
             format = self.movie['format']
@@ -431,6 +471,7 @@ class ExportSheet(NSObject):
             self.movieLoop.setEnabled_(format=='gif')
             self.movieBitrate.setEnabled_(self.movie['codec'] in ('hevc', 'h264'))
             self.movieBitrate.selectItemWithTag_(self.movie['bitrate'] or 0)
+            self.fillColors(self.movieColors, self.movie['colors'])
             self.canvasSize = None
             if self.script.vm.ran:
                 w, h = self.script.vm.canvas.pagesize
@@ -497,6 +538,7 @@ class ExportSheet(NSObject):
                      loop=-1 if self.movieLoop.state()==NSOnState else 0,
                      bitrate=self.movieBitrate.selectedItem().tag() or None,
                      codec=self.codecs[fmt_idx],
+                     colors=self.movieColors.selectedItem().representedObject(),
                      zoom=self.movie['zoom'] )
         if key:
             return state[key]
@@ -508,7 +550,7 @@ class ExportSheet(NSObject):
         state = dict(format=fmts[fmt_idx],
                      zoom=self.image['zoom'],
                      first=1,
-                     cmyk=self.imageCMYK.state()==NSOnState,
+                     colors=self.imageColors.selectedItem().representedObject(),
                      single=fmt_idx==1,
                      last=self.imagePageCount.intValue())
         if key:
@@ -532,18 +574,59 @@ class ExportSheet(NSObject):
         if note.object() == self.movieFps:
             self.updateBitrate()
 
-    def updateColorMode(self):
-        format = self.imageState('format')
-        can_cmyk = format in ('pdf','eps','tiff','jpg')
-        self.imageCMYK.setEnabled_(can_cmyk)
-        if not can_cmyk:
-            self.imageCMYK.setState_(NSOffState)
+    @objc.python_method
+    def proofed(self, proof):
+        kind, value = proof or (None, None)
+        self.image['colors'] = value if kind in ('press', 'rgb') else P3
+        self.movie['colors'] = value if kind == 'rgb' else P3
+
+    @objc.python_method
+    def fillColors(self, popup, colors):
+        installed = _installed_presses()
+        bundled = [(label, press) for press, label in _PRESS_LABELS.items()]
+        cmyk = [('Generic CMYK', CMYK)] + bundled + ([None] + installed if installed else [])
+        popup.removeAllItems()
+        for header, items in [('RGB', [('Display P3', P3), ('sRGB', SRGB)]), ('CMYK', cmyk)]:
+            if SECTION_HEADERS:
+                popup.menu().addItem_(NSMenuItem.sectionHeaderWithTitle_(header))
+            elif popup.numberOfItems():
+                popup.menu().addItem_(NSMenuItem.separatorItem())
+            for entry in items:
+                if entry is None:
+                    popup.menu().addItem_(NSMenuItem.separatorItem())
+                    continue
+                title, value = entry
+                popup.addItemWithTitle_(title)
+                popup.lastItem().setRepresentedObject_(value)
+        popup.selectItemAtIndex_(popup.indexOfItemWithRepresentedObject_(colors))
+        self.updateColors(popup)
+
+    @objc.python_method
+    def updateColors(self, popup):
+        if popup is self.imageColors:
+            format = self.formats['image'][self.imageFormat.indexOfSelectedItem()]
+        else:
+            format = self.formats['movie'][self.movieFormat.indexOfSelectedItem()]
+        allowed = _FORMAT_COLORS[format]
+        holds_cmyk = CMYK in allowed
+        for idx, item in enumerate(popup.itemArray()):
+            colors = item.representedObject()
+            if colors is None:
+                item.setHidden_(idx > 0 and not holds_cmyk)
+            elif colors in (P3, SRGB):
+                item.setEnabled_(colors in allowed or 'rgb' in allowed)
+            else:
+                item.setHidden_(not holds_cmyk)
+        chosen = popup.selectedItem()
+        if chosen is None or chosen.isHidden() or not chosen.isEnabled():
+            default = _FORMAT_DEFAULTS.get(format, P3)
+            popup.selectItemAtIndex_(popup.indexOfItemWithRepresentedObject_(default))
 
     @IBAction
     def imageFormatChanged_(self, sender):
         format = self.formats['image'][sender.indexOfSelectedItem()]
         self.exportPanel.setAllowedFileTypes_([format])
-        self.updateColorMode()
+        self.updateColors(self.imageColors)
         self.updatePagination()
 
     @IBAction
@@ -608,3 +691,4 @@ class ExportSheet(NSObject):
         self.movieLoop.setState_(NSOnState if is_gif else NSOffState)
         self.movieLoop.setEnabled_(is_gif)
         self.movieBitrate.setEnabled_(self.codecs[sender.indexOfSelectedItem()] in ('hevc', 'h264'))
+        self.updateColors(self.movieColors)

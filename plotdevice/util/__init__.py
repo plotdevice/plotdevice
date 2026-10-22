@@ -320,12 +320,17 @@ def rsrc_path(resource=None):
     app_rsrc = join(app_root, 'Contents/Resources')
     src_rsrc = join(mod_root, '../app/Resources')
 
-    for rsrc_root in (mod_rsrc, app_rsrc, src_rsrc):
+    roots = [mod_rsrc, app_rsrc, src_rsrc]
+    if '.app/Contents/' in mod_root:
+        roots.insert(1, mod_root.split('.app/Contents/')[0] + '.app/Contents/Resources')
+
+    for rsrc_root in roots:
         if exists("%s/colors.json" % rsrc_root): # check for a known rsrc file
             break
     else:
         raise RuntimeError("Couldn't locate resources directory.")
 
     if resource:
-        return join(rsrc_root, resource)
+        found = [join(root, resource) for root in [rsrc_root] + roots if exists(join(root, resource))]
+        return found[0] if found else join(rsrc_root, resource)
     return rsrc_root

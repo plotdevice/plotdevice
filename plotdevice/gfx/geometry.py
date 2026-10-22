@@ -756,6 +756,6 @@ class Transform(object):
 
     @property
     def transform(self):
-        warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", FutureWarning, stacklevel=2)
         return self._nsAffineTransform
 

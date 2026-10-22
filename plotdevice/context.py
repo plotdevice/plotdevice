@@ -1,5 +1,5 @@
 # encoding: utf-8
-import os, re, sys, types
+import os, re, sys, types, warnings
 from copy import copy
 from contextlib import contextmanager
 from collections import namedtuple, OrderedDict
@@ -9,12 +9,13 @@ from objc import super
 
 from .lib.cocoa import *
 from .lib import pathmatics
-from .lib.io import MovieExportSession
+from .lib.io import MovieExportSession, pdf_update
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
 from .gfx.geometry import Dimension, parse_coords, IDENTITY
 from .gfx.typography import Layout
 from .gfx.effects import Frob
 from .gfx import *
+from .gfx.colors import _named, _output_colors, _output_space, _output_mode, _output_intent, _INKS
 from . import gfx, lib, util, Halted, DeviceError
 
 __all__ = ('Context', 'Canvas')
@@ -28,7 +29,7 @@ GridUnits = namedtuple('GridUnits', ['unit', 'dpx', 'to_px', 'from_px'])
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_params', '_vars'
+    _state_vars = '_outputmode', '_press', '_colormode', '_colorrange', '_colorspace', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_params', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -43,6 +44,7 @@ class Context(object):
         self._statestack = []
         self._vars = []
         self._params = OrderedDict()
+        self._cli_colors = None # a windowless run's --colors, for the exports that don't choose their own
 
         self._resetContext()     # initialize default graphics state
         self._resetEnvironment() # initialize namespace & canvas
@@ -80,8 +82,10 @@ class Context(object):
         self._activate()
 
         # color state
+        self._press = None # the press of the enclosing `with export(..., colors=<press>)` (see gfx._outputpress)
         self._colormode = RGB
         self._colorrange = 1.0
+        self._colorspace = P3
         self._fillcolor = Color() # can also be a Gradient or Pattern
         self._strokecolor = None
 
@@ -748,9 +752,12 @@ class Context(object):
             kwargs.setdefault('mode', mode)
 
         if not args:
-            # if called without any component values update the global mode/range,
+            # if called without any component values update the global mode/range/space,
             # and return a context manager for `with color(mode=...)` usage
-            if {'range', 'mode'}.intersection(kwargs):
+            if {'range', 'mode', 'space'}.intersection(kwargs):
+                for kind in ('mode', 'space'):
+                    if kind in kwargs:
+                        kwargs[kind] = _named(kind, kwargs[kind])
                 return PlotContext(self, **kwargs)
 
         # if we got at least one numerical/string arg, parse it
@@ -759,7 +766,7 @@ class Context(object):
     def colormode(self, mode=None, range=None):
         """Legacy command. Equivalent to: color(mode=...)"""
         if mode is not None:
-            self._colormode = mode
+            self._colormode = _named('mode', mode)
         if range is not None:
             self._colorrange = float(range)
         return self._colormode
@@ -1492,12 +1499,13 @@ class Context(object):
         else:
             self.canvas.clear(*grobs)
 
-    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=None, cmyk=False, codec='hevc'):
+    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=None, codec='hevc', **kwargs):
         """Write single images or manage batch exports for animations.
 
         To write the canvas's current contents to a file, simply call export("~/somefile.png")
-        after your drawing commands have executed. When writing files that support non-RGB colors
-        (e.g., PDFs or TIFFs), the `cmyk` argument lets you optionally specify CMYK output.
+        after your drawing commands have executed. The `colors` argument chooses the color space
+        the file is written in: P3 (the default), SRGB, the path to an RGB .icc profile, or (for
+        PDF, TIFF, JPEG and EPS files) CMYK.
 
         When writing multiple images or frames of animation, the export manager keeps track of when
         the canvas needs to be cleared, when to write the graphics to file, and preventing the python
@@ -1523,6 +1531,8 @@ class Context(object):
 
         Note that the `loop` argument only applies to animated gifs, and `bitrate` and `codec` to `mov`
         files (a ProRes movie keeps the canvas's transparency and has a fixed quality rather than a bitrate).
+        Each format takes the `colors` it can hold: PNG and HEIC an RGB space or profile, MOV P3 or SRGB,
+        GIF only SRGB (its default, as is EPS's), and EPS SRGB or CMYK.
         """
 
         # determine the format by normalizing the file extension
@@ -1535,8 +1545,31 @@ class Context(object):
             badcodec = 'Unknown video codec "%s" (should be one of %s)' % (codec, ', '.join(MovieExportSession.CODECS))
             raise DeviceError(badcodec)
 
+        unknown = [arg for arg in kwargs if arg not in ('colors', 'cmyk')]
+        if unknown:
+            badarg = "Unknown export() argument%s '%s'" % ('' if len(unknown)==1 else 's', "', '".join(unknown))
+            raise DeviceError(badarg)
+        if 'cmyk' in kwargs:
+            if 'colors' in kwargs:
+                both = "export() takes colors= or the older cmyk=, not both"
+                raise DeviceError(both)
+            warnings.warn("export()'s cmyk= is deprecated: use colors=CMYK instead (or leave it out for RGB)", FutureWarning, stacklevel=2)
+            colors = _output_colors(CMYK if kwargs['cmyk'] else None, format)
+        elif 'colors' in kwargs:
+            colors = _output_colors(kwargs['colors'], format)
+        else:
+            colors = None
+            for inherited in (self._cli_colors, CMYK if self._outputmode == CMYK else None):
+                if inherited is not None and colors is None:
+                    try:
+                        colors = _output_colors(inherited, format)
+                    except DeviceError:
+                        pass # (colors the format can't hold)
+            if colors is None:
+                colors = _output_colors(None, format)
+
         # build up opts based on type of output file (anim vs static)
-        opts = {"cmyk":cmyk, "zoom":zoom}
+        opts = {"colors":colors, "zoom":zoom}
         if format=='mov' or (format=='gif' and fps or loop is not None):
             opts.update(fps=fps or 30, # set a default for .mov exports
                         loop={True:-1, False:0, None:0}.get(loop, loop), # convert bool args to int
@@ -1602,7 +1635,7 @@ class Context(object):
 class PlotContext(object):
     """Performs the setup/cleanup for a `with pen()/stroke()/fill()/color(mode,range)` block"""
     _statevars = dict(pen='_penstyle', stroke='_strokecolor', fill='_fillcolor',
-                      mode='_colormode', range='_colorrange', auto='_autoplot')
+                      mode='_colormode', range='_colorrange', space='_colorspace', auto='_autoplot')
 
     def __init__(self, ctx, restore=None, **spec):
         unknown = [k for k in spec if k not in self._statevars]
@@ -1761,20 +1794,21 @@ class Canvas(object):
         except IndexError as e:
             raise DeviceError("pop: too many canvas pops!")
 
-    def commit(self):
-        return Frame(self)
+    def commit(self, colors=None, format=None):
+        return Frame(self, colors, format)
 
     @property
     def _nsImage(self):
         # Allow the canvas to be used with the image() command
         return self.commit()._render_to_image()
 
-    def _getImageData(self, format, zoom=1.0, cmyk=False):
-        return self.commit()._getImageData(format, zoom, cmyk)
+    def _getImageData(self, format, zoom=1.0, colors=None):
+        return self.commit(_output_colors(colors, format), format)._getImageData(format, zoom)
 
-    def save(self, fname, format=None, zoom=1.0, cmyk=False):
-        """Write the current graphics objects to an image file"""
-        self.commit().save(fname, format, zoom, cmyk)
+    def save(self, fname, format=None, zoom=1.0, cmyk=False, colors=None):
+        """Write the current graphics objects to an image file (in `colors`, or CMYK if `cmyk` is set)"""
+        format = (format or fname.rsplit('.',1)[-1]).lower()
+        self.commit(_output_colors(CMYK if cmyk else colors, format), format).save(fname, format, zoom)
 
 
 def _unheld(grobs):
@@ -1904,14 +1938,29 @@ def _render_bounds(grob, boxes):
 
 class Frame(object):
 
-    def __init__(self, canvas):
-        self.grobs = _committed(canvas._grobs)
+    def __init__(self, canvas, colors=None, format=None):
+        self.colors = colors
+        self.press = colors if _output_mode(colors) == CMYK and colors != CMYK else None
+        if colors is None:
+            self.outputmode = canvas._ctx._outputmode if canvas._ctx else RGB
+        else:
+            self.outputmode = _output_mode(colors)
+        if self.press:
+            self.ink = (self.press, format in ('tiff', 'jpg', 'jpeg'))
+        else:
+            self.ink = None if colors in (None, P3, CMYK) else colors
+
+        token = gfx._committing.set(self)
+        try:
+            self.grobs = _committed(canvas._grobs)
+        finally:
+            gfx._committing.reset(token)
         self.width, self.height = canvas.width, canvas.height
         self.pagesize = canvas.pagesize
         self.background = canvas.background
-        self.outputmode = canvas._ctx._outputmode if canvas._ctx else RGB
         self._bounds = None  # each grob's _render_bounds, computed by the first culled render
         self._layers = {}    # the bounds of grobs drawn in transparency layers, as they're drawn
+        self.proof = None    # a printer profile's space the window shows it through (View > Proof Colors)
 
     def _layer_box(self, grob):
         key = id(grob)
@@ -1969,7 +2018,7 @@ class Frame(object):
     def _render_to_cgimage(self, zoom=1.0, dpr=1.0):
         scale = zoom * dpr
         size = Size(*self._raster_size(scale))
-        colorspace, opts = CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
+        colorspace, opts = CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
         bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
         self._render_to_context(bitmapContext, scale)
         return CGBitmapContextCreateImage(bitmapContext)
@@ -1987,7 +2036,20 @@ class Frame(object):
             if origin is not None:
                 offset = (-origin[0], origin[1] + H)
                 within = (origin[0] / scale, origin[1] / scale, w / scale, h / scale)
-            self._render_to_context(port, scale, cancelled, offset, within)
+            proof = self.proof or (_output_space(self.press) if self.press else None)
+            if proof is None:
+                self._render_to_context(port, scale, cancelled, offset, within)
+            else:
+                cmyk = CGColorSpaceGetModel(proof) == kCGColorSpaceModelCMYK
+                bitmap = CGBitmapContextCreate(None, w, h, 8, w * 4, proof, kCGImageAlphaNone if cmyk else kCGImageAlphaNoneSkipLast)
+                CGContextSetRenderingIntent(bitmap, kCGRenderingIntentRelativeColorimetric)
+                if not cmyk:
+                    CGContextSetRGBFillColor(bitmap, 1, 1, 1, 1)
+                    CGContextFillRect(bitmap, ((0, 0), (w, h)))
+                x, y = offset or (0, self.pagesize.height * scale)
+                self._render_to_context(bitmap, scale, cancelled, (x, y - (H - h)), within)
+                CGContextSetRenderingIntent(port, kCGRenderingIntentRelativeColorimetric)
+                CGContextDrawImage(port, ((0, H - h), (w, h)), CGBitmapContextCreateImage(bitmap))
             CGContextFlush(port)
         finally:
             CGContextRestoreGState(port)
@@ -2007,10 +2069,20 @@ class Frame(object):
             NSGraphicsContext.restoreGraphicsState()
             NSGraphicsContext.restoreGraphicsState()
 
-    def _getImageData(self, format, zoom=1.0, cmyk=False):
-        return self._encode(format, zoom, cmyk)[0]
+    @property
+    def _surface_space(self):
+        return _INKS[self.ink] if self.ink and not self.press else None
 
-    def _encode(self, format, zoom=1.0, cmyk=False, cancelled=None):
+    @property
+    def _blend_space(self):
+        if self.outputmode == CMYK:
+            return _output_space(self.press) if self.press else None
+        return _output_space(self.colors or P3)
+
+    def _getImageData(self, format, zoom=1.0, title=None):
+        return self._encode(format, zoom, title=title)[0]
+
+    def _encode(self, format, zoom=1.0, cancelled=None, title=None):
         if format == 'pdf':
             w, h = self.pagesize
             cgData = NSMutableData.alloc().init() # (owned, as the surface)
@@ -2021,6 +2093,10 @@ class Frame(object):
             CGPDFContextEndPage(pdfContext)
             CGPDFContextClose(pdfContext)
             pdfContext = None
+            if self._blend_space is not None:
+                intent = _output_intent(self.press) if self.press else None # (added by the patcher, see colors)
+                update = pdf_update(bytes(cgData), self._blend_space, intent, title)
+                cgData.appendBytes_length_(update, len(update))
             return cgData, None
         elif format == 'eps':
             with autorelease():
@@ -2036,13 +2112,15 @@ class Frame(object):
 
             size = Size(*[int(dim*zoom) for dim in self.pagesize])
             surface = None
-            if format in ('jpeg', 'jpg', 'tiff') and cmyk:
-                colorspace, opts = CGColorSpaceCreateDeviceCMYK(), kCGImageAlphaNone
+            if format in ('jpeg', 'jpg', 'tiff') and self.outputmode == CMYK and self.colors is not None:
+                colorspace, opts = _output_space(self.press) if self.press else CGColorSpaceCreateDeviceCMYK(), kCGImageAlphaNone
                 bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
+                if self.press:
+                    CGContextSetRenderingIntent(bitmapContext, kCGRenderingIntentRelativeColorimetric)
                 self._render_to_context(bitmapContext, zoom, cancelled)
                 cgImage = CGBitmapContextCreateImage(bitmapContext)
             else:
-                surface = objc.lookUpClass('PDSurface').alloc().initWithWidth_height_(size.width, size.height)
+                surface = objc.lookUpClass('PDSurface').alloc().initWithWidth_height_space_(size.width, size.height, self._surface_space)
                 self._render_to_surface(surface, zoom, cancelled)
                 surface.lock()
                 cgImage = CGBitmapContextCreateImage(surface.context())
@@ -2059,11 +2137,11 @@ class Frame(object):
             CGImageDestinationFinalize(cgDest)
             return cgData, surface
 
-    def save(self, fname, format=None, zoom=1.0, cmyk=False):
+    def save(self, fname, format=None, zoom=1.0):
         """Write the current graphics objects to an image file"""
         if format is None:
             format = fname.rsplit('.',1)[-1].lower()
-        data = self._getImageData(format, zoom, cmyk)
+        data = self._getImageData(format, zoom, os.path.splitext(os.path.basename(fname))[0])
         fname = NSString.stringByExpandingTildeInPath(fname)
         data.writeToFile_atomically_(fname, False)
 

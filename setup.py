@@ -8,7 +8,8 @@ approaches like `pip install .` or `python -m build`.
 """
 from glob import glob
 from subprocess import call
-from os.path import dirname, abspath, exists, join, getmtime
+import os, zlib
+from os.path import dirname, abspath, basename, exists, join, getmtime
 
 from setuptools import setup
 from setuptools.extension import Extension
@@ -23,7 +24,7 @@ def stale(dst, src):
 class BuildExtCommand(build_ext):
     """Build SwiftDraw.o before linking _plotdevice, then populate
     plotdevice/rsrc/ with the runtime resources plotdevice.util.rsrc_path()
-    depends on (icns, colors.json, an ibtool-compiled nib)."""
+    depends on (icns, colors.json, an ibtool-compiled nib, the press profiles)."""
 
     def run(self):
         call('cd deps/extensions/svg && make', shell=True, cwd=ROOT)
@@ -46,6 +47,19 @@ class BuildExtCommand(build_ext):
             self.spawn(['/usr/bin/ibtool', '--compile', nib, xib])
         self.copy_file(nib, rsrc_dir)
 
+        press_dir = join(rsrc_dir, 'press')
+        self.mkpath(press_dir)
+        for path in glob(join(press_dir, '*.icc')):
+            os.remove(path) # (uncompressed copies from earlier builds)
+        for path in glob(join(ROOT, 'deps/press/*')):
+            if path.endswith('.icc'):
+                dst = join(press_dir, basename(path) + '.zlib')
+                if stale(dst, path):
+                    with open(path, 'rb') as src, open(dst, 'wb') as out:
+                        out.write(zlib.compress(src.read(), 9))
+            else:
+                self.copy_file(path, press_dir)
+
 class SdistPrepCommand(sdist):
     """Make sure an sdist can be installed without needing Xcode/ibtool, and
     bundles the SwiftDraw sources for offline/reproducible builds."""
@@ -58,8 +72,10 @@ class SdistPrepCommand(sdist):
                 prune app/Resources/ui
                 include app/plotdevice
                 include deps/extensions/*/*.h
-                recursive-include deps/extensions/svg *.swift Makefile
+                recursive-include deps/extensions/svg *.swift *.tmpl Makefile
                 recursive-include deps/extensions/clipper2 *
+                graft deps/press
+                prune plotdevice/rsrc/press
                 include tests/*.py
                 graft tests/_in
                 graft examples
