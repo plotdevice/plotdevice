@@ -1,7 +1,35 @@
 import objc, os, re
+from .cocoa import CGContextBeginPage, CGContextEndPage, CGPDFContextClose, CGPDFContextCreateWithURL, CGRectMake, NSURL
 
 for cls in ["AnimatedGif", "Pages", "SysAdmin", "Video"]:
     globals()[cls] = objc.lookUpClass(cls)
+
+class PDFBook(object):
+
+    def __init__(self, fname, zoom=1.0):
+        self.zoom = zoom
+        self.pages = 0
+        self.closed = False
+        self.context = CGPDFContextCreateWithURL(NSURL.fileURLWithPath_(fname), None, None)
+
+    def addPage_(self, canvas):
+        frame = canvas.commit()
+        w, h = frame.pagesize
+        CGContextBeginPage(self.context, CGRectMake(0, 0, w * self.zoom, h * self.zoom))
+        frame._render_to_context(self.context, self.zoom)
+        CGContextEndPage(self.context)
+        self.pages += 1
+
+    def closeFile(self):
+        CGPDFContextClose(self.context)
+        self.context = None
+        self.closed = True
+
+    def framesWritten(self):
+        return self.pages
+
+    def doneWriting(self):
+        return self.closed
 
 ### Session objects which wrap the GCD-based export managers ###
 
@@ -95,7 +123,10 @@ class ImageExportSession(ExportSession):
             # output a single file (potentially a multipage PDF)
             if pad:
                 fname = re_padded.sub(pad%0, fname, count=1)
-            self.writer = Pages.alloc().initWithFile_(fname)
+            if format == 'pdf':
+                self.writer = PDFBook(fname, zoom)
+            else:
+                self.writer = Pages.alloc().initWithFile_(fname)
         else:
             # output multiple, sequentially-named files
             if pad:
@@ -106,8 +137,11 @@ class ImageExportSession(ExportSession):
             self.writer = Pages.alloc().initWithPattern_(name_tmpl)
 
     def add(self, canvas):
-        image = canvas._getImageData(self.format, self.zoom, self.cmyk)
-        self.writer.addPage_(image)
+        if isinstance(self.writer, PDFBook):
+            self.writer.addPage_(canvas)
+        else:
+            image = canvas._getImageData(self.format, self.zoom, self.cmyk)
+            self.writer.addPage_(image)
         self.added += 1
 
 class MovieExportSession(ExportSession):

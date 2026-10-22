@@ -366,6 +366,8 @@ class ImageWriter(object):
         self.format = format
         self.opts = opts
         self.anim = 'fps' in opts
+        if format == 'pdf' and not self.anim:
+            self.opts['single'] = not re_padded.search(self.fname)
         self.session = None
 
     def __enter__(self):
@@ -401,6 +403,8 @@ class ImageWriter(object):
     @property
     def page(self):
         """Clears the canvas, runs the code in the `with` block, then adds the canvas as a new pdf page.
+        In a PDF export `frame` does the same, but `page` also checks that the export is a document: a numbered
+        file name like 'page-{4}.pdf' writes a sequence of single-page files instead, and `page` refuses it.
 
         For example, to create a pdf with two pages, you could write:
 
@@ -423,7 +427,9 @@ class ImageWriter(object):
         if self.format != 'pdf':
             badform = 'The `page` property can only be used in PDF exports (not %r)'%self.format
             raise DeviceError(badform)
-        self.opts['single'] = True
+        if not self.opts['single']:
+            numbered = 'The `page` property makes pages of one PDF, but %r is numbered for a sequence of files (use `frame`)' % os.path.basename(self.fname)
+            raise DeviceError(numbered)
         return self.frame
 
     @property
@@ -444,6 +450,9 @@ class ImageWriter(object):
             with export("anim.mov") as movie:
                 with movie.frame:
                     ... # draw the frame
+
+        In a PDF export, each frame is a page of the document (as with `page`), unless the file name
+        is numbered (see below), which writes each to a file of its own.
 
         You can also use the `frame` property when writing to a series of sequentially-named
         files. For example, to generate 'output-0001.png' through 'output-0100.png':
