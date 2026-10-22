@@ -160,7 +160,7 @@ def cmd_clean(args):
 
     # Run make clean in svg extensions dir
     if exists('deps/extensions/svg'):
-        os.system('cd deps/extensions/svg && make clean')
+        os.system('cd deps/extensions/svg && make %s' % ('distclean' if args.dist else 'clean'))
 
 
 def cmd_distclean(args):
@@ -175,6 +175,9 @@ def cmd_app(args):
         env['PIP_NO_CACHE_DIR'] = '1'
     call('cd deps/frameworks && make', shell=True, env=env)
 
+    for product in ('dist/PlotDevice.app', 'dist/PlotDevice.app.dSYM'):
+        if exists(product):
+            rmtree(product)
     spawn(['xcodebuild', '-configuration', 'Release'])
     dsym = 'dist/PlotDevice.app.dSYM'
     if exists(dsym):

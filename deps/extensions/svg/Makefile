@@ -1,6 +1,6 @@
 REPO := https://github.com/swhitty/SwiftDraw.git
 TAG := 0.21.0
-.PHONY: all
+.PHONY: all clean distclean
 
 all: SwiftDraw.o
 	@:
@@ -20,5 +20,8 @@ SwiftDraw:
 	rm -r SwiftDraw/*.*
 
 clean:
-	rm -rf SwiftDraw
+	rm -rf SwiftDraw/.build
 	rm -f *.o
+
+distclean: clean
+	rm -rf SwiftDraw
