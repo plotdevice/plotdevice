@@ -61,6 +61,24 @@ class ModuleTests(PlotDeviceTestCase):
             self.assertIn('%s:2: FutureWarning: The \'transform\' attribute is deprecated' % script, out.stderr)
             self.assertIn('%s:3: FutureWarning: The \'image\' attribute is deprecated' % script, out.stderr)
 
+    def test_cli_colors(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            script = os.path.join(tmp, 'colors.pv')
+            with open(script, 'w') as f:
+                f.write("size(10, 10)\nfill(0, 0, 0)\nrect(0, 0, 10, 10)\n"
+                        "export('%s/own.tiff')\nexport('%s/chosen.tiff', colors=P3)\n" % (tmp, tmp))
+            run([sys.executable, '-m', 'plotdevice', '-q', script, '--colors', 'cmyk'], check=True, cwd=sdist_path)
+            from Quartz import (CGImageSourceCreateWithURL, CGImageSourceCreateImageAtIndex, CGImageGetColorSpace,
+                                CGColorSpaceGetModel, kCGColorSpaceModelCMYK)
+            from Foundation import NSURL
+            image = lambda name: CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(os.path.join(tmp, name)), None), 0, None)
+            self.assertEqual(CGColorSpaceGetModel(CGImageGetColorSpace(image('own.tiff'))), kCGColorSpaceModelCMYK)
+            self.assertNotEqual(CGColorSpaceGetModel(CGImageGetColorSpace(image('chosen.tiff'))), kCGColorSpaceModelCMYK)
+            windowed = run([sys.executable, '-m', 'plotdevice', script, '--colors', 'cmyk'], capture_output=True, text=True, cwd=sdist_path)
+            self.assertNotEqual(windowed.returncode, 0)
+            self.assertIn('--colors applies only with --export or -q', windowed.stderr)
+
     @unittest.skipIf(plotdevice.in_bundle, 'only applies outside the app')
     def test_cli_app_only_options(self):
         # outside the app, --install points to pip/uv and -t doesn't exist

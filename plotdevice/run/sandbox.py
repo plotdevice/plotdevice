@@ -14,7 +14,7 @@ Outcome = namedtuple('Outcome', ['ok', 'output'])
 Output = namedtuple('Output', ['isErr', 'data'])
 
 class Metadata(object):
-    __slots__ = 'args', 'virtualenv', 'first', 'frame', 'last', 'loop'
+    __slots__ = 'args', 'virtualenv', 'first', 'frame', 'last', 'loop', 'colors'
     def __init__(self, **opts):
         for k,v in opts.items(): setattr(self,k,v)
     def update(self, changes):
@@ -81,7 +81,7 @@ class Sandbox(object):
         # control params used during exports and console-based runs
         self._meta = Metadata(args=[], virtualenv=None, # environmant
                               first=1, frame=1, last=None, # runtime
-                              loop=False) # export opts
+                              loop=False, colors=None) # export opts (colors: a windowless run's --colors)
 
     # .script
     def _get_path(self):
@@ -183,13 +183,14 @@ class Sandbox(object):
 
         return result
 
-    def run(self, method=None, cmyk=False):
+    def run(self, method=None):
         """Clear the context and run either the entire script or a specific method."""
 
         # if this is the initial pass, reset the namespace and canvas state
         if method is None:
             check = self._preflight() # compile the script
-            self.context._outputmode = 'cmyk' if cmyk else 'rgb'
+            self.context._outputmode = 'cmyk' if self._meta.colors == 'cmyk' else 'rgb'
+            self.context._cli_colors = self._meta.colors
             if not check.ok:
                 return check
 
@@ -323,7 +324,7 @@ class Sandbox(object):
                    for a movie export also include:
                      bitrate, fps, loop
                    and for an image sequence:
-                     cmyk, single
+                     colors, single
         """
 
         # pull off the file extension and use that as the format
@@ -333,7 +334,7 @@ class Sandbox(object):
         self._meta.first, self._meta.last = opts['first'], opts['last']
 
         # compile & evaluate the script once
-        firstpass = self.run(cmyk=opts.get('cmyk',False))
+        firstpass = self.run()
         self.delegate.exportFrame(firstpass, canvas=None)
         if not firstpass.ok:
             return
@@ -376,7 +377,7 @@ class Sandbox(object):
 
             if self.animated:
                 # run the draw() function if it exists
-                result = self.run("draw", cmyk=self.session.cmyk)
+                result = self.run("draw")
             else:
                 # if not, we've already exec'd the module & setup() so use the canvas as-is
                 result = Outcome(True, StdIO().data)

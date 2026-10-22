@@ -78,6 +78,10 @@
 @implementation Video
 @synthesize framesWritten, doneWriting;
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec{
+    return [self initWithFile:fileName size:aSize fps:fps bitrate:mbps codec:codec srgb:NO];
+}
+
+- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec srgb:(BOOL)inSRGB{
 	if ((self = [super init])) {
 
         NSError *error = nil;
@@ -88,6 +92,7 @@
 
         videoWriter = [[AVAssetWriter alloc] initWithURL: [NSURL fileURLWithPath:fileName] fileType:AVFileTypeQuickTimeMovie error:&error];
         NSParameterAssert(videoWriter);
+        srgb = inSRGB;
         transferFunction = AVVideoTransferFunction_ITU_R_709_2;
         if (@available(macOS 15.0, *)) transferFunction = AVVideoTransferFunction_IEC_sRGB;
         [transferFunction retain];
@@ -98,7 +103,7 @@
                                          AVVideoWidthKey: @(aSize.width),
                                          AVVideoHeightKey: [NSNumber numberWithInt:aSize.height],
                                          AVVideoColorPropertiesKey: @{
-                                            AVVideoColorPrimariesKey: AVVideoColorPrimaries_P3_D65,
+                                            AVVideoColorPrimariesKey: srgb ? AVVideoColorPrimaries_ITU_R_709_2 : AVVideoColorPrimaries_P3_D65,
                                             AVVideoTransferFunctionKey: transferFunction,
                                             AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2}
                                          }];
@@ -143,13 +148,16 @@
     CVPixelBufferRef buffer = NULL;
     CVReturn err = CVPixelBufferPoolCreatePixelBufferWithAuxAttributes(NULL, pool, (CFDictionaryRef)aux, &buffer);
     if (err != kCVReturnSuccess || !buffer) return nil;
-    CVBufferSetAttachment(buffer, kCVImageBufferColorPrimariesKey, kCVImageBufferColorPrimaries_P3_D65, kCVAttachmentMode_ShouldPropagate);
+    CVBufferSetAttachment(buffer, kCVImageBufferColorPrimariesKey, srgb ? kCVImageBufferColorPrimaries_ITU_R_709_2 : kCVImageBufferColorPrimaries_P3_D65,
+                          kCVAttachmentMode_ShouldPropagate);
     CVBufferSetAttachment(buffer, kCVImageBufferYCbCrMatrixKey, kCVImageBufferYCbCrMatrix_ITU_R_709_2, kCVAttachmentMode_ShouldPropagate);
     CVBufferSetAttachment(buffer, kCVImageBufferTransferFunctionKey, (CFStringRef)transferFunction, kCVAttachmentMode_ShouldPropagate);
     CVBufferSetAttachment(buffer, kCVImageBufferAlphaChannelModeKey,
                           straightAlpha ? kCVImageBufferAlphaChannelMode_StraightAlpha : kCVImageBufferAlphaChannelMode_PremultipliedAlpha,
                           kCVAttachmentMode_ShouldPropagate);
-    PDSurface *surface = [PDSurface surfaceWithPixelBuffer:buffer];
+    CGColorSpaceRef space = srgb ? CGColorSpaceCreateWithName(kCGColorSpaceSRGB) : NULL;
+    PDSurface *surface = [PDSurface surfaceWithPixelBuffer:buffer space:space];
+    CGColorSpaceRelease(space);
     CVPixelBufferRelease(buffer);
     return surface;
 }

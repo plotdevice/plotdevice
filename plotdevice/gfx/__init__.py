@@ -54,7 +54,7 @@ _clips = ContextVar('clips', default=0)
 
 _bare = ContextVar('bare', default=None)
 
-_eps = ContextVar('eps', default=False)
+_committing = ContextVar('committing', default=None)
 
 @contextmanager
 def _rendering(frame, within=None):
@@ -120,12 +120,14 @@ def _visible(grobs):
     return grobs if within is None else _frame.get()._within(within, grobs)
 
 def _outputmode():
-    frame = _frame.get()
+    frame = _frame.get() or _committing.get()
     return _ctx._outputmode if frame is None else frame.outputmode
 
 def _inkmode():
     mode = _outputmode()
-    return 'eps' if mode == 'rgb' and _eps.get() else mode
+    frame = _frame.get() or _committing.get()
+    ink = None if frame is None else frame.ink
+    return ink if mode == 'rgb' and ink else mode
 
 def _canvas_dims():
     frame = _frame.get()

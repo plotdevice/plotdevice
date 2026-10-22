@@ -28,7 +28,12 @@ _SPACE_NAMES = {kCGColorSpaceExtendedDisplayP3:P3, kCGColorSpaceDisplayP3:P3,
                 kCGColorSpaceExtendedSRGB:SRGB, kCGColorSpaceSRGB:SRGB}
 _GENERIC_CMYK = CGColorSpaceCreateWithName(kCGColorSpaceGenericCMYK)
 _DEVICE_CMYK = CGColorSpaceCreateDeviceCMYK()
-_EPS_SPACE = CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
+
+_INKS = {SRGB: CGColorSpaceCreateWithName(kCGColorSpaceSRGB)}
+
+_FORMAT_COLORS = dict(png=('rgb',), heic=('rgb',), mov=(P3, SRGB), gif=(SRGB,), eps=(SRGB, CMYK),
+                      pdf=('rgb', CMYK), tiff=('rgb', CMYK), jpg=('rgb', CMYK))
+_FORMAT_DEFAULTS = dict(gif=SRGB, eps=SRGB)
 
 _NAMES = dict(mode={RGB:RGB, HSV:HSV, 'hsb':HSV, CMYK:CMYK, GREY:GREY},
               space={P3:P3, SRGB:SRGB})
@@ -44,6 +49,49 @@ def _named(kind, val):
         unknown = 'Unknown color %s %r (should be one of: %s)' % (kind, val, ', '.join(sorted(set(names.values()))))
         raise DeviceError(unknown)
     return names[key]
+
+def _output_colors(val, format):
+    format = 'jpg' if format == 'jpeg' else format
+    if val is None:
+        return _FORMAT_DEFAULTS.get(format, P3)
+    if not isinstance(val, str):
+        notpalette = 'colors= is the color space or profile to export in: P3, SRGB, CMYK, or an .icc file (not %r)' % (val,)
+        if numlike(val):
+            notpalette += "; it isn't a gif's palette size"
+        raise DeviceError(notpalette)
+    key = val.lower()
+    if key in (P3, SRGB, CMYK):
+        kind = key
+    else:
+        key = os.path.abspath(os.path.expanduser(val))
+        try:
+            icc = open(key, 'rb').read()
+        except OSError:
+            unknown = 'colors= should be P3, SRGB, CMYK, or the path to an .icc profile (%r is neither)' % val
+            raise DeviceError(unknown)
+        model = icc[16:20] if icc[36:40] == b'acsp' else None
+        if model == b'CMYK':
+            nopress = "Exporting to a CMYK profile isn't supported yet (%s)" % val
+            raise DeviceError(nopress)
+        space = CGColorSpaceCreateWithICCData(icc) if model == b'RGB ' else None
+        if space is None:
+            notrgb = 'colors= needs an RGB or CMYK .icc profile (%s is neither)' % val
+            raise DeviceError(notrgb)
+        _INKS.setdefault(key, space)
+        kind = 'rgb'
+    allowed = _FORMAT_COLORS[format]
+    if kind not in allowed and not (kind in (P3, SRGB) and 'rgb' in allowed):
+        options = ', '.join('an RGB .icc profile' if opt == 'rgb' else opt.upper() for opt in allowed)
+        if 'rgb' in allowed:
+            options = 'P3, SRGB, ' + options
+        cantfit = "%s %s file can't be exported with colors=%r (it takes %s)" % ('An' if format == 'eps' else 'A', format.upper(), val, options)
+        raise DeviceError(cantfit)
+    return key
+
+def _output_space(colors):
+    if colors == CMYK:
+        return None
+    return CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3) if colors == P3 else _INKS[colors]
 
 def _clamp(v):
     return min(max(v, 0.0), 1.0)
@@ -101,7 +149,8 @@ class Color(object):
         elif params == 1 and isinstance(args[0], Pattern):  # Pattern object
             pattern = args[0]._nsColor
             self._rgb_ = self._cmyk_ = self._cmyk_src = pattern.CGColor()
-            self._cache = {('ns', mode):pattern for mode in (RGB, CMYK, 'eps')}
+            self._cache = {('ns', mode):pattern for mode in (RGB, CMYK)}
+            self._cache['pattern'] = pattern # (the nsColor for any ink)
             self._cache['space'] = space
             return
         elif params == 1 and isinstance(args[0], Gradient): # Gradient (use first shade)
@@ -214,7 +263,7 @@ class Color(object):
             elif mode == CMYK:
                 ns = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(*self._values(CMYK))
             else:
-                ns = NSColor.colorWithCGColor_(_matched(self._rgb, _EPS_SPACE))
+                ns = self._cache.get('pattern') or NSColor.colorWithCGColor_(_matched(self._rgb, _INKS[mode]))
             self._cache['ns', mode] = ns
             return ns
 
@@ -233,7 +282,7 @@ class Color(object):
             elif mode == CMYK:
                 cg = CGColorCreate(_DEVICE_CMYK, self._values(CMYK))
             else:
-                cg = _matched(self._rgb, _EPS_SPACE)
+                cg = _matched(self._rgb, _INKS[mode])
             self._cache['cg', mode] = cg
             return cg
 
@@ -627,7 +676,7 @@ class Gradient(object):
                 c_space = NSColorSpace.alloc().initWithCGColorSpace_(_SPACES[self._space])
                 ns_clrs = [NSColor.colorWithCGColor_(c._rgb_as(self._space)) for c in self._colors]
             else:
-                c_space = NSColorSpace.deviceCMYKColorSpace() if c_mode==CMYK else NSColorSpace.sRGBColorSpace()
+                c_space = NSColorSpace.deviceCMYKColorSpace() if c_mode==CMYK else NSColorSpace.alloc().initWithCGColorSpace_(_INKS[c_mode])
                 ns_clrs = [c.nsColor for c in self._colors]
             ns_gradient = NSGradient.alloc().initWithColors_atLocations_colorSpace_(ns_clrs, self._steps, c_space)
             self._gradient, self._outputmode = ns_gradient, c_mode

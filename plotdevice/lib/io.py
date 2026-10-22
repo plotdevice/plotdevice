@@ -243,16 +243,17 @@ class ExportSession(object):
 
 re_padded = re.compile(r'{(\d+)}')
 class ImageExportSession(ExportSession):
-    def __init__(self, fname, format='pdf', zoom=1.0, first=1, last=None, single=False, **rest):
+    def __init__(self, fname, format='pdf', zoom=1.0, first=1, last=None, single=False, colors=None, **rest):
+        from ..gfx.colors import _output_colors, CMYK # (gfx imports this module)
         super(ImageExportSession, self).__init__()
         self.single_file = single or first==last
         if last is not None:
             self.begin(pages=last-first+1)
         self.format = format
         self.zoom = zoom
-        self.cmyk = rest.get('cmyk', False)
+        self.colors = _output_colors(colors, format)
         self.on_main = format == 'eps' # (it's drawn through an NSView)
-        cmyk_bitmap = self.cmyk and format in ('jpeg', 'jpg', 'tiff')
+        cmyk_bitmap = self.colors == CMYK and format in ('jpeg', 'jpg', 'tiff')
         self.presents = format not in ('pdf', 'eps') and not cmyk_bitmap
 
         m = re_padded.search(fname)
@@ -276,14 +277,14 @@ class ImageExportSession(ExportSession):
             self.writer = Pages.alloc().initWithPattern_(name_tmpl)
 
     def add(self, canvas, render=None):
-        frame = canvas.commit(self.format == 'eps')
-        writer, format, zoom, cmyk = self.writer, self.format, self.zoom, self.cmyk
+        frame = canvas.commit(self.colors)
+        writer, format, zoom = self.writer, self.format, self.zoom
         def work(cancelled):
             if isinstance(writer, PDFBook):
                 writer.addPage_(frame)
                 self.rendered += 1
                 return None
-            image, surface = frame._encode(format, zoom, cmyk, cancelled)
+            image, surface = frame._encode(format, zoom, cancelled)
             if image is not None:
                 writer.addPage_(image)
                 self.rendered += 1
@@ -305,7 +306,8 @@ class MovieExportSession(ExportSession):
         bigger = [rate for rate in MovieExportSession.BITRATES if rate >= wanted]
         return bigger[0] if bigger else MovieExportSession.BITRATES[-1]
 
-    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=None, loop=0, codec='hevc', zoom=1.0, **rest):
+    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=None, loop=0, codec='hevc', zoom=1.0, colors=None, **rest):
+        from ..gfx.colors import _output_colors # (gfx imports this module)
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
@@ -320,7 +322,7 @@ class MovieExportSession(ExportSession):
         self.bitrate = bitrate # (None to pick one from the movie's size)
         self.codec = codec
         self.zoom = zoom
-        self.cmyk = False
+        self.colors = _output_colors(colors, format)
         self.presents = True
 
     def writer_failed(self):
@@ -338,7 +340,7 @@ class MovieExportSession(ExportSession):
             print('unrecognized output format: %s' % self.format)
             return self.shutdown()
 
-        frame = canvas.commit()
+        frame = canvas.commit(self.colors)
         if not self.writer:
             size = self.size = frame._raster_size(self.zoom)
             if self.format == 'mov':
@@ -346,7 +348,7 @@ class MovieExportSession(ExportSession):
                 self.writer = Video.alloc()
                 codec = MovieExportSession.CODECS.index(self.codec)
                 bitrate = self.bitrate or MovieExportSession.auto_bitrate(size[0], size[1], self.fps)
-                self.writer.initWithFile_size_fps_bitrate_codec_(self.fname, size, self.fps, bitrate, codec)
+                self.writer.initWithFile_size_fps_bitrate_codec_srgb_(self.fname, size, self.fps, bitrate, codec, frame.ink is not None)
             else:
                 self.writer = AnimatedGif.alloc()
                 self.writer.initWithFile_size_fps_loop_(self.fname, size, self.fps, self.loop)
@@ -355,7 +357,7 @@ class MovieExportSession(ExportSession):
         if self.format == 'mov':
             def work(cancelled):
                 if straight:
-                    rendered = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(*self.size)
+                    rendered = objc.lookUpClass('PDSurface').surfaceWithWidth_height_space_(*self.size, frame._surface_space)
                     frame._render_to_surface(rendered, self.zoom, cancelled, origin=(0, 0))
                     if cancelled is not None and cancelled():
                         return None
@@ -381,7 +383,7 @@ class MovieExportSession(ExportSession):
                 return surface
         else:
             def work(cancelled):
-                surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(*self.size)
+                surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_space_(*self.size, frame._surface_space)
                 frame._render_to_surface(surface, self.zoom, cancelled, origin=(0, 0))
                 if cancelled is not None and cancelled():
                     return None

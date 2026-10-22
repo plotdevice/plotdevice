@@ -272,10 +272,33 @@ class ColorTests(PlotDeviceTestCase):
         self.assertEqual(bpp, 4)
         self.assertEqual(tuple(data[10 * row + 10 * bpp:][:4]), (153, 102, 102, 255))
 
+    def test_placed_cmyk_images_keep_their_numbers(self):
+        import zlib
+        from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpaceCreateWithName, kCGColorSpaceGenericCMYK,
+                            CGContextSetFillColorWithColor, CGColorCreate, CGContextFillRect, CGImageDestinationCreateWithURL,
+                            CGImageDestinationAddImage, CGImageDestinationFinalize, kCGImageAlphaNone)
+        from Foundation import NSURL
+        generic = CGColorSpaceCreateWithName(kCGColorSpaceGenericCMYK)
+        ctx = CGBitmapContextCreate(None, 20, 20, 8, 80, generic, kCGImageAlphaNone)
+        CGContextSetFillColorWithColor(ctx, CGColorCreate(generic, (0, 0, 0, 1, 1)))
+        CGContextFillRect(ctx, ((0, 10), (20, 10))) # (the top half: K)
+        CGContextSetFillColorWithColor(ctx, CGColorCreate(generic, (1, 0, 0, 0, 1)))
+        CGContextFillRect(ctx, ((0, 0), (20, 10)))  # (the bottom: C)
+        src = join(self.tmp, 'tagged.tiff')
+        dest = CGImageDestinationCreateWithURL(NSURL.fileURLWithPath_(src), 'public.tiff', 1, None)
+        CGImageDestinationAddImage(dest, CGBitmapContextCreateImage(ctx), None)
+        CGImageDestinationFinalize(dest)
+        size(20, 20)
+        image(src, 0, 0)
+        space, data, row, bpp = _image(self._save('placed.tiff', colors=CMYK))
+        self.assertEqual((tuple(data[5 * row + 5 * bpp:][:4]), tuple(data[15 * row + 5 * bpp:][:4])), ((0, 0, 0, 255), (255, 0, 0, 0)))
+        pdf = open(self._save('placed.pdf', colors=CMYK), 'rb').read()
+        self.assertTrue(re.search(rb'/Subtype /Image[^>]*/ColorSpace\s+/DeviceCMYK', pdf)) # (not printing the pdf if it fails)
+
     def test_rgb_export_after_a_cmyk_one_is_rgb(self):
         import zlib
         self._swatch(0, 1, 0)
-        export(join(self.tmp, 'b.pdf'), cmyk=True)
+        export(join(self.tmp, 'b.pdf'), colors=CMYK)
         self.assertEqual(outputmode(), RGB)
         export(join(self.tmp, 'c.pdf'))
         export(join(self.tmp, 'c.png'))
@@ -285,6 +308,116 @@ class ColorTests(PlotDeviceTestCase):
         self.assertNotRegex(content, rb' k\b')
         space, data, row, bpp = _image(join(self.tmp, 'c.png'))
         self.assertEqual(tuple(data[10 * row + 10 * bpp:][:3]), (0, 255, 0))
+
+    # export(colors=...)
+
+    def _two_swatches(self):
+        size(20, 10)
+        background(None)
+        fill(color('#3c8', space=SRGB))
+        rect(0, 0, 10, 10)
+        fill(1, 0, 0) # (P3 red, outside srgb)
+        rect(10, 0, 10, 10)
+
+    def test_srgb_exports_are_tagged_srgb_with_p3_colors_clipped(self):
+        self._two_swatches()
+        for ext in ('png', 'tiff', 'heic'):
+            path = join(self.tmp, 'srgb.' + ext)
+            export(path, colors=SRGB)
+            space, data, row, bpp = _image(path)
+            self.assertEqual(space, 'kCGColorSpaceSRGB', ext)
+            off = 3 if ext == 'heic' else 0 # (lossy)
+            for x, want in ((5, (0x33, 0xcc, 0x88)), (15, (255, 0, 0))):
+                got = data[5 * row + x * bpp:][:3]
+                self.assertLessEqual(max(abs(g - w) for g, w in zip(got, want)), off, (ext, tuple(got), want))
+
+    def test_srgb_pdfs_fill_and_blend_in_srgb(self):
+        import zlib
+        self._two_swatches()
+        with blend('multiply'):
+            rect(0, 0, 20, 10)
+        export(join(self.tmp, 'srgb.pdf'), colors=SRGB)
+        pdf = open(join(self.tmp, 'srgb.pdf'), 'rb').read()
+        streams = [zlib.decompress(s) for s in re.findall(rb'stream\r?\n(.*?)endstream', pdf, re.S)]
+        from Quartz import CGColorSpaceCopyICCData, CGColorSpaceCreateWithName, kCGColorSpaceSRGB, kCGColorSpaceDisplayP3
+        srgb, p3 = [bytes(CGColorSpaceCopyICCData(CGColorSpaceCreateWithName(name))) for name in (kCGColorSpaceSRGB, kCGColorSpaceDisplayP3)]
+        self.assertIn(srgb, streams)
+        self.assertNotIn(p3, streams) # (the fills are in srgb, and the groups are relabelled to it)
+        self.assertIn(b'1 0 0 sc', b''.join(streams))
+
+    def test_icc_exports_are_in_the_profile(self):
+        from Quartz import (CGColorSpaceCreateWithICCData, CGColorSpaceCreateWithName, kCGColorSpaceSRGB, CGColorCreate,
+                            CGColorCreateCopyByMatchingToColorSpace, kCGRenderingIntentDefault, CGColorGetComponents)
+        profile = '/System/Library/ColorSync/Profiles/AdobeRGB1998.icc'
+        self._two_swatches()
+        path = join(self.tmp, 'adobe.png')
+        export(path, colors=profile)
+        space, data, row, bpp = _image(path)
+        self.assertEqual(space, 'kCGColorSpaceAdobeRGB1998')
+        green = CGColorCreate(CGColorSpaceCreateWithName(kCGColorSpaceSRGB), (0x33 / 255, 0xcc / 255, 0x88 / 255, 1))
+        adobe = CGColorCreateCopyByMatchingToColorSpace(CGColorSpaceCreateWithICCData(open(profile, 'rb').read()), kCGRenderingIntentDefault, green, None)
+        want = tuple(round(v * 255) for v in CGColorGetComponents(adobe).as_tuple(4)[:3])
+        self.assertEqual(tuple(data[5 * row + 5 * bpp:][:3]), want)
+
+    def test_srgb_movies_are_tagged_rec709(self):
+        for colors, primaries in ((P3, 12), (SRGB, 1)): # (the colr atom's codes for P3-D65 and Rec.709)
+            path = join(self.tmp, colors + '.mov')
+            with export(path, colors=colors) as movie:
+                for i in range(2):
+                    with movie.frame:
+                        self._two_swatches()
+            mov = open(path, 'rb').read()
+            at = re.search(rb'colrncl[cx]', mov).end()
+            self.assertEqual(int.from_bytes(mov[at:at + 2], 'big'), primaries, colors)
+
+    def test_each_format_takes_the_colors_it_can_hold(self):
+        from plotdevice.gfx.colors import _output_colors
+        profile = '/System/Library/ColorSync/Profiles/AdobeRGB1998.icc'
+        accepts = dict(png='P3 SRGB icc', heic='P3 SRGB icc', mov='P3 SRGB', gif='SRGB', eps='SRGB CMYK',
+                       pdf='P3 SRGB icc CMYK', tiff='P3 SRGB icc CMYK', jpg='P3 SRGB icc CMYK')
+        for format, ok in accepts.items():
+            for name, val in (('P3', P3), ('SRGB', SRGB), ('icc', profile), ('CMYK', CMYK)):
+                if name in ok.split():
+                    _output_colors(val, format)
+                else:
+                    self.assertRaises(DeviceError, _output_colors, val, format)
+        self.assertEqual([_output_colors(None, f) for f in ('png', 'pdf', 'mov', 'gif', 'eps')], [P3, P3, P3, SRGB, SRGB])
+        self.assertEqual(_output_colors('CMYK', 'pdf'), CMYK)
+        self.assertEqual(_output_colors(profile, 'pdf'), profile)
+
+    def test_export_rejects_bad_colors_and_arguments(self):
+        self._two_swatches()
+        path = join(self.tmp, 'bad.pdf')
+        for kwargs in (dict(colors=64), dict(colors='adobe'), dict(colors='/nonexistent.icc'), dict(colors=__file__),
+                       dict(colors=CMYK, cmyk=True), dict(colours=CMYK)):
+            self.assertRaises(DeviceError, export, path, **kwargs)
+        self.assertRaises(DeviceError, export, join(self.tmp, 'bad.png'), colors=CMYK)
+        self.assertFalse(os.path.exists(path))
+
+    def test_exports_follow_outputmode_unless_they_choose(self):
+        outputmode(CMYK)
+        self._swatch(color(0, 0, 0, 1, mode=CMYK))
+        export(join(self.tmp, 'mode.tiff'))
+        export(join(self.tmp, 'chosen.tiff'), colors=P3)
+        export(join(self.tmp, 'mode.png')) # (a format that can't hold cmyk takes its default)
+        outputmode(RGB)
+        from Quartz import CGImageSourceCreateWithURL, CGImageSourceCreateImageAtIndex, CGImageGetColorSpace, CGColorSpaceGetModel, kCGColorSpaceModelCMYK
+        from Foundation import NSURL
+        tiff = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(join(self.tmp, 'mode.tiff')), None), 0, None)
+        self.assertEqual(CGColorSpaceGetModel(CGImageGetColorSpace(tiff)), kCGColorSpaceModelCMYK)
+        self.assertEqual(_image(join(self.tmp, 'chosen.tiff'))[0], 'kCGColorSpaceDisplayP3')
+        self.assertEqual(_image(join(self.tmp, 'mode.png'))[0], 'kCGColorSpaceDisplayP3')
+
+    def test_cmyk_argument_is_deprecated_for_colors(self):
+        import warnings
+        self._swatch(color(0, 0, 0, 1, mode=CMYK))
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            export(join(self.tmp, 'old.tiff'), cmyk=True)
+        self.assertEqual([w.category for w in caught], [FutureWarning])
+        self.assertEqual(caught[0].filename, __file__) # (pointing at the export() call)
+        export(join(self.tmp, 'new.tiff'), colors=CMYK)
+        self.assertEqual(open(join(self.tmp, 'old.tiff'), 'rb').read(), open(join(self.tmp, 'new.tiff'), 'rb').read())
 
     def _pdf_pixels(self, path):
         from Quartz import (CGPDFDocumentCreateWithURL, CGPDFDocumentGetPage, CGContextDrawPDFPage, CGBitmapContextCreate,
@@ -356,9 +489,9 @@ class ColorTests(PlotDeviceTestCase):
         export(join(self.tmp, 'plain.pdf'))
         draw()
         export(join(self.tmp, 'rgb.pdf'))
-        export(join(self.tmp, 'cmyk.pdf'), cmyk=True)
-        for name, cmyk in (('rgb_book', False), ('cmyk_book', True)):
-            with export(join(self.tmp, name + '.pdf'), cmyk=cmyk) as book:
+        export(join(self.tmp, 'cmyk.pdf'), colors=CMYK)
+        for name, colors in (('rgb_book', P3), ('cmyk_book', CMYK)):
+            with export(join(self.tmp, name + '.pdf'), colors=colors) as book:
                 with book.page:
                     draw()
         self.assertEqual([updates(name) for name in ('plain', 'cmyk', 'cmyk_book', 'rgb', 'rgb_book')], [0, 0, 0, 1, 1])

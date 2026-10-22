@@ -23,7 +23,10 @@
 @property (readonly) NSInteger height;
 @property (readonly) CVPixelBufferRef pixelBuffer; // the buffer it draws into, if made from one (else NULL)
 + (instancetype)surfaceWithWidth:(NSInteger)width height:(NSInteger)height;
++ (instancetype)surfaceWithWidth:(NSInteger)width height:(NSInteger)height space:(CGColorSpaceRef)space; // (NULL: display p3)
 + (instancetype)surfaceWithPixelBuffer:(CVPixelBufferRef)buffer; // an IOSurface-backed one, e.g. from a video encoder's pool
++ (instancetype)surfaceWithPixelBuffer:(CVPixelBufferRef)buffer space:(CGColorSpaceRef)space;
+- (instancetype)initWithWidth:(NSInteger)width height:(NSInteger)height space:(CGColorSpaceRef)space;
 - (void)lock;
 - (void)unlock;
 @end

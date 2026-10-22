@@ -18,8 +18,8 @@ from ..util.readers import get_http_session, last_modified
 from ..lib.io import MovieExportSession, ImageExportSession
 from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
-from .colors import CMYK
-from . import _ns_context, _cg_port
+from .colors import RGB, CMYK
+from . import _ns_context, _cg_port, _frame
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
 
@@ -351,8 +351,16 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             self._screen_transform.concat() # move the image into place via transforms
             with self.effects.applied(self):  # apply any blend/alpha/shadow effects
                 NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
-                bounds = ((0,0), self._nsImage.size()) # draw the image at (0,0)
-                self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
+                image = self._nsImage
+                frame = _frame.get()
+                if frame is not None and frame.outputmode == CMYK and frame.colors is not None:
+                    rep = next((r for r in image.representations() if isinstance(r, NSBitmapImageRep)), None)
+                    cg = rep.CGImage() if rep is not None else None
+                    if cg is not None and CGColorSpaceGetModel(CGImageGetColorSpace(cg)) == kCGColorSpaceModelCMYK:
+                        image = NSImage.alloc().initWithCGImage_size_(CGImageCreateCopyWithColorSpace(cg, CGColorSpaceCreateDeviceCMYK()), image.size())
+                        image.setFlipped_(True)
+                bounds = ((0,0), image.size()) # draw the image at (0,0)
+                image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
                 # NB: the nodebox source warns about quartz bugs triggered by drawing
                 # EPSs to other origin points. no clue whether this still applies...
 
@@ -396,7 +404,7 @@ class SequenceRenderer(object):
 
 class ImageWriter(object):
     def __init__(self, fname, format, **opts):
-        self.mode = CMYK if opts['cmyk'] else _ctx._outputmode
+        self.mode = CMYK if opts['colors'] == CMYK else RGB
         self.fname = os.path.expanduser(fname)
         self.format = format
         self.opts = opts
@@ -437,11 +445,7 @@ class ImageWriter(object):
             #
             m = re_padded.search(self.fname)
             fn = re_padded.sub('0'*int(m.group(1)), self.fname, count=1) if m else self.fname
-            prev_mode, _ctx._outputmode = _ctx._outputmode, self.mode
-            try:
-                _ctx.canvas.save(fn, self.format, self.opts['zoom'], self.mode==CMYK)
-            finally:
-                _ctx._outputmode = prev_mode # don't leave later exports in cmyk mode
+            _ctx.canvas.save(fn, self.format, self.opts['zoom'], colors=self.opts['colors'])
 
     @property
     def page(self):

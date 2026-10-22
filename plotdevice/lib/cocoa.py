@@ -2,7 +2,7 @@
 
 from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorCreate, CGColorCreateCopyByMatchingToColorSpace, \
                    CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, \
-                   CGColorSpaceCopyICCData, \
+                   CGColorSpaceCopyICCData, CGColorSpaceCreateWithICCData, \
                    CGColorRef, CGColorGetColorSpace, CGColorGetComponents, CGColorGetNumberOfComponents, CGColorSpaceCopyName, \
                    kCGColorSpaceExtendedDisplayP3, kCGColorSpaceExtendedSRGB, kCGColorSpaceGenericCMYK, kCGColorSpaceSRGB, \
                    kCGColorSpaceModelCMYK, \
@@ -21,6 +21,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    CGContextSetStrokeColorWithColor, CGContextTranslateCTM, CGDataConsumerCreateWithCFData, CGImageDestinationAddImage, \
                    CGImageDestinationCreateWithData, CGImageDestinationFinalize, CGImageDestinationSetProperties, \
                    CGImageGetBitsPerComponent, CGImageGetBitsPerPixel, CGImageGetBytesPerRow, CGImageGetDataProvider, \
+                   CGImageCreateCopyWithColorSpace, CGImageGetColorSpace, \
                    CGImageGetHeight, CGImageGetWidth, CGImageMaskCreate, CGPathAddCurveToPoint, CGPathAddLineToPoint, \
                    CGPathCloseSubpath, CGPathCreateCopy, CGPathCreateMutable, CGPathMoveToPoint, CGPathRelease, \
                    CGPDFContextBeginPage, CGPDFContextClose, CGPDFContextCreate, CGPDFContextEndPage, CGRectMake, \
