@@ -17,6 +17,7 @@ from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
 from ..run import Sandbox, encoded
 from .. import DeviceError
+from ..gfx.colors import _output_colors
 from . import set_timeout, FrameClock, FrameQueue, FRAMELOG
 
 NSEventGestureAxisVertical = 2
@@ -181,6 +182,7 @@ class ScriptController(NSWindowController):
         self._fps_shown = False # whether the toolbar readout is currently visible
         self._fps_stamp = 0     # when it was last refreshed
         self.queue = None       # the window's FrameQueue (once it has one)
+        self.proof = None       # View > Proof Colors' choice: None for the screen, ('rgb', SRGB), ('press', key) or ('printer', path)
         self._rendering = False # whether the latest frame invoke() rendered has yet to land
         self._rerun = False     # whether runScript() was called while it was rendering
 
@@ -687,8 +689,6 @@ class ScriptController(NSWindowController):
     @objc.python_method
     def exportInit(self, kind, fname, opts):
         """Begin actual export (invoked by self.exportSheet unless sheet was cancelled)"""
-        if 'colors' not in opts:
-            opts = dict(opts, colors='cmyk' if opts.get('cmyk') else None) # (the sheet's Convert to CMYK checkbox)
         if self.animationTimer is not None:
             self.stopScript()
 
@@ -857,6 +857,30 @@ class ScriptController(NSWindowController):
     def copyImageAsPDF_(self, sender):
         self.graphicsView.copyImageAsPDF_(sender)
 
+
+    #
+    # Proofing (View > Proof Colors)
+    #
+    @IBAction
+    def proofColors_(self, sender):
+        proof = sender.representedObject()
+        kind, value = proof or (None, None)
+        try:
+            press = _output_colors(value, 'tiff') if kind == 'press' else None
+            printer = CGColorSpaceCreateWithICCData(open(value, 'rb').read()) if kind == 'printer' else None
+        except (OSError, DeviceError):
+            return NSBeep()
+        self.proof = proof
+        self.graphicsView.press, self.graphicsView.printer = press, printer
+        self.graphicsView.rgb = value if kind == 'rgb' else None
+        self.exportSheet.proofed(proof)
+        if self.graphicsView.canvas is not None:
+            self.graphicsView.render(self.graphicsView.canvas)
+
+    def validateMenuItem_(self, item):
+        if item.action() == 'proofColors:':
+            item.setState_(NSOnState if item.representedObject() == self.proof else NSOffState)
+        return True
 
     #
     # Zoom commands, forwarding to the graphics view.

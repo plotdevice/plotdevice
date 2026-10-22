@@ -3,7 +3,7 @@
 from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorCreate, CGColorCreateCopyByMatchingToColorSpace, \
                    CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, \
                    CGColorSpaceCopyICCData, CGColorSpaceCreateWithICCData, kCGRenderingIntentRelativeColorimetric, CGContextSetRenderingIntent, \
-                   CGColorSpaceGetNumberOfComponents, \
+                   CGColorSpaceGetNumberOfComponents, CGContextFillRect, CGContextSetRGBFillColor, \
                    CGColorRef, CGColorGetColorSpace, CGColorGetComponents, CGColorGetNumberOfComponents, CGColorSpaceCopyName, \
                    kCGColorSpaceExtendedDisplayP3, kCGColorSpaceExtendedSRGB, kCGColorSpaceGenericCMYK, kCGColorSpaceSRGB, \
                    kCGColorSpaceModelCMYK, \

@@ -3,6 +3,7 @@ import os
 import re
 import json
 import zlib
+from glob import glob
 import colorsys
 import warnings
 from array import array
@@ -25,9 +26,9 @@ GREY = "greyscale"
 P3 = "p3"
 SRGB = "srgb"
 
-GRACOL = "crpc6"
-GRACOL_UNCOATED = "crpc3"
-SWOP = "crpc5"
+GRACOL = "gracol"
+GRACOL_UNCOATED = "gracol_uncoated"
+SWOP = "swop"
 FOGRA39 = "fogra39"
 FOGRA47 = "fogra47"
 _PRESSES = {GRACOL: 'GRACoL2013_CRPC6.icc', GRACOL_UNCOATED: 'GRACoL2013UNC_CRPC3.icc', SWOP: 'SWOP2013C3_CRPC5.icc',
@@ -38,6 +39,16 @@ _PRESS_CONDITIONS = {GRACOL: ('CGATS21-2-CRPC6', 'Universal Premium Coated (GRAC
                      SWOP: ('CGATS21-2-CRPC5', 'Universal Publication Coated (SWOP 2013, CGATS21-2 CRPC5)'),
                      FOGRA39: ('FOGRA39', 'Offset, gloss or matt coated paper (ISO 12647-2:2004, FOGRA39)'),
                      FOGRA47: ('FOGRA47', 'Offset, uncoated white paper (ISO 12647-2:2004, FOGRA47)')}
+
+_PRESS_LABELS = {GRACOL: 'GRACoL 2013 Coated (CRPC6)', GRACOL_UNCOATED: 'GRACoL 2013 Uncoated (CRPC3)', SWOP: 'SWOP 2013 (CRPC5)',
+                 FOGRA39: 'ISO Coated v2 (FOGRA39)', FOGRA47: 'PSO Uncoated (FOGRA47)'}
+
+_PROFILE_FOLDERS = ['/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles/Profiles', '/Library/ColorSync/Profiles/Recommended',
+                    '~/Library/ColorSync/Profiles', '/Library/Application Support/Adobe/Color/Profiles',
+                    '/Library/Application Support/Adobe/Color/Profiles/Recommended']
+_CANON_PROFILES = '/Library/Printers/Canon/BJPrinter/Resources/ICCProfiles'
+_PROFILE_HEADERS = {} # path -> (mtime, (class, data space, description)), see _profile_header
+_PROFILE_LISTS = {}   # function -> (the folders' & PPDs' mtimes, the list), see _profile_sources
 
 _PRESS_SPACES = {}
 _PRESS_NS_SPACES = {}
@@ -81,7 +92,7 @@ def _output_colors(val, format):
         if numlike(val):
             notpalette += "; it isn't a gif's palette size"
         raise DeviceError(notpalette)
-    key = val.lower()
+    key = val.lower().replace('-', '_')
     if key in (P3, SRGB, CMYK):
         kind = key
     elif key in _PRESSES:
@@ -140,6 +151,80 @@ def _icc_text(icc, sig):
             if tag[:4] == b'text':
                 return tag[8:].split(b'\0')[0].decode('latin-1')
     return None
+
+def _profile_header(path):
+    try:
+        mtime = os.path.getmtime(path)
+        if _PROFILE_HEADERS.get(path, (None,))[0] == mtime:
+            return _PROFILE_HEADERS[path][1]
+        with open(path, 'rb') as f:
+            head = f.read(132)
+            if len(head) < 132 or head[36:40] != b'acsp':
+                header = None
+            else:
+                count = min(int.from_bytes(head[128:132], 'big'), 256)
+                table = f.read(12 * count)
+                icc = bytearray(head + table)
+                for at in range(0, len(table), 12):
+                    if table[at:at + 4] == b'desc':
+                        offset, size = int.from_bytes(table[at + 4:at + 8], 'big'), int.from_bytes(table[at + 8:at + 12], 'big')
+                        f.seek(offset)
+                        icc = bytes(icc) + b'\0' * (offset - len(icc)) + f.read(min(size, 4096))
+                desc = _icc_text(bytes(icc), b'desc') or os.path.splitext(os.path.basename(path))[0]
+                header = (head[12:16], head[16:20], desc.strip())
+    except OSError:
+        return None
+    _PROFILE_HEADERS[path] = (mtime, header)
+    return header
+
+def _profile_sources():
+    paths = [os.path.expanduser(folder) for folder in _PROFILE_FOLDERS] + ['/etc/cups/ppd'] + glob('/etc/cups/ppd/*.ppd')
+    return tuple(os.path.getmtime(path) if os.path.exists(path) else None for path in paths)
+
+def _installed_presses():
+    sources = _profile_sources()
+    if _PROFILE_LISTS.get('presses', (None,))[0] == sources:
+        return _PROFILE_LISTS['presses'][1]
+    found = {}
+    for folder in _PROFILE_FOLDERS:
+        folder = os.path.expanduser(folder)
+        for name in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+            path = os.path.join(folder, name)
+            header = _profile_header(path) if os.path.splitext(name)[1].lower() in ('.icc', '.icm') else None
+            if header and header[:2] == (b'prtr', b'CMYK'):
+                found.setdefault(header[2], path)
+    presses = sorted(found.items(), key=lambda item: item[0].lower())
+    _PROFILE_LISTS['presses'] = (sources, presses)
+    return presses
+
+def _printer_profiles():
+    sources = _profile_sources()
+    if _PROFILE_LISTS.get('printers', (None,))[0] == sources:
+        return _PROFILE_LISTS['printers'][1]
+    found, seen = [], set()
+    for ppd in sorted(glob(os.path.join('/etc/cups/ppd', '*.ppd'))):
+        printer = os.path.splitext(os.path.basename(ppd))[0].replace('_', ' ')
+        try:
+            text = open(ppd, encoding='latin-1').read()
+        except OSError:
+            continue
+        paths = re.findall(r'^\*cupsICCProfile [^:]*:\s*"([^"]+)"', text, re.M)
+        if '*cupsICCQualifier2: CNIJProfileID' in text:
+            paths += [os.path.join(_CANON_PROFILES, name) for name in re.findall(r'^\*CNIJProfileID \d+/([^:]+):', text, re.M)]
+        for path in paths:
+            header = None if path.startswith('/System/Library/') else _profile_header(path)
+            if header and header[0] == b'prtr' and (printer, path) not in seen:
+                seen.add((printer, path))
+                found.append((printer, header[2], path))
+    for folder in _PROFILE_FOLDERS:
+        folder = os.path.expanduser(folder)
+        for name in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+            path = os.path.join(folder, name)
+            header = _profile_header(path) if os.path.splitext(name)[1].lower() in ('.icc', '.icm') else None
+            if header and header[:2] == (b'prtr', b'RGB ') and not any(path == p for _, _, p in found):
+                found.append((None, header[2], path))
+    _PROFILE_LISTS['printers'] = (sources, found)
+    return found
 
 def _output_intent(press):
     if press not in _PRESS_INTENTS:

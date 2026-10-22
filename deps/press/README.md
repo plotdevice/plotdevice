@@ -10,9 +10,9 @@ is), and `rsrc_path()` finds them there. They never change: a newer profile for 
 
 | constant | value | file | condition | publisher | license | bytes |
 |---|---|---|---|---|---|---|
-| `GRACOL` | `crpc6` | `GRACoL2013_CRPC6.icc` | GRACoL 2013, US premium coated sheetfed (CGATS.21 CRPC6) | Idealliance (© X-Rite) | [Idealliance](LICENSE-Idealliance.txt) | 3,462,308 |
-| `GRACOL_UNCOATED` | `crpc3` | `GRACoL2013UNC_CRPC3.icc` | GRACoL 2013 uncoated (CGATS.21 CRPC3) | Idealliance (© X-Rite) | [Idealliance](LICENSE-Idealliance.txt) | 3,706,408 |
-| `SWOP` | `crpc5` | `SWOP2013C3_CRPC5.icc` | SWOP 2013, US coated web (CGATS.21 CRPC5) | Idealliance (© X-Rite) | [Idealliance](LICENSE-Idealliance.txt) | 3,339,916 |
+| `GRACOL` | `gracol` | `GRACoL2013_CRPC6.icc` | GRACoL 2013, US premium coated sheetfed (CGATS.21 CRPC6) | Idealliance (© X-Rite) | [Idealliance](LICENSE-Idealliance.txt) | 3,462,308 |
+| `GRACOL_UNCOATED` | `gracol_uncoated` | `GRACoL2013UNC_CRPC3.icc` | GRACoL 2013 uncoated (CGATS.21 CRPC3) | Idealliance (© X-Rite) | [Idealliance](LICENSE-Idealliance.txt) | 3,706,408 |
+| `SWOP` | `swop` | `SWOP2013C3_CRPC5.icc` | SWOP 2013, US coated web (CGATS.21 CRPC5) | Idealliance (© X-Rite) | [Idealliance](LICENSE-Idealliance.txt) | 3,339,916 |
 | `FOGRA39` | `fogra39` | `ISOcoated_v2_bas.icc` | ISO 12647-2 coated, FOGRA39 (basICColor's rendition) | basICColor GmbH | [zlib](LICENSE-basICColor.txt) | 1,052,608 |
 | `FOGRA47` | `fogra47` | `PSO_Uncoated_ISO12647_bas.icc` | PSO uncoated, FOGRA47 (basICColor's rendition) | basICColor GmbH | [zlib](LICENSE-basICColor.txt) | 1,879,756 |
 

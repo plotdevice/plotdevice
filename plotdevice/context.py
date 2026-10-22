@@ -1960,6 +1960,7 @@ class Frame(object):
         self.background = canvas.background
         self._bounds = None  # each grob's _render_bounds, computed by the first culled render
         self._layers = {}    # the bounds of grobs drawn in transparency layers, as they're drawn
+        self.proof = None    # a printer profile's space the window shows it through (View > Proof Colors)
 
     def _layer_box(self, grob):
         key = id(grob)
@@ -2035,7 +2036,20 @@ class Frame(object):
             if origin is not None:
                 offset = (-origin[0], origin[1] + H)
                 within = (origin[0] / scale, origin[1] / scale, w / scale, h / scale)
-            self._render_to_context(port, scale, cancelled, offset, within)
+            proof = self.proof or (_output_space(self.press) if self.press else None)
+            if proof is None:
+                self._render_to_context(port, scale, cancelled, offset, within)
+            else:
+                cmyk = CGColorSpaceGetModel(proof) == kCGColorSpaceModelCMYK
+                bitmap = CGBitmapContextCreate(None, w, h, 8, w * 4, proof, kCGImageAlphaNone if cmyk else kCGImageAlphaNoneSkipLast)
+                CGContextSetRenderingIntent(bitmap, kCGRenderingIntentRelativeColorimetric)
+                if not cmyk:
+                    CGContextSetRGBFillColor(bitmap, 1, 1, 1, 1)
+                    CGContextFillRect(bitmap, ((0, 0), (w, h)))
+                x, y = offset or (0, self.pagesize.height * scale)
+                self._render_to_context(bitmap, scale, cancelled, (x, y - (H - h)), within)
+                CGContextSetRenderingIntent(port, kCGRenderingIntentRelativeColorimetric)
+                CGContextDrawImage(port, ((0, H - h), (w, h)), CGBitmapContextCreateImage(bitmap))
             CGContextFlush(port)
         finally:
             CGContextRestoreGState(port)

@@ -9,7 +9,7 @@ import objc
 
 from . import set_timeout, FrameQueue
 from ..lib.cocoa import *
-from ..gfx.colors import Color, RGB
+from ..gfx.colors import Color, RGB, _INKS
 from ..gfx.atoms import KEY_ESC
 from objc import super
 
@@ -552,6 +552,9 @@ class ViewportPhysics(object):
 class GraphicsView(NSView):
     script = IBOutlet()
     canvas = None
+    press = None      # View > Proof Colors' press, which the window shows its frames as a press TIFF holds them in
+    rgb = None        # or rgb colors (SRGB), shown as a PNG exported in them holds them
+    printer = None    # or the printer profile's space it shows them through
     _queue = None      # the window's FrameQueue (class-level: the ScriptController may set it before awakeFromNib)
     _presenter = None
     canvasSize = None # the canvas at the displayed zoom, in points (class-level: the clip view may ask before awakeFromNib)
@@ -616,7 +619,14 @@ class GraphicsView(NSView):
     @objc.python_method
     def render(self, canvas, focus=None, onerror=None, ondone=None):
         self.canvas = canvas
-        self._committed = canvas.commit()
+        if self.press:
+            self._committed = canvas.commit(self.press, 'tiff')
+        elif self.rgb:
+            self._committed = canvas.commit(self.rgb, 'png')
+            self._committed.proof = _INKS[self.rgb]
+        else:
+            self._committed = canvas.commit()
+            self._committed.proof = self.printer
         self._seq += 1
         self._request(focus, onerror=onerror, ondone=ondone)
 

@@ -451,7 +451,7 @@ class ColorTests(PlotDeviceTestCase):
         from plotdevice.util import rsrc_path
         readme = open(rsrc_path('press/README.md')).read()
         sums = dict((name, digest) for digest, name in re.findall(r'^([0-9a-f]{64})  (\S+)$', readme, re.M))
-        presses = dict(GRACOL='crpc6', GRACOL_UNCOATED='crpc3', SWOP='crpc5', FOGRA39='fogra39', FOGRA47='fogra47')
+        presses = dict(GRACOL='gracol', GRACOL_UNCOATED='gracol_uncoated', SWOP='swop', FOGRA39='fogra39', FOGRA47='fogra47')
         for name, value in presses.items():
             self.assertEqual(globals()[name], value)
             profile = _press_profile(value) # (decompressed from rsrc/press)
@@ -480,7 +480,7 @@ class ColorTests(PlotDeviceTestCase):
         from plotdevice.gfx.colors import _output_colors, _output_mode, _press_profile
         path = join(self.tmp, 'press.icc')
         open(path, 'wb').write(_press_profile(FOGRA47))
-        for val, format, key in ((GRACOL, 'pdf', GRACOL), ('FOGRA39', 'tiff', FOGRA39), ('crpc5', 'eps', SWOP), (path, 'jpg', path)):
+        for val, format, key in ((GRACOL, 'pdf', GRACOL), ('FOGRA39', 'tiff', FOGRA39), ('swop', 'eps', SWOP), ('Gracol-Uncoated', 'jpg', GRACOL_UNCOATED), (path, 'jpg', path)):
             self.assertEqual(_output_colors(val, format), key)
             self.assertEqual(_output_mode(key), CMYK)
         for format in ('png', 'heic', 'gif', 'mov'):
@@ -685,6 +685,50 @@ class ColorTests(PlotDeviceTestCase):
                 with book.page:
                     draw()
         self.assertEqual([updates(name) for name in ('plain', 'cmyk', 'cmyk_book', 'rgb', 'rgb_book')], [0, 0, 0, 1, 1])
+
+    def test_proofs_render_through_the_press_or_printer(self):
+        import objc
+        from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGContextDrawImage, CGDataProviderCopyData,
+                            CGImageGetDataProvider, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, kCGColorSpaceSRGB,
+                            kCGImageAlphaPremultipliedLast, CGContextSetRenderingIntent, kCGRenderingIntentRelativeColorimetric,
+                            CGImageSourceCreateWithURL, CGImageSourceCreateImageAtIndex)
+        from Foundation import NSURL
+        from plotdevice.gfx.colors import _output_colors
+        def pixels(img, w=40, h=20):
+            ctx = CGBitmapContextCreate(None, w, h, 8, w * 4, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedLast)
+            CGContextSetRenderingIntent(ctx, kCGRenderingIntentRelativeColorimetric)
+            CGContextDrawImage(ctx, ((0, 0), (w, h)), img)
+            data = bytes(CGDataProviderCopyData(CGImageGetDataProvider(CGBitmapContextCreateImage(ctx))))
+            return [tuple(data[(y * w + x) * 4:][:3]) for y in range(h) for x in range(w)]
+        def shown(frame, w=40, h=20, origin=None):
+            surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(w, h)
+            frame._render_to_surface(surface, 1.0, origin=origin)
+            return pixels(CGBitmapContextCreateImage(surface.context()), w, h)
+        def close(a, b, what):
+            worst = max(max(abs(x - y) for x, y in zip(p, q)) for p, q in zip(a, b))
+            self.assertLessEqual(worst, 1, what)
+        self._press_swatches()
+        press = _output_colors(GRACOL, 'tiff')
+        export(join(self.tmp, 'press.tiff'), colors=GRACOL)
+        tiff = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(join(self.tmp, 'press.tiff')), None), 0, None)
+        proofed = shown(_ctx.canvas.commit(press, 'tiff'))
+        close(proofed, pixels(tiff), 'a press proof shows the press tiff')
+        self.assertNotEqual(proofed[5 * 40 + 25], shown(_ctx.canvas.commit())[5 * 40 + 25]) # (p3 red, out of the press's gamut)
+        tile = shown(_ctx.canvas.commit(press, 'tiff'), 20, 10, origin=(20, 10))
+        close(tile, [proofed[y * 40 + x] for y in range(10, 20) for x in range(20, 40)], "a tile shows its part of the raster")
+        frame = _ctx.canvas.commit()
+        frame.proof = CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
+        red = tuple(round(v * 255) for v in SRGB_RED_IN_P3)
+        close([shown(frame)[5 * 40 + 25]], [red], 'p3 red through an sRGB printer')
+        close([shown(frame)[15 * 40 + 5]], [(255, 255, 255)], 'the background stays white')
+        from plotdevice.gfx.colors import _INKS
+        export(join(self.tmp, 'srgb.png'), colors=SRGB)
+        png = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(join(self.tmp, 'srgb.png')), None), 0, None)
+        frame = _ctx.canvas.commit(SRGB, 'png')
+        frame.proof = _INKS[SRGB]
+        proofed = shown(frame)
+        close(proofed, pixels(png), 'an sRGB proof shows the sRGB png')
+        close([proofed[5 * 40 + 25]], [red], 'p3 red clipped to sRGB')
 
     def test_window_surfaces_are_tagged_p3(self):
         import objc
