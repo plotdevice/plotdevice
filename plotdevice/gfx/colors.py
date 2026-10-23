@@ -12,7 +12,7 @@ from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path, numlike
 from . import _inkmode, _outputpress
 _ctx = None
-__all__ = ("RGB", "HSV", "HSB", "CMYK", "GREY", "P3", "SRGB",
+__all__ = ("RGB", "HSV", "HSB", "CMYK", "GREY", "P3", "SRGB", "REC709", "REC2020",
            "GRACOL", "GRACOL_UNCOATED", "SWOP", "FOGRA39", "FOGRA47",
            "Color", "Pattern", "Gradient",)
 
@@ -24,6 +24,8 @@ GREY = "greyscale"
 
 P3 = "p3"
 SRGB = "srgb"
+REC709 = "rec709"
+REC2020 = "rec2020"
 
 GRACOL = "gracol"
 GRACOL_UNCOATED = "gracol_uncoated"
@@ -47,8 +49,10 @@ _PROFILE_FOLDERS = ['~/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles
                     '/Library/Application Support/Adobe/Color/Profiles/Recommended']
 
 _SYSTEM_PROFILES = '/System/Library/ColorSync/Profiles'
-_SYSTEM_RGB = {'AdobeRGB1998.icc': 'Adobe RGB (1998)', 'ROMM RGB.icc': 'ROMM RGB (ProPhoto)', 'DCI(P3) RGB.icc': 'DCI-P3',
-               'ITU-709.icc': 'Rec. 709', 'ITU-2020.icc': 'Rec. 2020'}
+_SYSTEM_RGB = {'AdobeRGB1998.icc': 'Adobe RGB (1998)', 'ROMM RGB.icc': 'ROMM RGB (ProPhoto)', 'ITU-709.icc': 'Rec. 709',
+               'ITU-2020.icc': 'Rec. 2020'}
+_REC709 = os.path.join(_SYSTEM_PROFILES, 'ITU-709.icc')
+_REC2020 = os.path.join(_SYSTEM_PROFILES, 'ITU-2020.icc')
 _PROFILE_HEADERS = {} # path -> (mtime, (class, data space, description)), see _profile_header
 _PROFILE_LISTS = {}   # function -> (the folders' mtimes, the list), see _profile_sources
 
@@ -66,7 +70,7 @@ _DEVICE_CMYK = CGColorSpaceCreateDeviceCMYK()
 
 _INKS = {SRGB: CGColorSpaceCreateWithName(kCGColorSpaceSRGB)}
 
-_FORMAT_COLORS = dict(png=('rgb',), heic=('rgb',), mov=(P3, SRGB), gif=(SRGB,), eps=(SRGB, CMYK),
+_FORMAT_COLORS = dict(png=('rgb',), heic=('rgb',), mov=(P3, SRGB, _REC709, _REC2020), gif=(SRGB,), eps=(SRGB, CMYK),
                       pdf=('rgb', CMYK), tiff=('rgb', CMYK), jpg=('rgb', CMYK))
 _FORMAT_DEFAULTS = dict(gif=SRGB, eps=SRGB)
 
@@ -102,7 +106,8 @@ def _output_colors(val, format):
         if key not in _PRESS_SPACES:
             _PRESS_SPACES[key] = CGColorSpaceCreateWithICCData(_press_profile(key))
     else:
-        key = os.path.abspath(os.path.expanduser(val))
+        path = {REC709: _REC709, REC2020: _REC2020}.get(key, val) # rec709 & rec2020 name the system's profiles
+        key = os.path.abspath(os.path.expanduser(path))
         if not os.path.exists(key):
             key = _profile_names().get(val.lower(), key)
         try:
@@ -126,9 +131,10 @@ def _output_colors(val, format):
             _INKS.setdefault(key, space)
             kind = 'rgb'
     allowed = _FORMAT_COLORS[format]
-    fits = kind in allowed or (kind in (P3, SRGB) and 'rgb' in allowed) or (kind == 'press' and CMYK in allowed)
+    fits = kind in allowed or key in allowed or (kind in (P3, SRGB) and 'rgb' in allowed) or (kind == 'press' and CMYK in allowed)
     if not fits:
-        options = ', '.join('an RGB ICC profile' if opt == 'rgb' else opt.upper() for opt in allowed)
+        names = {'rgb': 'an RGB ICC profile', _REC709: 'REC709', _REC2020: 'REC2020'}
+        options = ', '.join(names.get(opt, opt.upper()) for opt in allowed)
         if 'rgb' in allowed:
             options = 'P3, SRGB, ' + options
         if CMYK in allowed:

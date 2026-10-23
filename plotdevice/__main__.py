@@ -67,7 +67,7 @@ def main():
   x = parser.add_argument_group("Export Options")
   x.add_argument('--export', '-o', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, heic, gif, or mov')
   x.add_argument('--zoom', metavar='PERCENT', default=100, type=int, help='scale of the output image or movie (100 = regular size); an image\'s can also be given by a filename ending in @2x/@3x/etc')
-  x.add_argument('--colors', metavar='NAME', help='the colors exports are written in: p3 (the default), srgb, cmyk, a press (gracol, gracol_uncoated, swop, fogra39 or fogra47), or the path to an .icc profile (with --export or -q; the script\'s own export()s use it too unless they choose their own)')
+  x.add_argument('--colors', metavar='NAME', help='the colors exports are written in: p3 (the default), srgb, rec709, rec2020, cmyk, a press (gracol, gracol_uncoated, swop, fogra39 or fogra47), or the path to an .icc profile (with --export or -q; the script\'s own export()s use it too unless they choose their own)')
   x.add_argument('--cmyk', action='store_const', const=True, default=False, help='the same as --colors cmyk (deprecated)')
 
   i = parser.add_argument_group("PlotDevice Script File", None)

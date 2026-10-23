@@ -491,7 +491,7 @@ class ColorTests(PlotDeviceTestCase):
         self.assertEqual(tuple(data[5 * row + 5 * bpp:][:3]), want)
 
     def test_srgb_movies_are_tagged_rec709(self):
-        for colors, primaries in ((P3, 12), (SRGB, 1)): # (the colr atom's codes for P3-D65 and Rec.709)
+        for colors, primaries, transfer, matrix in ((P3, 12, None, 1), (SRGB, 1, None, 1), (REC709, 1, 1, 1), (REC2020, 9, 1, 9)):
             path = join(self.tmp, colors + '.mov')
             with export(path, colors=colors) as movie:
                 for i in range(2):
@@ -499,15 +499,19 @@ class ColorTests(PlotDeviceTestCase):
                         self._two_swatches()
             mov = open(path, 'rb').read()
             at = re.search(rb'colrncl[cx]', mov).end()
-            self.assertEqual(int.from_bytes(mov[at:at + 2], 'big'), primaries, colors)
+            tags = [int.from_bytes(mov[at + i:at + i + 2], 'big') for i in (0, 2, 4)]
+            self.assertEqual(tags[0], primaries, colors)
+            self.assertEqual(tags[2], matrix, colors)
+            if transfer is not None:
+                self.assertEqual(tags[1], transfer, colors)
 
     def test_each_format_takes_the_colors_it_can_hold(self):
         from plotdevice.gfx.colors import _output_colors
         profile = '/System/Library/ColorSync/Profiles/AdobeRGB1998.icc'
-        accepts = dict(png='P3 SRGB icc', heic='P3 SRGB icc', mov='P3 SRGB', gif='SRGB', eps='SRGB CMYK',
-                       pdf='P3 SRGB icc CMYK', tiff='P3 SRGB icc CMYK', jpg='P3 SRGB icc CMYK')
+        accepts = dict(png='P3 SRGB icc rec', heic='P3 SRGB icc rec', mov='P3 SRGB rec', gif='SRGB', eps='SRGB CMYK',
+                       pdf='P3 SRGB icc rec CMYK', tiff='P3 SRGB icc rec CMYK', jpg='P3 SRGB icc rec CMYK')
         for format, ok in accepts.items():
-            for name, val in (('P3', P3), ('SRGB', SRGB), ('icc', profile), ('CMYK', CMYK)):
+            for name, val in (('P3', P3), ('SRGB', SRGB), ('icc', profile), ('rec', 'ITU-709'), ('rec', 'ITU-2020'), ('CMYK', CMYK)):
                 if name in ok.split():
                     _output_colors(val, format)
                 else:
@@ -614,6 +618,8 @@ class ColorTests(PlotDeviceTestCase):
                 os.chdir(here)
             if os.path.exists('/System/Library/ColorSync/Profiles/ITU-2020.icc'):
                 self.assertEqual(_output_colors('ITU-2020', 'png'), '/System/Library/ColorSync/Profiles/ITU-2020.icc')
+                self.assertEqual(_output_colors(REC2020, 'png'), _output_colors('ITU-2020', 'png'))
+                self.assertEqual(_output_colors('REC709', 'mov'), '/System/Library/ColorSync/Profiles/ITU-709.icc')
                 self.assertEqual(_output_colors('generic rgb profile', 'png'), '/System/Library/ColorSync/Profiles/Generic RGB Profile.icc')
                 generic = '/System/Library/ColorSync/Profiles/Generic CMYK Profile.icc'
                 copy = join(user, 'Copy.icc')

@@ -417,7 +417,7 @@ class MovieExportSession(ExportSession):
         return bigger[0] if bigger else MovieExportSession.BITRATES[-1]
 
     def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=None, loop=0, codec='hevc', zoom=1.0, colors=None, **rest):
-        from ..gfx.colors import _output_colors # (gfx imports this module)
+        from ..gfx.colors import _output_colors, P3, SRGB, _REC709, _REC2020 # (gfx imports this module)
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
@@ -433,6 +433,7 @@ class MovieExportSession(ExportSession):
         self.codec = codec
         self.zoom = zoom
         self.colors = _output_colors(colors, format)
+        self.video_colors = [P3, SRGB, _REC709, _REC2020].index(self.colors) if format == 'mov' else 0 # (as Video takes them)
         self.presents = True
 
     def writer_failed(self):
@@ -458,7 +459,7 @@ class MovieExportSession(ExportSession):
                 self.writer = Video.alloc()
                 codec = MovieExportSession.CODECS.index(self.codec)
                 bitrate = self.bitrate or MovieExportSession.auto_bitrate(size[0], size[1], self.fps)
-                self.writer.initWithFile_size_fps_bitrate_codec_srgb_(self.fname, size, self.fps, bitrate, codec, frame.ink is not None)
+                self.writer.initWithFile_size_fps_bitrate_codec_colors_(self.fname, size, self.fps, bitrate, codec, self.video_colors)
             else:
                 self.writer = AnimatedGif.alloc()
                 self.writer.initWithFile_size_fps_loop_(self.fname, size, self.fps, self.loop)

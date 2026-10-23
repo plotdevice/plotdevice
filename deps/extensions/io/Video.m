@@ -78,10 +78,10 @@
 @implementation Video
 @synthesize framesWritten, doneWriting;
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec{
-    return [self initWithFile:fileName size:aSize fps:fps bitrate:mbps codec:codec srgb:NO];
+    return [self initWithFile:fileName size:aSize fps:fps bitrate:mbps codec:codec colors:0];
 }
 
-- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec srgb:(BOOL)inSRGB{
+- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec colors:(NSUInteger)inColors{
 	if ((self = [super init])) {
 
         NSError *error = nil;
@@ -92,10 +92,15 @@
 
         videoWriter = [[AVAssetWriter alloc] initWithURL: [NSURL fileURLWithPath:fileName] fileType:AVFileTypeQuickTimeMovie error:&error];
         NSParameterAssert(videoWriter);
-        srgb = inSRGB;
+        colors = inColors;
         transferFunction = AVVideoTransferFunction_ITU_R_709_2;
-        if (@available(macOS 15.0, *)) transferFunction = AVVideoTransferFunction_IEC_sRGB;
+        if (colors < 2) {
+            if (@available(macOS 15.0, *)) transferFunction = AVVideoTransferFunction_IEC_sRGB;
+        }
         [transferFunction retain];
+        NSString *primaries = @[AVVideoColorPrimaries_P3_D65, AVVideoColorPrimaries_ITU_R_709_2, AVVideoColorPrimaries_ITU_R_709_2,
+                                AVVideoColorPrimaries_ITU_R_2020][colors];
+        NSString *matrix = colors == 3 ? AVVideoYCbCrMatrix_ITU_R_2020 : AVVideoYCbCrMatrix_ITU_R_709_2;
         NSArray *codecs = @[AVVideoCodecTypeHEVC, AVVideoCodecTypeH264, AVVideoCodecTypeAppleProRes4444];
         straightAlpha = codec == 2;
         NSMutableDictionary *videoSettings = [NSMutableDictionary dictionaryWithDictionary:@{
@@ -103,9 +108,9 @@
                                          AVVideoWidthKey: @(aSize.width),
                                          AVVideoHeightKey: [NSNumber numberWithInt:aSize.height],
                                          AVVideoColorPropertiesKey: @{
-                                            AVVideoColorPrimariesKey: srgb ? AVVideoColorPrimaries_ITU_R_709_2 : AVVideoColorPrimaries_P3_D65,
+                                            AVVideoColorPrimariesKey: primaries,
                                             AVVideoTransferFunctionKey: transferFunction,
-                                            AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2}
+                                            AVVideoYCbCrMatrixKey: matrix}
                                          }];
         if (codec != 2){
             videoSettings[AVVideoCompressionPropertiesKey] = @{
@@ -148,14 +153,15 @@
     CVPixelBufferRef buffer = NULL;
     CVReturn err = CVPixelBufferPoolCreatePixelBufferWithAuxAttributes(NULL, pool, (CFDictionaryRef)aux, &buffer);
     if (err != kCVReturnSuccess || !buffer) return nil;
-    CVBufferSetAttachment(buffer, kCVImageBufferColorPrimariesKey, srgb ? kCVImageBufferColorPrimaries_ITU_R_709_2 : kCVImageBufferColorPrimaries_P3_D65,
+    CFStringRef primaries = colors == 1 ? kCVImageBufferColorPrimaries_ITU_R_709_2 : kCVImageBufferColorPrimaries_P3_D65;
+    CVBufferSetAttachment(buffer, kCVImageBufferColorPrimariesKey, primaries, kCVAttachmentMode_ShouldPropagate);
+    CVBufferSetAttachment(buffer, kCVImageBufferYCbCrMatrixKey, colors == 3 ? kCVImageBufferYCbCrMatrix_ITU_R_2020 : kCVImageBufferYCbCrMatrix_ITU_R_709_2,
                           kCVAttachmentMode_ShouldPropagate);
-    CVBufferSetAttachment(buffer, kCVImageBufferYCbCrMatrixKey, kCVImageBufferYCbCrMatrix_ITU_R_709_2, kCVAttachmentMode_ShouldPropagate);
-    CVBufferSetAttachment(buffer, kCVImageBufferTransferFunctionKey, (CFStringRef)transferFunction, kCVAttachmentMode_ShouldPropagate);
+    CVBufferSetAttachment(buffer, kCVImageBufferTransferFunctionKey, kCVImageBufferTransferFunction_sRGB, kCVAttachmentMode_ShouldPropagate);
     CVBufferSetAttachment(buffer, kCVImageBufferAlphaChannelModeKey,
                           straightAlpha ? kCVImageBufferAlphaChannelMode_StraightAlpha : kCVImageBufferAlphaChannelMode_PremultipliedAlpha,
                           kCVAttachmentMode_ShouldPropagate);
-    CGColorSpaceRef space = srgb ? CGColorSpaceCreateWithName(kCGColorSpaceSRGB) : NULL;
+    CGColorSpaceRef space = colors == 1 ? CGColorSpaceCreateWithName(kCGColorSpaceSRGB) : NULL;
     PDSurface *surface = [PDSurface surfaceWithPixelBuffer:buffer space:space];
     CGColorSpaceRelease(space);
     CVPixelBufferRelease(buffer);

@@ -371,7 +371,7 @@ class DashboardController(NSObject):
 
 
 from ..context import RGB, CMYK
-from ..gfx.colors import P3, SRGB, _PRESS_LABELS, _FORMAT_COLORS, _FORMAT_DEFAULTS, _SYSTEM_PROFILES, _SYSTEM_RGB, \
+from ..gfx.colors import P3, SRGB, _PRESS_LABELS, _FORMAT_COLORS, _FORMAT_DEFAULTS, _SYSTEM_PROFILES, _SYSTEM_RGB, _REC709, _REC2020, \
                          _installed_presses
 from ..lib.io import MovieExportSession
 
@@ -646,16 +646,18 @@ class ExportSheet(NSObject):
                 next_item = popup.itemAtIndex_(idx + 1) if idx + 1 < popup.numberOfItems() else None
                 starts_cmyk = next_item is not None and next_item.representedObject() == CMYK
                 item.setHidden_((in_cmyk or starts_cmyk) and not holds_cmyk)
-            elif colors in (P3, SRGB):
-                item.setEnabled_(colors in allowed or 'rgb' in allowed)
-            elif colors in system:
-                item.setEnabled_('rgb' in allowed)
+            elif colors in (_REC709, _REC2020) and 'rgb' in allowed:
+                item.setHidden_(format not in ('png', 'tiff'))
+            elif colors in (P3, SRGB) or colors in system:
+                item.setHidden_(not (colors in allowed or 'rgb' in allowed))
             else:
                 item.setHidden_(not holds_cmyk)
         chosen = popup.selectedItem()
         if chosen is None or chosen.isHidden() or not chosen.isEnabled():
             default = _FORMAT_DEFAULTS.get(format, P3)
             popup.selectItemAtIndex_(popup.indexOfItemWithRepresentedObject_(default))
+        choices = [item for item in popup.itemArray() if item.representedObject() is not None and not item.isHidden()]
+        popup.setEnabled_(len(choices) > 1)
 
     @IBAction
     def imageFormatChanged_(self, sender):
