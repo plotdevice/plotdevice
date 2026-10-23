@@ -9,13 +9,13 @@ from objc import super
 
 from .lib.cocoa import *
 from .lib import pathmatics
-from .lib.io import MovieExportSession, pdf_update
+from .lib.io import MovieExportSession, Distiller, HEVC
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
 from .gfx.geometry import Dimension, parse_coords
 from .gfx.typography import Layout
 from .gfx.effects import Frob
 from .gfx import *
-from .gfx.colors import _named, _output_colors, _output_space, _output_mode, _output_intent, _INKS
+from .gfx.colors import Press, _named, _output_colors, _output_space, _output_mode, _INKS
 from . import gfx, lib, util, Halted, DeviceError
 
 __all__ = ('Context', 'Canvas')
@@ -1533,7 +1533,7 @@ class Context(object):
         else:
             self.canvas.clear(*grobs)
 
-    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=None, codec='hevc', **kwargs):
+    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=None, codec=HEVC, *, colors=None, cmyk=None):
         """Write single images or manage batch exports for animations.
 
         To write the canvas's current contents to a file, simply call export("~/somefile.png")
@@ -1559,9 +1559,11 @@ class Context(object):
         is `gif`, an image will be exported unless an `fps` or `loop` argument (of any value) is
         also provided, in which case an animated gif will be created. Otherwise all arguments aside
         from the fname are optional and default to:
-            fps: 30      (relevant for both gif and mov exports)
-            loop: False  (set to True to loop forever or an integer for a fixed number of repetitions)
+            fps: 30       (relevant for both gif and mov exports)
+            loop: False   (set to True to loop forever or an integer for a fixed number of repetitions)
             bitrate: None (in megabits per second; by default, picked from the canvas size)
+            codec: HEVC   (or H264 for broader compatibility / PRORES for post-export video editing)
+            colors: P3    (or SRGB for standard gamut / SWOP, GRACOL, etc. for CMYK profiles / path to an .icc file)
 
         Note that the `loop` argument only applies to animated gifs, and `bitrate` and `codec` to `mov`
         files (a ProRes movie keeps the canvas's transparency and has a fixed quality rather than a bitrate).
@@ -1579,26 +1581,23 @@ class Context(object):
             badcodec = 'Unknown video codec "%s" (should be one of %s)' % (codec, ', '.join(MovieExportSession.CODECS))
             raise DeviceError(badcodec)
 
-        unknown = [arg for arg in kwargs if arg not in ('colors', 'cmyk')]
-        if unknown:
-            badarg = "Unknown export() argument%s '%s'" % ('' if len(unknown)==1 else 's', "', '".join(unknown))
-            raise DeviceError(badarg)
-        if 'cmyk' in kwargs:
-            if 'colors' in kwargs:
-                both = "export() takes colors= or the older cmyk=, not both"
+        # pick output color space via fallback cascade:
+        # `export(colors)` > `--colors` switch > `outputmode()` > default RGB for selected format
+        if cmyk is not None:
+            if colors is not None:
+                both = "export() with `colors` or `cmyk`, but not both"
                 raise DeviceError(both)
-            warnings.warn("export()'s cmyk= is deprecated: use colors=CMYK instead (or leave it out for RGB)", FutureWarning, stacklevel=2)
-            colors = _output_colors(CMYK if kwargs['cmyk'] else None, format)
-        elif 'colors' in kwargs:
-            colors = _output_colors(kwargs['colors'], format)
+            warnings.warn("export()'s cmyk= is deprecated: use colors=CMYK instead (or omit it for RGB)", FutureWarning, stacklevel=2)
+            colors = _output_colors(CMYK if cmyk else None, format)
+        elif colors is not None:
+            colors = _output_colors(colors, format)
         else:
-            colors = None
             for inherited in (self._cli_colors, CMYK if self._outputmode == CMYK else None):
                 if inherited is not None and colors is None:
                     try:
                         colors = _output_colors(inherited, format)
                     except DeviceError:
-                        pass # (colors the format can't hold)
+                        pass # the format doesn't support it
             if colors is None:
                 colors = _output_colors(None, format)
 
@@ -1947,10 +1946,11 @@ class FrameBounds(object):
         return box
 
 class Frame(object):
+    """A committed copy of a Canvas"""
 
     def __init__(self, canvas, colors=None, format=None, proofed=False, vision=None):
-        self.colors = colors
-        self.press = colors if _output_mode(colors) == CMYK and colors != CMYK else None
+        self.colors = colors # either from export(colors=) or None for the working space
+        self.press = colors if colors in Press.named else None
         if colors is None:
             self.outputmode = canvas._ctx._outputmode if canvas._ctx else RGB
         else:
@@ -1960,6 +1960,7 @@ class Frame(object):
         else:
             self.ink = None if colors in (None, P3, CMYK) else colors
 
+        # texts resolve their colors while committing
         token = gfx._committing.set(self)
         try:
             self.grobs = self._committed(canvas._grobs)
@@ -2042,24 +2043,29 @@ class Frame(object):
         return CGBitmapContextCreateImage(bitmapContext)
 
     def _render_to_surface(self, surface, scale, cancelled=None, origin=None, size=None):
+        """Rasterize into a PDSurface at `scale` pixels per point"""
         w, h = size or (surface.width(), surface.height())
         H = surface.height()
         surface.lock()
         port = surface.context()
         CGContextSaveGState(port)
         try:
+            # the surface's top-left w x h pixels
             CGContextClipToRect(port, ((0, H - h), (w, h)))
             CGContextClearRect(port, ((0, H - h), (w, h)))
             offset = within = None
             if origin is not None:
                 offset = (-origin[0], origin[1] + H)
                 within = (origin[0] / scale, origin[1] / scale, w / scale, h / scale)
-            proof = self.proof or (_output_space(self.press) if self.press else None)
+
+            # convert colors if a Proof profile has been selected
+            proof = self.proof
             if self.vision is not None:
                 proof = CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3)
             if proof is None:
                 self._render_to_context(port, scale, cancelled, offset, within)
             else:
+                # render via a bitmap in the proof space
                 cmyk = CGColorSpaceGetModel(proof) == kCGColorSpaceModelCMYK
                 bitmap = CGBitmapContextCreate(None, w, h, 8, w * 4, proof, kCGImageAlphaNone if cmyk else kCGImageAlphaPremultipliedLast)
                 CGContextSetRenderingIntent(bitmap, kCGRenderingIntentRelativeColorimetric)
@@ -2067,7 +2073,7 @@ class Frame(object):
                 self._render_to_context(bitmap, scale, cancelled, (x, y - (H - h)), within)
                 image = CGBitmapContextCreateImage(bitmap)
                 if self.vision is not None:
-                    image = CGImageCreateCopyWithColorSpace(image, self.vision) # (its colors as the simulation shows them)
+                    image = CGImageCreateCopyWithColorSpace(image, self.vision)
                 CGContextSetRenderingIntent(port, kCGRenderingIntentRelativeColorimetric)
                 CGContextDrawImage(port, ((0, H - h), (w, h)), image)
             CGContextFlush(port)
@@ -2103,9 +2109,10 @@ class Frame(object):
         return self._encode(format, zoom, title=title)[0]
 
     def _encode(self, format, zoom=1.0, cancelled=None, title=None):
+        """Render and encode as `format`, returning the data and surface"""
         if format == 'pdf':
             w, h = self.pagesize
-            cgData = NSMutableData.alloc().init() # (owned, as the surface)
+            cgData = NSMutableData.alloc().init() # owned, not autoreleased
             dataConsumer = CGDataConsumerCreateWithCFData(cgData)
             pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w*zoom, h*zoom), None)
             CGPDFContextBeginPage(pdfContext, None)
@@ -2114,8 +2121,8 @@ class Frame(object):
             CGPDFContextClose(pdfContext)
             pdfContext = None
             if self._blend_space is not None:
-                intent = _output_intent(self.press) if self.press else None # (added by the patcher, see colors)
-                update = pdf_update(bytes(cgData), self._blend_space, intent, title)
+                intent = Press.named[self.press].intent if self.press else None
+                update = Distiller(bytes(cgData), self._blend_space, intent=intent, title=title).endmatter()
                 cgData.appendBytes_length_(update, len(update))
             return cgData, None
         elif format == 'eps':
@@ -2133,6 +2140,7 @@ class Frame(object):
             size = Size(*[int(dim*zoom) for dim in self.pagesize])
             surface = None
             if format in ('jpeg', 'jpg', 'tiff') and self.outputmode == CMYK and self.colors is not None:
+                # a bitmap in the press's space
                 colorspace, opts = _output_space(self.press) if self.press else CGColorSpaceCreateDeviceCMYK(), kCGImageAlphaNone
                 bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
                 if self.press:
@@ -2140,6 +2148,7 @@ class Frame(object):
                 self._render_to_context(bitmapContext, zoom, cancelled)
                 cgImage = CGBitmapContextCreateImage(bitmapContext)
             else:
+                # a surface the window can display
                 surface = objc.lookUpClass('PDSurface').alloc().initWithWidth_height_space_(size.width, size.height, self._surface_space)
                 self._render_to_surface(surface, zoom, cancelled)
                 surface.lock()
@@ -2148,11 +2157,12 @@ class Frame(object):
             if cancelled is not None and cancelled():
                 return None, None
 
-            cgData = NSMutableData.alloc().init() # (owned, as the surface)
+            cgData = NSMutableData.alloc().init() # owned, not autoreleased
             cgDest = CGImageDestinationCreateWithData(cgData, cgTypes[format], 1, None)
             cgProperies = {kCGImagePropertyDPIWidth: 72*zoom, kCGImagePropertyDPIHeight: 72*zoom}
             if format in ('jpg', 'jpeg'):
                 cgProperies[kCGImageDestinationLossyCompressionQuality] = 1.0
+            # ImageIO keeps the properties forever, so hand it a native dict
             CGImageDestinationAddImage(cgDest, cgImage, NSDictionary.dictionaryWithDictionary_(cgProperies))
             CGImageDestinationFinalize(cgDest)
             return cgData, surface

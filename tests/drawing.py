@@ -476,6 +476,25 @@ class DrawingTests(PlotDeviceTestCase):
         with fill(image('tests/_in/macpaint-thatch.png')):
             rect(80,20,50,50)
 
+    def test_stroke_takes_images_and_paths(self):
+        # stroke() makes a pattern from an image or a path, as fill() does
+        from plotdevice import _ctx
+        from Quartz import CGDataProviderCopyData, CGImageGetDataProvider
+        def drawn(*args):
+            clear(all)
+            size(100, 100)
+            nofill()
+            stroke(*args)
+            strokewidth(20)
+            rect(20, 20, 60, 60)
+            frame = _ctx.canvas.commit()
+            pixels = memoryview(CGDataProviderCopyData(CGImageGetDataProvider(frame._render_to_cgimage(1.0, 1.0)))).tobytes()
+            return len(frame.grobs), pixels
+        path = 'tests/_in/macpaint-thatch.png'
+        made = drawn(Pattern(path))
+        self.assertEqual(drawn(path), made)
+        self.assertEqual(drawn(image(path)), made) # the image isn't also drawn on its own
+
     @reference('drawing/background.png')
     def test_background(self):
         # ref/Canvas/commands/background()

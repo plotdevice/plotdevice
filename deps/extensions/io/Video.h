@@ -23,19 +23,18 @@
     NSInteger framesWritten;
     BOOL doneWriting;
     BOOL reported;
-    NSString *transferFunction; // the movie's (and its buffers')
-    BOOL straightAlpha;         // whether the movie stores alpha unpremultiplied (ProRes)
-    NSUInteger colors;          // 0: display p3, 1: srgb, 2: Rec.709, 3: Rec.2020 (see initWithFile:...colors:)
+    BOOL straightAlpha; // ProRes
+    NSUInteger colors;  // p3, srgb, Rec.709, Rec.2020
 }
 @property NSInteger framesWritten;
 @property BOOL doneWriting;
-@property (readonly) BOOL failed; // whether the writer has given up (frames are no longer appended)
+@property (readonly) BOOL failed; // the writer gave up
 
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec;
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec colors:(NSUInteger)inColors;
-- (PDSurface *)nextSurface; // one over a free buffer of the encoder's, or nil while it's using them all
+- (PDSurface *)nextSurface; // nil while all buffers are busy
 - (void)addSurface:(PDSurface *)surface;
-- (BOOL)addUnpremultiplied:(PDSurface *)rendered; // copied into a free buffer with straight alpha (NO while there's none)
+- (BOOL)addUnpremultiplied:(PDSurface *)rendered; // NO while no buffer is free
 - (void)closeFile;
 
 // internal callbacks

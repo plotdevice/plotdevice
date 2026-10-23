@@ -364,24 +364,19 @@ class DashboardController(NSObject):
 
 
 from ..context import RGB, CMYK
-from ..gfx.colors import P3, SRGB, _PRESS_LABELS, _FORMAT_COLORS, _FORMAT_DEFAULTS, _SYSTEM_PROFILES, _SYSTEM_RGB, _REC709, _REC2020, \
-                         _installed_presses
-from ..lib.io import MovieExportSession
+from ..gfx.colors import P3, SRGB, GRACOL, GRACOL_UNCOATED, SWOP, FOGRA39, FOGRA47, _FORMAT_COLORS, _FORMAT_DEFAULTS, \
+                         _SYSTEM_PROFILES, _REC709, _REC2020, _installed_presses
+from ..lib.io import MovieExportSession, HEVC, H264, PRORES
 
 # include menu sections headers on macOS 14+
 SECTION_HEADERS = hasattr(NSMenuItem, 'sectionHeaderWithTitle_')
 
-def fill_sections(menu, sections, action=None):
-    menu.removeAllItems()
-    for header, items in sections:
-        if header and SECTION_HEADERS:
-            menu.addItem_(NSMenuItem.sectionHeaderWithTitle_(header))
-        elif menu.numberOfItems():
-            menu.addItem_(NSMenuItem.separatorItem())
-        for title, value in items:
-            item = menu.addItemWithTitle_action_keyEquivalent_(title, None, '')
-            item.setRepresentedObject_(value)
-            item.setAction_(action)
+_PRESS_LABELS = {GRACOL: 'GRACoL 2013 Coated (CRPC6)', GRACOL_UNCOATED: 'GRACoL 2013 Uncoated (CRPC3)', SWOP: 'SWOP 2013 (CRPC5)',
+                 FOGRA39: 'ISO Coated v2 (FOGRA39)', FOGRA47: 'PSO Uncoated (FOGRA47)'}
+
+# system rgb spaces offered beside P3 and sRGB
+_SYSTEM_RGB = {'AdobeRGB1998.icc': 'Adobe RGB (1998)', 'ROMM RGB.icc': 'ROMM RGB (ProPhoto)', 'ITU-709.icc': 'Rec. 709',
+               'ITU-2020.icc': 'Rec. 2020'}
 
 def system_rgb():
     """The system rgb spaces present, as (label, path) pairs"""
@@ -389,7 +384,8 @@ def system_rgb():
             if os.path.exists(os.path.join(_SYSTEM_PROFILES, name))]
 
 class ProofColorsMenu(NSObject):
-    PREVIEW = 0.1
+    """View > Proof Colors, previewing the highlighted item"""
+    PREVIEW = 0.1 # secs before a highlight previews
     _timer = None
 
     @objc.python_method
@@ -434,7 +430,15 @@ class ProofColorsMenu(NSObject):
         cmyk = bundled + installed
         vision = [(name.capitalize(), ('vision', name)) for name in ('protanopia', 'protanomaly', 'deuteranopia', 'deuteranomaly',
                                                                      'tritanopia', 'tritanomaly')]
-        fill_sections(menu, [('RGB', rgb), ('CMYK', cmyk), ('Accessibility', vision)], 'proofColors:')
+        menu.removeAllItems()
+        for header, items in [('RGB', rgb), ('CMYK', cmyk), ('Accessibility', vision)]:
+            if SECTION_HEADERS:
+                menu.addItem_(NSMenuItem.sectionHeaderWithTitle_(header))
+            elif menu.numberOfItems():
+                menu.addItem_(NSMenuItem.separatorItem())
+            for title, value in items:
+                item = menu.addItemWithTitle_action_keyEquivalent_(title, 'proofColors:', '')
+                item.setRepresentedObject_(value)
 
 class ExportSheet(NSObject):
     # the script whose doExportAsImage and doExportAsMovie methods will be called
@@ -460,11 +464,11 @@ class ExportSheet(NSObject):
 
     def awakeFromNib(self):
         self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'heic', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'mov', 'mov', 'gif'))
-        self.codecs = ('hevc', 'h264', 'prores', None) # the movie formats' codecs
-        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=None, loop=0, codec='hevc', zoom=1.0, colors=P3)
+        self.codecs = (HEVC, H264, PRORES, None)
+        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=None, loop=0, codec=HEVC, zoom=1.0, colors=P3)
         self.image = dict(format='pdf', zoom=1.0, first=1, last=1, colors=P3, single=True)
         self.last = None
-        self.canvasSize = None # (w, h) the script last ran with, to preview the automatic bitrate
+        self.canvasSize = None # size of last run (for bitrate suggestion)
         self.movieFps.setDelegate_(self)
 
     @objc.python_method
@@ -494,7 +498,7 @@ class ExportSheet(NSObject):
             self.movieFormat.selectItemAtIndex_(format_idx)
             self.movieLoop.setState_(NSOnState if should_loop else NSOffState)
             self.movieLoop.setEnabled_(format=='gif')
-            self.movieBitrate.setEnabled_(self.movie['codec'] in ('hevc', 'h264'))
+            self.movieBitrate.setEnabled_(self.movie['codec'] in (HEVC, H264))
             self.movieBitrate.selectItemWithTag_(self.movie['bitrate'] or 0)
             self.fillColors(self.movieColors, self.movie['colors'])
             self.canvasSize = None
@@ -722,5 +726,5 @@ class ExportSheet(NSObject):
         is_gif = format=='gif'
         self.movieLoop.setState_(NSOnState if is_gif else NSOffState)
         self.movieLoop.setEnabled_(is_gif)
-        self.movieBitrate.setEnabled_(self.codecs[sender.indexOfSelectedItem()] in ('hevc', 'h264'))
+        self.movieBitrate.setEnabled_(self.codecs[sender.indexOfSelectedItem()] in (HEVC, H264))
         self.updateColors(self.movieColors)

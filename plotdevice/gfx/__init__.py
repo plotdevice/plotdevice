@@ -161,12 +161,13 @@ def _outputmode():
     return _ctx._outputmode if frame is None else frame.outputmode
 
 def _outputpress():
+    """The press colors resolve for, or None for Generic CMYK"""
     frame = _frame.get() or _committing.get()
     if frame is not None:
         return frame.press
     if _ctx._press:
         return _ctx._press
-    return _ctx._cli_colors if _ctx._cli_colors in colors._PRESS_SPACES else None
+    return _ctx._cli_colors if _ctx._cli_colors in colors.Press.named else None
 
 def _inkmode():
     """The mode to make colors' CGColors & NSColors for"""

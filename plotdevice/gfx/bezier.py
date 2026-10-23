@@ -409,16 +409,19 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         port = _cg_port()
         CGContextSaveGState(port)
         try:
+            # modify the context's CTM to reflect our final resting place
             if tuple(self.transform.matrix) != IDENTITY:
                 self._screen_transform.concat()
 
             # apply blend/alpha/shadow (and any associated transparency layers)
             with self.effects.applied(self):
-                target = _cg_port() # (a shadow may have the drawing go to a bitmap of its own)
+                # effects (like shadows) may shift the active context, so re-fetch
+                target = _cg_port()
+
                 # prepare to stroke, fill, or both
                 ink = None
                 path = self._nsBezierPath
-                filled = isinstance(self._fillcolor, Color)
+                filled = isinstance(self._fillcolor, (Color, Pattern))
                 lone_segment = filled and path.elementCount() == 2 and path.elementAtIndex_(1) == NSLineToBezierPathElement
                 if filled and not lone_segment:
                     ink = kCGPathFill
@@ -434,8 +437,8 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                     if self.dash:
                         CGContextSetLineDash(target, 0, self.dash, len(self.dash))
 
-                # use cocoa for patterns/gradients
-                if isinstance(self._fillcolor, (Gradient, Pattern)):
+                # use cocoa for gradients
+                if isinstance(self._fillcolor, Gradient):
                     self._fillcolor.fill(self)
 
                 # use cg for stroke & fill
@@ -444,6 +447,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                     CGContextAddPath(target, self.cgPath)
                     CGContextDrawPath(target, ink)
 
+                # fill the stroke's outline with its gradient
                 if gradient_stroke:
                     CGContextSaveGState(target)
                     CGContextBeginPath(target)

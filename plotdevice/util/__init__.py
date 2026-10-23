@@ -312,8 +312,8 @@ def autorelease():
 
 ### module data dir ###
 
-def rsrc_path(resource=None):
-    """Return absolute path of the rsrc directory (or a file within it)"""
+def rsrc_path(resource):
+    """Return absolute path of a file within the rsrc directory"""
     mod_root = abspath(dirname(dirname(__file__)))
     app_root = NSBundle.mainBundle().bundlePath()
     mod_rsrc = join(mod_root, 'rsrc')
@@ -324,13 +324,8 @@ def rsrc_path(resource=None):
     if '.app/Contents/' in mod_root:
         roots.insert(1, mod_root.split('.app/Contents/')[0] + '.app/Contents/Resources')
 
-    for rsrc_root in roots:
-        if exists("%s/colors.json" % rsrc_root): # check for a known rsrc file
-            break
-    else:
-        raise RuntimeError("Couldn't locate resources directory.")
-
-    if resource:
-        found = [join(root, resource) for root in [rsrc_root] + roots if exists(join(root, resource))]
-        return found[0] if found else join(rsrc_root, resource)
-    return rsrc_root
+    for root in roots:
+        path = join(root, resource)
+        if exists(path):
+            return path
+    return join(mod_rsrc, resource) # so opening it reports the module's path

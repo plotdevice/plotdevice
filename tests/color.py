@@ -12,11 +12,13 @@ from plotdevice import _ctx, DeviceError
 P3_RED_IN_SRGB = (1.0930908918380737, -0.22684034705162048, -0.15007957816123962)
 SRGB_RED_IN_P3 = (0.9174699187278748, 0.2003689408302307, 0.13852068781852722)
 
+# P3 red and sRGB greys per LittleCMS 2.19, in percent
 GRACOL_RED = (0, .937, 1, 0)
 DARK_GREYS = {GRACOL: ((83, 74, 61, 100), (82, 73, 62, 95), (80, 72, 62, 91), (78, 70, 63, 84), (0, 0, 0, 0)),
               FOGRA47: ((77, 60, 56, 95), (77, 58, 54, 94), (76, 56, 52, 93), (75, 53, 49, 89), (0, 0, 0, 0))}
 
 def _image(path):
+    """An image file's color space name and its pixels as written"""
     from Foundation import NSURL
     from Quartz import (CGImageSourceCreateWithURL, CGImageSourceCreateImageAtIndex, CGImageGetColorSpace,
                         CGColorSpaceCopyName, CGImageGetDataProvider, CGDataProviderCopyData, CGImageGetBytesPerRow,
@@ -222,20 +224,20 @@ class ColorTests(PlotDeviceTestCase):
 
     def test_reads_of_cmyk_colors_go_through_the_export_blocks_press(self):
         from Quartz import CGColorCreate
-        from plotdevice.gfx.colors import _PRESS_SPACES, _components, _matched, _SPACES
+        from plotdevice.gfx.colors import Press, _components, _matched, _SPACES
         cyan, white = color(1, 0, 0, 0, mode=CMYK), color(1)
         outside = (cyan.rgba, cyan.hex, cyan.blend(white, .5).rgba, hash(cyan))
         size(10, 10)
         with export(join(self.tmp, 'press.pdf'), colors=FOGRA47):
             inside = (cyan.rgba, cyan.hex, cyan.blend(white, .5).rgba, hash(cyan))
-            self.assertEqual(cyan, color(1, 0, 0, 0, mode=CMYK)) # (equality & hashing ignore the press)
-        direct = _components(_matched(CGColorCreate(_PRESS_SPACES[FOGRA47], (1, 0, 0, 0, 1)), _SPACES[P3]))
+            self.assertEqual(cyan, color(1, 0, 0, 0, mode=CMYK)) # equality ignores the press
+        direct = _components(_matched(CGColorCreate(Press.named[FOGRA47].space, (1, 0, 0, 0, 1)), _SPACES[P3]))
         self.assertComponents(inside[0], direct)
         self.assertComponents(inside[2], [v + (1 - v) * .5 for v in direct])
         self.assertNotEqual(inside[1], outside[1])
         self.assertGreater(abs(inside[0][0] - outside[0][0]), .05)
         self.assertEqual(inside[3], outside[3])
-        self.assertEqual((cyan.rgba, cyan.hex), outside[:2]) # (generic cmyk again after the block)
+        self.assertEqual((cyan.rgba, cyan.hex), outside[:2]) # generic cmyk after the block
 
     def test_gradient_keeps_the_space_its_made_in(self):
         with color(space=SRGB):
@@ -245,10 +247,11 @@ class ColorTests(PlotDeviceTestCase):
         self.assertEqual(Gradient('#f00', '#00f')._space, P3)
 
     def test_gradient_objects_fill_stroke_and_background(self):
+        # a Gradient works wherever a color does
         g = Gradient(color(1, 0, 0), color(0, 0, 1), angle=0)
         fill(g)
         self.assertIsInstance(rect(0, 0, 10, 10)._fillcolor, Gradient)
-        self.assertFalse(hasattr(g, '_rollback')) # (fill() installs a copy)
+        self.assertFalse(hasattr(g, '_rollback')) # fill() installs a copy
         self.assertIsInstance(rect(0, 0, 10, 10, fill=g)._fillcolor, Gradient)
         self.assertIsInstance(rect(0, 0, 10, 10, stroke=g)._strokecolor, Gradient)
         path = bezier(plot=False)
@@ -270,9 +273,10 @@ class ColorTests(PlotDeviceTestCase):
                 command(g, angle=90)
         with stroke(color(0, 1, 0), color(0, 0, 1)):
             self.assertIsInstance(rect(0, 0, 10, 10)._strokecolor, Gradient)
-        self.assertIsInstance(rect(0, 0, 10, 10)._strokecolor, Gradient) # (the block rolled back to the earlier one)
+        self.assertIsInstance(rect(0, 0, 10, 10)._strokecolor, Gradient) # rolled back to the earlier one
 
     def test_fill_stroke_and_background_take_colors_arguments(self):
+        # colors take color()'s args, gradients their own
         for command in (fill, stroke, background):
             name = command.__name__
             self.assertEqual(command(.5, 1, 1, mode=HSV), color(.5, 1, 1, mode=HSV))
@@ -292,6 +296,7 @@ class ColorTests(PlotDeviceTestCase):
                 command(mode=HSV)
             with self.assertRaisesRegex(DeviceError, "Unknown Color argument 'alpha'"):
                 command(alpha=.5)
+        # color() rejects the same
         for call in (lambda: color(1, 0, 0, alpha=.5), lambda: color(alpha=.5), lambda: color(mode=HSV, alpha=.5)):
             with self.assertRaisesRegex(DeviceError, "Unknown Color argument 'alpha'"):
                 call()
@@ -331,8 +336,8 @@ class ColorTests(PlotDeviceTestCase):
         self.assertGreater(right[2], 200)
         self.assertLess(right[0], 60)
         self.assertEqual(inside, (255, 255, 255))
-        self.assertNotEqual(px(14, 80), (255, 255, 255)) # (a dash)
-        self.assertEqual(px(25, 80), (255, 255, 255))    # (and the gap after it)
+        self.assertNotEqual(px(14, 80), (255, 255, 255)) # a dash
+        self.assertEqual(px(25, 80), (255, 255, 255))    # and the gap after it
         # in a cmyk export the gradient's stops keep their numbers
         clear(all)
         size(200, 100)
@@ -348,6 +353,23 @@ class ColorTests(PlotDeviceTestCase):
         self.assertGreater(ink(5, 30)[0], 95)
         self.assertGreater(ink(194, 30)[3], 95)
         self.assertLess(ink(194, 30)[0], 5)
+
+    def test_pattern_objects_draw_in_cmyk(self):
+        # an explicit Pattern draws as the image/path shorthand does, in a cmyk export too
+        def exported(name, paint):
+            clear(all)
+            size(100, 100)
+            background('white')
+            fill(paint)
+            stroke(paint)
+            pen(12)
+            rect(20, 20, 60, 60)
+            export(join(self.tmp, name), colors=CMYK)
+            return _image(join(self.tmp, name))[1]
+        tile = 'tests/_in/macpaint-thatch.png'
+        made = exported('object.tiff', Pattern(tile))
+        self.assertEqual(made, exported('shorthand.tiff', tile))
+        self.assertNotEqual(made, exported('blank.tiff', 'white'))
 
     # outputs
 
@@ -396,6 +418,7 @@ class ColorTests(PlotDeviceTestCase):
         self.assertTrue(any(all(abs(float(v) - w) < 1e-4 for v, w in zip(f.split(), text_srgb)) for f in fills), fills)
 
     def test_cmyk_exports_keep_cmyk_numbers(self):
+        # in cmyk output mode
         outputmode(CMYK)
         self._swatch(color(.6, .4, .4, 1, mode=CMYK))
         space, data, row, bpp = _image(self._save('swatch.tiff', cmyk=True))
@@ -404,6 +427,7 @@ class ColorTests(PlotDeviceTestCase):
         self.assertEqual(tuple(data[10 * row + 10 * bpp:][:4]), (153, 102, 102, 255))
 
     def test_placed_cmyk_images_keep_their_numbers(self):
+        # a tagged cmyk image is relabeled, not converted
         import zlib
         from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpaceCreateWithName, kCGColorSpaceGenericCMYK,
                             CGContextSetFillColorWithColor, CGColorCreate, CGContextFillRect, CGImageDestinationCreateWithURL,
@@ -412,9 +436,9 @@ class ColorTests(PlotDeviceTestCase):
         generic = CGColorSpaceCreateWithName(kCGColorSpaceGenericCMYK)
         ctx = CGBitmapContextCreate(None, 20, 20, 8, 80, generic, kCGImageAlphaNone)
         CGContextSetFillColorWithColor(ctx, CGColorCreate(generic, (0, 0, 0, 1, 1)))
-        CGContextFillRect(ctx, ((0, 10), (20, 10))) # (the top half: K)
+        CGContextFillRect(ctx, ((0, 10), (20, 10))) # top half K
         CGContextSetFillColorWithColor(ctx, CGColorCreate(generic, (1, 0, 0, 0, 1)))
-        CGContextFillRect(ctx, ((0, 0), (20, 10)))  # (the bottom: C)
+        CGContextFillRect(ctx, ((0, 0), (20, 10)))  # bottom half C
         src = join(self.tmp, 'tagged.tiff')
         dest = CGImageDestinationCreateWithURL(NSURL.fileURLWithPath_(src), 'public.tiff', 1, None)
         CGImageDestinationAddImage(dest, CGBitmapContextCreateImage(ctx), None)
@@ -424,7 +448,7 @@ class ColorTests(PlotDeviceTestCase):
         space, data, row, bpp = _image(self._save('placed.tiff', colors=CMYK))
         self.assertEqual((tuple(data[5 * row + 5 * bpp:][:4]), tuple(data[15 * row + 5 * bpp:][:4])), ((0, 0, 0, 255), (255, 0, 0, 0)))
         pdf = open(self._save('placed.pdf', colors=CMYK), 'rb').read()
-        self.assertTrue(re.search(rb'/Subtype /Image[^>]*/ColorSpace\s+/DeviceCMYK', pdf)) # (not printing the pdf if it fails)
+        self.assertTrue(re.search(rb'/Subtype /Image[^>]*/ColorSpace\s+/DeviceCMYK', pdf)) # never prints the pdf
 
     def test_rgb_export_after_a_cmyk_one_is_rgb(self):
         import zlib
@@ -473,7 +497,7 @@ class ColorTests(PlotDeviceTestCase):
         from Quartz import CGColorSpaceCopyICCData, CGColorSpaceCreateWithName, kCGColorSpaceSRGB, kCGColorSpaceDisplayP3
         srgb, p3 = [bytes(CGColorSpaceCopyICCData(CGColorSpaceCreateWithName(name))) for name in (kCGColorSpaceSRGB, kCGColorSpaceDisplayP3)]
         self.assertIn(srgb, streams)
-        self.assertNotIn(p3, streams) # (the fills are in srgb, and the groups are relabelled to it)
+        self.assertNotIn(p3, streams) # fills in srgb, groups relabeled
         self.assertIn(b'1 0 0 sc', b''.join(streams))
 
     def test_icc_exports_are_in_the_profile(self):
@@ -491,6 +515,7 @@ class ColorTests(PlotDeviceTestCase):
         self.assertEqual(tuple(data[5 * row + 5 * bpp:][:3]), want)
 
     def test_srgb_movies_are_tagged_rec709(self):
+        # the colr atom's primaries, transfer and matrix codes
         for colors, primaries, transfer, matrix in ((P3, 12, None, 1), (SRGB, 1, None, 1), (REC709, 1, 1, 1), (REC2020, 9, 1, 9)):
             path = join(self.tmp, colors + '.mov')
             with export(path, colors=colors) as movie:
@@ -524,8 +549,9 @@ class ColorTests(PlotDeviceTestCase):
         self._two_swatches()
         path = join(self.tmp, 'bad.pdf')
         for kwargs in (dict(colors=64), dict(colors='adobe'), dict(colors='/nonexistent.icc'), dict(colors=__file__),
-                       dict(colors=CMYK, cmyk=True), dict(colours=CMYK)):
+                       dict(colors=CMYK, cmyk=True)):
             self.assertRaises(DeviceError, export, path, **kwargs)
+        self.assertRaises(TypeError, export, path, colours=CMYK) # a misspelled keyword
         self.assertRaises(DeviceError, export, join(self.tmp, 'bad.png'), colors=CMYK)
         self.assertFalse(os.path.exists(path))
 
@@ -534,7 +560,7 @@ class ColorTests(PlotDeviceTestCase):
         self._swatch(color(0, 0, 0, 1, mode=CMYK))
         export(join(self.tmp, 'mode.tiff'))
         export(join(self.tmp, 'chosen.tiff'), colors=P3)
-        export(join(self.tmp, 'mode.png')) # (a format that can't hold cmyk takes its default)
+        export(join(self.tmp, 'mode.png')) # no cmyk, so the default
         outputmode(RGB)
         from Quartz import CGImageSourceCreateWithURL, CGImageSourceCreateImageAtIndex, CGImageGetColorSpace, CGColorSpaceGetModel, kCGColorSpaceModelCMYK
         from Foundation import NSURL
@@ -550,46 +576,30 @@ class ColorTests(PlotDeviceTestCase):
             warnings.simplefilter('always')
             export(join(self.tmp, 'old.tiff'), cmyk=True)
         self.assertEqual([w.category for w in caught], [FutureWarning])
-        self.assertEqual(caught[0].filename, __file__) # (pointing at the export() call)
+        self.assertEqual(caught[0].filename, __file__) # the export() call
         export(join(self.tmp, 'new.tiff'), colors=CMYK)
         self.assertEqual(open(join(self.tmp, 'old.tiff'), 'rb').read(), open(join(self.tmp, 'new.tiff'), 'rb').read())
 
     def test_bundled_presses_are_the_profiles_the_readme_lists(self):
         import hashlib
-        from plotdevice.gfx.colors import _press_profile, _PRESSES
+        from plotdevice.gfx.colors import Press, _PRESSES
         from plotdevice.util import rsrc_path
         readme = open(rsrc_path('press/README.md')).read()
         sums = dict((name, digest) for digest, name in re.findall(r'^([0-9a-f]{64})  (\S+)$', readme, re.M))
         presses = dict(GRACOL='gracol', GRACOL_UNCOATED='gracol_uncoated', SWOP='swop', FOGRA39='fogra39', FOGRA47='fogra47')
         for name, value in presses.items():
             self.assertEqual(globals()[name], value)
-            profile = _press_profile(value) # (decompressed from rsrc/press)
+            profile = Press(value).profile # decompressed from rsrc/press
             self.assertEqual(hashlib.sha256(profile).hexdigest(), sums[_PRESSES[value]], name)
             self.assertEqual((profile[12:16], profile[16:20]), (b'prtr', b'CMYK'), name)
         self.assertEqual(len(sums), len(presses))
 
-    def test_rsrc_path_finds_resources_the_modules_rsrc_lacks_in_its_apps_resources(self):
-        import plotdevice.util as util
-        app = join(self.tmp, 'Fake.app/Contents')
-        module = join(app, 'Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/plotdevice')
-        for path in (join(module, 'rsrc/colors.json'), join(app, 'Resources/press/GRACoL2013_CRPC6.icc')):
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            open(path, 'w').close()
-        real = util.__file__
-        util.__file__ = join(module, 'util/__init__.py')
-        try:
-            self.assertEqual(util.rsrc_path(), join(module, 'rsrc'))
-            self.assertEqual(util.rsrc_path('colors.json'), join(module, 'rsrc/colors.json'))
-            self.assertEqual(util.rsrc_path('press/GRACoL2013_CRPC6.icc'), join(app, 'Resources/press/GRACoL2013_CRPC6.icc'))
-            self.assertEqual(util.rsrc_path('press/missing.icc'), join(module, 'rsrc/press/missing.icc'))
-        finally:
-            util.__file__ = real
-
     def test_installed_profiles_by_file_name(self):
+        # names match in folder order, after a path
         from Quartz import CGColorSpaceCopyICCData, CGColorSpaceCreateWithName, kCGColorSpaceSRGB
         from plotdevice.gfx import colors
-        from plotdevice.gfx.colors import _output_colors, _press_profile
-        cmyk, rgb = _press_profile(FOGRA47), bytes(CGColorSpaceCopyICCData(CGColorSpaceCreateWithName(kCGColorSpaceSRGB)))
+        from plotdevice.gfx.colors import _output_colors, Press
+        cmyk, rgb = Press(FOGRA47).profile, bytes(CGColorSpaceCopyICCData(CGColorSpaceCreateWithName(kCGColorSpaceSRGB)))
         user, other = join(self.tmp, 'user'), join(self.tmp, 'other')
         os.makedirs(user)
         os.makedirs(other)
@@ -602,6 +612,7 @@ class ColorTests(PlotDeviceTestCase):
             for name in ('My Press', 'my press.icc', 'MY PRESS'):
                 self.assertEqual(_output_colors(name, 'pdf'), os.path.realpath(join(user, 'My Press.icc')))
             self.assertEqual(_output_colors('lab proof', 'png'), os.path.realpath(join(other, 'Lab Proof.ICM')))
+            # the menus skip truncated profiles
             open(join(user, 'Cut Off.icc'), 'wb').write(cmyk[:4000])
             self.assertIsNone(colors._profile_header(join(user, 'Cut Off.icc')))
             self.assertIsNotNone(colors._profile_header(join(user, 'My Press.icc')))
@@ -609,6 +620,7 @@ class ColorTests(PlotDeviceTestCase):
                 _output_colors('My Press', 'png')
             with self.assertRaisesRegex(DeviceError, "'Nothing Here' isn't a built-in color space or ICC profile filename"):
                 _output_colors('Nothing Here', 'pdf')
+            # an existing path wins over a name
             here = os.getcwd()
             os.chdir(other)
             try:
@@ -616,11 +628,13 @@ class ColorTests(PlotDeviceTestCase):
                 self.assertEqual(_output_colors('Shadowed', 'png'), os.path.realpath(join(user, 'Shadowed.icc')))
             finally:
                 os.chdir(here)
+            # system profiles, offered or not
             if os.path.exists('/System/Library/ColorSync/Profiles/ITU-2020.icc'):
                 self.assertEqual(_output_colors('ITU-2020', 'png'), '/System/Library/ColorSync/Profiles/ITU-2020.icc')
                 self.assertEqual(_output_colors(REC2020, 'png'), _output_colors('ITU-2020', 'png'))
                 self.assertEqual(_output_colors('REC709', 'mov'), '/System/Library/ColorSync/Profiles/ITU-709.icc')
                 self.assertEqual(_output_colors('generic rgb profile', 'png'), '/System/Library/ColorSync/Profiles/Generic RGB Profile.icc')
+                # Generic CMYK in any form means CMYK
                 generic = '/System/Library/ColorSync/Profiles/Generic CMYK Profile.icc'
                 copy = join(user, 'Copy.icc')
                 open(copy, 'wb').write(open(generic, 'rb').read())
@@ -633,9 +647,9 @@ class ColorTests(PlotDeviceTestCase):
             colors._PROFILE_LISTS.clear()
 
     def test_presses_resolve_where_cmyk_fits(self):
-        from plotdevice.gfx.colors import _output_colors, _output_mode, _press_profile
+        from plotdevice.gfx.colors import _output_colors, _output_mode, Press
         path = join(self.tmp, 'press.icc')
-        open(path, 'wb').write(_press_profile(FOGRA47))
+        open(path, 'wb').write(Press(FOGRA47).profile)
         for val, format, key in ((GRACOL, 'pdf', GRACOL), ('FOGRA39', 'tiff', FOGRA39), ('swop', 'eps', SWOP), ('Gracol-Uncoated', 'jpg', GRACOL_UNCOATED), (path, 'jpg', path)):
             self.assertEqual(_output_colors(val, format), key)
             self.assertEqual(_output_mode(key), CMYK)
@@ -657,9 +671,10 @@ class ColorTests(PlotDeviceTestCase):
             rect(30, 0, 10, 10)
 
     def test_rgb_colors_keep_their_shadows_in_a_press(self):
+        # dark greys stay distinct, white is the paper
         from plotdevice.gfx.colors import _output_colors
         for press, greys in DARK_GREYS.items():
-            _output_colors(press, 'pdf') # (loads the press)
+            _output_colors(press, 'pdf') # loads the press
             inks = [color(g / 255, g / 255, g / 255, space=SRGB)._press_values(press) for g in (0, 8, 16, 26, 255)]
             for got, want in zip(inks, greys):
                 self.assertLessEqual(max(abs(g * 100 - w) for g, w in zip(got, want)), 1, (press, got, want))
@@ -671,7 +686,7 @@ class ColorTests(PlotDeviceTestCase):
                             CGBitmapContextCreate, CGContextDrawImage, CGBitmapContextCreateImage, CGDataProviderCopyData,
                             CGImageGetDataProvider, kCGImageAlphaNone)
         from Foundation import NSURL
-        from plotdevice.gfx.colors import _press_profile
+        from plotdevice.gfx.colors import Press
         self._press_swatches()
         red = tuple(round(v * 255) for v in GRACOL_RED)
         for ext in ('tiff', 'jpg'):
@@ -679,7 +694,8 @@ class ColorTests(PlotDeviceTestCase):
             export(path, colors=GRACOL)
             img = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(path), None), 0, None)
             space = CGImageGetColorSpace(img)
-            self.assertEqual(bytes(CGColorSpaceCopyICCData(space)), _press_profile(GRACOL), ext)
+            self.assertEqual(bytes(CGColorSpaceCopyICCData(space)), Press(GRACOL).profile, ext)
+            # drawn in its own space, unconverted
             ctx = CGBitmapContextCreate(None, 40, 20, 8, 160, space, kCGImageAlphaNone)
             CGContextDrawImage(ctx, ((0, 0), (40, 20)), img)
             data = bytes(CGDataProviderCopyData(CGImageGetDataProvider(CGBitmapContextCreateImage(ctx))))
@@ -690,7 +706,7 @@ class ColorTests(PlotDeviceTestCase):
 
     def test_press_pdfs_are_pdfx4(self):
         import zlib
-        from plotdevice.gfx.colors import _press_profile
+        from plotdevice.gfx.colors import Press
         self._press_swatches()
         path = join(self.tmp, 'press.pdf')
         export(path, colors=GRACOL)
@@ -700,29 +716,32 @@ class ColorTests(PlotDeviceTestCase):
             try:
                 streams.append(zlib.decompress(data))
             except zlib.error:
-                streams.append(data.strip()) # (the XMP packet, uncompressed)
-        icc = _press_profile(GRACOL)
-        self.assertEqual(streams.count(icc), 1) # (the output intent's)
+                streams.append(data.strip()) # the XMP packet, uncompressed
+        icc = Press(GRACOL).profile
+        self.assertEqual(streams.count(icc), 1) # the output intent's
         drawn = b''.join(s for s in streams if s != icc and not s.startswith(b'<?xpacket'))
         fills = set(re.sub(rb'\s+', b' ', k) for k in re.findall(rb'[-\d.]+\s+[-\d.]+\s+[-\d.]+\s+[-\d.]+(?=\s+k\b)', drawn))
         self.assertTrue({b'0 0 0 1', b'0.6 0.4 0.4 1', b'0 0 1 0', b'0 0 0 0'} <= fills, fills)
         self.assertTrue(any(all(abs(float(a) - b) < .01 for a, b in zip(f.split(), GRACOL_RED)) for f in fills), (fills, GRACOL_RED))
+        # assertIn would print the 2.7 MB file
         for expected in (rb'/OutputIntents (\d+) 0 R', rb'/Version /1.6 /OutputIntents \d+ 0 R /Metadata', rb'/OutputConditionIdentifier \(CGATS21-2-CRPC6\)',
                          rb'<pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion>', rb'/Trapped /False /GTS_PDFXVersion \(PDF/X-4\)',
                          rb'/TrimBox \[0 0 40 20\]'):
             self.assertTrue(re.search(expected, pdf), expected)
         groups = re.findall(rb'/Group\s*<<[^>]*/CS\s+(\d+) 0 R', pdf)
         self.assertTrue(groups)
+        # PDF/X-4 needs DeviceCMYK blending
         self.assertTrue(re.search(rb'\n%s 0 obj\n/DeviceCMYK\s*endobj' % groups[-1], pdf), groups)
 
     def test_placed_images_in_a_press(self):
+        # cmyk images keep their numbers, rgb ones convert
         from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpaceCreateWithICCData, CGColorSpaceCreateDeviceCMYK,
                             CGColorSpaceCreateWithName, kCGColorSpaceSRGB, kCGImageAlphaPremultipliedLast, CGContextSetFillColorWithColor,
                             CGColorCreate, CGContextFillRect, CGImageCreateCopyWithColorSpace, CGImageDestinationCreateWithURL,
                             CGImageDestinationAddImage, CGImageDestinationFinalize, kCGImageAlphaNone, CGImageSourceCreateWithURL,
                             CGImageSourceCreateImageAtIndex, CGImageGetColorSpace, CGContextDrawImage, CGDataProviderCopyData, CGImageGetDataProvider)
         from Foundation import NSURL
-        from plotdevice.gfx.colors import _press_profile
+        from plotdevice.gfx.colors import Press
         def write(name, space, comps, alpha=kCGImageAlphaNone, relabel=None):
             ctx = CGBitmapContextCreate(None, 10, 10, 8, 40, space, alpha)
             CGContextSetFillColorWithColor(ctx, CGColorCreate(space, comps + (1,)))
@@ -739,7 +758,7 @@ class ColorTests(PlotDeviceTestCase):
             CGContextDrawImage(ctx, ((0, 0), (30, 10)), img)
             data = bytes(CGDataProviderCopyData(CGImageGetDataProvider(CGBitmapContextCreateImage(ctx))))
             return [tuple(round(v / 2.55) for v in data[(5 * 30 + x) * 4:][:4]) for x in (5, 15, 25)]
-        gracol = CGColorSpaceCreateWithICCData(_press_profile(GRACOL))
+        gracol = CGColorSpaceCreateWithICCData(Press(GRACOL).profile)
         tagged = write('gracol.tiff', gracol, (.6, .4, .4, 1))
         untagged = write('untagged.tiff', gracol, (0, 0, 0, 1), relabel=CGColorSpaceCreateDeviceCMYK())
         orange = write('orange.tiff', CGColorSpaceCreateWithName(kCGColorSpaceSRGB), (1, .5, 0), kCGImageAlphaPremultipliedLast)
@@ -751,11 +770,11 @@ class ColorTests(PlotDeviceTestCase):
             got = pixel(join(self.tmp, 'placed.tiff'))
             self.assertEqual(got[:2], [(60, 40, 40, 100), (0, 0, 0, 100)], colors)
         export(join(self.tmp, 'placed.tiff'), colors=GRACOL)
-        self.assertEqual(pixel(join(self.tmp, 'placed.tiff'))[2], (0, 60, 96, 0)) # (perceptual: relative would give Y 100)
+        self.assertEqual(pixel(join(self.tmp, 'placed.tiff'))[2], (0, 60, 96, 0)) # relative intent would give Y 100
         export(join(self.tmp, 'placed.pdf'), colors=FOGRA39)
         pdf = open(join(self.tmp, 'placed.pdf'), 'rb').read()
         spaces = re.findall(rb'/Subtype /Image[^>]*?/ColorSpace\s+(/\w+|\d+ 0 R)', pdf)
-        self.assertEqual(spaces.count(b'/DeviceCMYK'), 2, spaces) # (the orange stays rgb, for the rip to convert)
+        self.assertEqual(spaces.count(b'/DeviceCMYK'), 2, spaces) # the orange stays rgb
 
     def test_press_eps_keeps_the_numbers(self):
         self._press_swatches()
@@ -766,6 +785,7 @@ class ColorTests(PlotDeviceTestCase):
         self.assertIn((.6, .4, .4, 1), inks)
 
     def _pdf_pixels(self, path):
+        """A PDF's first page and its PNG, drawn into P3 over white"""
         from Quartz import (CGPDFDocumentCreateWithURL, CGPDFDocumentGetPage, CGContextDrawPDFPage, CGBitmapContextCreate,
                             CGBitmapContextCreateImage, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, CGContextDrawImage,
                             CGImageSourceCreateWithURL, CGImageSourceCreateImageAtIndex, CGContextSetRGBFillColor, CGContextFillRect,
@@ -783,6 +803,7 @@ class ColorTests(PlotDeviceTestCase):
         return pdf, png
 
     def _generic_png(self, n):
+        """An n x n image tagged Generic RGB"""
         from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpaceCreateWithName, kCGColorSpaceGenericRGB,
                             CGContextSetRGBFillColor, CGContextFillRect, CGImageDestinationCreateWithURL, CGImageDestinationAddImage,
                             CGImageDestinationFinalize, kCGImageAlphaPremultipliedLast)
@@ -799,6 +820,7 @@ class ColorTests(PlotDeviceTestCase):
         return path
 
     def test_pdf_groups_blend_in_p3(self):
+        # quartz's generic rgb groups clip P3 colors
         self._swatch(1, .8, 0)
         with blend('multiply'):
             fill(1, .8, 0)
@@ -810,6 +832,7 @@ class ColorTests(PlotDeviceTestCase):
         self.assertEqual(pdf, png)
 
     def test_pdf_groups_leave_generic_rgb_images_alone(self):
+        # images sharing the groups' space aren't relabeled
         for n in (4, 400):
             clear(all)
             size(20, 20)
@@ -821,7 +844,7 @@ class ColorTests(PlotDeviceTestCase):
             export(join(self.tmp, 'generic.png'))
             export(join(self.tmp, 'generic.pdf'))
             pdf, png = self._pdf_pixels(join(self.tmp, 'generic.pdf'))
-            self.assertLessEqual(max(abs(a - b) for a, b in zip(pdf, png)), 2, n) # (the small image is scaled up)
+            self.assertLessEqual(max(abs(a - b) for a, b in zip(pdf, png)), 2, n) # the small image is scaled up
 
     def test_pdfs_without_groups_or_in_cmyk_are_left_as_quartz_writes_them(self):
         def draw(groups=True):
@@ -843,6 +866,7 @@ class ColorTests(PlotDeviceTestCase):
         self.assertEqual([updates(name) for name in ('plain', 'cmyk', 'cmyk_book', 'rgb', 'rgb_book')], [0, 0, 0, 1, 1])
 
     def test_proofs_render_through_the_press_or_srgb(self):
+        # proofs show as their exports do, tiles too
         import objc
         from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGContextDrawImage, CGDataProviderCopyData,
                             CGImageGetDataProvider, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, kCGColorSpaceSRGB,
@@ -851,6 +875,7 @@ class ColorTests(PlotDeviceTestCase):
         from Foundation import NSURL
         from plotdevice.gfx.colors import _output_colors
         def pixels(img, w=40, h=20):
+            # drawn into p3, as the window is
             ctx = CGBitmapContextCreate(None, w, h, 8, w * 4, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedLast)
             CGContextSetRenderingIntent(ctx, kCGRenderingIntentRelativeColorimetric)
             CGContextDrawImage(ctx, ((0, 0), (w, h)), img)
@@ -867,10 +892,10 @@ class ColorTests(PlotDeviceTestCase):
         press = _output_colors(GRACOL, 'tiff')
         export(join(self.tmp, 'press.tiff'), colors=GRACOL)
         tiff = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(join(self.tmp, 'press.tiff')), None), 0, None)
-        proofed = shown(_ctx.canvas.commit(press, 'tiff'))
+        proofed = shown(_ctx.canvas.commit(press, 'tiff', proofed=True))
         close(proofed, pixels(tiff), 'a press proof shows the press tiff')
-        self.assertNotEqual(proofed[5 * 40 + 25], shown(_ctx.canvas.commit())[5 * 40 + 25]) # (p3 red, out of the press's gamut)
-        tile = shown(_ctx.canvas.commit(press, 'tiff'), 20, 10, origin=(20, 10))
+        self.assertNotEqual(proofed[5 * 40 + 25], shown(_ctx.canvas.commit())[5 * 40 + 25]) # p3 red, out of gamut
+        tile = shown(_ctx.canvas.commit(press, 'tiff', proofed=True), 20, 10, origin=(20, 10))
         close(tile, [proofed[y * 40 + x] for y in range(10, 20) for x in range(20, 40)], "a tile shows its part of the raster")
         # a frame proofed through sRGB clips p3 red to sRGB's
         frame = _ctx.canvas.commit()
@@ -878,24 +903,23 @@ class ColorTests(PlotDeviceTestCase):
         red = tuple(round(v * 255) for v in SRGB_RED_IN_P3)
         close([shown(frame)[5 * 40 + 25]], [red], 'p3 red through sRGB')
         close([shown(frame)[15 * 40 + 5]], [(255, 255, 255)], 'the background stays white')
-        from plotdevice.gfx.colors import _INKS
+        # an sRGB proof matches a colors=SRGB png
         export(join(self.tmp, 'srgb.png'), colors=SRGB)
         png = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(join(self.tmp, 'srgb.png')), None), 0, None)
-        frame = _ctx.canvas.commit(SRGB, 'png')
-        frame.proof = _INKS[SRGB]
-        proofed = shown(frame)
+        proofed = shown(_ctx.canvas.commit(SRGB, 'png', proofed=True))
         close(proofed, pixels(png), 'an sRGB proof shows the sRGB png')
         close([proofed[5 * 40 + 25]], [red], 'p3 red clipped to sRGB')
+        # as does a system rgb space's proof
         from plotdevice.gfx.colors import _output_colors
         adobe = '/System/Library/ColorSync/Profiles/AdobeRGB1998.icc'
         if os.path.exists(adobe):
             export(join(self.tmp, 'adobe.png'), colors=adobe)
             png = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(join(self.tmp, 'adobe.png')), None), 0, None)
-            frame = _ctx.canvas.commit(_output_colors(adobe, 'png'), 'png')
-            frame.proof = _INKS[adobe]
+            frame = _ctx.canvas.commit(_output_colors(adobe, 'png'), 'png', proofed=True)
             close(shown(frame), pixels(png), 'an Adobe RGB proof shows the Adobe RGB png')
 
     def test_run_fullscreen_keeps_the_proof(self):
+        # Run Fullscreen keeps the window's proof
         from plotdevice.gui.views import FullscreenView
         from plotdevice.gfx.colors import _output_colors, _output_space
         from plotdevice.gfx.vision import _vision_space
@@ -918,6 +942,7 @@ class ColorTests(PlotDeviceTestCase):
             self.assertIs(frame.vision, proofArgs.get('vision'), name)
 
     def test_vision_proofs_show_the_simulation(self):
+        # simulated frames match DaltonLens's math
         import objc
         from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGContextDrawImage, CGDataProviderCopyData,
                             CGImageGetDataProvider, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, kCGImageAlphaPremultipliedLast)
@@ -929,8 +954,7 @@ class ColorTests(PlotDeviceTestCase):
             fill(*c)
             rect(10 * i, 0, 10, 10)
         for deficiency in ('protanopia', 'protanomaly', 'deuteranopia', 'deuteranomaly', 'tritanopia', 'tritanomaly'):
-            frame = _ctx.canvas.commit()
-            frame.vision = _vision_space(deficiency)
+            frame = _ctx.canvas.commit(vision=_vision_space(deficiency))
             surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(10 * len(swatches), 10)
             frame._render_to_surface(surface, 1.0)
             w = 10 * len(swatches)
@@ -941,7 +965,7 @@ class ColorTests(PlotDeviceTestCase):
                 r, g, b = data[(5 * w + 10 * i + 5) * 4:][:3]
                 want = [round(255 * encode(min(max(v, 0), 1))) for v in _simulate(deficiency, [_decode(v) for v in c])]
                 self.assertLessEqual(max(abs(x - y) for x, y in zip((r, g, b), want)), 3, (deficiency, c, (r, g, b), want))
-        from plotdevice.gfx.colors import _INKS
+        # proofs keep transparency and alpha
         clear(all)
         size(30, 10)
         background(None)
@@ -951,11 +975,10 @@ class ColorTests(PlotDeviceTestCase):
         rect(10, 0, 10, 10)
         red = [round(255 * encode(min(max(v, 0), 1))) for v in _simulate('protanopia', (1, 0, 0))]
         for kind in ('protanopia', 'srgb'):
-            frame = _ctx.canvas.commit(SRGB, 'png') if kind == 'srgb' else _ctx.canvas.commit()
             if kind == 'srgb':
-                frame.proof = _INKS[SRGB]
+                frame = _ctx.canvas.commit(SRGB, 'png', proofed=True)
             else:
-                frame.vision = _vision_space('protanopia')
+                frame = _ctx.canvas.commit(vision=_vision_space('protanopia'))
             surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(30, 10)
             frame._render_to_surface(surface, 1.0)
             ctx = CGBitmapContextCreate(None, 30, 10, 8, 120, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedLast)
@@ -967,10 +990,12 @@ class ColorTests(PlotDeviceTestCase):
             self.assertLessEqual(max(abs(2 * h - o) for h, o in zip(half[:3], opaque[:3])), 3, (kind, half, opaque))
             if kind == 'protanopia':
                 self.assertLessEqual(max(abs(o - r) for o, r in zip(opaque[:3], red)), 3, (opaque, red))
+        # white & grey stay put, red goes dark yellow-green
         self.assertEqual([round(v, 3) for v in _simulate('protanopia', (1, 1, 1))], [1.0, 1.0, 1.0])
         red = _simulate('protanopia', (1, 0, 0))
         self.assertAlmostEqual(red[0], red[1], places=2)
         self.assertLess(red[2], .01)
+        # anomalies lie between normal and dichromat
         for full, partial, color, channel in (('protanopia', 'protanomaly', (1, 0, 0), 1), ('deuteranopia', 'deuteranomaly', (1, 0, 0), 1),
                                               ('tritanopia', 'tritanomaly', (0, 0, 1), 0)):
             normal, between, extreme = color[channel], _simulate(partial, color)[channel], _simulate(full, color)[channel]

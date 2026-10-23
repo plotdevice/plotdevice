@@ -37,7 +37,7 @@ typedef struct {
 @property BOOL doneWriting;
 
 - (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps loop:(NSInteger)count;
-- (void)addFrame:(NSBitmapImageRep *)frame; // a canvas-sized bitmap (gif frames are 1 pixel per point)
+- (void)addFrame:(NSBitmapImageRep *)frame;
 - (void)closeFile;
 
 // internal callbacks

@@ -15,16 +15,16 @@ from ..lib.cocoa import *
 from plotdevice import DeviceError, free_threaded
 from ..util import _copy_attrs, autorelease
 from ..util.readers import get_http_session, last_modified
-from ..lib.io import MovieExportSession, ImageExportSession
+from ..lib.io import MovieExportSession, ImageExportSession, HEVC, H264, PRORES
 from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, _hull
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
-from .colors import RGB, CMYK, _output_mode, _PRESS_SPACES
+from .colors import RGB, CMYK, _output_mode, Press
 from . import _ns_context, _cg_port, _frame
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
 
 _ctx = None
-__all__ = ("Image", 'ImageWriter')
+__all__ = ("Image", 'ImageWriter', 'HEVC', 'H264', 'PRORES')
 
 ### The bitmap/vector image-container (a.k.a. NSImage proxy) ###
 
@@ -362,16 +362,17 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
         with _ns_context():
             self._screen_transform.concat() # move the image into place via transforms
-            with self.effects.applied(self):  # apply any blend/alpha/shadow effects
+            with self.effects.applied(self): # apply any blend/alpha/shadow effects
                 NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
                 image = self._nsImage
                 frame = _frame.get()
                 if frame is not None and frame.outputmode == CMYK and frame.colors is not None:
+                    # preserve numbers for cmyk bitmaps and relabel to match the current press profile
                     rep = next((r for r in image.representations() if isinstance(r, NSBitmapImageRep)), None)
                     cg = rep.CGImage() if rep is not None else None
                     if cg is not None and CGColorSpaceGetModel(CGImageGetColorSpace(cg)) == kCGColorSpaceModelCMYK:
                         in_space = frame.press and frame.ink[1]
-                        space = _PRESS_SPACES[frame.press] if in_space else CGColorSpaceCreateDeviceCMYK()
+                        space = Press.named[frame.press].space if in_space else CGColorSpaceCreateDeviceCMYK()
                         image = NSImage.alloc().initWithCGImage_size_(CGImageCreateCopyWithColorSpace(cg, space), image.size())
                         image.setFlipped_(True)
                 bounds = ((0,0), image.size()) # draw the image at (0,0)
@@ -420,15 +421,16 @@ class ExportRenderer(object):
 class ImageWriter(object):
     def __init__(self, fname, format, **opts):
         self.mode = _output_mode(opts['colors'])
-        self.press = opts['colors'] if self.mode == CMYK and opts['colors'] != CMYK else None
+        self.press = opts['colors'] if opts['colors'] in Press.named else None
         self.fname = os.path.expanduser(fname)
         self.format = format
         self.opts = opts
         self.anim = 'fps' in opts
         if format == 'pdf' and not self.anim:
+            # one document unless the name is numbered
             self.opts['single'] = not re_padded.search(self.fname)
         self.session = None
-        self.renderer = None # with the GIL off, renders the frames added to a sequence on a thread of their own
+        self.renderer = None # used only with the GIL off
 
     def __enter__(self):
         self._pool = NSAutoreleasePool.alloc().init()
@@ -567,5 +569,5 @@ class ImageWriter(object):
             time.sleep(0.1)
         if self.renderer is not None:
             self.renderer.check()
-        if isinstance(self.session, MovieExportSession) and self.session.writer_failed():
+        if isinstance(self.session, MovieExportSession) and self.session.discard_if_failed():
             raise DeviceError("Export failed: encoding error")
