@@ -413,9 +413,11 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 if filled and not lone_segment:
                     ink = kCGPathFill
                     CGContextSetFillColorWithColor(target, self._fillcolor.cgColor)
+                gradient_stroke = isinstance(self._strokecolor, Gradient)
                 if (self._strokecolor):
-                    ink = kCGPathStroke if ink is None else kCGPathFillStroke
-                    CGContextSetStrokeColorWithColor(target, self._strokecolor.cgColor)
+                    if not gradient_stroke:
+                        ink = kCGPathStroke if ink is None else kCGPathFillStroke
+                        CGContextSetStrokeColorWithColor(target, self._strokecolor.cgColor)
                     CGContextSetLineWidth(target, self.nib)
                     CGContextSetLineCap(target, _CAPSTYLE[self.cap])
                     CGContextSetLineJoin(target, _JOINSTYLE[self.join])
@@ -431,6 +433,16 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                     CGContextBeginPath(target)
                     CGContextAddPath(target, self.cgPath)
                     CGContextDrawPath(target, ink)
+
+                if gradient_stroke:
+                    CGContextSaveGState(target)
+                    CGContextBeginPath(target)
+                    CGContextAddPath(target, self.cgPath)
+                    CGContextReplacePathWithStrokedPath(target)
+                    outline = CGContextGetPathBoundingBox(target)
+                    CGContextClip(target)
+                    self._strokecolor.fill((tuple(outline.origin), tuple(outline.size)))
+                    CGContextRestoreGState(target)
         finally:
             CGContextRestoreGState(port)
 

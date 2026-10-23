@@ -212,6 +212,8 @@ class Context(object):
         be specified with the `center` keyword arg. If included, the center arg should be a
         2-tuple with x,y values in the range -1 to +1.
 
+        A Gradient object can also be passed as the sole argument.
+
         In addition to colors, you can also call background() with an image() as its sole argument.
         In this case the image will be tiled to fill the canvas.
         """
@@ -219,15 +221,17 @@ class Context(object):
             if len(args) == 1 and args[0] is None:
                 bg = None
             elif isinstance(args[0], Image):
+                _image_arg(args, kwargs, 'background')
                 bg = Pattern(args[0])
                 self.canvas.clear(args[0])
             elif isinstance(args[0],str) and (args[0].startswith('http') or exists(expanduser(args[0]))):
+                _image_arg(args, kwargs, 'background')
                 bg = Pattern(args[0])
-            elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
-                bg = Gradient(*args, **kwargs)
             else:
-                bg = Color(args)
+                bg = _color_or_gradient(args, kwargs, 'background')
             self.canvas.background = bg
+        elif kwargs:
+            _colorless(kwargs, 'background')
         return self.canvas.background
 
     def outputmode(self, mode=None):
@@ -743,6 +747,8 @@ class Context(object):
             fill('#74e9ff', 0.4) # translucent pale blue
             stroke('chartreuse') # electric bile
         """
+        Color.validate(kwargs)
+
         # flatten any tuples in the arguments list
         args = _flatten(args)
 
@@ -801,6 +807,9 @@ class Context(object):
         be specified with the `center` keyword arg. If included, the center arg should be a
         2-tuple with x,y values in the range -1 to +1.
 
+        A Gradient object can also be passed as the sole argument (its steps, angle, and center
+        having been set when it was created).
+
         In addition to colors, you can also call fill() with an image() as its sole argument.
         In this case the image will be tiled to fit the object being filled.
 
@@ -816,17 +825,19 @@ class Context(object):
                 return self.nofill()
 
             if isinstance(args[0], Image):
+                _image_arg(args, kwargs, 'fill')
                 clr = Pattern(args[0])
                 self.canvas.clear(args[0])
             elif isinstance(args[0],str) and (args[0].startswith('http') or exists(expanduser(args[0]))):
+                _image_arg(args, kwargs, 'fill')
                 clr = Pattern(args[0])
-            elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
-                clr = Gradient(*args, **kwargs)
             else:
-                clr = Color(*args)
+                clr = _color_or_gradient(args, kwargs, 'fill')
             setattr(clr, '_rollback', dict(fill=self._fillcolor))
             self._fillcolor = clr._installed = clr.copy()
             return clr
+        elif kwargs:
+            _colorless(kwargs, 'fill')
         return self._fillcolor
 
     def nostroke(self):
@@ -836,14 +847,18 @@ class Context(object):
         self._strokecolor = clr._installed = None
         return clr
 
-    def stroke(self, *args):
+    def stroke(self, *args, **kwargs):
         """Set the stroke color
 
         Arguments will be interpeted according to the current color-mode and range. For details:
             help(color)
 
+        As with fill(), more than one color arg (or a Gradient object) strokes with a gradient,
+        which spans the outline the stroke paints. The `steps`, `angle`, and `center` keyword args
+        work as they do for fill().
+
         Returns:
-            the current stroke color as a Color object.
+            the current stroke color as a Color (or Gradient) object.
 
         Context Manager:
             stroke() can be used as part of a `with` statement in which case the stroke will
@@ -853,10 +868,12 @@ class Context(object):
             if args[0] is None:
                 return self.nostroke()
 
-            annotated = Color(*args)
+            annotated = _color_or_gradient(args, kwargs, 'stroke')
             setattr(annotated, '_rollback', dict(stroke=self._strokecolor))
             self._strokecolor = annotated._installed = annotated.copy()
             return annotated
+        elif kwargs:
+            _colorless(kwargs, 'stroke')
         return self._strokecolor
 
     ### Pen Commands ###
@@ -1811,6 +1828,36 @@ class Canvas(object):
         self.commit(_output_colors(CMYK if cmyk else colors, format), format).save(fname, format, zoom)
 
 
+def _color_or_gradient(args, kwargs, command):
+    if isinstance(args[0], Gradient):
+        if len(args) > 1 or kwargs:
+            badgradient = "%s() takes a Gradient object as its only argument (its steps, angle and center are set when it's created)" % command
+            raise DeviceError(badgradient)
+        return args[0].copy()
+
+    several_colors = len(args) > 1 and all(Color.recognized(c) for c in args)
+    gradient_args = [arg for arg in kwargs if arg in Gradient.kwargs]
+    if several_colors:
+        unknown = [arg for arg in kwargs if arg not in Gradient.kwargs]
+        if unknown:
+            badarg = "Unknown Gradient argument%s '%s'" % ('' if len(unknown)==1 else 's', "', '".join(unknown))
+            raise DeviceError(badarg)
+        return Gradient(*args, **kwargs)
+    if gradient_args:
+        nogradient = "%s() takes '%s' only with two or more colors (for a gradient)" % (command, "', '".join(gradient_args))
+        raise DeviceError(nogradient)
+    return Color(*args, **kwargs)
+
+def _image_arg(args, kwargs, command):
+    if len(args) > 1 or kwargs:
+        badimage = "%s() takes an image as its only argument" % command
+        raise DeviceError(badimage)
+
+def _colorless(kwargs, command):
+    Color.validate({arg: val for arg, val in kwargs.items() if arg not in Gradient.kwargs})
+    nocolor = "%s() takes '%s' only with a color" % (command, "', '".join(kwargs))
+    raise DeviceError(nocolor)
+
 def _unheld(grobs):
     for grob in grobs:
         return sys.getrefcount(grob)
@@ -2144,4 +2191,3 @@ class Frame(object):
         data = self._getImageData(format, zoom, os.path.splitext(os.path.basename(fname))[0])
         fname = NSString.stringByExpandingTildeInPath(fname)
         data.writeToFile_atomically_(fname, False)
-

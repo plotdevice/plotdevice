@@ -272,6 +272,7 @@ def _hexstring(r, g, b):
 class Color(object):
 
     def __init__(self, *args, **kwargs):
+        Color.validate(kwargs)
 
         # flatten any tuples in the arguments list
         args = _flatten(args)
@@ -730,6 +731,13 @@ class Color(object):
         r = float(_ctx._colorrange if rng is None else rng)
         if r == 1.0: return lst
         return [v / r for v in lst]
+
+    @classmethod
+    def validate(cls, kwargs):
+        unknown = [arg for arg in kwargs if arg not in ('mode', 'range', 'space')]
+        if unknown:
+            badarg = "Unknown Color argument%s '%s'" % ('' if len(unknown)==1 else 's', "', '".join(unknown))
+            raise DeviceError(badarg)
 
     @classmethod
     def recognized(cls, blob):

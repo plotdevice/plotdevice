@@ -244,6 +244,111 @@ class ColorTests(PlotDeviceTestCase):
         self.assertEqual(Gradient(g)._space, SRGB)
         self.assertEqual(Gradient('#f00', '#00f')._space, P3)
 
+    def test_gradient_objects_fill_stroke_and_background(self):
+        g = Gradient(color(1, 0, 0), color(0, 0, 1), angle=0)
+        fill(g)
+        self.assertIsInstance(rect(0, 0, 10, 10)._fillcolor, Gradient)
+        self.assertFalse(hasattr(g, '_rollback')) # (fill() installs a copy)
+        self.assertIsInstance(rect(0, 0, 10, 10, fill=g)._fillcolor, Gradient)
+        self.assertIsInstance(rect(0, 0, 10, 10, stroke=g)._strokecolor, Gradient)
+        path = bezier(plot=False)
+        path.fill, path.stroke = g, g
+        self.assertIsInstance(path._fillcolor, Gradient)
+        self.assertIsInstance(path._strokecolor, Gradient)
+        saved = fill(color(1, 0, 0), color(0, 0, 1), angle=0)
+        fill(0)
+        fill(saved)
+        self.assertIsInstance(rect(0, 0, 10, 10)._fillcolor, Gradient)
+        stroke(g)
+        self.assertIsInstance(rect(0, 0, 10, 10)._strokecolor, Gradient)
+        stroke(color(1, 0, 0), color(0, 0, 1), angle=90)
+        self.assertIsInstance(rect(0, 0, 10, 10)._strokecolor, Gradient)
+        background(g)
+        self.assertIsInstance(_ctx.canvas.background, Gradient)
+        for command in (fill, stroke, background):
+            with self.assertRaisesRegex(DeviceError, 'only argument'):
+                command(g, angle=90)
+        with stroke(color(0, 1, 0), color(0, 0, 1)):
+            self.assertIsInstance(rect(0, 0, 10, 10)._strokecolor, Gradient)
+        self.assertIsInstance(rect(0, 0, 10, 10)._strokecolor, Gradient) # (the block rolled back to the earlier one)
+
+    def test_fill_stroke_and_background_take_colors_arguments(self):
+        for command in (fill, stroke, background):
+            name = command.__name__
+            self.assertEqual(command(.5, 1, 1, mode=HSV), color(.5, 1, 1, mode=HSV))
+            self.assertEqual(command(HSV, .5, 1, 1), color(.5, 1, 1, mode=HSV))
+            self.assertEqual(command(255, 0, 0, range=255), color(1, 0, 0))
+            self.assertEqual(command(1, 0, 0, space=SRGB), color(1, 0, 0, space=SRGB))
+            self.assertIsInstance(command('red', 'blue', angle=0, steps=[0, 1]), Gradient)
+            with self.assertRaisesRegex(DeviceError, "Unknown Color argument 'alpha'"):
+                command(1, 0, 0, alpha=.5)
+            with self.assertRaisesRegex(DeviceError, "Unknown Color arguments 'alpha', 'colour'"):
+                command(1, 0, 0, alpha=.5, colour=1)
+            with self.assertRaisesRegex(DeviceError, "Unknown Gradient argument 'mode'"):
+                command('red', 'blue', angle=0, mode=HSV)
+            with self.assertRaisesRegex(DeviceError, "%s\\(\\) takes 'angle' only with two or more colors" % name):
+                command('red', angle=0)
+            with self.assertRaisesRegex(DeviceError, "%s\\(\\) takes 'mode' only with a color" % name):
+                command(mode=HSV)
+            with self.assertRaisesRegex(DeviceError, "Unknown Color argument 'alpha'"):
+                command(alpha=.5)
+        for call in (lambda: color(1, 0, 0, alpha=.5), lambda: color(alpha=.5), lambda: color(mode=HSV, alpha=.5)):
+            with self.assertRaisesRegex(DeviceError, "Unknown Color argument 'alpha'"):
+                call()
+
+    def test_images_take_no_other_arguments(self):
+        # an image's tiles can't take colors or gradient keywords
+        tile = 'tests/_in/plaid.png'
+        for command in (fill, background):
+            for args, kwargs in (((tile, 'red'), {}), ((tile,), dict(angle=45)), ((image(tile),), dict(alpha=.5))):
+                with self.assertRaisesRegex(DeviceError, "takes an image as its only argument"):
+                    command(*args, **kwargs)
+
+    def test_gradient_strokes_draw_within_the_stroke(self):
+        from Foundation import NSURL
+        from Quartz import (CGImageSourceCreateWithURL, CGImageSourceCreateImageAtIndex, CGBitmapContextCreate,
+                            CGContextDrawImage, CGBitmapContextCreateImage, CGDataProviderCopyData, CGImageGetDataProvider,
+                            CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, kCGImageAlphaPremultipliedLast)
+        def pixels(path, w, h):
+            img = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(path), None), 0, None)
+            ctx = CGBitmapContextCreate(None, w, h, 8, w * 4, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedLast)
+            CGContextDrawImage(ctx, ((0, 0), (w, h)), img)
+            data = bytes(CGDataProviderCopyData(CGImageGetDataProvider(CGBitmapContextCreateImage(ctx))))
+            return lambda x, y: tuple(data[(y * w + x) * 4:][:3])
+        size(200, 100)
+        background(1)
+        nofill()
+        stroke(color(1, 0, 0), color(0, 0, 1), angle=0)
+        pen(10)
+        rect(10, 10, 180, 40)
+        pen(10, dash=10)
+        line(10, 80, 190, 80)
+        export(join(self.tmp, 'stroke.png'))
+        px = pixels(join(self.tmp, 'stroke.png'), 200, 100)
+        left, right, inside = px(10, 30), px(189, 30), px(100, 30)
+        self.assertGreater(left[0], 200)
+        self.assertLess(left[2], 60)
+        self.assertGreater(right[2], 200)
+        self.assertLess(right[0], 60)
+        self.assertEqual(inside, (255, 255, 255))
+        self.assertNotEqual(px(14, 80), (255, 255, 255)) # (a dash)
+        self.assertEqual(px(25, 80), (255, 255, 255))    # (and the gap after it)
+        # in a cmyk export the gradient's stops keep their numbers
+        clear(all)
+        size(200, 100)
+        background(None)
+        nofill()
+        stroke(color(1, 0, 0, 0, mode=CMYK), color(0, 0, 0, 1, mode=CMYK), angle=0)
+        pen(10)
+        rect(10, 10, 180, 40)
+        export(join(self.tmp, 'stroke.tiff'), colors=CMYK)
+        name, data, row, depth = _image(join(self.tmp, 'stroke.tiff'))
+        ink = lambda x, y: tuple(round(v / 2.55) for v in data[y * row + x * depth:][:4])
+        self.assertEqual(ink(5, 30)[1:3], (0, 0))
+        self.assertGreater(ink(5, 30)[0], 95)
+        self.assertGreater(ink(194, 30)[3], 95)
+        self.assertLess(ink(194, 30)[0], 5)
+
     # outputs
 
     def _save(self, name, **kwargs):

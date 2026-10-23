@@ -16,6 +16,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    kCGImageAlphaNone, kCGImageAlphaNoneSkipFirst, kCGImageAlphaNoneSkipLast, kCGInterpolationHigh, \
                    CGContextBeginPath, CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, \
                    CGContextClearRect, CGContextClearRect, CGContextClip, CGContextClipToMask, CGContextClipToRect, CGContextGetClipBoundingBox, CGContextDrawPath, \
+                   CGContextReplacePathWithStrokedPath, CGContextGetPathBoundingBox, \
                    CGContextEndTransparencyLayer, CGContextEOClip, CGContextFlush, CGContextGetCTM, CGContextRestoreGState, CGContextSaveGState, CGContextScaleCTM, \
                    CGContextSetAlpha, CGContextSetBlendMode, CGContextSetFillColorWithColor, CGContextSetLineCap, \
                    CGContextSetLineDash, CGContextSetLineJoin, CGContextSetLineWidth, CGContextSetShadowWithColor, \
