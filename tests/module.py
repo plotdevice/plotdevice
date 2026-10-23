@@ -75,6 +75,12 @@ class ModuleTests(PlotDeviceTestCase):
             image = lambda name: CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(os.path.join(tmp, name)), None), 0, None)
             self.assertEqual(CGColorSpaceGetModel(CGImageGetColorSpace(image('own.tiff'))), kCGColorSpaceModelCMYK)
             self.assertNotEqual(CGColorSpaceGetModel(CGImageGetColorSpace(image('chosen.tiff'))), kCGColorSpaceModelCMYK)
+            reads = os.path.join(tmp, 'reads.pv')
+            with open(reads, 'w') as f:
+                f.write("print(color(1, 0, 0, 0, mode=CMYK).hex)\n")
+            hexes = [run([sys.executable, '-m', 'plotdevice', '-q', reads] + flags, capture_output=True, text=True, cwd=sdist_path).stdout.split()
+                     for flags in ([], ['--colors', 'fogra47'])]
+            self.assertNotEqual(hexes[0], hexes[1])
             windowed = run([sys.executable, '-m', 'plotdevice', script, '--colors', 'cmyk'], capture_output=True, text=True, cwd=sdist_path)
             self.assertNotEqual(windowed.returncode, 0)
             self.assertIn('--colors applies only with --export or -q', windowed.stderr)

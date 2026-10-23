@@ -1,7 +1,8 @@
 import objc, os, re, time, math, zlib
 from ..util import autorelease
 from .cocoa import CGBitmapContextCreateImage, CGContextBeginPage, CGContextEndPage, CGPDFContextClose, \
-                   CGPDFContextCreateWithURL, CGRectMake, NSBitmapImageRep, NSURL, CGColorSpaceCopyICCData
+                   CGPDFContextCreateWithURL, CGRectMake, NSBitmapImageRep, NSURL, CGColorSpaceCopyICCData, \
+                   CGColorSpaceGetNumberOfComponents
 
 for cls in ["AnimatedGif", "Pages", "SysAdmin", "Video"]:
     globals()[cls] = objc.lookUpClass(cls)
@@ -10,8 +11,39 @@ re_obj = re.compile(rb'(\d+) 0 obj\s*(.*?)\s*(stream\r?\n|endobj)', re.S)
 re_group_cs = re.compile(rb'(/Group\s*<<[^>]*?/S\s*/Transparency[^>]*?/CS\s+)(\d+)(\s+0\s+R)')
 re_icc_space = re.compile(rb'\[\s*/ICCBased\s+(\d+)\s+0\s+R\s*\]')
 re_length = re.compile(rb'/Length\s+(\d+)\b(?!\s+\d+\s+R)')
+re_pdf_date = re.compile(rb"D:(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(?:(Z)|([+-])(\d\d)'?(\d\d))?")
 
-def pdf_update(pdf, blend_space):
+XMP = """<?xpacket begin="﻿" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+ <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+    xmlns:pdf="http://ns.adobe.com/pdf/1.3/" xmlns:xmpMM="http://ns.adobe.com/xap/1.0/mm/"
+    xmlns:pdfxid="http://www.npes.org/pdfx/ns/id/">
+   <dc:format>application/pdf</dc:format>
+   <dc:title><rdf:Alt><rdf:li xml:lang="x-default">{title}</rdf:li></rdf:Alt></dc:title>
+   <xmp:CreateDate>{created}</xmp:CreateDate>
+   <xmp:ModifyDate>{modified}</xmp:ModifyDate>
+   <xmp:MetadataDate>{modified}</xmp:MetadataDate>
+   <xmp:CreatorTool>{creator}</xmp:CreatorTool>
+   <pdf:Producer>{producer}</pdf:Producer>
+   <pdf:Trapped>False</pdf:Trapped>
+   <xmpMM:DocumentID>uuid:{document}</xmpMM:DocumentID>
+   <xmpMM:InstanceID>uuid:{instance}</xmpMM:InstanceID>
+   <xmpMM:VersionID>1</xmpMM:VersionID>
+   <xmpMM:RenditionClass>default</xmpMM:RenditionClass>
+   <pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion>
+  </rdf:Description>
+ </rdf:RDF>
+</x:xmpmeta>
+<?xpacket end="w"?>"""
+
+def pdf_text(text):
+    """A PDF string"""
+    if all(ord(c) < 128 for c in text):
+        return b'(%s)' % re.sub(rb'([\\()])', rb'\\\1', text.encode('ascii'))
+    return b'<FEFF%s>' % text.encode('utf-16-be').hex().upper().encode()
+
+def pdf_update(pdf, blend_space, intent=None, title=None):
     tail = re.search(rb'startxref\s+(\d+)\s+%%EOF\s*$', pdf)
     xref = tail and re.compile(rb'xref\s+0 (\d+)\s+').match(pdf, int(tail.group(1)))
     if not xref:
@@ -38,13 +70,24 @@ def pdf_update(pdf, blend_space):
         head, start, length = objs[n]
         return pdf[start:start + length]
 
+    def data(n):
+        return zlib.decompress(stream(n)) if b'/FlateDecode' in objs[n][0] else stream(n)
+
     def profile(n):
         m = re_icc_space.fullmatch(objs[n][0]) if n in objs else None
         icc = int(m.group(1)) if m else None
         if icc not in objs or objs[icc][1] is None:
             return None, None
-        data = stream(icc)
-        return icc, zlib.decompress(data) if b'/FlateDecode' in objs[icc][0] else data
+        return icc, data(icc)
+
+    added, heads, size = {}, {}, count # (heads: the rewritten objects' dictionaries)
+
+    if intent:
+        intent_icc, outputs, size = size, size + 1, size + 2
+        added[intent_icc] = b'<< /N 4 /Length %d /Filter /FlateDecode >>\nstream\n%s\nendstream' % (len(intent['profile']), intent['profile'])
+        registry = b' /RegistryName %s' % pdf_text(intent['registry']) if intent['registry'] else b''
+        added[outputs] = b'[ << /Type /OutputIntent /S /GTS_PDFX /OutputConditionIdentifier %s /OutputCondition %s%s /Info %s /DestOutputProfile %d 0 R >> ]' % (
+            pdf_text(intent['identifier']), pdf_text(intent['condition']), registry, pdf_text(intent['condition']), intent_icc)
 
     target = bytes(CGColorSpaceCopyICCData(blend_space))
     holders = {}
@@ -52,43 +95,106 @@ def pdf_update(pdf, blend_space):
         for m in re_group_cs.finditer(head):
             holders.setdefault(int(m.group(2)), set()).add(n)
     relabel = [g for g in holders if profile(g)[1] not in (None, target)]
-    if not relabel:
-        return b''
-
-    added, heads, size = {}, {}, count # (heads: the rewritten objects' dictionaries)
-    found = [(n, icc) for n in objs for icc, data in [profile(n)] if data == target]
-    if found:
-        space, icc = found[0]
-    else:
-        data = zlib.compress(target)
-        icc, space, size = size, size + 1, size + 2
-        added[icc] = b'<< /N 3 /Alternate /DeviceRGB /Length %d /Filter /FlateDecode >>\nstream\n%s\nendstream' % (len(data), data)
-        added[space] = b'[ /ICCBased %d 0 R ]' % icc
-
-    def cost(ns):
-        return sum(len(objs[n][0]) + (objs[n][2] or 0) for n in ns)
-
-    def regroup(head, old, new):
-        return re_group_cs.sub(lambda m: m.group(1) + (b'%d' % new if int(m.group(2)) == old else m.group(2)) + m.group(3), head)
-
-    for g in relabel:
-        ref = re.compile(rb'(?<![\d.])%d\s+0\s+R' % g)
-        others = []
-        for n in objs:
-            head = heads.get(n, objs[n][0])
-            group_refs = sum(int(m.group(2)) == g for m in re_group_cs.finditer(head))
-            if len(ref.findall(head)) > group_refs:
-                others.append(n)
-        if others and cost(holders[g]) < cost(others):
-            for n in holders[g]:
-                heads[n] = regroup(heads.get(n, objs[n][0]), g, space)
+    if relabel:
+        found = [] if intent else [(n, icc) for n in objs for icc, icc_data in [profile(n)] if icc_data == target]
+        space = None # (an ICCBased space of the profile, made only if the groups' objects are pointed at one)
+        if intent:
+            icc = None
+        elif found:
+            space, icc = found[0]
         else:
-            added[g] = b'[ /ICCBased %d 0 R ]' % icc
-            if others:
-                copy, size = size, size + 1
-                added[copy] = objs[g][0]
-                for n in others:
-                    heads[n] = regroup(ref.sub(b'%d 0 R' % copy, heads.get(n, objs[n][0])), copy, g)
+            profiles = [n for n, (head, start, _) in objs.items() if start is not None and re.search(rb'/N\s+[134]\b', head) and b'/Subtype' not in head]
+            icc = next((n for n in profiles if data(n) == target), None)
+            if icc is None:
+                compressed = zlib.compress(target)
+                components = CGColorSpaceGetNumberOfComponents(blend_space)
+                alternate = b'/DeviceCMYK' if components == 4 else b'/DeviceRGB'
+                icc, size = size, size + 1
+                added[icc] = b'<< /N %d /Alternate %s /Length %d /Filter /FlateDecode >>\nstream\n%s\nendstream' % (components, alternate, len(compressed), compressed)
+
+        new_space = b'/DeviceCMYK' if intent else b'[ /ICCBased %d 0 R ]' % icc
+
+        def cost(ns):
+            return sum(len(objs[n][0]) + (objs[n][2] or 0) for n in ns)
+
+        def regroup(head, old, new):
+            return re_group_cs.sub(lambda m: m.group(1) + (b'%d' % new if int(m.group(2)) == old else m.group(2)) + m.group(3), head)
+
+        for g in relabel:
+            ref = re.compile(rb'(?<![\d.])%d\s+0\s+R' % g)
+            others = []
+            for n in objs:
+                head = heads.get(n, objs[n][0])
+                group_refs = sum(int(m.group(2)) == g for m in re_group_cs.finditer(head))
+                if len(ref.findall(head)) > group_refs:
+                    others.append(n)
+            if others and cost(holders[g]) < cost(others):
+                if space is None:
+                    space, size = size, size + 1
+                    added[space] = new_space
+                for n in holders[g]:
+                    heads[n] = regroup(heads.get(n, objs[n][0]), g, space)
+            else:
+                added[g] = new_space
+                if others:
+                    copy, size = size, size + 1
+                    added[copy] = objs[g][0]
+                    for n in others:
+                        heads[n] = regroup(ref.sub(b'%d 0 R' % copy, heads.get(n, objs[n][0])), copy, g)
+
+    if intent:
+        root = int(re.search(rb'/Root (\d+) 0 R', trailer.group(1)).group(1))
+        info = re.search(rb'/Info (\d+) 0 R', trailer.group(1))
+        info_head = objs[int(info.group(1))][0] if info else b'<< >>'
+        created = re.search(rb'/CreationDate\s*\((.*?)\)', info_head)
+        modified = re.search(rb'/ModDate\s*\((.*?)\)', info_head)
+        producer = re.search(rb'/Producer\s*\(((?:\\.|[^\\)])*)\)', info_head)
+        ids = re.findall(rb'<([0-9a-fA-F]{32})>', trailer.group(1))
+        def iso(date):
+            m = date and re_pdf_date.match(date.group(1))
+            if not m:
+                return time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+            y, mo, d, h, mi, sec, z, sign, oh, om = [g.decode() if g else g for g in m.groups()]
+            return '%s-%s-%sT%s:%s:%s%s' % (y, mo, d, h, mi, sec, 'Z' if z or not sign else '%s%s:%s' % (sign, oh, om))
+        def uuid(hex_id):
+            h = hex_id.decode().lower()
+            return '%s-%s-%s-%s-%s' % (h[:8], h[8:12], h[12:16], h[16:20], h[20:])
+        def xml(text):
+            return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        from plotdevice import __version__
+        title = title or 'Untitled'
+        creator = 'PlotDevice %s' % __version__
+        producer_text = re.sub(rb'\\(.)', rb'\1', producer.group(1)).decode('latin-1') if producer else creator
+        packet = XMP.format(title=xml(title), created=iso(created), modified=iso(modified or created), creator=creator,
+                            producer=xml(producer_text), document=uuid(ids[0]) if ids else '00000000-0000-0000-0000-000000000000',
+                            instance=uuid(ids[-1]) if ids else '00000000-0000-0000-0000-000000000000').encode('utf-8')
+        metadata, size = size, size + 1
+        added[metadata] = b'<< /Type /Metadata /Subtype /XML /Length %d >>\nstream\n%s\nendstream' % (len(packet), packet)
+
+        catalog = re.sub(rb'\s*/(Version\s*/[\d.]+|OutputIntents\s+\d+ 0 R)', b'', objs[root][0])
+        heads[root] = catalog[:catalog.rindex(b'>>')] + b' /Version /1.6 /OutputIntents %d 0 R /Metadata %d 0 R >>' % (outputs, metadata)
+        entries = b' /Title %s /Creator (%s) /Trapped /False /GTS_PDFXVersion (PDF/X-4)' % (pdf_text(title), creator.encode())
+        info_head = re.sub(rb'\s*/(Title|Creator|Trapped|GTS_PDFXVersion)\s*(\((?:\\.|[^\\)])*\)|<[^>]*>|/\w+)', b'', info_head)
+        if info:
+            heads[int(info.group(1))] = info_head[:info_head.rindex(b'>>')] + entries + b' >>'
+        else:
+            info_obj, size = size, size + 1
+            added[info_obj] = b'<<%s >>' % entries
+
+        for n, (head, _, _) in objs.items():
+            if re.search(rb'/Type\s*/Page\b', head) and b'/TrimBox' not in head:
+                box = re.search(rb'/MediaBox\s*(\[[^\]]*\])', head)
+                parent = re.search(rb'/Parent\s+(\d+) 0 R', head)
+                while not box and parent and int(parent.group(1)) in objs: # (inherited)
+                    up = objs[int(parent.group(1))][0]
+                    box, parent = re.search(rb'/MediaBox\s*(\[[^\]]*\])', up), re.search(rb'/Parent\s+(\d+) 0 R', up)
+                if box:
+                    page = heads.get(n, head)
+                    heads[n] = page[:page.rindex(b'>>')] + b' /TrimBox %s >>' % box.group(1)
+
+
+    if not added and not heads:
+        return b''
     updates = dict(added)
     for n, head in heads.items():
         updates[n] = head if objs[n][1] is None else head + b'\nstream\n' + stream(n) + b'\nendstream'
@@ -100,17 +206,21 @@ def pdf_update(pdf, blend_space):
         update.append(obj)
         offsets[n], pos = pos, pos + len(obj)
     keep = b' '.join(re.findall(rb'/(?:Root|Info) \d+ 0 R|/ID\s*\[[^\]]*\]', trailer.group(1)))
+    if intent and not re.search(rb'/Info \d+ 0 R', keep):
+        keep += b' /Info %d 0 R' % info_obj
     update.append(b'xref\n' + b''.join(b'%d 1\n%010d 00000 n \n' % (n, offsets[n]) for n in sorted(offsets)))
     update.append(b'trailer\n<< /Size %d %s /Prev %d >>\nstartxref\n%d\n%%%%EOF\n' % (size, keep, int(tail.group(1)), pos))
     return b''.join(update)
 
 class PDFBook(object):
 
-    def __init__(self, fname, zoom=1.0):
+    def __init__(self, fname, zoom=1.0, press=None):
+        from ..gfx.colors import _output_intent # (gfx imports this module)
         self.fname = fname
         self.zoom = zoom
         self.pages = 0
         self.closed = False
+        self.intent = _output_intent(press) if press else None # (a press's output intent, added once it's closed)
         self.blend_space = None # the space its groups blend in, from its first page's output mode
         self.context = CGPDFContextCreateWithURL(NSURL.fileURLWithPath_(fname), None, None)
 
@@ -128,7 +238,7 @@ class PDFBook(object):
         self.context = None
         if self.blend_space is not None:
             with open(self.fname, 'rb') as f:
-                update = pdf_update(f.read(), self.blend_space)
+                update = pdf_update(f.read(), self.blend_space, self.intent, os.path.splitext(os.path.basename(self.fname))[0])
             with open(self.fname, 'ab') as f:
                 f.write(update)
         self.closed = True
@@ -244,7 +354,7 @@ class ExportSession(object):
 re_padded = re.compile(r'{(\d+)}')
 class ImageExportSession(ExportSession):
     def __init__(self, fname, format='pdf', zoom=1.0, first=1, last=None, single=False, colors=None, **rest):
-        from ..gfx.colors import _output_colors, CMYK # (gfx imports this module)
+        from ..gfx.colors import _output_colors, _output_mode, CMYK # (gfx imports this module)
         super(ImageExportSession, self).__init__()
         self.single_file = single or first==last
         if last is not None:
@@ -253,7 +363,7 @@ class ImageExportSession(ExportSession):
         self.zoom = zoom
         self.colors = _output_colors(colors, format)
         self.on_main = format == 'eps' # (it's drawn through an NSView)
-        cmyk_bitmap = self.colors == CMYK and format in ('jpeg', 'jpg', 'tiff')
+        cmyk_bitmap = _output_mode(self.colors) == CMYK and format in ('jpeg', 'jpg', 'tiff')
         self.presents = format not in ('pdf', 'eps') and not cmyk_bitmap
 
         m = re_padded.search(fname)
@@ -264,7 +374,7 @@ class ImageExportSession(ExportSession):
             if pad:
                 fname = re_padded.sub(pad%0, fname, count=1)
             if format == 'pdf':
-                self.writer = PDFBook(fname, zoom)
+                self.writer = PDFBook(fname, zoom, self.colors if _output_mode(self.colors) == CMYK and self.colors != CMYK else None)
             else:
                 self.writer = Pages.alloc().initWithFile_(fname)
         else:
@@ -277,7 +387,7 @@ class ImageExportSession(ExportSession):
             self.writer = Pages.alloc().initWithPattern_(name_tmpl)
 
     def add(self, canvas, render=None):
-        frame = canvas.commit(self.colors)
+        frame = canvas.commit(self.colors, self.format)
         writer, format, zoom = self.writer, self.format, self.zoom
         def work(cancelled):
             if isinstance(writer, PDFBook):
@@ -340,7 +450,7 @@ class MovieExportSession(ExportSession):
             print('unrecognized output format: %s' % self.format)
             return self.shutdown()
 
-        frame = canvas.commit(self.colors)
+        frame = canvas.commit(self.colors, self.format)
         if not self.writer:
             size = self.size = frame._raster_size(self.zoom)
             if self.format == 'mov':

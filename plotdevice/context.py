@@ -15,7 +15,7 @@ from .gfx.geometry import Dimension, parse_coords, IDENTITY
 from .gfx.typography import Layout
 from .gfx.effects import Frob
 from .gfx import *
-from .gfx.colors import _named, _output_colors, _output_space, _INKS
+from .gfx.colors import _named, _output_colors, _output_space, _output_mode, _output_intent, _INKS
 from . import gfx, lib, util, Halted, DeviceError
 
 __all__ = ('Context', 'Canvas')
@@ -29,7 +29,7 @@ GridUnits = namedtuple('GridUnits', ['unit', 'dpx', 'to_px', 'from_px'])
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    _state_vars = '_outputmode', '_colormode', '_colorrange', '_colorspace', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_params', '_vars'
+    _state_vars = '_outputmode', '_press', '_colormode', '_colorrange', '_colorspace', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_params', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -82,6 +82,7 @@ class Context(object):
         self._activate()
 
         # color state
+        self._press = None # the press of the enclosing `with export(..., colors=<press>)` (see gfx._outputpress)
         self._colormode = RGB
         self._colorrange = 1.0
         self._colorspace = P3
@@ -1793,8 +1794,8 @@ class Canvas(object):
         except IndexError as e:
             raise DeviceError("pop: too many canvas pops!")
 
-    def commit(self, colors=None):
-        return Frame(self, colors)
+    def commit(self, colors=None, format=None):
+        return Frame(self, colors, format)
 
     @property
     def _nsImage(self):
@@ -1802,12 +1803,12 @@ class Canvas(object):
         return self.commit()._render_to_image()
 
     def _getImageData(self, format, zoom=1.0, colors=None):
-        return self.commit(_output_colors(colors, format))._getImageData(format, zoom)
+        return self.commit(_output_colors(colors, format), format)._getImageData(format, zoom)
 
     def save(self, fname, format=None, zoom=1.0, cmyk=False, colors=None):
         """Write the current graphics objects to an image file (in `colors`, or CMYK if `cmyk` is set)"""
         format = (format or fname.rsplit('.',1)[-1]).lower()
-        self.commit(_output_colors(CMYK if cmyk else colors, format)).save(fname, format, zoom)
+        self.commit(_output_colors(CMYK if cmyk else colors, format), format).save(fname, format, zoom)
 
 
 def _unheld(grobs):
@@ -1937,13 +1938,17 @@ def _render_bounds(grob, boxes):
 
 class Frame(object):
 
-    def __init__(self, canvas, colors=None):
+    def __init__(self, canvas, colors=None, format=None):
         self.colors = colors
+        self.press = colors if _output_mode(colors) == CMYK and colors != CMYK else None
         if colors is None:
             self.outputmode = canvas._ctx._outputmode if canvas._ctx else RGB
         else:
-            self.outputmode = CMYK if colors == CMYK else RGB
-        self.ink = None if colors in (None, P3, CMYK) else colors
+            self.outputmode = _output_mode(colors)
+        if self.press:
+            self.ink = (self.press, format in ('tiff', 'jpg', 'jpeg'))
+        else:
+            self.ink = None if colors in (None, P3, CMYK) else colors
 
         token = gfx._committing.set(self)
         try:
@@ -2052,16 +2057,18 @@ class Frame(object):
 
     @property
     def _surface_space(self):
-        return _INKS[self.ink] if self.ink else None
+        return _INKS[self.ink] if self.ink and not self.press else None
 
     @property
     def _blend_space(self):
-        return _output_space(self.colors or P3) if self.outputmode != CMYK else None
+        if self.outputmode == CMYK:
+            return _output_space(self.press) if self.press else None
+        return _output_space(self.colors or P3)
 
-    def _getImageData(self, format, zoom=1.0):
-        return self._encode(format, zoom)[0]
+    def _getImageData(self, format, zoom=1.0, title=None):
+        return self._encode(format, zoom, title=title)[0]
 
-    def _encode(self, format, zoom=1.0, cancelled=None):
+    def _encode(self, format, zoom=1.0, cancelled=None, title=None):
         if format == 'pdf':
             w, h = self.pagesize
             cgData = NSMutableData.alloc().init() # (owned, as the surface)
@@ -2073,7 +2080,8 @@ class Frame(object):
             CGPDFContextClose(pdfContext)
             pdfContext = None
             if self._blend_space is not None:
-                update = pdf_update(bytes(cgData), self._blend_space)
+                intent = _output_intent(self.press) if self.press else None # (added by the patcher, see colors)
+                update = pdf_update(bytes(cgData), self._blend_space, intent, title)
                 cgData.appendBytes_length_(update, len(update))
             return cgData, None
         elif format == 'eps':
@@ -2090,9 +2098,11 @@ class Frame(object):
 
             size = Size(*[int(dim*zoom) for dim in self.pagesize])
             surface = None
-            if format in ('jpeg', 'jpg', 'tiff') and self.colors == CMYK:
-                colorspace, opts = CGColorSpaceCreateDeviceCMYK(), kCGImageAlphaNone
+            if format in ('jpeg', 'jpg', 'tiff') and self.outputmode == CMYK and self.colors is not None:
+                colorspace, opts = _output_space(self.press) if self.press else CGColorSpaceCreateDeviceCMYK(), kCGImageAlphaNone
                 bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
+                if self.press:
+                    CGContextSetRenderingIntent(bitmapContext, kCGRenderingIntentRelativeColorimetric)
                 self._render_to_context(bitmapContext, zoom, cancelled)
                 cgImage = CGBitmapContextCreateImage(bitmapContext)
             else:
@@ -2117,7 +2127,7 @@ class Frame(object):
         """Write the current graphics objects to an image file"""
         if format is None:
             format = fname.rsplit('.',1)[-1].lower()
-        data = self._getImageData(format, zoom)
+        data = self._getImageData(format, zoom, os.path.splitext(os.path.basename(fname))[0])
         fname = NSString.stringByExpandingTildeInPath(fname)
         data.writeToFile_atomically_(fname, False)
 

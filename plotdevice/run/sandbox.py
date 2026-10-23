@@ -7,6 +7,7 @@ from PyObjCTools import AppHelper
 from ..lib.io import MovieExportSession, ImageExportSession
 from .common import stacktrace, coredump, uncoded
 from plotdevice import util, context, gfx, Halted, DeviceError
+from ..gfx.colors import _output_mode
 
 __all__ = ['Sandbox']
 
@@ -189,7 +190,7 @@ class Sandbox(object):
         # if this is the initial pass, reset the namespace and canvas state
         if method is None:
             check = self._preflight() # compile the script
-            self.context._outputmode = 'cmyk' if self._meta.colors == 'cmyk' else 'rgb'
+            self.context._outputmode = _output_mode(self._meta.colors)
             self.context._cli_colors = self._meta.colors
             if not check.ok:
                 return check

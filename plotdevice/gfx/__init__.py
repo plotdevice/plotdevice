@@ -123,11 +123,19 @@ def _outputmode():
     frame = _frame.get() or _committing.get()
     return _ctx._outputmode if frame is None else frame.outputmode
 
+def _outputpress():
+    frame = _frame.get() or _committing.get()
+    if frame is not None:
+        return frame.press
+    if _ctx._press:
+        return _ctx._press
+    return _ctx._cli_colors if _ctx._cli_colors in colors._PRESS_SPACES else None
+
 def _inkmode():
     mode = _outputmode()
     frame = _frame.get() or _committing.get()
     ink = None if frame is None else frame.ink
-    return ink if mode == 'rgb' and ink else mode
+    return ink or mode
 
 def _canvas_dims():
     frame = _frame.get()

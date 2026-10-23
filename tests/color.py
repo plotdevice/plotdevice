@@ -12,6 +12,10 @@ from plotdevice import _ctx, DeviceError
 P3_RED_IN_SRGB = (1.0930908918380737, -0.22684034705162048, -0.15007957816123962)
 SRGB_RED_IN_P3 = (0.9174699187278748, 0.2003689408302307, 0.13852068781852722)
 
+GRACOL_RED = (0, .937, 1, 0)
+DARK_GREYS = {GRACOL: ((83, 74, 61, 100), (82, 73, 62, 95), (80, 72, 62, 91), (78, 70, 63, 84), (0, 0, 0, 0)),
+              FOGRA47: ((77, 60, 56, 95), (77, 58, 54, 94), (76, 56, 52, 93), (75, 53, 49, 89), (0, 0, 0, 0))}
+
 def _image(path):
     from Foundation import NSURL
     from Quartz import (CGImageSourceCreateWithURL, CGImageSourceCreateImageAtIndex, CGImageGetColorSpace,
@@ -210,6 +214,28 @@ class ColorTests(PlotDeviceTestCase):
             mid = color(1, 0, 0, space=P3).blend('#00f', .5)
         self.assertEqual(mid.space, SRGB)
         self.assertComponents(mid.rgba, ((P3_RED_IN_SRGB[0]) / 2, P3_RED_IN_SRGB[1] / 2, (1 + P3_RED_IN_SRGB[2]) / 2, 1))
+
+    def test_cmyk_colors_blend_in_cmyk(self):
+        k50 = color(0, 0, 0, 1, mode=CMYK).blend(color(0, 0, 0, 0, mode=CMYK), .5)
+        self.assertComponents(k50.cmyka, (0, 0, 0, .5, 1))
+        self.assertComponents(color(1, 0, 0, 0, mode=CMYK).blend(color(0, 1, 0, 0, mode=CMYK), .25).cmyka, (.75, .25, 0, 0, 1))
+
+    def test_reads_of_cmyk_colors_go_through_the_export_blocks_press(self):
+        from Quartz import CGColorCreate
+        from plotdevice.gfx.colors import _PRESS_SPACES, _components, _matched, _SPACES
+        cyan, white = color(1, 0, 0, 0, mode=CMYK), color(1)
+        outside = (cyan.rgba, cyan.hex, cyan.blend(white, .5).rgba, hash(cyan))
+        size(10, 10)
+        with export(join(self.tmp, 'press.pdf'), colors=FOGRA47):
+            inside = (cyan.rgba, cyan.hex, cyan.blend(white, .5).rgba, hash(cyan))
+            self.assertEqual(cyan, color(1, 0, 0, 0, mode=CMYK)) # (equality & hashing ignore the press)
+        direct = _components(_matched(CGColorCreate(_PRESS_SPACES[FOGRA47], (1, 0, 0, 0, 1)), _SPACES[P3]))
+        self.assertComponents(inside[0], direct)
+        self.assertComponents(inside[2], [v + (1 - v) * .5 for v in direct])
+        self.assertNotEqual(inside[1], outside[1])
+        self.assertGreater(abs(inside[0][0] - outside[0][0]), .05)
+        self.assertEqual(inside[3], outside[3])
+        self.assertEqual((cyan.rgba, cyan.hex), outside[:2]) # (generic cmyk again after the block)
 
     def test_gradient_keeps_the_space_its_made_in(self):
         with color(space=SRGB):
@@ -418,6 +444,170 @@ class ColorTests(PlotDeviceTestCase):
         self.assertEqual(caught[0].filename, __file__) # (pointing at the export() call)
         export(join(self.tmp, 'new.tiff'), colors=CMYK)
         self.assertEqual(open(join(self.tmp, 'old.tiff'), 'rb').read(), open(join(self.tmp, 'new.tiff'), 'rb').read())
+
+    def test_bundled_presses_are_the_profiles_the_readme_lists(self):
+        import hashlib
+        from plotdevice.gfx.colors import _press_profile, _PRESSES
+        from plotdevice.util import rsrc_path
+        readme = open(rsrc_path('press/README.md')).read()
+        sums = dict((name, digest) for digest, name in re.findall(r'^([0-9a-f]{64})  (\S+)$', readme, re.M))
+        presses = dict(GRACOL='crpc6', GRACOL_UNCOATED='crpc3', SWOP='crpc5', FOGRA39='fogra39', FOGRA47='fogra47')
+        for name, value in presses.items():
+            self.assertEqual(globals()[name], value)
+            profile = _press_profile(value) # (decompressed from rsrc/press)
+            self.assertEqual(hashlib.sha256(profile).hexdigest(), sums[_PRESSES[value]], name)
+            self.assertEqual((profile[12:16], profile[16:20]), (b'prtr', b'CMYK'), name)
+        self.assertEqual(len(sums), len(presses))
+
+    def test_rsrc_path_finds_resources_the_modules_rsrc_lacks_in_its_apps_resources(self):
+        import plotdevice.util as util
+        app = join(self.tmp, 'Fake.app/Contents')
+        module = join(app, 'Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/plotdevice')
+        for path in (join(module, 'rsrc/colors.json'), join(app, 'Resources/press/GRACoL2013_CRPC6.icc')):
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            open(path, 'w').close()
+        real = util.__file__
+        util.__file__ = join(module, 'util/__init__.py')
+        try:
+            self.assertEqual(util.rsrc_path(), join(module, 'rsrc'))
+            self.assertEqual(util.rsrc_path('colors.json'), join(module, 'rsrc/colors.json'))
+            self.assertEqual(util.rsrc_path('press/GRACoL2013_CRPC6.icc'), join(app, 'Resources/press/GRACoL2013_CRPC6.icc'))
+            self.assertEqual(util.rsrc_path('press/missing.icc'), join(module, 'rsrc/press/missing.icc'))
+        finally:
+            util.__file__ = real
+
+    def test_presses_resolve_where_cmyk_fits(self):
+        from plotdevice.gfx.colors import _output_colors, _output_mode, _press_profile
+        path = join(self.tmp, 'press.icc')
+        open(path, 'wb').write(_press_profile(FOGRA47))
+        for val, format, key in ((GRACOL, 'pdf', GRACOL), ('FOGRA39', 'tiff', FOGRA39), ('crpc5', 'eps', SWOP), (path, 'jpg', path)):
+            self.assertEqual(_output_colors(val, format), key)
+            self.assertEqual(_output_mode(key), CMYK)
+        for format in ('png', 'heic', 'gif', 'mov'):
+            with self.assertRaisesRegex(DeviceError, "can't be exported"):
+                _output_colors(GRACOL, format)
+
+    def _press_swatches(self):
+        size(40, 20)
+        background(1)
+        fill(color(0, 0, 0, 1, mode=CMYK))
+        rect(0, 0, 10, 10)
+        fill(color(.6, .4, .4, 1, mode=CMYK))
+        rect(10, 0, 10, 10)
+        fill(1, 0, 0)
+        rect(20, 0, 10, 10)
+        with blend('multiply'):
+            fill(color(0, 0, 1, 0, mode=CMYK))
+            rect(30, 0, 10, 10)
+
+    def test_rgb_colors_keep_their_shadows_in_a_press(self):
+        from plotdevice.gfx.colors import _output_colors
+        for press, greys in DARK_GREYS.items():
+            _output_colors(press, 'pdf') # (loads the press)
+            inks = [color(g / 255, g / 255, g / 255, space=SRGB)._press_values(press) for g in (0, 8, 16, 26, 255)]
+            for got, want in zip(inks, greys):
+                self.assertLessEqual(max(abs(g * 100 - w) for g, w in zip(got, want)), 1, (press, got, want))
+            self.assertEqual(len(set(inks)), 5, press)
+            self.assertEqual(inks[-1], (0, 0, 0, 0, 1))
+
+    def test_press_bitmaps_keep_cmyk_numbers_in_the_press(self):
+        from Quartz import (CGImageSourceCreateWithURL, CGImageSourceCreateImageAtIndex, CGImageGetColorSpace, CGColorSpaceCopyICCData,
+                            CGBitmapContextCreate, CGContextDrawImage, CGBitmapContextCreateImage, CGDataProviderCopyData,
+                            CGImageGetDataProvider, kCGImageAlphaNone)
+        from Foundation import NSURL
+        from plotdevice.gfx.colors import _press_profile
+        self._press_swatches()
+        red = tuple(round(v * 255) for v in GRACOL_RED)
+        for ext in ('tiff', 'jpg'):
+            path = join(self.tmp, 'press.' + ext)
+            export(path, colors=GRACOL)
+            img = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(path), None), 0, None)
+            space = CGImageGetColorSpace(img)
+            self.assertEqual(bytes(CGColorSpaceCopyICCData(space)), _press_profile(GRACOL), ext)
+            ctx = CGBitmapContextCreate(None, 40, 20, 8, 160, space, kCGImageAlphaNone)
+            CGContextDrawImage(ctx, ((0, 0), (40, 20)), img)
+            data = bytes(CGDataProviderCopyData(CGImageGetDataProvider(CGBitmapContextCreateImage(ctx))))
+            pixel = lambda x, y: tuple(data[(y * 40 + x) * 4:][:4])
+            off = 0 if ext == 'tiff' else 4
+            for (x, y), want in (((5, 5), (0, 0, 0, 255)), ((15, 5), (153, 102, 102, 255)), ((25, 5), red), ((5, 15), (0, 0, 0, 0))):
+                self.assertLessEqual(max(abs(g - w) for g, w in zip(pixel(x, y), want)), max(off, 1), (ext, x, y, pixel(x, y), want))
+
+    def test_press_pdfs_are_pdfx4(self):
+        import zlib
+        from plotdevice.gfx.colors import _press_profile
+        self._press_swatches()
+        path = join(self.tmp, 'press.pdf')
+        export(path, colors=GRACOL)
+        pdf = open(path, 'rb').read()
+        streams = []
+        for data in re.findall(rb'stream\r?\n(.*?)endstream', pdf, re.S):
+            try:
+                streams.append(zlib.decompress(data))
+            except zlib.error:
+                streams.append(data.strip()) # (the XMP packet, uncompressed)
+        icc = _press_profile(GRACOL)
+        self.assertEqual(streams.count(icc), 1) # (the output intent's)
+        drawn = b''.join(s for s in streams if s != icc and not s.startswith(b'<?xpacket'))
+        fills = set(re.sub(rb'\s+', b' ', k) for k in re.findall(rb'[-\d.]+\s+[-\d.]+\s+[-\d.]+\s+[-\d.]+(?=\s+k\b)', drawn))
+        self.assertTrue({b'0 0 0 1', b'0.6 0.4 0.4 1', b'0 0 1 0', b'0 0 0 0'} <= fills, fills)
+        self.assertTrue(any(all(abs(float(a) - b) < .01 for a, b in zip(f.split(), GRACOL_RED)) for f in fills), (fills, GRACOL_RED))
+        for expected in (rb'/OutputIntents (\d+) 0 R', rb'/Version /1.6 /OutputIntents \d+ 0 R /Metadata', rb'/OutputConditionIdentifier \(CGATS21-2-CRPC6\)',
+                         rb'<pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion>', rb'/Trapped /False /GTS_PDFXVersion \(PDF/X-4\)',
+                         rb'/TrimBox \[0 0 40 20\]'):
+            self.assertTrue(re.search(expected, pdf), expected)
+        groups = re.findall(rb'/Group\s*<<[^>]*/CS\s+(\d+) 0 R', pdf)
+        self.assertTrue(groups)
+        self.assertTrue(re.search(rb'\n%s 0 obj\n/DeviceCMYK\s*endobj' % groups[-1], pdf), groups)
+
+    def test_placed_images_in_a_press(self):
+        from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorSpaceCreateWithICCData, CGColorSpaceCreateDeviceCMYK,
+                            CGColorSpaceCreateWithName, kCGColorSpaceSRGB, kCGImageAlphaPremultipliedLast, CGContextSetFillColorWithColor,
+                            CGColorCreate, CGContextFillRect, CGImageCreateCopyWithColorSpace, CGImageDestinationCreateWithURL,
+                            CGImageDestinationAddImage, CGImageDestinationFinalize, kCGImageAlphaNone, CGImageSourceCreateWithURL,
+                            CGImageSourceCreateImageAtIndex, CGImageGetColorSpace, CGContextDrawImage, CGDataProviderCopyData, CGImageGetDataProvider)
+        from Foundation import NSURL
+        from plotdevice.gfx.colors import _press_profile
+        def write(name, space, comps, alpha=kCGImageAlphaNone, relabel=None):
+            ctx = CGBitmapContextCreate(None, 10, 10, 8, 40, space, alpha)
+            CGContextSetFillColorWithColor(ctx, CGColorCreate(space, comps + (1,)))
+            CGContextFillRect(ctx, ((0, 0), (10, 10)))
+            img = CGBitmapContextCreateImage(ctx)
+            path = join(self.tmp, name)
+            dest = CGImageDestinationCreateWithURL(NSURL.fileURLWithPath_(path), 'public.tiff', 1, None)
+            CGImageDestinationAddImage(dest, CGImageCreateCopyWithColorSpace(img, relabel) if relabel else img, None)
+            CGImageDestinationFinalize(dest)
+            return path
+        def pixel(path):
+            img = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(path), None), 0, None)
+            ctx = CGBitmapContextCreate(None, 30, 10, 8, 120, CGImageGetColorSpace(img), kCGImageAlphaNone)
+            CGContextDrawImage(ctx, ((0, 0), (30, 10)), img)
+            data = bytes(CGDataProviderCopyData(CGImageGetDataProvider(CGBitmapContextCreateImage(ctx))))
+            return [tuple(round(v / 2.55) for v in data[(5 * 30 + x) * 4:][:4]) for x in (5, 15, 25)]
+        gracol = CGColorSpaceCreateWithICCData(_press_profile(GRACOL))
+        tagged = write('gracol.tiff', gracol, (.6, .4, .4, 1))
+        untagged = write('untagged.tiff', gracol, (0, 0, 0, 1), relabel=CGColorSpaceCreateDeviceCMYK())
+        orange = write('orange.tiff', CGColorSpaceCreateWithName(kCGColorSpaceSRGB), (1, .5, 0), kCGImageAlphaPremultipliedLast)
+        size(30, 10)
+        for i, path in enumerate((tagged, untagged, orange)):
+            image(path, i * 10, 0)
+        for colors in (FOGRA39, CMYK):
+            export(join(self.tmp, 'placed.tiff'), colors=colors)
+            got = pixel(join(self.tmp, 'placed.tiff'))
+            self.assertEqual(got[:2], [(60, 40, 40, 100), (0, 0, 0, 100)], colors)
+        export(join(self.tmp, 'placed.tiff'), colors=GRACOL)
+        self.assertEqual(pixel(join(self.tmp, 'placed.tiff'))[2], (0, 60, 96, 0)) # (perceptual: relative would give Y 100)
+        export(join(self.tmp, 'placed.pdf'), colors=FOGRA39)
+        pdf = open(join(self.tmp, 'placed.pdf'), 'rb').read()
+        spaces = re.findall(rb'/Subtype /Image[^>]*?/ColorSpace\s+(/\w+|\d+ 0 R)', pdf)
+        self.assertEqual(spaces.count(b'/DeviceCMYK'), 2, spaces) # (the orange stays rgb, for the rip to convert)
+
+    def test_press_eps_keeps_the_numbers(self):
+        self._press_swatches()
+        export(join(self.tmp, 'press.eps'), colors=GRACOL)
+        eps = open(join(self.tmp, 'press.eps'), 'rb').read().decode('latin-1')
+        inks = set(tuple(round(float(v), 4) for v in m.split()) for m in re.findall(r'([-\d.]+ [-\d.]+ [-\d.]+ [-\d.]+) (?:setcmykcolor|k)\b', eps))
+        self.assertIn((0, 0, 0, 1), inks)
+        self.assertIn((.6, .4, .4, 1), inks)
 
     def _pdf_pixels(self, path):
         from Quartz import (CGPDFDocumentCreateWithURL, CGPDFDocumentGetPage, CGContextDrawPDFPage, CGBitmapContextCreate,

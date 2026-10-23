@@ -2,7 +2,8 @@
 
 from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorCreate, CGColorCreateCopyByMatchingToColorSpace, \
                    CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, \
-                   CGColorSpaceCopyICCData, CGColorSpaceCreateWithICCData, \
+                   CGColorSpaceCopyICCData, CGColorSpaceCreateWithICCData, kCGRenderingIntentRelativeColorimetric, CGContextSetRenderingIntent, \
+                   CGColorSpaceGetNumberOfComponents, \
                    CGColorRef, CGColorGetColorSpace, CGColorGetComponents, CGColorGetNumberOfComponents, CGColorSpaceCopyName, \
                    kCGColorSpaceExtendedDisplayP3, kCGColorSpaceExtendedSRGB, kCGColorSpaceGenericCMYK, kCGColorSpaceSRGB, \
                    kCGColorSpaceModelCMYK, \
@@ -81,4 +82,8 @@ from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CI
                        NSZeroRect
 from CoreServices import kUTTypePNG, kUTTypeJPEG, kUTTypeGIF, kUTTypeTIFF
 from WebKit import WKWebView, WKWebViewConfiguration, WKUserScript, WKUserScriptInjectionTimeAtDocumentStart
+from ColorSync import ColorSyncProfileCreate, ColorSyncProfileCreateWithName, ColorSyncTransformCreate, ColorSyncTransformConvert, \
+                      kColorSyncDisplayP3Profile, kColorSyncProfile, kColorSyncRenderingIntent, kColorSyncRenderingIntentRelative, \
+                      kColorSyncTransformTag, kColorSyncTransformDeviceToPCS, kColorSyncTransformPCSToDevice, \
+                      kColorSyncBlackPointCompensation, kColorSync16BitInteger, kColorSyncAlphaNone
 from objc import IBOutlet, IBAction

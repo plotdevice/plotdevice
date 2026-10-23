@@ -18,7 +18,7 @@ from ..util.readers import get_http_session, last_modified
 from ..lib.io import MovieExportSession, ImageExportSession
 from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
-from .colors import RGB, CMYK
+from .colors import RGB, CMYK, _output_mode, _PRESS_SPACES
 from . import _ns_context, _cg_port, _frame
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
@@ -357,7 +357,9 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                     rep = next((r for r in image.representations() if isinstance(r, NSBitmapImageRep)), None)
                     cg = rep.CGImage() if rep is not None else None
                     if cg is not None and CGColorSpaceGetModel(CGImageGetColorSpace(cg)) == kCGColorSpaceModelCMYK:
-                        image = NSImage.alloc().initWithCGImage_size_(CGImageCreateCopyWithColorSpace(cg, CGColorSpaceCreateDeviceCMYK()), image.size())
+                        in_space = frame.press and frame.ink[1]
+                        space = _PRESS_SPACES[frame.press] if in_space else CGColorSpaceCreateDeviceCMYK()
+                        image = NSImage.alloc().initWithCGImage_size_(CGImageCreateCopyWithColorSpace(cg, space), image.size())
                         image.setFlipped_(True)
                 bounds = ((0,0), image.size()) # draw the image at (0,0)
                 image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
@@ -404,7 +406,8 @@ class SequenceRenderer(object):
 
 class ImageWriter(object):
     def __init__(self, fname, format, **opts):
-        self.mode = CMYK if opts['colors'] == CMYK else RGB
+        self.mode = _output_mode(opts['colors'])
+        self.press = opts['colors'] if self.mode == CMYK and opts['colors'] != CMYK else None
         self.fname = os.path.expanduser(fname)
         self.format = format
         self.opts = opts
@@ -418,6 +421,7 @@ class ImageWriter(object):
         self._pool = NSAutoreleasePool.alloc().init()
         _ctx._saveContext()
         _ctx._outputmode = self.mode
+        _ctx._press = self.press # (scripts' reads of cmyk colors as rgb go through it in the block)
         return self
 
     def __exit__(self, type, value, tb):

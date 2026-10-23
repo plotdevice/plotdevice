@@ -1,0 +1,9 @@
+GRACoL2013_CRPC6.icc, GRACoL2013UNC_CRPC3.icc, SWOP2013C3_CRPC5.icc
+
+The terms in each profile's copyright tag (cprt), verbatim:
+
+Copyright X-Rite, Inc. This profile is made available by IDEAlliance, with permission of X-Rite, Inc., and may be
+used, embedded, exchanged, included in commercial software and shared without restriction.  It may not be altered
+without written permission of IDEAlliance except for single site use.
+
+GRACoL and SWOP are trademarks of Idealliance (PRINTING United Alliance, d/b/a Idealliance).

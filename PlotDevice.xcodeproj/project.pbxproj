@@ -385,6 +385,7 @@
 				8D15AC300486D014006FF6A4 /* Sources */,
 				8D15AC330486D014006FF6A4 /* Frameworks */,
 				2A79B148286508220074E96A /* Embed Frameworks */,
+				2A9E55D1300A100000C0FFEE /* Move Press Profiles */,
 				2A36AE34286B81290088976E /* Symlink Command Line Tool */,
 			);
 			buildRules = (
@@ -499,6 +500,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "examples=\"$CONFIGURATION_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/examples\"\nditto Examples $examples\n";
+			showEnvVarsInLog = 0;
+		};
+		2A9E55D1300A100000C0FFEE /* Move Press Profiles */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Move Press Profiles";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# one copy of the press profiles, in the app's Resources (where rsrc_path() finds it), rather than one in each\n# embedded framework's plotdevice/rsrc: moved from the frameworks the app embeds. only the app's copies lose theirs:\n# deps/frameworks keeps its frameworks' installs complete, since venvs and py2app builds run on them too\npress=\"$CONFIGURATION_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/press\"\nrm -rf \"$press\"\nditto \"$CONFIGURATION_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH\"/Python.framework/Versions/Current/lib/python3*/site-packages/plotdevice/rsrc/press \"$press\"\nfor fmwk in \"$CONFIGURATION_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH\"/Python*.framework; do\n  rm -rf \"$fmwk\"/Versions/Current/lib/python3*/site-packages/plotdevice/rsrc/press\ndone\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
