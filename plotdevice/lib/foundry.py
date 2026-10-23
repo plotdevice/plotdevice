@@ -300,6 +300,7 @@ def line_slugs(txt_obj, rng=None):
         block = txt_obj._blocks[frag['block']]
         frame = frag['frame'].rectValue()
         if not block._frame.size.w:
+            # use the shrink-to-fit bounds if no width is specified
             frame.origin.x, frame.size.width = block._shift, block._fit.width
         frame = block._from_px(frame)
         bounds = block._from_px(frag['bounds'].rectValue())
@@ -529,11 +530,12 @@ class Librarian(object):
         self._enc = {}     # psname -> encoding
         self._specs = {}   # spec_dict -> psname
         self._fuzzy = {}   # fammy name -> famname
-        self._styled = odict() # style key -> text attrs (least recently used first)
-        self._checked = monotonic() # when the installed-font list was last compared
+        self._styled = odict() # style key -> text attrs, ordered LRU first
+        self._checked = monotonic() # last installed-font check
         self._mgr.setUsesFontLeading_(False)
 
     def refresh(self):
+        # pick up newly (un)installed fonts once a second
         now = monotonic()
         if now - self._checked < 1.0:
             return
@@ -542,6 +544,7 @@ class Librarian(object):
             self.__init__()
 
     def recall(self, key):
+        """Returns the value remembered for a style key, or None"""
         self.refresh()
         val = self._styled.get(key)
         if val is not None:
@@ -549,6 +552,7 @@ class Librarian(object):
         return val
 
     def remember(self, key, val):
+        """Caches a value until the installed fonts change"""
         self._styled[key] = val
         if len(self._styled) > 2048:
             self._styled.popitem(last=False)

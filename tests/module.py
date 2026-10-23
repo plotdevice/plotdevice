@@ -1,5 +1,5 @@
 import os, sys
-import sysconfig
+import tempfile
 import unittest
 from . import PlotDeviceTestCase, reference
 from subprocess import check_output, run, STDOUT
@@ -34,23 +34,22 @@ class ModuleTests(PlotDeviceTestCase):
         check_output([sys.executable, '-m', 'plotdevice', script, '--export', output], stderr=STDOUT, cwd=sdist_path)
         self.render(save_output=False)
 
-    @unittest.skipUnless(sysconfig.get_config_var('Py_GIL_DISABLED'), 'needs a free-threaded build')
+    @unittest.skipUnless(plotdevice.free_threaded, 'needs a free-threaded build')
     def test_cli_gil(self):
-        import tempfile
+        # the free-threaded cli relaunches with -X gil=0
         with tempfile.TemporaryDirectory() as tmp:
             script = os.path.join(tmp, 'gil.pv')
             with open(script, 'w') as f:
                 f.write("import sys\nprint('gil=%s xgil=%s' % (sys._is_gil_enabled(), sys._xoptions.get('gil')))\nsize(10, 10)\n")
             def gil(**env):
                 env = {k: v for k, v in os.environ.items() if k != 'PYTHON_GIL'} | env
-                out = check_output([sys.executable, '-m', 'plotdevice', script, '--export', os.path.join(tmp, 'gil.png')],
-                                   stderr=STDOUT, cwd=sdist_path, env=env, text=True)
-                return out
+                return check_output([sys.executable, '-m', 'plotdevice', script, '--export', os.path.join(tmp, 'gil.png')],
+                                    stderr=STDOUT, cwd=sdist_path, env=env, text=True)
             self.assertIn('gil=False xgil=0', gil())                     # relaunched with -X gil=0
-            self.assertIn('gil=True xgil=None', gil(PYTHON_GIL='1'))     # the user's choice wins, no relaunch
+            self.assertIn('gil=True xgil=None', gil(PYTHON_GIL='1'))     # the user's choice wins
 
     def test_cli_shows_deprecation_warnings(self):
-        import tempfile
+        # FutureWarnings name the script's line
         with tempfile.TemporaryDirectory() as tmp:
             script = os.path.join(tmp, 'deprecated.pv')
             with open(script, 'w') as f:
@@ -62,7 +61,7 @@ class ModuleTests(PlotDeviceTestCase):
             self.assertIn('%s:3: FutureWarning: The \'image\' attribute is deprecated' % script, out.stderr)
 
     def test_cli_colors(self):
-        import tempfile
+        # --colors sets -q exports' default colors
         with tempfile.TemporaryDirectory() as tmp:
             script = os.path.join(tmp, 'colors.pv')
             with open(script, 'w') as f:
@@ -75,6 +74,7 @@ class ModuleTests(PlotDeviceTestCase):
             image = lambda name: CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(os.path.join(tmp, name)), None), 0, None)
             self.assertEqual(CGColorSpaceGetModel(CGImageGetColorSpace(image('own.tiff'))), kCGColorSpaceModelCMYK)
             self.assertNotEqual(CGColorSpaceGetModel(CGImageGetColorSpace(image('chosen.tiff'))), kCGColorSpaceModelCMYK)
+            # and the press cmyk colors are read through
             reads = os.path.join(tmp, 'reads.pv')
             with open(reads, 'w') as f:
                 f.write("print(color(1, 0, 0, 0, mode=CMYK).hex)\n")
@@ -95,6 +95,24 @@ class ModuleTests(PlotDeviceTestCase):
         free_threaded = run([sys.executable, '-m', 'plotdevice', '-t', script], capture_output=True, text=True, cwd=sdist_path)
         self.assertEqual(free_threaded.returncode, 2)
         self.assertIn('unrecognized arguments: -t', free_threaded.stderr)
+
+    def test_rsrc_path_finds_resources_the_modules_rsrc_lacks_in_its_apps_resources(self):
+        # the Xcode app keeps them in Resources
+        import plotdevice.util as util
+        with tempfile.TemporaryDirectory() as tmp:
+            app = os.path.join(tmp, 'Fake.app/Contents')
+            module = os.path.join(app, 'Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/plotdevice')
+            for path in (os.path.join(module, 'rsrc/colors.json'), os.path.join(app, 'Resources/press/GRACoL2013_CRPC6.icc')):
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                open(path, 'w').close()
+            real = util.__file__
+            util.__file__ = os.path.join(module, 'util/__init__.py')
+            try:
+                self.assertEqual(util.rsrc_path('colors.json'), os.path.join(module, 'rsrc/colors.json'))
+                self.assertEqual(util.rsrc_path('press/GRACoL2013_CRPC6.icc'), os.path.join(app, 'Resources/press/GRACoL2013_CRPC6.icc'))
+                self.assertEqual(util.rsrc_path('press/missing.icc'), os.path.join(module, 'rsrc/press/missing.icc'))
+            finally:
+                util.__file__ = real
 
 
 def suite():

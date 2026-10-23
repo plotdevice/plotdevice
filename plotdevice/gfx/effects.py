@@ -9,15 +9,14 @@ from plotdevice import DeviceError
 from ..util import numlike
 from .colors import Color
 from .geometry import Point, CORNER
-from . import _cg_context, _cg_layer, _cg_port, _canvas_dims, _base_ctm, _visible, _layer_box, _clips, _frame, _bare, \
-              _render_lock
+from . import _cg_context, _cg_layer, _cg_bitmap, _cg_port, _canvas_dims, _base_ctm, _visible, _layer_box, \
+              _clip_depth, _casting, _render_lock
 
 _ctx = None
 __all__ = ("Effect", "Shadow", "Stencil",)
 
-_QUICK_BLUR = 32  # widest shadow blur (in device px) left to Core Graphics; wider ones are downsampled
+_CG_BLUR_LIMIT = 32  # widest blur handled by Core Graphics
 _OPAQUE = (kCGImageAlphaNone, kCGImageAlphaNoneSkipFirst, kCGImageAlphaNoneSkipLast)
-_ARGB = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
 
 # blend modes
 _BLEND=dict(
@@ -145,41 +144,30 @@ class Effect(Frob):
             CGContextSetBlendMode(_cg_port(), _BLEND[fx['blend']])
         if 'shadow' in fx:
             shadow = Shadow(None) if fx['shadow'] is None else fx['shadow']
-            shadow._set()
+            shadow.set()
 
-        # i *think* it's better to skip the transparency layer when only blending,
-        # but am bracing for the discovery that it's not...
-        return bool(fx) and fx.keys() != {'blend'}
-        # return bool(fx) # return whether any state was just changed
+        return bool(fx) # return whether any state was just changed
 
     @contextmanager
-    def applied(self, owner=None):
+    def applied(self, owner):
         """Apply compositing effects (if any) to any drawing inside the `with` block"""
-        if self._fx and (owner is None or _bare.get() is not owner):
-            box = _layer_box(owner)
+        if self._fx and _casting.get() is not owner:
+            shadowed = 'shadow' in self._fx
             if self.set('blend', 'alpha'):
-                if 'shadow' not in self._fx and getattr(owner, '_one_paint', False):
-                    yield # a lone fill or stroke takes the alpha and blend as exactly as a layer would
+                if not shadowed and getattr(owner, '_paints_once', False):
+                    yield # a lone fill or stroke needs no layer
                 else:
-                    with _cg_layer(box):
-                        if 'shadow' not in self._fx:
+                    with _cg_layer(_layer_box(owner)):
+                        if not shadowed:
                             yield # if there's no shadow, we don't need a second layer
                         else:
-                            with self._shadowed(box, owner):
-                                yield # if there is, it needs one of its own
+                            with (self.shadow or Shadow(None)).applied(owner):
+                                yield # if there is, it needs its own
             else:
-                # no blend or alpha changes, but since _fx exists there must be a shadow
-                with self._shadowed(box, owner):
+                with (self.shadow or Shadow(None)).applied(owner):
                     yield
         else:
             yield
-
-    def _shadowed(self, box, owner):
-        shadow = self._fx.get('shadow')
-        if shadow is None:
-            self.set('shadow') # (a shadow of None turns an inherited one off)
-            return _cg_layer(box)
-        return shadow._cast(box, owner)
 
     def copy(self):
         new = Effect()
@@ -262,61 +250,78 @@ class Shadow(object):
     def copy(self):
         return Shadow(self)
 
-    def _device(self):
+    @property
+    def _device_offset(self):
         a, b, c, d, _, _ = _base_ctm.get()
         x, y = self._offset
-        return (a*x + c*y, b*x + d*y), self._blur * abs(a*d - b*c) ** .5
+        return a*x + c*y, b*x + d*y
 
-    def _set(self):
-        offset, blur = self._device()
-        CGContextSetShadowWithColor(_cg_port(), offset, blur, self._color.cgColor)
+    @property
+    def _device_blur(self):
+        a, b, c, d, _, _ = _base_ctm.get()
+        return self._blur * abs(a*d - b*c) ** .5
+
+    def set(self):
+        CGContextSetShadowWithColor(_cg_port(), self._device_offset, self._device_blur, self._color.cgColor)
 
     @contextmanager
-    def _cast(self, box, owner):
+    def applied(self, owner):
+        """Draw the `with` block's drawing with this shadow behind it"""
         port = _cg_port()
-        (dx, dy), blur = self._device()
-        bitmap = CGBitmapContextGetWidth(port) > 0 and CGBitmapContextGetAlphaInfo(port) not in _OPAQUE \
-                 and CGColorSpaceGetModel(CGBitmapContextGetColorSpace(port)) == kCGColorSpaceModelRGB
+        box = _layer_box(owner)
+        (dx, dy), blur = self._device_offset, self._device_blur
+        in_bitmap = CGBitmapContextGetWidth(port) > 0
+        rgba = in_bitmap and CGBitmapContextGetAlphaInfo(port) not in _OPAQUE \
+               and CGColorSpaceGetModel(CGBitmapContextGetColorSpace(port)) == kCGColorSpaceModelRGB
+        wide = blur > _CG_BLUR_LIMIT
         reach = None
-        if blur > _QUICK_BLUR and box is not None and owner is not None and bitmap and not _clips.get() and _frame.get() is not None:
+
+        # CG's blur is inconsistent (and slows down) as it widens, so for wide blurs scale down first
+        if wide and box is not None and rgba and not _clip_depth.get():
+            # the target and what can shadow it
             whole = ((0, 0), (CGBitmapContextGetWidth(port), CGBitmapContextGetHeight(port)))
             clip = CGRectApplyAffineTransform(CGContextGetClipBoundingBox(port), CGContextGetCTM(port))
             target = CGRectIntegral(CGRectIntersection(whole, clip))
             drawn = CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), _base_ctm.get())
             reach = CGRectIntegral(CGRectIntersection(drawn, CGRectInset(target, -(blur + abs(dx)), -(blur + abs(dy)))))
         if reach is None or CGRectIsEmpty(reach):
-            self._set()
+            self.set()
             with _cg_layer(box):
                 yield
             return
 
+        # draw the with-block content at full size
         shown = CGRectIntegral(CGRectIntersection(drawn, target))
-        with _drawing_into(port, shown if not CGRectIsEmpty(shown) else ((0, 0), (1, 1)), 1.0, CGContextGetCTM(port)) as full:
+        with _cg_bitmap(shown if not CGRectIsEmpty(shown) else ((0, 0), (1, 1)), 1.0, CGContextGetCTM(port)) as drawing_port:
             yield
-        drawing = CGBitmapContextCreateImage(full)
+        drawing = CGBitmapContextCreateImage(drawing_port)
 
-        k = _QUICK_BLUR / blur
-        with _drawing_into(port, reach, k, _base_ctm.get()) as shrunk:
-            bare = _bare.set(owner)
+        # redraw scaled down to a _CG_BLUR_LIMIT blur
+        scale = _CG_BLUR_LIMIT / blur
+        with _cg_bitmap(reach, scale, _base_ctm.get()) as silhouette_port:
+            casting = _casting.set(owner)
             try:
                 owner._draw()
             finally:
-                _bare.reset(bare)
-        silhouette = CGBitmapContextCreateImage(shrunk)
+                _casting.reset(casting)
+        silhouette = CGBitmapContextCreateImage(silhouette_port)
 
+        # render just the shadow using the scaled silhouette
         (rx, ry), (rw, rh) = reach
         sx, sy, sw, sh = rx + dx - blur, ry + dy - blur, rw + 2 * blur, rh + 2 * blur
-        small_w, small_h = int(math.ceil(sw * k)), int(math.ceil(sh * k))
-        small = CGBitmapContextCreate(None, small_w, small_h, 8, 0, CGBitmapContextGetColorSpace(port), _ARGB)
-        CGContextSetShadowWithColor(small, (small_w, 0), _QUICK_BLUR, self._color.cgColor)
-        silhouette_size = (CGBitmapContextGetWidth(shrunk), CGBitmapContextGetHeight(shrunk))
-        CGContextDrawImage(small, ((blur * k - small_w, blur * k), silhouette_size), silhouette)
-        shadow = CGBitmapContextCreateImage(small)
+        shadow_w, shadow_h = int(math.ceil(sw * scale)), int(math.ceil(sh * scale))
+        shadow_port = CGBitmapContextCreate(None, shadow_w, shadow_h, 8, 0, CGBitmapContextGetColorSpace(port),
+                                            kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
+        CGContextSetShadowWithColor(shadow_port, (shadow_w, 0), _CG_BLUR_LIMIT, self._color.cgColor)
+        silhouette_size = (CGBitmapContextGetWidth(silhouette_port), CGBitmapContextGetHeight(silhouette_port))
+        CGContextDrawImage(shadow_port, ((blur * scale - shadow_w, blur * scale), silhouette_size), silhouette)
+        shadow = CGBitmapContextCreateImage(shadow_port)
 
+        # draw the scaled-up shadow and the with-block content on top
         CGContextSaveGState(port)
         CGContextConcatCTM(port, CGAffineTransformInvert(CGContextGetCTM(port)))
         CGContextSetInterpolationQuality(port, kCGInterpolationHigh)
-        CGContextDrawImage(port, ((sx, sy), (small_w / k, small_h / k)), shadow)
+        CGContextDrawImage(port, ((sx, sy), (shadow_w / scale, shadow_h / scale)), shadow)
         if not CGRectIsEmpty(shown):
             CGContextDrawImage(port, shown, drawing)
         CGContextRestoreGState(port)
@@ -349,25 +354,6 @@ class Shadow(object):
             x,y = offset
         self._offset = Point(float(x), float(y))
     offset = property(_get_offset, _set_offset)
-
-@contextmanager
-def _drawing_into(port, rect, scale, ctm):
-    (x, y), (w, h) = rect
-    bitmap = CGBitmapContextCreate(None, int(math.ceil(w * scale)), int(math.ceil(h * scale)), 8, 0,
-                                   CGBitmapContextGetColorSpace(port), _ARGB)
-    CGContextScaleCTM(bitmap, scale, scale)
-    CGContextTranslateCTM(bitmap, -x, -y)
-    CGContextConcatCTM(bitmap, ctm)
-    flipped = NSGraphicsContext.currentContext().isFlipped()
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmap, flipped))
-    to_bitmap = CGAffineTransformConcat(CGAffineTransformMakeTranslation(-x, -y), CGAffineTransformMakeScale(scale, scale))
-    moved = _base_ctm.set(CGAffineTransformConcat(_base_ctm.get(), to_bitmap))
-    try:
-        yield bitmap
-    finally:
-        _base_ctm.reset(moved)
-        NSGraphicsContext.restoreGraphicsState()
 
 class Stencil(Frob):
     def __init__(self, stencil, invert=False, channel=None):
@@ -439,13 +425,13 @@ class Stencil(Frob):
             xf.inverse.concat() # ...restore the previous state after
 
     @contextmanager
-    def applied(self, owner=None):
+    def applied(self, owner):
         self.set()
-        token = _clips.set(_clips.get() + 1)
+        token = _clip_depth.set(_clip_depth.get() + 1)
         try:
             yield
         finally:
-            _clips.reset(token)
+            _clip_depth.reset(token)
 
 class ClippingPath(Stencil):
     pass # NodeBox compat...

@@ -28,7 +28,8 @@ class Metadata(object):
 
 class Delegate(object):
     """No-op sandbox delegate that will be used by default if a delegate isn't specified"""
-    exportRender = None # export jobs are run as soon as they're made
+    def exportRender(self, frame, work):
+        work(None)
     def exportReady(self):
         return True
     def exportFrame(self, status, canvas=None):
@@ -70,9 +71,8 @@ class Sandbox(object):
         self.crashed = False    # flag whether the script exited abnormally
         self.live = False       # whether to keep the output pipe open between runs
         self.session = None     # the image/movie export session (if any)
-        self._stopped = False   # whether the export was ended early by stopExport()
-        self.delegate = None    # object with exportFrame and exportProgress methods
-
+        self._stopped = False   # session ended early by stopExport()
+        self.delegate = None    # object with export-lifecycle methods
 
         # set up the graphics plumbing
         self.canvas = context.Canvas()
@@ -82,7 +82,7 @@ class Sandbox(object):
         # control params used during exports and console-based runs
         self._meta = Metadata(args=[], virtualenv=None, # environmant
                               first=1, frame=1, last=None, # runtime
-                              loop=False, colors=None) # export opts (colors: a windowless run's --colors)
+                              loop=False, colors=None) # export opts
 
     # .script
     def _get_path(self):
@@ -133,6 +133,7 @@ class Sandbox(object):
 
     @property
     def ran(self):
+        """Whether the current source has run without crashing (r)"""
         return self._code is not None and not self.crashed
 
     @property
@@ -284,8 +285,8 @@ class Sandbox(object):
         os.chdir(scriptDir)
 
         try:
-            self.context._activate()
-            method()
+            self.context._activate() # ensure this sandbox's context is bound
+            method() # run the code object we were passed
         except Halted:
             return Outcome('HALTED', output.data)
         except:
@@ -360,6 +361,7 @@ class Sandbox(object):
         self._exportFrame()
 
     def stopExport(self):
+        """End the export early, still running the script's stop()"""
         self._stopped = True
         self.session.cancel()
         self.call("stop")
@@ -384,8 +386,7 @@ class Sandbox(object):
                 result = Outcome(True, StdIO().data)
 
             # let the delegate draw to the screen
-            # pass the frame content to the file-writer
-            preview = None if self.session.presents else self.canvas
+            preview = None if self.session.presents else self.canvas # unless it shows the export's render
             self.delegate.exportFrame(result, preview)
 
             # pass the frame content to the file-writer

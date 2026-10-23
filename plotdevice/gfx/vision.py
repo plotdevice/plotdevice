@@ -1,7 +1,9 @@
 # encoding: utf-8
+"""Color spaces that simulate color vision deficiencies"""
 import struct
 from ..lib.cocoa import *
 
+# Viénot 1999, Brettel 1997, & Machado 2009 (see daltonlens.org/opensource-cvd-simulation)
 _BRETTEL_TRITAN = ((1.01277, 0.13548, -0.14826, -0.01243, 0.86812, 0.14431, 0.07589, 0.80500, 0.11911),
                    (0.93678, 0.18979, -0.12657, 0.06154, 0.81526, 0.12320, -0.37562, 1.12767, 0.24796),
                    (0.03901, -0.02788, -0.01113))
@@ -14,27 +16,28 @@ _SIMULATIONS = {
     'tritanomaly': _BRETTEL_TRITAN + (0.6,),
 }
 
-_P3_TO_XYZ = ((0.4865709, 0.2656677, 0.1982173), (0.2289746, 0.6917385, 0.0792869), (0.0, 0.0451134, 1.0439444))
-_XYZ_TO_SRGB = ((3.2404542, -1.5371385, -0.4985314), (-0.9692660, 1.8760108, 0.0415560), (0.0556434, -0.2040259, 1.0572252))
+# linear P3 <-> linear sRGB
+_TO_SRGB = ((1.22474504332068, -0.2249043124736699, 7.250784997414605e-08),
+            (-0.04205780743371995, 1.0420809603180001, -5.531688000021129e-08),
+            (-0.01964228962508, -0.07865489259129002, 1.0985372304589898))
+_FROM_SRGB = ((0.8225929891205486, 0.1775339096877781, -4.535470049199205e-08),
+              (0.03319939601171828, 0.966783512371125, 4.6491124104576245e-08),
+              (0.017085360552979614, 0.07239574917612229, 0.9103014217807303))
+
+# linear P3 -> D50 XYZ
+_TO_XYZ = ((0.5151214599609375, 0.2919769287109375, 0.1571044921875),
+           (0.2411956787109375, 0.6922454833984375, 0.0665740966796875),
+           (-0.0010528564453125, 0.0418853759765625, 0.7840728759765625))
 
 _GRID = 33     # lookup table points per channel
-_VISION = {}   # deficiency -> CGColorSpace, made the first time it's proofed
+_VISION = {}   # deficiency -> CGColorSpace
 
-
-def _mul(a, b):
-    return tuple(tuple(sum(a[i][k] * b[k][j] for k in range(3)) for j in range(3)) for i in range(3))
 
 def _apply(m, v):
     return tuple(m[i][0] * v[0] + m[i][1] * v[1] + m[i][2] * v[2] for i in range(3))
 
-def _inverse(m):
-    (a, b, c), (d, e, f), (g, h, i) = m
-    det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
-    return ((( e * i - f * h) / det, (c * h - b * i) / det, (b * f - c * e) / det),
-            (( f * g - d * i) / det, (a * i - c * g) / det, (c * d - a * f) / det),
-            (( d * h - e * g) / det, (b * g - a * h) / det, (a * e - b * d) / det))
-
 def _decode(v):
+    # inverse sRGB curve, which P3 shares
     return v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4
 
 def _simulate(deficiency, p3):
@@ -47,29 +50,13 @@ def _simulate(deficiency, p3):
     simulated = [s * severity + c * (1 - severity) for s, c in zip(simulated, rgb)]
     return _apply(_FROM_SRGB, simulated)
 
-_TO_SRGB = _mul(_XYZ_TO_SRGB, _P3_TO_XYZ)
-_FROM_SRGB = _inverse(_TO_SRGB)
-
-def _tag(icc, sig):
-    count = struct.unpack('>I', icc[128:132])[0]
-    for at in range(132, 132 + 12 * count, 12):
-        if icc[at:at + 4] == sig:
-            offset, size = struct.unpack('>II', icc[at + 4:at + 12])
-            return icc[offset:offset + size]
-    return None
-
 def _profile(deficiency):
-    p3 = bytes(CGColorSpaceCopyICCData(CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3)))
-    fixed = lambda b: struct.unpack('>i', b)[0] / 65536.0
-    colorants = [[fixed(_tag(p3, sig)[8 + 4 * i:12 + 4 * i]) for i in range(3)] for sig in (b'rXYZ', b'gXYZ', b'bXYZ')]
-    to_xyz = tuple(tuple(colorants[j][i] for j in range(3)) for i in range(3)) # (columns: r, g & b's XYZ)
-
     steps = [_decode(i / (_GRID - 1)) for i in range(_GRID)]
     clut = bytearray()
     for r in steps:
         for g in steps:
             for b in steps:
-                xyz = _apply(to_xyz, _simulate(deficiency, (r, g, b)))
+                xyz = _apply(_TO_XYZ, _simulate(deficiency, (r, g, b)))
                 clut += struct.pack('>3H', *[min(max(int(round(v * 32768)), 0), 65535) for v in xyz])
 
     s15 = lambda v: struct.pack('>i', int(round(v * 65536)))
@@ -92,6 +79,7 @@ def _profile(deficiency):
     return header + struct.pack('>I', len(tags)) + table + data
 
 def _vision_space(deficiency):
+    """The color space that shows P3 as `deficiency` sees it"""
     if deficiency not in _VISION:
         _VISION[deficiency] = CGColorSpaceCreateWithICCData(_profile(deficiency))
     return _VISION[deficiency]

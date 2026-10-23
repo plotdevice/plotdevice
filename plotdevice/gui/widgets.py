@@ -7,8 +7,6 @@ from math import floor, ceil
 import objc
 from . import set_timeout
 
-BURST = 0.25  # seconds between edits that make them a burst (and of quiet that ends one)
-
 ## classes instantiated by PlotDeviceDocument.xib & PlotDeviceScript.xib
 
 class StatusView(NSView):
@@ -64,15 +62,6 @@ class StatusView(NSView):
         self.cancel.setHidden_(True)
         self.counter.setHidden_(True)
         self._state = 'idle'
-
-    def showFPS_(self, fps):
-        if self._state == 'idle':
-            self.counter.setStringValue_("%.0f fps" % fps)
-            self.counter.setHidden_(False)
-
-    def hideFPS(self):
-        if self._state == 'idle':
-            self.counter.setHidden_(True)
 
     def mouseEntered_(self, e):
         if self._state == 'run':
@@ -261,14 +250,16 @@ class DashboardRow(NSView):
 class DashboardController(NSObject):
     script = IBOutlet()
     panel = IBOutlet()
+    BURST = 0.25 # secs between edits to qualify as a burst
 
     def awakeFromNib(self):
         self.panel.contentView().setFlipped_(True)
         self.panel.contentView().setMaterial_(NSVisualEffectMaterialHUDWindow)
         self.rows = OrderedDict()
         self.positioned = False
-        self.editing = False  # whether edits are arriving in a burst (as while dragging a slider)
-        self._lastEdit, self._settle = 0, None
+        self.editing = False # edits are arriving in a burst
+        self._lastEdit = 0
+        self._settle = None
 
     def shutdown(self):
         if self._settle is not None:
@@ -282,15 +273,17 @@ class DashboardController(NSObject):
     def setVariable_to_(self, name, val):
         var = self.script.vm.params[name]
         var.value = val
+        # if animating/exporting, wait for the next frame to see the update
         animating = self.script.animationTimer is not None
         exporting = self.script.vm.session is not None
         if not animating and not exporting:
+            # a second edit close behind starts a burst
             now = time.perf_counter()
-            self.editing = self.editing or now - self._lastEdit < BURST
+            self.editing = self.editing or now - self._lastEdit < self.BURST
             self._lastEdit = now
             if self._settle is not None:
                 self._settle.invalidate()
-            self._settle = set_timeout(self, 'settle:', BURST)
+            self._settle = set_timeout(self, 'settle:', self.BURST)
             self.script.runScript()
 
     def settle_(self, timer):
@@ -371,30 +364,28 @@ class DashboardController(NSObject):
 
 
 from ..context import RGB, CMYK
-from ..gfx.colors import P3, SRGB, _PRESS_LABELS, _FORMAT_COLORS, _FORMAT_DEFAULTS, _SYSTEM_PROFILES, _SYSTEM_RGB, _REC709, _REC2020, \
-                         _installed_presses
-from ..lib.io import MovieExportSession
+from ..gfx.colors import P3, SRGB, GRACOL, GRACOL_UNCOATED, SWOP, FOGRA39, FOGRA47, _FORMAT_COLORS, _FORMAT_DEFAULTS, \
+                         _SYSTEM_PROFILES, _REC709, _REC2020, _installed_presses
+from ..lib.io import MovieExportSession, HEVC, H264, PRORES
 
+# include menu sections headers on macOS 14+
 SECTION_HEADERS = hasattr(NSMenuItem, 'sectionHeaderWithTitle_')
 
-def fill_sections(menu, sections, action=None):
-    menu.removeAllItems()
-    for header, items in sections:
-        if header and SECTION_HEADERS:
-            menu.addItem_(NSMenuItem.sectionHeaderWithTitle_(header))
-        elif menu.numberOfItems():
-            menu.addItem_(NSMenuItem.separatorItem())
-        for title, value in items:
-            item = menu.addItemWithTitle_action_keyEquivalent_(title, None, '')
-            item.setRepresentedObject_(value)
-            item.setAction_(action)
+_PRESS_LABELS = {GRACOL: 'GRACoL 2013 Coated (CRPC6)', GRACOL_UNCOATED: 'GRACoL 2013 Uncoated (CRPC3)', SWOP: 'SWOP 2013 (CRPC5)',
+                 FOGRA39: 'ISO Coated v2 (FOGRA39)', FOGRA47: 'PSO Uncoated (FOGRA47)'}
+
+# system rgb spaces offered beside P3 and sRGB
+_SYSTEM_RGB = {'AdobeRGB1998.icc': 'Adobe RGB (1998)', 'ROMM RGB.icc': 'ROMM RGB (ProPhoto)', 'ITU-709.icc': 'Rec. 709',
+               'ITU-2020.icc': 'Rec. 2020'}
 
 def system_rgb():
+    """The system rgb spaces present, as (label, path) pairs"""
     return [(label, os.path.join(_SYSTEM_PROFILES, name)) for name, label in _SYSTEM_RGB.items()
             if os.path.exists(os.path.join(_SYSTEM_PROFILES, name))]
 
 class ProofColorsMenu(NSObject):
-    PREVIEW = 0.1
+    """View > Proof Colors, previewing the highlighted item"""
+    PREVIEW = 0.1 # secs before a highlight previews
     _timer = None
 
     @objc.python_method
@@ -418,6 +409,7 @@ class ProofColorsMenu(NSObject):
         self._timer = set_timeout(self, 'preview:', self.PREVIEW, info=[proof])
 
     def menuDidClose_(self, menu):
+        # restore once a click has made its choice
         if self._timer is not None:
             self._timer.invalidate()
         self._timer = set_timeout(self, 'restore:', 0)
@@ -438,7 +430,15 @@ class ProofColorsMenu(NSObject):
         cmyk = bundled + installed
         vision = [(name.capitalize(), ('vision', name)) for name in ('protanopia', 'protanomaly', 'deuteranopia', 'deuteranomaly',
                                                                      'tritanopia', 'tritanomaly')]
-        fill_sections(menu, [('RGB', rgb), ('CMYK', cmyk), ('Accessibility', vision)], 'proofColors:')
+        menu.removeAllItems()
+        for header, items in [('RGB', rgb), ('CMYK', cmyk), ('Accessibility', vision)]:
+            if SECTION_HEADERS:
+                menu.addItem_(NSMenuItem.sectionHeaderWithTitle_(header))
+            elif menu.numberOfItems():
+                menu.addItem_(NSMenuItem.separatorItem())
+            for title, value in items:
+                item = menu.addItemWithTitle_action_keyEquivalent_(title, 'proofColors:', '')
+                item.setRepresentedObject_(value)
 
 class ExportSheet(NSObject):
     # the script whose doExportAsImage and doExportAsMovie methods will be called
@@ -464,11 +464,11 @@ class ExportSheet(NSObject):
 
     def awakeFromNib(self):
         self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'heic', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'mov', 'mov', 'gif'))
-        self.codecs = ('hevc', 'h264', 'prores', None) # the movie formats' codecs
-        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=None, loop=0, codec='hevc', zoom=1.0, colors=P3)
+        self.codecs = (HEVC, H264, PRORES, None)
+        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=None, loop=0, codec=HEVC, zoom=1.0, colors=P3)
         self.image = dict(format='pdf', zoom=1.0, first=1, last=1, colors=P3, single=True)
         self.last = None
-        self.canvasSize = None # (w, h) the script last ran with, to preview the automatic bitrate
+        self.canvasSize = None # size of last run (for bitrate suggestion)
         self.movieFps.setDelegate_(self)
 
     @objc.python_method
@@ -498,7 +498,7 @@ class ExportSheet(NSObject):
             self.movieFormat.selectItemAtIndex_(format_idx)
             self.movieLoop.setState_(NSOnState if should_loop else NSOffState)
             self.movieLoop.setEnabled_(format=='gif')
-            self.movieBitrate.setEnabled_(self.movie['codec'] in ('hevc', 'h264'))
+            self.movieBitrate.setEnabled_(self.movie['codec'] in (HEVC, H264))
             self.movieBitrate.selectItemWithTag_(self.movie['bitrate'] or 0)
             self.fillColors(self.movieColors, self.movie['colors'])
             self.canvasSize = None
@@ -554,6 +554,7 @@ class ExportSheet(NSObject):
             self.last = os.path.split(fname) # save the path we exported to
             self.script.exportInit(kind, fname, opts)
 
+    # PyObjC lacks this selector's metadata
     exportPanelDidEnd_returnCode_contextInfo_ = objc.selector(
         exportPanelDidEnd_returnCode_contextInfo_, signature=b'v@:@q^v')
 
@@ -605,6 +606,7 @@ class ExportSheet(NSObject):
 
     @objc.python_method
     def proofed(self, proof):
+        """Preset both Colors pop-ups from View > Proof Colors' choice"""
         kind, value = proof or (None, None)
         if kind == 'vision':
             return
@@ -613,6 +615,7 @@ class ExportSheet(NSObject):
 
     @objc.python_method
     def fillColors(self, popup, colors):
+        """Rebuild a Colors pop-up and select `colors`"""
         rgb = [('Display P3', P3), ('sRGB', SRGB)] + system_rgb()
         bundled = [(label, press) for press, label in _PRESS_LABELS.items()]
         cmyk = [('Generic CMYK', CMYK)] + bundled + _installed_presses()
@@ -630,6 +633,7 @@ class ExportSheet(NSObject):
 
     @objc.python_method
     def updateColors(self, popup):
+        """Show only the colors the format can hold"""
         if popup is self.imageColors:
             format = self.formats['image'][self.imageFormat.indexOfSelectedItem()]
         else:
@@ -637,15 +641,10 @@ class ExportSheet(NSObject):
         allowed = _FORMAT_COLORS[format]
         holds_cmyk = CMYK in allowed
         system = [os.path.join(_SYSTEM_PROFILES, name) for name in _SYSTEM_RGB]
-        in_cmyk = False # (whether the items so far are past the CMYK section's start)
         for idx, item in enumerate(popup.itemArray()):
             colors = item.representedObject()
-            if colors == CMYK:
-                in_cmyk = True
             if colors is None:
-                next_item = popup.itemAtIndex_(idx + 1) if idx + 1 < popup.numberOfItems() else None
-                starts_cmyk = next_item is not None and next_item.representedObject() == CMYK
-                item.setHidden_((in_cmyk or starts_cmyk) and not holds_cmyk)
+                item.setHidden_(idx > 0 and not holds_cmyk)
             elif colors in (_REC709, _REC2020) and 'rgb' in allowed:
                 item.setHidden_(format not in ('png', 'tiff'))
             elif colors in (P3, SRGB) or colors in system:
@@ -727,5 +726,5 @@ class ExportSheet(NSObject):
         is_gif = format=='gif'
         self.movieLoop.setState_(NSOnState if is_gif else NSOffState)
         self.movieLoop.setEnabled_(is_gif)
-        self.movieBitrate.setEnabled_(self.codecs[sender.indexOfSelectedItem()] in ('hevc', 'h264'))
+        self.movieBitrate.setEnabled_(self.codecs[sender.indexOfSelectedItem()] in (HEVC, H264))
         self.updateColors(self.movieColors)

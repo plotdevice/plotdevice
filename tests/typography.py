@@ -513,6 +513,16 @@ class TypographyTests(PlotDeviceTestCase):
         self.assertEqual([line.text for line in copied.lines], [line.text for line in t.lines])
         self.assertEqual(copied.frame, t.frame)
 
+    def test_flowed_blocks_keep_the_texts_size_and_units(self):
+        # flowed blocks match the first, even after the canvas changes units
+        size(10, 8, cm)
+        t = text('a long run of words that wraps around ' * 20, 1, 1.5, width=4, height=1.5, plot=False)
+        size(400, 300, px)
+        list(t.flow(10))
+        self.assertEqual(len(t.blocks), 10)
+        self.assertEqual({tuple(b.size) for b in t.blocks}, {(4, 1.5)})
+        self.assertEqual({b._grid.dpx for b in t.blocks}, {t._grid.dpx})
+
 def suite():
   suite = unittest.TestSuite()
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(TypographyTests))

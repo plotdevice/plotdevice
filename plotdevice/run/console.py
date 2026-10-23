@@ -23,6 +23,7 @@ from math import floor, ceil
 from os.path import dirname, abspath, exists, join
 from io import open
 
+from .. import free_threaded
 from ..run import objc, encoded
 from ..lib.cocoa import *
 from ..lib.io import SysAdmin, ExportSession
@@ -43,6 +44,7 @@ class ScriptApp(NSApplication):
         if mode=='headless':
             app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
         elif mode=='windowed':
+            # ensure even non-Framework builds get a Dock icon
             app.setActivationPolicy_(NSApplicationActivationPolicyRegular)
             icon = NSImage.alloc().initWithContentsOfFile_(rsrc_path('PlotDeviceFile.icns'))
             app.setApplicationIconImage_(icon)
@@ -89,9 +91,10 @@ class ScriptAppDelegate(NSObject):
                 opts['last'] = opts.get('first', 1)
 
             if opts['export']:
-                gil = getattr(sys, '_is_gil_enabled', lambda: True)()
+                # with the GIL off, render on a separate thread
+                gil_off = free_threaded and not sys._is_gil_enabled()
                 several = opts['last'] > opts['first']
-                if several and not gil:
+                if several and gil_off:
                     self.script.queue = FrameQueue()
 
                 # kick off an export session
@@ -116,6 +119,7 @@ class ScriptAppDelegate(NSObject):
                 NSApp().terminate_(None)
 
     def applicationShouldTerminate_(self, app):
+        # allow ongoing exports a chance to halt cleanly
         if self.script.vm is not None and self.script.vm.session:
             self.script.finishExport()
         if not ExportSession.unfinished:
@@ -125,7 +129,7 @@ class ScriptAppDelegate(NSObject):
         return NSTerminateLater
 
     def quitOnceWritten_(self, timer):
-        writing = [s for s in ExportSession.unfinished if s.writer is not None and not s.writer.doneWriting()]
+        writing = ExportSession.writing()
         if not writing or time.time() > self._quitBy:
             timer.invalidate()
             NSApp().replyToApplicationShouldTerminate_(True)
@@ -227,6 +231,7 @@ class ConsoleScript(ScriptController):
             STDERR.flush()
 
     def crash(self):
+        # a failed export render ends the run
         super(ConsoleScript, self).crash()
         NSApp().delegate().done(ok=False)
 

@@ -10,7 +10,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    CGContextAddPath, CGContextAddRect, \
                    CGAffineTransformConcat, CGAffineTransformInvert, CGRectApplyAffineTransform, \
                    CGAffineTransformMakeScale, CGAffineTransformMakeTranslation, CGBitmapContextGetAlphaInfo, CGBitmapContextGetColorSpace, \
-                   CGBitmapContextGetHeight, CGBitmapContextGetWidth, CGColorCreateCopyWithAlpha, CGColorGetAlpha, \
+                   CGBitmapContextGetHeight, CGBitmapContextGetWidth, CGColorCreateCopyWithAlpha, \
                    CGColorSpaceGetModel, CGContextConcatCTM, CGContextDrawImage, CGContextSetInterpolationQuality, \
                    CGRectInset, CGRectIntegral, CGRectIntersection, CGRectIsEmpty, kCGColorSpaceModelRGB, \
                    kCGImageAlphaNone, kCGImageAlphaNoneSkipFirst, kCGImageAlphaNoneSkipLast, kCGImageAlphaPremultipliedLast, kCGInterpolationHigh, \

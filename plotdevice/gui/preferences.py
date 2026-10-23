@@ -5,9 +5,9 @@ import objc
 import platform
 from io import open
 from subprocess import Popen, PIPE
-from sysconfig import get_config_var
 
 from ..lib.cocoa import *
+from .. import free_threaded as running_free_threaded
 from plotdevice.gui import bundle_path, set_timeout
 
 def get_default(label):
@@ -29,15 +29,10 @@ def defaultDefaults():
         "plotdevice:font-name":"Menlo",
         "plotdevice:font-size":11,
         "plotdevice:autosave":True,
-        "plotdevice:free-threading":False # read by main.m to pick which Python framework to start
+        "plotdevice:free-threading":False # read by main.m at launch
     }
 NSUserDefaults.standardUserDefaults().registerDefaults_(defaultDefaults())
 THEMES = None # to be filled in as needed
-
-PYTHON_MODE_NOTE_LINKS = {
-    'in parallel': 'https://docs.python.org/3/howto/free-threading-python.html',
-    'yet': 'https://py-free-threading.github.io/tracking/',
-}
 
 def dev_extras():
     """Should the editor's web inspector be enabled?
@@ -110,7 +105,9 @@ def possibleToolLocations():
 
 
 
+# the xib's free-threading compatibility note
 class PlotDeviceLinkField(NSTextField):
+    """A label whose links open when clicked"""
     @objc.python_method
     def links(self):
         """The (rect, url) of each link in the label's text"""
@@ -233,18 +230,23 @@ class PlotDevicePreferencesController(NSWindowController):
         set_default('autosave', enabled)
 
     def checkPythonMode(self):
+        # add clickable links to the free-threading note
         self.pythonVersion.setStringValue_(platform.python_version())
+        links = {
+            'in parallel': 'https://docs.python.org/3/howto/free-threading-python.html',
+            'yet': 'https://py-free-threading.github.io/tracking/',
+        }
         note = self.pythonModeNote.attributedStringValue().mutableCopy()
-        for phrase, url in PYTHON_MODE_NOTE_LINKS.items():
+        for phrase, url in links.items():
             phrase_range = note.string().rangeOfString_(phrase)
             if phrase_range.location != NSNotFound:
                 note.addAttribute_value_range_(NSLinkAttributeName, NSURL.URLWithString_(url), phrase_range)
         self.pythonModeNote.setAttributedStringValue_(note)
-        self.pythonModeNoteText = note
-        running_free_threaded = bool(get_config_var('Py_GIL_DISABLED'))
+        self._noteText = note
         if os.path.exists(bundle_path(fmwk='PythonT')):
             free_threaded = get_default('free-threading')
         else:
+            # other builds run on whatever Python built them
             free_threaded = running_free_threaded
             unavailable = self.pythonModeStandardRadio if free_threaded else self.pythonModeFreeRadio
             unavailable.setEnabled_(False)
@@ -260,12 +262,13 @@ class PlotDevicePreferencesController(NSWindowController):
 
     @objc.python_method
     def _updatePythonModeNote(self, free_threaded):
-        running_free_threaded = bool(get_config_var('Py_GIL_DISABLED'))
-        if free_threaded == running_free_threaded:
-            self.pythonModeNote.setAttributedStringValue_(self.pythonModeNoteText)
-        else:
+        # a mode change waits for a relaunch
+        relaunch = free_threaded != running_free_threaded
+        if relaunch:
             self.pythonModeNote.setStringValue_("Settings will take effect the next time you launch PlotDevice")
-        self.pythonModeNoteAsterisk.setHidden_(free_threaded != running_free_threaded)
+        else:
+            self.pythonModeNote.setAttributedStringValue_(self._noteText)
+        self.pythonModeNoteAsterisk.setHidden_(not relaunch)
         self.window().invalidateCursorRectsForView_(self.pythonModeNote)
 
     def checkThemes(self):

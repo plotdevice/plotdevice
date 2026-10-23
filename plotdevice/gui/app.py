@@ -7,6 +7,8 @@ from glob import glob
 from ..lib.cocoa import *
 from PyObjCTools import AppHelper
 from .preferences import PlotDevicePreferencesController, get_default
+from .document import ScriptController
+from ..lib.io import ExportSession
 from . import bundle_path, set_timeout
 
 LIB_DIR_README = """"You can put PlotDevice libraries In this directory to make them available to your scripts.
@@ -121,12 +123,11 @@ class PlotDeviceAppDelegate(NSObject):
         NSWorkspace.sharedWorkspace().openURL_(url)
 
     def applicationShouldTerminate_(self, app):
-        from .document import ScriptController
-        from ..lib.io import ExportSession
+        # try to end exports cleanly so they can write complete files
         for win in app.windows():
             controller = win.windowController()
-            exporting = isinstance(controller, ScriptController) and controller.vm is not None and controller.vm.session
-            if exporting:
+            open_script = isinstance(controller, ScriptController) and controller.vm is not None
+            if open_script and controller.vm.session:
                 controller.finishExport()
         if not ExportSession.unfinished:
             return NSTerminateNow
@@ -135,8 +136,7 @@ class PlotDeviceAppDelegate(NSObject):
         return NSTerminateLater
 
     def quitOnceWritten_(self, timer):
-        from ..lib.io import ExportSession
-        writing = [s for s in ExportSession.unfinished if s.writer is not None and not s.writer.doneWriting()]
+        writing = ExportSession.writing()
         if not writing or time.time() > self._quitBy:
             timer.invalidate()
             NSApplication.sharedApplication().replyToApplicationShouldTerminate_(True)

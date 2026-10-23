@@ -18,11 +18,8 @@
     return [[[self alloc] initWithWidth:width height:height space:space] autorelease];
 }
 
-+ (instancetype)surfaceWithPixelBuffer:(CVPixelBufferRef)buffer{
-    return [[[self alloc] initWithPixelBuffer:buffer] autorelease];
-}
-
 + (instancetype)surfaceWithPixelBuffer:(CVPixelBufferRef)buffer space:(CGColorSpaceRef)space{
+    // retain the buffer so its pool can't recycle it
     IOSurface *surface = buffer ? (IOSurface *)CVPixelBufferGetIOSurface(buffer) : nil;
     return [[[self alloc] initWithSurface:surface pixelBuffer:buffer space:space] autorelease];
 }
@@ -39,13 +36,8 @@
         IOSurfacePropertyKeyPixelFormat: @(kCVPixelFormatType_32BGRA),
     }];
     self = [self initWithSurface:surface pixelBuffer:NULL space:space];
-    [surface release];
+    [surface release]; // there may not be an autorelease pool
     return self;
-}
-
-- (instancetype)initWithPixelBuffer:(CVPixelBufferRef)buffer{
-    IOSurface *surface = buffer ? (IOSurface *)CVPixelBufferGetIOSurface(buffer) : nil;
-    return [self initWithSurface:surface pixelBuffer:buffer space:NULL];
 }
 
 - (instancetype)initWithSurface:(IOSurface *)surface pixelBuffer:(CVPixelBufferRef)buffer space:(CGColorSpaceRef)space{
@@ -59,9 +51,13 @@
         _width = surface.width;
         _height = surface.height;
         _space = space ? CGColorSpaceRetain(space) : CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3);
+
+        // tag the image with the active color space
         CFPropertyListRef plist = CGColorSpaceCopyPropertyList(_space);
         IOSurfaceSetValue((IOSurfaceRef)_surface, kIOSurfaceColorSpace, plist);
         CFRelease(plist);
+
+        // draw into the surface's memory
         _context = CGBitmapContextCreate(_surface.baseAddress, _width, _height, 8, _surface.bytesPerRow, _space,
                                          kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
     }
@@ -76,6 +72,7 @@
     [super dealloc];
 }
 
+// bracket drawing with these so readers never see partial frames
 - (void)lock{
     [_surface lockWithOptions:0 seed:NULL];
 }

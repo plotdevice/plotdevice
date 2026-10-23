@@ -369,7 +369,7 @@ class Stylesheet(object):
 
     def copy(self):
         new = Stylesheet.__new__(Stylesheet)
-        new._styles = self._styles
+        new._styles = self._styles # styles are immutable, so share them
         return new
 
     @property

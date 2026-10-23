@@ -7,7 +7,7 @@ from plotdevice import DeviceError
 from . import _cg_port
 from .atoms import PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .colors import Color, Gradient, Pattern
-from .geometry import CENTER, DEGREES, IDENTITY, Transform, Region, Point, _pivot
+from .geometry import CENTER, DEGREES, IDENTITY, Transform, Region, Point, _pivot, _hull
 from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten, numlike
 from ..lib import pathmatics
 
@@ -84,6 +84,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             setattr(_ctx, attr, val)
 
     def copy(self):
+        # pull all state from the original object (rather than inheriting from _ctx)
         clone = Bezier.__new__(Bezier)
         clone._nsBezierPath = self._nsBezierPath.copy()
         clone._transform = self._transform.copy()
@@ -372,13 +373,11 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
     @property
     def _screen_matrix(self):
-
         matrix = tuple(self.transform.matrix)
-        if matrix == IDENTITY or self.transformmode != CENTER:
-            return matrix
-
-        cx, cy = self._to_px(self.center)
-        return _pivot(matrix, cx, cy)
+        if self.transformmode == CENTER and matrix != IDENTITY:
+            cx, cy = self._to_px(self.center)
+            return _pivot(matrix, cx, cy)
+        return matrix
 
     @property
     def _screen_transform(self):
@@ -392,23 +391,37 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         return pathmatics.convert_path(path)
 
     @property
-    def _one_paint(self):
+    def _paints_once(self):
         return self._fillcolor is None or not self._strokecolor
+
+    def _render_box(self):
+        """The box its outline covers where it's drawn"""
+        dpx = self._grid.dpx
+        try:
+            (x, y), (w, h) = self._nsBezierPath.bounds()
+        except Exception:
+            return (0, 0, 0, 0) # an empty path
+        if tuple(self.transform.matrix) == IDENTITY:
+            return (x * dpx, y * dpx, w * dpx, h * dpx)
+        return _hull(self._screen_matrix, x * dpx, y * dpx, w * dpx, h * dpx)
 
     def _draw(self):
         port = _cg_port()
         CGContextSaveGState(port)
         try:
+            # modify the context's CTM to reflect our final resting place
             if tuple(self.transform.matrix) != IDENTITY:
                 self._screen_transform.concat()
 
             # apply blend/alpha/shadow (and any associated transparency layers)
             with self.effects.applied(self):
-                target = _cg_port() # (a shadow may have the drawing go to a bitmap of its own)
+                # effects (like shadows) may shift the active context, so re-fetch
+                target = _cg_port()
+
                 # prepare to stroke, fill, or both
                 ink = None
                 path = self._nsBezierPath
-                filled = isinstance(self._fillcolor, Color)
+                filled = isinstance(self._fillcolor, (Color, Pattern))
                 lone_segment = filled and path.elementCount() == 2 and path.elementAtIndex_(1) == NSLineToBezierPathElement
                 if filled and not lone_segment:
                     ink = kCGPathFill
@@ -424,8 +437,8 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                     if self.dash:
                         CGContextSetLineDash(target, 0, self.dash, len(self.dash))
 
-                # use cocoa for patterns/gradients
-                if isinstance(self._fillcolor, (Gradient, Pattern)):
+                # use cocoa for gradients
+                if isinstance(self._fillcolor, Gradient):
                     self._fillcolor.fill(self)
 
                 # use cg for stroke & fill
@@ -434,6 +447,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                     CGContextAddPath(target, self.cgPath)
                     CGContextDrawPath(target, ink)
 
+                # fill the stroke's outline with its gradient
                 if gradient_stroke:
                     CGContextSaveGState(target)
                     CGContextBeginPath(target)

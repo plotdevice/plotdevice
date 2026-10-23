@@ -23,11 +23,8 @@ __all__ = [
 CENTER = "center"
 CORNER = "corner"
 
+# the matrix of no effect
 IDENTITY = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
-
-def _pivot(matrix, cx, cy, tx=0.0, ty=0.0):
-    a, b, c, d, mx, my = matrix
-    return (a, b, c, d, mx + cx + tx - (a * cx + c * cy), my + cy + ty - (b * cx + d * cy))
 
 # rotation modes
 DEGREES = "degrees"
@@ -37,6 +34,19 @@ PERCENT = "percent"
 # maths
 pi = math.pi
 tau = 2*pi
+
+def _pivot(matrix, cx, cy, tx=0.0, ty=0.0):
+    """Apply `matrix` at cx/cy, then translate by tx/ty"""
+    a, b, c, d, mx, my = matrix
+    return (a, b, c, d, mx + cx + tx - (a * cx + c * cy), my + cy + ty - (b * cx + d * cy))
+
+def _hull(matrix, x0, y0, w0, h0):
+    """The bounding box of a rect mapped through `matrix`"""
+    a, b, c, d, tx, ty = matrix
+    corners = [(cx, cy) for cx in (x0, x0 + w0) for cy in (y0, y0 + h0)]
+    xs = [a * cx + c * cy + tx for cx, cy in corners]
+    ys = [b * cx + d * cy + ty for cx, cy in corners]
+    return (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
 
 ### tuple-like objects for grid dimensions ###
 
@@ -92,6 +102,7 @@ class Point(Pair):
     def __init__(self, *vals, **kwargs):
         plain = len(vals) == 2 and type(vals[0]) in (int, float) and type(vals[1]) in (int, float)
         if plain:
+            # fast path for plain numbers & copies
             self._a, self._b = float(vals[0]), float(vals[1])
         elif len(vals) == 1 and type(vals[0]) is Point:
             self._a, self._b = vals[0]._a, vals[0]._b
@@ -167,6 +178,7 @@ class Size(Pair):
     __slots__ = ()
 
     def __init__(self, *vals, **kwargs):
+        # fast path for plain numbers & copies
         plain = len(vals) == 2 and (vals[0] is None or type(vals[0]) in (int, float)) and \
                 (vals[1] is None or type(vals[1]) in (int, float))
         if plain:
@@ -228,6 +240,7 @@ class Region(object):
     opts = ('x','y','w','h','width','height')
 
     def __init__(self, *args, **kwargs):
+        # fast paths for the usual forms
         count = 0 if kwargs else len(args)
         if count == 1 and type(args[0]) is Region:
             self._origin, self._size = Point(args[0]._origin), Size(args[0]._size)
@@ -237,6 +250,7 @@ class Region(object):
             self._origin, self._size = Point(x, y), Size(w, h)
             return
         if 2 <= count <= 4 and type(args[0]) in (int, float) and type(args[1]) in (int, float):
+            # a None dim needs both dims given
             w, h = (args[2:] + (0, 0))[:2]
             plain_w = type(w) in (int, float) or (w is None and count == 4)
             plain_h = type(h) in (int, float) or (h is None and count == 4)
@@ -276,6 +290,7 @@ class Region(object):
                 self.origin, self.size = coords[0]
                 return
 
+            # plain x/y or x/y/w numbers can only match one pattern
             plain_numbers = len(coords) in (2, 3) and all(type(c) in (int, float) for c in coords)
             if plain_numbers and len(coords) == 2:
                 self.origin = parse_coords(coords, [Point])
@@ -319,6 +334,7 @@ class Region(object):
 
     def union(self, *args):
         """Return a new Region which fully encloses the existing Region and the arguments"""
+        # empty regions are left out, as in NSUnionRect
         other = Region(*args)
         (x0, y0), (w0, h0) = self._origin, self._size
         (x1, y1), (w1, h1) = other._origin, other._size
@@ -332,6 +348,7 @@ class Region(object):
 
     def intersect(self, *args):
         """Return a new Region with the in-common portion of this Region and the arguments"""
+        # matches NSIntersectionRect
         other = Region(*args)
         (x0, y0), (w0, h0) = self._origin, self._size
         (x1, y1), (w1, h1) = other._origin, other._size
@@ -436,6 +453,7 @@ def parse_coords(coords, types):
     precisely into the given sequence of types, an exception is raised.
     """
 
+    # fast path for exactly enough plain numbers
     needed = sum(1 if cls is float else 2 for cls in types)
     if len(coords) == needed and all(type(c) in (int, float) for c in coords):
         objs, at = [], 0
@@ -758,4 +776,3 @@ class Transform(object):
     def transform(self):
         warnings.warn("The 'transform' attribute is deprecated. Please use _nsAffineTransform instead.", FutureWarning, stacklevel=2)
         return self._nsAffineTransform
-

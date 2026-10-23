@@ -12,19 +12,19 @@ from contextlib import contextmanager
 from urllib.parse import urlparse
 from ..lib.cocoa import *
 
-from plotdevice import DeviceError
+from plotdevice import DeviceError, free_threaded
 from ..util import _copy_attrs, autorelease
 from ..util.readers import get_http_session, last_modified
-from ..lib.io import MovieExportSession, ImageExportSession
-from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot
+from ..lib.io import MovieExportSession, ImageExportSession, HEVC, H264, PRORES
+from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, _hull
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
-from .colors import RGB, CMYK, _output_mode, _PRESS_SPACES
+from .colors import RGB, CMYK, _output_mode, Press
 from . import _ns_context, _cg_port, _frame
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
 
 _ctx = None
-__all__ = ("Image", 'ImageWriter')
+__all__ = ("Image", 'ImageWriter', 'HEVC', 'H264', 'PRORES')
 
 ### The bitmap/vector image-container (a.k.a. NSImage proxy) ###
 
@@ -102,8 +102,9 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                     setattr(self, k, v)
 
     def copy(self):
+        # pull all state from the original object (rather than inheriting from _ctx)
         clone = Image.__new__(Image)
-        clone._nsImage = self._nsImage # never edited in place, so copies share it
+        clone._nsImage = self._nsImage # never edited in place
         clone._frame = self._frame.copy()
         clone._transform = self._transform.copy()
         clone._effects = self._effects.copy()
@@ -216,6 +217,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             # create an offscreen bitmap context and rasterize the scaled image into it
             bitmap_opts = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
             bitmap_ctx = CGBitmapContextCreate(None, w, h, 8, w*4, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), bitmap_opts)
+            # flip the CTM itself, since flipped=True below only tells AppKit the context is flipped
             CGContextTranslateCTM(bitmap_ctx, 0, h)
             CGContextScaleCTM(bitmap_ctx, 1, -1)
             NSGraphicsContext.saveGraphicsState()
@@ -266,7 +268,9 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
     @property
     def _screen_matrix(self):
-        """The transform incorporates the global context state but also accounts for
+        """The matrix the image is drawn with.
+
+        The transform incorporates the global context state but also accounts for
         centering and max width/height values set in the constructor."""
 
         # set scale factor so entire image fits in the given rect or dimension
@@ -277,6 +281,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
         matrix = tuple(self.transform.matrix)
         if self._transformmode == CENTER and matrix != IDENTITY:
+            # apply the context's CTM at the image's center
             w, h = self._to_px(self.size)
             a, b, c, d, tx, ty = _pivot(matrix, w * factor / 2, h * factor / 2, dx, dy)
         else:
@@ -344,37 +349,44 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         # no rep we know how to trace
         return Bezier()
 
+    def _render_box(self):
+        """The box its pixels cover where it's drawn"""
+        w0, h0 = self._nsImage.size()
+        if tuple(self.transform.matrix) == IDENTITY:
+            dpx, factor = self._grid.dpx, self._scalefactor
+            return (self.x * dpx, self.y * dpx, w0 * factor, h0 * factor)
+        return _hull(self._screen_matrix, 0, 0, w0, h0)
+
     def _draw(self):
         """Draw an image on the given coordinates."""
 
         with _ns_context():
             self._screen_transform.concat() # move the image into place via transforms
-            with self.effects.applied(self):  # apply any blend/alpha/shadow effects
+            with self.effects.applied(self): # apply any blend/alpha/shadow effects
                 NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
                 image = self._nsImage
                 frame = _frame.get()
                 if frame is not None and frame.outputmode == CMYK and frame.colors is not None:
+                    # preserve numbers for cmyk bitmaps and relabel to match the current press profile
                     rep = next((r for r in image.representations() if isinstance(r, NSBitmapImageRep)), None)
                     cg = rep.CGImage() if rep is not None else None
                     if cg is not None and CGColorSpaceGetModel(CGImageGetColorSpace(cg)) == kCGColorSpaceModelCMYK:
                         in_space = frame.press and frame.ink[1]
-                        space = _PRESS_SPACES[frame.press] if in_space else CGColorSpaceCreateDeviceCMYK()
+                        space = Press.named[frame.press].space if in_space else CGColorSpaceCreateDeviceCMYK()
                         image = NSImage.alloc().initWithCGImage_size_(CGImageCreateCopyWithColorSpace(cg, space), image.size())
                         image.setFlipped_(True)
                 bounds = ((0,0), image.size()) # draw the image at (0,0)
                 image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
-                # NB: the nodebox source warns about quartz bugs triggered by drawing
-                # EPSs to other origin points. no clue whether this still applies...
 
 ### context manager for calls to `with export(...)` ###
 
 import time
 re_padded = re.compile(r'{(\d+)}')
-free_threaded = not getattr(sys, '_is_gil_enabled', lambda: True)()
 
-class SequenceRenderer(object):
+class ExportRenderer(object):
+    """Renders an export's frames one at a time on a thread of its own"""
     def __init__(self):
-        self.error = None
+        self._error = None
         self._failed = False
         self._jobs = queue.Queue(maxsize=1)
         self._thread = threading.Thread(target=self._loop, daemon=True, name='export-render')
@@ -385,43 +397,46 @@ class SequenceRenderer(object):
         self._jobs.put((frame, work))
 
     def check(self):
-        if self.error is not None:
-            error, self.error = self.error, None
+        if self._error is not None:
+            error, self._error = self._error, None
             raise error
 
-    def stop(self):
+    def finish(self):
+        """Wait for the remaining frames and end the thread"""
         self._jobs.put(None)
         self._thread.join()
 
     def _loop(self):
         while (job := self._jobs.get()) is not None:
             frame, work = job
-            if self._failed and frame is not None:
+            closing = frame is None # done()'s job, which closes the file even after a failure
+            if self._failed and not closing:
                 continue
             try:
                 with autorelease():
-                    work(None)
+                    work(cancelled=None)
             except Exception as err:
-                self._failed, self.error = True, err
+                self._failed, self._error = True, err
 
 class ImageWriter(object):
     def __init__(self, fname, format, **opts):
         self.mode = _output_mode(opts['colors'])
-        self.press = opts['colors'] if self.mode == CMYK and opts['colors'] != CMYK else None
+        self.press = opts['colors'] if opts['colors'] in Press.named else None
         self.fname = os.path.expanduser(fname)
         self.format = format
         self.opts = opts
         self.anim = 'fps' in opts
         if format == 'pdf' and not self.anim:
+            # one document unless the name is numbered
             self.opts['single'] = not re_padded.search(self.fname)
         self.session = None
-        self.renderer = None # with the GIL off, renders the frames added to a sequence on a thread of their own
+        self.renderer = None # used only with the GIL off
 
     def __enter__(self):
         self._pool = NSAutoreleasePool.alloc().init()
         _ctx._saveContext()
         _ctx._outputmode = self.mode
-        _ctx._press = self.press # (scripts' reads of cmyk colors as rgb go through it in the block)
+        _ctx._press = self.press # for scripts' cmyk reads
         return self
 
     def __exit__(self, type, value, tb):
@@ -437,7 +452,7 @@ class ImageWriter(object):
             self.finish()
         except Exception:
             if type is None:
-                raise # (else the script's own exception is the one to report)
+                raise # else report the script's error
         del self._pool
 
 
@@ -530,8 +545,9 @@ class ImageWriter(object):
 
     def add(self):
         """Add a new frame or page with the current contents of the canvas."""
-        if self.renderer is None and free_threaded:
-            self.renderer = SequenceRenderer()
+        gil_off = free_threaded and not sys._is_gil_enabled()
+        if self.renderer is None and gil_off:
+            self.renderer = ExportRenderer()
         self._session().add(_ctx.canvas, self.renderer)
 
     def _session(self):
@@ -546,12 +562,12 @@ class ImageWriter(object):
         """Blocks until disk I/O is complete"""
         self.session.done(self.renderer)
         if self.renderer is not None:
-            self.renderer.stop()
+            self.renderer.finish()
         while True:
             if self.session.writer.doneWriting():
                 break
             time.sleep(0.1)
         if self.renderer is not None:
             self.renderer.check()
-        if isinstance(self.session, MovieExportSession) and self.session.writer_failed():
+        if isinstance(self.session, MovieExportSession) and self.session.discard_if_failed():
             raise DeviceError("Export failed: encoding error")

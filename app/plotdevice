@@ -15,20 +15,22 @@ fi
 
 case "$env" in
     *.app/Contents/*)
+        # don't generate bytecode files in a signed app bundle
         export PYTHONDONTWRITEBYTECODE=1
+
+        # run without the GIL on -t or --free-threaded
         for arg in "$@"; do
             case "$arg" in
-                --fre*) free_threaded=1 ;; # no other long option starts with --fre
+                --fre*) free_threaded=1 ;; # the only --fre option
                 --*) ;;
                 -*) case "${arg%%o*}" in *t*) free_threaded=1 ;; esac ;; # -o takes the rest as its value
             esac
         done
         if [ -n "$free_threaded" ]; then
             PYTHON="${env%/Python.framework/*}/PythonT.framework/Versions/Current/bin/python3t"
-            [ -z "${PYTHON_GIL+set}" ] && GIL_OFF="-X gil=0"
         fi
         ;;
 esac
 
 export _p_l_o_t_d_e_v_i_c_e_=$(basename ${0})
-"$PYTHON" $GIL_OFF -m plotdevice "$@"
+"$PYTHON" -m plotdevice "$@"

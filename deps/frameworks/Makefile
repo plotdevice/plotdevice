@@ -15,6 +15,7 @@ PIP_ENV = $(if $(PIP_NO_CACHE_DIR),PIP_NO_CACHE_DIR=1,)
 PIP_INCLUDES = $(shell $(BIN)/python3-config --includes)
 PIP_INCLUDES_T = $(shell $(BIN_T)/python3t-config --includes)
 
+# reinstall plotdevice on every build, then relocate
 all: Python.framework PythonT.framework
 	$(PIP_ENV) CFLAGS="$(PIP_INCLUDES)" $(BIN)/pip3 install --upgrade ../..
 	$(PIP_ENV) CFLAGS="$(PIP_INCLUDES_T)" $(BIN_T)/pip3 install --upgrade ../..
@@ -29,6 +30,7 @@ $(PYTHON_PKG):
 Python.framework: PY = python3
 PythonT.framework: PY = python3t
 
+# PythonT borrows OpenSSL, zstd & ncurses from Python
 PythonT.framework: Python.framework
 
 Python.framework PythonT.framework: %.framework:
@@ -40,7 +42,10 @@ Python.framework PythonT.framework: %.framework:
 	PYTHONNOUSERSITE=1 $@/Versions/Current/bin/$(PY) -s -m ensurepip
 	PYTHONNOUSERSITE=1 $(PIP_ENV) $@/Versions/Current/bin/$(PY) -s -m pip install --upgrade pip
 	PYTHONNOUSERSITE=1 $(PIP_ENV) CFLAGS="$$($@/Versions/Current/bin/$(PY)-config --includes)" $@/Versions/Current/bin/$(PY) -s -m pip install -r requirements.txt
+	# pyobjc's test .dSYM bundles make xcode's strip
+	# bail out while copying the framework into the app
 	find $@ -type d \( -name PyObjCTest -o -name \*.dSYM \) -prune -exec rm -rf {} +
+	# drop CPython's tests, tkinter, idle and docs
 	cd $@/Versions/Current && rm -rf $(UNUSED_FILES)
 
 clean:

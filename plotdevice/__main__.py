@@ -67,8 +67,8 @@ def main():
   x = parser.add_argument_group("Export Options")
   x.add_argument('--export', '-o', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, heic, gif, or mov')
   x.add_argument('--zoom', metavar='PERCENT', default=100, type=int, help='scale of the output image or movie (100 = regular size); an image\'s can also be given by a filename ending in @2x/@3x/etc')
-  x.add_argument('--colors', metavar='NAME', help='the colors exports are written in: p3 (the default), srgb, rec709, rec2020, cmyk, a press (gracol, gracol_uncoated, swop, fogra39 or fogra47), or the path to an .icc profile (with --export or -q; the script\'s own export()s use it too unless they choose their own)')
-  x.add_argument('--cmyk', action='store_const', const=True, default=False, help='the same as --colors cmyk (deprecated)')
+  x.add_argument('--colors', metavar='NAME', help='the color profile used for exports: p3 (the default), srgb, rec709, rec2020, cmyk, gracol, gracol_uncoated, swop, fogra39, fogra47, or the path to an .icc profile')
+  x.add_argument('--cmyk', action='store_const', const=True, default=False, help='deprecated (equivalent to: --colors cmyk)')
 
   i = parser.add_argument_group("PlotDevice Script File", None)
   i.add_argument('script', help='the python script to be rendered')
@@ -77,13 +77,16 @@ def main():
   p.add_argument('--install', nargs='*', default=[], metavar='package', help="Use `pip` to download libraries into the ~/Library/Application Support/PlotDevice directory, making them `import`-able in the application and by scripts run from the command line")
 
 
+  installing = sys.argv[1:2] == ['--install'] or sys.argv[1:3] in (['-t', '--install'], ['--free-threaded', '--install'])
   if len(sys.argv)==1:
     parser.print_usage()
     print('for more detail:\n  %s --help' % parser.prog)
     return
-  elif sys.argv[1] == '--install' or sys.argv[1:3] in (['-t', '--install'], ['--free-threaded', '--install']):
+  elif installing:
+    # --install has to come first (or be right after -t)
     if not plotdevice.in_bundle:
-      parser.exit(1, "--install is only available in the PlotDevice app's command line tool; install packages with pip (or uv)\nin the Python environment you run PlotDevice from instead\n")
+      unbundled = "--install is only available in the PlotDevice app's command line tool; install packages with pip (or uv)\nin the Python environment you run PlotDevice from instead\n"
+      parser.exit(1, unbundled)
 
     from subprocess import call
     from .run import interpreter_lib_dir
@@ -150,6 +153,7 @@ def main():
     # it's a `single' doc or a sequence of numbered pdf files
     opts.single = bool(ext=='pdf' and not re.search(r'{\d+}', opts.export) and opts.last and opts.first < opts.last)
 
+    # a still image's zoom can also come from its filename
     m = re.search(r'@(\d+)[xX]$', outname)
     still = ext not in ('mov', 'gif')
     if m and still:
