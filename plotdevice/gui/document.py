@@ -18,6 +18,7 @@ from .views import FullscreenWindow, FullscreenView
 from ..run import Sandbox, encoded
 from .. import DeviceError
 from ..gfx.colors import _output_colors
+from ..gfx.vision import _vision_space
 from . import set_timeout, FrameClock, FrameQueue, FRAMELOG
 
 NSEventGestureAxisVertical = 2
@@ -182,7 +183,8 @@ class ScriptController(NSWindowController):
         self._fps_shown = False # whether the toolbar readout is currently visible
         self._fps_stamp = 0     # when it was last refreshed
         self.queue = None       # the window's FrameQueue (once it has one)
-        self.proof = None       # View > Proof Colors' choice: None for the screen, ('rgb', SRGB or a path) or ('press', key)
+        self.proof = None       # View > Proof Colors' choice: None for the screen, ('rgb', SRGB or a path), ('press', key) or ('vision', deficiency)
+        self._shownProof = None # the proof the view is showing (the choice, or one its menu is previewing)
         self._rendering = False # whether the latest frame invoke() rendered has yet to land
         self._rerun = False     # whether runScript() was called while it was rendering
 
@@ -469,6 +471,9 @@ class ScriptController(NSWindowController):
             self.currentView = FullscreenView.alloc().init()
             self.currentView.canvas = None
             self.currentView.queue = self.queue
+            self.currentView.press = self.graphicsView.press
+            self.currentView.rgb = self.graphicsView.rgb
+            self.currentView.vision = self.graphicsView.vision
             fullRect = NSScreen.mainScreen().frame()
             if not self.offscreen:
                 self.offscreen = FullscreenWindow.alloc().initWithRect_(fullRect)
@@ -864,18 +869,30 @@ class ScriptController(NSWindowController):
     @IBAction
     def proofColors_(self, sender):
         proof = sender.representedObject()
+        if not self.showProof(proof):
+            return NSBeep()
+        self.proof = proof
+        self.exportSheet.proofed(proof)
+
+    @objc.python_method
+    def showProof(self, proof):
+        if proof == self._shownProof:
+            return True
         kind, value = proof or (None, None)
         try:
             press = _output_colors(value, 'tiff') if kind == 'press' else None
             rgb = _output_colors(value, 'png') if kind == 'rgb' else None # (loading the space a profile's path names)
+            vision = _vision_space(value) if kind == 'vision' else None
         except DeviceError:
-            return NSBeep()
-        self.proof = proof
+            return False
+        self._shownProof = proof
         self.graphicsView.press = press
         self.graphicsView.rgb = rgb
-        self.exportSheet.proofed(proof)
-        if self.graphicsView.canvas is not None:
+        self.graphicsView.vision = vision
+        animating = self.animationTimer is not None and self.animationTimer.isValid()
+        if self.graphicsView.canvas is not None and not animating:
             self.graphicsView.render(self.graphicsView.canvas)
+        return True
 
     def validateMenuItem_(self, item):
         if item.action() == 'proofColors:':

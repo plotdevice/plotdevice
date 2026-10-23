@@ -3,7 +3,7 @@
 from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, CGColorCreate, CGColorCreateCopyByMatchingToColorSpace, \
                    CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, \
                    CGColorSpaceCopyICCData, CGColorSpaceCreateWithICCData, kCGRenderingIntentRelativeColorimetric, CGContextSetRenderingIntent, \
-                   CGColorSpaceGetNumberOfComponents, CGContextFillRect, CGContextSetRGBFillColor, \
+                   CGColorSpaceGetNumberOfComponents, \
                    CGColorRef, CGColorGetColorSpace, CGColorGetComponents, CGColorGetNumberOfComponents, CGColorSpaceCopyName, \
                    kCGColorSpaceExtendedDisplayP3, kCGColorSpaceExtendedSRGB, kCGColorSpaceGenericCMYK, kCGColorSpaceSRGB, \
                    kCGColorSpaceModelCMYK, \
@@ -13,7 +13,7 @@ from Quartz import CALayer, CGBitmapContextCreate, CGBitmapContextCreateImage, C
                    CGBitmapContextGetHeight, CGBitmapContextGetWidth, CGColorCreateCopyWithAlpha, CGColorGetAlpha, \
                    CGColorSpaceGetModel, CGContextConcatCTM, CGContextDrawImage, CGContextSetInterpolationQuality, \
                    CGRectInset, CGRectIntegral, CGRectIntersection, CGRectIsEmpty, kCGColorSpaceModelRGB, \
-                   kCGImageAlphaNone, kCGImageAlphaNoneSkipFirst, kCGImageAlphaNoneSkipLast, kCGInterpolationHigh, \
+                   kCGImageAlphaNone, kCGImageAlphaNoneSkipFirst, kCGImageAlphaNoneSkipLast, kCGImageAlphaPremultipliedLast, kCGInterpolationHigh, \
                    CGContextBeginPath, CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, \
                    CGContextClearRect, CGContextClearRect, CGContextClip, CGContextClipToMask, CGContextClipToRect, CGContextGetClipBoundingBox, CGContextDrawPath, \
                    CGContextReplacePathWithStrokedPath, CGContextGetPathBoundingBox, \

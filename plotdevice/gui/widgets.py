@@ -384,11 +384,7 @@ def fill_sections(menu, sections, action=None):
             menu.addItem_(NSMenuItem.sectionHeaderWithTitle_(header))
         elif menu.numberOfItems():
             menu.addItem_(NSMenuItem.separatorItem())
-        for entry in items:
-            if entry is None:
-                menu.addItem_(NSMenuItem.separatorItem())
-                continue
-            title, value = entry
+        for title, value in items:
             item = menu.addItemWithTitle_action_keyEquivalent_(title, None, '')
             item.setRepresentedObject_(value)
             item.setAction_(action)
@@ -398,6 +394,39 @@ def system_rgb():
             if os.path.exists(os.path.join(_SYSTEM_PROFILES, name))]
 
 class ProofColorsMenu(NSObject):
+    PREVIEW = 0.1
+    _timer = None
+
+    @objc.python_method
+    def _controller(self):
+        return NSApp().targetForAction_to_from_('proofColors:', None, None)
+
+    def preview_(self, timer):
+        self._timer = None
+        controller = self._controller()
+        if controller is not None:
+            controller.showProof(timer.userInfo()[0])
+
+    def menu_willHighlightItem_(self, menu, item):
+        controller = self._controller()
+        if controller is None:
+            return
+        previewable = item is not None and item.action() == 'proofColors:'
+        proof = item.representedObject() if previewable else controller.proof
+        if self._timer is not None:
+            self._timer.invalidate()
+        self._timer = set_timeout(self, 'preview:', self.PREVIEW, info=[proof])
+
+    def menuDidClose_(self, menu):
+        if self._timer is not None:
+            self._timer.invalidate()
+        self._timer = set_timeout(self, 'restore:', 0)
+
+    def restore_(self, timer):
+        self._timer = None
+        controller = self._controller()
+        if controller is not None:
+            controller.showProof(controller.proof)
 
     def menuNeedsUpdate_(self, menu):
         win = NSApp().mainWindow()
@@ -405,9 +434,11 @@ class ProofColorsMenu(NSObject):
         spaces = [(label, ('rgb', path)) for label, path in system_rgb()]
         bundled = [(label, ('press', press)) for press, label in _PRESS_LABELS.items()]
         installed = [(desc, ('press', path)) for desc, path in _installed_presses()]
-        rgb = [(screen.localizedName(), None), ('sRGB', ('rgb', SRGB))] + ([None] + spaces if spaces else [])
-        cmyk = bundled + ([None] + installed if installed else [])
-        fill_sections(menu, [('RGB', rgb), ('CMYK', cmyk)], 'proofColors:')
+        rgb = [(screen.localizedName(), None), ('sRGB', ('rgb', SRGB))] + spaces
+        cmyk = bundled + installed
+        vision = [(name.capitalize(), ('vision', name)) for name in ('protanopia', 'protanomaly', 'deuteranopia', 'deuteranomaly',
+                                                                     'tritanopia', 'tritanomaly')]
+        fill_sections(menu, [('RGB', rgb), ('CMYK', cmyk), ('Accessibility', vision)], 'proofColors:')
 
 class ExportSheet(NSObject):
     # the script whose doExportAsImage and doExportAsMovie methods will be called
@@ -575,27 +606,23 @@ class ExportSheet(NSObject):
     @objc.python_method
     def proofed(self, proof):
         kind, value = proof or (None, None)
+        if kind == 'vision':
+            return
         self.image['colors'] = value if kind in ('press', 'rgb') else P3
         self.movie['colors'] = value if value == SRGB else P3
 
     @objc.python_method
     def fillColors(self, popup, colors):
-        system = system_rgb()
-        rgb = [('Display P3', P3), ('sRGB', SRGB)] + ([None] + system if system else [])
-        installed = _installed_presses()
+        rgb = [('Display P3', P3), ('sRGB', SRGB)] + system_rgb()
         bundled = [(label, press) for press, label in _PRESS_LABELS.items()]
-        cmyk = [('Generic CMYK', CMYK)] + bundled + ([None] + installed if installed else [])
+        cmyk = [('Generic CMYK', CMYK)] + bundled + _installed_presses()
         popup.removeAllItems()
         for header, items in [('RGB', rgb), ('CMYK', cmyk)]:
             if SECTION_HEADERS:
                 popup.menu().addItem_(NSMenuItem.sectionHeaderWithTitle_(header))
             elif popup.numberOfItems():
                 popup.menu().addItem_(NSMenuItem.separatorItem())
-            for entry in items:
-                if entry is None:
-                    popup.menu().addItem_(NSMenuItem.separatorItem())
-                    continue
-                title, value = entry
+            for title, value in items:
                 popup.addItemWithTitle_(title)
                 popup.lastItem().setRepresentedObject_(value)
         popup.selectItemAtIndex_(popup.indexOfItemWithRepresentedObject_(colors))

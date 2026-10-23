@@ -2008,6 +2008,7 @@ class Frame(object):
         self._bounds = None  # each grob's _render_bounds, computed by the first culled render
         self._layers = {}    # the bounds of grobs drawn in transparency layers, as they're drawn
         self.proof = None    # an rgb space the window shows it through (View > Proof Colors' sRGB, Adobe RGB, ...)
+        self.vision = None   # or a color vision simulation's space, which a P3 rendering is relabelled with (see gfx.vision)
 
     def _layer_box(self, grob):
         key = id(grob)
@@ -2084,19 +2085,21 @@ class Frame(object):
                 offset = (-origin[0], origin[1] + H)
                 within = (origin[0] / scale, origin[1] / scale, w / scale, h / scale)
             proof = self.proof or (_output_space(self.press) if self.press else None)
+            if self.vision is not None:
+                proof = CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3)
             if proof is None:
                 self._render_to_context(port, scale, cancelled, offset, within)
             else:
                 cmyk = CGColorSpaceGetModel(proof) == kCGColorSpaceModelCMYK
-                bitmap = CGBitmapContextCreate(None, w, h, 8, w * 4, proof, kCGImageAlphaNone if cmyk else kCGImageAlphaNoneSkipLast)
+                bitmap = CGBitmapContextCreate(None, w, h, 8, w * 4, proof, kCGImageAlphaNone if cmyk else kCGImageAlphaPremultipliedLast)
                 CGContextSetRenderingIntent(bitmap, kCGRenderingIntentRelativeColorimetric)
-                if not cmyk:
-                    CGContextSetRGBFillColor(bitmap, 1, 1, 1, 1)
-                    CGContextFillRect(bitmap, ((0, 0), (w, h)))
                 x, y = offset or (0, self.pagesize.height * scale)
                 self._render_to_context(bitmap, scale, cancelled, (x, y - (H - h)), within)
+                image = CGBitmapContextCreateImage(bitmap)
+                if self.vision is not None:
+                    image = CGImageCreateCopyWithColorSpace(image, self.vision) # (its colors as the simulation shows them)
                 CGContextSetRenderingIntent(port, kCGRenderingIntentRelativeColorimetric)
-                CGContextDrawImage(port, ((0, H - h), (w, h)), CGBitmapContextCreateImage(bitmap))
+                CGContextDrawImage(port, ((0, H - h), (w, h)), image)
             CGContextFlush(port)
         finally:
             CGContextRestoreGState(port)

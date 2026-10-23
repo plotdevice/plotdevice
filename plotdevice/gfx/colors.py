@@ -167,7 +167,7 @@ def _profile_header(path):
             return _PROFILE_HEADERS[path][1]
         with open(path, 'rb') as f:
             head = f.read(132)
-            if len(head) < 132 or head[36:40] != b'acsp':
+            if len(head) < 132 or head[36:40] != b'acsp' or int.from_bytes(head[0:4], 'big') > os.path.getsize(path):
                 header = None
             else:
                 count = min(int.from_bytes(head[128:132], 'big'), 256)

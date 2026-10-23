@@ -598,6 +598,9 @@ class ColorTests(PlotDeviceTestCase):
             for name in ('My Press', 'my press.icc', 'MY PRESS'):
                 self.assertEqual(_output_colors(name, 'pdf'), os.path.realpath(join(user, 'My Press.icc')))
             self.assertEqual(_output_colors('lab proof', 'png'), os.path.realpath(join(other, 'Lab Proof.ICM')))
+            open(join(user, 'Cut Off.icc'), 'wb').write(cmyk[:4000])
+            self.assertIsNone(colors._profile_header(join(user, 'Cut Off.icc')))
+            self.assertIsNotNone(colors._profile_header(join(user, 'My Press.icc')))
             with self.assertRaisesRegex(DeviceError, "can't be exported"):
                 _output_colors('My Press', 'png')
             with self.assertRaisesRegex(DeviceError, "'Nothing Here' isn't a built-in color space or ICC profile filename"):
@@ -885,6 +888,88 @@ class ColorTests(PlotDeviceTestCase):
             frame = _ctx.canvas.commit(_output_colors(adobe, 'png'), 'png')
             frame.proof = _INKS[adobe]
             close(shown(frame), pixels(png), 'an Adobe RGB proof shows the Adobe RGB png')
+
+    def test_run_fullscreen_keeps_the_proof(self):
+        from plotdevice.gui.views import FullscreenView
+        from plotdevice.gfx.colors import _output_colors, _INKS
+        from plotdevice.gfx.vision import _vision_space
+        class Presenter(object):
+            def render(self, frame, *args, **kwargs):
+                self.frame = frame
+        self._press_swatches()
+        proofs = dict(press=(_output_colors(GRACOL, 'tiff'), None, None), rgb=(None, SRGB, None),
+                      vision=(None, None, _vision_space('protanopia')), screen=(None, None, None))
+        for name, (press, rgb, vision) in proofs.items():
+            view = FullscreenView.alloc().init()
+            view._presenter = Presenter()
+            view.press, view.rgb, view.vision = press, rgb, vision
+            view.render(_ctx.canvas)
+            frame = view._presenter.frame
+            self.assertEqual(frame.press, press, name)
+            self.assertIs(frame.proof, _INKS[rgb] if rgb else None, name)
+            self.assertIs(frame.vision, vision, name)
+
+    def test_vision_proofs_show_the_simulation(self):
+        import objc
+        from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGContextDrawImage, CGDataProviderCopyData,
+                            CGImageGetDataProvider, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, kCGImageAlphaPremultipliedLast)
+        from plotdevice.gfx.vision import _vision_space, _simulate, _decode
+        encode = lambda v: 12.92 * v if v <= 0.0031308 else 1.055 * v ** (1 / 2.4) - 0.055
+        swatches = [(1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0), (0, 1, 1), (1, 0, 1), (.5, .5, .5), (1, 1, 1), (.8, .4, .1), (.2, .7, .4)]
+        size(10 * len(swatches), 10)
+        for i, c in enumerate(swatches):
+            fill(*c)
+            rect(10 * i, 0, 10, 10)
+        for deficiency in ('protanopia', 'protanomaly', 'deuteranopia', 'deuteranomaly', 'tritanopia', 'tritanomaly'):
+            frame = _ctx.canvas.commit()
+            frame.vision = _vision_space(deficiency)
+            surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(10 * len(swatches), 10)
+            frame._render_to_surface(surface, 1.0)
+            w = 10 * len(swatches)
+            ctx = CGBitmapContextCreate(None, w, 10, 8, w * 4, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedLast)
+            CGContextDrawImage(ctx, ((0, 0), (w, 10)), CGBitmapContextCreateImage(surface.context()))
+            data = bytes(CGDataProviderCopyData(CGImageGetDataProvider(CGBitmapContextCreateImage(ctx))))
+            for i, c in enumerate(swatches):
+                r, g, b = data[(5 * w + 10 * i + 5) * 4:][:3]
+                want = [round(255 * encode(min(max(v, 0), 1))) for v in _simulate(deficiency, [_decode(v) for v in c])]
+                self.assertLessEqual(max(abs(x - y) for x, y in zip((r, g, b), want)), 3, (deficiency, c, (r, g, b), want))
+        from plotdevice.gfx.colors import _INKS
+        clear(all)
+        size(30, 10)
+        background(None)
+        fill(1, 0, 0)
+        rect(0, 0, 10, 10)
+        fill(1, 0, 0, .5)
+        rect(10, 0, 10, 10)
+        red = [round(255 * encode(min(max(v, 0), 1))) for v in _simulate('protanopia', (1, 0, 0))]
+        for kind in ('protanopia', 'srgb'):
+            frame = _ctx.canvas.commit(SRGB, 'png') if kind == 'srgb' else _ctx.canvas.commit()
+            if kind == 'srgb':
+                frame.proof = _INKS[SRGB]
+            else:
+                frame.vision = _vision_space('protanopia')
+            surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(30, 10)
+            frame._render_to_surface(surface, 1.0)
+            ctx = CGBitmapContextCreate(None, 30, 10, 8, 120, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedLast)
+            CGContextDrawImage(ctx, ((0, 0), (30, 10)), CGBitmapContextCreateImage(surface.context()))
+            data = bytes(CGDataProviderCopyData(CGImageGetDataProvider(CGBitmapContextCreateImage(ctx))))
+            opaque, half, empty = [tuple(data[(5 * 30 + x) * 4:][:4]) for x in (5, 15, 25)]
+            self.assertEqual(empty, (0, 0, 0, 0), kind)
+            self.assertEqual(half[3], 128, kind)
+            self.assertLessEqual(max(abs(2 * h - o) for h, o in zip(half[:3], opaque[:3])), 3, (kind, half, opaque))
+            if kind == 'protanopia':
+                self.assertLessEqual(max(abs(o - r) for o, r in zip(opaque[:3], red)), 3, (opaque, red))
+        self.assertEqual([round(v, 3) for v in _simulate('protanopia', (1, 1, 1))], [1.0, 1.0, 1.0])
+        red = _simulate('protanopia', (1, 0, 0))
+        self.assertAlmostEqual(red[0], red[1], places=2)
+        self.assertLess(red[2], .01)
+        for full, partial, color, channel in (('protanopia', 'protanomaly', (1, 0, 0), 1), ('deuteranopia', 'deuteranomaly', (1, 0, 0), 1),
+                                              ('tritanopia', 'tritanomaly', (0, 0, 1), 0)):
+            normal, between, extreme = color[channel], _simulate(partial, color)[channel], _simulate(full, color)[channel]
+            self.assertLess(min(normal, extreme), between, partial)
+            self.assertLess(between, max(normal, extreme), partial)
+        for deficiency in ('protanomaly', 'deuteranomaly', 'tritanomaly'):
+            self.assertEqual([round(v, 2) for v in _simulate(deficiency, (1, 1, 1))], [1.0, 1.0, 1.0], deficiency)
 
     def test_window_surfaces_are_tagged_p3(self):
         import objc

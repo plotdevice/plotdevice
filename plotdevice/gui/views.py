@@ -549,11 +549,23 @@ class ViewportPhysics(object):
         (t0, before), (t1, after) = recent[0], recent[-1]
         return tuple((b - a) / (t1 - t0) for a, b in zip(before, after))
 
+def _commit_proofed(canvas, press, rgb, vision):
+    if press:
+        return canvas.commit(press, 'tiff')
+    if rgb:
+        frame = canvas.commit(rgb, 'png')
+        frame.proof = _INKS[rgb]
+        return frame
+    frame = canvas.commit()
+    frame.vision = vision
+    return frame
+
 class GraphicsView(NSView):
     script = IBOutlet()
     canvas = None
     press = None      # View > Proof Colors' press, which the window shows its frames as a press TIFF holds them in
     rgb = None        # or rgb colors (SRGB or a profile's path), shown as a PNG exported in them holds them
+    vision = None     # or a color vision simulation's space (gfx.vision) its P3 frames are shown through
     _queue = None      # the window's FrameQueue (class-level: the ScriptController may set it before awakeFromNib)
     _presenter = None
     canvasSize = None # the canvas at the displayed zoom, in points (class-level: the clip view may ask before awakeFromNib)
@@ -618,13 +630,7 @@ class GraphicsView(NSView):
     @objc.python_method
     def render(self, canvas, focus=None, onerror=None, ondone=None):
         self.canvas = canvas
-        if self.press:
-            self._committed = canvas.commit(self.press, 'tiff')
-        elif self.rgb:
-            self._committed = canvas.commit(self.rgb, 'png')
-            self._committed.proof = _INKS[self.rgb]
-        else:
-            self._committed = canvas.commit()
+        self._committed = _commit_proofed(canvas, self.press, self.rgb, self.vision)
         self._seq += 1
         self._request(focus, onerror=onerror, ondone=ondone)
 
@@ -879,6 +885,9 @@ class GraphicsView(NSView):
     @IBAction
     def copyImageAsPDF_(self, sender):
         self._copied = getattr(self, '_committed', None)
+        proofing = self.press or self.rgb or self.vision
+        if proofing and self.canvas is not None:
+            self._copied = self.canvas.commit()
         if self._copied is not None:
             pboard = NSPasteboard.generalPasteboard()
             pboard.declareTypes_owner_([NSPasteboardTypePDF, NSPasteboardTypeTIFF], self)
@@ -955,6 +964,7 @@ class FullscreenWindow(NSWindow):
         return True
 
 class FullscreenView(NSView):
+    press = rgb = vision = None  # the window's proof when Run Fullscreen began (see GraphicsView)
 
     def init(self):
         super(FullscreenView, self).init()
@@ -994,7 +1004,7 @@ class FullscreenView(NSView):
             self._scalingFactor = min(sw / cw, sh / ch)
         win = self.window()
         dpr = win.backingScaleFactor() if win else NSScreen.mainScreen().backingScaleFactor()
-        frame = self._committed = canvas.commit()
+        frame = self._committed = _commit_proofed(canvas, self.press, self.rgb, self.vision)
         self._seq += 1
         self._presenter.render(frame, self._seq, self._scalingFactor, dpr or 1.0, onerror=onerror, ondone=ondone)
 
