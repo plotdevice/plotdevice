@@ -18,6 +18,7 @@ from os.path import join, exists, dirname, basename, abspath, getsize, realpath
 
 ROOT = dirname(abspath(__file__))
 sys.path.insert(0, ROOT)
+is_framework = realpath(sys.executable).startswith(join(ROOT, 'deps/frameworks', ''))
 
 APP_NAME = 'PlotDevice'
 SPARKLE_VERSION = '2.1.0'
@@ -70,6 +71,7 @@ def spawn(cmd, **kwargs):
 
 def cmd_dev(args):
     if args.frameworks:
+        # build the frameworks and a venv for each
         spawn(['make', '-C', 'deps/frameworks', 'Python.framework', 'PythonT.framework'])
         spawn(['deps/frameworks/Python.framework/Versions/Current/bin/python3', '-B', 'make.py', 'dev'])
         spawn(['deps/frameworks/PythonT.framework/Versions/Current/bin/python3t', '-B', 'make.py', 'dev'])
@@ -77,18 +79,19 @@ def cmd_dev(args):
 
     # install pyobjc, requests and the other pypi dependencies in deps/local
     import platform
-    venv_name = platform.python_version() + sys.abiflags
-    in_frameworks = realpath(sys.executable).startswith(join(ROOT, 'deps/frameworks', ''))
-    if in_frameworks:
+    venv_name = platform.python_version() + sys.abiflags # add 't' if free-threaded
+    if is_framework:
         venv_name += '-fmwk'
-        os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+        os.environ['PYTHONDONTWRITEBYTECODE'] = '1' # prevent .pyc files from invalidating code-signing
     venv_dir = join('deps/local', venv_name)
     if not exists(venv_dir):
+        # resolve symlinked interpreters (like uv/pyenv stubs)
         spawn([realpath(sys.executable), '-m', 'venv', venv_dir])
         PIP = join(venv_dir, 'bin/pip3')
         call([PIP, 'install', '--upgrade', 'pip', 'setuptools', 'wheel', 'py2app', 'twine'])
         call([PIP, 'install', '-e', ROOT])
-        if in_frameworks:
+        if is_framework:
+            # add a .pth to keep bytecode in the venv
             site_packages = glob(join(venv_dir, 'lib/python3*/site-packages'))[0]
             with open(join(site_packages, '00-pycache-prefix.pth'), 'w') as f:
                 f.write('import sys; sys.pycache_prefix = %r\n' % join(ROOT, venv_dir, 'pycache'))
@@ -175,6 +178,7 @@ def cmd_app(args):
         env['PIP_NO_CACHE_DIR'] = '1'
     call('cd deps/frameworks && make', shell=True, env=env)
 
+    # clear out existing build products
     for product in ('dist/PlotDevice.app', 'dist/PlotDevice.app.dSYM'):
         if exists(product):
             rmtree(product)
@@ -196,8 +200,8 @@ def cmd_py2app(args):
   > ./deps/local/<python-version>/bin/python3 make.py py2app""")
         sys.exit(1)
 
-    in_frameworks = realpath(sys.executable).startswith(join(ROOT, 'deps/frameworks', ''))
-    if in_frameworks:
+    # update the plotdevice module in the embedded frameworks
+    if is_framework:
         spawn(['make', '-C', 'deps/frameworks'])
 
     from py2app.build_app import py2app as build_py2app

@@ -274,6 +274,11 @@ class ExportSession(object):
         # one of the cIO classes
         self.writer = None
 
+    @classmethod
+    def writing(cls):
+        """The unfinished sessions whose writers are still writing"""
+        return [s for s in ExportSession.unfinished if s.writer is not None and not s.writer.doneWriting()]
+
         self.on_main = False
 
         self.presents = False

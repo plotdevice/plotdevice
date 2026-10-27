@@ -1,6 +1,7 @@
 import AppKit
 import CoreGraphics
 
+// An NSImageRep that draws and traces a SwiftDraw SVG.
 @objc(PDSVGImageRep)
 public final class SVGImageRep: NSImageRep {
 
@@ -30,6 +31,7 @@ public final class SVGImageRep: NSImageRep {
     return nil
   }
 
+  // NSImageRep's copy misses our Swift properties
   public override func copy(with zone: NSZone? = nil) -> Any {
     let copy = SVGImageRep(svg: svg)
     copy.size = size
@@ -39,6 +41,7 @@ public final class SVGImageRep: NSImageRep {
     return copy
   }
 
+  // Flip the context for SVG's y-down coordinates.
   public override func draw() -> Bool {
     guard let gc = NSGraphicsContext.current else { return false }
     let ctx = gc.cgContext
@@ -52,6 +55,7 @@ public final class SVGImageRep: NSImageRep {
     return true
   }
 
+  // The union of the SVG's shapes, traced once.
   @objc public func outline() -> NSBezierPath {
     outlineLock.lock()
     defer { outlineLock.unlock() }
@@ -66,6 +70,7 @@ public final class SVGImageRep: NSImageRep {
 
 public extension NSImage {
 
+  // An NSImage that never caches the rep as a bitmap.
   private static func plotdeviceSVG(_ rep: SVGImageRep?) -> NSImage? {
     guard let rep = rep else { return nil }
     let image = NSImage(size: rep.size)

@@ -213,7 +213,7 @@ def numlike(obj):
     if isinstance(obj, (int, float)):
         return True
     if isinstance(obj, objc.objc_object):
-        return False
+        return False # NSNumbers were caught above, so avoid the bridged hasattr
     return hasattr(obj, '__int__') or hasattr(obj, '__float__')
 
 ### give ordered- and default-dict a nicer repr ###

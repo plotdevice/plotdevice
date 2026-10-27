@@ -5,6 +5,7 @@ TAG := 0.21.0
 all: SwiftDraw.o
 	@:
 
+# re-copy the glue & manifest on every build
 SwiftDraw.o: SwiftDraw PDSVGImageRep.swift Package.swift.tmpl
 	cp PDSVGImageRep.swift SwiftDraw/SwiftDraw
 	cp Package.swift.tmpl SwiftDraw/Package.swift
@@ -19,6 +20,7 @@ SwiftDraw:
 	rm SwiftDraw/SwiftDraw/SVGView.swift
 	rm -r SwiftDraw/*.*
 
+# only distclean removes the SwiftDraw checkout
 clean:
 	rm -rf SwiftDraw/.build
 	rm -f *.o

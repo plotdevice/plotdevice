@@ -6,9 +6,9 @@ the prebuild and compilation steps necessary for setuptools to package the modul
 You needn't run this script directly, just use one of the ordinary installation
 approaches like `pip install .` or `python -m build`.
 """
+import zlib
 from glob import glob
 from subprocess import call
-import os, zlib
 from os.path import dirname, abspath, basename, exists, join, getmtime
 
 from setuptools import setup
@@ -23,13 +23,14 @@ def stale(dst, src):
 
 class BuildExtCommand(build_ext):
     """Build SwiftDraw.o before linking _plotdevice, then populate
-    plotdevice/rsrc/ with the runtime resources plotdevice.util.rsrc_path()
+    plotdevice/rsrc/ with the runtime resources plotdevice.util.rsrc_path
     depends on (icns, colors.json, an ibtool-compiled nib, the press profiles)."""
 
     def run(self):
         call('cd deps/extensions/svg && make', shell=True, cwd=ROOT)
         call('cd deps/extensions/clipper2 && make', shell=True, cwd=ROOT)
 
+        # relink if any .o is updated
         for ext in self.extensions:
             ext.depends = list(ext.depends) + list(ext.extra_objects)
         build_ext.run(self)
@@ -47,10 +48,9 @@ class BuildExtCommand(build_ext):
             self.spawn(['/usr/bin/ibtool', '--compile', nib, xib])
         self.copy_file(nib, rsrc_dir)
 
+        # and the press profiles, zlib'd, with their licenses
         press_dir = join(rsrc_dir, 'press')
         self.mkpath(press_dir)
-        for path in glob(join(press_dir, '*.icc')):
-            os.remove(path) # (uncompressed copies from earlier builds)
         for path in glob(join(ROOT, 'deps/press/*')):
             if path.endswith('.icc'):
                 dst = join(press_dir, basename(path) + '.zlib')
