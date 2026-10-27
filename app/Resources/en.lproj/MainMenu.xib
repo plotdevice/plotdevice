@@ -390,11 +390,6 @@ CQ
                             <menuItem title="Zoom to" id="500">
                                 <menu key="submenu" title="Zoom to" id="501">
                                     <items>
-                                        <menuItem title="To Fit" keyEquivalent="0" id="512">
-                                            <connections>
-                                                <action selector="zoomToFit:" target="-1" id="513"/>
-                                            </connections>
-                                        </menuItem>
                                         <menuItem title="Actual Size" tag="100" keyEquivalent="1" id="502">
                                             <connections>
                                                 <action selector="zoomToTag:" target="-1" id="506"/>
@@ -415,9 +410,15 @@ CQ
                                                 <action selector="zoomToTag:" target="-1" id="509"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="zS4-0p-Kq7"/>
                                         <menuItem title="50%" tag="50" keyEquivalent="5" id="510">
                                             <connections>
                                                 <action selector="zoomToTag:" target="-1" id="511"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Fit Window" keyEquivalent="0" id="512">
+                                            <connections>
+                                                <action selector="zoomToFit:" target="-1" id="513"/>
                                             </connections>
                                         </menuItem>
                                     </items>

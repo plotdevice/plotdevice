@@ -447,7 +447,7 @@ class FramePresenter(object):
             if destination is not None:
                 target = [v * dpr for v in destination] # tiles are in pixels
             else:
-                target = self._tracker.visible_rect(zoom * dpr)
+                target = self._tracker.visible_rect(dpr)
             missing = [t for t in tiles.covering(target) if t not in tiles.layers]
             work = lambda cancelled: (tiles, self._rasterizer.render_tiles(tiles, missing, cancelled))
         elif mode == 'viewport':
