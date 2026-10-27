@@ -11,7 +11,7 @@ from .lib.cocoa import *
 from .lib import pathmatics
 from .lib.io import MovieExportSession, pdf_update
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
-from .gfx.geometry import Dimension, parse_coords, IDENTITY
+from .gfx.geometry import Dimension, parse_coords
 from .gfx.typography import Layout
 from .gfx.effects import Frob
 from .gfx import *
@@ -44,7 +44,7 @@ class Context(object):
         self._statestack = []
         self._vars = []
         self._params = OrderedDict()
-        self._cli_colors = None # a windowless run's --colors, for the exports that don't choose their own
+        self._cli_colors = None # a windowless run's --colors
 
         self._resetContext()     # initialize default graphics state
         self._resetEnvironment() # initialize namespace & canvas
@@ -82,7 +82,7 @@ class Context(object):
         self._activate()
 
         # color state
-        self._press = None # the press of the enclosing `with export(..., colors=<press>)` (see gfx._outputpress)
+        self._press = None # an enclosing export's press
         self._colormode = RGB
         self._colorrange = 1.0
         self._colorspace = P3
@@ -217,21 +217,9 @@ class Context(object):
         In addition to colors, you can also call background() with an image() as its sole argument.
         In this case the image will be tiled to fill the canvas.
         """
-        if len(args) > 0:
-            if len(args) == 1 and args[0] is None:
-                bg = None
-            elif isinstance(args[0], Image):
-                _image_arg(args, kwargs, 'background')
-                bg = Pattern(args[0])
-                self.canvas.clear(args[0])
-            elif isinstance(args[0],str) and (args[0].startswith('http') or exists(expanduser(args[0]))):
-                _image_arg(args, kwargs, 'background')
-                bg = Pattern(args[0])
-            else:
-                bg = _color_or_gradient(args, kwargs, 'background')
-            self.canvas.background = bg
-        elif kwargs:
-            _colorless(kwargs, 'background')
+        if args or kwargs:
+            clear = len(args) == 1 and args[0] is None
+            self.canvas.background = None if clear else self._color_arg(args, kwargs, 'background')
         return self.canvas.background
 
     def outputmode(self, mode=None):
@@ -820,24 +808,13 @@ class Context(object):
             fill() can be used as part of a `with` statement in which case the fill will
             be reset to its previous value once the block completes
         """
-        if args:
-            if args[0] is None:
-                return self.nofill()
-
-            if isinstance(args[0], Image):
-                _image_arg(args, kwargs, 'fill')
-                clr = Pattern(args[0])
-                self.canvas.clear(args[0])
-            elif isinstance(args[0],str) and (args[0].startswith('http') or exists(expanduser(args[0]))):
-                _image_arg(args, kwargs, 'fill')
-                clr = Pattern(args[0])
-            else:
-                clr = _color_or_gradient(args, kwargs, 'fill')
+        if args and args[0] is None:
+            return self.nofill()
+        if args or kwargs:
+            clr = self._color_arg(args, kwargs, 'fill')
             setattr(clr, '_rollback', dict(fill=self._fillcolor))
             self._fillcolor = clr._installed = clr.copy()
             return clr
-        elif kwargs:
-            _colorless(kwargs, 'fill')
         return self._fillcolor
 
     def nostroke(self):
@@ -857,24 +834,64 @@ class Context(object):
         which spans the outline the stroke paints. The `steps`, `angle`, and `center` keyword args
         work as they do for fill().
 
+        In addition to colors, you can also call stroke() with an image() as its sole argument.
+        In this case the image will be tiled along the outline being stroked.
+
         Returns:
-            the current stroke color as a Color (or Gradient) object.
+            the current stroke color as a Color (or Gradient/Pattern) object.
 
         Context Manager:
             stroke() can be used as part of a `with` statement in which case the stroke will
             be reset to its previous value once the block completes
         """
-        if len(args) > 0:
-            if args[0] is None:
-                return self.nostroke()
-
-            annotated = _color_or_gradient(args, kwargs, 'stroke')
-            setattr(annotated, '_rollback', dict(stroke=self._strokecolor))
-            self._strokecolor = annotated._installed = annotated.copy()
-            return annotated
-        elif kwargs:
-            _colorless(kwargs, 'stroke')
+        if args and args[0] is None:
+            return self.nostroke()
+        if args or kwargs:
+            clr = self._color_arg(args, kwargs, 'stroke')
+            setattr(clr, '_rollback', dict(stroke=self._strokecolor))
+            self._strokecolor = clr._installed = clr.copy()
+            return clr
         return self._strokecolor
+
+    def _color_arg(self, args, kwargs, command):
+        # the Pattern, Gradient, or Color a background(), fill(), or stroke() call describes
+        if not args:
+            Color.validate({arg: val for arg, val in kwargs.items() if arg not in Gradient.kwargs})
+            nocolor = "%s() takes '%s' only with a color" % (command, "', '".join(kwargs))
+            raise DeviceError(nocolor)
+
+        src = args[0]
+        is_path = isinstance(src, str) and (src.startswith('http') or exists(expanduser(src)))
+        if isinstance(src, (Image, Pattern)) or is_path:
+            if len(args) > 1 or kwargs:
+                badimage = "%s() takes an image as its only argument" % command
+                raise DeviceError(badimage)
+        if isinstance(src, Image):
+            self.canvas.clear(src) # remove the image drawn as a side effect by `image(pth)`
+            return Pattern(src) # use the image for just the pattern instead
+        if is_path:
+            return Pattern(src)
+        if isinstance(src, Pattern):
+            return src.copy() # make sure each use of a Pattern gets its own rollback
+
+        if isinstance(src, Gradient):
+            if len(args) > 1 or kwargs:
+                badgradient = "%s() takes a Gradient object as its only argument (its steps, angle and center are set when it's created)" % command
+                raise DeviceError(badgradient)
+            return src.copy() # make sure each use of a Gradient gets its own rollback
+
+        several_colors = len(args) > 1 and all(Color.recognized(c) for c in args)
+        gradient_args = [arg for arg in kwargs if arg in Gradient.kwargs]
+        if several_colors:
+            unknown = [arg for arg in kwargs if arg not in Gradient.kwargs]
+            if unknown:
+                badarg = "Unknown Gradient argument%s '%s'" % ('' if len(unknown)==1 else 's', "', '".join(unknown))
+                raise DeviceError(badarg)
+            return Gradient(*args, **kwargs)
+        if gradient_args:
+            nogradient = "%s() takes '%s' only with two or more colors (for a gradient)" % (command, "', '".join(gradient_args))
+            raise DeviceError(nogradient)
+        return Color(*args, **kwargs)
 
     ### Pen Commands ###
 
@@ -1663,6 +1680,7 @@ class PlotContext(object):
         # start with the current context state as a baseline
         prior = {k:getattr(ctx, v) for k,v in self._statevars.items() if k in spec or restore==all}
         for param, val in spec.items():
+            # a fill() or stroke() call already set its rollback, so restore what that call replaced
             rollback = getattr(val, '_rollback', {})
             if param in rollback:
                 prior[param] = rollback[param]
@@ -1828,160 +1846,104 @@ class Canvas(object):
         self.commit(_output_colors(CMYK if cmyk else colors, format), format).save(fname, format, zoom)
 
 
-def _color_or_gradient(args, kwargs, command):
-    if isinstance(args[0], Gradient):
-        if len(args) > 1 or kwargs:
-            badgradient = "%s() takes a Gradient object as its only argument (its steps, angle and center are set when it's created)" % command
-            raise DeviceError(badgradient)
-        return args[0].copy()
-
-    several_colors = len(args) > 1 and all(Color.recognized(c) for c in args)
-    gradient_args = [arg for arg in kwargs if arg in Gradient.kwargs]
-    if several_colors:
-        unknown = [arg for arg in kwargs if arg not in Gradient.kwargs]
-        if unknown:
-            badarg = "Unknown Gradient argument%s '%s'" % ('' if len(unknown)==1 else 's', "', '".join(unknown))
-            raise DeviceError(badarg)
-        return Gradient(*args, **kwargs)
-    if gradient_args:
-        nogradient = "%s() takes '%s' only with two or more colors (for a gradient)" % (command, "', '".join(gradient_args))
-        raise DeviceError(nogradient)
-    return Color(*args, **kwargs)
-
-def _image_arg(args, kwargs, command):
-    if len(args) > 1 or kwargs:
-        badimage = "%s() takes an image as its only argument" % command
-        raise DeviceError(badimage)
-
-def _colorless(kwargs, command):
-    Color.validate({arg: val for arg, val in kwargs.items() if arg not in Gradient.kwargs})
-    nocolor = "%s() takes '%s' only with a color" % (command, "', '".join(kwargs))
-    raise DeviceError(nocolor)
-
 def _unheld(grobs):
     for grob in grobs:
         return sys.getrefcount(grob)
-_UNHELD = _unheld([object()])
 
-def _committed(grobs):
-    committed = []
-    for grob in grobs:
-        if isinstance(grob, Frob):
-            grob = copy(grob)
-            grob._grobs = _committed(grob.contents)
-        else:
-            held = sys.getrefcount(grob) > _UNHELD
-            for part in grob._parts:
-                held = held or sys.getrefcount(part) > _UNHELD
-            if held:
-                grob = grob.copy()
-            grob._commit()
-        committed.append(grob)
-    return tuple(committed)
+_UNHELD = _unheld([object()]) # the refcount of a grob only its list holds
 
-_UNBOUNDED_BLENDS = {'clear', 'copy', 'sourcein', 'sourceout', 'destinationin', 'destinationatop'}
+class FrameBounds(object):
+    """Where a frame's grobs can draw"""
 
-def _hull(matrix, x0, y0, w0, h0):
-    a, b, c, d, tx, ty = matrix
-    corners = [(cx, cy) for cx in (x0, x0 + w0) for cy in (y0, y0 + h0)]
-    xs = [a * cx + c * cy + tx for cx, cy in corners]
-    ys = [b * cx + d * cy + ty for cx, cy in corners]
-    return (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
+    # blend modes that reach outside the shape
+    _UNBOUNDED_BLENDS = {'clear', 'copy', 'sourcein', 'sourceout', 'destinationin', 'destinationatop'}
 
-def _path_box(path):
-    dpx = path._grid.dpx
-    try:
-        (x, y), (w, h) = path._nsBezierPath.bounds()
-    except Exception:
-        return (0, 0, 0, 0) # an empty path
-    if tuple(path.transform.matrix) == IDENTITY:
-        return (x * dpx, y * dpx, w * dpx, h * dpx)
-    return _hull(path._screen_matrix, x * dpx, y * dpx, w * dpx, h * dpx)
+    def __init__(self, grobs):
+        self._grobs = grobs
+        self._boxes = None # each grob's box, made lazily
+        self._layers = {}  # transparency layers' boxes
 
-def _with_effects(box, fx):
-    if box is None or fx.get('blend') in _UNBOUNDED_BLENDS:
-        return None
-    shadow = fx.get('shadow')
-    if shadow is not None:
-        x, y, w, h = box
-        (dx, dy), reach = shadow.offset, shadow.blur + 2
-        x0, y0 = min(x, x + dx - reach), min(y, y + dy - reach)
-        x1, y1 = max(x + w, x + w + dx + reach), max(y + h, y + h + dy + reach)
-        box = (x0, y0, x1 - x0, y1 - y0)
-    return box
+    def within(self, rect, grobs):
+        """The grobs that could draw inside rect"""
+        if self._boxes is None:
+            boxes = {}
+            for grob in self._grobs:
+                boxes[id(grob)] = self._box(grob, boxes)
+            self._boxes = boxes
+        x, y, w, h = rect
+        boxes = [self._boxes[id(grob)] for grob in grobs]
+        return [grob for grob, box in zip(grobs, boxes) if box is None or not (
+                box[0] > x + w or box[1] > y + h or box[0] + box[2] < x or box[1] + box[3] < y)]
 
-def _render_bounds(grob, boxes):
-    if isinstance(grob, Frob):
+    def layer_box(self, grob):
+        """The box of a grob and its own effects"""
+        key = id(grob)
+        if key not in self._layers:
+            self._layers[key] = self._box(grob, {})
+        return self._layers[key]
+
+    @classmethod
+    def _box(cls, grob, boxes):
+        """A grob's box, or None if it may draw anywhere"""
+        if not isinstance(grob, Frob):
+            # for a single grob, account for its shape's bounds plus room for strokes, miters, and antialiasing
+            x, y, w, h = grob._render_box()
+            pad = (getattr(grob, 'strokewidth', 0) or 0) * grob._grid.dpx * 5 + 2
+
+            # grow the box further to make room for its effects (shadows etc.)
+            fx = getattr(grob, '_effects', None)
+            return cls._with_effects((x - pad, y - pad, w + 2 * pad, h + 2 * pad), {} if fx is None else fx._fx)
+
+        # for groups, start by measuring a box for each grob inside
         contents = grob.contents
         for g in contents:
-            boxes[id(g)] = _render_bounds(g, boxes)
+            boxes[id(g)] = cls._box(g, boxes)
+
+        # the group should be the union of the boxes (or unbounded if any box in the group is also unbounded)
         inner = [boxes[id(g)] for g in contents]
-        box = None
+        union = None
         if inner and None not in inner:
             x0, y0 = min(b[0] for b in inner), min(b[1] for b in inner)
             x1, y1 = max(b[0] + b[2] for b in inner), max(b[1] + b[3] for b in inner)
-            box = (x0, y0, x1 - x0, y1 - y0)
+            union = (x0, y0, x1 - x0, y1 - y0)
+
+        # an effects group grows to cover its effects
         if isinstance(grob, Effect):
             if grob._fx.get('shadow') is not None:
                 nested = list(contents)
                 while nested:
                     g = nested.pop()
-                    boxes[id(g)] = _with_effects(boxes[id(g)], grob._fx)
+                    boxes[id(g)] = cls._with_effects(boxes[id(g)], grob._fx)
                     if isinstance(g, Frob):
                         nested.extend(g.contents)
-            return _with_effects(box, grob._fx)
-        path = getattr(grob, 'path', None)
-        if path is not None and not grob.evenodd:
-            cx, cy, cw, ch = _path_box(path)
-            if box is None:
-                return (cx - 2, cy - 2, cw + 4, ch + 4)
-            x0, y0 = max(box[0], cx - 2), max(box[1], cy - 2)
-            x1, y1 = min(box[0] + box[2], cx + cw + 2), min(box[1] + box[3], cy + ch + 2)
-            return (x0, y0, max(x1 - x0, 0), max(y1 - y0, 0))
-        return box
+            return cls._with_effects(union, grob._fx)
 
-    dpx = grob._grid.dpx
-    untransformed = tuple(grob.transform.matrix) == IDENTITY
-    if hasattr(grob, '_engine'):
-        if grob._engine is None:
-            line = grob._ct
-            x0, y0, w0, h0 = line.x, 0.0, line.width, line.height
-        else:
-            xs, ys = [], []
-            for block in grob._blocks:
-                (ux, uy), (uw, uh) = grob._engine.usedRectForTextContainer_(block._block)
-                ox, oy = block._frame.origin
-                bx, by = ox * dpx - block._shift + ux, oy * dpx + uy
-                xs += [bx, bx + uw]
-                ys += [by, by + uh]
-            x0, y0, w0, h0 = min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)
-        if untransformed:
-            x, y, w, h = x0 + grob.x * dpx, y0 + (grob.y - grob._headroom) * dpx, w0, h0
-        else:
-            x, y, w, h = _hull(grob._screen_matrix, x0, y0, w0, h0)
-        reach, at, end = 0, 0, grob._store.length()
-        fonts = list(grob._line.fonts) if grob._engine is None else []
-        while at < end and grob._engine is not None:
-            font, run = grob._store.attribute_atIndex_effectiveRange_('NSFont', at, None)
-            if font is not None:
-                fonts.append(font)
-            at += run.length
-        for font in fonts:
-            (gx, gy), (gw, gh) = font.boundingRectForFont()
-            reach = max(reach, -gx, -gy, gx + gw, gy + gh)
-        x, y, w, h = x - reach, y - reach, w + 2 * reach, h + 2 * reach
-    elif hasattr(grob, '_nsImage'):
-        w0, h0 = grob._nsImage.size()
-        if untransformed:
-            factor = grob._scalefactor
-            x, y, w, h = grob.x * dpx, grob.y * dpx, w0 * factor, h0 * factor
-        else:
-            x, y, w, h = _hull(grob._screen_matrix, 0, 0, w0, h0)
-    else:
-        x, y, w, h = _path_box(grob)
-    pad = (getattr(grob, 'strokewidth', 0) or 0) * dpx * 5 + 2
-    fx = getattr(grob, '_effects', None)
-    return _with_effects((x - pad, y - pad, w + 2 * pad, h + 2 * pad), {} if fx is None else fx._fx)
+        if isinstance(grob, Stencil) and getattr(grob, 'path', None) is not None and not grob.evenodd:
+            aa = 2 # account for the antialiasing fringe at the clip's edges
+            cx, cy, cw, ch = grob.path._render_box()
+            if union is None:
+                return (cx - aa, cy - aa, cw + 2 * aa, ch + 2 * aa)
+            x0, y0 = max(union[0], cx - aa), max(union[1], cy - aa)
+            x1, y1 = min(union[0] + union[2], cx + cw + aa), min(union[1] + union[3], cy + ch + aa)
+            return (x0, y0, max(x1 - x0, 0), max(y1 - y0, 0))
+
+        # the grob is either a bitmap mask or an inverted clip, so use its inner union
+        return union
+
+    @classmethod
+    def _with_effects(cls, box, fx):
+        # grow the box to account for active effects
+        if box is None or fx.get('blend') in cls._UNBOUNDED_BLENDS:
+            return None
+        shadow = fx.get('shadow')
+        if shadow is not None:
+            # a shadow extends to its blur radius + antialiasing fringe
+            x, y, w, h = box
+            (dx, dy), reach = shadow.offset, shadow.blur + 2
+            x0, y0 = min(x, x + dx - reach), min(y, y + dy - reach)
+            x1, y1 = max(x + w, x + w + dx + reach), max(y + h, y + h + dy + reach)
+            box = (x0, y0, x1 - x0, y1 - y0)
+        return box
 
 class Frame(object):
 
@@ -1999,35 +1961,36 @@ class Frame(object):
 
         token = gfx._committing.set(self)
         try:
-            self.grobs = _committed(canvas._grobs)
+            self.grobs = self._committed(canvas._grobs)
         finally:
             gfx._committing.reset(token)
         self.width, self.height = canvas.width, canvas.height
         self.pagesize = canvas.pagesize
         self.background = canvas.background
-        self._bounds = None  # each grob's _render_bounds, computed by the first culled render
-        self._layers = {}    # the bounds of grobs drawn in transparency layers, as they're drawn
+        self._bounds = FrameBounds(self.grobs)
         self.proof = None    # an rgb space the window shows it through (View > Proof Colors' sRGB, Adobe RGB, ...)
         self.vision = None   # or a color vision simulation's space, which a P3 rendering is relabelled with (see gfx.vision)
 
-    def _layer_box(self, grob):
-        key = id(grob)
-        if key not in self._layers:
-            self._layers[key] = _render_bounds(grob, {})
-        return self._layers[key]
-
-    def _within(self, rect, grobs):
-        if self._bounds is None:
-            bounds = {}
-            for grob in self.grobs:
-                bounds[id(grob)] = _render_bounds(grob, bounds)
-            self._bounds = bounds
-        x, y, w, h = rect
-        boxes = [self._bounds[id(grob)] for grob in grobs]
-        return [grob for grob, box in zip(grobs, boxes) if box is None or not (
-                box[0] > x + w or box[1] > y + h or box[0] + box[2] < x or box[1] + box[3] < y)]
+    @staticmethod
+    def _committed(grobs):
+        # make immutable copies of the script's grobs & containers
+        committed = []
+        for grob in grobs:
+            if isinstance(grob, Frob):
+                grob = copy(grob)
+                grob._grobs = Frame._committed(grob.contents)
+            else:
+                held = sys.getrefcount(grob) > _UNHELD
+                for part in grob._parts:
+                    held = held or sys.getrefcount(part) > _UNHELD
+                if held:
+                    grob = grob.copy()
+                grob._commit()
+            committed.append(grob)
+        return tuple(committed)
 
     def draw(self, cancelled=None, within=None):
+        """Render the frame into the current graphics context"""
         with gfx._render_lock, gfx._rendering(self, within):
             if self.background is not None:
                 rect = ((0,0), self.pagesize)
@@ -2064,6 +2027,12 @@ class Frame(object):
         return tuple(max(int(dim * scale), 1) for dim in self.pagesize)
 
     def _render_to_cgimage(self, zoom=1.0, dpr=1.0):
+        """Rasterize to a CGImage at `zoom` (points per canvas-unit) times `dpr`
+        (pixels per point).
+
+        Draws into a private bitmap context rather than borrowing lockFocus's
+        thread-global focus stack, so unlike _render_to_image it's also safe to
+        call from a non-main thread."""
         scale = zoom * dpr
         size = Size(*self._raster_size(scale))
         colorspace, opts = CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
@@ -2126,7 +2095,7 @@ class Frame(object):
     @property
     def _blend_space(self):
         if self.outputmode == CMYK:
-            return _output_space(self.press) if self.press else None
+            return _output_space(self.press) if self.press else None # plain CMYK is left as is
         return _output_space(self.colors or P3)
 
     def _getImageData(self, format, zoom=1.0, title=None):

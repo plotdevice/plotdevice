@@ -64,12 +64,13 @@ class Bequest(type):
 class Grob(object, metaclass=Bequest):
     """A GRaphic OBject is the base class for all drawing primitives."""
     ctxAttrs = ('_grid',)
-    _parts = () # sub-objects a script can hold that reach back into the grob (e.g. a Text's blocks)
+    _parts = () # sub-objects like a Text's blocks
 
     def __init__(self, **kwargs):
         self.inherit() # copy over every _ctx attribute we're interested in
 
     def _commit(self):
+        """Finish any lazy work so drawing is read-only"""
         pass
 
     def draw(self):
@@ -363,6 +364,7 @@ class StyleMixin(Grob):
             kwargs = dict(kwargs)
             del kwargs['width']
 
+        # only restyle if style kwargs were passed
         if any(k in StyleMixin.opts for k in kwargs):
             self._update_style(**kwargs)
 

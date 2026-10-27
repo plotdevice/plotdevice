@@ -1,5 +1,5 @@
 # encoding: utf-8
-import threading, time
+import math, threading, time
 from contextlib import contextmanager
 from contextvars import ContextVar
 from ..lib.cocoa import *
@@ -29,31 +29,61 @@ def _cg_context():
 @contextmanager
 def _cg_layer(box=None):
     port = _cg_port()
-    if box is None:
-        CGContextBeginTransparencyLayer(port, None)
-    else:
+    if box:
+        # limit the transparency layer to the requested rect
         to_user = CGAffineTransformConcat(_base_ctm.get(), CGAffineTransformInvert(CGContextGetCTM(port)))
         CGContextBeginTransparencyLayerWithRect(port, CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), to_user), None)
+    else:
+        CGContextBeginTransparencyLayer(port, None)
     yield
     CGContextEndTransparencyLayer(port)
+
+@contextmanager
+def _cg_bitmap(rect, scale, ctm):
+    # draw into a new bitmap covering `rect`
+    port = _cg_port()
+    (x, y), (w, h) = rect
+    bitmap = CGBitmapContextCreate(None, int(math.ceil(w * scale)), int(math.ceil(h * scale)), 8, 0,
+                                   CGBitmapContextGetColorSpace(port),
+                                   kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
+    CGContextScaleCTM(bitmap, scale, scale)
+    CGContextTranslateCTM(bitmap, -x, -y)
+    CGContextConcatCTM(bitmap, ctm)
+    flipped = NSGraphicsContext.currentContext().isFlipped()
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmap, flipped))
+    to_bitmap = CGAffineTransformConcat(CGAffineTransformMakeTranslation(-x, -y), CGAffineTransformMakeScale(scale, scale))
+    moved = _base_ctm.set(CGAffineTransformConcat(_base_ctm.get(), to_bitmap))
+    try:
+        yield bitmap
+    finally:
+        _base_ctm.reset(moved)
+        NSGraphicsContext.restoreGraphicsState()
 
 def _cg_port():
     return NSGraphicsContext.currentContext().CGContext()
 
 ### render-time state ###
 
-_frame = ContextVar('frame', default=None)
+# the canvas state used by the currently executing script
 _ctx = None
 
+# the Frame being rendered on this thread
+_frame = ContextVar('frame', default=None)
+
+# the CTM when the frame started drawing
 _base_ctm = ContextVar('base_ctm', default=(1, 0, 0, -1, 0, 0))
 
+# the rect being rendered, for culling
 _culling = ContextVar('culling', default=None)
 
 # how many clip() or mask() stencils the drawing is inside
-_clips = ContextVar('clips', default=0)
+_clip_depth = ContextVar('clip_depth', default=0)
 
-_bare = ContextVar('bare', default=None)
+# a grob being redrawn to cast its shadow
+_casting = ContextVar('casting', default=None)
 
+# the frame being committed
 _committing = ContextVar('committing', default=None)
 
 @contextmanager
@@ -69,15 +99,18 @@ def _rendering(frame, within=None):
         _frame.reset(token)
 
 class _RenderLock(object):
-    QUANTUM = 0.003 # (3 ms)
+    """Serializes Core Graphics calls across threads"""
+    # renders run until their time slice elapses, then hand off to the next thread.
+    # only necessary because of FB25219467, which causes cross-thread glitches on aarch64
+    QUANTUM = 0.003 # 3 ms
 
     def __init__(self):
         self._cond = threading.Condition()
-        self._owner = None # thread holding it
-        self._depth = 0    # how many times it's been taken without being let go
+        self._owner = None # thread holding the lock
+        self._depth = 0    # re-entry depth
         self._since = 0.0  # when it was taken
         self._issued = 0   # tickets handed out (one per waiting or holding thread)
-        self._serving = 0  # the ticket whose thread holds it
+        self._serving = 0  # the holder's ticket
 
     def __enter__(self):
         me = threading.get_ident()
@@ -100,6 +133,7 @@ class _RenderLock(object):
                 self._cond.notify_all()
 
     def checkpoint(self):
+        """Let a waiting render in once this one's quantum is up"""
         if self._owner != threading.get_ident():
             return
         waiting = self._issued - self._serving > 1
@@ -112,14 +146,17 @@ class _RenderLock(object):
 _render_lock = _RenderLock()
 
 def _layer_box(grob):
+    """The box a grob's transparency layer needs, or None"""
     frame = _frame.get()
-    return None if frame is None or grob is None else frame._layer_box(grob)
+    return None if frame is None or grob is None else frame._bounds.layer_box(grob)
 
 def _visible(grobs):
+    """The grobs that may draw inside the rect being rendered"""
     within = _culling.get()
-    return grobs if within is None else _frame.get()._within(within, grobs)
+    return grobs if within is None else _frame.get()._bounds.within(within, grobs)
 
 def _outputmode():
+    """The RGB/CMYK mode to resolve colors for"""
     frame = _frame.get() or _committing.get()
     return _ctx._outputmode if frame is None else frame.outputmode
 
@@ -132,12 +169,14 @@ def _outputpress():
     return _ctx._cli_colors if _ctx._cli_colors in colors._PRESS_SPACES else None
 
 def _inkmode():
-    mode = _outputmode()
+    """The mode to make colors' CGColors & NSColors for"""
     frame = _frame.get() or _committing.get()
-    ink = None if frame is None else frame.ink
-    return ink or mode
+    if frame is not None and frame.ink:
+        return frame.ink
+    return _ctx._outputmode if frame is None else frame.outputmode
 
 def _canvas_dims():
+    """The canvas's width & height in canvas units"""
     frame = _frame.get()
     if frame is None:
         return _ctx.canvas.width, _ctx.canvas.height
@@ -163,4 +202,3 @@ def bind(ctx):
     # parent context. before a user script is interpreted, the sandbox resets the
     # context which calls this method as a side-effect.
     setattr(module, '_ctx', ctx)
-
