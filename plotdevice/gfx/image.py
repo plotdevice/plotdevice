@@ -382,7 +382,8 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 import time
 re_padded = re.compile(r'{(\d+)}')
 
-class SequenceRenderer(object):
+class ExportRenderer(object):
+    """Renders an export's frames one at a time on a thread of its own"""
     def __init__(self):
         self._error = None
         self._failed = False
@@ -542,8 +543,9 @@ class ImageWriter(object):
 
     def add(self):
         """Add a new frame or page with the current contents of the canvas."""
-        if self.renderer is None and free_threaded:
-            self.renderer = SequenceRenderer()
+        gil_off = free_threaded and not sys._is_gil_enabled()
+        if self.renderer is None and gil_off:
+            self.renderer = ExportRenderer()
         self._session().add(_ctx.canvas, self.renderer)
 
     def _session(self):

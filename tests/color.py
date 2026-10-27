@@ -897,23 +897,25 @@ class ColorTests(PlotDeviceTestCase):
 
     def test_run_fullscreen_keeps_the_proof(self):
         from plotdevice.gui.views import FullscreenView
-        from plotdevice.gfx.colors import _output_colors, _INKS
+        from plotdevice.gfx.colors import _output_colors, _output_space
         from plotdevice.gfx.vision import _vision_space
         class Presenter(object):
             def render(self, frame, *args, **kwargs):
                 self.frame = frame
         self._press_swatches()
-        proofs = dict(press=(_output_colors(GRACOL, 'tiff'), None, None), rgb=(None, SRGB, None),
-                      vision=(None, None, _vision_space('protanopia')), screen=(None, None, None))
-        for name, (press, rgb, vision) in proofs.items():
+        press = _output_colors(GRACOL, 'tiff')
+        proofs = dict(press={'colors': press, 'format': 'tiff', 'proofed': True},
+                      rgb={'colors': SRGB, 'format': 'png', 'proofed': True},
+                      vision={'vision': _vision_space('protanopia')}, screen={})
+        for name, proofArgs in proofs.items():
             view = FullscreenView.alloc().init()
             view._presenter = Presenter()
-            view.press, view.rgb, view.vision = press, rgb, vision
+            view.proofArgs = proofArgs
             view.render(_ctx.canvas)
             frame = view._presenter.frame
-            self.assertEqual(frame.press, press, name)
-            self.assertIs(frame.proof, _INKS[rgb] if rgb else None, name)
-            self.assertIs(frame.vision, vision, name)
+            self.assertEqual(frame.press, press if name == 'press' else None, name)
+            self.assertIs(frame.proof, _output_space(proofArgs['colors']) if 'proofed' in proofArgs else None, name)
+            self.assertIs(frame.vision, proofArgs.get('vision'), name)
 
     def test_vision_proofs_show_the_simulation(self):
         import objc

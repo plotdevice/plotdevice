@@ -91,9 +91,10 @@ class ScriptAppDelegate(NSObject):
                 opts['last'] = opts.get('first', 1)
 
             if opts['export']:
-                gil = getattr(sys, '_is_gil_enabled', lambda: True)()
+                # with the GIL off, render on a separate thread
+                gil_off = free_threaded and not sys._is_gil_enabled()
                 several = opts['last'] > opts['first']
-                if several and not gil:
+                if several and gil_off:
                     self.script.queue = FrameQueue()
 
                 # kick off an export session

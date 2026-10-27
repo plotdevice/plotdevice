@@ -1747,7 +1747,7 @@ class _PostScriptView(NSView):
         return True
 
 class Canvas(object):
-    _ctx = None # the Context drawing into us (set by Context.__init__)
+    _ctx = None
 
     def __init__(self, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, unit=px):
         self.unit = unit
@@ -1829,8 +1829,9 @@ class Canvas(object):
         except IndexError as e:
             raise DeviceError("pop: too many canvas pops!")
 
-    def commit(self, colors=None, format=None):
-        return Frame(self, colors, format)
+    def commit(self, colors=None, format=None, proofed=False, vision=None):
+        """Commit the canvas's current contents to a renderable Frame"""
+        return Frame(self, colors, format, proofed, vision)
 
     @property
     def _nsImage(self):
@@ -1947,7 +1948,7 @@ class FrameBounds(object):
 
 class Frame(object):
 
-    def __init__(self, canvas, colors=None, format=None):
+    def __init__(self, canvas, colors=None, format=None, proofed=False, vision=None):
         self.colors = colors
         self.press = colors if _output_mode(colors) == CMYK and colors != CMYK else None
         if colors is None:
@@ -1968,8 +1969,8 @@ class Frame(object):
         self.pagesize = canvas.pagesize
         self.background = canvas.background
         self._bounds = FrameBounds(self.grobs)
-        self.proof = None    # an rgb space the window shows it through (View > Proof Colors' sRGB, Adobe RGB, ...)
-        self.vision = None   # or a color vision simulation's space, which a P3 rendering is relabelled with (see gfx.vision)
+        self.proof = _output_space(colors) if proofed else None # the window's Proof Colors setting
+        self.vision = vision # a Proof setting simulating color deficiency
 
     @staticmethod
     def _committed(grobs):

@@ -2,6 +2,7 @@
 //  Surface.h
 //  PlotDevice
 //
+//  An IOSurface-backed render target for windows and exports.
 //
 
 #import <Foundation/Foundation.h>
@@ -21,10 +22,9 @@
 @property (readonly) CGContextRef context; // draw into this between lock and unlock
 @property (readonly) NSInteger width;      // in pixels
 @property (readonly) NSInteger height;
-@property (readonly) CVPixelBufferRef pixelBuffer; // the buffer it draws into, if made from one (else NULL)
+@property (readonly) CVPixelBufferRef pixelBuffer; // unset if not derived from one
 + (instancetype)surfaceWithWidth:(NSInteger)width height:(NSInteger)height;
-+ (instancetype)surfaceWithWidth:(NSInteger)width height:(NSInteger)height space:(CGColorSpaceRef)space; // (NULL: display p3)
-+ (instancetype)surfaceWithPixelBuffer:(CVPixelBufferRef)buffer; // an IOSurface-backed one, e.g. from a video encoder's pool
++ (instancetype)surfaceWithWidth:(NSInteger)width height:(NSInteger)height space:(CGColorSpaceRef)space; // P3 by default
 + (instancetype)surfaceWithPixelBuffer:(CVPixelBufferRef)buffer space:(CGColorSpaceRef)space;
 - (instancetype)initWithWidth:(NSInteger)width height:(NSInteger)height space:(CGColorSpaceRef)space;
 - (void)lock;
