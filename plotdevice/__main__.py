@@ -163,7 +163,7 @@ def main():
 
   if opts.cmyk:
     if opts.colors:
-      parser.exit(1, 'bad argument [--cmyk]\nuse --colors or the older --cmyk, not both\n')
+      parser.exit(1, 'bad argument [--cmyk]\nuse --colors or the older --cmyk, but not both\n')
     sys.stderr.write('warning: --cmyk is deprecated, use --colors cmyk instead\n')
     opts.colors = 'cmyk'
   del opts.cmyk

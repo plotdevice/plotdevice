@@ -1585,9 +1585,9 @@ class Context(object):
         # `export(colors)` > `--colors` switch > `outputmode()` > default RGB for selected format
         if cmyk is not None:
             if colors is not None:
-                both = "export() with `colors` or `cmyk`, but not both"
+                both = "export() accepts `colors` or `cmyk`, but not both"
                 raise DeviceError(both)
-            warnings.warn("export()'s cmyk= is deprecated: use colors=CMYK instead (or omit it for RGB)", FutureWarning, stacklevel=2)
+            warnings.warn("export()'s cmyk= is deprecated: use colors=CMYK instead", FutureWarning, stacklevel=2)
             colors = _output_colors(CMYK if cmyk else None, format)
         elif colors is not None:
             colors = _output_colors(colors, format)
