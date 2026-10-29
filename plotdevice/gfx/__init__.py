@@ -134,14 +134,12 @@ class _RenderLock(object):
 
     def checkpoint(self):
         """Let a waiting render in once this one's quantum is up"""
-        if self._owner != threading.get_ident():
-            return
+        if self._owner != threading.get_ident() or self._depth > 1:
+            return # when in the middle of a reentrant CG call, don't hand off the lock
         waiting = self._issued - self._serving > 1
         if waiting and time.perf_counter() - self._since >= self.QUANTUM:
-            depth, self._depth = self._depth, 1
             self.__exit__()
             self.__enter__()
-            self._depth = depth
 
 _render_lock = _RenderLock()
 
