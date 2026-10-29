@@ -675,6 +675,8 @@ class GraphicsView(NSView):
     proofArgs = {} # Canvas.commit args for the proof
     zoomLevels = [0.1, 0.25, 0.5, 0.75] + [float(z) for z in range(1, 21)] # from 10% to 2000%
 
+    ### setup ###
+
     def initWithFrame_(self, frame):
         # nib loading calls back into the view (scrolls, a backing change) before awakeFromNib
         self = super(GraphicsView, self).initWithFrame_(frame)
@@ -732,6 +734,59 @@ class GraphicsView(NSView):
                 self.fitToViewport()
                 self.layer().setContents_(placeholder)
 
+    ### window ###
+
+    def viewDidMoveToWindow(self):
+        super(GraphicsView, self).viewDidMoveToWindow()
+        scrollview = self.enclosingScrollView()
+        if self.window() is None or scrollview is None:
+            return
+        # small scrollers, and observers for pinches and for scrolling tiles into view
+        scrollview.horizontalScroller().setControlSize_(NSSmallControlSize)
+        scrollview.verticalScroller().setControlSize_(NSSmallControlSize)
+        scrollview.contentView().setPostsBoundsChangedNotifications_(True)
+        nc = NSNotificationCenter.defaultCenter()
+        nc.addObserver_selector_name_object_(self, "scrollViewDidEndLiveMagnify:",
+                                             NSScrollViewDidEndLiveMagnifyNotification, scrollview)
+        nc.addObserver_selector_name_object_(self, "scrollViewWillStartLiveMagnify:",
+                                             NSScrollViewWillStartLiveMagnifyNotification, scrollview)
+        nc.addObserver_selector_name_object_(self, "clipBoundsChanged:",
+                                             NSViewBoundsDidChangeNotification, scrollview.contentView())
+
+    def viewWillMoveToWindow_(self, window):
+        super(GraphicsView, self).viewWillMoveToWindow_(window)
+        # drop renders that finish outside a window
+        self._presenter.attached = window is not None
+        # drop the observers on teardown
+        if window is None:
+            if self._zoomApply is not None:
+                self._zoomApply.invalidate()
+                self._zoomApply = None
+            nc = NSNotificationCenter.defaultCenter()
+            nc.removeObserver_name_object_(self, NSScrollViewDidEndLiveMagnifyNotification, None)
+            nc.removeObserver_name_object_(self, NSScrollViewWillStartLiveMagnifyNotification, None)
+            nc.removeObserver_name_object_(self, NSViewBoundsDidChangeNotification, None)
+
+    def viewDidChangeBackingProperties(self):
+        # re-render for a display with a different pixel density
+        super(GraphicsView, self).viewDidChangeBackingProperties()
+        win = self.window()
+        if win is None:
+            return
+        dpr = win.backingScaleFactor()
+        if dpr == self._dpr:
+            return
+        self._dpr = dpr
+        self._rerender()
+
+    def isOpaque(self):
+        return False
+
+    def isFlipped(self):
+        return True
+
+    ### rendering ###
+
     @objc.python_method
     def render(self, canvas, focus=None, onerror=None, ondone=None):
         """Commit the canvas and have the presenter render it for this view"""
@@ -746,6 +801,12 @@ class GraphicsView(NSView):
         self._committed = frame
         self._seq += 1
         self._request(onerror=onerror, work=work)
+
+    @objc.python_method
+    def liveEnded(self):
+        """Re-render a viewport-only or export-scaled frame as a still"""
+        if self._presenter.viewport_only or self._presenter.at_export_scale:
+            self._rerender()
 
     @objc.python_method
     def _rerender(self, focus=None, zoom_end=None):
@@ -829,28 +890,7 @@ class GraphicsView(NSView):
         else:
             self._presenter.render(frame, seq, zoom, dpr, period, target, on_layout, onerror, ondone)
 
-    @objc.python_method
-    def liveEnded(self):
-        """Re-render a viewport-only or export-scaled frame as a still"""
-        if self._presenter.viewport_only or self._presenter.at_export_scale:
-            self._rerender()
-
-    @objc.python_method
-    def _moved(self):
-        scrollview = self.enclosingScrollView()
-        if scrollview:
-            (vx, vy), (vw, vh) = scrollview.documentVisibleRect()
-            ox, oy, cw, ch = self.canvasRect()
-            visible = (vx - ox, vy - oy, vx - ox + vw, vy - oy + vh)
-            # bounds shrink during a zoom preview
-            viewport_size = tuple(scrollview.contentView().frame().size)
-            self._presenter.moved(visible, (cw, ch), viewport_size, scrollview.magnification())
-
-    def scrollViewWillStartLiveMagnify_(self, note):
-        self._presenter.zoom_started()
-
-    def clipBoundsChanged_(self, note):
-        self._moved()
+    ### geometry ###
 
     @objc.python_method
     def canvasRect(self):
@@ -858,6 +898,12 @@ class GraphicsView(NSView):
         W, H = self.frame().size
         cw, ch = self.canvasSize or (W, H)
         return ((W - cw) / 2.0, (H - ch) / 2.0, cw, ch)
+
+    @objc.python_method
+    def canvasPoint(self, pt):
+        """A point in the view's coordinates, in canvas units"""
+        ox, oy, _, _ = self.canvasRect()
+        return ((pt[0] - ox) / self._zoom, (pt[1] - oy) / self._zoom)
 
     @objc.python_method
     def fitToViewport(self):
@@ -894,10 +940,20 @@ class GraphicsView(NSView):
         return (clamp((NSMidX(vis) - ox) / cw), clamp((NSMidY(vis) - oy) / ch))
 
     @objc.python_method
-    def canvasPoint(self, pt):
-        """A point in the view's coordinates, in canvas units"""
-        ox, oy, _, _ = self.canvasRect()
-        return ((pt[0] - ox) / self._zoom, (pt[1] - oy) / self._zoom)
+    def _moved(self):
+        scrollview = self.enclosingScrollView()
+        if scrollview:
+            (vx, vy), (vw, vh) = scrollview.documentVisibleRect()
+            ox, oy, cw, ch = self.canvasRect()
+            visible = (vx - ox, vy - oy, vx - ox + vw, vy - oy + vh)
+            # bounds shrink during a zoom preview
+            viewport_size = tuple(scrollview.contentView().frame().size)
+            self._presenter.moved(visible, (cw, ch), viewport_size, scrollview.magnification())
+
+    def clipBoundsChanged_(self, note):
+        self._moved()
+
+    ### zooming ###
 
     def _get_zoom(self):
         return self._zoom
@@ -908,80 +964,6 @@ class GraphicsView(NSView):
         self._zoomTarget = zoom
         self._rerender()
     zoom = property(_get_zoom, _set_zoom)
-
-    def applyMagnification_(self, sender):
-        # update the magnification during a scroll/pinch zoom then re-render once it settles
-        if self._zoomApply is not None:
-            self._zoomApply.invalidate()
-            self._zoomApply = None
-        scrollview = self.enclosingScrollView()
-        if scrollview is None:
-            return
-        mag = scrollview.magnification()
-        if abs(mag - 1.0) < 1e-3:
-            self._presenter.zoom_ended()
-            return
-        # keep what's centered now
-        focus = self._focus()
-        target = self._zoom * mag
-        target = max(self.zoomLevels[0], min(self.zoomLevels[-1], target))
-        # keep the preview up until the re-render is shown
-        self._zoomTarget = target
-        def zoom_end():
-            if self._zoomEnd is not zoom_end:
-                return  # already folded in or replaced
-            self._zoomEnd = None
-            scrollview.setMagnification_(scrollview.magnification() / mag)
-            self._presenter.zoom_ended()
-        self._zoomEnd = zoom_end
-        self._rerender(focus=focus, zoom_end=zoom_end)
-
-    def scrollViewDidEndLiveMagnify_(self, note):
-        # trackpad pinch gesture settled
-        self.applyMagnification_(note)
-
-    def viewDidChangeBackingProperties(self):
-        # re-render for a display with a different pixel density
-        super(GraphicsView, self).viewDidChangeBackingProperties()
-        win = self.window()
-        if win is None:
-            return
-        dpr = win.backingScaleFactor()
-        if dpr == self._dpr:
-            return
-        self._dpr = dpr
-        self._rerender()
-
-    def viewWillMoveToWindow_(self, window):
-        super(GraphicsView, self).viewWillMoveToWindow_(window)
-        # drop renders that finish outside a window
-        self._presenter.attached = window is not None
-        # drop the observers on teardown
-        if window is None:
-            if self._zoomApply is not None:
-                self._zoomApply.invalidate()
-                self._zoomApply = None
-            nc = NSNotificationCenter.defaultCenter()
-            nc.removeObserver_name_object_(self, NSScrollViewDidEndLiveMagnifyNotification, None)
-            nc.removeObserver_name_object_(self, NSScrollViewWillStartLiveMagnifyNotification, None)
-            nc.removeObserver_name_object_(self, NSViewBoundsDidChangeNotification, None)
-
-    def viewDidMoveToWindow(self):
-        super(GraphicsView, self).viewDidMoveToWindow()
-        scrollview = self.enclosingScrollView()
-        if self.window() is None or scrollview is None:
-            return
-        # small scrollers, and observers for pinches and for scrolling tiles into view
-        scrollview.horizontalScroller().setControlSize_(NSSmallControlSize)
-        scrollview.verticalScroller().setControlSize_(NSSmallControlSize)
-        scrollview.contentView().setPostsBoundsChangedNotifications_(True)
-        nc = NSNotificationCenter.defaultCenter()
-        nc.addObserver_selector_name_object_(self, "scrollViewDidEndLiveMagnify:",
-                                             NSScrollViewDidEndLiveMagnifyNotification, scrollview)
-        nc.addObserver_selector_name_object_(self, "scrollViewWillStartLiveMagnify:",
-                                             NSScrollViewWillStartLiveMagnifyNotification, scrollview)
-        nc.addObserver_selector_name_object_(self, "clipBoundsChanged:",
-                                             NSViewBoundsDidChangeNotification, scrollview.contentView())
 
     @IBAction
     def zoomIn_(self, sender):
@@ -1012,11 +994,63 @@ class GraphicsView(NSView):
         # stay within the zoom levels
         self.zoom = max(self.zoomLevels[0], min(self.zoomLevels[-1], factor))
 
-    def isOpaque(self):
-        return False
+    def scrollViewWillStartLiveMagnify_(self, note):
+        self._presenter.zoom_started()
 
-    def isFlipped(self):
-        return True
+    def scrollWheel_(self, event):
+        # Option-scroll magnifies like a pinch
+        scrollview = self.enclosingScrollView()
+        zooming = bool(event.modifierFlags() & NSAlternateKeyMask)
+        zoomable = self.canvas is not None and scrollview is not None
+        if not (zooming and zoomable):
+            super(GraphicsView, self).scrollWheel_(event)
+            return
+
+        # make wheel ticks and trackpad deltas feel alike
+        dy = event.scrollingDeltaY()
+        factor = 0.004 if event.hasPreciseScrollingDeltas() else 0.05
+        step = 1.0 + max(-15.0, min(15.0, dy)) * factor
+        if step != 1.0:
+            if abs(scrollview.magnification() - 1.0) < 1e-3:
+                self._presenter.zoom_started()
+            mag = scrollview.magnification() * step
+            center = scrollview.contentView().convertPoint_fromView_(event.locationInWindow(), None)
+            scrollview.setMagnification_centeredAtPoint_(mag, center)
+
+        if self._zoomApply is not None:
+            self._zoomApply.invalidate()
+        self._zoomApply = set_timeout(self, 'applyMagnification:', 0.2)
+
+    def scrollViewDidEndLiveMagnify_(self, note):
+        # trackpad pinch gesture settled
+        self.applyMagnification_(note)
+
+    def applyMagnification_(self, sender):
+        # update the magnification during a scroll/pinch zoom then re-render once it settles
+        if self._zoomApply is not None:
+            self._zoomApply.invalidate()
+            self._zoomApply = None
+        scrollview = self.enclosingScrollView()
+        if scrollview is None:
+            return
+        mag = scrollview.magnification()
+        if abs(mag - 1.0) < 1e-3:
+            self._presenter.zoom_ended()
+            return
+        # keep what's centered now
+        focus = self._focus()
+        target = self._zoom * mag
+        target = max(self.zoomLevels[0], min(self.zoomLevels[-1], target))
+        # keep the preview up until the re-render is shown
+        self._zoomTarget = target
+        def zoom_end():
+            if self._zoomEnd is not zoom_end:
+                return  # already folded in or replaced
+            self._zoomEnd = None
+            scrollview.setMagnification_(scrollview.magnification() / mag)
+            self._presenter.zoom_ended()
+        self._zoomEnd = zoom_end
+        self._rerender(focus=focus, zoom_end=zoom_end)
 
     ### pasteboard ###
 
@@ -1055,36 +1089,12 @@ class GraphicsView(NSView):
         self.keycode = event.keyCode()
 
         if self.keycode==KEY_ESC: # stop animating on ESC
-            NSApp.sendAction_to_from_('stopScript:', None, self)
+            NSApp().sendAction_to_from_('stopScript:', None, self)
 
     def keyUp_(self, event):
         self.keydown = False
         self.key = event.characters()
         self.keycode = event.keyCode()
-
-    def scrollWheel_(self, event):
-        # Option-scroll magnifies like a pinch
-        scrollview = self.enclosingScrollView()
-        zooming = bool(event.modifierFlags() & NSAlternateKeyMask)
-        zoomable = self.canvas is not None and scrollview is not None
-        if not (zooming and zoomable):
-            super(GraphicsView, self).scrollWheel_(event)
-            return
-
-        # make wheel ticks and trackpad deltas feel alike
-        dy = event.scrollingDeltaY()
-        factor = 0.004 if event.hasPreciseScrollingDeltas() else 0.05
-        step = 1.0 + max(-15.0, min(15.0, dy)) * factor
-        if step != 1.0:
-            if abs(scrollview.magnification() - 1.0) < 1e-3:
-                self._presenter.zoom_started()
-            mag = scrollview.magnification() * step
-            center = scrollview.contentView().convertPoint_fromView_(event.locationInWindow(), None)
-            scrollview.setMagnification_centeredAtPoint_(mag, center)
-
-        if self._zoomApply is not None:
-            self._zoomApply.invalidate()
-        self._zoomApply = set_timeout(self, 'applyMagnification:', 0.2)
 
     def canBecomeKeyView(self):
         return True
