@@ -524,7 +524,7 @@ class Librarian(object):
 
     def __init__(self):
         self._fonts = _fm.availableFonts()
-        self._fams = sorted(_fm.availableFontFamilies())
+        self._families = None # listed on first use, since that takes ~80 ms
         self._members = {} # famname -> [Face(), Face(), ...]
         self._parents = {} # psname -> famname
         self._enc = {}     # psname -> encoding
@@ -562,6 +562,12 @@ class Librarian(object):
     def font_names(self):
         self.refresh()
         return list(self._fonts)
+
+    @property
+    def _fams(self):
+        if self._families is None:
+            self._families = sorted(_fm.availableFontFamilies())
+        return self._families
 
     @property
     def fam_names(self):

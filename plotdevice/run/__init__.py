@@ -32,7 +32,7 @@ if in_bundle:
 
 try:
     # test the sys.path by attempting to load a PyObjC submodule...
-    from Foundation import *
+    import Foundation
     import objc
 except ImportError:
     # detect whether we're being run from the repository and set up a local env if so
@@ -46,7 +46,7 @@ except ImportError:
         if not exists(local_libs):
             call([sys.executable, make_py, 'dev'])
         site.addsitedir(local_libs)
-        from Foundation import *
+        import Foundation
         import objc
     else:
         from pprint import pformat

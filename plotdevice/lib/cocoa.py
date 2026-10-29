@@ -84,7 +84,6 @@ from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CI
                        NSNotificationCenter, NSObject, NSOffsetRect, NSOperationQueue, NSPoint, NSPointInRect, \
                        NSRect, NSRectFromString, NSSelectorFromString, NSSize, NSString, NSStringFromRect, NSTimer, \
                        NSTimeZone, NSURL, NSUserDefaults, NSUTF8StringEncoding, NSWidth, NSZeroRect
-from CoreServices import kUTTypeGIF, kUTTypeJPEG, kUTTypePNG, kUTTypeTIFF
 from WebKit import WKUserScript, WKUserScriptInjectionTimeAtDocumentStart, WKWebView, WKWebViewConfiguration
 from ColorSync import ColorSyncProfileCreate, ColorSyncProfileCreateWithName, ColorSyncTransformConvert, \
                       ColorSyncTransformCreate, kColorSync16BitInteger, kColorSyncAlphaNone, \

@@ -2099,11 +2099,11 @@ class Frame(object):
                 view = _PostScriptView.alloc().initWithCanvas_(self)
                 return view.dataWithEPSInsideRect_(view.bounds()), None
         else:
-            cgTypes = {"gif":  kUTTypeGIF,
-                       "jpg":  kUTTypeJPEG,
-                       "jpeg": kUTTypeJPEG,
-                       "png":  kUTTypePNG,
-                       "tiff": kUTTypeTIFF,
+            cgTypes = {"gif":  'com.compuserve.gif',
+                       "jpg":  'public.jpeg',
+                       "jpeg": 'public.jpeg',
+                       "png":  'public.png',
+                       "tiff": 'public.tiff',
                        "heic": 'public.heic'}
 
             size = Size(*[int(dim*zoom) for dim in self.pagesize])

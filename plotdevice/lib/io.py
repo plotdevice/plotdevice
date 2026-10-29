@@ -1,6 +1,6 @@
 import objc, os, re, time, math, zlib
 from uuid import UUID
-from xml.sax.saxutils import escape
+from html import escape
 from ..util import autorelease
 from .cocoa import CGBitmapContextCreateImage, CGContextBeginPage, CGContextEndPage, CGPDFContextClose, \
                    CGPDFContextCreateWithURL, CGRectMake, NSBitmapImageRep, NSURL, CGColorSpaceCopyICCData, \
@@ -199,8 +199,8 @@ class Distiller(object):
         ids = re.findall(rb'<([0-9a-fA-F]{32})>', self._trailer)
         nil = '00000000-0000-0000-0000-000000000000'
         document, instance = (str(UUID(ids[0].decode())), str(UUID(ids[-1].decode()))) if ids else (nil, nil)
-        packet = XMP.format(title=escape(title), created=self.iso(created), modified=self.iso(modified), creator=creator,
-                            producer=escape(producer_text), document=document, instance=instance).encode('utf-8')
+        packet = XMP.format(title=escape(title, quote=False), created=self.iso(created), modified=self.iso(modified), creator=creator,
+                            producer=escape(producer_text, quote=False), document=document, instance=instance).encode('utf-8')
         metadata = self._add(b'<< /Type /Metadata /Subtype /XML /Length %d >>\nstream\n%s\nendstream' % (len(packet), packet))
 
         # the catalog: PDF 1.6, the output intent, and the XMP
