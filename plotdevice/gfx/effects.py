@@ -1,7 +1,9 @@
 # encoding: utf-8
 import os
 import re
+import sys
 import math
+from copy import copy
 from contextlib import contextmanager
 from ..lib.cocoa import *
 
@@ -65,6 +67,16 @@ BLEND_MODES = """    normal, clear, copy, xor, multiply, screen,
 
 ### Effects objects ###
 
+def _commit_all(grobs):
+    """The grobs to use for drawing (or copies of any the script still holds references to)"""
+    for probe in [object()]:
+        unheld = sys.getrefcount(probe) # the refcount of an unreferenced grob
+    committed = []
+    for grob in grobs:
+        held = sys.getrefcount(grob) > unheld # measured before grob._commit adds a reference
+        committed.append(grob._commit(held))
+    return tuple(committed)
+
 class Frob(object):
     """A FoRmatting OBject encapsulates changes to the graphics context state.
 
@@ -86,6 +98,12 @@ class Frob(object):
             for grob in _visible(self._grobs):
                 _render_lock.checkpoint()
                 grob._draw()
+
+    def _commit(self, held):
+        """A copy of the container holding its committed contents"""
+        frob = copy(self)
+        frob._grobs = _commit_all(self.contents)
+        return frob
 
     @property
     def contents(self):
@@ -112,8 +130,8 @@ class Effect(Frob):
         if not hasattr(self, '_rollback'):
             self._rollback = {eff:val for eff,val in _ctx._effects._fx.items() if eff in self._fx}
 
-        # concat ourseves as a new canvas container
-        _ctx.canvas.push(self)
+        # concat a snapshot of ourselves as a new canvas container
+        _ctx.canvas.push(Effect(**self._fx))
 
         # reset the global per-object effects state within the block (since the effects
         # will be applied to a transparency layer encapsulating all drawing)

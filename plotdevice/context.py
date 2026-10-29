@@ -1,6 +1,5 @@
 # encoding: utf-8
-import os, re, sys, types, warnings
-from copy import copy
+import os, re, types, warnings
 from contextlib import contextmanager
 from collections import namedtuple, OrderedDict
 from os.path import exists, expanduser
@@ -13,7 +12,7 @@ from .lib.io import MovieExportSession, Distiller, HEVC
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
 from .gfx.geometry import Dimension, parse_coords
 from .gfx.typography import Layout
-from .gfx.effects import Frob
+from .gfx.effects import Frob, _commit_all
 from .gfx import *
 from .gfx.colors import Press, _named, _output_colors, _output_space, _output_mode, _INKS
 from . import gfx, lib, util, Halted, DeviceError
@@ -1846,12 +1845,6 @@ class Canvas(object):
         self.commit(_output_colors(CMYK if cmyk else colors, format), format).save(fname, format, zoom)
 
 
-def _unheld(grobs):
-    for grob in grobs:
-        return sys.getrefcount(grob)
-
-_UNHELD = _unheld([object()]) # the refcount of a grob only its list holds
-
 class FrameBounds(object):
     """Where a frame's grobs can draw"""
 
@@ -1963,7 +1956,7 @@ class Frame(object):
         # texts resolve their colors while committing
         token = gfx._committing.set(self)
         try:
-            self.grobs = self._committed(canvas._grobs)
+            self.grobs = _commit_all(canvas._grobs)
         finally:
             gfx._committing.reset(token)
         self.width, self.height = canvas.width, canvas.height
@@ -1972,24 +1965,6 @@ class Frame(object):
         self._bounds = FrameBounds(self.grobs)
         self.proof = _output_space(colors) if proofed else None # the window's Proof Colors setting
         self.vision = vision # a Proof setting simulating color deficiency
-
-    @staticmethod
-    def _committed(grobs):
-        # make immutable copies of the script's grobs & containers
-        committed = []
-        for grob in grobs:
-            if isinstance(grob, Frob):
-                grob = copy(grob)
-                grob._grobs = Frame._committed(grob.contents)
-            else:
-                held = sys.getrefcount(grob) > _UNHELD
-                for part in grob._parts:
-                    held = held or sys.getrefcount(part) > _UNHELD
-                if held:
-                    grob = grob.copy()
-                grob._commit()
-            committed.append(grob)
-        return tuple(committed)
 
     def draw(self, cancelled=None, within=None):
         """Render the frame into the current graphics context"""

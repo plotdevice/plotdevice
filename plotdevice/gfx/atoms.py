@@ -64,14 +64,13 @@ class Bequest(type):
 class Grob(object, metaclass=Bequest):
     """A GRaphic OBject is the base class for all drawing primitives."""
     ctxAttrs = ('_grid',)
-    _parts = () # sub-objects like a Text's blocks
 
     def __init__(self, **kwargs):
         self.inherit() # copy over every _ctx attribute we're interested in
 
-    def _commit(self):
-        """Finish any lazy work so drawing is read-only"""
-        pass
+    def _commit(self, held):
+        """The grob to use for drawing (a copy if the script still holds a reference to it)"""
+        return self.copy() if held else self
 
     def draw(self):
         """Adds the grob to the canvas. This will result in a _draw later on, when the

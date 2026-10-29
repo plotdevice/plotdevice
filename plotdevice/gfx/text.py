@@ -802,19 +802,23 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         """Returns the Transform object that will be used to draw the text block."""
         return Transform(self._screen_matrix)
 
-    @property
-    def _parts(self):
-        return self._blocks if self._engine is not None else ()
+    def _commit(self, held):
+        # check for both direct references to the Text object and its blocks (and only copy if held)
+        for probe in [object()]:
+            unheld = sys.getrefcount(probe)
+        for block in self._blocks if self._engine is not None else ():
+            held = held or sys.getrefcount(block) > unheld
+        text = self.copy() if held else self
 
-    def _commit(self):
         # resolve colors and layout so they are already calculated before draw time
         # (prevents deadlocks from multiple threads accessing the TextStorage)
-        self._colorize()
-        if self._engine is None and self._line is None:
-            self._use_textkit()
-        if self._engine is not None:
-            for block in self._blocks:
-                self._engine.glyphRangeForTextContainer_(block._block)
+        text._colorize()
+        if text._engine is None and text._line is None:
+            text._use_textkit()
+        if text._engine is not None:
+            for block in text._blocks:
+                text._engine.glyphRangeForTextContainer_(block._block)
+        return text
 
     def _render_box(self):
         """The box its glyphs can cover where it's drawn"""
