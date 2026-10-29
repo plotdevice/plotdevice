@@ -79,14 +79,11 @@
 
 @implementation Video
 @synthesize framesWritten, doneWriting;
-- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec{
-    return [self initWithFile:fileName size:aSize fps:fps bitrate:mbps codec:codec colors:0];
-}
-
-- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec colors:(NSUInteger)inColors{
+- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSString *)codec colors:(NSString *)colors{
 	if ((self = [super init])) {
 
         NSError *error = nil;
+        size = aSize;
         frameRate = fps;
         frameCount = 0;
         frames = [[NSOperationQueue alloc] init];
@@ -95,18 +92,20 @@
         NSParameterAssert(videoWriter);
 
         // tag the movie's color space
-        colors = inColors;
+        BOOL srgb = [colors isEqualToString:@"srgb"];
+        rec2020 = [colors isEqualToString:@"rec2020"];
+        space = srgb ? CGColorSpaceCreateWithName(kCGColorSpaceSRGB) : NULL;
         NSString *transferFunction = AVVideoTransferFunction_ITU_R_709_2;
-        if (colors < 2) {
+        if (srgb || [colors isEqualToString:@"p3"]) {
             // AVFoundation only writes the sRGB curve on macOS 15+
             if (@available(macOS 15.0, *)) transferFunction = AVVideoTransferFunction_IEC_sRGB;
         }
-        NSString *primaries = @[AVVideoColorPrimaries_P3_D65, AVVideoColorPrimaries_ITU_R_709_2, AVVideoColorPrimaries_ITU_R_709_2,
-                                AVVideoColorPrimaries_ITU_R_2020][colors];
-        NSString *matrix = colors == 3 ? AVVideoYCbCrMatrix_ITU_R_2020
-                                       : AVVideoYCbCrMatrix_ITU_R_709_2;
-        NSArray *codecs = @[AVVideoCodecTypeHEVC, AVVideoCodecTypeH264, AVVideoCodecTypeAppleProRes4444];
-        straightAlpha = codec == 2; // only ProRes 4444 has alpha
+        NSString *primaries = @{@"p3": AVVideoColorPrimaries_P3_D65, @"srgb": AVVideoColorPrimaries_ITU_R_709_2,
+                                @"rec709": AVVideoColorPrimaries_ITU_R_709_2, @"rec2020": AVVideoColorPrimaries_ITU_R_2020}[colors];
+        NSString *matrix = rec2020 ? AVVideoYCbCrMatrix_ITU_R_2020
+                                   : AVVideoYCbCrMatrix_ITU_R_709_2;
+        NSDictionary *codecs = @{@"hevc": AVVideoCodecTypeHEVC, @"h264": AVVideoCodecTypeH264, @"prores": AVVideoCodecTypeAppleProRes4444};
+        prores = [codec isEqualToString:@"prores"];
         NSMutableDictionary *videoSettings = [NSMutableDictionary dictionaryWithDictionary:@{
                                          AVVideoCodecKey: codecs[codec],
                                          AVVideoWidthKey: @(aSize.width),
@@ -116,7 +115,7 @@
                                             AVVideoTransferFunctionKey: transferFunction,
                                             AVVideoYCbCrMatrixKey: matrix}
                                          }];
-        if (codec != 2){ // ProRes has no bitrate
+        if (!prores){ // ProRes has no bitrate
             videoSettings[AVVideoCompressionPropertiesKey] = @{
                 AVVideoAverageBitRateKey:@((int)(mbps*1000000))
             };
@@ -151,7 +150,7 @@
     return videoWriter.status == AVAssetWriterStatusFailed;
 }
 
-- (PDSurface *)nextSurface{
+- (PDSurface *)encoderSurface{
     CVPixelBufferPoolRef pool = adaptor.pixelBufferPool;
     if (!pool) return nil;
     NSDictionary *aux = @{ (id)kCVPixelBufferPoolAllocationThresholdKey: @(kPoolThreshold) };
@@ -161,22 +160,39 @@
 
     // tag the buffer with the space its frame is drawn in (sRGB or P3), then let the encoder convert to the movie's space.
     // CG can't be trusted to draw in Rec.709/2020 (because it applies the wrong gamma)
-    CFStringRef primaries = colors == 1 ? kCVImageBufferColorPrimaries_ITU_R_709_2 : kCVImageBufferColorPrimaries_P3_D65;
+    CFStringRef primaries = space ? kCVImageBufferColorPrimaries_ITU_R_709_2 : kCVImageBufferColorPrimaries_P3_D65;
     CVBufferSetAttachment(buffer, kCVImageBufferColorPrimariesKey, primaries, kCVAttachmentMode_ShouldPropagate);
-    CVBufferSetAttachment(buffer, kCVImageBufferYCbCrMatrixKey, colors == 3 ? kCVImageBufferYCbCrMatrix_ITU_R_2020 : kCVImageBufferYCbCrMatrix_ITU_R_709_2,
+    CVBufferSetAttachment(buffer, kCVImageBufferYCbCrMatrixKey, rec2020 ? kCVImageBufferYCbCrMatrix_ITU_R_2020 : kCVImageBufferYCbCrMatrix_ITU_R_709_2,
                           kCVAttachmentMode_ShouldPropagate);
     CVBufferSetAttachment(buffer, kCVImageBufferTransferFunctionKey, kCVImageBufferTransferFunction_sRGB, kCVAttachmentMode_ShouldPropagate);
     CVBufferSetAttachment(buffer, kCVImageBufferAlphaChannelModeKey,
-                          straightAlpha ? kCVImageBufferAlphaChannelMode_StraightAlpha : kCVImageBufferAlphaChannelMode_PremultipliedAlpha,
+                          prores ? kCVImageBufferAlphaChannelMode_StraightAlpha : kCVImageBufferAlphaChannelMode_PremultipliedAlpha,
                           kCVAttachmentMode_ShouldPropagate);
-    CGColorSpaceRef space = colors == 1 ? CGColorSpaceCreateWithName(kCGColorSpaceSRGB) : NULL /* Display P3 */;
     PDSurface *surface = [PDSurface surfaceWithPixelBuffer:buffer space:space];
-    CGColorSpaceRelease(space);
     CVPixelBufferRelease(buffer);
     return surface;
 }
 
-- (void)addSurface:(PDSurface *)surface{
+- (PDSurface *)nextSurface{
+    // CG draws premultiplied, so a ProRes frame needs its own surface for addSurface: to unpremultiply
+    if (prores) return [PDSurface surfaceWithWidth:size.width height:size.height space:space];
+    return [self encoderSurface];
+}
+
+- (BOOL)addSurface:(PDSurface *)drawn{
+    PDSurface *surface = drawn;
+    if (prores){
+        surface = [self encoderSurface];
+        if (!surface) return NO;
+        [drawn lock];
+        [surface lock];
+        vImage_Buffer src = {drawn.surface.baseAddress, drawn.height, drawn.width, drawn.surface.bytesPerRow};
+        vImage_Buffer dst = {surface.surface.baseAddress, surface.height, surface.width, surface.surface.bytesPerRow};
+        vImageUnpremultiplyData_BGRA8888(&src, &dst, kvImageNoFlags);
+        [surface unlock];
+        [drawn unlock];
+    }
+
     FrameWriter *fw = [[[FrameWriter alloc] init] autorelease];
     fw.surface = surface;
     fw.frameNum = frameCount++;
@@ -186,20 +202,6 @@
     fw.adaptor = adaptor;
     fw.delegate = self;
     [frames addOperation:fw];
-}
-
-// CG draws premultiplied, but ProRes decoders need the surface converted to straight alpha
-- (BOOL)addUnpremultiplied:(PDSurface *)rendered{
-    PDSurface *surface = [self nextSurface];
-    if (!surface) return NO;
-    [rendered lock];
-    [surface lock];
-    vImage_Buffer src = {rendered.surface.baseAddress, rendered.height, rendered.width, rendered.surface.bytesPerRow};
-    vImage_Buffer dst = {surface.surface.baseAddress, surface.height, surface.width, surface.surface.bytesPerRow};
-    vImageUnpremultiplyData_BGRA8888(&src, &dst, kvImageNoFlags);
-    [surface unlock];
-    [rendered unlock];
-    [self addSurface:surface];
     return YES;
 }
 
@@ -229,6 +231,7 @@
 }
 
 - (void)dealloc{
+    CGColorSpaceRelease(space);
     [frames release];
     [videoWriter release];
     [videoWriterInput release];

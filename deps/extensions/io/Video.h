@@ -23,18 +23,18 @@
     NSInteger framesWritten;
     BOOL doneWriting;
     BOOL reported;
-    BOOL straightAlpha; // ProRes
-    NSUInteger colors;  // p3, srgb, Rec.709, Rec.2020
+    CGSize size;
+    BOOL prores;           // unpremultiplied, no bitrate
+    BOOL rec2020;          // use the Rec.2020 matrix rather than Rec.709's
+    CGColorSpaceRef space; // what frames are drawn in: sRGB, or NULL for P3
 }
 @property NSInteger framesWritten;
 @property BOOL doneWriting;
 @property (readonly) BOOL failed; // the writer gave up
 
-- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec;
-- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSUInteger)codec colors:(NSUInteger)inColors;
-- (PDSurface *)nextSurface; // nil while all buffers are busy
-- (void)addSurface:(PDSurface *)surface;
-- (BOOL)addUnpremultiplied:(PDSurface *)rendered; // NO while no buffer is free
+- (id)initWithFile:(NSString *)fileName size:(CGSize)aSize fps:(NSUInteger)fps bitrate:(double)mbps codec:(NSString *)codec colors:(NSString *)colors;
+- (PDSurface *)nextSurface; // a surface to draw the next frame in, or nil while all buffers are busy
+- (BOOL)addSurface:(PDSurface *)drawn; // NO while no buffer is free
 - (void)closeFile;
 
 // internal callbacks

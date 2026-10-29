@@ -515,20 +515,21 @@ class ColorTests(PlotDeviceTestCase):
         self.assertEqual(tuple(data[5 * row + 5 * bpp:][:3]), want)
 
     def test_srgb_movies_are_tagged_rec709(self):
-        # the colr atom's primaries, transfer and matrix codes
-        for colors, primaries, transfer, matrix in ((P3, 12, None, 1), (SRGB, 1, None, 1), (REC709, 1, 1, 1), (REC2020, 9, 1, 9)):
-            path = join(self.tmp, colors + '.mov')
-            with export(path, colors=colors) as movie:
-                for i in range(2):
-                    with movie.frame:
-                        self._two_swatches()
-            mov = open(path, 'rb').read()
-            at = re.search(rb'colrncl[cx]', mov).end()
-            tags = [int.from_bytes(mov[at + i:at + i + 2], 'big') for i in (0, 2, 4)]
-            self.assertEqual(tags[0], primaries, colors)
-            self.assertEqual(tags[2], matrix, colors)
-            if transfer is not None:
-                self.assertEqual(tags[1], transfer, colors)
+        # the colr atom's primaries, transfer, and matrix codes, whichever codec
+        for codec in (HEVC, PRORES):
+            for colors, primaries, transfer, matrix in ((P3, 12, None, 1), (SRGB, 1, None, 1), (REC709, 1, 1, 1), (REC2020, 9, 1, 9)):
+                path = join(self.tmp, '%s-%s.mov' % (codec, colors))
+                with export(path, codec=codec, colors=colors) as movie:
+                    for i in range(2):
+                        with movie.frame:
+                            self._two_swatches()
+                mov = open(path, 'rb').read()
+                at = re.search(rb'colrncl[cx]', mov).end()
+                tags = [int.from_bytes(mov[at + i:at + i + 2], 'big') for i in (0, 2, 4)]
+                self.assertEqual(tags[0], primaries, (codec, colors))
+                self.assertEqual(tags[2], matrix, (codec, colors))
+                if transfer is not None:
+                    self.assertEqual(tags[1], transfer, (codec, colors))
 
     def test_each_format_takes_the_colors_it_can_hold(self):
         from plotdevice.gfx.colors import _output_colors

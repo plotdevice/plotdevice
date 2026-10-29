@@ -470,7 +470,7 @@ class ImageExportSession(ExportSession):
         self.added += 1
 
 class MovieExportSession(ExportSession):
-    CODECS = (HEVC, H264, PRORES) # indices match Video.m's numbering
+    CODECS = (HEVC, H264, PRORES)
     BITRATES = (1, 2, 4, 8, 16, 32) # in Mbit/s
 
     @staticmethod
@@ -498,7 +498,7 @@ class MovieExportSession(ExportSession):
         self.codec = codec
         self.zoom = zoom
         self.colors = _output_colors(colors, format)
-        self.video_colors = [P3, SRGB, _REC709, _REC2020].index(self.colors) if format == 'mov' else 0 # Video's numbering
+        self.video_colors = {P3: 'p3', SRGB: 'srgb', _REC709: 'rec709', _REC2020: 'rec2020'}.get(self.colors) # Video's names
         self.presents = True
 
     def discard_if_failed(self):
@@ -525,25 +525,23 @@ class MovieExportSession(ExportSession):
                 # HEVC and H.264 crop to ensure even sizes, ProRes fails on odd heights
                 size = self.size = tuple(dim - dim % 2 for dim in size)
                 self.writer = Video.alloc()
-                codec = MovieExportSession.CODECS.index(self.codec)
                 bitrate = self.bitrate or MovieExportSession.auto_bitrate(size[0], size[1], self.fps)
-                self.writer.initWithFile_size_fps_bitrate_codec_colors_(self.fname, size, self.fps, bitrate, codec, self.video_colors)
+                self.writer.initWithFile_size_fps_bitrate_codec_colors_(self.fname, size, self.fps, bitrate, self.codec, self.video_colors)
             else:
                 self.writer = AnimatedGif.alloc()
                 self.writer.initWithFile_size_fps_loop_(self.fname, size, self.fps, self.loop)
-        writer, gif, prores = self.writer, self.format == 'gif', self.codec == PRORES
-        in_place = not (gif or prores) # HEVC and H.264 draw straight into the encoder's buffers
+        writer, gif = self.writer, self.format == 'gif'
 
         def work(cancelled):
             stopped = lambda: cancelled is not None and cancelled()
-            if in_place:
-                # wait for a free buffer from the encoder and draw into it
+            if gif:
+                surface = PDSurface.surfaceWithWidth_height_space_(*self.size, frame._surface_space)
+            else:
+                # wait for the encoder to provide a surface to draw in
                 while (surface := writer.nextSurface()) is None:
                     if stopped() or writer.failed():
                         return None
                     time.sleep(0.002)
-            else:
-                surface = PDSurface.surfaceWithWidth_height_space_(*self.size, frame._surface_space)
             frame._render_to_surface(surface, self.zoom, cancelled, origin=(0, 0))
             if stopped():
                 return None # cancelled mid-render, so don't encode the partial frame
@@ -553,14 +551,12 @@ class MovieExportSession(ExportSession):
                 image = CGBitmapContextCreateImage(surface.context())
                 surface.unlock()
                 writer.addFrame_(NSBitmapImageRep.alloc().initWithCGImage_(image))
-            elif prores:
-                # copied into an encoder buffer, unpremultiplied
-                while not writer.addUnpremultiplied_(surface):
+            else:
+                # ProRes waits for a free buffer to unpremultiply into
+                while not writer.addSurface_(surface):
                     if stopped() or writer.failed():
                         return None
                     time.sleep(0.002)
-            else:
-                writer.addSurface_(surface)
             self.rendered += 1
             return surface
 
