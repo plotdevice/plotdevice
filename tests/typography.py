@@ -424,6 +424,22 @@ class TypographyTests(PlotDeviceTestCase):
         self.assertEqual(list(t.stylesheet), [])
         self.assertEqual(sorted(stylesheet()), ['b', 'i'])
 
+    def test_font_weights_before_partial_family_names(self):
+        # 'bold' is a weight, not part of "Arial Rounded MT Bold"
+        self.assertEqual(font('Helvetica', 'bold').weight, 'Bold')
+        self.assertEqual(font('Avenir', 'black').weight, 'Black')
+        font('Helvetica', 20)
+        f = font('bold', 16, italic=True)
+        self.assertEqual((f.family, f.weight, f.italic), ('Helvetica', 'Bold', True))
+
+    def test_whole_family_names_skip_the_family_list(self):
+        from plotdevice.lib import foundry
+        foundry.LIBRARY.__init__() # as just imported
+        self.assertEqual(font('helvetica neue', 'light', 20).family, 'Helvetica Neue')
+        self.assertIsNone(foundry.LIBRARY._families)
+        self.assertEqual(font('Helvetica Neu').family, 'Helvetica Neue') # partial names need the list
+        self.assertIsNotNone(foundry.LIBRARY._families)
+
     @reference('typography/textpath.png')
     def test_textpath(self):
         # ref/Typography/commands/textpath()

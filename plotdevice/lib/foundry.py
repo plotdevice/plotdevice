@@ -117,15 +117,16 @@ def font_axes(*args, **kwargs):
             for k,v in item._spec.items():
                 spec.setdefault(k,v)
         elif isinstance(item, str):
-            # name-like values
-            if fammy(item):
-                spec.setdefault('family', family_name(item))
+            # check for an exact family match first and only try a fuzzy match after ensuring it isn't a width or weight
+            exact = LIBRARY.match_fam(item)
+            if exact:
+                spec.setdefault('family', exact)
             elif widthy(item):
                 spec.setdefault('width', item)
             elif weighty(item):
                 spec.setdefault('weight', item)
             else:
-                family_name(item) # raise an exception suggesting family names
+                spec.setdefault('family', family_name(item)) # if no match, raise an exception with suggested familiy names
         elif numlike(item) and 'size' not in kwargs:
             spec['size'] = float(item)
     return spec
@@ -382,18 +383,6 @@ def sanitized(unclean):
     else:
         return _sanitize(unclean)
 
-def fammy(word):
-    try:
-        family_name(word)
-    except DeviceError:
-        return False
-    return True
-
-def facey(word):
-    if word in _fm.availableFontFamilies():
-        return False
-    return word in _fm.availableFonts() or NSFont.fontWithName_size_(word,9)
-
 def widthy(word):
     return sanitized(word) in wid_corpus + list(wid_abbrevs.keys())
 
@@ -637,14 +626,21 @@ class Librarian(object):
 
         return font_face(self._specs[q])
 
+    def match_fam(self, word):
+        """Returns the family's name if the arg names one exactly (ignoring case), or None"""
+        word = re.sub(r'  +',' ',word.strip())
+        members = _fm.availableMembersOfFontFamily_(word)
+        return self.parent_fam(members[0][0]) if members else None
+
     def best_fam(self, word):
         """Returns a valid family name if the arg fuzzy matches any existing families"""
         self.refresh()
 
-        # first try for an exact match
+        # first try for an exact match, which needn't list every family
+        exact = self.match_fam(word)
+        if exact:
+            return exact
         word = re.sub(r'  +',' ',word.strip())
-        if word in self._fams:
-            return word
 
         # do a case-insensitive, no-whitespace comparison
         if word not in self._fuzzy:
