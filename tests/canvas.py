@@ -190,6 +190,40 @@ class FrameTests(PlotDeviceTestCase):
         self.assertEqual(_pixels(CGBitmapContextCreateImage(surface.context())),
                          _pixels(frame._render_to_cgimage(1.0, 2.0)))
 
+    def test_canvas_as_image_is_a_p3_bitmap(self):
+        # the same pixels on every machine, which Image treats as raster
+        from AppKit import NSBitmapImageRep
+        from Quartz import CGImageGetColorSpace, CGColorSpaceCopyName, kCGColorSpaceDisplayP3
+        frame = _scene()
+        snapshot = Image(_ctx.canvas)
+        rep, = snapshot._nsImage.representations()
+        self.assertIsInstance(rep, NSBitmapImageRep)
+        self.assertEqual(tuple(rep.size()), tuple(frame.pagesize))
+        self.assertEqual(CGColorSpaceCopyName(CGImageGetColorSpace(rep.CGImage())), kCGColorSpaceDisplayP3)
+        self.assertEqual(_pixels(rep.CGImage()), _pixels(frame._render_to_cgimage(1.0, 2.0)))
+        outline = snapshot._outline.bounds
+        self.assertEqual((outline.w, outline.h), tuple(frame.pagesize))
+
+    def test_canvas_draws_as_an_image_and_a_pattern(self):
+        import re
+        size(100, 50)
+        background('white')
+        rect(0, 0, 50, 25, fill='red')
+        snapshot, tile = Image(_ctx.canvas), Pattern(_ctx.canvas)
+        original = {dpr: _pixels(_ctx.canvas.commit()._render_to_cgimage(1.0, dpr)) for dpr in (1.0, 2.0)}
+
+        # the image is exact at 2x; the pattern is checked at 1x, since its tiles ignore the render's scale
+        # (bugs.md), where the 2x snapshot's resampled edges differ by up to 31
+        draws = [(lambda: image(snapshot, 0, 0), 2.0, 0), (lambda: rect(0, 0, 100, 50, fill=tile), 1.0, 32)]
+        for draw, dpr, tolerance in draws:
+            clear(all)
+            draw()
+            frame = _ctx.canvas.commit()
+            drawn = _pixels(frame._render_to_cgimage(1.0, dpr))
+            self.assertLessEqual(max(abs(a - b) for a, b in zip(drawn, original[dpr])), tolerance)
+        pdf = bytes(frame._getImageData('pdf'))
+        self.assertEqual(len(re.findall(rb'/Subtype\s*/Image', pdf)), 1)
+
 def _pump(until, timeout=5.0):
     """Run the main run loop until `until()` holds"""
     from Foundation import NSRunLoop, NSDate, NSDefaultRunLoopMode

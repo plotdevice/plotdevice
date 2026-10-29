@@ -1834,7 +1834,7 @@ class Canvas(object):
     @property
     def _nsImage(self):
         # Allow the canvas to be used with the image() command
-        return self.commit()._render_to_image()
+        return self.commit()._nsImage
 
     def _getImageData(self, format, zoom=1.0, colors=None):
         return self.commit(_output_colors(colors, format), format)._getImageData(format, zoom)
@@ -1986,18 +1986,12 @@ class Frame(object):
 
     @property
     def _nsImage(self):
-        return self._render_to_image()
-
-    def _render_to_image(self, zoom=1.0):
-        size = Size(*[int(dim*zoom) for dim in self.pagesize])
-        img = NSImage.alloc().initWithSize_(size)
-        with autorelease():
-            img.lockFocusFlipped_(True)
-            trans = NSAffineTransform.transform()
-            trans.scaleXBy_yBy_(zoom,zoom)
-            trans.concat()
-            self.draw()
-            img.unlockFocus()
+        # convert to a 2x bitmap in P3
+        bitmap = NSBitmapImageRep.alloc().initWithCGImage_(self._render_to_cgimage(1.0, 2.0))
+        bitmap.setSize_(self.pagesize)
+        img = NSImage.alloc().initWithSize_(self.pagesize)
+        img.addRepresentation_(bitmap)
+        img.setFlipped_(True)
         return img
 
     def _raster_size(self, scale):
@@ -2008,8 +2002,8 @@ class Frame(object):
         (pixels per point).
 
         Draws into a private bitmap context rather than borrowing lockFocus's
-        thread-global focus stack, so unlike _render_to_image it's also safe to
-        call from a non-main thread."""
+        thread-global focus stack, so it's also safe to call from a non-main
+        thread."""
         scale = zoom * dpr
         size = Size(*self._raster_size(scale))
         colorspace, opts = CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
