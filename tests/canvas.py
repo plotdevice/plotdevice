@@ -124,6 +124,14 @@ class FrameTests(PlotDeviceTestCase):
             self.assertIs(type(committed), type(grob))
         self.assertIsNot(frame.grobs[-1].contents[0], r)
 
+    def test_frame_copies_the_contents_of_containers_the_script_holds(self):
+        # the script can reach them through the container
+        size(100, 100)
+        with clip(oval(0, 0, 50, 50, plot=False)) as stencil:
+            rect(20, 20, 10, 10)
+        frame = _ctx.canvas.commit()
+        self.assertIsNot(frame.grobs[0].contents[0], stencil.contents[0])
+
     def test_held_grobs_can_be_edited_after_commit(self):
         size(100, 100)
         pen(2, dash=4)

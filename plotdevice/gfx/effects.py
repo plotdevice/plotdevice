@@ -67,14 +67,14 @@ BLEND_MODES = """    normal, clear, copy, xor, multiply, screen,
 
 ### Effects objects ###
 
-def _commit_all(grobs):
+def _commit_all(grobs, held=False):
     """The grobs to use for drawing (or copies of any the script still holds references to)"""
     for probe in [object()]:
         unheld = sys.getrefcount(probe) # the refcount of an unreferenced grob
     committed = []
     for grob in grobs:
-        held = sys.getrefcount(grob) > unheld # measured before grob._commit adds a reference
-        committed.append(grob._commit(held))
+        copying = held or sys.getrefcount(grob) > unheld # measured before grob._commit adds a reference
+        committed.append(grob._commit(copying))
     return tuple(committed)
 
 class Frob(object):
@@ -102,7 +102,7 @@ class Frob(object):
     def _commit(self, held):
         """A copy of the container holding its committed contents"""
         frob = copy(self)
-        frob._grobs = _commit_all(self.contents)
+        frob._grobs = _commit_all(self.contents, held) # the script can reach a held container's contents
         return frob
 
     @property
