@@ -870,6 +870,10 @@ class Pattern(object):
         vectors = [r for r in reps if isinstance(r, (NSPDFImageRep, PDSVGImageRep))]
         rep = vectors[0] if vectors else max(reps, key=lambda r: r.pixelsWide() * r.pixelsHigh(), default=None)
         snapshot = rep.frame if isinstance(rep, FrameImageRep) else None
+        filling = frame is not None and snapshot is not None
+        if filling and (frame.colors, frame.format) != (snapshot.colors, snapshot.format):
+            from ..context import Frame
+            snapshot = Frame(snapshot, frame.colors, frame.format) # in the colors of the frame it fills
         scale = abs(matrix.a * matrix.d - matrix.b * matrix.c) ** .5
         flip = (scale, 0, 0, -scale, 0, size.height * scale) # a y-up tile at the render's scale, for shadows in PDFs
 

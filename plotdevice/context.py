@@ -1940,13 +1940,15 @@ class FrameBounds(object):
         return box
 
 class Frame(object):
-    """A committed copy of a Canvas"""
+    """A committed copy of a Canvas (or of another Frame, in other colors)"""
 
-    def __init__(self, canvas, colors=None, format=None, proofed=False, vision=None):
+    def __init__(self, src, colors=None, format=None, proofed=False, vision=None):
+        copying = isinstance(src, Frame) # its texts must keep their own colors
         self.colors = colors # either from export(colors=) or None for the working space
+        self.format = format
         self.press = colors if colors in Press.named else None
         if colors is None:
-            self.outputmode = canvas._ctx._outputmode if canvas._ctx else RGB
+            self.outputmode = src.outputmode if copying else (src._ctx._outputmode if src._ctx else RGB)
         else:
             self.outputmode = _output_mode(colors)
         if self.press:
@@ -1957,12 +1959,12 @@ class Frame(object):
         # texts resolve their colors while committing
         token = gfx._committing.set(self)
         try:
-            self.grobs = _commit_all(canvas._grobs)
+            self.grobs = _commit_all(src.grobs, held=True) if copying else _commit_all(src._grobs)
         finally:
             gfx._committing.reset(token)
-        self.width, self.height = canvas.width, canvas.height
-        self.pagesize = canvas.pagesize
-        self.background = canvas.background
+        self.width, self.height = src.width, src.height
+        self.pagesize = src.pagesize
+        self.background = src.background
         self._bounds = FrameBounds(self.grobs)
         self.proof = _output_space(colors) if proofed else None # the window's Proof Colors setting
         self.vision = vision # a Proof setting simulating color deficiency
