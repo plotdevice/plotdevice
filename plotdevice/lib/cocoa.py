@@ -4,44 +4,45 @@ from Quartz import CALayer, CGAffineTransformConcat, CGAffineTransformInvert, CG
                    CGAffineTransformMakeTranslation, CGBitmapContextCreate, CGBitmapContextCreateImage, \
                    CGBitmapContextGetAlphaInfo, CGBitmapContextGetColorSpace, CGBitmapContextGetHeight, \
                    CGBitmapContextGetWidth, CGColorCreate, CGColorCreateCopyByMatchingToColorSpace, \
-                   CGColorCreateCopyWithAlpha, CGColorGetColorSpace, CGColorGetComponents, \
+                   CGColorCreateCopyWithAlpha, CGColorCreateWithPattern, CGColorGetColorSpace, CGColorGetComponents, \
                    CGColorGetNumberOfComponents, CGColorRef, CGColorSpaceCopyICCData, CGColorSpaceCopyName, \
-                   CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGColorSpaceCreateWithICCData, \
-                   CGColorSpaceCreateWithName, CGColorSpaceGetModel, CGColorSpaceGetNumberOfComponents, \
-                   CGContextAddPath, CGContextAddRect, CGContextBeginPage, CGContextBeginPath, \
-                   CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, CGContextClearRect, \
-                   CGContextClip, CGContextClipToMask, CGContextClipToRect, CGContextConcatCTM, CGContextDrawImage, \
-                   CGContextDrawPath, CGContextEndPage, CGContextEndTransparencyLayer, CGContextEOClip, \
-                   CGContextFlush, CGContextGetClipBoundingBox, CGContextGetCTM, CGContextGetPathBoundingBox, \
-                   CGContextReplacePathWithStrokedPath, CGContextRestoreGState, CGContextSaveGState, \
-                   CGContextScaleCTM, CGContextSetAlpha, CGContextSetBlendMode, CGContextSetFillColorWithColor, \
-                   CGContextSetInterpolationQuality, CGContextSetLineCap, CGContextSetLineDash, \
-                   CGContextSetLineJoin, CGContextSetLineWidth, CGContextSetRenderingIntent, \
+                   CGColorSpaceCreateDeviceCMYK, CGColorSpaceCreateDeviceRGB, CGColorSpaceCreatePattern, \
+                   CGColorSpaceCreateWithICCData, CGColorSpaceCreateWithName, CGColorSpaceGetModel, \
+                   CGColorSpaceGetNumberOfComponents, CGContextAddPath, CGContextAddRect, CGContextBeginPage, \
+                   CGContextBeginPath, CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, \
+                   CGContextClearRect, CGContextClip, CGContextClipToMask, CGContextClipToRect, CGContextConcatCTM, \
+                   CGContextDrawImage, CGContextDrawPath, CGContextEndPage, CGContextEndTransparencyLayer, \
+                   CGContextEOClip, CGContextFlush, CGContextGetClipBoundingBox, CGContextGetCTM, \
+                   CGContextGetPathBoundingBox, CGContextReplacePathWithStrokedPath, CGContextRestoreGState, \
+                   CGContextSaveGState, CGContextScaleCTM, CGContextSetAlpha, CGContextSetBlendMode, \
+                   CGContextSetFillColorWithColor, CGContextSetInterpolationQuality, CGContextSetLineCap, \
+                   CGContextSetLineDash, CGContextSetLineJoin, CGContextSetLineWidth, CGContextSetRenderingIntent, \
                    CGContextSetShadowWithColor, CGContextSetStrokeColorWithColor, CGContextTranslateCTM, \
                    CGDataConsumerCreateWithCFData, CGImageCreateCopyWithColorSpace, CGImageDestinationAddImage, \
                    CGImageDestinationCreateWithData, CGImageDestinationFinalize, CGImageDestinationSetProperties, \
                    CGImageGetBitsPerComponent, CGImageGetBitsPerPixel, CGImageGetBytesPerRow, CGImageGetColorSpace, \
                    CGImageGetDataProvider, CGImageGetHeight, CGImageGetWidth, CGImageMaskCreate, \
                    CGPathAddCurveToPoint, CGPathAddLineToPoint, CGPathCloseSubpath, CGPathCreateCopy, \
-                   CGPathCreateMutable, CGPathMoveToPoint, CGPathRelease, CGPDFContextBeginPage, CGPDFContextClose, \
-                   CGPDFContextCreate, CGPDFContextCreateWithURL, CGPDFContextEndPage, CGRectApplyAffineTransform, \
-                   CGRectInset, CGRectIntegral, CGRectIntersection, CGRectIsEmpty, CGRectMake, CGSizeMake, \
-                   kCAGravityCenter, kCAGravityResize, kCAGravityResizeAspect, kCGBitmapByteOrder32Host, \
-                   kCGBlendModeClear, kCGBlendModeColor, kCGBlendModeColorBurn, kCGBlendModeColorDodge, \
-                   kCGBlendModeCopy, kCGBlendModeDarken, kCGBlendModeDestinationAtop, kCGBlendModeDestinationIn, \
-                   kCGBlendModeDestinationOut, kCGBlendModeDestinationOver, kCGBlendModeDifference, \
-                   kCGBlendModeExclusion, kCGBlendModeHardLight, kCGBlendModeHue, kCGBlendModeLighten, \
-                   kCGBlendModeLuminosity, kCGBlendModeMultiply, kCGBlendModeNormal, kCGBlendModeOverlay, \
-                   kCGBlendModePlusDarker, kCGBlendModePlusLighter, kCGBlendModeSaturation, kCGBlendModeScreen, \
-                   kCGBlendModeSoftLight, kCGBlendModeSourceAtop, kCGBlendModeSourceIn, kCGBlendModeSourceOut, \
-                   kCGBlendModeXOR, kCGColorSpaceDisplayP3, kCGColorSpaceExtendedDisplayP3, \
+                   CGPathCreateMutable, CGPathMoveToPoint, CGPathRelease, CGPatternCreate, CGPDFContextBeginPage, \
+                   CGPDFContextClose, CGPDFContextCreate, CGPDFContextCreateWithURL, CGPDFContextEndPage, \
+                   CGRectApplyAffineTransform, CGRectInset, CGRectIntegral, CGRectIntersection, CGRectIsEmpty, \
+                   CGRectMake, CGSizeMake, kCAGravityCenter, kCAGravityResize, kCAGravityResizeAspect, \
+                   kCGBitmapByteOrder32Host, kCGBlendModeClear, kCGBlendModeColor, kCGBlendModeColorBurn, \
+                   kCGBlendModeColorDodge, kCGBlendModeCopy, kCGBlendModeDarken, kCGBlendModeDestinationAtop, \
+                   kCGBlendModeDestinationIn, kCGBlendModeDestinationOut, kCGBlendModeDestinationOver, \
+                   kCGBlendModeDifference, kCGBlendModeExclusion, kCGBlendModeHardLight, kCGBlendModeHue, \
+                   kCGBlendModeLighten, kCGBlendModeLuminosity, kCGBlendModeMultiply, kCGBlendModeNormal, \
+                   kCGBlendModeOverlay, kCGBlendModePlusDarker, kCGBlendModePlusLighter, kCGBlendModeSaturation, \
+                   kCGBlendModeScreen, kCGBlendModeSoftLight, kCGBlendModeSourceAtop, kCGBlendModeSourceIn, \
+                   kCGBlendModeSourceOut, kCGBlendModeXOR, kCGColorSpaceDisplayP3, kCGColorSpaceExtendedDisplayP3, \
                    kCGColorSpaceExtendedSRGB, kCGColorSpaceGenericCMYK, kCGColorSpaceModelCMYK, \
                    kCGColorSpaceModelRGB, kCGColorSpaceSRGB, kCGImageAlphaNone, kCGImageAlphaNoneSkipFirst, \
                    kCGImageAlphaNoneSkipLast, kCGImageAlphaPremultipliedFirst, kCGImageAlphaPremultipliedLast, \
                    kCGImageDestinationLossyCompressionQuality, kCGImagePropertyDPIHeight, kCGImagePropertyDPIWidth, \
                    kCGInterpolationHigh, kCGLineCapButt, kCGLineCapRound, kCGLineCapSquare, kCGLineJoinBevel, \
                    kCGLineJoinMiter, kCGLineJoinRound, kCGPathFill, kCGPathFillStroke, kCGPathStroke, \
-                   kCGRenderingIntentDefault, kCGRenderingIntentRelativeColorimetric, kCIInputImageKey
+                   kCGPatternTilingConstantSpacing, kCGRenderingIntentDefault, \
+                   kCGRenderingIntentRelativeColorimetric, kCIInputImageKey
 from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplication, \
                    NSApplicationActivationPolicyAccessory, NSApplicationActivationPolicyRegular, \
                    NSApplicationPresentationAutoHideMenuBar, NSApplicationPresentationAutoHideToolbar, \

@@ -280,12 +280,14 @@ class PaperbackWriter(object):
         self.context = CGPDFContextCreateWithURL(NSURL.fileURLWithPath_(fname), None, None)
 
     def addPage_(self, frame):
+        from ..gfx import _render_lock
         if not self.pages:
             self.blend_space = frame._blend_space
         w, h = frame.pagesize
         CGContextBeginPage(self.context, CGRectMake(0, 0, w * self.zoom, h * self.zoom))
         frame._render_to_context(self.context, self.zoom)
-        CGContextEndPage(self.context)
+        with _render_lock: # pattern tiles draw during EndPage, after the render released the lock
+            CGContextEndPage(self.context)
         self.pages += 1
 
     def closeFile(self):

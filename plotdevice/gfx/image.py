@@ -18,10 +18,13 @@ from ..util.readers import get_http_session, last_modified
 from ..lib.io import MovieExportSession, ImageExportSession, HEVC, H264, PRORES
 from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, _hull
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
-from .colors import RGB, CMYK, _output_mode, Press
+from .colors import _output_mode, Press
 from . import _ns_context, _cg_port, _frame
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
+
+class FrameImageRep(NSBitmapImageRep):
+    frame = None # the committed canvas this bitmap shows
 
 _ctx = None
 __all__ = ("Image", 'ImageWriter', 'HEVC', 'H264', 'PRORES')
@@ -29,7 +32,7 @@ __all__ = ("Image", 'ImageWriter', 'HEVC', 'H264', 'PRORES')
 ### The bitmap/vector image-container (a.k.a. NSImage proxy) ###
 
 class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
-    stateAttrs = ('_nsImage',)
+    stateAttrs = ('_nsImage', '_tiles')
     opts = ('data', 'src', 'image')
 
     def __init__(self, *args, **kwargs):
@@ -86,6 +89,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         else:
             undefined = "Image requires either a source (path/url/Image) or image data"
             raise DeviceError(undefined)
+        self._tiles = getattr(src, '_tiles', {}) # pattern tiles by matrix & ink, shared with images made from this one
 
         # set the bounds (in phases)
         if isinstance(src, Image):
@@ -105,6 +109,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         # pull all state from the original object (rather than inheriting from _ctx)
         clone = Image.__new__(Image)
         clone._nsImage = self._nsImage # never edited in place
+        clone._tiles = self._tiles
         clone._frame = self._frame.copy()
         clone._transform = self._transform.copy()
         clone._effects = self._effects.copy()
@@ -357,6 +362,18 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             return (self.x * dpx, self.y * dpx, w0 * factor, h0 * factor)
         return _hull(self._screen_matrix, 0, 0, w0, h0)
 
+    def _nsImage_as(self, cmyk):
+        """The NSImage to draw, with a CMYK bitmap re-tagged as `cmyk` (keeping its numbers)"""
+        image = self._nsImage
+        if cmyk is not None:
+            # preserve numbers for cmyk bitmaps and relabel to match the current press profile
+            rep = next((r for r in image.representations() if isinstance(r, NSBitmapImageRep)), None)
+            cg = rep.CGImage() if rep is not None else None
+            if cg is not None and CGColorSpaceGetModel(CGImageGetColorSpace(cg)) == kCGColorSpaceModelCMYK:
+                image = NSImage.alloc().initWithCGImage_size_(CGImageCreateCopyWithColorSpace(cg, cmyk), image.size())
+                image.setFlipped_(True)
+        return image
+
     def _draw(self):
         """Draw an image on the given coordinates."""
 
@@ -364,17 +381,8 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             self._screen_transform.concat() # move the image into place via transforms
             with self.effects.applied(self): # apply any blend/alpha/shadow effects
                 NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
-                image = self._nsImage
                 frame = _frame.get()
-                if frame is not None and frame.outputmode == CMYK and frame.colors is not None:
-                    # preserve numbers for cmyk bitmaps and relabel to match the current press profile
-                    rep = next((r for r in image.representations() if isinstance(r, NSBitmapImageRep)), None)
-                    cg = rep.CGImage() if rep is not None else None
-                    if cg is not None and CGColorSpaceGetModel(CGImageGetColorSpace(cg)) == kCGColorSpaceModelCMYK:
-                        in_space = frame.press and frame.ink[1]
-                        space = Press.named[frame.press].space if in_space else CGColorSpaceCreateDeviceCMYK()
-                        image = NSImage.alloc().initWithCGImage_size_(CGImageCreateCopyWithColorSpace(cg, space), image.size())
-                        image.setFlipped_(True)
+                image = self._nsImage_as(frame._cmyk_space if frame is not None else None)
                 bounds = ((0,0), image.size()) # draw the image at (0,0)
                 image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
 

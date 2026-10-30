@@ -6,7 +6,7 @@ from collections import namedtuple, defaultdict
 from .. import DeviceError
 from ..lib.foundry import fontspec, LIBRARY
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
-from .colors import Color, Gradient
+from .colors import Color, Gradient, Pattern
 from .geometry import Transform, Dimension, Region, Pair, CENTER, CORNER
 from .effects import Effect
 
@@ -236,7 +236,7 @@ class ColorMixin(Grob):
     def _get_fill(self):
         return self._fillcolor
     def _set_fill(self, *args):
-        if isinstance(args[0], Gradient):
+        if isinstance(args[0], (Gradient, Pattern)):
             self._fillcolor = args[0].copy()
         else:
             self._fillcolor = None if args[0] is None else Color(*args)
@@ -245,7 +245,7 @@ class ColorMixin(Grob):
     def _get_stroke(self):
         return self._strokecolor
     def _set_stroke(self, *args):
-        if isinstance(args[0], Gradient):
+        if isinstance(args[0], (Gradient, Pattern)):
             self._strokecolor = args[0].copy()
         else:
             self._strokecolor = None if args[0] is None else Color(*args)

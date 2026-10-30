@@ -210,19 +210,17 @@ class FrameTests(PlotDeviceTestCase):
         background('white')
         rect(0, 0, 50, 25, fill='red')
         snapshot, tile = Image(_ctx.canvas), Pattern(_ctx.canvas)
-        original = {dpr: _pixels(_ctx.canvas.commit()._render_to_cgimage(1.0, dpr)) for dpr in (1.0, 2.0)}
+        original = _pixels(_ctx.canvas.commit()._render_to_cgimage(1.0, 2.0))
 
-        # the image is exact at 2x; the pattern is checked at 1x, since its tiles ignore the render's scale
-        # (bugs.md), where the 2x snapshot's resampled edges differ by up to 31
-        draws = [(lambda: image(snapshot, 0, 0), 2.0, 0), (lambda: rect(0, 0, 100, 50, fill=tile), 1.0, 32)]
-        for draw, dpr, tolerance in draws:
+        # both are exact at 2x: the image as a 2x bitmap, the pattern by drawing the canvas's vectors
+        draws = [(lambda: image(snapshot, 0, 0), 1), (lambda: rect(0, 0, 100, 50, fill=tile), 0)]
+        for draw, bitmaps in draws:
             clear(all)
             draw()
             frame = _ctx.canvas.commit()
-            drawn = _pixels(frame._render_to_cgimage(1.0, dpr))
-            self.assertLessEqual(max(abs(a - b) for a, b in zip(drawn, original[dpr])), tolerance)
-        pdf = bytes(frame._getImageData('pdf'))
-        self.assertEqual(len(re.findall(rb'/Subtype\s*/Image', pdf)), 1)
+            self.assertEqual(_pixels(frame._render_to_cgimage(1.0, 2.0)), original)
+            pdf = bytes(frame._getImageData('pdf'))
+            self.assertEqual(len(re.findall(rb'/Subtype\s*/Image', pdf)), bitmaps)
 
 def _pump(until, timeout=5.0):
     """Run the main run loop until `until()` holds"""

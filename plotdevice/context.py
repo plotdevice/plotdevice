@@ -15,6 +15,7 @@ from .gfx.typography import Layout
 from .gfx.effects import Frob, _commit_all
 from .gfx import *
 from .gfx.colors import Press, _named, _output_colors, _output_space, _output_mode, _INKS
+from .gfx.image import FrameImageRep
 from . import gfx, lib, util, Halted, DeviceError
 
 __all__ = ('Context', 'Canvas')
@@ -1973,6 +1974,9 @@ class Frame(object):
                 rect = ((0,0), self.pagesize)
                 if isinstance(self.background, Gradient):
                     self.background.fill(rect)
+                elif isinstance(self.background, Pattern):
+                    CGContextSetFillColorWithColor(gfx._cg_port(), self.background.cgColor)
+                    NSRectFillUsingOperation(rect, NSCompositeSourceOver)
                 else:
                     self.background.set()
                     NSRectFillUsingOperation(rect, NSCompositeSourceOver)
@@ -1987,7 +1991,8 @@ class Frame(object):
     @property
     def _nsImage(self):
         # convert to a 2x bitmap in P3
-        bitmap = NSBitmapImageRep.alloc().initWithCGImage_(self._render_to_cgimage(1.0, 2.0))
+        bitmap = FrameImageRep.alloc().initWithCGImage_(self._render_to_cgimage(1.0, 2.0))
+        bitmap.frame = self # so patterns can draw its vectors
         bitmap.setSize_(self.pagesize)
         img = NSImage.alloc().initWithSize_(self.pagesize)
         img.addRepresentation_(bitmap)
@@ -2069,6 +2074,13 @@ class Frame(object):
         return _INKS[self.ink] if self.ink and not self.press else None
 
     @property
+    def _cmyk_space(self):
+        # what CMYK bitmaps are tagged with to keep their numbers, or None outside a CMYK export
+        if self.outputmode != CMYK or self.colors is None:
+            return None
+        return Press.named[self.press].space if self.press and self.ink[1] else CGColorSpaceCreateDeviceCMYK()
+
+    @property
     def _blend_space(self):
         if self.outputmode == CMYK:
             return _output_space(self.press) if self.press else None # plain CMYK is left as is
@@ -2086,7 +2098,8 @@ class Frame(object):
             pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w*zoom, h*zoom), None)
             CGPDFContextBeginPage(pdfContext, None)
             self._render_to_context(pdfContext, zoom)
-            CGPDFContextEndPage(pdfContext)
+            with gfx._render_lock: # pattern tiles draw during EndPage, after the render released the lock
+                CGPDFContextEndPage(pdfContext)
             CGPDFContextClose(pdfContext)
             pdfContext = None
             if self._blend_space is not None:
@@ -2095,7 +2108,7 @@ class Frame(object):
                 cgData.appendBytes_length_(update, len(update))
             return cgData, None
         elif format == 'eps':
-            with autorelease():
+            with autorelease(), gfx._render_lock: # AppKit draws pattern tiles after drawRect_ returns
                 view = _PostScriptView.alloc().initWithCanvas_(self)
                 return view.dataWithEPSInsideRect_(view.bounds()), None
         else:

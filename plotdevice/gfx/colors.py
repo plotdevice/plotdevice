@@ -10,7 +10,7 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path, numlike
-from . import _inkmode, _outputpress
+from . import _inkmode, _outputpress, _frame, _base_ctm
 _ctx = None
 __all__ = ("RGB", "HSV", "HSB", "CMYK", "GREY", "P3", "SRGB", "REC709", "REC2020",
            "GRACOL", "GRACOL_UNCOATED", "SWOP", "FOGRA39", "FOGRA47",
@@ -840,12 +840,68 @@ class Color(object):
 class Pattern(object):
     def __init__(self, img):
         if isinstance(img, Pattern):
-            self._nsColor, self.cgColor = img._nsColor, img.cgColor
+            self._image = img._image
         else:
             from .image import Image
-            img = Image(img) if isinstance(img, str) else img
-            self._nsColor = NSColor.colorWithPatternImage_(img._nsImage)
-            self.cgColor = self._nsColor.CGColor() # the same in every output mode
+            self._image = img.copy() if isinstance(img, Image) else Image(img) # tiled from where it would draw
+
+    @property
+    def _nsColor(self):
+        # text fills still access the image as a bitmap
+        return NSColor.colorWithPatternImage_(self._image._nsImage)
+
+    @property
+    def cgColor(self):
+        # cache 'tiles' (based on the pattern's matrix & ink) on the source Image itself
+        frame = _frame.get()
+        matrix = CGAffineTransformConcat(self._image._screen_matrix, _base_ctm.get())
+        key = tuple(matrix), _inkmode(), frame and frame.colors
+        tiles = self._image._tiles
+        try:
+            return tiles[key]
+        except KeyError:
+            pass
+
+        # the tile draws the canvas's grobs/image's vector rep (avoiding the NSImage which would rasterize it)
+        from .image import PDSVGImageRep, FrameImageRep
+        size = self._image._nsImage.size()
+        cmyk = frame._cmyk_space if frame is not None else None
+        reps = self._image._nsImage_as(cmyk).representations()
+        vectors = [r for r in reps if isinstance(r, (NSPDFImageRep, PDSVGImageRep))]
+        rep = vectors[0] if vectors else max(reps, key=lambda r: r.pixelsWide() * r.pixelsHigh(), default=None)
+        snapshot = rep.frame if isinstance(rep, FrameImageRep) else None
+        scale = abs(matrix.a * matrix.d - matrix.b * matrix.c) ** .5
+        flip = (scale, 0, 0, -scale, 0, size.height * scale) # a y-up tile at the render's scale, for shadows in PDFs
+
+        def cell(info, port):
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(port, True))
+            try:
+                if snapshot is not None:
+                    CGContextConcatCTM(port, flip)
+                    snapshot.draw() # re-enters the render lock
+                elif vectors:
+                    if isinstance(rep, NSPDFImageRep):
+                        CGContextTranslateCTM(port, 0, size.height) # pdf pages draw y-up (svgs flip themselves)
+                        CGContextScaleCTM(port, 1, -1)
+                    rep.drawInRect_(((0,0), size)) # respectFlipped would rasterize it
+                else:
+                    NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
+                    rep.drawInRect_fromRect_operation_fraction_respectFlipped_hints_(((0,0), size), NSZeroRect,
+                                                                                    NSCompositeSourceOver, 1.0, True, None)
+            finally:
+                NSGraphicsContext.restoreGraphicsState()
+
+        bounds = ((0,0), size)
+        if snapshot is not None:
+            matrix = CGAffineTransformConcat(CGAffineTransformInvert(flip), matrix)
+            bounds = ((0,0), (size.width * scale, size.height * scale))
+        (_, _), (w, h) = bounds
+        tile = CGPatternCreate(None, bounds, matrix, w, h, kCGPatternTilingConstantSpacing, True, cell)
+        if len(tiles) >= 32:
+            del tiles[next(iter(tiles))] # drop the oldest (zooms & animations make a new matrix every frame)
+        tiles[key] = CGColorCreateWithPattern(CGColorSpaceCreatePattern(None), tile, [1.0])
+        return tiles[key]
 
     # fill() and stroke() both cache the previous canvas state by creating a _rollback attr.
     # act as a context manager if there's a fill/stroke state to revert to at the end of the block.
