@@ -15,7 +15,7 @@ from .gfx.typography import Layout
 from .gfx.effects import Frob, _commit_all
 from .gfx import *
 from .gfx.colors import Press, _named, _output_colors, _output_space, _output_mode, _INKS
-from .gfx.image import FrameImageRep
+from .gfx.image import FrameImageRep, Snapshot
 from . import gfx, lib, util, Halted, DeviceError
 
 __all__ = ('Context', 'Canvas')
@@ -1478,8 +1478,10 @@ class Context(object):
             return self._autoplot
         elif obj in (True,False):
             return PlotContext(self, auto=obj)
+        elif isinstance(obj, Canvas):
+            obj = Snapshot(obj) # a vector clone of the canvas's current contents
         elif not isinstance(obj, Grob):
-            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
+            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects, or a canvas (not %s)'%type(obj)
             raise DeviceError(notdrawable)
 
         # by default, plot a copy of the grob and return a reference to that new copy.
@@ -2099,9 +2101,13 @@ class Frame(object):
             dataConsumer = CGDataConsumerCreateWithCFData(cgData)
             pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w*zoom, h*zoom), None)
             CGPDFContextBeginPage(pdfContext, None)
-            self._render_to_context(pdfContext, zoom)
-            with gfx._render_lock: # pattern tiles draw during EndPage, after the render released the lock
-                CGPDFContextEndPage(pdfContext)
+            token = gfx._pdf_doc.set((pdfContext, {}))
+            try:
+                self._render_to_context(pdfContext, zoom)
+                with gfx._render_lock: # pattern tiles draw during EndPage, after the render released the lock
+                    CGPDFContextEndPage(pdfContext)
+            finally:
+                gfx._pdf_doc.reset(token)
             CGPDFContextClose(pdfContext)
             pdfContext = None
             if self._blend_space is not None:

@@ -52,7 +52,7 @@ class Bequest(type):
         super(Bequest, cls).__init__(name, bases, dct)
         if not (name=='Grob' or name.endswith('Mixin')):
             info = defaultdict(set)
-            for typ in (cls,)+bases:
+            for typ in cls.__mro__:
                 info['_inherit'].update(getattr(typ,'ctxAttrs',[]))
                 info['_state'].update(getattr(typ,'stateAttrs',[]))
                 info['_opts'].update(getattr(typ,'opts',[]))

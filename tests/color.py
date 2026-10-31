@@ -403,6 +403,24 @@ class ColorTests(PlotDeviceTestCase):
             export(join(self.tmp, 'pattern.tiff'), colors=colors)
             self.assertEqual(_image(join(self.tmp, 'pattern.tiff')), _image(join(self.tmp, 'direct.tiff')), colors)
 
+    def test_plotted_canvases_draw_in_the_exports_colors(self):
+        # a canvas plotted before the export resolves its colors as the export does
+        def scene():
+            rect(0, 0, 40, 20, fill='red')
+            rect(0, 20, 40, 20, fill=Color('cmyk', 0, 1, 1, 0))
+            text('Hi', 4, 34, size=18, fill='blue')
+        size(40, 40)
+        scene()
+        snapshot = plot(_ctx.canvas, 0, 0)
+        for colors in (CMYK, FOGRA39):
+            clear(all)
+            scene()
+            export(join(self.tmp, 'direct.tiff'), colors=colors)
+            clear(all)
+            plot(snapshot)
+            export(join(self.tmp, 'plotted.tiff'), colors=colors)
+            self.assertEqual(_image(join(self.tmp, 'plotted.tiff')), _image(join(self.tmp, 'direct.tiff')), colors)
+
     # outputs
 
     def _save(self, name, **kwargs):

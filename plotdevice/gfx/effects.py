@@ -377,7 +377,10 @@ class Stencil(Frob):
     def __init__(self, stencil, invert=False, channel=None):
         from .text import Text
         from .bezier import Bezier
-        from .image import Image
+        from .image import Image, Snapshot
+        if isinstance(stencil, Snapshot):
+            badstencil = "a plotted canvas can't be a clip() or mask() stencil (use image(canvas) instead)"
+            raise DeviceError(badstencil)
         if isinstance(stencil, Text):
             self.path = stencil.path
             self.evenodd = invert

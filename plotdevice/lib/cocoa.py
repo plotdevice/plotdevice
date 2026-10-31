@@ -11,17 +11,18 @@ from Quartz import CALayer, CGAffineTransformConcat, CGAffineTransformInvert, CG
                    CGColorSpaceGetNumberOfComponents, CGContextAddPath, CGContextAddRect, CGContextBeginPage, \
                    CGContextBeginPath, CGContextBeginTransparencyLayer, CGContextBeginTransparencyLayerWithRect, \
                    CGContextClearRect, CGContextClip, CGContextClipToMask, CGContextClipToRect, CGContextConcatCTM, \
-                   CGContextDrawImage, CGContextDrawPath, CGContextEndPage, CGContextEndTransparencyLayer, \
-                   CGContextEOClip, CGContextFlush, CGContextGetClipBoundingBox, CGContextGetCTM, \
-                   CGContextGetPathBoundingBox, CGContextReplacePathWithStrokedPath, CGContextRestoreGState, \
-                   CGContextSaveGState, CGContextScaleCTM, CGContextSetAlpha, CGContextSetBlendMode, \
-                   CGContextSetFillColorWithColor, CGContextSetInterpolationQuality, CGContextSetLineCap, \
-                   CGContextSetLineDash, CGContextSetLineJoin, CGContextSetLineWidth, CGContextSetRenderingIntent, \
-                   CGContextSetShadowWithColor, CGContextSetStrokeColorWithColor, CGContextTranslateCTM, \
-                   CGDataConsumerCreateWithCFData, CGImageCreateCopyWithColorSpace, CGImageDestinationAddImage, \
-                   CGImageDestinationCreateWithData, CGImageDestinationFinalize, CGImageDestinationSetProperties, \
-                   CGImageGetBitsPerComponent, CGImageGetBitsPerPixel, CGImageGetBytesPerRow, CGImageGetColorSpace, \
-                   CGImageGetDataProvider, CGImageGetHeight, CGImageGetWidth, CGImageMaskCreate, \
+                   CGContextDrawImage, CGContextDrawLayerInRect, CGContextDrawPath, CGContextEndPage, \
+                   CGContextEndTransparencyLayer, CGContextEOClip, CGContextFlush, CGContextGetClipBoundingBox, \
+                   CGContextGetCTM, CGContextGetPathBoundingBox, CGContextReplacePathWithStrokedPath, \
+                   CGContextRestoreGState, CGContextSaveGState, CGContextScaleCTM, CGContextSetAlpha, \
+                   CGContextSetBlendMode, CGContextSetFillColorWithColor, CGContextSetInterpolationQuality, \
+                   CGContextSetLineCap, CGContextSetLineDash, CGContextSetLineJoin, CGContextSetLineWidth, \
+                   CGContextSetRenderingIntent, CGContextSetShadowWithColor, CGContextSetStrokeColorWithColor, \
+                   CGContextTranslateCTM, CGDataConsumerCreateWithCFData, CGImageCreateCopyWithColorSpace, \
+                   CGImageDestinationAddImage, CGImageDestinationCreateWithData, CGImageDestinationFinalize, \
+                   CGImageDestinationSetProperties, CGImageGetBitsPerComponent, CGImageGetBitsPerPixel, \
+                   CGImageGetBytesPerRow, CGImageGetColorSpace, CGImageGetDataProvider, CGImageGetHeight, \
+                   CGImageGetWidth, CGImageMaskCreate, CGLayerCreateWithContext, CGLayerGetContext, \
                    CGPathAddCurveToPoint, CGPathAddLineToPoint, CGPathCloseSubpath, CGPathCreateCopy, \
                    CGPathCreateMutable, CGPathMoveToPoint, CGPathRelease, CGPatternCreate, CGPDFContextBeginPage, \
                    CGPDFContextClose, CGPDFContextCreate, CGPDFContextCreateWithURL, CGPDFContextEndPage, \

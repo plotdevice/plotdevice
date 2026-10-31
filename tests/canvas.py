@@ -230,6 +230,106 @@ class FrameTests(PlotDeviceTestCase):
             pdf = bytes(frame._getImageData('pdf'))
             self.assertEqual(len(re.findall(rb'/Subtype\s*/Image', pdf)), bitmaps)
 
+    def test_plotted_canvas_draws_its_vectors(self):
+        # as the same shapes drawn directly, nested canvases included
+        def shapes(x, y):
+            rect(x + 5, y + 5, 30, 20, fill='teal')
+            oval(x + 40, y + 10, 25, 25, fill='orange', stroke='black', strokewidth=2)
+            text('Hi', x + 10, y + 50, size=20, fill='navy')
+        size(80, 60)
+        background(None)
+        shapes(0, 0)
+        inner = plot(_ctx.canvas, 0, 0)
+        clear(all)
+        size(80, 60)
+        background(None)
+        plot(inner)
+        nested = plot(_ctx.canvas, 0, 0)
+        clear(all)
+        size(300, 100)
+        plot(inner, 10, 10)
+        plot(nested, 150, 10)
+        plotted = _pixels(_ctx.canvas.commit()._render_to_cgimage(1.0, 2.0))
+        clear(all)
+        size(300, 100)
+        shapes(10, 10)
+        shapes(150, 10)
+        self.assertEqual(plotted, _pixels(_ctx.canvas.commit()._render_to_cgimage(1.0, 2.0)))
+
+    def test_plotted_canvases_share_a_layer_in_pdfs(self):
+        # drawn once into the PDF, however many times and at whatever scale it's plotted
+        import re
+        size(80, 60)
+        background(None)
+        rect(5, 5, 30, 20, fill='teal')
+        text('Hi', 10, 50, size=20, fill='navy')
+        snapshot = plot(_ctx.canvas, 0, 0)
+        clear(all)
+        size(400, 300)
+        for i in range(12):
+            with rotate(i * 7):
+                plot(snapshot, 20 + (i % 4) * 90, 20 + (i // 4) * 90, width=40 + i * 3)
+        pdf = bytes(_ctx.canvas.commit()._getImageData('pdf'))
+        self.assertEqual(len(re.findall(rb'/Subtype\s*/Form', pdf)), 1)
+        self.assertEqual(len(re.findall(rb'/Subtype\s*/Image', pdf)), 0)
+
+    def test_plotted_canvases_in_patterns_stay_vectors(self):
+        # a canvas plotted inside a canvas used as a pattern is drawn as vectors in pdf & eps exports
+        import re
+        size(40, 40)
+        background(None)
+        oval(5, 5, 30, 30, fill='teal')
+        inner = plot(_ctx.canvas, 0, 0)
+        frames = {}
+        for name, draw in (('plotted', lambda: plot(inner, 10, 10)), ('direct', lambda: oval(15, 15, 30, 30, fill='teal'))):
+            clear(all)
+            size(60, 60)
+            background(None)
+            draw()
+            tile = Pattern(_ctx.canvas)
+            clear(all)
+            size(200, 150)
+            rect(0, 0, 200, 150, fill=tile)
+            frames[name] = _ctx.canvas.commit()
+        self.assertIsNone(re.search(rb'/Subtype\s*/Image', bytes(frames['plotted']._getImageData('pdf'))))
+        plotted, direct = (len(bytes(frames[name]._getImageData('eps'))) for name in ('plotted', 'direct'))
+        self.assertLess(plotted, 2 * direct) # a rasterized layer makes it ~30x
+
+    def test_plotted_shadows_scale_in_pdfs(self):
+        # a shadowed canvas plotted at another size or angle matches in a PDF and a bitmap
+        from Quartz import (CGPDFDocumentCreateWithProvider, CGDataProviderCreateWithCFData, CGPDFDocumentGetPage,
+                            CGContextDrawPDFPage, CGBitmapContextCreate, CGBitmapContextCreateImage, CGContextScaleCTM,
+                            CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, kCGImageAlphaPremultipliedFirst,
+                            kCGBitmapByteOrder32Host)
+        size(100, 80)
+        background(None)
+        with shadow('black', blur=4, offset=3):
+            oval(15, 15, 40, 40, fill='teal')
+        snapshot = plot(_ctx.canvas, 0, 0)
+        clear(all)
+        size(200, 150)
+        background('white')
+        plot(snapshot, 10, 10, width=150)
+        plot(snapshot, 10, 100, width=50)
+        with transform(CENTER), rotate(30):
+            plot(snapshot, 120, 70, width=60)
+        frame = _ctx.canvas.commit()
+        bitmap = _pixels(frame._render_to_cgimage(1.0, 2.0))
+        doc = CGPDFDocumentCreateWithProvider(CGDataProviderCreateWithCFData(frame._getImageData('pdf')))
+        ctx = CGBitmapContextCreate(None, 400, 300, 8, 1600, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3),
+                                    kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
+        CGContextScaleCTM(ctx, 2, 2)
+        CGContextDrawPDFPage(ctx, CGPDFDocumentGetPage(doc, 1))
+        self.assertLessEqual(max(abs(a - b) for a, b in zip(bitmap, _pixels(CGBitmapContextCreateImage(ctx)))), 8)
+
+    def test_plotted_canvas_isnt_a_stencil(self):
+        size(80, 60)
+        rect(5, 5, 30, 20)
+        snapshot = plot(_ctx.canvas, 0, 0)
+        with self.assertRaisesRegex(DeviceError, "can't be a clip"):
+            with clip(snapshot):
+                pass
+
 def _pump(until, timeout=5.0):
     """Run the main run loop until `until()` holds"""
     from Foundation import NSRunLoop, NSDate, NSDefaultRunLoopMode

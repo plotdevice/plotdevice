@@ -86,6 +86,9 @@ _casting = ContextVar('casting', default=None)
 # the frame being committed
 _committing = ContextVar('committing', default=None)
 
+# the PDF being drawn and its plotted-canvas layers (if any)
+_pdf_doc = ContextVar('pdf_doc', default=(None, None))
+
 @contextmanager
 def _rendering(frame, within=None):
     token = _frame.set(frame)

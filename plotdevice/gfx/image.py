@@ -18,8 +18,9 @@ from ..util.readers import get_http_session, last_modified
 from ..lib.io import MovieExportSession, ImageExportSession, HEVC, H264, PRORES
 from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, _hull
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
+from .effects import Frob
 from .colors import _output_mode, Press
-from . import _ns_context, _cg_port, _frame
+from . import _ns_context, _cg_port, _frame, _committing, _pdf_doc
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
 
@@ -385,6 +386,98 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                 image = self._nsImage_as(frame._cmyk_space if frame is not None else None)
                 bounds = ((0,0), image.size()) # draw the image at (0,0)
                 image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
+
+### a canvas plotted as vectors ###
+
+class Snapshot(Image):
+    stateAttrs = ('_canvas', '_source', '_shadowed')
+
+    def __init__(self, src, *coords, **kwargs):
+        super(Image, self).__init__(**kwargs)
+        self._source = src.commit() if hasattr(src, 'commit') else src # the canvas as it was plotted
+        self._canvas = self._source # the canvas in the colors of the frame it's eventually drawn in
+        self._tiles = {} # CGColors containing pattern tiles (for using the snapshot as a fill/stroke/background)
+
+        # check for nested grobs with shadows (which layer drawing doesn't automatically scale)
+        nested, self._shadowed = list(self._source.grobs), False
+        while nested and not self._shadowed:
+            grob = nested.pop()
+            effects = grob if isinstance(grob, Frob) else getattr(grob, '_effects', None)
+            self._shadowed = getattr(effects, '_fx', {}).get('shadow') is not None or getattr(grob, '_shadowed', False)
+            nested.extend(grob.contents if isinstance(grob, Frob) else ())
+
+        if coords:
+            self._frame._parse(coords)
+        for k, v in kwargs.items():
+            if k in FrameMixin.opts:
+                setattr(self, k, v)
+
+    def copy(self):
+        clone = Snapshot.__new__(Snapshot)
+        clone._canvas, clone._source, clone._shadowed, clone._tiles = self._canvas, self._source, self._shadowed, self._tiles
+        clone._frame = self._frame.copy()
+        clone._transform = self._transform.copy()
+        clone._effects = self._effects.copy()
+        clone._grid, clone._transformmode = self._grid, self._transformmode
+        return clone
+
+    def _commit(self, held):
+        # resolve its colors as the frame being committed does
+        snapshot = self.copy() if held else self
+        frame = _committing.get()
+        recolor = frame is not None and (frame.colors, frame.format) != (self._canvas.colors, self._canvas.format)
+        if recolor:
+            from ..context import Frame
+            snapshot = snapshot if held else self.copy()
+            snapshot._canvas = Frame(self._source, frame.colors, frame.format)
+        return snapshot
+
+    @property
+    def _nsImage(self):
+        # return a 2x bitmap for use in text fills
+        return self._canvas._nsImage
+
+    @property
+    def size(self):
+        return self._from_px(self._canvas.pagesize)
+
+    def _render_box(self):
+        w0, h0 = self._canvas.pagesize
+        if tuple(self.transform.matrix) == IDENTITY:
+            dpx, factor = self._grid.dpx, self._scalefactor
+            return (self.x * dpx, self.y * dpx, w0 * factor, h0 * factor)
+        return _hull(self._screen_matrix, 0, 0, w0, h0)
+
+    def _draw(self):
+        with _ns_context():
+            self._screen_transform.concat() # position the snapshot
+            with self.effects.applied(self): # apply blend/alpha/shadow (if any)
+                # if this isn't a PDF, draw the grobs directly
+                (doc, layers), port = _pdf_doc.get(), _cg_port()
+                if doc is None or CGBitmapContextGetWidth(port) > 0:
+                    self._canvas.draw() # re-enters the render lock
+                    return
+
+                # in a PDF, draw into a layer once then reuse that reference for subsequent draws
+                ctm = CGContextGetCTM(port)
+                linear = (ctm.a, ctm.b, ctm.c, ctm.d, 0, 0) if self._shadowed else (1, 0, 0, -1, 0, 0)
+                w, h = self._canvas.pagesize
+                (bx, by), (bw, bh) = CGRectApplyAffineTransform(((0, 0), (w, h)), linear)
+                key = self._source, self._canvas.colors, self._canvas.format, linear
+                if key not in layers:
+                    layer = CGLayerCreateWithContext(doc, (bw, bh), None)
+                    ctx = CGLayerGetContext(layer)
+                    CGContextTranslateCTM(ctx, -bx, -by)
+                    CGContextConcatCTM(ctx, linear)
+                    NSGraphicsContext.saveGraphicsState()
+                    NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(ctx, True))
+                    try:
+                        self._canvas.draw()
+                    finally:
+                        NSGraphicsContext.restoreGraphicsState()
+                    layers[key] = layer
+                CGContextConcatCTM(port, CGAffineTransformInvert(linear))
+                CGContextDrawLayerInRect(port, ((bx, by), (bw, bh)), layers[key])
 
 ### context manager for calls to `with export(...)` ###
 
