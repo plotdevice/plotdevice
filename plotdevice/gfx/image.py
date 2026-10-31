@@ -382,7 +382,22 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                 frame = _frame.get()
                 image = self._nsImage_as(frame._cmyk_space if frame is not None else None)
                 bounds = ((0,0), image.size()) # draw the image at (0,0)
-                image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
+                vector = next((r for r in image.representations() if isinstance(r, (NSPDFImageRep, PDSVGImageRep))), None)
+                if vector is None:
+                    image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
+                else:
+                    # draw svg & pdf reps directly, otherwise NSImage rasterizes them in layers and pattern cells
+                    port = _cg_port()
+                    if self.alpha < 1:
+                        CGContextSetAlpha(port, self.alpha)
+                        CGContextBeginTransparencyLayer(port, None)
+                    if isinstance(vector, NSPDFImageRep):
+                        # only pdfs need a manual y-axis flip
+                        CGContextTranslateCTM(port, 0, image.size().height)
+                        CGContextScaleCTM(port, 1, -1)
+                    vector.drawInRect_(bounds)
+                    if self.alpha < 1:
+                        CGContextEndTransparencyLayer(port)
 
 ### a canvas plotted as vectors ###
 

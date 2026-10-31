@@ -322,6 +322,22 @@ class FrameTests(PlotDeviceTestCase):
         CGContextDrawPDFPage(ctx, CGPDFDocumentGetPage(doc, 1))
         self.assertLessEqual(max(abs(a - b) for a, b in zip(bitmap, _pixels(CGBitmapContextCreateImage(ctx)))), 8)
 
+    def test_vector_images_stay_vectors_in_plotted_and_tiled_canvases(self):
+        # svg & pdf images inside a canvas that's plotted or used as a pattern are written as vectors, as on the page
+        import re
+        for src in ('tests/_in/vector-fill.svg', 'tests/_in/tiny-triangle.pdf'):
+            clear(all)
+            size(60, 60)
+            background(None)
+            image(src, 5, 5, width=50)
+            snapshot = plot(_ctx.canvas, 0, 0)
+            for draw in (lambda: plot(snapshot, 10, 10, width=80), lambda: rect(0, 0, 200, 150, fill=Pattern(snapshot))):
+                clear(all)
+                size(200, 150)
+                draw()
+                pdf = bytes(_ctx.canvas.commit()._getImageData('pdf'))
+                self.assertIsNone(re.search(rb'/Subtype\s*/Image', pdf), src)
+
     def test_plotted_canvas_isnt_a_stencil(self):
         size(80, 60)
         rect(5, 5, 30, 20)
