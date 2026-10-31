@@ -838,12 +838,18 @@ class Color(object):
         return "#"+s
 
 class Pattern(object):
-    def __init__(self, img):
-        if isinstance(img, Pattern):
+    def __init__(self, img, *coords, x=None, y=None, width=None, height=None):
+        placement = {k: v for k, v in dict(x=x, y=y, width=width, height=height).items() if v is not None}
+        placed = coords or placement
+        if isinstance(img, Pattern) and not placed:
             self._image = img._image
         else:
             from .image import Image
-            self._image = img.copy() if isinstance(img, Image) else Image(img) # tiled from where it would draw
+            src = img._image if isinstance(img, Pattern) else img
+            if placed:
+                self._image = Image(src, *coords, **placement) # placed as image(src, ...) would be
+            else:
+                self._image = src.copy() if isinstance(src, Image) else Image(src) # tiled from where it would draw
 
     @property
     def _nsColor(self):

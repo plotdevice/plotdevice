@@ -516,6 +516,25 @@ class DrawingTests(PlotDeviceTestCase):
             for dpr in (1.0, 2.0):
                 self.assertEqual(drawn(Pattern(img), box, dpr), drawn(img, None, dpr), (path, dpr))
 
+    def test_patterns_take_images_placement(self):
+        # Pattern(src, x, y, width=...) tiles as an image(src, x, y, width=...) fill does
+        from plotdevice import _ctx
+        from Quartz import CGDataProviderCopyData, CGImageGetDataProvider
+        def drawn(paint):
+            clear(all)
+            size(100, 100)
+            fill(paint)
+            rect(0, 0, 100, 100)
+            frame = _ctx.canvas.commit()
+            return memoryview(CGDataProviderCopyData(CGImageGetDataProvider(frame._render_to_cgimage(1.0, 2.0)))).tobytes()
+        path = 'tests/_in/plaid.png'
+        self.assertEqual(drawn(Pattern(path, 13, 7, width=40)), drawn(image(path, 13, 7, width=40, plot=False)))
+        img = image(path, 50, 50, width=30, plot=False)
+        self.assertEqual(drawn(Pattern(img, 13, 7)), drawn(image(img, 13, 7, plot=False))) # overriding its own place
+        self.assertEqual(drawn(Pattern(Pattern(path), x=5)), drawn(image(path, x=5, plot=False)))
+        with self.assertRaises(TypeError):
+            Pattern(path, angle=45)
+
     def test_vector_patterns_stay_vectors_in_pdfs(self):
         # svg, pdf & canvas patterns draw their shapes rather than a bitmap
         import re
