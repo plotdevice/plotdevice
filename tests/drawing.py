@@ -563,12 +563,12 @@ class DrawingTests(PlotDeviceTestCase):
         background(None)
         with shadow('black', blur=4, offset=3):
             oval(15, 15, 40, 40, fill='teal')
-        snapshot = image(_ctx.canvas, 0, 0, plot=False)
+        snapshot = plot(_ctx.canvas, 0, 0)
         clear(all)
         size(200, 150)
         background('white')
         with clip(rect(10, 10, 150, 120, plot=False)):
-            rect(0, 0, 200, 150, fill=Pattern(image(snapshot, 10, 10, width=150, plot=False)))
+            rect(0, 0, 200, 150, fill=Pattern(snapshot, 10, 10, width=150))
         frame = _ctx.canvas.commit()
         bitmap = memoryview(CGDataProviderCopyData(CGImageGetDataProvider(frame._render_to_cgimage(1.0, 2.0)))).tobytes()
         doc = CGPDFDocumentCreateWithProvider(CGDataProviderCreateWithCFData(frame._getImageData('pdf')))
@@ -578,6 +578,24 @@ class DrawingTests(PlotDeviceTestCase):
         CGContextDrawPDFPage(ctx, CGPDFDocumentGetPage(doc, 1))
         pdf = memoryview(CGDataProviderCopyData(CGImageGetDataProvider(CGBitmapContextCreateImage(ctx)))).tobytes()
         self.assertLessEqual(max(abs(a - b) for a, b in zip(bitmap, pdf)), 8)
+
+    def test_canvases_tile_vectors_and_their_images_bitmaps(self):
+        # fill(canvas) draws its shapes into the tiles, fill(image(canvas)) its 2x snapshot
+        import re
+        from plotdevice import _ctx
+        size(60, 40)
+        background(None)
+        oval(5, 5, 30, 30, fill='teal')
+        canvas = _ctx.canvas
+        vectors, bitmap = Pattern(canvas), Pattern(image(canvas, plot=False))
+        for paint, rasterized in ((vectors, False), (bitmap, True)):
+            clear(all)
+            size(200, 200)
+            rect(20, 20, 160, 160, fill=paint)
+            pdf = bytes(_ctx.canvas.commit()._getImageData('pdf'))
+            self.assertEqual(bool(re.findall(rb'/Subtype\s*/Image', pdf)), rasterized)
+        with self.assertRaisesRegex(DeviceError, "takes an image as its only argument"):
+            fill(canvas, 'red')
 
     def test_fills_from_one_image_share_a_tile(self):
         # each fill() makes a new Pattern, but they all draw the image's one tile

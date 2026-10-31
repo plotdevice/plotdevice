@@ -393,13 +393,13 @@ class ColorTests(PlotDeviceTestCase):
             text('Hi', 4, 34, size=18, fill='blue')
         size(40, 40)
         scene()
-        snapshot = Image(_ctx.canvas)
+        tile = Pattern(_ctx.canvas)
         for colors in (CMYK, FOGRA39):
             clear(all)
             scene()
             export(join(self.tmp, 'direct.tiff'), colors=colors)
             clear(all)
-            rect(0, 0, 40, 40, fill=Pattern(snapshot))
+            rect(0, 0, 40, 40, fill=tile)
             export(join(self.tmp, 'pattern.tiff'), colors=colors)
             self.assertEqual(_image(join(self.tmp, 'pattern.tiff')), _image(join(self.tmp, 'direct.tiff')), colors)
 

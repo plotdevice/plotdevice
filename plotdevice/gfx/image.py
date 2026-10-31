@@ -24,9 +24,6 @@ from . import _ns_context, _cg_port, _frame, _committing, _pdf_doc
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
 
-class FrameImageRep(NSBitmapImageRep):
-    frame = None # the committed canvas this bitmap shows
-
 _ctx = None
 __all__ = ("Image", 'ImageWriter', 'HEVC', 'H264', 'PRORES')
 
@@ -394,17 +391,23 @@ class Snapshot(Image):
 
     def __init__(self, src, *coords, **kwargs):
         super(Image, self).__init__(**kwargs)
-        self._source = src.commit() if hasattr(src, 'commit') else src # the canvas as it was plotted
-        self._canvas = self._source # the canvas in the colors of the frame it's eventually drawn in
-        self._tiles = {} # CGColors containing pattern tiles (for using the snapshot as a fill/stroke/background)
+        if isinstance(src, Snapshot):
+            # inherit cached tiles as well as content
+            self._source, self._shadowed, self._tiles = src._source, src._shadowed, src._tiles
+            for attr in ['x','y','width','height']:
+                setattr(self, attr, getattr(src, attr))
+        else:
+            self._source = src.commit() if hasattr(src, 'commit') else src # the canvas as it was plotted
+            self._tiles = {} # CGColors containing pattern tiles (for using the snapshot as a fill/stroke/background)
 
-        # check for nested grobs with shadows (which layer drawing doesn't automatically scale)
-        nested, self._shadowed = list(self._source.grobs), False
-        while nested and not self._shadowed:
-            grob = nested.pop()
-            effects = grob if isinstance(grob, Frob) else getattr(grob, '_effects', None)
-            self._shadowed = getattr(effects, '_fx', {}).get('shadow') is not None or getattr(grob, '_shadowed', False)
-            nested.extend(grob.contents if isinstance(grob, Frob) else ())
+            # check for nested grobs with shadows (which layer drawing doesn't automatically scale)
+            nested, self._shadowed = list(self._source.grobs), False
+            while nested and not self._shadowed:
+                grob = nested.pop()
+                effects = grob if isinstance(grob, Frob) else getattr(grob, '_effects', None)
+                self._shadowed = getattr(effects, '_fx', {}).get('shadow') is not None or getattr(grob, '_shadowed', False)
+                nested.extend(grob.contents if isinstance(grob, Frob) else ())
+        self._canvas = self._source # the canvas in the colors of the frame it's eventually drawn in
 
         if coords:
             self._frame._parse(coords)

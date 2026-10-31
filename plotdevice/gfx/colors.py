@@ -844,12 +844,14 @@ class Pattern(object):
         if isinstance(img, Pattern) and not placed:
             self._image = img._image
         else:
-            from .image import Image
+            from .image import Image, Snapshot
             src = img._image if isinstance(img, Pattern) else img
-            if placed:
-                self._image = Image(src, *coords, **placement) # placed as image(src, ...) would be
+            if isinstance(src, Image) and not placed:
+                self._image = src.copy() # tiled from where it would draw
+            elif isinstance(src, Snapshot) or hasattr(src, 'commit'):
+                self._image = Snapshot(src, *coords, **placement) # a canvas tiles its vectors
             else:
-                self._image = src.copy() if isinstance(src, Image) else Image(src) # tiled from where it would draw
+                self._image = Image(src, *coords, **placement) # placed as image(src, ...) would be
 
     @property
     def _nsColor(self):
@@ -869,13 +871,16 @@ class Pattern(object):
             pass
 
         # the tile draws the canvas's grobs/image's vector rep (avoiding the NSImage which would rasterize it)
-        from .image import PDSVGImageRep, FrameImageRep
-        size = self._image._nsImage.size()
-        cmyk = frame._cmyk_space if frame is not None else None
-        reps = self._image._nsImage_as(cmyk).representations()
-        vectors = [r for r in reps if isinstance(r, (NSPDFImageRep, PDSVGImageRep))]
-        rep = vectors[0] if vectors else max(reps, key=lambda r: r.pixelsWide() * r.pixelsHigh(), default=None)
-        snapshot = rep.frame if isinstance(rep, FrameImageRep) else None
+        from .image import PDSVGImageRep, Snapshot
+        snapshot = self._image._canvas if isinstance(self._image, Snapshot) else None
+        if snapshot is not None:
+            size, vectors, rep = snapshot.pagesize, [], None
+        else:
+            size = self._image._nsImage.size()
+            cmyk = frame._cmyk_space if frame is not None else None
+            reps = self._image._nsImage_as(cmyk).representations()
+            vectors = [r for r in reps if isinstance(r, (NSPDFImageRep, PDSVGImageRep))]
+            rep = vectors[0] if vectors else max(reps, key=lambda r: r.pixelsWide() * r.pixelsHigh(), default=None)
         filling = frame is not None and snapshot is not None
         if filling and (frame.colors, frame.format) != (snapshot.colors, snapshot.format):
             from ..context import Frame

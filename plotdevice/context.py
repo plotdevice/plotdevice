@@ -15,7 +15,7 @@ from .gfx.typography import Layout
 from .gfx.effects import Frob, _commit_all
 from .gfx import *
 from .gfx.colors import Press, _named, _output_colors, _output_space, _output_mode, _INKS
-from .gfx.image import FrameImageRep, Snapshot
+from .gfx.image import Snapshot
 from . import gfx, lib, util, Halted, DeviceError
 
 __all__ = ('Context', 'Canvas')
@@ -862,10 +862,12 @@ class Context(object):
 
         src = args[0]
         is_path = isinstance(src, str) and (src.startswith('http') or exists(expanduser(src)))
-        if isinstance(src, (Image, Pattern)) or is_path:
+        if isinstance(src, (Image, Pattern, Canvas)) or is_path:
             if len(args) > 1 or kwargs:
                 badimage = "%s() takes an image as its only argument" % command
                 raise DeviceError(badimage)
+        if isinstance(src, Canvas):
+            return Pattern(src) # tiles its vectors as of now
         if isinstance(src, Image):
             self.canvas.clear(src) # remove the image drawn as a side effect by `image(pth)`
             return Pattern(src) # use the image for just the pattern instead
@@ -1995,8 +1997,7 @@ class Frame(object):
     @property
     def _nsImage(self):
         # convert to a 2x bitmap in P3
-        bitmap = FrameImageRep.alloc().initWithCGImage_(self._render_to_cgimage(1.0, 2.0))
-        bitmap.frame = self # so patterns can draw its vectors
+        bitmap = NSBitmapImageRep.alloc().initWithCGImage_(self._render_to_cgimage(1.0, 2.0))
         bitmap.setSize_(self.pagesize)
         img = NSImage.alloc().initWithSize_(self.pagesize)
         img.addRepresentation_(bitmap)
