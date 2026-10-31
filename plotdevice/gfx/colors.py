@@ -331,11 +331,6 @@ class Color(object):
                     self._cache['space'] = space
                     self._updateCmyk()
             return
-        elif params == 1 and isinstance(args[0], Pattern):  # Pattern object
-            pattern = args[0]._nsColor
-            self._rgb_ = self._cmyk_ = self._src = pattern.CGColor()
-            self._cache = {'pattern':pattern, 'space':space}
-            return
         elif params == 1 and isinstance(args[0], Gradient): # Gradient (use first shade)
             self._share(args[0]._colors[0])
             return
@@ -449,9 +444,7 @@ class Color(object):
         try:
             return self._cache['ns', mode]
         except KeyError:
-            if self._cache.get('pattern'):
-                ns = self._cache['pattern']
-            elif mode == RGB:
+            if mode == RGB:
                 ns = NSColor.colorWithCGColor_(self._rgb_as(P3))
             elif mode == CMYK:
                 ns = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(*self._values(CMYK))
@@ -854,11 +847,6 @@ class Pattern(object):
                 self._image = Image(src, *coords, **placement) # placed as image(src, ...) would be
 
     @property
-    def _nsColor(self):
-        # text fills still access the image as a bitmap
-        return NSColor.colorWithPatternImage_(self._image._nsImage)
-
-    @property
     def cgColor(self):
         # cache 'tiles' (based on the pattern's matrix & ink) on the source Image itself
         frame = _frame.get()
@@ -936,9 +924,6 @@ class Pattern(object):
         for param, val in self._rollback.items():
             statevar = {"fill":"_fillcolor", "stroke":"_strokecolor"}[param]
             setattr(_ctx, statevar, val)
-
-    def set(self):
-        self._nsColor.set()
 
     def copy(self):
         return Pattern(self)

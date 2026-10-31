@@ -11,7 +11,7 @@ from ..lib.cocoa import *
 from plotdevice import DeviceError
 from .typography import *
 from .geometry import Transform, Region, Size, Point, Pair, IDENTITY, _pivot, _hull
-from .colors import Color
+from .colors import Color, Pattern
 from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, FrameMixin, Grob
 from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, Element, read
@@ -45,6 +45,7 @@ objc.loadBundleFunctions(NSBundle.bundleWithPath_('/System/Library/Frameworks/Co
     ('CTRunGetAttributes', b'@@'),
     ('CTRunGetStringRange', b'{CFRange=qq}@'),
     ('CTLineDraw', b'v@^{CGContext=}'),
+    ('CTRunDraw', b'v@^{CGContext=}{CFRange=qq}'),
     ('CTTypesetterCreateWithAttributedString', b'@@', '', {'retval': {'already_retained': True}}),
     ('CTTypesetterSuggestLineBreak', b'q@qd'),
 ])
@@ -74,7 +75,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     # from EffectsMixin:   alpha blend shadow
     # from FrameMixin:    x y width height
     # from StyleMixin:     stylesheet fill _parse_style()
-    stateAttrs = ('_nodes', '_nsmode')
+    stateAttrs = ('_nodes', '_nsmode', '_patterns')
     opts = ('str', 'xml', 'src')
 
     def __init__(self, *args, **kwargs):
@@ -105,6 +106,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         # maintain a lookup table of nodes within xml input
         self._nodes = {}
+        self._patterns = {} # pattern fills, keyed by their runs' PDColor
 
         # use the first positional arg if no xml/str/src kwarg was passed
         if not any(o in kwargs for o in self.opts) and len(args):
@@ -250,7 +252,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         # set up TextKit for complex/multiline runs
         if self._engine is not None:
             return
-        self._engine = NSLayoutManager.alloc().init()
+        self._engine = foundry.PDLayoutManager.alloc().init()
         self._engine.setUsesScreenFonts_(False)
         self._engine.setUsesFontLeading_(False)
         self._engine.setBackgroundLayoutEnabled_(False) # laid out at commit
@@ -391,10 +393,16 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             fill = layer.get('fill', fill)
             margin = layer.get('margin', margin)
 
+        # a pattern run's PDColor is its identifies its tiles (the black NSColor is just a placeholder)
+        pattern = isinstance(fill, Pattern)
+        color = Color('black' if pattern else fill)
+        paint = str(id(fill)) if pattern else color._src
+        if pattern:
+            self._patterns[paint] = fill
+
         # reuse attrs for the same font, fill, & styles
-        color = Color(fill)
         head, tail = map(self._to_px, margin)
-        key = (_inkmode(), color._src, head, tail, self._font._key)
+        key = (_inkmode(), paint, head, tail, self._font._key)
         key += tuple(tuple(sorted((k, v) for k, v in layer.items() if k not in ('fill', 'margin'))) for layer in layers)
         attrs = foundry.LIBRARY.recall(key)
         if attrs is not None:
@@ -448,7 +456,9 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             kern = (spec['tracking'] * font.size)/1000.0
 
         # build the features dict out of objc references since TextKit caches them
-        attrs = dict(NSFont=font._nsFont, PDColor=color._src, NSColor=color.nsColor, NSParagraphStyle=graf, NSKern=kern)
+        attrs = dict(NSFont=font._nsFont, PDColor=paint, NSColor=color.nsColor, NSParagraphStyle=graf, NSKern=kern)
+        if pattern:
+            attrs['CTForegroundColorFromContext'] = True # coretext uses the context's color (set in _draw)
         return foundry.LIBRARY.remember(key, NSDictionary.dictionaryWithDictionary_(attrs))
 
     def _colorize(self):
@@ -459,8 +469,8 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             end = self._store.length()
             while at < end:
                 clr, rng = self._store.attribute_atIndex_effectiveRange_('PDColor', at, None)
-                # skip patterns (their NSColors hold the tile, not color components in need of conversion)
-                if CGColorSpaceGetModel(CGColorGetColorSpace(clr)) != kCGColorSpaceModelPattern:
+                # skip pattern runs (since PDColor is just the pattern's key, not a real color)
+                if not isinstance(clr, str):
                     self._store.addAttribute_value_range_('NSColor', Color(clr).nsColor, rng)
                 at += rng.length
             self._nsmode = mode
@@ -868,13 +878,23 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
                     port = _cg_port()
                     CGContextSetTextMatrix(port, CGAffineTransformMake(1, 0, 0, -1, 0, 0))
                     CGContextSetTextPosition(port, self._line.x, self._line.baseline)
-                    CTLineDraw(self._line.ctline, port)
+                    if not self._patterns:
+                        CTLineDraw(self._line.ctline, port)
+                    else:
+                        for run in CTLineGetGlyphRuns(self._line.ctline):
+                            # for pattern runs, pass the tile as its CGColor
+                            pattern = self._patterns.get(CTRunGetAttributes(run)['PDColor'])
+                            if pattern is not None:
+                                CGContextSetFillColorWithColor(port, pattern.cgColor)
+                            CTRunDraw(run, port, (0, 0))
                 else:
-                    # typeset with TextKit
+                    # typeset with TextKit (and let PDLayoutManager handle patterned fills)
+                    self._engine.setPatternFills_({key: pattern.cgColor for key, pattern in self._patterns.items()})
                     for block in self._blocks:
                         px_offset = self._to_px(block.offset)
                         px_offset.x -= block._shift
                         self._engine.drawGlyphsForGlyphRange_atPoint_(block._glyphs, px_offset)
+                    self._engine.setPatternFills_(None)
 
     @property
     def path(self):

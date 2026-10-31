@@ -403,6 +403,19 @@ class ColorTests(PlotDeviceTestCase):
             export(join(self.tmp, 'pattern.tiff'), colors=colors)
             self.assertEqual(_image(join(self.tmp, 'pattern.tiff')), _image(join(self.tmp, 'direct.tiff')), colors)
 
+    def test_canvas_pattern_text_draws_in_the_exports_colors(self):
+        # text filled with a canvas tile resolves its colors as the export does
+        size(20, 20)
+        rect(0, 0, 20, 20, fill=Color('cmyk', 0, 1, 1, 0))
+        tile = Pattern(_ctx.canvas)
+        for colors in (CMYK, FOGRA39):
+            for paint, name in ((tile, 'tiled.tiff'), (Color('cmyk', 0, 1, 1, 0), 'direct.tiff')):
+                clear(all)
+                size(220, 120)
+                text('Hm', 10, 90, size=96, font='Helvetica', weight='bold', fill=paint)
+                export(join(self.tmp, name), colors=colors)
+            self.assertEqual(_image(join(self.tmp, 'tiled.tiff')), _image(join(self.tmp, 'direct.tiff')), colors)
+
     def test_plotted_canvases_draw_in_the_exports_colors(self):
         # a canvas plotted before the export resolves its colors as the export does
         def scene():

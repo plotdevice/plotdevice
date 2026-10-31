@@ -37,7 +37,7 @@ from Quartz import CALayer, CGAffineTransformConcat, CGAffineTransformInvert, CG
                    kCGBlendModeScreen, kCGBlendModeSoftLight, kCGBlendModeSourceAtop, kCGBlendModeSourceIn, \
                    kCGBlendModeSourceOut, kCGBlendModeXOR, kCGColorSpaceDisplayP3, kCGColorSpaceExtendedDisplayP3, \
                    kCGColorSpaceExtendedSRGB, kCGColorSpaceGenericCMYK, kCGColorSpaceModelCMYK, \
-                   kCGColorSpaceModelPattern, kCGColorSpaceModelRGB, kCGColorSpaceSRGB, kCGImageAlphaNone, \
+                   kCGColorSpaceModelRGB, kCGColorSpaceSRGB, kCGImageAlphaNone, \
                    kCGImageAlphaNoneSkipFirst, kCGImageAlphaNoneSkipLast, kCGImageAlphaPremultipliedFirst, \
                    kCGImageAlphaPremultipliedLast, kCGImageDestinationLossyCompressionQuality, \
                    kCGImagePropertyDPIHeight, kCGImagePropertyDPIWidth, kCGInterpolationHigh, kCGLineCapButt, \

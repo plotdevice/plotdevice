@@ -14,3 +14,7 @@
 + (NSArray *)lineFragmentsInRange:(NSRange)char_range withLayout:(NSLayoutManager *)layout;
 + (NSArray *)textContainersInRange:(NSRange)rng withLayout:(NSLayoutManager *)layout;
 @end
+
+@interface PDLayoutManager : NSLayoutManager
+@property (nonatomic, copy) NSDictionary *patternFills; // the CGColor for each patterned run (keyed by PDColor)
+@end

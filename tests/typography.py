@@ -539,6 +539,70 @@ class TypographyTests(PlotDeviceTestCase):
         self.assertEqual({tuple(b.size) for b in t.blocks}, {(4, 1.5)})
         self.assertEqual({b._grid.dpx for b in t.blocks}, {t._grid.dpx})
 
+    def test_pattern_fills_tile_text_as_they_do_shapes(self):
+        # glyphs show the tiles a shape filled with the same pattern would, on a line (coretext) and in a block (textkit)
+        from plotdevice import _ctx
+        from Quartz import CGDataProviderCopyData, CGImageGetDataProvider
+        def drawn(dpr, paint, outlined, at):
+            clear(all)
+            size(220, 120)
+            background('white')
+            glyphs = text('Hm', *at, size=96, font='Helvetica', weight='bold', fill='black' if outlined else paint, plot=not outlined)
+            if outlined:
+                with clip(glyphs.path):
+                    rect(0, 0, 220, 120, fill=paint)
+            return bytes(CGDataProviderCopyData(CGImageGetDataProvider(_ctx.canvas.commit()._render_to_cgimage(1.0, dpr))))
+        size(40, 40)
+        oval(5, 5, 30, 30, fill='teal')
+        tile = Pattern(_ctx.canvas)
+        plaid = 'tests/_in/plaid.png'
+        for at in ((10, 90), (10, 10, 180)): # one line, then a block
+            for dpr in (1.0, 2.0):
+                w, h = int(220 * dpr), int(120 * dpr)
+                mask = drawn(dpr, 'black', False, at)
+                dark = [max(mask[i * 4:i * 4 + 3]) < 8 for i in range(w * h)]
+                inside = [i for i in range(w * h) if all(dark[j] for j in (i - 2, i + 2, i - 2 * w, i + 2 * w) if 0 <= j < w * h)]
+                for paint in (Pattern(plaid), Pattern(plaid, 13, 7, width=40), tile):
+                    got, want = drawn(dpr, paint, False, at), drawn(dpr, paint, True, at)
+                    off = sum(1 for i in inside if max(abs(got[i * 4 + k] - want[i * 4 + k]) for k in range(3)) > 8)
+                    self.assertLess(off, len(inside) / 100, (at, dpr)) # a bitmap tile's seams may resample differently
+
+    def test_pattern_filled_text_stays_vector_in_pdfs(self):
+        # svg & canvas patterns fill glyphs as vectors, and the text stays text
+        import re
+        from plotdevice import _ctx
+        size(40, 40)
+        oval(5, 5, 30, 30, fill='teal')
+        tile = Pattern(_ctx.canvas)
+        for paint in (tile, Pattern('tests/_in/vector-fill.svg', width=30)):
+            for at in ((10, 90), (10, 10, 180)):
+                clear(all)
+                size(220, 120)
+                text('Hm', *at, size=96, fill=paint)
+                pdf = bytes(_ctx.canvas.commit()._getImageData('pdf'))
+                self.assertIsNone(re.search(rb'/Subtype\s*/Image', pdf), at)
+                self.assertIsNotNone(re.search(rb'/Type\s*/Font\b', pdf), at)
+
+    def test_pattern_fills_in_styles(self):
+        # a style's pattern fill draws as an inline one does, beside runs in other colors
+        from plotdevice import _ctx
+        from Quartz import CGDataProviderCopyData, CGImageGetDataProvider
+        plaid = Pattern('tests/_in/plaid.png')
+        def drawn(**kwargs):
+            clear(all)
+            size(220, 120)
+            background('white')
+            stylesheet('plaid', fill=plaid)
+            text(10, 90, size=96, font='Helvetica', weight='bold', **kwargs)
+            return bytes(CGDataProviderCopyData(CGImageGetDataProvider(_ctx.canvas.commit()._render_to_cgimage(1.0, 1.0))))
+        inline = drawn(str='Hm', fill=plaid)
+        self.assertEqual(drawn(xml='<plaid>Hm</plaid>'), inline)
+        mixed = drawn(xml='<plaid>H</plaid>m', fill='red')
+        split = 10 + int(measure('H', size=96, font='Helvetica', weight='bold').width) - 2
+        left = lambda px: [px[(y * 220 + x) * 4:(y * 220 + x) * 4 + 4] for y in range(120) for x in range(split)]
+        self.assertEqual(left(mixed), left(inline))
+        self.assertIn(bytes([0, 0, 255, 255]), [mixed[i:i + 4] for i in range(split * 4, len(mixed), 4)]) # red (bgra)
+
 def suite():
   suite = unittest.TestSuite()
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(TypographyTests))

@@ -378,7 +378,7 @@ class StyleMixin(Grob):
         spec = dict(self.stylesheet._styles.get( opts.get('style'), {} ))
         spec.update(fontspec(*fontargs, **fontopts))
         if 'fill' in opts:
-            spec['fill'] = Color(opts['fill'])
+            spec['fill'] = opts['fill'] if isinstance(opts['fill'], Pattern) else Color(opts['fill'])
         return spec
 
     def _update_style(self, *args, **kwargs):

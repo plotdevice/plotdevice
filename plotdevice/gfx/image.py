@@ -437,7 +437,7 @@ class Snapshot(Image):
 
     @property
     def _nsImage(self):
-        # return a 2x bitmap for use in text fills
+        # return a 2x bitmap for use by image(snapshot)
         return self._canvas._nsImage
 
     @property
