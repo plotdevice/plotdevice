@@ -564,14 +564,23 @@ class ColorTests(PlotDeviceTestCase):
         self.assertIn(b'1 0 0 sc', b''.join(streams))
 
     def test_icc_exports_are_in_the_profile(self):
+        from Foundation import NSURL
         from Quartz import (CGColorSpaceCreateWithICCData, CGColorSpaceCreateWithName, kCGColorSpaceSRGB, CGColorCreate,
-                            CGColorCreateCopyByMatchingToColorSpace, kCGRenderingIntentDefault, CGColorGetComponents)
+                            CGColorCreateCopyByMatchingToColorSpace, kCGRenderingIntentDefault, CGColorGetComponents,
+                            CGImageSourceCreateWithURL, CGImageSourceCreateImageAtIndex, CGImageGetColorSpace,
+                            CGColorSpaceCopyICCData)
         profile = '/System/Library/ColorSync/Profiles/AdobeRGB1998.icc'
         self._two_swatches()
         path = join(self.tmp, 'adobe.png')
         export(path, colors=profile)
         space, data, row, bpp = _image(path)
-        self.assertEqual(space, 'kCGColorSpaceAdobeRGB1998')
+        # macos 26 re-signs png profiles as apple's, so compare all but the header and copyright
+        def tags(icc):
+            count = int.from_bytes(icc[128:132], 'big')
+            entries = [icc[at:at + 12] for at in range(132, 132 + 12 * count, 12)]
+            return {e[:4]: icc[int.from_bytes(e[4:8], 'big'):][:int.from_bytes(e[8:12], 'big')] for e in entries if e[:4] != b'cprt'}
+        img = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(path), None), 0, None)
+        self.assertEqual(tags(bytes(CGColorSpaceCopyICCData(CGImageGetColorSpace(img)))), tags(open(profile, 'rb').read()))
         green = CGColorCreate(CGColorSpaceCreateWithName(kCGColorSpaceSRGB), (0x33 / 255, 0xcc / 255, 0x88 / 255, 1))
         adobe = CGColorCreateCopyByMatchingToColorSpace(CGColorSpaceCreateWithICCData(open(profile, 'rb').read()), kCGRenderingIntentDefault, green, None)
         want = tuple(round(v * 255) for v in CGColorGetComponents(adobe).as_tuple(4)[:3])
