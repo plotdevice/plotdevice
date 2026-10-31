@@ -456,6 +456,12 @@ class Snapshot(Image):
         return self._canvas._nsImage
 
     @property
+    def _outline(self):
+        # the canvas's shapes, as a vector stencil
+        from .bezier import Bezier
+        return Bezier(self._canvas._traced(self._canvas.grobs))
+
+    @property
     def size(self):
         return self._from_px(self._canvas.pagesize)
 

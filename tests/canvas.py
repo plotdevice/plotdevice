@@ -338,14 +338,6 @@ class FrameTests(PlotDeviceTestCase):
                 pdf = bytes(_ctx.canvas.commit()._getImageData('pdf'))
                 self.assertIsNone(re.search(rb'/Subtype\s*/Image', pdf), src)
 
-    def test_plotted_canvas_isnt_a_stencil(self):
-        size(80, 60)
-        rect(5, 5, 30, 20)
-        snapshot = plot(_ctx.canvas, 0, 0)
-        with self.assertRaisesRegex(DeviceError, "can't be a clip"):
-            with clip(snapshot):
-                pass
-
 def _pump(until, timeout=5.0):
     """Run the main run loop until `until()` holds"""
     from Foundation import NSRunLoop, NSDate, NSDefaultRunLoopMode

@@ -378,13 +378,14 @@ class Stencil(Frob):
         from .text import Text
         from .bezier import Bezier
         from .image import Image, Snapshot
-        if isinstance(stencil, Snapshot):
-            badstencil = "a plotted canvas can't be a clip() or mask() stencil (use image(canvas) instead)"
-            raise DeviceError(badstencil)
+        if hasattr(stencil, 'commit'):
+            stencil = Snapshot(stencil) # wrap raw canvas references in a Snapshot
+        if isinstance(stencil, Snapshot) and not channel:
+            channel = 'outline' # trace vector shapes unless a bitmap channel is selected
         if isinstance(stencil, Text):
             self.path = stencil.path
             self.evenodd = invert
-        if isinstance(stencil, Bezier):
+        elif isinstance(stencil, Bezier):
             self.path = stencil.copy()
             self.evenodd = invert
         elif isinstance(stencil, Image):
@@ -406,6 +407,9 @@ class Stencil(Frob):
                 self.channel = channel
                 self.invert = invert
                 self.bmp = stencil
+        else:
+            badstencil = "clip() and mask() take a Bezier, Image, Text, or Canvas stencil (not %s)" % type(stencil).__name__
+            raise DeviceError(badstencil)
 
     def set(self):
         port = _cg_port()
