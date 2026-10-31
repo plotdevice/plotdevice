@@ -20,6 +20,7 @@ __all__ = ["font_family", "font_encoding", "font_face", "best_face",
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic', 'ascent', 'descent'])
 Slug = namedtuple("Slug", ["frame", "bounds", "baseline", "span"])
 Vandercook = objc.lookUpClass('Vandercook')
+PDLayoutManager = objc.lookUpClass('PDLayoutManager')
 
 # introspection methods for postscript names & families
 

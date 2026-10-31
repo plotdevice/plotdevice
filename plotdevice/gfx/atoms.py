@@ -6,7 +6,7 @@ from collections import namedtuple, defaultdict
 from .. import DeviceError
 from ..lib.foundry import fontspec, LIBRARY
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
-from .colors import Color, Gradient
+from .colors import Color, Gradient, Pattern
 from .geometry import Transform, Dimension, Region, Pair, CENTER, CORNER
 from .effects import Effect
 
@@ -52,7 +52,7 @@ class Bequest(type):
         super(Bequest, cls).__init__(name, bases, dct)
         if not (name=='Grob' or name.endswith('Mixin')):
             info = defaultdict(set)
-            for typ in (cls,)+bases:
+            for typ in cls.__mro__:
                 info['_inherit'].update(getattr(typ,'ctxAttrs',[]))
                 info['_state'].update(getattr(typ,'stateAttrs',[]))
                 info['_opts'].update(getattr(typ,'opts',[]))
@@ -236,7 +236,7 @@ class ColorMixin(Grob):
     def _get_fill(self):
         return self._fillcolor
     def _set_fill(self, *args):
-        if isinstance(args[0], Gradient):
+        if isinstance(args[0], (Gradient, Pattern)):
             self._fillcolor = args[0].copy()
         else:
             self._fillcolor = None if args[0] is None else Color(*args)
@@ -245,7 +245,7 @@ class ColorMixin(Grob):
     def _get_stroke(self):
         return self._strokecolor
     def _set_stroke(self, *args):
-        if isinstance(args[0], Gradient):
+        if isinstance(args[0], (Gradient, Pattern)):
             self._strokecolor = args[0].copy()
         else:
             self._strokecolor = None if args[0] is None else Color(*args)
@@ -378,7 +378,7 @@ class StyleMixin(Grob):
         spec = dict(self.stylesheet._styles.get( opts.get('style'), {} ))
         spec.update(fontspec(*fontargs, **fontopts))
         if 'fill' in opts:
-            spec['fill'] = Color(opts['fill'])
+            spec['fill'] = opts['fill'] if isinstance(opts['fill'], Pattern) else Color(opts['fill'])
         return spec
 
     def _update_style(self, *args, **kwargs):

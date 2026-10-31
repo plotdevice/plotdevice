@@ -86,22 +86,34 @@ _casting = ContextVar('casting', default=None)
 # the frame being committed
 _committing = ContextVar('committing', default=None)
 
+# the PDF being drawn and its plotted-canvas layers (if any)
+_pdf_doc = ContextVar('pdf_doc', default=(None, None))
+
 @contextmanager
 def _rendering(frame, within=None):
     token = _frame.set(frame)
     ctm_token = _base_ctm.set(CGContextGetCTM(_cg_port()))
     cull_token = _culling.set(within)
+    clip_token = _clip_depth.set(0) # a pattern's tile starts its canvas outside any clip
+    cast_token = _casting.set(None) # ...and outside any shadow being cast
     try:
         yield
     finally:
+        _casting.reset(cast_token)
+        _clip_depth.reset(clip_token)
         _culling.reset(cull_token)
         _base_ctm.reset(ctm_token)
         _frame.reset(token)
 
 class _RenderLock(object):
-    """Serializes Core Graphics calls across threads"""
-    # renders run until their time slice elapses, then hand off to the next thread.
-    # only necessary because of FB25219467, which causes cross-thread glitches on aarch64
+    """Serializes Core Graphics calls across threads
+
+    Renders run until their time slice elapses, then hand off to the next thread.
+    This is only necessary because of FB25219467, which causes cross-thread
+    glitches on aarch64.
+
+    A canvas pattern's tile renders from inside a CG call, so whoever makes that
+    call holds the lock for it."""
     QUANTUM = 0.003 # 3 ms
 
     def __init__(self):

@@ -18,8 +18,9 @@ from ..util.readers import get_http_session, last_modified
 from ..lib.io import MovieExportSession, ImageExportSession, HEVC, H264, PRORES
 from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, _hull
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
-from .colors import RGB, CMYK, _output_mode, Press
-from . import _ns_context, _cg_port, _frame
+from .effects import Frob
+from .colors import _output_mode, Press
+from . import _ns_context, _cg_port, _frame, _committing, _pdf_doc
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
 
@@ -29,7 +30,7 @@ __all__ = ("Image", 'ImageWriter', 'HEVC', 'H264', 'PRORES')
 ### The bitmap/vector image-container (a.k.a. NSImage proxy) ###
 
 class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
-    stateAttrs = ('_nsImage',)
+    stateAttrs = ('_nsImage', '_tiles')
     opts = ('data', 'src', 'image')
 
     def __init__(self, *args, **kwargs):
@@ -86,6 +87,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         else:
             undefined = "Image requires either a source (path/url/Image) or image data"
             raise DeviceError(undefined)
+        self._tiles = getattr(src, '_tiles', {}) # pattern tiles by matrix & ink, shared with images made from this one
 
         # set the bounds (in phases)
         if isinstance(src, Image):
@@ -105,6 +107,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         # pull all state from the original object (rather than inheriting from _ctx)
         clone = Image.__new__(Image)
         clone._nsImage = self._nsImage # never edited in place
+        clone._tiles = self._tiles
         clone._frame = self._frame.copy()
         clone._transform = self._transform.copy()
         clone._effects = self._effects.copy()
@@ -357,6 +360,18 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             return (self.x * dpx, self.y * dpx, w0 * factor, h0 * factor)
         return _hull(self._screen_matrix, 0, 0, w0, h0)
 
+    def _nsImage_as(self, cmyk):
+        """The NSImage to draw, with a CMYK bitmap re-tagged as `cmyk` (keeping its numbers)"""
+        image = self._nsImage
+        if cmyk is not None:
+            # preserve numbers for cmyk bitmaps and relabel to match the current press profile
+            rep = next((r for r in image.representations() if isinstance(r, NSBitmapImageRep)), None)
+            cg = rep.CGImage() if rep is not None else None
+            if cg is not None and CGColorSpaceGetModel(CGImageGetColorSpace(cg)) == kCGColorSpaceModelCMYK:
+                image = NSImage.alloc().initWithCGImage_size_(CGImageCreateCopyWithColorSpace(cg, cmyk), image.size())
+                image.setFlipped_(True)
+        return image
+
     def _draw(self):
         """Draw an image on the given coordinates."""
 
@@ -364,19 +379,129 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             self._screen_transform.concat() # move the image into place via transforms
             with self.effects.applied(self): # apply any blend/alpha/shadow effects
                 NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
-                image = self._nsImage
                 frame = _frame.get()
-                if frame is not None and frame.outputmode == CMYK and frame.colors is not None:
-                    # preserve numbers for cmyk bitmaps and relabel to match the current press profile
-                    rep = next((r for r in image.representations() if isinstance(r, NSBitmapImageRep)), None)
-                    cg = rep.CGImage() if rep is not None else None
-                    if cg is not None and CGColorSpaceGetModel(CGImageGetColorSpace(cg)) == kCGColorSpaceModelCMYK:
-                        in_space = frame.press and frame.ink[1]
-                        space = Press.named[frame.press].space if in_space else CGColorSpaceCreateDeviceCMYK()
-                        image = NSImage.alloc().initWithCGImage_size_(CGImageCreateCopyWithColorSpace(cg, space), image.size())
-                        image.setFlipped_(True)
+                image = self._nsImage_as(frame._cmyk_space if frame is not None else None)
                 bounds = ((0,0), image.size()) # draw the image at (0,0)
-                image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
+                vector = next((r for r in image.representations() if isinstance(r, (NSPDFImageRep, PDSVGImageRep))), None)
+                if vector is None:
+                    image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
+                else:
+                    # draw svg & pdf reps directly, otherwise NSImage rasterizes them in layers and pattern cells
+                    port = _cg_port()
+                    if self.alpha < 1:
+                        CGContextSetAlpha(port, self.alpha)
+                        CGContextBeginTransparencyLayer(port, None)
+                    if isinstance(vector, NSPDFImageRep):
+                        # only pdfs need a manual y-axis flip
+                        CGContextTranslateCTM(port, 0, image.size().height)
+                        CGContextScaleCTM(port, 1, -1)
+                    vector.drawInRect_(bounds)
+                    if self.alpha < 1:
+                        CGContextEndTransparencyLayer(port)
+
+### a canvas plotted as vectors ###
+
+class Snapshot(Image):
+    stateAttrs = ('_canvas', '_source', '_shadowed')
+
+    def __init__(self, src, *coords, **kwargs):
+        super(Image, self).__init__(**kwargs)
+        if isinstance(src, Snapshot):
+            # inherit cached tiles as well as content
+            self._source, self._shadowed, self._tiles = src._source, src._shadowed, src._tiles
+            for attr in ['x','y','width','height']:
+                setattr(self, attr, getattr(src, attr))
+        else:
+            self._source = src.commit() if hasattr(src, 'commit') else src # the canvas as it was plotted
+            self._tiles = {} # CGColors containing pattern tiles (for using the snapshot as a fill/stroke/background)
+
+            # check for nested grobs with shadows (which layer drawing doesn't automatically scale)
+            nested, self._shadowed = list(self._source.grobs), False
+            while nested and not self._shadowed:
+                grob = nested.pop()
+                effects = grob if isinstance(grob, Frob) else getattr(grob, '_effects', None)
+                self._shadowed = getattr(effects, '_fx', {}).get('shadow') is not None or getattr(grob, '_shadowed', False)
+                nested.extend(grob.contents if isinstance(grob, Frob) else ())
+        self._canvas = self._source # the canvas in the colors of the frame it's eventually drawn in
+
+        if coords:
+            self._frame._parse(coords)
+        for k, v in kwargs.items():
+            if k in FrameMixin.opts:
+                setattr(self, k, v)
+
+    def copy(self):
+        clone = Snapshot.__new__(Snapshot)
+        clone._canvas, clone._source, clone._shadowed, clone._tiles = self._canvas, self._source, self._shadowed, self._tiles
+        clone._frame = self._frame.copy()
+        clone._transform = self._transform.copy()
+        clone._effects = self._effects.copy()
+        clone._grid, clone._transformmode = self._grid, self._transformmode
+        return clone
+
+    def _commit(self, held):
+        # resolve its colors as the frame being committed does
+        snapshot = self.copy() if held else self
+        frame = _committing.get()
+        recolor = frame is not None and (frame.colors, frame.format) != (self._canvas.colors, self._canvas.format)
+        if recolor:
+            from ..context import Frame
+            snapshot = snapshot if held else self.copy()
+            snapshot._canvas = Frame(self._source, frame.colors, frame.format)
+        return snapshot
+
+    @property
+    def _nsImage(self):
+        # return a 2x bitmap for use by image(snapshot)
+        return self._canvas._nsImage
+
+    @property
+    def _outline(self):
+        # the canvas's shapes, as a vector stencil
+        from .bezier import Bezier
+        return Bezier(self._canvas._traced(self._canvas.grobs))
+
+    @property
+    def size(self):
+        return self._from_px(self._canvas.pagesize)
+
+    def _render_box(self):
+        w0, h0 = self._canvas.pagesize
+        if tuple(self.transform.matrix) == IDENTITY:
+            dpx, factor = self._grid.dpx, self._scalefactor
+            return (self.x * dpx, self.y * dpx, w0 * factor, h0 * factor)
+        return _hull(self._screen_matrix, 0, 0, w0, h0)
+
+    def _draw(self):
+        with _ns_context():
+            self._screen_transform.concat() # position the snapshot
+            with self.effects.applied(self): # apply blend/alpha/shadow (if any)
+                # if this isn't a PDF, draw the grobs directly
+                (doc, layers), port = _pdf_doc.get(), _cg_port()
+                if doc is None or CGBitmapContextGetWidth(port) > 0:
+                    self._canvas.draw() # re-enters the render lock
+                    return
+
+                # in a PDF, draw into a layer once then reuse that reference for subsequent draws
+                ctm = CGContextGetCTM(port)
+                linear = (ctm.a, ctm.b, ctm.c, ctm.d, 0, 0) if self._shadowed else (1, 0, 0, -1, 0, 0)
+                w, h = self._canvas.pagesize
+                (bx, by), (bw, bh) = CGRectApplyAffineTransform(((0, 0), (w, h)), linear)
+                key = self._source, self._canvas.colors, self._canvas.format, linear
+                if key not in layers:
+                    layer = CGLayerCreateWithContext(doc, (bw, bh), None)
+                    ctx = CGLayerGetContext(layer)
+                    CGContextTranslateCTM(ctx, -bx, -by)
+                    CGContextConcatCTM(ctx, linear)
+                    NSGraphicsContext.saveGraphicsState()
+                    NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(ctx, True))
+                    try:
+                        self._canvas.draw()
+                    finally:
+                        NSGraphicsContext.restoreGraphicsState()
+                    layers[key] = layer
+                CGContextConcatCTM(port, CGAffineTransformInvert(linear))
+                CGContextDrawLayerInRect(port, ((bx, by), (bw, bh)), layers[key])
 
 ### context manager for calls to `with export(...)` ###
 

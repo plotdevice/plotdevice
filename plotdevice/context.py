@@ -15,6 +15,7 @@ from .gfx.typography import Layout
 from .gfx.effects import Frob, _commit_all
 from .gfx import *
 from .gfx.colors import Press, _named, _output_colors, _output_space, _output_mode, _INKS
+from .gfx.image import Snapshot
 from . import gfx, lib, util, Halted, DeviceError
 
 __all__ = ('Context', 'Canvas')
@@ -861,10 +862,12 @@ class Context(object):
 
         src = args[0]
         is_path = isinstance(src, str) and (src.startswith('http') or exists(expanduser(src)))
-        if isinstance(src, (Image, Pattern)) or is_path:
+        if isinstance(src, (Image, Pattern, Canvas)) or is_path:
             if len(args) > 1 or kwargs:
                 badimage = "%s() takes an image as its only argument" % command
                 raise DeviceError(badimage)
+        if isinstance(src, Canvas):
+            return Pattern(src) # tiles its vectors as of now
         if isinstance(src, Image):
             self.canvas.clear(src) # remove the image drawn as a side effect by `image(pth)`
             return Pattern(src) # use the image for just the pattern instead
@@ -1065,6 +1068,9 @@ class Context(object):
         a raster image, a rect the size of the image) and used as the mask directly,
         rather than rasterizing a bitmap mask.
 
+        A canvas, or plot(canvas, ...) reference, masks with the outline of its vector
+        shapes. If channel is set to 'alpha' or 'black', it will be rasterized first.
+
         See also: clip()
         """
         cp = self.beginclip(stencil, mask=True, channel=channel)
@@ -1088,6 +1094,9 @@ class Context(object):
         `channel` is 'outline', the image's vector shapes are traced into a Bezier
         path (or, for a raster image, a rect the size of the image) and used as the
         clip directly, rather than rasterizing a bitmap mask.
+
+        A canvas, or plot(canvas, ...) reference, masks with the outline of its vector
+        shapes. If channel is set to 'alpha' or 'black', it will be rasterized first.
 
         See also: mask()
         """
@@ -1477,8 +1486,10 @@ class Context(object):
             return self._autoplot
         elif obj in (True,False):
             return PlotContext(self, auto=obj)
+        elif isinstance(obj, Canvas):
+            obj = Snapshot(obj) # a vector clone of the canvas's current contents
         elif not isinstance(obj, Grob):
-            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
+            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects, or a canvas (not %s)'%type(obj)
             raise DeviceError(notdrawable)
 
         # by default, plot a copy of the grob and return a reference to that new copy.
@@ -1939,13 +1950,15 @@ class FrameBounds(object):
         return box
 
 class Frame(object):
-    """A committed copy of a Canvas"""
+    """A committed copy of a Canvas (or of another Frame, in other colors)"""
 
-    def __init__(self, canvas, colors=None, format=None, proofed=False, vision=None):
+    def __init__(self, src, colors=None, format=None, proofed=False, vision=None):
+        copying = isinstance(src, Frame) # its texts must keep their own colors
         self.colors = colors # either from export(colors=) or None for the working space
+        self.format = format
         self.press = colors if colors in Press.named else None
         if colors is None:
-            self.outputmode = canvas._ctx._outputmode if canvas._ctx else RGB
+            self.outputmode = src.outputmode if copying else (src._ctx._outputmode if src._ctx else RGB)
         else:
             self.outputmode = _output_mode(colors)
         if self.press:
@@ -1956,12 +1969,12 @@ class Frame(object):
         # texts resolve their colors while committing
         token = gfx._committing.set(self)
         try:
-            self.grobs = _commit_all(canvas._grobs)
+            self.grobs = _commit_all(src.grobs, held=True) if copying else _commit_all(src._grobs)
         finally:
             gfx._committing.reset(token)
-        self.width, self.height = canvas.width, canvas.height
-        self.pagesize = canvas.pagesize
-        self.background = canvas.background
+        self.width, self.height = src.width, src.height
+        self.pagesize = src.pagesize
+        self.background = src.background
         self._bounds = FrameBounds(self.grobs)
         self.proof = _output_space(colors) if proofed else None # the window's Proof Colors setting
         self.vision = vision # a Proof setting simulating color deficiency
@@ -1973,6 +1986,9 @@ class Frame(object):
                 rect = ((0,0), self.pagesize)
                 if isinstance(self.background, Gradient):
                     self.background.fill(rect)
+                elif isinstance(self.background, Pattern):
+                    CGContextSetFillColorWithColor(gfx._cg_port(), self.background.cgColor)
+                    NSRectFillUsingOperation(rect, NSCompositeSourceOver)
                 else:
                     self.background.set()
                     NSRectFillUsingOperation(rect, NSCompositeSourceOver)
@@ -1993,6 +2009,36 @@ class Frame(object):
         img.addRepresentation_(bitmap)
         img.setFlipped_(True)
         return img
+
+    def _traced(self, grobs):
+        # the union of the grobs' shapes, in the frame's px space
+        from .gfx.effects import Stencil
+        outline = NSBezierPath.bezierPath()
+        for grob in grobs:
+            if isinstance(grob, Stencil):
+                # the contents within a clip(), or outside a mask()
+                contents = self._traced(grob.contents)
+                if hasattr(grob, 'path'):
+                    stencil, masked = grob.path._screen_transform.apply(grob.path._nsBezierPath), grob.evenodd
+                else:
+                    stencil = grob.bmp._screen_transform.apply(grob.bmp._outline._nsBezierPath) # a bitmap stencil's image
+                    masked = grob.invert != (grob.channel == 'black')
+                shape = pathmatics.difference(contents, stencil, 0.6) if masked else pathmatics.intersect(contents, stencil, 0.6)
+            elif isinstance(grob, Frob):
+                shape = self._traced(grob.contents)
+            elif isinstance(grob, Image):
+                shape = grob._screen_transform.apply(grob._outline._nsBezierPath)
+            elif isinstance(grob, Bezier):
+                shape = grob._nsBezierPath if grob._fillcolor is not None else NSBezierPath.bezierPath()
+                if grob._strokecolor is not None:
+                    stroked = grob.trace(grob.nib, grob.joinstyle, grob.capstyle)._nsBezierPath
+                    shape = pathmatics.union(shape, stroked, 0.6)
+                shape = grob._screen_transform.apply(shape)
+            else:
+                path = grob.path # text's glyphs
+                shape = path._screen_transform.apply(path._nsBezierPath)
+            outline = pathmatics.union(outline, shape, 0.6)
+        return outline
 
     def _raster_size(self, scale):
         return tuple(max(int(dim * scale), 1) for dim in self.pagesize)
@@ -2069,6 +2115,13 @@ class Frame(object):
         return _INKS[self.ink] if self.ink and not self.press else None
 
     @property
+    def _cmyk_space(self):
+        # what CMYK bitmaps are tagged with to keep their numbers, or None outside a CMYK export
+        if self.outputmode != CMYK or self.colors is None:
+            return None
+        return Press.named[self.press].space if self.press and self.ink[1] else CGColorSpaceCreateDeviceCMYK()
+
+    @property
     def _blend_space(self):
         if self.outputmode == CMYK:
             return _output_space(self.press) if self.press else None # plain CMYK is left as is
@@ -2085,8 +2138,13 @@ class Frame(object):
             dataConsumer = CGDataConsumerCreateWithCFData(cgData)
             pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w*zoom, h*zoom), None)
             CGPDFContextBeginPage(pdfContext, None)
-            self._render_to_context(pdfContext, zoom)
-            CGPDFContextEndPage(pdfContext)
+            token = gfx._pdf_doc.set((pdfContext, {}))
+            try:
+                self._render_to_context(pdfContext, zoom)
+                with gfx._render_lock: # pattern tiles draw during EndPage, after the render released the lock
+                    CGPDFContextEndPage(pdfContext)
+            finally:
+                gfx._pdf_doc.reset(token)
             CGPDFContextClose(pdfContext)
             pdfContext = None
             if self._blend_space is not None:
@@ -2095,7 +2153,7 @@ class Frame(object):
                 cgData.appendBytes_length_(update, len(update))
             return cgData, None
         elif format == 'eps':
-            with autorelease():
+            with autorelease(), gfx._render_lock: # AppKit draws pattern tiles after drawRect_ returns
                 view = _PostScriptView.alloc().initWithCanvas_(self)
                 return view.dataWithEPSInsideRect_(view.bounds()), None
         else:

@@ -67,14 +67,14 @@ BLEND_MODES = """    normal, clear, copy, xor, multiply, screen,
 
 ### Effects objects ###
 
-def _commit_all(grobs):
+def _commit_all(grobs, held=False):
     """The grobs to use for drawing (or copies of any the script still holds references to)"""
     for probe in [object()]:
         unheld = sys.getrefcount(probe) # the refcount of an unreferenced grob
     committed = []
     for grob in grobs:
-        held = sys.getrefcount(grob) > unheld # measured before grob._commit adds a reference
-        committed.append(grob._commit(held))
+        copying = held or sys.getrefcount(grob) > unheld # measured before grob._commit adds a reference
+        committed.append(grob._commit(copying))
     return tuple(committed)
 
 class Frob(object):
@@ -102,7 +102,7 @@ class Frob(object):
     def _commit(self, held):
         """A copy of the container holding its committed contents"""
         frob = copy(self)
-        frob._grobs = _commit_all(self.contents)
+        frob._grobs = _commit_all(self.contents, held) # the script can reach a held container's contents
         return frob
 
     @property
@@ -377,11 +377,15 @@ class Stencil(Frob):
     def __init__(self, stencil, invert=False, channel=None):
         from .text import Text
         from .bezier import Bezier
-        from .image import Image
+        from .image import Image, Snapshot
+        if hasattr(stencil, 'commit'):
+            stencil = Snapshot(stencil) # wrap raw canvas references in a Snapshot
+        if isinstance(stencil, Snapshot) and not channel:
+            channel = 'outline' # trace vector shapes unless a bitmap channel is selected
         if isinstance(stencil, Text):
             self.path = stencil.path
             self.evenodd = invert
-        if isinstance(stencil, Bezier):
+        elif isinstance(stencil, Bezier):
             self.path = stencil.copy()
             self.evenodd = invert
         elif isinstance(stencil, Image):
@@ -403,6 +407,9 @@ class Stencil(Frob):
                 self.channel = channel
                 self.invert = invert
                 self.bmp = stencil
+        else:
+            badstencil = "clip() and mask() take a Bezier, Image, Text, or Canvas stencil (not %s)" % type(stencil).__name__
+            raise DeviceError(badstencil)
 
     def set(self):
         port = _cg_port()

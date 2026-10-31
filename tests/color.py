@@ -354,6 +354,20 @@ class ColorTests(PlotDeviceTestCase):
         self.assertGreater(ink(194, 30)[3], 95)
         self.assertLess(ink(194, 30)[0], 5)
 
+    def test_pattern_filled_text_exports_in_cmyk(self):
+        # text filled with a pattern exports as it does when drawn inside the export block
+        def scene():
+            clear(all)
+            size(100, 100)
+            background('white')
+            text('Hm', 10, 60, size=48, fill=Pattern('tests/_in/macpaint-thatch.png'))
+        for colors in (CMYK, FOGRA39):
+            scene()
+            export(join(self.tmp, colors + '-after.tiff'), colors=colors)
+            with export(join(self.tmp, colors + '-inside.tiff'), colors=colors):
+                scene()
+            self.assertEqual(_image(join(self.tmp, colors + '-after.tiff')), _image(join(self.tmp, colors + '-inside.tiff')), colors)
+
     def test_pattern_objects_draw_in_cmyk(self):
         # an explicit Pattern draws as the image/path shorthand does, in a cmyk export too
         def exported(name, paint):
@@ -370,6 +384,55 @@ class ColorTests(PlotDeviceTestCase):
         made = exported('object.tiff', Pattern(tile))
         self.assertEqual(made, exported('shorthand.tiff', tile))
         self.assertNotEqual(made, exported('blank.tiff', 'white'))
+
+    def test_canvas_patterns_draw_in_the_exports_colors(self):
+        # a snapshot made outside the export resolves its colors as the export does
+        def scene():
+            rect(0, 0, 40, 20, fill='red')
+            rect(0, 20, 40, 20, fill=Color('cmyk', 0, 1, 1, 0))
+            text('Hi', 4, 34, size=18, fill='blue')
+        size(40, 40)
+        scene()
+        tile = Pattern(_ctx.canvas)
+        for colors in (CMYK, FOGRA39):
+            clear(all)
+            scene()
+            export(join(self.tmp, 'direct.tiff'), colors=colors)
+            clear(all)
+            rect(0, 0, 40, 40, fill=tile)
+            export(join(self.tmp, 'pattern.tiff'), colors=colors)
+            self.assertEqual(_image(join(self.tmp, 'pattern.tiff')), _image(join(self.tmp, 'direct.tiff')), colors)
+
+    def test_canvas_pattern_text_draws_in_the_exports_colors(self):
+        # text filled with a canvas tile resolves its colors as the export does
+        size(20, 20)
+        rect(0, 0, 20, 20, fill=Color('cmyk', 0, 1, 1, 0))
+        tile = Pattern(_ctx.canvas)
+        for colors in (CMYK, FOGRA39):
+            for paint, name in ((tile, 'tiled.tiff'), (Color('cmyk', 0, 1, 1, 0), 'direct.tiff')):
+                clear(all)
+                size(220, 120)
+                text('Hm', 10, 90, size=96, font='Helvetica', weight='bold', fill=paint)
+                export(join(self.tmp, name), colors=colors)
+            self.assertEqual(_image(join(self.tmp, 'tiled.tiff')), _image(join(self.tmp, 'direct.tiff')), colors)
+
+    def test_plotted_canvases_draw_in_the_exports_colors(self):
+        # a canvas plotted before the export resolves its colors as the export does
+        def scene():
+            rect(0, 0, 40, 20, fill='red')
+            rect(0, 20, 40, 20, fill=Color('cmyk', 0, 1, 1, 0))
+            text('Hi', 4, 34, size=18, fill='blue')
+        size(40, 40)
+        scene()
+        snapshot = plot(_ctx.canvas, 0, 0)
+        for colors in (CMYK, FOGRA39):
+            clear(all)
+            scene()
+            export(join(self.tmp, 'direct.tiff'), colors=colors)
+            clear(all)
+            plot(snapshot)
+            export(join(self.tmp, 'plotted.tiff'), colors=colors)
+            self.assertEqual(_image(join(self.tmp, 'plotted.tiff')), _image(join(self.tmp, 'direct.tiff')), colors)
 
     # outputs
 

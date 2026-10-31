@@ -2,6 +2,7 @@
 import unittest
 from . import PlotDeviceTestCase, reference
 from plotdevice import *
+from plotdevice import DeviceError
 
 class CompositingTests(PlotDeviceTestCase):
     def test_effects_restore_to_unset(self):
@@ -253,6 +254,96 @@ class CompositingTests(PlotDeviceTestCase):
         image("tests/_in/header.jpg", -130, 0)
         endclip()
 
+
+    def _stenciled_by_a_canvas(self, command):
+        # black shapes (a fill, a stroke, text, an svg, a plotted canvas & stenciled groups), then a red fill stenciled by the canvas
+        from plotdevice import _ctx
+        from Quartz import CGDataProviderCopyData, CGImageGetDataProvider
+        def pixels():
+            return bytes(CGDataProviderCopyData(CGImageGetDataProvider(_ctx.canvas.commit()._render_to_cgimage(1.0, 1.0))))
+        size(40, 40)
+        background(None)
+        star(20, 20, 5, 18, 8, fill='black')
+        inner = plot(_ctx.canvas, 0, 0)
+        clear(all)
+        size(160, 120)
+        background('white')
+        rect(10, 10, 50, 40, fill='black')
+        oval(70, 10, 50, 50, fill=None, stroke='black', strokewidth=8)
+        text('Hi', 10, 105, size=48, font='Helvetica', weight='bold', fill='black')
+        image('tests/_in/vector-fill.svg', 120, 70, width=35)
+        plot(inner, 70, 70)
+        with clip(oval(125, 5, 30, 30)): # groups clipped & masked by paths, and clipped by a bitmap
+            rect(120, 12, 40, 12, fill='black')
+        with mask(oval(134, 38, 10, 10)):
+            rect(126, 34, 26, 18, fill='black')
+        with clip(image('tests/_in/plaid.png', 128, 55, width=12)):
+            rect(120, 50, 40, 24, fill='black')
+        drawn = pixels()
+        with command(_ctx.canvas):
+            rect(0, 0, 160, 120, fill='red')
+        return drawn, pixels()
+
+    def _near(self, drawn, i, inked, w=160):
+        # whether every px within 2 of px i is (or isn't) inked
+        n = len(drawn) // 4
+        return all((max(drawn[j * 4:j * 4 + 3]) < 128) == inked for dy in (-2, 0, 2) for dx in (-2, 0, 2)
+                   for j in [i + dy * w + dx] if 0 <= j < n)
+
+    def test_clip_canvas(self):
+        # a canvas clips to the outline of what's drawn on it (not its page or background)
+        drawn, got = self._stenciled_by_a_canvas(clip)
+        red, white = bytes([0, 0, 255]), bytes([255, 255, 255]) # bgr
+        for i in range(len(drawn) // 4):
+            if self._near(drawn, i, True):
+                self.assertEqual(got[i * 4:i * 4 + 3], red, i)
+            elif self._near(drawn, i, False):
+                self.assertEqual(got[i * 4:i * 4 + 3], white, i)
+
+    def test_mask_canvas(self):
+        # a canvas masks out the outline of what's drawn on it
+        drawn, got = self._stenciled_by_a_canvas(mask)
+        red = bytes([0, 0, 255]) # bgr
+        for i in range(len(drawn) // 4):
+            if self._near(drawn, i, True):
+                self.assertEqual(got[i * 4:i * 4 + 3], drawn[i * 4:i * 4 + 3], i) # the shapes, as drawn
+            elif self._near(drawn, i, False):
+                self.assertEqual(got[i * 4:i * 4 + 3], red, i)
+
+    def test_clip_plotted_canvas(self):
+        # a plotted canvas clips to its outline where it was plotted
+        from plotdevice import _ctx
+        from Quartz import CGDataProviderCopyData, CGImageGetDataProvider
+        def pixels():
+            return bytes(CGDataProviderCopyData(CGImageGetDataProvider(_ctx.canvas.commit()._render_to_cgimage(1.0, 1.0))))
+        size(60, 40)
+        background(None)
+        oval(5, 5, 30, 30, fill='black')
+        text('Hi', 38, 32, size=20, fill='black') # clear of the oval (a sliver between them reads as ink in `drawn`)
+        logo = plot(_ctx.canvas, 0, 0)
+        clear(all)
+        size(200, 150)
+        background('white')
+        plot(logo, 40, 30, width=120)
+        drawn = pixels()
+        clear(all)
+        size(200, 150)
+        background('white')
+        with clip(plot(logo, 40, 30, width=120)):
+            rect(0, 0, 200, 150, fill='red')
+        got = pixels()
+        red, white = bytes([0, 0, 255]), bytes([255, 255, 255]) # bgr
+        for i in range(len(drawn) // 4):
+            if self._near(drawn, i, True, 200):
+                self.assertEqual(got[i * 4:i * 4 + 3], red, i)
+            elif self._near(drawn, i, False, 200):
+                self.assertEqual(got[i * 4:i * 4 + 3], white, i)
+
+    def test_stencils_must_be_drawable(self):
+        for stencil in ('red', 42, None):
+            with self.assertRaisesRegex(DeviceError, "take a Bezier, Image, Text, or Canvas stencil"):
+                with clip(stencil):
+                    pass
 
 def suite():
   suite = unittest.TestSuite()

@@ -495,6 +495,123 @@ class DrawingTests(PlotDeviceTestCase):
         self.assertEqual(drawn(path), made)
         self.assertEqual(drawn(image(path)), made) # the image isn't also drawn on its own
 
+    def test_patterns_tile_from_where_their_image_would_draw(self):
+        # a pattern's tiles follow its image's position & size, at the render's scale
+        from plotdevice import _ctx
+        from Quartz import CGDataProviderCopyData, CGImageGetDataProvider
+        def drawn(paint, box, dpr):
+            clear(all)
+            size(100, 100)
+            background('white')
+            if box is None:
+                paint.draw()
+            else:
+                with clip(rect(*box, plot=False)):
+                    rect(0, 0, 100, 100, fill=paint)
+            frame = _ctx.canvas.commit()
+            return memoryview(CGDataProviderCopyData(CGImageGetDataProvider(frame._render_to_cgimage(1.0, dpr)))).tobytes()
+        for path in ('tests/_in/plaid.png', 'tests/_in/tiny-triangle.pdf', 'tests/_in/vector-fill.svg'):
+            img = image(path, 13, 7, width=40, plot=False)
+            box = tuple(img.bounds.origin) + tuple(img.bounds.size)
+            for dpr in (1.0, 2.0):
+                self.assertEqual(drawn(Pattern(img), box, dpr), drawn(img, None, dpr), (path, dpr))
+
+    def test_patterns_take_images_placement(self):
+        # Pattern(src, x, y, width=...) tiles as an image(src, x, y, width=...) fill does
+        from plotdevice import _ctx
+        from Quartz import CGDataProviderCopyData, CGImageGetDataProvider
+        def drawn(paint):
+            clear(all)
+            size(100, 100)
+            fill(paint)
+            rect(0, 0, 100, 100)
+            frame = _ctx.canvas.commit()
+            return memoryview(CGDataProviderCopyData(CGImageGetDataProvider(frame._render_to_cgimage(1.0, 2.0)))).tobytes()
+        path = 'tests/_in/plaid.png'
+        self.assertEqual(drawn(Pattern(path, 13, 7, width=40)), drawn(image(path, 13, 7, width=40, plot=False)))
+        img = image(path, 50, 50, width=30, plot=False)
+        self.assertEqual(drawn(Pattern(img, 13, 7)), drawn(image(img, 13, 7, plot=False))) # overriding its own place
+        self.assertEqual(drawn(Pattern(Pattern(path), x=5)), drawn(image(path, x=5, plot=False)))
+        with self.assertRaises(TypeError):
+            Pattern(path, angle=45)
+
+    def test_vector_patterns_stay_vectors_in_pdfs(self):
+        # svg, pdf & canvas patterns draw their shapes rather than a bitmap
+        import re
+        from plotdevice import _ctx
+        size(60, 40)
+        oval(5, 5, 30, 30, fill='teal')
+        text('Hi', 30, 30, size=20)
+        tiles = [Pattern(_ctx.canvas), Pattern('tests/_in/vector-fill.svg'), Pattern('tests/_in/tiny-triangle.pdf')]
+        for tile in tiles:
+            clear(all)
+            size(200, 200)
+            background(tile)
+            rect(20, 20, 160, 160, fill=tile)
+            pdf = bytes(_ctx.canvas.commit()._getImageData('pdf'))
+            self.assertEqual(len(re.findall(rb'/Subtype\s*/Image', pdf)), 0)
+            self.assertEqual(len(re.findall(rb'/PatternType', pdf)), 1) # the background and rect share a tile
+
+    def test_canvas_pattern_shadows_match_in_pdfs(self):
+        # a canvas tile's shadows point and scale the same way in a PDF as in a bitmap
+        from plotdevice import _ctx
+        from Quartz import (CGPDFDocumentCreateWithProvider, CGDataProviderCreateWithCFData, CGPDFDocumentGetPage,
+                            CGContextDrawPDFPage, CGBitmapContextCreate, CGBitmapContextCreateImage, CGContextScaleCTM,
+                            CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, kCGImageAlphaPremultipliedFirst,
+                            kCGBitmapByteOrder32Host, CGDataProviderCopyData, CGImageGetDataProvider)
+        size(100, 80)
+        background(None)
+        with shadow('black', blur=4, offset=3):
+            oval(15, 15, 40, 40, fill='teal')
+        snapshot = plot(_ctx.canvas, 0, 0)
+        clear(all)
+        size(200, 150)
+        background('white')
+        with clip(rect(10, 10, 150, 120, plot=False)):
+            rect(0, 0, 200, 150, fill=Pattern(snapshot, 10, 10, width=150))
+        frame = _ctx.canvas.commit()
+        bitmap = memoryview(CGDataProviderCopyData(CGImageGetDataProvider(frame._render_to_cgimage(1.0, 2.0)))).tobytes()
+        doc = CGPDFDocumentCreateWithProvider(CGDataProviderCreateWithCFData(frame._getImageData('pdf')))
+        ctx = CGBitmapContextCreate(None, 400, 300, 8, 1600, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3),
+                                    kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
+        CGContextScaleCTM(ctx, 2, 2)
+        CGContextDrawPDFPage(ctx, CGPDFDocumentGetPage(doc, 1))
+        pdf = memoryview(CGDataProviderCopyData(CGImageGetDataProvider(CGBitmapContextCreateImage(ctx)))).tobytes()
+        self.assertLessEqual(max(abs(a - b) for a, b in zip(bitmap, pdf)), 8)
+
+    def test_canvases_tile_vectors_and_their_images_bitmaps(self):
+        # fill(canvas) draws its shapes into the tiles, fill(image(canvas)) its 2x snapshot
+        import re
+        from plotdevice import _ctx
+        size(60, 40)
+        background(None)
+        oval(5, 5, 30, 30, fill='teal')
+        canvas = _ctx.canvas
+        vectors, bitmap = Pattern(canvas), Pattern(image(canvas, plot=False))
+        for paint, rasterized in ((vectors, False), (bitmap, True)):
+            clear(all)
+            size(200, 200)
+            rect(20, 20, 160, 160, fill=paint)
+            pdf = bytes(_ctx.canvas.commit()._getImageData('pdf'))
+            self.assertEqual(bool(re.findall(rb'/Subtype\s*/Image', pdf)), rasterized)
+        with self.assertRaisesRegex(DeviceError, "takes an image as its only argument"):
+            fill(canvas, 'red')
+
+    def test_fills_from_one_image_share_a_tile(self):
+        # each fill() makes a new Pattern, but they all draw the image's one tile
+        import re
+        from plotdevice import _ctx
+        size(60, 40)
+        oval(5, 5, 30, 30, fill='teal')
+        snapshot = image(_ctx.canvas, 0, 0, width=30, plot=False)
+        clear(all)
+        size(200, 200)
+        for x in (0, 50, 100):
+            fill(snapshot)
+            rect(x, 20, 40, 160)
+        pdf = bytes(_ctx.canvas.commit()._getImageData('pdf'))
+        self.assertEqual(len(re.findall(rb'/PatternType', pdf)), 1)
+
     @reference('drawing/background.png')
     def test_background(self):
         # ref/Canvas/commands/background()

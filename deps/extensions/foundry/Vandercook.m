@@ -181,3 +181,19 @@ static NSDictionary *AAT;
   return block_idxs;
 }
 @end
+
+@implementation PDLayoutManager
+
+- (void)dealloc{
+  [_patternFills release];
+  [super dealloc];
+}
+
+- (void)showCGGlyphs:(const CGGlyph *)glyphs positions:(const CGPoint *)positions count:(NSInteger)count font:(NSFont *)font textMatrix:(CGAffineTransform)textMatrix attributes:(NSDictionary *)attributes inContext:(CGContextRef)ctx{
+  // switch to the corresponding tiles if this is a patterned fill
+  id fill = _patternFills[attributes[@"PDColor"]];
+  if (fill) CGContextSetFillColorWithColor(ctx, (CGColorRef)fill);
+  [super showCGGlyphs:glyphs positions:positions count:count font:font textMatrix:textMatrix attributes:attributes inContext:ctx];
+}
+
+@end

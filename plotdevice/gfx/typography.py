@@ -8,7 +8,7 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from .atoms import StyleMixin
-from .colors import Color
+from .colors import Color, Pattern
 from ..util import _copy_attrs
 from ..lib.foundry import *
 
@@ -384,7 +384,7 @@ class Stylesheet(object):
             spec.update(self._styles.get( kwargs.get('style'), {} ))
             spec.update(fontspec(*args, **kwargs))
             color = kwargs.get('fill')
-            if color and not isinstance(color, Color):
+            if color and not isinstance(color, (Color, Pattern)):
                 if isinstance(color, (str, int, float)):
                     color = (color,)
                 color = Color(*color)

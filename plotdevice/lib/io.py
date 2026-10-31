@@ -278,19 +278,26 @@ class PaperbackWriter(object):
         self.intent = Press.named[press].intent if press else None
         self.blend_space = None # set by the first page
         self.context = CGPDFContextCreateWithURL(NSURL.fileURLWithPath_(fname), None, None)
+        self.layers = {} # cached CGLayers of plotted canvases
 
     def addPage_(self, frame):
+        from ..gfx import _render_lock, _pdf_doc
         if not self.pages:
             self.blend_space = frame._blend_space
         w, h = frame.pagesize
         CGContextBeginPage(self.context, CGRectMake(0, 0, w * self.zoom, h * self.zoom))
-        frame._render_to_context(self.context, self.zoom)
-        CGContextEndPage(self.context)
+        token = _pdf_doc.set((self.context, self.layers))
+        try:
+            frame._render_to_context(self.context, self.zoom)
+            with _render_lock: # pattern tiles draw during EndPage, after the render released the lock
+                CGContextEndPage(self.context)
+        finally:
+            _pdf_doc.reset(token)
         self.pages += 1
 
     def closeFile(self):
         CGPDFContextClose(self.context)
-        self.context = None
+        self.context = self.layers = None
         if self.blend_space is not None:
             with open(self.fname, 'rb') as f:
                 title = os.path.splitext(os.path.basename(self.fname))[0]
