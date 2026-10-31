@@ -354,6 +354,20 @@ class ColorTests(PlotDeviceTestCase):
         self.assertGreater(ink(194, 30)[3], 95)
         self.assertLess(ink(194, 30)[0], 5)
 
+    def test_pattern_filled_text_exports_in_cmyk(self):
+        # text filled with a pattern exports as it does when drawn inside the export block
+        def scene():
+            clear(all)
+            size(100, 100)
+            background('white')
+            text('Hm', 10, 60, size=48, fill=Pattern('tests/_in/macpaint-thatch.png'))
+        for colors in (CMYK, FOGRA39):
+            scene()
+            export(join(self.tmp, colors + '-after.tiff'), colors=colors)
+            with export(join(self.tmp, colors + '-inside.tiff'), colors=colors):
+                scene()
+            self.assertEqual(_image(join(self.tmp, colors + '-after.tiff')), _image(join(self.tmp, colors + '-inside.tiff')), colors)
+
     def test_pattern_objects_draw_in_cmyk(self):
         # an explicit Pattern draws as the image/path shorthand does, in a cmyk export too
         def exported(name, paint):

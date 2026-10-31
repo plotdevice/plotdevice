@@ -36,13 +36,13 @@ from Quartz import CALayer, CGAffineTransformConcat, CGAffineTransformInvert, CG
                    kCGBlendModeScreen, kCGBlendModeSoftLight, kCGBlendModeSourceAtop, kCGBlendModeSourceIn, \
                    kCGBlendModeSourceOut, kCGBlendModeXOR, kCGColorSpaceDisplayP3, kCGColorSpaceExtendedDisplayP3, \
                    kCGColorSpaceExtendedSRGB, kCGColorSpaceGenericCMYK, kCGColorSpaceModelCMYK, \
-                   kCGColorSpaceModelRGB, kCGColorSpaceSRGB, kCGImageAlphaNone, kCGImageAlphaNoneSkipFirst, \
-                   kCGImageAlphaNoneSkipLast, kCGImageAlphaPremultipliedFirst, kCGImageAlphaPremultipliedLast, \
-                   kCGImageDestinationLossyCompressionQuality, kCGImagePropertyDPIHeight, kCGImagePropertyDPIWidth, \
-                   kCGInterpolationHigh, kCGLineCapButt, kCGLineCapRound, kCGLineCapSquare, kCGLineJoinBevel, \
-                   kCGLineJoinMiter, kCGLineJoinRound, kCGPathFill, kCGPathFillStroke, kCGPathStroke, \
-                   kCGPatternTilingConstantSpacing, kCGRenderingIntentDefault, \
-                   kCGRenderingIntentRelativeColorimetric, kCIInputImageKey
+                   kCGColorSpaceModelPattern, kCGColorSpaceModelRGB, kCGColorSpaceSRGB, kCGImageAlphaNone, \
+                   kCGImageAlphaNoneSkipFirst, kCGImageAlphaNoneSkipLast, kCGImageAlphaPremultipliedFirst, \
+                   kCGImageAlphaPremultipliedLast, kCGImageDestinationLossyCompressionQuality, \
+                   kCGImagePropertyDPIHeight, kCGImagePropertyDPIWidth, kCGInterpolationHigh, kCGLineCapButt, \
+                   kCGLineCapRound, kCGLineCapSquare, kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, \
+                   kCGPathFill, kCGPathFillStroke, kCGPathStroke, kCGPatternTilingConstantSpacing, \
+                   kCGRenderingIntentDefault, kCGRenderingIntentRelativeColorimetric, kCIInputImageKey
 from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplication, \
                    NSApplicationActivationPolicyAccessory, NSApplicationActivationPolicyRegular, \
                    NSApplicationPresentationAutoHideMenuBar, NSApplicationPresentationAutoHideToolbar, \

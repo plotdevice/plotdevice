@@ -459,7 +459,9 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             end = self._store.length()
             while at < end:
                 clr, rng = self._store.attribute_atIndex_effectiveRange_('PDColor', at, None)
-                self._store.addAttribute_value_range_('NSColor', Color(clr).nsColor, rng)
+                # skip patterns (their NSColors hold the tile, not color components in need of conversion)
+                if CGColorSpaceGetModel(CGColorGetColorSpace(clr)) != kCGColorSpaceModelPattern:
+                    self._store.addAttribute_value_range_('NSColor', Color(clr).nsColor, rng)
                 at += rng.length
             self._nsmode = mode
             if self._engine is None:
