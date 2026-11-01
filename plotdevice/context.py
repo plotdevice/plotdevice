@@ -10,7 +10,7 @@ from .lib.cocoa import *
 from .lib import pathmatics
 from .lib.io import MovieExportSession, Distiller, HEVC
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
-from .gfx.geometry import Dimension, parse_coords
+from .gfx.geometry import Dimension, IDENTITY, parse_coords
 from .gfx.typography import Layout
 from .gfx.effects import Frob, _commit_all
 from .gfx import *
@@ -268,8 +268,12 @@ class Context(object):
         if self._path is not None:
             # if a bezier is being built in a `with` block, add curves to it, but
             # ignore kwargs since the parent bezier's styles apply to all lines drawn
-            xf = p._screen_transform
-            self._path.extend(xf.apply(p))
+            matrix = p._screen_matrix
+            path = p._nsBezierPath
+            if matrix != IDENTITY:
+                path = Transform(matrix)._nsAffineTransform.transformBezierPath_(path)
+            self._path._nsBezierPath.appendBezierPath_(path)
+            self._path._fulcrum = None
         elif draw:
             # if this is a one-off primitive, draw it depending on the kwargs & state
             p.draw()
