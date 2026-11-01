@@ -588,9 +588,9 @@ class Transform(object):
         if transform is None:
             transform = NSAffineTransform.transform()
         elif isinstance(transform, Transform):
-            transform = transform._nsAffineTransform.copy()
+            transform = nscopy(transform._nsAffineTransform)
         elif isinstance(transform, NSAffineTransform):
-            transform = transform.copy()
+            transform = nscopy(transform)
         elif isinstance(transform, (list, tuple, NSAffineTransformStruct)):
             struct = tuple(transform)
             transform = NSAffineTransform.transform()

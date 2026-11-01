@@ -93,3 +93,6 @@ from ColorSync import ColorSyncProfileCreate, ColorSyncProfileCreateWithName, Co
                       kColorSyncRenderingIntent, kColorSyncRenderingIntentRelative, kColorSyncTransformDeviceToPCS, \
                       kColorSyncTransformPCSToDevice, kColorSyncTransformTag
 from objc import IBAction, IBOutlet
+
+NSObject.new().copy # invoke copy once so pyobjc 11 will be able to look it up successfully
+nscopy = NSObject.pyobjc_instanceMethods.copy # cache the lookup for faster copies in the future

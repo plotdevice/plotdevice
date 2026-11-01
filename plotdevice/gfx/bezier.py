@@ -8,7 +8,7 @@ from . import _cg_port
 from .atoms import PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .colors import Color, Gradient, Pattern
 from .geometry import CENTER, DEGREES, IDENTITY, Transform, Region, Point, _pivot, _hull
-from ..util import trim_zeroes, _copy_attr, _copy_attrs, _flatten, numlike
+from ..util import trim_zeroes, _copy_attr, _flatten, numlike
 from ..lib import pathmatics
 
 _ctx = None
@@ -62,9 +62,10 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 p = pathmatics.findpath(path, 1.0 if kwargs.get('smooth') else 0.0)
                 self._nsBezierPath = p._nsBezierPath
         elif isinstance(path, Bezier):
-            _copy_attrs(path, self, Bezier.stateAttrs)
+            self._nsBezierPath = nscopy(path._nsBezierPath)
+            self._fulcrum = _copy_attr(path._fulcrum)
         elif isinstance(path, NSBezierPath):
-            self._nsBezierPath = path.copy()
+            self._nsBezierPath = nscopy(path)
         else:
             badpath = "Don't know what to do with %s." % path
             raise DeviceError(badpath)
@@ -86,7 +87,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def copy(self):
         # pull all state from the original object (rather than inheriting from _ctx)
         clone = Bezier.__new__(Bezier)
-        clone._nsBezierPath = self._nsBezierPath.copy()
+        clone._nsBezierPath = nscopy(self._nsBezierPath)
         clone._transform = self._transform.copy()
         clone._effects = self._effects.copy()
         clone._fillcolor = _copy_attr(self._fillcolor)

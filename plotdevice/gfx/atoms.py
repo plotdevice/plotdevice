@@ -64,6 +64,7 @@ class Bequest(type):
 class Grob(object, metaclass=Bequest):
     """A GRaphic OBject is the base class for all drawing primitives."""
     ctxAttrs = ('_grid',)
+    sharedAttrs = ('_grid',)
 
     def __init__(self, **kwargs):
         self.inherit() # copy over every _ctx attribute we're interested in
@@ -255,6 +256,7 @@ class TransformMixin(Grob):
     """Mixin class for transformation support.
     Adds the _transform and _transformmode attributes to the class."""
     ctxAttrs = ('_transform', '_transformmode',)
+    sharedAttrs = ('_transformmode',)
 
     def __init__(self, **kwargs):
         super(TransformMixin, self).__init__(**kwargs)
@@ -299,6 +301,7 @@ class PenMixin(Grob):
     """Mixin class for linestyle support.
     Adds the nib, cap, join, and dash attributes to the class."""
     ctxAttrs = ('_penstyle', )
+    sharedAttrs = ('_penstyle',)
     opts = ('nib','cap','join','dash','strokewidth','capstyle','joinstyle','dashstyle',)
 
     def __init__(self, **kwargs):

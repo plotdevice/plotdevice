@@ -81,7 +81,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     def __init__(self, *args, **kwargs):
 
         # CoreText lays out single lines, TextKit handles the rest
-        self._store = NSMutableAttributedString.alloc().init()
+        self._store = NSMutableAttributedString.new()
         self._engine = None # TextKit's layout manager
         self._line = None   # CoreText's LineLayout
         self._nsmode = None # output mode of the store's NSColors
@@ -252,7 +252,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         # set up TextKit for complex/multiline runs
         if self._engine is not None:
             return
-        self._engine = foundry.PDLayoutManager.alloc().init()
+        self._engine = foundry.PDLayoutManager.new()
         self._engine.setUsesScreenFonts_(False)
         self._engine.setUsesFontLeading_(False)
         self._engine.setBackgroundLayoutEnabled_(False) # laid out at commit
@@ -1134,7 +1134,7 @@ class TextBlock(FrameMixin, Grob):
         self._grid = parent._grid # use the Text's or prior TextBlock's units
 
         # create a new container
-        self._block = NSTextContainer.alloc().init()
+        self._block = NSTextContainer.new()
         self._block.setLineFragmentPadding_(0)
         self._resized()
 
