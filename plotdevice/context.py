@@ -271,7 +271,9 @@ class Context(object):
             matrix = p._screen_matrix
             path = p._nsBezierPath
             if matrix != IDENTITY:
-                path = Transform(matrix)._nsAffineTransform.transformBezierPath_(path)
+                a, b, c, d, tx, ty = matrix
+                dpx = p._grid.dpx # scale the matrix to canvas units rather than px
+                path = Transform((a, b, c, d, tx / dpx, ty / dpx))._nsAffineTransform.transformBezierPath_(path)
             self._path._nsBezierPath.appendBezierPath_(path)
             self._path._fulcrum = None
         elif draw:

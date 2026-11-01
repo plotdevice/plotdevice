@@ -89,6 +89,24 @@ class DrawingTests(PlotDeviceTestCase):
         fill('green', 'cyan')
         bezier(path)
 
+    def test_paths_compound_units(self):
+        # shapes transformed inside a compound path land where they would on their own, in any unit
+        size(20, 20, unit=cm)
+        with bezier(plot=False) as path:
+            with transform():
+                translate(1.5, -.5)
+                rect(2, 3, 4, 2)
+        (x, y), (w, h) = path.bounds
+        self.assertEqual([round(v, 9) for v in (x, y, w, h)], [3.5, 2.5, 4, 2])
+
+        transform(CENTER)
+        with bezier(plot=False) as path:
+            with transform():
+                rotate(30)
+                rect(2, 3, 4, 2)
+        self.assertAlmostEqual(path.center.x, 4)
+        self.assertAlmostEqual(path.center.y, 4)
+
     @reference('drawing/paths-flat-union.png')
     def test_paths_flat_union(self):
         # tut/Bezier_Paths (7)
