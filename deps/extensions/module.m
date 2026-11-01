@@ -37,5 +37,7 @@ PyMODINIT_FUNC PyInit__plotdevice(void){
     Py_INCREF(err);
     PyModule_AddObject(m, "error", err);
 
+    if (PDPath_register(m) < 0) return NULL;
+
     return m;
 }

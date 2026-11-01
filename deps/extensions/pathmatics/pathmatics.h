@@ -24,6 +24,9 @@ PyObject * cPathmatics_area(PyObject *self, PyObject *args);
 PyObject * cPathmatics_pdfOutline(PyObject *self, PyObject *args);
 PyObject * cPathmatics_strokeToFill(PyObject *self, PyObject *args);
 
+// adds the PDPath type (pdpath.m) to the module
+int PDPath_register(PyObject *module);
+
 // Shared NSBezierPath <-> CGPathRef conversion (used by the boolean-op backend
 // and cPathmatics_strokeToFill in pathmatics.m, and by the PDF content-stream
 // tracer in pdftrace.m).
