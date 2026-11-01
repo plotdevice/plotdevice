@@ -626,6 +626,22 @@ static PyTypeObject PDPathType = {
     .tp_as_sequence = &PDPath_sequence,
 };
 
+CGPathRef
+PDPath_CGPath(PyObject *obj)
+{
+    if (!PyObject_TypeCheck(obj, &PDPathType)) return NULL;
+    pd_flush((PDPathObject *)obj);
+    return ((PDPathObject *)obj)->path;
+}
+
+PyObject *
+PDPath_FromCGPath(CGPathRef path)
+{
+    PDPathObject *self = pd_alloc(CGPathCreateMutable());
+    if (self) pd_append_cg(self, path, CGAffineTransformIdentity, YES);
+    return (PyObject *)self;
+}
+
 int
 PDPath_register(PyObject *module)
 {

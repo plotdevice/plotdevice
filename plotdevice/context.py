@@ -8,6 +8,7 @@ from objc import super
 
 from .lib.cocoa import *
 from .lib import pathmatics
+from _plotdevice import PDPath
 from .lib.io import MovieExportSession, Distiller, HEVC
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
 from .gfx.geometry import Dimension, IDENTITY, parse_coords
@@ -269,12 +270,12 @@ class Context(object):
             # if a bezier is being built in a `with` block, add curves to it, but
             # ignore kwargs since the parent bezier's styles apply to all lines drawn
             matrix = p._screen_matrix
-            path = p._nsBezierPath
-            if matrix != IDENTITY:
+            if matrix == IDENTITY:
+                self._path._pdpath.add(p._pdpath)
+            else:
                 a, b, c, d, tx, ty = matrix
                 dpx = p._grid.dpx # scale the matrix to canvas units rather than px
-                path = Transform((a, b, c, d, tx / dpx, ty / dpx))._nsAffineTransform.transformBezierPath_(path)
-            self._path._nsBezierPath.appendBezierPath_(path)
+                self._path._pdpath.add(p._pdpath, (a, b, c, d, tx / dpx, ty / dpx))
             self._path._fulcrum = None
         elif draw:
             # if this is a one-off primitive, draw it depending on the kwargs & state
@@ -2015,30 +2016,30 @@ class Frame(object):
     def _traced(self, grobs):
         # the union of the grobs' shapes, in the frame's px space
         from .gfx.effects import Stencil
-        outline = NSBezierPath.bezierPath()
+        outline = PDPath()
         for grob in grobs:
             if isinstance(grob, Stencil):
                 # the contents within a clip(), or outside a mask()
                 contents = self._traced(grob.contents)
                 if hasattr(grob, 'path'):
-                    stencil, masked = grob.path._screen_transform.apply(grob.path._nsBezierPath), grob.evenodd
+                    stencil, masked = grob.path._screen_transform.apply(grob.path)._pdpath, grob.evenodd
                 else:
-                    stencil = grob.bmp._screen_transform.apply(grob.bmp._outline._nsBezierPath) # a bitmap stencil's image
+                    stencil = grob.bmp._screen_transform.apply(grob.bmp._outline)._pdpath # a bitmap stencil's image
                     masked = grob.invert != (grob.channel == 'black')
                 shape = pathmatics.difference(contents, stencil, 0.6) if masked else pathmatics.intersect(contents, stencil, 0.6)
             elif isinstance(grob, Frob):
                 shape = self._traced(grob.contents)
             elif isinstance(grob, Image):
-                shape = grob._screen_transform.apply(grob._outline._nsBezierPath)
+                shape = grob._screen_transform.apply(grob._outline)._pdpath
             elif isinstance(grob, Bezier):
-                shape = grob._nsBezierPath if grob._fillcolor is not None else NSBezierPath.bezierPath()
+                shape = grob._pdpath if grob._fillcolor is not None else PDPath()
                 if grob._strokecolor is not None:
-                    stroked = grob.trace(grob.nib, grob.joinstyle, grob.capstyle)._nsBezierPath
+                    stroked = grob.trace(grob.nib, grob.joinstyle, grob.capstyle)._pdpath
                     shape = pathmatics.union(shape, stroked, 0.6)
                 shape = grob._screen_transform.apply(shape)
             else:
                 path = grob.path # text's glyphs
-                shape = path._screen_transform.apply(path._nsBezierPath)
+                shape = path._screen_transform.apply(path)._pdpath
             outline = pathmatics.union(outline, shape, 0.6)
         return outline
 

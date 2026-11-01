@@ -1,19 +1,8 @@
-import objc
 from collections import namedtuple
 from math import degrees, atan2, sqrt, pow, radians, sin, cos
-from .cocoa import CGPathRelease, NSBezierPath
+from .cocoa import NSBezierPath
 from ..gfx.geometry import Point
 from ..gfx.bezier import Bezier, Curve
-
-# Quartz loop speedups
-
-Pathmatician = objc.lookUpClass('Pathmatician')
-def convert_path(ns_path):
-    """Creates a CGPath from the points in an NSBezierPath"""
-    pth = Pathmatician.cgPath_(ns_path)
-    CGPathRelease(pth)
-    return pth
-
 
 # Trig helpers
 
@@ -51,26 +40,26 @@ def pdf_outline(pdf_data):
     return _pdf_outline(pdf_data, NSBezierPath.bezierPath())
 
 from _plotdevice import stroke_to_fill as _stroke_to_fill
-def stroke_to_fill(ns_path, width, cap, join, miter=10.0):
-    """Converts a stroked NSBezierPath into its equivalent fill-only outline
-    (in the same local coordinate space as ns_path itself)."""
-    return _stroke_to_fill(ns_path, width, cap, join, miter)
+def stroke_to_fill(path, width, cap, join, miter=10.0):
+    """Converts a stroked PDPath into its equivalent fill-only outline
+    (in the same local coordinate space as path itself)."""
+    return _stroke_to_fill(path, width, cap, join, miter)
 
 from _plotdevice import offset as _offset
-def offset(ns_path, delta, join, miter=2.0, flatness=0.6):
-    """Grows (delta > 0) or shrinks (delta < 0) an NSBezierPath's boundary."""
-    return _offset(ns_path, delta, join, miter, flatness)
+def offset(path, delta, join, miter=2.0, flatness=0.6):
+    """Grows (delta > 0) or shrinks (delta < 0) a PDPath's boundary."""
+    return _offset(path, delta, join, miter, flatness)
 
 from _plotdevice import simplify as _simplify
-def simplify(ns_path, epsilon, flatness=0.6):
-    """Reduces an NSBezierPath's point count, keeping every remaining point
+def simplify(path, epsilon, flatness=0.6):
+    """Reduces a PDPath's point count, keeping every remaining point
     within epsilon of the original boundary."""
-    return _simplify(ns_path, epsilon, flatness)
+    return _simplify(path, epsilon, flatness)
 
 from _plotdevice import area as _area
-def area(ns_path, flatness=0.6):
-    """Returns the total unsigned fill area enclosed by an NSBezierPath."""
-    return _area(ns_path, flatness)
+def area(path, flatness=0.6):
+    """Returns the total unsigned fill area enclosed by a PDPath."""
+    return _area(path, flatness)
 
 try:
     from _plotdevice import linepoint, linelength, curvepoint, curvelength
