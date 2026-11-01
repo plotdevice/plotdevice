@@ -107,6 +107,36 @@ class DrawingTests(PlotDeviceTestCase):
         self.assertAlmostEqual(path.center.x, 4)
         self.assertAlmostEqual(path.center.y, 4)
 
+    def test_paths_closepath(self):
+        # closepath() closes the current subpath, once, and does nothing without one
+        def triangle(x):
+            moveto(x, 0)
+            lineto(x + 10, 0)
+            lineto(x + 5, 8)
+        closes = lambda path: [el.cmd for el in path].count(CLOSE)
+
+        with bezier(plot=False) as path:
+            triangle(0)
+            closepath()
+            closepath()
+            triangle(20)
+            closepath()
+        self.assertEqual(closes(path), 2)
+
+        beginpath()
+        triangle(0)
+        closepath()
+        triangle(20)
+        self.assertEqual(closes(endpath(plot=False)), 2) # the open one is autoclosed
+
+        with bezier(plot=False, close=True) as path:
+            triangle(0)
+            closepath()
+        self.assertEqual(closes(path), 1)
+
+        beginpath()
+        self.assertEqual(len(endpath(plot=False)), 0)
+
     @reference('drawing/paths-flat-union.png')
     def test_paths_flat_union(self):
         # tut/Bezier_Paths (7)

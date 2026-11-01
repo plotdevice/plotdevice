@@ -143,7 +143,10 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             self.extend(Bezier(p)[1:]) # omit the initial moveto in the semicircle
 
     def closepath(self):
-        self._nsBezierPath.closePath()
+        # close the current subpath if it's open and non-empty
+        count = self._nsBezierPath.elementCount()
+        if count and self._nsBezierPath.elementAtIndex_(count - 1) not in (MOVETO, CLOSE):
+            self._nsBezierPath.closePath()
 
     def _autoclose(self):
         if self._needs_closure:

@@ -518,16 +518,13 @@ class Context(object):
 
     def beginpath(self, x=None, y=None):
         self._path = Bezier()
-        self._pathclosed = False
         if x != None and y != None:
             self._path.moveto(x,y)
 
     def closepath(self):
         if self._path is None:
             raise DeviceError("No active path. Use bezier() or beginpath() first.")
-        if not self._pathclosed:
-            self._path.closepath()
-            self._pathclosed = True
+        self._path.closepath()
 
     def endpath(self, **kwargs):
         if self._path is None:
@@ -540,7 +537,6 @@ class Context(object):
         if draw:
             p.draw()
         self._path = None
-        self._pathclosed = False
         return p
 
     def drawpath(self, path, **kwargs):
