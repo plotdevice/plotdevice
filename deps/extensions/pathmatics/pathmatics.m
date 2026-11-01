@@ -249,10 +249,10 @@ path_to_polygon(NSBezierPath *path, float flatness)
     {
         int spc = contours_in_path_from_el(flat, es);
 
-        // allocate enough memory to hold this many points
+        // allocate enough memory to hold this many points (plus the closing moveto)
 
         poly->contours[i].count = spc;
-        poly->contours[i].points = malloc( sizeof( PDPoint ) * spc );
+        poly->contours[i].points = malloc( sizeof( PDPoint ) * (spc + 1) );
 
         es += spc;
     }
