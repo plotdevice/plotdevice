@@ -495,7 +495,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         self._fulcrum = t.apply(self._fulcrum) if self._fulcrum else None
 
     def _get_x(self):
-        return getattr(self._fulcrum or self.bounds.origin.x, 'x')
+        return (self._fulcrum or self.bounds.origin).x
     def _set_x(self, new_x):
         if self._fulcrum:
             new_x -= self._fulcrum.x - self.bounds.origin.x
@@ -503,7 +503,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     x = property(_get_x, _set_x)
 
     def _get_y(self):
-        return getattr(self._fulcrum or self.bounds.origin.x, 'y')
+        return (self._fulcrum or self.bounds.origin).y
     def _set_y(self, new_y):
         if self._fulcrum:
             new_y -= self._fulcrum.y - self.bounds.origin.y

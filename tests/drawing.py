@@ -109,6 +109,16 @@ class DrawingTests(PlotDeviceTestCase):
         self.assertAlmostEqual(path.center.x, 4)
         self.assertAlmostEqual(path.center.y, 4)
 
+    def test_paths_xy(self):
+        # a path's x & y are its fulcrum's, or else its bounds' origin
+        size(100, 100)
+        box = rect(10, 20, 30, 40, plot=False)
+        self.assertEqual((box.x, box.y), (10, 20))
+        spiky = star(50, 60, 5, 20, plot=False)
+        self.assertEqual((spiky.x, spiky.y), (50, 60))
+        box.x, box.y = 15, 25
+        self.assertEqual(tuple(box.bounds.origin), (15, 25))
+
     def test_paths_closepath(self):
         # closepath() closes the current subpath, once, and does nothing without one
         def triangle(x):
