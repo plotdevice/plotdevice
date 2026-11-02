@@ -44,8 +44,6 @@ objc.loadBundleFunctions(NSBundle.bundleWithPath_('/System/Library/Frameworks/Co
     ('CTLineGetGlyphRuns', b'@@'),
     ('CTRunGetAttributes', b'@@'),
     ('CTRunGetStringRange', b'{CFRange=qq}@'),
-    ('CTLineDraw', b'v@^{CGContext=}'),
-    ('CTRunDraw', b'v@^{CGContext=}{CFRange=qq}'),
     ('CTTypesetterCreateWithAttributedString', b'@@', '', {'retval': {'already_retained': True}}),
     ('CTTypesetterSuggestLineBreak', b'q@qd'),
 ])
@@ -75,7 +73,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     # from EffectsMixin:   alpha blend shadow
     # from FrameMixin:    x y width height
     # from StyleMixin:     stylesheet fill _parse_style()
-    stateAttrs = ('_nodes', '_nsmode', '_patterns')
+    stateAttrs = ('_nodes', '_paints')
     opts = ('str', 'xml', 'src')
 
     def __init__(self, *args, **kwargs):
@@ -84,7 +82,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         self._store = NSMutableAttributedString.new()
         self._engine = None # TextKit's layout manager
         self._line = None   # CoreText's LineLayout
-        self._nsmode = None # output mode of the store's NSColors
+        self._fill_cache = None # the runs' fills for the output mode last drawn in
 
         if args and isinstance(args[0], Text):
             # create a parallel set of nstext objects when copying an existing Text
@@ -106,7 +104,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
         # maintain a lookup table of nodes within xml input
         self._nodes = {}
-        self._patterns = {} # pattern fills, keyed by their runs' PDColor
+        self._paints = {} # each run's Color or Pattern, keyed by its PDColor
 
         # use the first positional arg if no xml/str/src kwarg was passed
         if not any(o in kwargs for o in self.opts) and len(args):
@@ -234,11 +232,6 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             self._store.beginEditing()
             self._store.appendAttributedString_(attrib_txt)
             self._store.endEditing()
-
-            # update earlier runs if the cmyk/rgb mode has changed
-            if self._nsmode is None:
-                self._nsmode = _inkmode()
-            self._colorize()
 
             # switch to TextKit once it exceeds one line
             if self._engine is None:
@@ -393,16 +386,16 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             fill = layer.get('fill', fill)
             margin = layer.get('margin', margin)
 
-        # a pattern run's PDColor is its identifies its tiles (the black NSColor is just a placeholder)
-        pattern = isinstance(fill, Pattern)
-        color = Color('black' if pattern else fill)
-        paint = str(id(fill)) if pattern else color._src
-        if pattern:
-            self._patterns[paint] = fill
+        # a run's PDColor keys its fill: a pattern's id or a color's CGColor
+        fill = fill if isinstance(fill, Pattern) else Color(fill)
+        paint = str(id(fill)) if isinstance(fill, Pattern) else fill._src
+        if paint not in self._paints:
+            self._paints[paint] = fill
+            self._fill_cache = None
 
         # reuse attrs for the same font, fill, & styles
         head, tail = map(self._to_px, margin)
-        key = (_inkmode(), paint, head, tail, self._font._key)
+        key = (paint, head, tail, self._font._key)
         key += tuple(tuple(sorted((k, v) for k, v in layer.items() if k not in ('fill', 'margin'))) for layer in layers)
         attrs = foundry.LIBRARY.recall(key)
         if attrs is not None:
@@ -456,26 +449,9 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             kern = (spec['tracking'] * font.size)/1000.0
 
         # build the features dict out of objc references since TextKit caches them
-        attrs = dict(NSFont=font._nsFont, PDColor=paint, NSColor=color.nsColor, NSParagraphStyle=graf, NSKern=kern)
-        if pattern:
-            attrs['CTForegroundColorFromContext'] = True # coretext uses the context's color (set in _draw)
+        attrs = dict(NSFont=font._nsFont, PDColor=paint, NSParagraphStyle=graf, NSKern=kern)
+        attrs['CTForegroundColorFromContext'] = True # coretext uses the context's color (set in _draw)
         return foundry.LIBRARY.remember(key, NSDictionary.dictionaryWithDictionary_(attrs))
-
-    def _colorize(self):
-        """Updates the TextStorage, rewriting Colors as rgb or cmyk NSColors based on the current output mode"""
-        mode = _inkmode()
-        if self._nsmode != mode:
-            at = 0
-            end = self._store.length()
-            while at < end:
-                clr, rng = self._store.attribute_atIndex_effectiveRange_('PDColor', at, None)
-                # skip pattern runs (since PDColor is just the pattern's key, not a real color)
-                if not isinstance(clr, str):
-                    self._store.addAttribute_value_range_('NSColor', Color(clr).nsColor, rng)
-                at += rng.length
-            self._nsmode = mode
-            if self._engine is None:
-                self._line = self._typeset_line() # update the stale colors from the last run
 
     @classmethod
     def _dedent(cls, attrib_txt, idx=0, inherit=False):
@@ -822,9 +798,8 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
             held = held or sys.getrefcount(block) > unheld
         text = self.copy() if held else self
 
-        # resolve colors and layout so they are already calculated before draw time
+        # resolve the layout so it's already calculated before draw time
         # (prevents deadlocks from multiple threads accessing the TextStorage)
-        text._colorize()
         if text._engine is None and text._line is None:
             text._use_textkit()
         if text._engine is not None:
@@ -869,6 +844,26 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         # pad before transforming, so the reach scales with the glyphs
         return _hull(self._screen_matrix, x0 - reach, y0 - reach, w0 + 2 * reach, h0 + 2 * reach)
 
+    def _fills(self):
+        # the runs' CGColors in a map table, since dictionaries copy their keys and CGColors can't be copied
+        mode = _inkmode()
+        if self._fill_cache is None or self._fill_cache[0] != mode:
+            colors, patterns = NSMapTable.strongToStrongObjectsMapTable(), []
+            for paint, fill in self._paints.items():
+                if isinstance(fill, Pattern):
+                    patterns.append((paint, fill))
+                else:
+                    colors.setObject_forKey_(fill.cgColor, paint)
+            self._fill_cache = (mode, colors, patterns)
+        _, fills, patterns = self._fill_cache
+
+        # patterns' tiles depend on the render, so they're added each time
+        if patterns:
+            fills = fills.copy()
+            for paint, pattern in patterns:
+                fills.setObject_forKey_(pattern.cgColor, paint)
+        return fills
+
     def _draw(self):
         with _ns_context():                  # save and restore the gstate
             self._screen_transform.concat()  # transform so text can be drawn at the origin
@@ -878,23 +873,15 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
                     port = _cg_port()
                     CGContextSetTextMatrix(port, CGAffineTransformMake(1, 0, 0, -1, 0, 0))
                     CGContextSetTextPosition(port, self._line.x, self._line.baseline)
-                    if not self._patterns:
-                        CTLineDraw(self._line.ctline, port)
-                    else:
-                        for run in CTLineGetGlyphRuns(self._line.ctline):
-                            # for pattern runs, pass the tile as its CGColor
-                            pattern = self._patterns.get(CTRunGetAttributes(run)['PDColor'])
-                            if pattern is not None:
-                                CGContextSetFillColorWithColor(port, pattern.cgColor)
-                            CTRunDraw(run, port, (0, 0))
+                    foundry.PDLayoutManager.drawLine_fills_inContext_(self._line.ctline, self._fills(), port)
                 else:
-                    # typeset with TextKit (and let PDLayoutManager handle patterned fills)
-                    self._engine.setPatternFills_({key: pattern.cgColor for key, pattern in self._patterns.items()})
+                    # typeset with TextKit (and let PDLayoutManager fill each run)
+                    self._engine.setFills_(self._fills())
                     for block in self._blocks:
                         px_offset = self._to_px(block.offset)
                         px_offset.x -= block._shift
                         self._engine.drawGlyphsForGlyphRange_atPoint_(block._glyphs, px_offset)
-                    self._engine.setPatternFills_(None)
+                    self._engine.setFills_(None)
 
     @property
     def path(self):

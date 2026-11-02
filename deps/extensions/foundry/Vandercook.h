@@ -16,5 +16,6 @@
 @end
 
 @interface PDLayoutManager : NSLayoutManager
-@property (nonatomic, copy) NSDictionary *patternFills; // the CGColor for each patterned run (keyed by PDColor)
+@property (nonatomic, retain) NSMapTable *fills; // the CGColor for each run, keyed by its PDColor attribute
++ (void)drawLine:(id)line fills:(NSMapTable *)fills inContext:(CGContextRef)port;
 @end

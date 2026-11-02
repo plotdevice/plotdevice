@@ -7,6 +7,7 @@
 //
 
 #import "Vandercook.h"
+#import <CoreText/CoreText.h>
 #import <CoreText/SFNTLayoutTypes.h>
 
 static NSDictionary *AAT;
@@ -185,15 +186,24 @@ static NSDictionary *AAT;
 @implementation PDLayoutManager
 
 - (void)dealloc{
-  [_patternFills release];
+  [_fills release];
   [super dealloc];
 }
 
 - (void)showCGGlyphs:(const CGGlyph *)glyphs positions:(const CGPoint *)positions count:(NSInteger)count font:(NSFont *)font textMatrix:(CGAffineTransform)textMatrix attributes:(NSDictionary *)attributes inContext:(CGContextRef)ctx{
-  // switch to the corresponding tiles if this is a patterned fill
-  id fill = _patternFills[attributes[@"PDColor"]];
+  // fill with the run's color or pattern tiles
+  id fill = [_fills objectForKey:attributes[@"PDColor"]];
   if (fill) CGContextSetFillColorWithColor(ctx, (CGColorRef)fill);
   [super showCGGlyphs:glyphs positions:positions count:count font:font textMatrix:textMatrix attributes:attributes inContext:ctx];
+}
+
++ (void)drawLine:(id)line fills:(NSMapTable *)fills inContext:(CGContextRef)port{
+  // fill each text run using the CGColor identified by the PDColor attribute
+  for (id run in (NSArray *)CTLineGetGlyphRuns((CTLineRef)line)){
+    id fill = [fills objectForKey:((NSDictionary *)CTRunGetAttributes((CTRunRef)run))[@"PDColor"]];
+    if (fill) CGContextSetFillColorWithColor(port, (CGColorRef)fill);
+    CTRunDraw((CTRunRef)run, port, CFRangeMake(0, 0));
+  }
 }
 
 @end

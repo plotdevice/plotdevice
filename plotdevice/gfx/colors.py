@@ -11,7 +11,7 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path, numlike
-from . import _inkmode, _outputpress, _frame, _base_ctm
+from . import _inkmode, _outputpress, _frame, _base_ctm, _cg_port
 
 PDGradient = objc.lookUpClass('PDGradient')
 
@@ -233,15 +233,8 @@ class Press(object):
 
     def __init__(self, key, space=None):
         self.key = key
-        self._ns_space = self._profile = self._intent = self._transform = None
+        self._profile = self._intent = self._transform = None
         self.space = space if space is not None else CGColorSpaceCreateWithICCData(self.profile)
-
-    @property
-    def ns_space(self):
-        """The press's space as an NSColorSpace"""
-        if self._ns_space is None:
-            self._ns_space = NSColorSpace.alloc().initWithCGColorSpace_(self.space)
-        return self._ns_space
 
     @property
     def profile(self):
@@ -415,7 +408,9 @@ class Color(object):
         return hash(self._key())
 
     def set(self):
-        self.nsColor.set()
+        port = _cg_port()
+        CGContextSetFillColorWithColor(port, self.cgColor)
+        CGContextSetStrokeColorWithColor(port, self.cgColor)
 
     # fill() and stroke() both cache the previous canvas state by creating a _rollback attr.
     # act as a context manager if there's a fill/stroke state to revert to at the end of the block.
@@ -440,28 +435,6 @@ class Color(object):
     def space(self):
         """The color space of the rgb, hsv & grey components"""
         return self._cache['space']
-
-    @property
-    def nsColor(self):
-        # one per output mode, rgb as p3
-        mode = _inkmode()
-        try:
-            return self._cache['ns', mode]
-        except KeyError:
-            if mode == RGB:
-                ns = NSColor.colorWithCGColor_(self._rgb_as(P3))
-            elif mode == CMYK:
-                ns = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(*self._values(CMYK))
-            elif isinstance(mode, tuple):
-                press, in_space = mode
-                if in_space:
-                    ns = NSColor.colorWithColorSpace_components_count_(Press.named[press].ns_space, self._press_values(press), 5)
-                else:
-                    ns = NSColor.colorWithDeviceCyan_magenta_yellow_black_alpha_(*self._press_values(press))
-            else:
-                ns = NSColor.colorWithCGColor_(_matched(self._rgb, _INKS[mode]))
-            self._cache['ns', mode] = ns
-            return ns
 
     @property
     def cgColor(self):

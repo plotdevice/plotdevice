@@ -46,7 +46,7 @@ class FrameTests(PlotDeviceTestCase):
         lib.bind(_Poison())
         try:
             with self.assertRaises(AssertionError):
-                Color(1, 0, 0).nsColor # the poison catches reads...
+                Color(1, 0, 0).cgColor # the poison catches reads...
             rendered = _png(frame)     # ...and a render never makes one
         finally:
             _ctx._activate()
@@ -75,24 +75,18 @@ class FrameTests(PlotDeviceTestCase):
     def test_frame_commits_text(self):
         # rendering never writes to the text storage,
         # which used to deadlock two renders of a frame
-        from plotdevice.gfx.text import Text
         size(120, 60)
         t = text('committed', 10, 40)
-        outputmode(CMYK) # the commit must pick this up
+        outputmode(CMYK) # a mode the text wasn't made in
         frame = _ctx.canvas.commit()
         committed = frame.grobs[0] # a copy, since `t` is still held
-        self.assertEqual(committed._nsmode, CMYK)
         if committed._engine is not None:
             self.assertEqual(committed._engine.firstUnlaidCharacterIndex(), len(committed.text))
         else:
             self.assertIsNotNone(committed._line) # laid out by CoreText
-        def forbidden(text):
-            raise AssertionError('rendering wrote to the text storage')
-        orig, Text._colorize = Text._colorize, forbidden
-        try:
-            _png(frame)
-        finally:
-            Text._colorize = orig
+        stored = committed._store.copy()
+        _png(frame)
+        self.assertTrue(committed._store.isEqualToAttributedString_(stored))
 
     def test_frame_shares_grobs_the_script_let_go_of(self):
         size(100, 100)

@@ -1989,11 +1989,8 @@ class Frame(object):
                 rect = ((0,0), self.pagesize)
                 if isinstance(self.background, Gradient):
                     self.background.fill(rect)
-                elif isinstance(self.background, Pattern):
-                    CGContextSetFillColorWithColor(gfx._cg_port(), self.background.cgColor)
-                    NSRectFillUsingOperation(rect, NSCompositeSourceOver)
                 else:
-                    self.background.set()
+                    CGContextSetFillColorWithColor(gfx._cg_port(), self.background.cgColor)
                     NSRectFillUsingOperation(rect, NSCompositeSourceOver)
 
             with autorelease():

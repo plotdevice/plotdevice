@@ -82,10 +82,11 @@ from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CI
                        NSBundle, NSCharacterSet, NSData, NSDate, NSDateFormatter, NSDictionary, NSFileCoordinator, \
                        NSFileHandle, NSFileHandleDataAvailableNotification, NSHeight, NSInsetRect, \
                        NSIntersectionRange, NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, \
-                       NSMakeRange, NSMidX, NSMidY, NSMutableAttributedString, NSMutableData, NSNotFound, \
-                       NSNotificationCenter, NSObject, NSOffsetRect, NSOperationQueue, NSPoint, NSPointInRect, \
-                       NSRect, NSRectFromString, NSSelectorFromString, NSSize, NSString, NSStringFromRect, NSTimer, \
-                       NSTimeZone, NSURL, NSUserDefaults, NSUTF8StringEncoding, NSWidth, NSZeroRect
+                       NSMakeRange, NSMapTable, NSMidX, NSMidY, NSMutableAttributedString, NSMutableData, \
+                       NSNotFound, NSNotificationCenter, NSObject, NSOffsetRect, NSOperationQueue, NSPoint, \
+                       NSPointInRect, NSRect, NSRectFromString, NSSelectorFromString, NSSize, NSString, \
+                       NSStringFromRect, NSTimer, NSTimeZone, NSURL, NSUserDefaults, NSUTF8StringEncoding, NSWidth, \
+                       NSZeroRect
 from WebKit import WKUserScript, WKUserScriptInjectionTimeAtDocumentStart, WKWebView, WKWebViewConfiguration
 from ColorSync import ColorSyncProfileCreate, ColorSyncProfileCreateWithName, ColorSyncTransformConvert, \
                       ColorSyncTransformCreate, kColorSync16BitInteger, kColorSyncAlphaNone, \
