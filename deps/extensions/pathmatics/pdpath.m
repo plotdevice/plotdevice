@@ -560,17 +560,6 @@ PDPath_elements(PDPathObject *self, PyObject *unused)
 }
 
 static PyObject *
-PDPath_ns(PDPathObject *self, PyObject *unused)
-{
-    // a new NSBezierPath with the same outline (its closes all made with closePath)
-    static PyTypeObject *ns_type = NULL;
-    if (!ns_type && !(ns_type = pyobjc_type("AppKit", "NSBezierPath"))) return NULL;
-    pd_flush(self);
-    NSBezierPath *ns = [[Pathmatician bezierPath:self->path] retain];
-    return wrap_objc(ns_type, ns, 0);
-}
-
-static PyObject *
 PDPath_cgpath(PDPathObject *self, void *closure)
 {
     // the path as pyobjc's CGPathRef, for Quartz calls (a live view of this path, not a copy)
@@ -600,7 +589,6 @@ static PyMethodDef PDPath_methods[] = {
     {"contains", (PyCFunction)(void(*)(void))PDPath_contains, METH_FASTCALL, NULL},
     {"current_point", (PyCFunction)PDPath_current_point, METH_NOARGS, NULL},
     {"elements", (PyCFunction)PDPath_elements, METH_NOARGS, NULL},
-    {"ns", (PyCFunction)PDPath_ns, METH_NOARGS, NULL},
     {NULL}
 };
 

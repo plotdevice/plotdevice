@@ -55,7 +55,7 @@ from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplicati
                    NSCurveToBezierPathElement, NSDeviceCMYKColorSpace, NSDeviceIndependentModifierFlagsMask, \
                    NSDeviceRGBColorSpace, NSDocument, NSDocumentController, NSDragOperationCopy, NSEventTypeKeyDown, \
                    NSFindPboard, NSFixedPitchFontMask, NSFocusRingTypeExterior, NSFont, NSFontDescriptor, \
-                   NSFontManager, NSForegroundColorAttributeName, NSGIFFileType, NSGradient, NSGraphicsContext, \
+                   NSFontManager, NSForegroundColorAttributeName, NSGIFFileType, NSGraphicsContext, \
                    NSGraphiteControlTint, NSImage, NSImageCacheNever, NSImageCompressionFactor, \
                    NSImageInterpolationHigh, NSItalicFontMask, NSJPEGFileType, NSJustifiedTextAlignment, \
                    NSKernAttributeName, NSKeyValueObservingOptionNew, NSLayoutConstraint, NSLayoutManager, \

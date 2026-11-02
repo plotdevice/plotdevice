@@ -354,6 +354,37 @@ class ColorTests(PlotDeviceTestCase):
         self.assertGreater(ink(194, 30)[3], 95)
         self.assertLess(ink(194, 30)[0], 5)
 
+    def test_gradient_fills_cover_their_path_in_any_unit(self):
+        for unit, side in ((px, 300), (cm, 10), (inch, 4)):
+            clear(all)
+            size(side, side, unit=unit)
+            background(1)
+            fill(color(1, 0, 0), color(0, 0, 1), angle=0)
+            rect(side * .25, side * .25, side * .5, side * .5)
+            export(join(self.tmp, 'units.png'))
+            name, data, row, depth = _image(join(self.tmp, 'units.png'))
+            dpx = side * unit.basis / 300 # the png's pixels per 300th of the page
+            rgb = lambda x, y: tuple(data[int(y * dpx) * row + int(x * dpx) * depth:][:3])
+            left, right, outside = rgb(80, 150), rgb(220, 150), rgb(30, 30)
+            self.assertGreater(left[0], 200)
+            self.assertLess(left[2], 60)
+            self.assertGreater(right[2], 200)
+            self.assertLess(right[0], 60)
+            self.assertEqual(outside, (255, 255, 255))
+
+    def test_gradients_fade_to_clear_without_darkening(self):
+        # a lone color fades to clear, staying the same color as it does
+        size(200, 100)
+        background(None)
+        fill(Gradient(color(1, 0, 0), angle=0))
+        rect(0, 0, 200, 100)
+        export(join(self.tmp, 'fade.png'))
+        name, data, row, depth = _image(join(self.tmp, 'fade.png'))
+        r, g, b, a = data[50 * row + 100 * depth:][:4]
+        self.assertGreater(r, 245)
+        self.assertLess(max(g, b), 10)
+        self.assertTrue(100 < a < 155)
+
     def test_pattern_filled_text_exports_in_cmyk(self):
         # text filled with a pattern exports as it does when drawn inside the export block
         def scene():

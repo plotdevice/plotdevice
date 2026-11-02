@@ -5,12 +5,16 @@ import json
 import zlib
 import colorsys
 import warnings
+import objc
 from array import array
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path, numlike
 from . import _inkmode, _outputpress, _frame, _base_ctm
+
+PDGradient = objc.lookUpClass('PDGradient')
+
 _ctx = None
 __all__ = ("RGB", "HSV", "HSB", "CMYK", "GREY", "P3", "SRGB", "REC709", "REC2020",
            "GRACOL", "GRACOL_UNCOATED", "SWOP", "FOGRA39", "FOGRA47",
@@ -937,7 +941,7 @@ class Gradient(object):
             _copy_attrs(colors[0], self, ('_gradient', '_outputmode', '_space', '_steps', '_colors', '_center', '_angle'))
             return
 
-        # parse colors and assemble an NSGradient
+        # parse colors and their stops
         colors = [Color(c) for c in colors]
         if len(colors) == 1:
             colors.append(Color(None))
@@ -988,23 +992,23 @@ class Gradient(object):
         return 'Gradient(%s, steps=%r)'%(", ".join('%r'%c for c in self._colors), self._steps)
 
     @property
-    def nsGradient(self):
+    def pdGradient(self):
         c_mode = _inkmode()
         if not self._gradient or self._outputmode!=c_mode:
             # rgb in the gradient's space, else the output's
             if c_mode == RGB:
-                c_space = NSColorSpace.alloc().initWithCGColorSpace_(_SPACES[self._space])
-                ns_clrs = [NSColor.colorWithCGColor_(c._rgb_as(self._space)) for c in self._colors]
+                c_space = _SPACES[self._space]
+                clrs = [c._rgb_as(self._space) for c in self._colors]
             else:
                 if c_mode == CMYK or (isinstance(c_mode, tuple) and not c_mode[1]):
-                    c_space = NSColorSpace.deviceCMYKColorSpace()
+                    c_space = _DEVICE_CMYK
                 elif isinstance(c_mode, tuple):
-                    c_space = Press.named[c_mode[0]].ns_space
+                    c_space = Press.named[c_mode[0]].space
                 else:
-                    c_space = NSColorSpace.alloc().initWithCGColorSpace_(_INKS[c_mode])
-                ns_clrs = [c.nsColor for c in self._colors]
-            ns_gradient = NSGradient.alloc().initWithColors_atLocations_colorSpace_(ns_clrs, self._steps, c_space)
-            self._gradient, self._outputmode = ns_gradient, c_mode
+                    c_space = _INKS[c_mode]
+                clrs = [c.cgColor for c in self._colors]
+            pd_gradient = PDGradient.alloc().initWithColors_atLocations_colorSpace_(clrs, self._steps, c_space)
+            self._gradient, self._outputmode = pd_gradient, c_mode
         return self._gradient
 
     @property
@@ -1017,12 +1021,11 @@ class Gradient(object):
     def fill(self, obj):
         if isinstance(obj, tuple):
             if self._angle is not None:
-                self.nsGradient.drawInRect_angle_(obj, self._angle)
+                self.pdGradient.drawInRect_angle_(obj, self._angle)
             else:
-                self.nsGradient.drawInRect_relativeCenterPosition_(obj, self._center)
+                self.pdGradient.drawInRect_relativeCenterPosition_(obj, self._center)
         elif obj.__class__.__name__ == 'Bezier':
-            pth = obj._pdpath.ns() # NSGradient draws in an NSBezierPath
             if self._angle is not None:
-                self.nsGradient.drawInBezierPath_angle_(pth, self._angle)
+                self.pdGradient.drawInPath_angle_(obj.cgPath, self._angle)
             else:
-                self.nsGradient.drawInBezierPath_relativeCenterPosition_(pth, self._center)
+                self.pdGradient.drawInPath_relativeCenterPosition_(obj.cgPath, self._center)
