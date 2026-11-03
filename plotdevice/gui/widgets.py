@@ -364,7 +364,7 @@ class DashboardController(NSObject):
 
 
 from ..context import RGB, CMYK
-from ..gfx.colors import P3, SRGB, Profile, _FORMAT_COLORS, _FORMAT_DEFAULTS, _REC709, _REC2020
+from ..gfx.colors import P3, SRGB, Profile, Output
 from ..lib.io import MovieExportSession, HEVC, H264, PRORES
 
 # include menu sections headers on macOS 14+
@@ -622,14 +622,14 @@ class ExportSheet(NSObject):
             format = self.formats['image'][self.imageFormat.indexOfSelectedItem()]
         else:
             format = self.formats['movie'][self.movieFormat.indexOfSelectedItem()]
-        allowed = _FORMAT_COLORS[format]
+        allowed = Output.FORMATS[format]
         holds_cmyk = CMYK in allowed
         system = [key for _, key in Profile.installed(RGB)]
         for idx, item in enumerate(popup.itemArray()):
             colors = item.representedObject()
             if colors is None:
                 item.setHidden_(idx > 0 and not holds_cmyk)
-            elif colors in (_REC709, _REC2020) and 'rgb' in allowed:
+            elif colors in (Profile.REC709, Profile.REC2020) and 'rgb' in allowed:
                 item.setHidden_(format not in ('png', 'tiff'))
             elif colors in (P3, SRGB) or colors in system:
                 item.setHidden_(not (colors in allowed or 'rgb' in allowed))
@@ -637,7 +637,7 @@ class ExportSheet(NSObject):
                 item.setHidden_(not holds_cmyk)
         chosen = popup.selectedItem()
         if chosen is None or chosen.isHidden() or not chosen.isEnabled():
-            default = _FORMAT_DEFAULTS.get(format, P3)
+            default = Output.DEFAULTS.get(format, P3)
             popup.selectItemAtIndex_(popup.indexOfItemWithRepresentedObject_(default))
         choices = [item for item in popup.itemArray() if item.representedObject() is not None and not item.isHidden()]
         popup.setEnabled_(len(choices) > 1)

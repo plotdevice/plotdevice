@@ -224,14 +224,14 @@ class ColorTests(PlotDeviceTestCase):
 
     def test_reads_of_cmyk_colors_go_through_the_export_blocks_press(self):
         from Quartz import CGColorCreate
-        from plotdevice.gfx.colors import Profile, _components, _matched, _SPACES
+        from plotdevice.gfx.colors import Profile, SPACES, _components, _matched
         cyan, white = color(1, 0, 0, 0, mode=CMYK), color(1)
         outside = (cyan.rgba, cyan.hex, cyan.blend(white, .5).rgba, hash(cyan))
         size(10, 10)
         with export(join(self.tmp, 'press.pdf'), colors=FOGRA47):
             inside = (cyan.rgba, cyan.hex, cyan.blend(white, .5).rgba, hash(cyan))
             self.assertEqual(cyan, color(1, 0, 0, 0, mode=CMYK)) # equality ignores the press
-        direct = _components(_matched(CGColorCreate(Profile.named[FOGRA47].space, (1, 0, 0, 0, 1)), _SPACES[P3]))
+        direct = _components(_matched(CGColorCreate(Profile.named[FOGRA47].space, (1, 0, 0, 0, 1)), SPACES[P3]))
         self.assertComponents(inside[0], direct)
         self.assertComponents(inside[2], [v + (1 - v) * .5 for v in direct])
         self.assertNotEqual(inside[1], outside[1])
@@ -687,7 +687,7 @@ class ColorTests(PlotDeviceTestCase):
 
     def test_bundled_presses_are_the_profiles_the_readme_lists(self):
         import hashlib
-        from plotdevice.gfx.colors import Press, _PRESSES
+        from plotdevice.gfx.colors import Press
         from plotdevice.util import rsrc_path
         readme = open(rsrc_path('press/README.md')).read()
         sums = dict((name, digest) for digest, name in re.findall(r'^([0-9a-f]{64})  (\S+)$', readme, re.M))
@@ -695,7 +695,7 @@ class ColorTests(PlotDeviceTestCase):
         for name, value in presses.items():
             self.assertEqual(globals()[name], value)
             profile = Press(value).icc # decompressed from rsrc/press
-            self.assertEqual(hashlib.sha256(profile).hexdigest(), sums[_PRESSES[value]], name)
+            self.assertEqual(hashlib.sha256(profile).hexdigest(), sums[Press.BUNDLED[value]], name)
             self.assertEqual((profile[12:16], profile[16:20]), (b'prtr', b'CMYK'), name)
         self.assertEqual(len(sums), len(presses))
 
@@ -712,16 +712,16 @@ class ColorTests(PlotDeviceTestCase):
         for folder, name, icc in ((user, 'My Press.icc', cmyk), (other, 'My Press.icc', cmyk), (other, 'Lab Proof.ICM', rgb),
                                   (user, 'Shadowed.icc', rgb), (other, 'Shadowed.icc', cmyk)):
             open(join(folder, name), 'wb').write(icc)
-        saved = colors._PROFILE_FOLDERS
-        colors._PROFILE_FOLDERS = [user, other]
+        saved = colors.Profile.FOLDERS
+        colors.Profile.FOLDERS = [user, other]
         try:
             for name in ('My Press', 'my press.icc', 'MY PRESS'):
                 self.assertEqual(parsed(name, 'pdf'), os.path.realpath(join(user, 'My Press.icc')))
             self.assertEqual(parsed('lab proof', 'png'), os.path.realpath(join(other, 'Lab Proof.ICM')))
             # the menus skip truncated profiles
             open(join(user, 'Cut Off.icc'), 'wb').write(cmyk[:4000])
-            self.assertIsNone(colors._profile_header(join(user, 'Cut Off.icc')))
-            self.assertIsNotNone(colors._profile_header(join(user, 'My Press.icc')))
+            self.assertIsNone(colors.Profile.header(join(user, 'Cut Off.icc')))
+            self.assertIsNotNone(colors.Profile.header(join(user, 'My Press.icc')))
             with self.assertRaisesRegex(DeviceError, "can't be exported"):
                 Output.parse('My Press', 'png')
             with self.assertRaisesRegex(DeviceError, "'Nothing Here' isn't a built-in color space or ICC profile filename"):
@@ -749,8 +749,8 @@ class ColorTests(PlotDeviceTestCase):
                 with self.assertRaisesRegex(DeviceError, "can't be exported"):
                     Output.parse('Generic CMYK Profile', 'png')
         finally:
-            colors._PROFILE_FOLDERS = saved
-            colors._PROFILE_LISTS.clear()
+            colors.Profile.FOLDERS = saved
+            colors.Profile.scanned.clear()
 
     def test_presses_resolve_where_cmyk_fits(self):
         from plotdevice.gfx.colors import Output, Profile, Press

@@ -15,7 +15,7 @@ from .gfx.geometry import Dimension, IDENTITY, parse_coords
 from .gfx.typography import Layout
 from .gfx.effects import Frob, _commit_all
 from .gfx import *
-from .gfx.colors import Output, _named
+from .gfx.colors import Output, _canonical
 from .gfx.image import Snapshot
 from . import gfx, lib, util, Halted, DeviceError
 
@@ -752,7 +752,7 @@ class Context(object):
             if {'range', 'mode', 'space'}.intersection(kwargs):
                 for kind in ('mode', 'space'):
                     if kind in kwargs:
-                        kwargs[kind] = _named(kind, kwargs[kind])
+                        kwargs[kind] = _canonical(kind, kwargs[kind])
                 return PlotContext(self, **kwargs)
 
         # if we got at least one numerical/string arg, parse it
@@ -761,7 +761,7 @@ class Context(object):
     def colormode(self, mode=None, range=None):
         """Legacy command. Equivalent to: color(mode=...)"""
         if mode is not None:
-            self._colormode = _named('mode', mode)
+            self._colormode = _canonical('mode', mode)
         if range is not None:
             self._colorrange = float(range)
         return self._colormode

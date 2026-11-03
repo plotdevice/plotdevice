@@ -34,138 +34,33 @@ SRGB = "srgb"
 REC709 = "rec709"
 REC2020 = "rec2020"
 
-# bundled presses and their zlib'd profiles
+# bundled presses
 GRACOL = "gracol"
 GRACOL_UNCOATED = "gracol_uncoated"
 SWOP = "swop"
 FOGRA39 = "fogra39"
 FOGRA47 = "fogra47"
-_PRESSES = {GRACOL: 'GRACoL2013_CRPC6.icc', GRACOL_UNCOATED: 'GRACoL2013UNC_CRPC3.icc', SWOP: 'SWOP2013C3_CRPC5.icc',
-            FOGRA39: 'ISOcoated_v2_bas.icc', FOGRA47: 'PSO_Uncoated_ISO12647_bas.icc'}
-
-# PDF/X output conditions from color.org's registry
-_PRESS_CONDITIONS = {GRACOL: ('CGATS21-2-CRPC6', 'Universal Premium Coated (GRACoL 2013, CGATS21-2 CRPC6)'),
-                     GRACOL_UNCOATED: ('CGATS21-2-CRPC3', 'Universal Premium Uncoated (GRACoL 2013, CGATS21-2 CRPC3)'),
-                     SWOP: ('CGATS21-2-CRPC5', 'Universal Publication Coated (SWOP 2013, CGATS21-2 CRPC5)'),
-                     FOGRA39: ('FOGRA39', 'Offset, gloss or matt coated paper (ISO 12647-2:2004, FOGRA39)'),
-                     FOGRA47: ('FOGRA47', 'Offset, uncoated white paper (ISO 12647-2:2004, FOGRA47)')}
-
-# the menus' names for the bundled presses
-_PRESS_LABELS = {GRACOL: 'GRACoL 2013 Coated (CRPC6)', GRACOL_UNCOATED: 'GRACoL 2013 Uncoated (CRPC3)', SWOP: 'SWOP 2013 (CRPC5)',
-                 FOGRA39: 'ISO Coated v2 (FOGRA39)', FOGRA47: 'PSO Uncoated (FOGRA47)'}
-
-# profile folders, in match order
-_PROFILE_FOLDERS = ['~/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles/Profiles',
-                    '/Library/ColorSync/Profiles/Recommended', '/Library/Application Support/Adobe/Color/Profiles',
-                    '/Library/Application Support/Adobe/Color/Profiles/Recommended']
-
-# system profiles, searched last, and the video spaces
-_SYSTEM_PROFILES = '/System/Library/ColorSync/Profiles'
-_REC709 = os.path.join(_SYSTEM_PROFILES, 'ITU-709.icc')
-_REC2020 = os.path.join(_SYSTEM_PROFILES, 'ITU-2020.icc')
-_PROFILE_LISTS = {} # folder mtimes -> (presses, names)
-
-# system rgb spaces offered beside P3 and sRGB
-_SYSTEM_RGB = {'AdobeRGB1998.icc': 'Adobe RGB (1998)', 'ROMM RGB.icc': 'ROMM RGB (ProPhoto)', 'ITU-709.icc': 'Rec. 709',
-               'ITU-2020.icc': 'Rec. 2020'}
-
-# extended spaces keep out-of-gamut components
-_SPACES = {P3: CGColorSpaceCreateWithName(kCGColorSpaceExtendedDisplayP3),
-           SRGB: CGColorSpaceCreateWithName(kCGColorSpaceExtendedSRGB)}
-_SPACE_NAMES = {kCGColorSpaceExtendedDisplayP3:P3, kCGColorSpaceDisplayP3:P3,
-                kCGColorSpaceExtendedSRGB:SRGB, kCGColorSpaceSRGB:SRGB}
-_GENERIC_CMYK = CGColorSpaceCreateWithName(kCGColorSpaceGenericCMYK)
-_DEVICE_CMYK = CGColorSpaceCreateDeviceCMYK()
-
-# the colors= each format takes, and its default
-_FORMAT_COLORS = dict(png=('rgb',), heic=('rgb',), mov=(P3, SRGB, _REC709, _REC2020), gif=(SRGB,), eps=(SRGB, CMYK),
-                      pdf=('rgb', CMYK), tiff=('rgb', CMYK), jpg=('rgb', CMYK))
-_FORMAT_DEFAULTS = dict(gif=SRGB, eps=SRGB)
-
-# lowercased names for mode= and space=
-_NAMES = dict(mode={RGB:RGB, HSV:HSV, 'hsb':HSV, CMYK:CMYK, GREY:GREY},
-              space={P3:P3, SRGB:SRGB})
-
-_CSS_COLORS = json.load(open(rsrc_path('colors.json')))
-
-def _named(kind, val):
-    """The color mode or space a string names, in any case"""
-    if val is None:
-        return None
-    names = _NAMES[kind]
-    key = val.lower() if isinstance(val, str) else val
-    if key not in names:
-        unknown = 'Unknown color %s %r (should be one of: %s)' % (kind, val, ', '.join(sorted(set(names.values()))))
-        raise DeviceError(unknown)
-    return names[key]
-
-def _icc_text(icc, sig):
-    count = int.from_bytes(icc[128:132], 'big')
-    for at in range(132, 132 + 12 * count, 12):
-        if icc[at:at + 4] == sig:
-            offset, size = int.from_bytes(icc[at + 4:at + 8], 'big'), int.from_bytes(icc[at + 8:at + 12], 'big')
-            tag = icc[offset:offset + size]
-            if tag[:4] == b'mluc':
-                length, start = int.from_bytes(tag[20:24], 'big'), int.from_bytes(tag[24:28], 'big')
-                return tag[start:start + length].decode('utf-16-be')
-            if tag[:4] == b'desc':
-                return tag[12:12 + int.from_bytes(tag[8:12], 'big')].split(b'\0')[0].decode('latin-1')
-            if tag[:4] == b'text':
-                return tag[8:].split(b'\0')[0].decode('latin-1')
-    return None
-
-def _profile_header(path):
-    # a profile's class, data space & description, or None
-    try:
-        with open(path, 'rb') as f:
-            head = f.read(132)
-            # skip truncated files
-            if len(head) < 132 or head[36:40] != b'acsp' or int.from_bytes(head[0:4], 'big') > os.path.getsize(path):
-                return None
-            count = min(int.from_bytes(head[128:132], 'big'), 256)
-            table = f.read(12 * count)
-            icc = bytearray(head + table)
-            for at in range(0, len(table), 12):
-                if table[at:at + 4] == b'desc':
-                    offset, size = int.from_bytes(table[at + 4:at + 8], 'big'), int.from_bytes(table[at + 8:at + 12], 'big')
-                    f.seek(offset)
-                    icc = bytes(icc) + b'\0' * (offset - len(icc)) + f.read(min(size, 4096))
-            desc = _icc_text(bytes(icc), b'desc') or os.path.splitext(os.path.basename(path))[0]
-            return (head[12:16], head[16:20], desc.strip())
-    except OSError:
-        return None
-
-def _installed_profiles():
-    # installed presses, and profiles by lowercased name
-    folders = [os.path.expanduser(folder) for folder in _PROFILE_FOLDERS]
-    sources = tuple(os.path.getmtime(path) if os.path.exists(path) else None for path in folders)
-    lists = _PROFILE_LISTS.get(sources)
-    if lists is None:
-        found, names = {}, {}
-        for folder in folders + [_SYSTEM_PROFILES]:
-            for name in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
-                stem, ext = os.path.splitext(name)
-                if ext.lower() not in ('.icc', '.icm'):
-                    continue
-                path = os.path.join(folder, name)
-                real = os.path.realpath(path) # Adobe links into ColorSync's
-                if os.path.isfile(real):
-                    names.setdefault(name.lower(), real)
-                    names.setdefault(stem.lower(), real)
-                header = _profile_header(path) if folder != _SYSTEM_PROFILES else None
-                if header and header[:2] == (b'prtr', b'CMYK'):
-                    found.setdefault(header[2], path)
-        lists = (sorted(found.items(), key=lambda item: item[0].lower()), names)
-        _PROFILE_LISTS.clear()
-        _PROFILE_LISTS[sources] = lists
-    return lists
-
-def _installed_presses():
-    """The installed CMYK output profiles, as (description, path) pairs"""
-    return _installed_profiles()[0]
 
 class Profile(object):
     named = {} # key -> Profile, as colors= names it
+
+    # ICC profile search path
+    FOLDERS = ['~/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles/Profiles',
+               '/Library/ColorSync/Profiles/Recommended', '/Library/Application Support/Adobe/Color/Profiles',
+               '/Library/Application Support/Adobe/Color/Profiles/Recommended']
+
+    # system profiles (searched last)
+    SYSTEM = '/System/Library/ColorSync/Profiles'
+
+    # default video spaces
+    REC709 = os.path.join(SYSTEM, 'ITU-709.icc')
+    REC2020 = os.path.join(SYSTEM, 'ITU-2020.icc')
+
+    # system rgb spaces offered beside P3 and sRGB
+    SYSTEM_RGB = {'AdobeRGB1998.icc': 'Adobe RGB (1998)', 'ROMM RGB.icc': 'ROMM RGB (ProPhoto)',
+                  'ITU-709.icc': 'Rec. 709', 'ITU-2020.icc': 'Rec. 2020'}
+
+    scanned = {} # folder mtimes -> (presses, names)
 
     def __init__(self, key, mode, space):
         self.key = key
@@ -178,20 +73,20 @@ class Profile(object):
         key = val.lower().replace('-', '_')
         if key in (P3, SRGB, CMYK):
             return cls.named[key]
-        if key in _PRESSES:
+        if key in Press.BUNDLED:
             if key not in cls.named:
                 cls.named[key] = Press(key)
             return cls.named[key]
 
         # a path, else an installed profile's name
-        path = {REC709: _REC709, REC2020: _REC2020}.get(key, val) # rec709 & rec2020 point to the system's .icc profiles
+        path = {REC709: cls.REC709, REC2020: cls.REC2020}.get(key, val) # rec709 & rec2020 point to the system's .icc profiles
         key = os.path.abspath(os.path.expanduser(path))
         if not os.path.exists(key):
-            key = _installed_profiles()[1].get(val.lower(), key)
+            key = cls.scan()[1].get(val.lower(), key)
         try:
             icc = open(key, 'rb').read()
         except OSError:
-            searched = ', '.join(_PROFILE_FOLDERS + [_SYSTEM_PROFILES])
+            searched = ', '.join(cls.FOLDERS + [cls.SYSTEM])
             unknown = "%r isn't a built-in color space or ICC profile filename (searched in: %s)" % (val, searched)
             raise DeviceError(unknown)
         model = icc[16:20] if icc[36:40] == b'acsp' else None
@@ -199,7 +94,7 @@ class Profile(object):
         if space is None:
             notrgb = "%r isn't an RGB or CMYK ICC profile" % val
             raise DeviceError(notrgb)
-        generic = os.path.join(_SYSTEM_PROFILES, 'Generic CMYK Profile.icc')
+        generic = os.path.join(cls.SYSTEM, 'Generic CMYK Profile.icc')
         if model == b'CMYK' and os.path.exists(generic) and icc == open(generic, 'rb').read():
             # generic cmyk means unlabeled CMYK
             return cls.named[CMYK]
@@ -211,11 +106,90 @@ class Profile(object):
     def installed(cls, mode):
         """The profiles the menus offer for `mode` beside the built-in spaces, as (label, key) pairs"""
         if mode == RGB:
-            return [(label, os.path.join(_SYSTEM_PROFILES, name)) for name, label in _SYSTEM_RGB.items()
-                    if os.path.exists(os.path.join(_SYSTEM_PROFILES, name))]
-        return [(label, press) for press, label in _PRESS_LABELS.items()] + _installed_presses()
+            return [(label, os.path.join(cls.SYSTEM, name)) for name, label in cls.SYSTEM_RGB.items()
+                    if os.path.exists(os.path.join(cls.SYSTEM, name))]
+        return [(label, press) for press, label in Press.LABELS.items()] + cls.scan()[0]
+
+    @staticmethod
+    def header(path):
+        """A profile's class, data space, & description, or None"""
+        try:
+            with open(path, 'rb') as f:
+                head = f.read(132)
+                # skip truncated files
+                if len(head) < 132 or head[36:40] != b'acsp' or int.from_bytes(head[0:4], 'big') > os.path.getsize(path):
+                    return None
+                count = min(int.from_bytes(head[128:132], 'big'), 256)
+                table = f.read(12 * count)
+                icc = bytearray(head + table)
+                for at in range(0, len(table), 12):
+                    if table[at:at + 4] == b'desc':
+                        offset, size = int.from_bytes(table[at + 4:at + 8], 'big'), int.from_bytes(table[at + 8:at + 12], 'big')
+                        f.seek(offset)
+                        icc = bytes(icc) + b'\0' * (offset - len(icc)) + f.read(min(size, 4096))
+                desc = Profile.tag_text(bytes(icc), b'desc') or os.path.splitext(os.path.basename(path))[0]
+                return (head[12:16], head[16:20], desc.strip())
+        except OSError:
+            return None
+
+    @classmethod
+    def scan(cls):
+        """The installed presses as (description, path) pairs, and profiles by lowercased name"""
+        folders = [os.path.expanduser(folder) for folder in cls.FOLDERS]
+        sources = tuple(os.path.getmtime(path) if os.path.exists(path) else None for path in folders)
+        lists = cls.scanned.get(sources)
+        if lists is None:
+            found, names = {}, {}
+            for folder in folders + [cls.SYSTEM]:
+                for name in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+                    stem, ext = os.path.splitext(name)
+                    if ext.lower() not in ('.icc', '.icm'):
+                        continue
+                    path = os.path.join(folder, name)
+                    real = os.path.realpath(path) # Adobe links into ColorSync's
+                    if os.path.isfile(real):
+                        names.setdefault(name.lower(), real)
+                        names.setdefault(stem.lower(), real)
+                    header = cls.header(path) if folder != cls.SYSTEM else None
+                    if header and header[:2] == (b'prtr', b'CMYK'):
+                        found.setdefault(header[2], path)
+            lists = (sorted(found.items(), key=lambda item: item[0].lower()), names)
+            cls.scanned.clear()
+            cls.scanned[sources] = lists
+        return lists
+
+    @staticmethod
+    def tag_text(icc, sig):
+        """The text of an ICC profile's `sig` tag, or None"""
+        count = int.from_bytes(icc[128:132], 'big')
+        for at in range(132, 132 + 12 * count, 12):
+            if icc[at:at + 4] == sig:
+                offset, size = int.from_bytes(icc[at + 4:at + 8], 'big'), int.from_bytes(icc[at + 8:at + 12], 'big')
+                tag = icc[offset:offset + size]
+                if tag[:4] == b'mluc':
+                    length, start = int.from_bytes(tag[20:24], 'big'), int.from_bytes(tag[24:28], 'big')
+                    return tag[start:start + length].decode('utf-16-be')
+                if tag[:4] == b'desc':
+                    return tag[12:12 + int.from_bytes(tag[8:12], 'big')].split(b'\0')[0].decode('latin-1')
+                if tag[:4] == b'text':
+                    return tag[8:].split(b'\0')[0].decode('latin-1')
+        return None
 
 class Press(Profile):
+    # bundled presses' zlib'd profiles
+    BUNDLED = {GRACOL: 'GRACoL2013_CRPC6.icc', GRACOL_UNCOATED: 'GRACoL2013UNC_CRPC3.icc', SWOP: 'SWOP2013C3_CRPC5.icc',
+               FOGRA39: 'ISOcoated_v2_bas.icc', FOGRA47: 'PSO_Uncoated_ISO12647_bas.icc'}
+
+    # PDF/X output conditions from color.org's registry
+    CONDITIONS = {GRACOL: ('CGATS21-2-CRPC6', 'Universal Premium Coated (GRACoL 2013, CGATS21-2 CRPC6)'),
+                  GRACOL_UNCOATED: ('CGATS21-2-CRPC3', 'Universal Premium Uncoated (GRACoL 2013, CGATS21-2 CRPC3)'),
+                  SWOP: ('CGATS21-2-CRPC5', 'Universal Publication Coated (SWOP 2013, CGATS21-2 CRPC5)'),
+                  FOGRA39: ('FOGRA39', 'Offset, gloss or matt coated paper (ISO 12647-2:2004, FOGRA39)'),
+                  FOGRA47: ('FOGRA47', 'Offset, uncoated white paper (ISO 12647-2:2004, FOGRA47)')}
+
+    # the menus' names for the bundled presses
+    LABELS = {GRACOL: 'GRACoL 2013 Coated (CRPC6)', GRACOL_UNCOATED: 'GRACoL 2013 Uncoated (CRPC3)', SWOP: 'SWOP 2013 (CRPC5)',
+              FOGRA39: 'ISO Coated v2 (FOGRA39)', FOGRA47: 'PSO Uncoated (FOGRA47)'}
 
     def __init__(self, key, space=None):
         self.key = key # read by the icc property
@@ -226,8 +200,8 @@ class Press(Profile):
     def icc(self):
         """The press's ICC profile bytes"""
         if self._icc is None:
-            if self.key in _PRESSES:
-                self._icc = zlib.decompress(open(rsrc_path('press/%s.zlib' % _PRESSES[self.key]), 'rb').read())
+            if self.key in self.BUNDLED:
+                self._icc = zlib.decompress(open(rsrc_path('press/%s.zlib' % self.BUNDLED[self.key]), 'rb').read())
             else:
                 self._icc = open(self.key, 'rb').read()
         return self._icc
@@ -236,16 +210,16 @@ class Press(Profile):
     def intent(self):
         """The press's PDF/X output intent"""
         if self._intent is None:
-            if self.key in _PRESS_CONDITIONS:
-                identifier, condition = _PRESS_CONDITIONS[self.key]
+            if self.key in self.CONDITIONS:
+                identifier, condition = self.CONDITIONS[self.key]
                 registry = 'http://www.color.org'
-                profile = open(rsrc_path('press/%s.zlib' % _PRESSES[self.key]), 'rb').read()
+                profile = open(rsrc_path('press/%s.zlib' % self.BUNDLED[self.key]), 'rb').read()
             else:
                 # the condition its targ tag names, else Custom
-                targ = (_icc_text(self.icc, b'targ') or '').strip()
+                targ = (self.tag_text(self.icc, b'targ') or '').strip()
                 named = targ and '\n' not in targ and len(targ) < 64 # not the data itself
                 identifier, registry = (targ, 'http://www.color.org') if named else ('Custom', '')
-                condition = _icc_text(self.icc, b'desc') or os.path.basename(self.key)
+                condition = self.tag_text(self.icc, b'desc') or os.path.basename(self.key)
                 profile = zlib.compress(self.icc, 1)
             self._intent = dict(identifier=identifier, condition=condition, registry=registry, profile=profile)
         return self._intent
@@ -280,12 +254,17 @@ Ink = namedtuple('Ink', ['profile', 'tagged'])
 class Output(namedtuple('Output', ['profile', 'format'])):
     __slots__ = ()
 
+    # the colors= each format takes, and its default
+    FORMATS = dict(png=('rgb',), heic=('rgb',), mov=(P3, SRGB, Profile.REC709, Profile.REC2020), gif=(SRGB,), eps=(SRGB, CMYK),
+                   pdf=('rgb', CMYK), tiff=('rgb', CMYK), jpg=('rgb', CMYK))
+    DEFAULTS = dict(gif=SRGB, eps=SRGB)
+
     @classmethod
     def parse(cls, val, format):
         """The output an export in `format` is written in for colors=`val`"""
         name = 'jpg' if format == 'jpeg' else format
         if val is None:
-            return cls(Profile.named[_FORMAT_DEFAULTS.get(name, P3)], format)
+            return cls(Profile.named[cls.DEFAULTS.get(name, P3)], format)
         if not isinstance(val, str):
             notpalette = "colors=%r isn't a built-in color space or ICC profile filename" % (val,)
             if numlike(val):
@@ -299,12 +278,12 @@ class Output(namedtuple('Output', ['profile', 'format'])):
             kind = 'press'
         else:
             kind = 'rgb'
-        allowed = _FORMAT_COLORS[name]
+        allowed = cls.FORMATS[name]
         listed = kind in allowed or key in allowed
         rgb_fits = kind in (P3, SRGB) and 'rgb' in allowed
         press_fits = kind == 'press' and CMYK in allowed
         if not (listed or rgb_fits or press_fits):
-            names = {'rgb': 'an RGB ICC profile', _REC709: 'REC709', _REC2020: 'REC2020'}
+            names = {'rgb': 'an RGB ICC profile', Profile.REC709: 'REC709', Profile.REC2020: 'REC2020'}
             options = ', '.join(names.get(opt, opt.upper()) for opt in allowed)
             if 'rgb' in allowed:
                 options = 'P3, SRGB, ' + options
@@ -364,6 +343,31 @@ class Proof(namedtuple('Proof', ['output', 'vision'])):
             return CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3)
         return self.output.profile.space
 
+# extended spaces keep out-of-gamut components
+SPACES = {P3: CGColorSpaceCreateWithName(kCGColorSpaceExtendedDisplayP3),
+           SRGB: CGColorSpaceCreateWithName(kCGColorSpaceExtendedSRGB)}
+SPACE_NAMES = {kCGColorSpaceExtendedDisplayP3:P3, kCGColorSpaceDisplayP3:P3,
+                kCGColorSpaceExtendedSRGB:SRGB, kCGColorSpaceSRGB:SRGB}
+GENERIC_CMYK = CGColorSpaceCreateWithName(kCGColorSpaceGenericCMYK)
+DEVICE_CMYK = CGColorSpaceCreateDeviceCMYK()
+
+# lowercased names for mode= and space=
+NAMES = dict(mode={RGB:RGB, HSV:HSV, 'hsb':HSV, CMYK:CMYK, GREY:GREY},
+              space={P3:P3, SRGB:SRGB})
+
+CSS_COLORS = json.load(open(rsrc_path('colors.json')))
+
+def _canonical(kind, val):
+    """The color mode or space a string case-insensitively names"""
+    if val is None:
+        return None
+    names = NAMES[kind]
+    key = val.lower() if isinstance(val, str) else val
+    if key not in names:
+        unknown = 'Unknown color %s %r (should be one of: %s)' % (kind, val, ', '.join(sorted(set(names.values()))))
+        raise DeviceError(unknown)
+    return names[key]
+
 def _clamp(v):
     return min(max(v, 0.0), 1.0)
 
@@ -385,7 +389,7 @@ class Color(object):
         if args and args[0] in (RGB, HSV, CMYK, GREY):
             mode, args = args[0], args[1:]
         else:
-            mode = _named('mode', kwargs.get('mode'))
+            mode = _canonical('mode', kwargs.get('mode'))
 
         if mode is None:
             # if no mode was specified, interpret the components in the context's current mode
@@ -393,7 +397,7 @@ class Color(object):
 
         # components are in space=, else the current one
         converting = kwargs.get('space') is not None
-        space = _named('space', kwargs.get('space')) or _ctx._colorspace
+        space = _canonical('space', kwargs.get('space')) or _ctx._colorspace
 
         # use the specified range for int values, or leave it as None to use the default 0-1 scale
         rng = kwargs.get('range')
@@ -409,7 +413,7 @@ class Color(object):
                     self._cmyk = self._src
                     self._space = space # rgb converted on demand
                 else:
-                    self._rgb = _matched(self._rgb, _SPACES[space])
+                    self._rgb = _matched(self._rgb, SPACES[space])
                     self._space = space
                     self._updateCmyk()
             return
@@ -418,18 +422,18 @@ class Color(object):
             return
         elif params == 1 and isinstance(args[0], (NSColor, CGColorRef)): # NSColor or CGColor object
             clr = args[0].CGColor() if isinstance(args[0], NSColor) else args[0]
-            own = _SPACE_NAMES.get(CGColorSpaceCopyName(CGColorGetColorSpace(clr)))
+            own = SPACE_NAMES.get(CGColorSpaceCopyName(CGColorGetColorSpace(clr)))
             if own is not None:
                 # keep p3 or srgb components unless converting
-                clr = CGColorCreate(_SPACES[own], _components(clr))
+                clr = CGColorCreate(SPACES[own], _components(clr))
                 if converting and own != space:
-                    clr = _matched(clr, _SPACES[space])
+                    clr = _matched(clr, SPACES[space])
                 else:
                     space = own
             elif CGColorSpaceGetModel(CGColorGetColorSpace(clr)) == kCGColorSpaceModelCMYK:
-                clr, cmyk = CGColorCreate(_GENERIC_CMYK, _components(clr)), True
+                clr, cmyk = CGColorCreate(GENERIC_CMYK, _components(clr)), True
             else:
-                clr = _matched(clr, _SPACES[space])
+                clr = _matched(clr, SPACES[space])
         elif params>=1 and isinstance(args[0], str):
             r, g, b, a = Color._parse(args[0])              # Hex string or named color
             if args[1:]:
@@ -532,9 +536,9 @@ class Color(object):
             if profile.key == P3:
                 cg = self._rgb
             elif profile.key == CMYK:
-                cg = CGColorCreate(_DEVICE_CMYK, self._values(CMYK))
+                cg = CGColorCreate(DEVICE_CMYK, self._values(CMYK))
             elif isinstance(profile, Press):
-                cg = CGColorCreate(profile.space if ink.tagged else _DEVICE_CMYK, self._press_values(profile.key))
+                cg = CGColorCreate(profile.space if ink.tagged else DEVICE_CMYK, self._press_values(profile.key))
             else:
                 cg = _matched(self._rgb, profile.space)
             self._to['cg', ink] = cg
@@ -552,14 +556,14 @@ class Color(object):
         return self._to[key]
 
     def _rgb_as(self, space):
-        return self._rgb if self.space == space else _matched(self._rgb, _SPACES[space])
+        return self._rgb if self.space == space else _matched(self._rgb, SPACES[space])
 
     def _read_as(self, space):
         # the rgb a script reads
         press = _output().press
         if press is None or self._mode is not CMYK:
             return self._rgb_as(space)
-        return _matched(CGColorCreate(press.space, self._values(CMYK)), _SPACES[space])
+        return _matched(CGColorCreate(press.space, self._values(CMYK)), SPACES[space])
 
     def _read(self, mode):
         # scripts see cmyk colors through the output press
@@ -602,7 +606,7 @@ class Color(object):
         try:
             return self._to['rgb']
         except KeyError:
-            rgb = self._to['rgb'] = _matched(self._src, _SPACES[self._space])
+            rgb = self._to['rgb'] = _matched(self._src, SPACES[self._space])
             return rgb
 
     @_rgb.setter
@@ -615,7 +619,7 @@ class Color(object):
         try:
             return self._to['cmyk']
         except KeyError:
-            cmyk = self._to['cmyk'] = _matched(self._src, _GENERIC_CMYK)
+            cmyk = self._to['cmyk'] = _matched(self._src, GENERIC_CMYK)
             return cmyk
 
     @_cmyk.setter
@@ -812,7 +816,7 @@ class Color(object):
 
         def valid_str(s):
             s = s.strip() if isinstance(s, str) else ''
-            return s in _CSS_COLORS or re.match(r'#?[A-Fa-f0-9]{3,8}$', s)
+            return s in CSS_COLORS or re.match(r'#?[A-Fa-f0-9]{3,8}$', s)
 
         if isinstance(blob, (tuple, list)):
             demoded = [b for b in blob if b not in (RGB,HSV,CMYK,GREY)]
@@ -832,7 +836,7 @@ class Color(object):
         # cmyk is clamped, rgb leaves all but alpha
         if scheme == CMYK:
             values = tuple(_clamp(float(v)) for v in components)
-            return CGColorCreate(_GENERIC_CMYK, values), values
+            return CGColorCreate(GENERIC_CMYK, values), values
         *values, alpha = components
         if scheme == HSV:
             h, s, v = values
@@ -840,15 +844,15 @@ class Color(object):
         elif scheme == GREY:
             values = values * 3
         values = (*map(float, values), _clamp(float(alpha)))
-        return CGColorCreate(_SPACES[space], values), values
+        return CGColorCreate(SPACES[space], values), values
 
     @classmethod
     def _parse(cls, clrstr):
         """Returns an r/g/b/a tuple based on a css color name or a hex string of the form:
         RRGGBBAA, RRGGBB, RGBA, or RGB (with or without a leading #)
         """
-        if clrstr in _CSS_COLORS: # handle css color names
-            clrstr = _CSS_COLORS[clrstr]
+        if clrstr in CSS_COLORS: # handle css color names
+            clrstr = CSS_COLORS[clrstr]
 
         if re.search(r'#?[0-9a-fA-F]{3,8}', clrstr): # rgb & rgba hex strings
             hexclr = clrstr.lstrip('#')
@@ -1036,11 +1040,11 @@ class Gradient(object):
             # rgb in the gradient's space, else the output's
             profile = ink.profile
             if profile.key == P3:
-                c_space = _SPACES[self._space]
+                c_space = SPACES[self._space]
                 clrs = [c._rgb_as(self._space) for c in self._colors]
             else:
                 if profile.mode == CMYK and not ink.tagged:
-                    c_space = _DEVICE_CMYK
+                    c_space = DEVICE_CMYK
                 else:
                     c_space = profile.space
                 clrs = [c.cgColor for c in self._colors]

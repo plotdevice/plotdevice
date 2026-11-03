@@ -488,7 +488,7 @@ class MovieExportSession(ExportSession):
         return bigger[0] if bigger else MovieExportSession.BITRATES[-1]
 
     def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=None, loop=0, codec=HEVC, zoom=1.0, output=None, **rest):
-        from ..gfx.colors import Output, P3, SRGB, _REC709, _REC2020
+        from ..gfx.colors import Output, Profile, P3, SRGB
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
@@ -504,7 +504,7 @@ class MovieExportSession(ExportSession):
         self.codec = codec
         self.zoom = zoom
         self.output = output or Output.parse(None, format)
-        self.video_colors = {P3: 'p3', SRGB: 'srgb', _REC709: 'rec709', _REC2020: 'rec2020'}.get(self.output.profile.key) # Video's names
+        self.video_colors = {P3: 'p3', SRGB: 'srgb', Profile.REC709: 'rec709', Profile.REC2020: 'rec2020'}.get(self.output.profile.key) # Video's names
         self.presents = True
 
     def discard_if_failed(self):
