@@ -555,7 +555,7 @@ class ScriptController(NSWindowController):
     def tick_(self, sender):
         """Draw a frame if the FrameClock says one is due"""
         clock = self.animationTimer
-        if clock and self.queue.ready and clock.should_draw():
+        if clock and self.queue.ready and clock.should_draw(delivered=sender is None):
             self.step()
             clock.frame_done() # no restart if step() stopped
 

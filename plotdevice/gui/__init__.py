@@ -61,7 +61,7 @@ class FrameClock:
         else:
             self._timer = set_timeout(target, sel, self._period, repeat=True)
 
-    def should_draw(self):
+    def should_draw(self, delivered=False):
         """True when a frame is due and the run loop has had its turn"""
         now = CACurrentMediaTime()
         if not self.isValid():
@@ -90,8 +90,9 @@ class FrameClock:
             self._credit += self._rate * (now - self._tick)
         self._tick = now
 
-        # due once a whole frame is owed
-        if self._credit < 1.0 - 0.5 * min(1.0, self._rate * self._refresh):
+        # a frame is due on the vblank closest to when it's owed, not the first one after
+        slack = 0.0 if delivered else 0.5 * min(1.0, self._rate * self._refresh)
+        if self._credit < 1.0 - slack:
             return False
         if self._last is not None and now < self._last + self.MIN_IDLE - 1e-5:
             # due, but let the run loop breathe first

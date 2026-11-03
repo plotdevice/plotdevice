@@ -384,6 +384,26 @@ class RendererTests(PlotDeviceTestCase):
         finally:
             queue.shutdown()
 
+    def test_clock_holds_early_deliveries_for_the_vblank(self):
+        # a delivery mid-period waits for the next vblank, but a late one draws at once
+        from plotdevice import gui
+        from unittest import mock
+        link = SimpleNamespace(addToRunLoop_forMode_=lambda *args: None, invalidate=lambda: None,
+                               timestamp=lambda: 0.0, targetTimestamp=lambda: 1 / 60)
+        view = SimpleNamespace(displayLinkWithTarget_selector_=lambda target, sel: link)
+        clock = gui.FrameClock(view, None, None, 60)
+        def at(t, delivered=False):
+            with mock.patch.object(gui, 'CACurrentMediaTime', lambda: t):
+                drew = clock.should_draw(delivered=delivered)
+                if drew:
+                    clock.frame_done()
+                return drew
+        self.assertTrue(at(0.0))
+        self.assertFalse(at(0.0115, delivered=True))
+        self.assertTrue(at(1 / 60))
+        self.assertTrue(at(0.045, delivered=True))
+        clock.invalidate()
+
     def test_frame_draw_stops_when_cancelled(self):
         # a cancelled render stops between grobs
         size(40, 40)
