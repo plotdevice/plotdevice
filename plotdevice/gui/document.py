@@ -17,8 +17,7 @@ from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
 from ..run import Sandbox, encoded
 from .. import DeviceError
-from ..gfx.colors import Output
-from ..gfx.vision import _vision_space
+from ..gfx.colors import Proof
 from . import set_timeout, FrameClock, FrameQueue
 
 NSEventGestureAxisVertical = 2
@@ -463,7 +462,7 @@ class ScriptController(NSWindowController):
             self.currentView = FullscreenView.alloc().init()
             self.currentView.canvas = None
             self.currentView.queue = self.queue
-            self.currentView.proofArgs = self.graphicsView.proofArgs
+            self.currentView.proof = self.graphicsView.proof
             fullRect = NSScreen.mainScreen().frame()
             if not self.offscreen:
                 self.offscreen = FullscreenWindow.alloc().initWithRect_(fullRect)
@@ -874,20 +873,12 @@ class ScriptController(NSWindowController):
         """Show the view through `proof` and return whether it could"""
         if proof == self._shownProof:
             return True
-        kind, value = proof or (None, None)
         try:
-            if kind == 'press':
-                proofArgs = {'output': Output.parse(value, 'tiff'), 'proofed': True}
-            elif kind == 'rgb':
-                proofArgs = {'output': Output.parse(value, 'png'), 'proofed': True}
-            elif kind == 'vision':
-                proofArgs = {'vision': _vision_space(value)}
-            else:
-                proofArgs = {}
+            shown = Proof.named(*proof) if proof else None
         except DeviceError:
             return False
         self._shownProof = proof
-        self.graphicsView.proofArgs = proofArgs
+        self.graphicsView.proof = shown
 
         # if animating, wait for the next frame. if static, trigger a proofed re-render
         animating = self.animationTimer is not None and self.animationTimer.isValid()

@@ -979,7 +979,7 @@ class ColorTests(PlotDeviceTestCase):
                             kCGImageAlphaPremultipliedLast, CGContextSetRenderingIntent, kCGRenderingIntentRelativeColorimetric,
                             CGImageSourceCreateWithURL, CGImageSourceCreateImageAtIndex)
         from Foundation import NSURL
-        from plotdevice.gfx.colors import Output
+        from plotdevice.gfx.colors import Output, Proof
         def pixels(img, w=40, h=20):
             # drawn into p3, as the window is
             ctx = CGBitmapContextCreate(None, w, h, 8, w * 4, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedLast)
@@ -995,24 +995,24 @@ class ColorTests(PlotDeviceTestCase):
             worst = max(max(abs(x - y) for x, y in zip(p, q)) for p, q in zip(a, b))
             self.assertLessEqual(worst, 1, what)
         self._press_swatches()
-        press = Output.parse(GRACOL, 'tiff')
+        press = Proof.named('press', GRACOL)
         export(join(self.tmp, 'press.tiff'), colors=GRACOL)
         tiff = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(join(self.tmp, 'press.tiff')), None), 0, None)
-        proofed = shown(_ctx.canvas.commit(press, proofed=True))
+        proofed = shown(_ctx.canvas.commit(proof=press))
         close(proofed, pixels(tiff), 'a press proof shows the press tiff')
         self.assertNotEqual(proofed[5 * 40 + 25], shown(_ctx.canvas.commit())[5 * 40 + 25]) # p3 red, out of gamut
-        tile = shown(_ctx.canvas.commit(press, proofed=True), 20, 10, origin=(20, 10))
+        tile = shown(_ctx.canvas.commit(proof=press), 20, 10, origin=(20, 10))
         close(tile, [proofed[y * 40 + x] for y in range(10, 20) for x in range(20, 40)], "a tile shows its part of the raster")
         # a frame proofed through sRGB clips p3 red to sRGB's
         frame = _ctx.canvas.commit()
-        frame.proof = CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
+        frame.proof = Proof(Output.parse(SRGB, 'png'), None) # an sRGB proof of the working space
         red = tuple(round(v * 255) for v in SRGB_RED_IN_P3)
         close([shown(frame)[5 * 40 + 25]], [red], 'p3 red through sRGB')
         close([shown(frame)[15 * 40 + 5]], [(255, 255, 255)], 'the background stays white')
         # an sRGB proof matches a colors=SRGB png
         export(join(self.tmp, 'srgb.png'), colors=SRGB)
         png = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(join(self.tmp, 'srgb.png')), None), 0, None)
-        proofed = shown(_ctx.canvas.commit(Output.parse(SRGB, 'png'), proofed=True))
+        proofed = shown(_ctx.canvas.commit(proof=Proof.named('rgb', SRGB)))
         close(proofed, pixels(png), 'an sRGB proof shows the sRGB png')
         close([proofed[5 * 40 + 25]], [red], 'p3 red clipped to sRGB')
         # as does a system rgb space's proof
@@ -1020,39 +1020,35 @@ class ColorTests(PlotDeviceTestCase):
         if os.path.exists(adobe):
             export(join(self.tmp, 'adobe.png'), colors=adobe)
             png = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(join(self.tmp, 'adobe.png')), None), 0, None)
-            frame = _ctx.canvas.commit(Output.parse(adobe, 'png'), proofed=True)
+            frame = _ctx.canvas.commit(proof=Proof.named('rgb', adobe))
             close(shown(frame), pixels(png), 'an Adobe RGB proof shows the Adobe RGB png')
 
     def test_run_fullscreen_keeps_the_proof(self):
         # Run Fullscreen keeps the window's proof
         from plotdevice.gui.views import FullscreenView
-        from plotdevice.gfx.colors import Output
-        from plotdevice.gfx.vision import _vision_space
+        from plotdevice.gfx.colors import Proof
         class Presenter(object):
             def render(self, frame, *args, **kwargs):
                 self.frame = frame
         self._press_swatches()
-        press = Output.parse(GRACOL, 'tiff')
-        proofs = dict(press={'output': press, 'proofed': True},
-                      rgb={'output': Output.parse(SRGB, 'png'), 'proofed': True},
-                      vision={'vision': _vision_space('protanopia')}, screen={})
-        for name, proofArgs in proofs.items():
+        proofs = dict(press=Proof.named('press', GRACOL), rgb=Proof.named('rgb', SRGB), vision=Proof.named('vision', 'protanopia'),
+                      screen=None)
+        for name, proof in proofs.items():
             view = FullscreenView.alloc().init()
             view._presenter = Presenter()
-            view.proofArgs = proofArgs
+            view.proof = proof
             view.render(_ctx.canvas)
             frame = view._presenter.frame
-            self.assertIs(frame.output.press, press.press if name == 'press' else None, name)
-            self.assertIs(frame.proof, proofArgs['output'].profile.space if 'proofed' in proofArgs else None, name)
-            self.assertIs(frame.vision, proofArgs.get('vision'), name)
+            self.assertIs(frame.output.press, proof.output.press if name == 'press' else None, name)
+            self.assertIs(frame.proof, proof, name)
 
     def test_vision_proofs_show_the_simulation(self):
         # simulated frames match DaltonLens's math
         import objc
         from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGContextDrawImage, CGDataProviderCopyData,
                             CGImageGetDataProvider, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, kCGImageAlphaPremultipliedLast)
-        from plotdevice.gfx.vision import _vision_space, _simulate, _decode
-        from plotdevice.gfx.colors import Output
+        from plotdevice.gfx.vision import _simulate, _decode
+        from plotdevice.gfx.colors import Proof
         encode = lambda v: 12.92 * v if v <= 0.0031308 else 1.055 * v ** (1 / 2.4) - 0.055
         swatches = [(1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0), (0, 1, 1), (1, 0, 1), (.5, .5, .5), (1, 1, 1), (.8, .4, .1), (.2, .7, .4)]
         size(10 * len(swatches), 10)
@@ -1060,7 +1056,7 @@ class ColorTests(PlotDeviceTestCase):
             fill(*c)
             rect(10 * i, 0, 10, 10)
         for deficiency in ('protanopia', 'protanomaly', 'deuteranopia', 'deuteranomaly', 'tritanopia', 'tritanomaly'):
-            frame = _ctx.canvas.commit(vision=_vision_space(deficiency))
+            frame = _ctx.canvas.commit(proof=Proof.named('vision', deficiency))
             surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(10 * len(swatches), 10)
             frame._render_to_surface(surface, 1.0)
             w = 10 * len(swatches)
@@ -1082,9 +1078,9 @@ class ColorTests(PlotDeviceTestCase):
         red = [round(255 * encode(min(max(v, 0), 1))) for v in _simulate('protanopia', (1, 0, 0))]
         for kind in ('protanopia', 'srgb'):
             if kind == 'srgb':
-                frame = _ctx.canvas.commit(Output.parse(SRGB, 'png'), proofed=True)
+                frame = _ctx.canvas.commit(proof=Proof.named('rgb', SRGB))
             else:
-                frame = _ctx.canvas.commit(vision=_vision_space('protanopia'))
+                frame = _ctx.canvas.commit(proof=Proof.named('vision', 'protanopia'))
             surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(30, 10)
             frame._render_to_surface(surface, 1.0)
             ctx = CGBitmapContextCreate(None, 30, 10, 8, 120, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedLast)

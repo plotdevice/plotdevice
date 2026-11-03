@@ -1835,9 +1835,9 @@ class Canvas(object):
         except IndexError as e:
             raise DeviceError("pop: too many canvas pops!")
 
-    def commit(self, output=None, proofed=False, vision=None):
+    def commit(self, output=None, proof=None):
         """Commit the canvas's current contents to a renderable Frame"""
-        return Frame(self, output, proofed, vision)
+        return Frame(self, output, proof)
 
     @property
     def _nsImage(self):
@@ -1949,8 +1949,10 @@ class FrameBounds(object):
 class Frame(object):
     """A committed copy of a Canvas (or of another Frame, in other colors)"""
 
-    def __init__(self, src, output=None, proofed=False, vision=None):
+    def __init__(self, src, output=None, proof=None):
         copying = isinstance(src, Frame) # its texts must keep their own colors
+        if proof is not None and proof.output is not None:
+            output = proof.output # drawn in the colors being proofed
         if output is None:
             # the working space, in the canvas's mode
             mode = src.output.mode if copying else (src._ctx._output.mode if src._ctx else RGB)
@@ -1967,8 +1969,7 @@ class Frame(object):
         self.pagesize = src.pagesize
         self.background = src.background
         self._bounds = FrameBounds(self.grobs)
-        self.proof = output.profile.space if proofed else None # the window's Proof Colors setting
-        self.vision = vision # a Proof setting simulating color deficiency
+        self.proof = proof # the window's Proof Colors setting
 
     def draw(self, cancelled=None, within=None):
         """Render the frame into the current graphics context"""
@@ -2062,9 +2063,7 @@ class Frame(object):
                 within = (origin[0] / scale, origin[1] / scale, w / scale, h / scale)
 
             # convert colors if a Proof profile has been selected
-            proof = self.proof
-            if self.vision is not None:
-                proof = CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3)
+            proof = self.proof.space if self.proof is not None else None
             if proof is None:
                 self._render_to_context(port, scale, cancelled, offset, within)
             else:
@@ -2075,8 +2074,8 @@ class Frame(object):
                 x, y = offset or (0, self.pagesize.height * scale)
                 self._render_to_context(bitmap, scale, cancelled, (x, y - (H - h)), within)
                 image = CGBitmapContextCreateImage(bitmap)
-                if self.vision is not None:
-                    image = CGImageCreateCopyWithColorSpace(image, self.vision)
+                if self.proof.vision is not None:
+                    image = CGImageCreateCopyWithColorSpace(image, self.proof.vision)
                 CGContextSetRenderingIntent(port, kCGRenderingIntentRelativeColorimetric)
                 CGContextDrawImage(port, ((0, H - h), (w, h)), image)
             CGContextFlush(port)

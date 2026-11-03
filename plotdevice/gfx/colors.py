@@ -13,6 +13,7 @@ from ..lib.cocoa import *
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path, numlike
 from . import _output, _frame, _base_ctm, _cg_port
+from .vision import _vision_space
 
 PDGradient = objc.lookUpClass('PDGradient')
 
@@ -49,6 +50,10 @@ _PRESS_CONDITIONS = {GRACOL: ('CGATS21-2-CRPC6', 'Universal Premium Coated (GRAC
                      FOGRA39: ('FOGRA39', 'Offset, gloss or matt coated paper (ISO 12647-2:2004, FOGRA39)'),
                      FOGRA47: ('FOGRA47', 'Offset, uncoated white paper (ISO 12647-2:2004, FOGRA47)')}
 
+# the menus' names for the bundled presses
+_PRESS_LABELS = {GRACOL: 'GRACoL 2013 Coated (CRPC6)', GRACOL_UNCOATED: 'GRACoL 2013 Uncoated (CRPC3)', SWOP: 'SWOP 2013 (CRPC5)',
+                 FOGRA39: 'ISO Coated v2 (FOGRA39)', FOGRA47: 'PSO Uncoated (FOGRA47)'}
+
 # profile folders, in match order
 _PROFILE_FOLDERS = ['~/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles/Profiles',
                     '/Library/ColorSync/Profiles/Recommended', '/Library/Application Support/Adobe/Color/Profiles',
@@ -59,6 +64,10 @@ _SYSTEM_PROFILES = '/System/Library/ColorSync/Profiles'
 _REC709 = os.path.join(_SYSTEM_PROFILES, 'ITU-709.icc')
 _REC2020 = os.path.join(_SYSTEM_PROFILES, 'ITU-2020.icc')
 _PROFILE_LISTS = {} # folder mtimes -> (presses, names)
+
+# system rgb spaces offered beside P3 and sRGB
+_SYSTEM_RGB = {'AdobeRGB1998.icc': 'Adobe RGB (1998)', 'ROMM RGB.icc': 'ROMM RGB (ProPhoto)', 'ITU-709.icc': 'Rec. 709',
+               'ITU-2020.icc': 'Rec. 2020'}
 
 # extended spaces keep out-of-gamut components
 _SPACES = {P3: CGColorSpaceCreateWithName(kCGColorSpaceExtendedDisplayP3),
@@ -198,6 +207,14 @@ class Profile(object):
             return cls.named.setdefault(key, Press(key, space))
         return cls.named.setdefault(key, Profile(key, RGB, space))
 
+    @classmethod
+    def installed(cls, mode):
+        """The profiles the menus offer for `mode` beside the built-in spaces, as (label, key) pairs"""
+        if mode == RGB:
+            return [(label, os.path.join(_SYSTEM_PROFILES, name)) for name, label in _SYSTEM_RGB.items()
+                    if os.path.exists(os.path.join(_SYSTEM_PROFILES, name))]
+        return [(label, press) for press, label in _PRESS_LABELS.items()] + _installed_presses()
+
 class Press(Profile):
 
     def __init__(self, key, space=None):
@@ -329,6 +346,23 @@ class Output(namedtuple('Output', ['profile', 'format'])):
     def ink(self):
         """What colors resolve to: CMYK bitmaps keep a press's numbers in its space"""
         return Ink(self.profile, self.press is not None and self.format in ('tiff', 'jpg', 'jpeg'))
+
+class Proof(namedtuple('Proof', ['output', 'vision'])):
+    __slots__ = ()
+
+    @classmethod
+    def named(cls, kind, value):
+        """The proof a View > Proof Colors item names: a press, an rgb profile, or a color vision deficiency"""
+        if kind == 'vision':
+            return cls(None, _vision_space(value))
+        return cls(Output.parse(value, 'tiff' if kind == 'press' else 'png'), None)
+
+    @property
+    def space(self):
+        """The space a proofed render is drawn in before it's shown, or None to draw as usual"""
+        if self.vision is not None:
+            return CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3)
+        return self.output.profile.space
 
 def _clamp(v):
     return min(max(v, 0.0), 1.0)
