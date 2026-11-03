@@ -19,7 +19,7 @@ from ..lib.io import MovieExportSession, ImageExportSession, HEVC, H264, PRORES
 from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, _hull
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
 from .effects import Frob
-from .colors import _output_mode, Press
+from .profiles import Output
 from . import _ns_context, _cg_port, _frame, _committing, _pdf_doc
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
@@ -380,7 +380,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             with self.effects.applied(self): # apply any blend/alpha/shadow effects
                 NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
                 frame = _frame.get()
-                image = self._nsImage_as(frame._cmyk_space if frame is not None else None)
+                image = self._nsImage_as(frame.output.cmyk_space if frame is not None else None)
                 bounds = ((0,0), image.size()) # draw the image at (0,0)
                 vector = next((r for r in image.representations() if isinstance(r, (NSPDFImageRep, PDSVGImageRep))), None)
                 if vector is None:
@@ -443,11 +443,11 @@ class Snapshot(Image):
         # resolve its colors as the frame being committed does
         snapshot = self.copy() if held else self
         frame = _committing.get()
-        recolor = frame is not None and (frame.colors, frame.format) != (self._canvas.colors, self._canvas.format)
+        recolor = frame is not None and frame.output != self._canvas.output
         if recolor:
             from ..context import Frame
             snapshot = snapshot if held else self.copy()
-            snapshot._canvas = Frame(self._source, frame.colors, frame.format)
+            snapshot._canvas = Frame(self._source, frame.output)
         return snapshot
 
     @property
@@ -487,7 +487,7 @@ class Snapshot(Image):
                 linear = (ctm.a, ctm.b, ctm.c, ctm.d, 0, 0) if self._shadowed else (1, 0, 0, -1, 0, 0)
                 w, h = self._canvas.pagesize
                 (bx, by), (bw, bh) = CGRectApplyAffineTransform(((0, 0), (w, h)), linear)
-                key = self._source, self._canvas.colors, self._canvas.format, linear
+                key = self._source, self._canvas.output, linear
                 if key not in layers:
                     layer = CGLayerCreateWithContext(doc, (bw, bh), None)
                     ctx = CGLayerGetContext(layer)
@@ -545,8 +545,6 @@ class ExportRenderer(object):
 
 class ImageWriter(object):
     def __init__(self, fname, format, **opts):
-        self.mode = _output_mode(opts['colors'])
-        self.press = opts['colors'] if opts['colors'] in Press.named else None
         self.fname = os.path.expanduser(fname)
         self.format = format
         self.opts = opts
@@ -560,8 +558,7 @@ class ImageWriter(object):
     def __enter__(self):
         self._pool = NSAutoreleasePool.alloc().init()
         _ctx._saveContext()
-        _ctx._outputmode = self.mode
-        _ctx._press = self.press # for scripts' cmyk reads
+        _ctx._output = Output(self.opts['output'].profile, None) # for scripts' reads
         return self
 
     def __exit__(self, type, value, tb):
@@ -589,7 +586,7 @@ class ImageWriter(object):
             #
             m = re_padded.search(self.fname)
             fn = re_padded.sub('0'*int(m.group(1)), self.fname, count=1) if m else self.fname
-            _ctx.canvas.save(fn, self.format, self.opts['zoom'], colors=self.opts['colors'])
+            _ctx.canvas.save(fn, self.format, self.opts['zoom'], colors=self.opts['output'].profile.key)
 
     @property
     def page(self):

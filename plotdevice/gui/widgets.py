@@ -364,24 +364,11 @@ class DashboardController(NSObject):
 
 
 from ..context import RGB, CMYK
-from ..gfx.colors import P3, SRGB, GRACOL, GRACOL_UNCOATED, SWOP, FOGRA39, FOGRA47, _FORMAT_COLORS, _FORMAT_DEFAULTS, \
-                         _SYSTEM_PROFILES, _REC709, _REC2020, _installed_presses
+from ..gfx.profiles import P3, SRGB, Profile, Output
 from ..lib.io import MovieExportSession, HEVC, H264, PRORES
 
 # include menu sections headers on macOS 14+
 SECTION_HEADERS = hasattr(NSMenuItem, 'sectionHeaderWithTitle_')
-
-_PRESS_LABELS = {GRACOL: 'GRACoL 2013 Coated (CRPC6)', GRACOL_UNCOATED: 'GRACoL 2013 Uncoated (CRPC3)', SWOP: 'SWOP 2013 (CRPC5)',
-                 FOGRA39: 'ISO Coated v2 (FOGRA39)', FOGRA47: 'PSO Uncoated (FOGRA47)'}
-
-# system rgb spaces offered beside P3 and sRGB
-_SYSTEM_RGB = {'AdobeRGB1998.icc': 'Adobe RGB (1998)', 'ROMM RGB.icc': 'ROMM RGB (ProPhoto)', 'ITU-709.icc': 'Rec. 709',
-               'ITU-2020.icc': 'Rec. 2020'}
-
-def system_rgb():
-    """The system rgb spaces present, as (label, path) pairs"""
-    return [(label, os.path.join(_SYSTEM_PROFILES, name)) for name, label in _SYSTEM_RGB.items()
-            if os.path.exists(os.path.join(_SYSTEM_PROFILES, name))]
 
 class ProofColorsMenu(NSObject):
     """View > Proof Colors, previewing the highlighted item"""
@@ -423,11 +410,9 @@ class ProofColorsMenu(NSObject):
     def menuNeedsUpdate_(self, menu):
         win = NSApp().mainWindow()
         screen = win.screen() if win else NSScreen.mainScreen()
-        spaces = [(label, ('rgb', path)) for label, path in system_rgb()]
-        bundled = [(label, ('press', press)) for press, label in _PRESS_LABELS.items()]
-        installed = [(desc, ('press', path)) for desc, path in _installed_presses()]
+        spaces = [(label, ('rgb', key)) for label, key in Profile.installed(RGB)]
         rgb = [(screen.localizedName(), None), ('sRGB', ('rgb', SRGB))] + spaces
-        cmyk = bundled + installed
+        cmyk = [(label, ('press', key)) for label, key in Profile.installed(CMYK)]
         vision = [(name.capitalize(), ('vision', name)) for name in ('protanopia', 'protanomaly', 'deuteranopia', 'deuteranomaly',
                                                                      'tritanopia', 'tritanomaly')]
         menu.removeAllItems()
@@ -616,9 +601,8 @@ class ExportSheet(NSObject):
     @objc.python_method
     def fillColors(self, popup, colors):
         """Rebuild a Colors pop-up and select `colors`"""
-        rgb = [('Display P3', P3), ('sRGB', SRGB)] + system_rgb()
-        bundled = [(label, press) for press, label in _PRESS_LABELS.items()]
-        cmyk = [('Generic CMYK', CMYK)] + bundled + _installed_presses()
+        rgb = [('Display P3', P3), ('sRGB', SRGB)] + Profile.installed(RGB)
+        cmyk = [('Generic CMYK', CMYK)] + Profile.installed(CMYK)
         popup.removeAllItems()
         for header, items in [('RGB', rgb), ('CMYK', cmyk)]:
             if SECTION_HEADERS:
@@ -638,14 +622,14 @@ class ExportSheet(NSObject):
             format = self.formats['image'][self.imageFormat.indexOfSelectedItem()]
         else:
             format = self.formats['movie'][self.movieFormat.indexOfSelectedItem()]
-        allowed = _FORMAT_COLORS[format]
+        allowed = Output.FORMATS[format]
         holds_cmyk = CMYK in allowed
-        system = [os.path.join(_SYSTEM_PROFILES, name) for name in _SYSTEM_RGB]
+        system = [key for _, key in Profile.installed(RGB)]
         for idx, item in enumerate(popup.itemArray()):
             colors = item.representedObject()
             if colors is None:
                 item.setHidden_(idx > 0 and not holds_cmyk)
-            elif colors in (_REC709, _REC2020) and 'rgb' in allowed:
+            elif colors in Profile.SYSTEM_VIDEO and 'rgb' in allowed:
                 item.setHidden_(format not in ('png', 'tiff'))
             elif colors in (P3, SRGB) or colors in system:
                 item.setHidden_(not (colors in allowed or 'rgb' in allowed))
@@ -653,7 +637,7 @@ class ExportSheet(NSObject):
                 item.setHidden_(not holds_cmyk)
         chosen = popup.selectedItem()
         if chosen is None or chosen.isHidden() or not chosen.isEnabled():
-            default = _FORMAT_DEFAULTS.get(format, P3)
+            default = Output.DEFAULTS.get(format, P3)
             popup.selectItemAtIndex_(popup.indexOfItemWithRepresentedObject_(default))
         choices = [item for item in popup.itemArray() if item.representedObject() is not None and not item.isHidden()]
         popup.setEnabled_(len(choices) > 1)

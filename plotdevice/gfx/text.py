@@ -16,7 +16,7 @@ from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, FrameMixin, Grob
 from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, Element, read
 from ..lib import foundry
-from . import _ns_context, _cg_port, _inkmode
+from . import _ns_context, _cg_port, _output
 
 _ctx = None
 __all__ = ("Text", "LEFT", "RIGHT", "CENTER", "JUSTIFY",)
@@ -846,15 +846,15 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
     def _fills(self):
         # the runs' CGColors in a map table, since dictionaries copy their keys and CGColors can't be copied
-        mode = _inkmode()
-        if self._fill_cache is None or self._fill_cache[0] != mode:
+        ink = _output().ink
+        if self._fill_cache is None or self._fill_cache[0] != ink:
             colors, patterns = NSMapTable.strongToStrongObjectsMapTable(), []
             for paint, fill in self._paints.items():
                 if isinstance(fill, Pattern):
                     patterns.append((paint, fill))
                 else:
                     colors.setObject_forKey_(fill.cgColor, paint)
-            self._fill_cache = (mode, colors, patterns)
+            self._fill_cache = (ink, colors, patterns)
         _, fills, patterns = self._fill_cache
 
         # patterns' tiles depend on the render, so they're added each time

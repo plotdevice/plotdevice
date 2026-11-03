@@ -320,7 +320,7 @@ class FrameLayers(object):
         bg = frame.background
         if not isinstance(bg, Color) or bg.alpha < 1:
             return None
-        color = bg._rgb if frame.outputmode == RGB else bg._cmyk
+        color = bg._rgb if frame.output.mode == RGB else bg._cmyk
         return CGColorCreateCopyByMatchingToColorSpace(CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGRenderingIntentDefault, color, None)
 
 class FramePresenter(object):
@@ -672,7 +672,7 @@ class ViewTracker(object):
 
 class GraphicsView(NSView):
     script = IBOutlet()
-    proofArgs = {} # Canvas.commit args for the proof
+    proof = None # the View > Proof Colors setting
     zoomLevels = [0.1, 0.25, 0.5, 0.75] + [float(z) for z in range(1, 21)] # from 10% to 2000%
 
     ### setup ###
@@ -791,7 +791,7 @@ class GraphicsView(NSView):
     def render(self, canvas, focus=None, onerror=None, ondone=None):
         """Commit the canvas and have the presenter render it for this view"""
         self.canvas = canvas
-        self._committed = canvas.commit(**self.proofArgs)
+        self._committed = canvas.commit(proof=self.proof)
         self._seq += 1
         self._request(focus, onerror=onerror, ondone=ondone)
 
@@ -1058,7 +1058,7 @@ class GraphicsView(NSView):
     def copyImageAsPDF_(self, sender):
         """Put the latest frame on the pasteboard, without any proof"""
         self._copied = self._committed
-        if self.proofArgs and self.canvas is not None:
+        if self.proof is not None and self.canvas is not None:
             self._copied = self.canvas.commit()
         if self._copied is not None:
             pboard = NSPasteboard.generalPasteboard()
@@ -1113,7 +1113,7 @@ class FullscreenWindow(NSWindow):
         return True
 
 class FullscreenView(NSView):
-    proofArgs = {} # proof when Run Fullscreen began
+    proof = None # proof when Run Fullscreen began
 
     def init(self):
         super(FullscreenView, self).init()
@@ -1157,7 +1157,7 @@ class FullscreenView(NSView):
             self._scalingFactor = min(sw / cw, sh / ch)
         win = self.window()
         dpr = win.backingScaleFactor() if win else NSScreen.mainScreen().backingScaleFactor()
-        frame = canvas.commit(**self.proofArgs)
+        frame = canvas.commit(proof=self.proof)
         self._seq += 1
         self._presenter.render(frame, self._seq, self._scalingFactor, dpr, onerror=onerror, ondone=ondone)
 

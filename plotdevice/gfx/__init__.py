@@ -165,26 +165,10 @@ def _visible(grobs):
     within = _culling.get()
     return grobs if within is None else _frame.get()._bounds.within(within, grobs)
 
-def _outputmode():
-    """The RGB/CMYK mode to resolve colors for"""
+def _output():
+    """The output colors resolve for: the frame's, else the script's"""
     frame = _frame.get() or _committing.get()
-    return _ctx._outputmode if frame is None else frame.outputmode
-
-def _outputpress():
-    """The press colors resolve for, or None for Generic CMYK"""
-    frame = _frame.get() or _committing.get()
-    if frame is not None:
-        return frame.press
-    if _ctx._press:
-        return _ctx._press
-    return _ctx._cli_colors if _ctx._cli_colors in colors.Press.named else None
-
-def _inkmode():
-    """The mode to make colors' CGColors & NSColors for"""
-    frame = _frame.get() or _committing.get()
-    if frame is not None and frame.ink:
-        return frame.ink
-    return _ctx._outputmode if frame is None else frame.outputmode
+    return _ctx._output if frame is None else frame.output
 
 def _canvas_dims():
     """The canvas's width & height in canvas units"""
