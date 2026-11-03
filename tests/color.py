@@ -1047,7 +1047,7 @@ class ColorTests(PlotDeviceTestCase):
         import objc
         from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGContextDrawImage, CGDataProviderCopyData,
                             CGImageGetDataProvider, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, kCGImageAlphaPremultipliedLast)
-        from plotdevice.gfx.vision import _simulate, _decode
+        from plotdevice.gfx.profiles import _simulate, _decode
         from plotdevice.gfx.colors import Proof
         encode = lambda v: 12.92 * v if v <= 0.0031308 else 1.055 * v ** (1 / 2.4) - 0.055
         swatches = [(1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0), (0, 1, 1), (1, 0, 1), (.5, .5, .5), (1, 1, 1), (.8, .4, .1), (.2, .7, .4)]
