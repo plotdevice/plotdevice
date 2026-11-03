@@ -324,12 +324,12 @@ class Color(object):
         elif params == 1 and isinstance(args[0], Color):    # Color object
             self._share(args[0])
             if converting and self.space != space:
-                if self._from_cmyk:
+                if self._mode is CMYK:
                     self._cmyk = self._src
-                    self._cache['space'], self._rgb_ = space, None # converted on demand
+                    self._space = space # rgb converted on demand
                 else:
                     self._rgb = _matched(self._rgb, _SPACES[space])
-                    self._cache['space'] = space
+                    self._space = space
                     self._updateCmyk()
             return
         elif params == 1 and isinstance(args[0], Gradient): # Gradient (use first shade)
@@ -372,19 +372,19 @@ class Color(object):
         else:                                               # default is the new black
             clr, values = Color._cgcolor(GREY, space, 0, 1)
 
-        # values derived from the views, and the space
-        self._cache = {'space':space}
+        # the space of the rgb components
+        self._space = space
         if cmyk:
             # keep the cmyk, convert to rgb on demand
-            self._rgb_, self._src = None, clr
             self._cmyk = clr
+            self._src, self._mode = clr, CMYK
             if values is not None:
-                self._cache['cmyka'] = values
+                self._to['cmyka'] = values
         else:
-            self._rgb = clr
-            self._src, self._cmyk_ = clr, None # converted on demand
+            self._rgb = clr # cmyk converted on demand
+            self._src, self._mode = clr, RGB
             if values is not None:
-                self._cache['rgba'] = values
+                self._to['rgba'] = values
 
     @trim_zeroes
     def __repr__(self):
@@ -438,14 +438,14 @@ class Color(object):
     @property
     def space(self):
         """The color space of the rgb, hsv & grey components"""
-        return self._cache['space']
+        return self._space
 
     @property
     def cgColor(self):
         # one per output mode
         mode = _inkmode()
         try:
-            return self._cache['cg', mode]
+            return self._to['cg', mode]
         except KeyError:
             if mode == RGB:
                 cg = self._rgb
@@ -456,19 +456,19 @@ class Color(object):
                 cg = CGColorCreate(Press.named[press].space if in_space else _DEVICE_CMYK, self._press_values(press))
             else:
                 cg = _matched(self._rgb, _INKS[mode])
-            self._cache['cg', mode] = cg
+            self._to['cg', mode] = cg
             return cg
 
     def _press_values(self, press):
         # cmyk as given, rgb converted into the press
         key = 'press', press
-        if key not in self._cache:
-            if self._from_cmyk:
-                self._cache[key] = self._values(CMYK)
+        if key not in self._to:
+            if self._mode is CMYK:
+                self._to[key] = self._values(CMYK)
             else:
                 r, g, b, alpha = _components(self._rgb_as(P3))
-                self._cache[key] = Press.named[press].convert((r, g, b)) + (alpha,)
-        return self._cache[key]
+                self._to[key] = Press.named[press].convert((r, g, b)) + (alpha,)
+        return self._to[key]
 
     def _rgb_as(self, space):
         return self._rgb if self.space == space else _matched(self._rgb, _SPACES[space])
@@ -476,22 +476,22 @@ class Color(object):
     def _read_as(self, space):
         # the rgb a script reads
         press = _outputpress()
-        if press is None or not self._from_cmyk: # cheaper test first
+        if press is None or self._mode is not CMYK:
             return self._rgb_as(space)
         return _matched(CGColorCreate(Press.named[press].space, self._values(CMYK)), _SPACES[space])
 
     def _read(self, mode):
         # scripts see cmyk colors through the output press
         press = _outputpress() if mode is not CMYK else None
-        return self._values(mode, press if press and self._from_cmyk else None) # cheaper test first
+        return self._values(mode, press if self._mode is CMYK else None)
 
     def _values(self, mode, press=None):
         if mode is RGB:
             key = 'rgba' if press is None else ('rgba', press)
             try:
-                return self._cache[key]
+                return self._to[key]
             except KeyError:
-                rgba = self._cache[key] = _components(self._rgb if press is None else self._read_as(self.space))
+                rgba = self._to[key] = _components(self._rgb if press is None else self._read_as(self.space))
                 return rgba
         elif mode is HSV:
             # unclamped, out of gamut s & b exceed 1
@@ -500,9 +500,9 @@ class Color(object):
             return hsv + (a,)
         elif mode is CMYK:
             try:
-                return self._cache['cmyka']
+                return self._to['cmyka']
             except KeyError:
-                cmyka = self._cache['cmyka'] = _components(self._cmyk)
+                cmyka = self._to['cmyka'] = _components(self._cmyk)
                 return cmyka
 
     def copy(self):
@@ -512,61 +512,47 @@ class Color(object):
 
     def _share(self, other):
         # CGColors are immutable and safe to share
-        self._rgb_ = other._rgb_
-        self._cmyk_ = other._cmyk_
-        self._src = other._src
-        self._cache = other._cache
+        self._space, self._src, self._mode, self._to = other._space, other._src, other._mode, other._to
 
-    # setting a view starts a fresh cache
+    # setting a view drops the other conversions
     @property
     def _rgb(self):
-        # converted on demand, once per shared cache
-        if self._rgb_ is None:
-            cache = self._cache
-            if 'rgb' not in cache:
-                cache['rgb'] = _matched(self._src, _SPACES[cache['space']])
-            self._rgb_ = cache['rgb']
-        return self._rgb_
+        # converted on demand, once for every copy sharing it
+        try:
+            return self._to['rgb']
+        except KeyError:
+            rgb = self._to['rgb'] = _matched(self._src, _SPACES[self._space])
+            return rgb
 
     @_rgb.setter
     def _rgb(self, clr):
-        self._rgb_, self._cache = clr, {'space':self._cache['space']}
+        self._to = {'rgb':clr}
 
     @property
     def _cmyk(self):
         # derived on demand from the defining view
-        if self._cmyk_ is None:
-            cache = self._cache
-            if 'cmyk' not in cache:
-                cache['cmyk'] = _matched(self._src, _GENERIC_CMYK)
-            self._cmyk_ = cache['cmyk']
-        return self._cmyk_
+        try:
+            return self._to['cmyk']
+        except KeyError:
+            cmyk = self._to['cmyk'] = _matched(self._src, _GENERIC_CMYK)
+            return cmyk
 
     @_cmyk.setter
     def _cmyk(self, clr):
-        self._cmyk_, self._cache = clr, {'space':self._cache['space']}
-
-    @property
-    def _from_cmyk(self):
-        # defined in cmyk?
-        try:
-            return self._cache['from_cmyk']
-        except KeyError:
-            from_cmyk = self._cache['from_cmyk'] = CGColorSpaceGetModel(CGColorGetColorSpace(self._src)) == kCGColorSpaceModelCMYK
-            return from_cmyk
+        self._to = {'cmyk':clr}
 
     def _updateCmyk(self):
-        self._src, self._cmyk_ = self._rgb, None
+        self._src, self._mode = self._rgb, RGB
 
     def _updateRgb(self):
-        self._src, self._rgb_ = self._cmyk, None
+        self._src, self._mode = self._cmyk, CMYK
 
     def _get_hue(self):
         return self._read(HSV)[0]
     def _set_hue(self, val):
         val = self._normalize(val)
         h, s, b, a = self._read(HSV)
-        self._rgb, self._cache['rgba'] = Color._cgcolor(HSV, self.space, val, s, b, a)
+        self._rgb, self._to['rgba'] = Color._cgcolor(HSV, self.space, val, s, b, a)
         self._updateCmyk()
     h = hue = property(_get_hue, _set_hue, doc="the hue of the color")
 
@@ -575,7 +561,7 @@ class Color(object):
     def _set_saturation(self, val):
         val = self._normalize(val)
         h, s, b, a = self._read(HSV)
-        self._rgb, self._cache['rgba'] = Color._cgcolor(HSV, self.space, h, val, b, a)
+        self._rgb, self._to['rgba'] = Color._cgcolor(HSV, self.space, h, val, b, a)
         self._updateCmyk()
     s = saturation = property(_get_saturation, _set_saturation, doc="the saturation of the color")
 
@@ -584,7 +570,7 @@ class Color(object):
     def _set_brightness(self, val):
         val = self._normalize(val)
         h, s, b, a = self._read(HSV)
-        self._rgb, self._cache['rgba'] = Color._cgcolor(HSV, self.space, h, s, val, a)
+        self._rgb, self._to['rgba'] = Color._cgcolor(HSV, self.space, h, s, val, a)
         self._updateCmyk()
     v = value = brightness = property(_get_brightness, _set_brightness, doc="the brightness of the color")
 
@@ -592,7 +578,7 @@ class Color(object):
         return self._read(HSV)
     def _set_hsba(self, values):
         h, s, b, a = self._normalizeList(values)
-        self._rgb, self._cache['rgba'] = Color._cgcolor(HSV, self.space, h, s, b, a)
+        self._rgb, self._to['rgba'] = Color._cgcolor(HSV, self.space, h, s, b, a)
         self._updateCmyk()
     hsba = property(_get_hsba, _set_hsba, doc="the hue, saturation, brightness and alpha of the color")
 
@@ -601,7 +587,7 @@ class Color(object):
     def _set_red(self, val):
         val = self._normalize(val)
         r, g, b, a = self._read(RGB)
-        self._rgb, self._cache['rgba'] = Color._cgcolor(RGB, self.space, val, g, b, a)
+        self._rgb, self._to['rgba'] = Color._cgcolor(RGB, self.space, val, g, b, a)
         self._updateCmyk()
     r = red = property(_get_red, _set_red, doc="the red component of the color")
 
@@ -610,7 +596,7 @@ class Color(object):
     def _set_green(self, val):
         val = self._normalize(val)
         r, g, b, a = self._read(RGB)
-        self._rgb, self._cache['rgba'] = Color._cgcolor(RGB, self.space, r, val, b, a)
+        self._rgb, self._to['rgba'] = Color._cgcolor(RGB, self.space, r, val, b, a)
         self._updateCmyk()
     g = green = property(_get_green, _set_green, doc="the green component of the color")
 
@@ -619,7 +605,7 @@ class Color(object):
     def _set_blue(self, val):
         val = self._normalize(val)
         r, g, b, a = self._read(RGB)
-        self._rgb, self._cache['rgba'] = Color._cgcolor(RGB, self.space, r, g, val, a)
+        self._rgb, self._to['rgba'] = Color._cgcolor(RGB, self.space, r, g, val, a)
         self._updateCmyk()
     b = blue = property(_get_blue, _set_blue, doc="the blue component of the color")
 
@@ -628,7 +614,7 @@ class Color(object):
     def _set_alpha(self, val):
         # keep a cmyk color's components
         val = _clamp(self._normalize(val))
-        if self._from_cmyk:
+        if self._mode is CMYK:
             self._cmyk = CGColorCreateCopyWithAlpha(self._src, val)
             self._updateRgb()
         else:
@@ -640,7 +626,7 @@ class Color(object):
         return self._read(RGB)
     def _set_rgba(self, values):
         r, g, b, a = self._normalizeList(values)
-        self._rgb, self._cache['rgba'] = Color._cgcolor(RGB, self.space, r, g, b, a)
+        self._rgb, self._to['rgba'] = Color._cgcolor(RGB, self.space, r, g, b, a)
         self._updateCmyk()
     rgba = property(_get_rgba, _set_rgba, doc="the red, green, blue and alpha values of the color")
 
@@ -649,7 +635,7 @@ class Color(object):
     def _set_cyan(self, val):
         val = self._normalize(val)
         c, m, y, k, a = self.cmyka
-        self._cmyk, self._cache['cmyka'] = Color._cgcolor(CMYK, None, val, m, y, k, a)
+        self._cmyk, self._to['cmyka'] = Color._cgcolor(CMYK, None, val, m, y, k, a)
         self._updateRgb()
     c = cyan = property(_get_cyan, _set_cyan, doc="the cyan component of the color")
 
@@ -658,7 +644,7 @@ class Color(object):
     def _set_magenta(self, val):
         val = self._normalize(val)
         c, m, y, k, a = self.cmyka
-        self._cmyk, self._cache['cmyka'] = Color._cgcolor(CMYK, None, c, val, y, k, a)
+        self._cmyk, self._to['cmyka'] = Color._cgcolor(CMYK, None, c, val, y, k, a)
         self._updateRgb()
     m = magenta = property(_get_magenta, _set_magenta, doc="the magenta component of the color")
 
@@ -667,7 +653,7 @@ class Color(object):
     def _set_yellow(self, val):
         val = self._normalize(val)
         c, m, y, k, a = self.cmyka
-        self._cmyk, self._cache['cmyka'] = Color._cgcolor(CMYK, None, c, m, val, k, a)
+        self._cmyk, self._to['cmyka'] = Color._cgcolor(CMYK, None, c, m, val, k, a)
         self._updateRgb()
     y = yellow = property(_get_yellow, _set_yellow, doc="the yellow component of the color")
 
@@ -676,7 +662,7 @@ class Color(object):
     def _set_black(self, val):
         val = self._normalize(val)
         c, m, y, k, a = self.cmyka
-        self._cmyk, self._cache['cmyka'] = Color._cgcolor(CMYK, None, c, m, y, val, a)
+        self._cmyk, self._to['cmyka'] = Color._cgcolor(CMYK, None, c, m, y, val, a)
         self._updateRgb()
     k = black = property(_get_black, _set_black, doc="the black component of the color")
 
@@ -690,7 +676,7 @@ class Color(object):
         return Color._hexstring(r, g, b)
     def _set_hex(self, val):
         r, g, b, a = Color._parse(val)
-        self._rgb, self._cache['rgba'] = Color._cgcolor(RGB, _ctx._colorspace, r, g, b, self.a)
+        self._rgb, self._to['rgba'] = Color._cgcolor(RGB, _ctx._colorspace, r, g, b, self.a)
         self._updateCmyk()
     hex = property(_get_hex, _set_hex, doc="the rgb hex string for the color (in the current color space)")
 
@@ -699,7 +685,7 @@ class Color(object):
     def _set_hexa(self, hexa):
         clr, alpha = hexa
         r, g, b, _ = Color._parse(clr)
-        self._rgb, self._cache['rgba'] = Color._cgcolor(RGB, _ctx._colorspace, r, g, b, self._normalize(alpha))
+        self._rgb, self._to['rgba'] = Color._cgcolor(RGB, _ctx._colorspace, r, g, b, self._normalize(alpha))
         self._updateCmyk()
     hexa = property(_get_hexa, _set_hexa, doc="a tuple containing the color's rgb hex string and an alpha float")
 
@@ -710,7 +696,7 @@ class Color(object):
         current color space (whatever spaces the two colors are in) and returned in it.
         """
         other = Color(otherColor)
-        if self._from_cmyk and other._from_cmyk:
+        if self._mode is CMYK and other._mode is CMYK:
             mixed = [v + (w - v) * factor for v, w in zip(self._values(CMYK), other._values(CMYK))]
             return self.__class__(mixed, mode=CMYK, range=1)
         space = _ctx._colorspace
