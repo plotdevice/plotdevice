@@ -693,7 +693,7 @@ class ColorTests(PlotDeviceTestCase):
         presses = dict(GRACOL='gracol', GRACOL_UNCOATED='gracol_uncoated', SWOP='swop', FOGRA39='fogra39', FOGRA47='fogra47')
         for name, value in presses.items():
             self.assertEqual(globals()[name], value)
-            profile = Press(value).profile # decompressed from rsrc/press
+            profile = Press(value).icc # decompressed from rsrc/press
             self.assertEqual(hashlib.sha256(profile).hexdigest(), sums[_PRESSES[value]], name)
             self.assertEqual((profile[12:16], profile[16:20]), (b'prtr', b'CMYK'), name)
         self.assertEqual(len(sums), len(presses))
@@ -703,7 +703,7 @@ class ColorTests(PlotDeviceTestCase):
         from Quartz import CGColorSpaceCopyICCData, CGColorSpaceCreateWithName, kCGColorSpaceSRGB
         from plotdevice.gfx import colors
         from plotdevice.gfx.colors import _output_colors, Press
-        cmyk, rgb = Press(FOGRA47).profile, bytes(CGColorSpaceCopyICCData(CGColorSpaceCreateWithName(kCGColorSpaceSRGB)))
+        cmyk, rgb = Press(FOGRA47).icc, bytes(CGColorSpaceCopyICCData(CGColorSpaceCreateWithName(kCGColorSpaceSRGB)))
         user, other = join(self.tmp, 'user'), join(self.tmp, 'other')
         os.makedirs(user)
         os.makedirs(other)
@@ -753,7 +753,7 @@ class ColorTests(PlotDeviceTestCase):
     def test_presses_resolve_where_cmyk_fits(self):
         from plotdevice.gfx.colors import _output_colors, _output_mode, Press
         path = join(self.tmp, 'press.icc')
-        open(path, 'wb').write(Press(FOGRA47).profile)
+        open(path, 'wb').write(Press(FOGRA47).icc)
         for val, format, key in ((GRACOL, 'pdf', GRACOL), ('FOGRA39', 'tiff', FOGRA39), ('swop', 'eps', SWOP), ('Gracol-Uncoated', 'jpg', GRACOL_UNCOATED), (path, 'jpg', path)):
             self.assertEqual(_output_colors(val, format), key)
             self.assertEqual(_output_mode(key), CMYK)
@@ -798,7 +798,7 @@ class ColorTests(PlotDeviceTestCase):
             export(path, colors=GRACOL)
             img = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(path), None), 0, None)
             space = CGImageGetColorSpace(img)
-            self.assertEqual(bytes(CGColorSpaceCopyICCData(space)), Press(GRACOL).profile, ext)
+            self.assertEqual(bytes(CGColorSpaceCopyICCData(space)), Press(GRACOL).icc, ext)
             # drawn in its own space, unconverted
             ctx = CGBitmapContextCreate(None, 40, 20, 8, 160, space, kCGImageAlphaNone)
             CGContextDrawImage(ctx, ((0, 0), (40, 20)), img)
@@ -821,7 +821,7 @@ class ColorTests(PlotDeviceTestCase):
                 streams.append(zlib.decompress(data))
             except zlib.error:
                 streams.append(data.strip()) # the XMP packet, uncompressed
-        icc = Press(GRACOL).profile
+        icc = Press(GRACOL).icc
         self.assertEqual(streams.count(icc), 1) # the output intent's
         drawn = b''.join(s for s in streams if s != icc and not s.startswith(b'<?xpacket'))
         fills = set(re.sub(rb'\s+', b' ', k) for k in re.findall(rb'[-\d.]+\s+[-\d.]+\s+[-\d.]+\s+[-\d.]+(?=\s+k\b)', drawn))
@@ -862,7 +862,7 @@ class ColorTests(PlotDeviceTestCase):
             CGContextDrawImage(ctx, ((0, 0), (30, 10)), img)
             data = bytes(CGDataProviderCopyData(CGImageGetDataProvider(CGBitmapContextCreateImage(ctx))))
             return [tuple(round(v / 2.55) for v in data[(5 * 30 + x) * 4:][:4]) for x in (5, 15, 25)]
-        gracol = CGColorSpaceCreateWithICCData(Press(GRACOL).profile)
+        gracol = CGColorSpaceCreateWithICCData(Press(GRACOL).icc)
         tagged = write('gracol.tiff', gracol, (.6, .4, .4, 1))
         untagged = write('untagged.tiff', gracol, (0, 0, 0, 1), relabel=CGColorSpaceCreateDeviceCMYK())
         orange = write('orange.tiff', CGColorSpaceCreateWithName(kCGColorSpaceSRGB), (1, .5, 0), kCGImageAlphaPremultipliedLast)

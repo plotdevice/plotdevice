@@ -233,18 +233,18 @@ class Press(object):
 
     def __init__(self, key, space=None):
         self.key = key
-        self._profile = self._intent = self._transform = None
-        self.space = space if space is not None else CGColorSpaceCreateWithICCData(self.profile)
+        self._icc = self._intent = self._transform = None
+        self.space = space if space is not None else CGColorSpaceCreateWithICCData(self.icc)
 
     @property
-    def profile(self):
+    def icc(self):
         """The press's ICC profile bytes"""
-        if self._profile is None:
+        if self._icc is None:
             if self.key in _PRESSES:
-                self._profile = zlib.decompress(open(rsrc_path('press/%s.zlib' % _PRESSES[self.key]), 'rb').read())
+                self._icc = zlib.decompress(open(rsrc_path('press/%s.zlib' % _PRESSES[self.key]), 'rb').read())
             else:
-                self._profile = open(self.key, 'rb').read()
-        return self._profile
+                self._icc = open(self.key, 'rb').read()
+        return self._icc
 
     @property
     def intent(self):
@@ -256,28 +256,32 @@ class Press(object):
                 profile = open(rsrc_path('press/%s.zlib' % _PRESSES[self.key]), 'rb').read()
             else:
                 # the condition its targ tag names, else Custom
-                icc = self.profile
-                targ = (_icc_text(icc, b'targ') or '').strip()
+                targ = (_icc_text(self.icc, b'targ') or '').strip()
                 named = targ and '\n' not in targ and len(targ) < 64 # not the data itself
                 identifier, registry = (targ, 'http://www.color.org') if named else ('Custom', '')
-                condition = _icc_text(icc, b'desc') or os.path.basename(self.key)
-                profile = zlib.compress(icc, 1)
+                condition = _icc_text(self.icc, b'desc') or os.path.basename(self.key)
+                profile = zlib.compress(self.icc, 1)
             self._intent = dict(identifier=identifier, condition=condition, registry=registry, profile=profile)
         return self._intent
 
-    @property
-    def transform(self):
-        """ColorSync's transform from P3 into the press"""
+    def convert(self, rgb):
+        """The inks this press prints for P3 `rgb` components"""
         if self._transform is None:
-            icc = CGColorSpaceCopyICCData(self.space)
-            profile, _ = ColorSyncProfileCreate(icc, None) # (profile, error)
+            # colorsync's transform from p3 into the press
+            profile, _ = ColorSyncProfileCreate(self.icc, None) # (profile, error)
             steps = [{kColorSyncProfile: ColorSyncProfileCreateWithName(kColorSyncDisplayP3Profile),
                       kColorSyncRenderingIntent: kColorSyncRenderingIntentRelative,
                       kColorSyncTransformTag: kColorSyncTransformDeviceToPCS},
                      {kColorSyncProfile: profile, kColorSyncRenderingIntent: kColorSyncRenderingIntentRelative,
                       kColorSyncTransformTag: kColorSyncTransformPCSToDevice, kColorSyncBlackPointCompensation: True}]
             self._transform = ColorSyncTransformCreate(steps, {kColorSyncBlackPointCompensation: True})
-        return self._transform
+
+        # clipped p3 in 16-bit ints. ColorSync's float
+        # path tints white with black point compensation.
+        rgb = array('H', (round(min(max(v, 0.0), 1.0) * 65535) for v in rgb))
+        _, cmyk = ColorSyncTransformConvert(self._transform, 1, 1, array('H', [0] * 4), kColorSync16BitInteger,
+                                            kColorSyncAlphaNone, 8, rgb, kColorSync16BitInteger, kColorSyncAlphaNone, 6, None)
+        return tuple(0.0 if v < .001 else 1.0 if v > .999 else v for v in (c / 65535 for c in cmyk))
 
 def _clamp(v):
     return min(max(v, 0.0), 1.0)
@@ -462,14 +466,8 @@ class Color(object):
             if self._from_cmyk:
                 self._cache[key] = self._values(CMYK)
             else:
-                # clipped p3 in 16-bit ints. ColorSync's float
-                # path tints white with black point compensation.
                 r, g, b, alpha = _components(self._rgb_as(P3))
-                rgb = array('H', (round(_clamp(v) * 65535) for v in (r, g, b)))
-                _, cmyk = ColorSyncTransformConvert(Press.named[press].transform, 1, 1, array('H', [0] * 4), kColorSync16BitInteger,
-                                                    kColorSyncAlphaNone, 8, rgb, kColorSync16BitInteger, kColorSyncAlphaNone, 6, None)
-                inks = tuple(0.0 if v < .001 else 1.0 if v > .999 else v for v in (c / 65535 for c in cmyk))
-                self._cache[key] = inks + (alpha,)
+                self._cache[key] = Press.named[press].convert((r, g, b)) + (alpha,)
         return self._cache[key]
 
     def _rgb_as(self, space):
