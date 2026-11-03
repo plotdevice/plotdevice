@@ -172,9 +172,9 @@ def main():
     if opts.mode != 'headless':
       parser.exit(1, 'bad argument [--colors]\n--colors applies only with --export or -q\n')
     from plotdevice import DeviceError
-    from .gfx.colors import _output_colors
+    from .gfx.colors import Output
     try:
-      opts.colors = _output_colors(opts.colors, ext if opts.export else 'pdf')
+      opts.colors = Output.parse(opts.colors, ext if opts.export else 'pdf').profile.key
     except DeviceError as e:
       parser.exit(1, 'bad argument [--colors]\n%s\n' % e)
 

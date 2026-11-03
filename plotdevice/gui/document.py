@@ -17,7 +17,7 @@ from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
 from ..run import Sandbox, encoded
 from .. import DeviceError
-from ..gfx.colors import _output_colors
+from ..gfx.colors import Output
 from ..gfx.vision import _vision_space
 from . import set_timeout, FrameClock, FrameQueue
 
@@ -877,9 +877,9 @@ class ScriptController(NSWindowController):
         kind, value = proof or (None, None)
         try:
             if kind == 'press':
-                proofArgs = {'colors': _output_colors(value, 'tiff'), 'format': 'tiff', 'proofed': True}
+                proofArgs = {'output': Output.parse(value, 'tiff'), 'proofed': True}
             elif kind == 'rgb':
-                proofArgs = {'colors': _output_colors(value, 'png'), 'format': 'png', 'proofed': True}
+                proofArgs = {'output': Output.parse(value, 'png'), 'proofed': True}
             elif kind == 'vision':
                 proofArgs = {'vision': _vision_space(value)}
             else:

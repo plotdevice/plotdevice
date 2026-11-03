@@ -7,11 +7,12 @@ import colorsys
 import warnings
 import objc
 from array import array
+from collections import namedtuple
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path, numlike
-from . import _inkmode, _outputpress, _frame, _base_ctm, _cg_port
+from . import _output, _frame, _base_ctm, _cg_port
 
 PDGradient = objc.lookUpClass('PDGradient')
 
@@ -88,47 +89,6 @@ def _named(kind, val):
         unknown = 'Unknown color %s %r (should be one of: %s)' % (kind, val, ', '.join(sorted(set(names.values()))))
         raise DeviceError(unknown)
     return names[key]
-
-def _output_colors(val, format):
-    """The colors an export in `format` is written in for colors=`val`"""
-    format = 'jpg' if format == 'jpeg' else format
-    if val is None:
-        return _FORMAT_DEFAULTS.get(format, P3)
-    if not isinstance(val, str):
-        notpalette = "colors=%r isn't a built-in color space or ICC profile filename" % (val,)
-        if numlike(val):
-            notpalette += " (it isn't a gif's palette size)"
-        raise DeviceError(notpalette)
-    profile = Profile.find(val)
-    key = profile.key
-    if key in (P3, SRGB, CMYK):
-        kind = key
-    elif isinstance(profile, Press):
-        kind = 'press'
-    else:
-        kind = 'rgb'
-    allowed = _FORMAT_COLORS[format]
-    listed = kind in allowed or key in allowed
-    rgb_fits = kind in (P3, SRGB) and 'rgb' in allowed
-    press_fits = kind == 'press' and CMYK in allowed
-    if not (listed or rgb_fits or press_fits):
-        names = {'rgb': 'an RGB ICC profile', _REC709: 'REC709', _REC2020: 'REC2020'}
-        options = ', '.join(names.get(opt, opt.upper()) for opt in allowed)
-        if 'rgb' in allowed:
-            options = 'P3, SRGB, ' + options
-        if CMYK in allowed:
-            options += ', GRACOL, GRACOL_UNCOATED, SWOP, FOGRA39, FOGRA47, a CMYK ICC profile'
-        cantfit = "%s %s file can't be exported with colors=%r (it takes %s)" % ('An' if format == 'eps' else 'A', format.upper(), val, options)
-        raise DeviceError(cantfit)
-    return key
-
-def _output_mode(colors):
-    """The output mode an export's colors are drawn in"""
-    return Profile.named[colors].mode if colors in Profile.named else RGB
-
-def _output_space(colors):
-    """The CGColorSpace an export's file is written in, or None for CMYK"""
-    return Profile.named[colors].space
 
 def _icc_text(icc, sig):
     count = int.from_bytes(icc[128:132], 'big')
@@ -297,6 +257,79 @@ Profile.named.update({P3: Profile(P3, RGB, CGColorSpaceCreateWithName(kCGColorSp
                       SRGB: Profile(SRGB, RGB, CGColorSpaceCreateWithName(kCGColorSpaceSRGB)),
                       CMYK: Profile(CMYK, CMYK, None)})
 
+# what a render's colors resolve to, and whether a press's numbers keep its space
+Ink = namedtuple('Ink', ['profile', 'tagged'])
+
+class Output(namedtuple('Output', ['profile', 'format'])):
+    __slots__ = ()
+
+    @classmethod
+    def parse(cls, val, format):
+        """The output an export in `format` is written in for colors=`val`"""
+        name = 'jpg' if format == 'jpeg' else format
+        if val is None:
+            return cls(Profile.named[_FORMAT_DEFAULTS.get(name, P3)], format)
+        if not isinstance(val, str):
+            notpalette = "colors=%r isn't a built-in color space or ICC profile filename" % (val,)
+            if numlike(val):
+                notpalette += " (it isn't a gif's palette size)"
+            raise DeviceError(notpalette)
+        profile = Profile.find(val)
+        key = profile.key
+        if key in (P3, SRGB, CMYK):
+            kind = key
+        elif isinstance(profile, Press):
+            kind = 'press'
+        else:
+            kind = 'rgb'
+        allowed = _FORMAT_COLORS[name]
+        listed = kind in allowed or key in allowed
+        rgb_fits = kind in (P3, SRGB) and 'rgb' in allowed
+        press_fits = kind == 'press' and CMYK in allowed
+        if not (listed or rgb_fits or press_fits):
+            names = {'rgb': 'an RGB ICC profile', _REC709: 'REC709', _REC2020: 'REC2020'}
+            options = ', '.join(names.get(opt, opt.upper()) for opt in allowed)
+            if 'rgb' in allowed:
+                options = 'P3, SRGB, ' + options
+            if CMYK in allowed:
+                options += ', GRACOL, GRACOL_UNCOATED, SWOP, FOGRA39, FOGRA47, a CMYK ICC profile'
+            cantfit = "%s %s file can't be exported with colors=%r (it takes %s)" % ('An' if name == 'eps' else 'A', name.upper(), val, options)
+            raise DeviceError(cantfit)
+        return cls(profile, format)
+
+    @classmethod
+    def working(cls, mode):
+        """The output a script or a window draws in for `mode`, with no file"""
+        return cls(Profile.named[CMYK if mode == CMYK else P3], None)
+
+    @property
+    def mode(self):
+        """The RGB or CMYK mode colors are drawn in"""
+        return self.profile.mode
+
+    @property
+    def press(self):
+        """The press colors convert into, or None"""
+        return self.profile if isinstance(self.profile, Press) else None
+
+    @property
+    def cmyk_space(self):
+        """What CMYK bitmaps are tagged with to keep their numbers, or None outside a CMYK export"""
+        if self.mode != CMYK or self.format is None:
+            return None
+        return self.press.space if self.ink.tagged else CGColorSpaceCreateDeviceCMYK()
+
+    @property
+    def surface_space(self):
+        """The space a window-displayable surface is tagged with, or None for P3"""
+        rgb_profile = self.mode == RGB and self.profile.key != P3
+        return self.profile.space if rgb_profile else None
+
+    @property
+    def ink(self):
+        """What colors resolve to: CMYK bitmaps keep a press's numbers in its space"""
+        return Ink(self.profile, self.press is not None and self.format in ('tiff', 'jpg', 'jpeg'))
+
 def _clamp(v):
     return min(max(v, 0.0), 1.0)
 
@@ -456,21 +489,21 @@ class Color(object):
 
     @property
     def cgColor(self):
-        # one per output mode
-        mode = _inkmode()
+        # one per ink
+        ink = _output().ink
         try:
-            return self._to['cg', mode]
+            return self._to['cg', ink]
         except KeyError:
-            if mode == RGB:
+            profile = ink.profile
+            if profile.key == P3:
                 cg = self._rgb
-            elif mode == CMYK:
+            elif profile.key == CMYK:
                 cg = CGColorCreate(_DEVICE_CMYK, self._values(CMYK))
-            elif isinstance(mode, tuple):
-                press, in_space = mode
-                cg = CGColorCreate(Profile.named[press].space if in_space else _DEVICE_CMYK, self._press_values(press))
+            elif isinstance(profile, Press):
+                cg = CGColorCreate(profile.space if ink.tagged else _DEVICE_CMYK, self._press_values(profile.key))
             else:
-                cg = _matched(self._rgb, Profile.named[mode].space)
-            self._to['cg', mode] = cg
+                cg = _matched(self._rgb, profile.space)
+            self._to['cg', ink] = cg
             return cg
 
     def _press_values(self, press):
@@ -489,14 +522,14 @@ class Color(object):
 
     def _read_as(self, space):
         # the rgb a script reads
-        press = _outputpress()
+        press = _output().press
         if press is None or self._mode is not CMYK:
             return self._rgb_as(space)
-        return _matched(CGColorCreate(Profile.named[press].space, self._values(CMYK)), _SPACES[space])
+        return _matched(CGColorCreate(press.space, self._values(CMYK)), _SPACES[space])
 
     def _read(self, mode):
         # scripts see cmyk colors through the output press
-        press = _outputpress() if mode is not CMYK else None
+        press = _output().press if mode is not CMYK else None
         return self._values(mode, press if self._mode is CMYK else None)
 
     def _values(self, mode, press=None):
@@ -826,7 +859,7 @@ class Pattern(object):
         # cache 'tiles' (based on the pattern's matrix & ink) on the source Image itself
         frame = _frame.get()
         matrix = CGAffineTransformConcat(self._image._screen_matrix, _base_ctm.get())
-        key = tuple(matrix), _inkmode(), frame and frame.colors
+        key = tuple(matrix), _output().ink, frame and frame.output
         tiles = self._image._tiles
         try:
             return tiles[key]
@@ -840,14 +873,14 @@ class Pattern(object):
             size, vectors, rep = snapshot.pagesize, [], None
         else:
             size = self._image._nsImage.size()
-            cmyk = frame._cmyk_space if frame is not None else None
+            cmyk = frame.output.cmyk_space if frame is not None else None
             reps = self._image._nsImage_as(cmyk).representations()
             vectors = [r for r in reps if isinstance(r, (NSPDFImageRep, PDSVGImageRep))]
             rep = vectors[0] if vectors else max(reps, key=lambda r: r.pixelsWide() * r.pixelsHigh(), default=None)
         filling = frame is not None and snapshot is not None
-        if filling and (frame.colors, frame.format) != (snapshot.colors, snapshot.format):
+        if filling and frame.output != snapshot.output:
             from ..context import Frame
-            snapshot = Frame(snapshot, frame.colors, frame.format) # in the colors of the frame it fills
+            snapshot = Frame(snapshot, frame.output) # in the colors of the frame it fills
         scale = abs(matrix.a * matrix.d - matrix.b * matrix.c) ** .5
         flip = (scale, 0, 0, -scale, 0, size.height * scale) # a y-up tile at the render's scale, for shadows in PDFs
 
@@ -909,7 +942,7 @@ class Gradient(object):
 
     def __init__(self, *colors, **kwargs):
         if colors and isinstance(colors[0], Gradient):
-            _copy_attrs(colors[0], self, ('_gradient', '_outputmode', '_space', '_steps', '_colors', '_center', '_angle'))
+            _copy_attrs(colors[0], self, ('_gradient', '_ink', '_space', '_steps', '_colors', '_center', '_angle'))
             return
 
         # parse colors and their stops
@@ -929,7 +962,7 @@ class Gradient(object):
         self._steps = steps
         self._colors = colors
         self._center = center
-        self._outputmode = None
+        self._ink = None
         self._gradient = None
 
         # interpolate in the space current at creation
@@ -964,22 +997,21 @@ class Gradient(object):
 
     @property
     def pdGradient(self):
-        c_mode = _inkmode()
-        if not self._gradient or self._outputmode!=c_mode:
+        ink = _output().ink
+        if not self._gradient or self._ink != ink:
             # rgb in the gradient's space, else the output's
-            if c_mode == RGB:
+            profile = ink.profile
+            if profile.key == P3:
                 c_space = _SPACES[self._space]
                 clrs = [c._rgb_as(self._space) for c in self._colors]
             else:
-                if c_mode == CMYK or (isinstance(c_mode, tuple) and not c_mode[1]):
+                if profile.mode == CMYK and not ink.tagged:
                     c_space = _DEVICE_CMYK
-                elif isinstance(c_mode, tuple):
-                    c_space = Profile.named[c_mode[0]].space
                 else:
-                    c_space = Profile.named[c_mode].space
+                    c_space = profile.space
                 clrs = [c.cgColor for c in self._colors]
             pd_gradient = PDGradient.alloc().initWithColors_atLocations_colorSpace_(clrs, self._steps, c_space)
-            self._gradient, self._outputmode = pd_gradient, c_mode
+            self._gradient, self._ink = pd_gradient, ink
         return self._gradient
 
     @property

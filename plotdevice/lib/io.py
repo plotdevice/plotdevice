@@ -270,12 +270,11 @@ class PaperbackWriter(object):
     """Draws each frame it's given as the next page of one PDF file"""
 
     def __init__(self, fname, zoom=1.0, press=None):
-        from ..gfx.colors import Profile
         self.fname = fname
         self.zoom = zoom
         self.pages = 0
         self.closed = False
-        self.intent = Profile.named[press].intent if press else None
+        self.intent = press.intent if press else None
         self.blend_space = None # set by the first page
         self.context = CGPDFContextCreateWithURL(NSURL.fileURLWithPath_(fname), None, None)
         self.layers = {} # cached CGLayers of plotted canvases
@@ -283,7 +282,7 @@ class PaperbackWriter(object):
     def addPage_(self, frame):
         from ..gfx import _render_lock, _pdf_doc
         if not self.pages:
-            self.blend_space = frame._blend_space
+            self.blend_space = frame.output.profile.space
         w, h = frame.pagesize
         CGContextBeginPage(self.context, CGRectMake(0, 0, w * self.zoom, h * self.zoom))
         token = _pdf_doc.set((self.context, self.layers))
@@ -422,17 +421,17 @@ class ExportSession(object):
 
 re_padded = re.compile(r'{(\d+)}')
 class ImageExportSession(ExportSession):
-    def __init__(self, fname, format='pdf', zoom=1.0, first=1, last=None, single=False, colors=None, **rest):
-        from ..gfx.colors import _output_colors, _output_mode, CMYK, Profile, Press # circular import
+    def __init__(self, fname, format='pdf', zoom=1.0, first=1, last=None, single=False, output=None, **rest):
+        from ..gfx.colors import Output, CMYK # circular import
         super(ImageExportSession, self).__init__()
         self.single_file = single or first==last
         if last is not None:
             self.begin(pages=last-first+1)
         self.format = format
         self.zoom = zoom
-        self.colors = _output_colors(colors, format)
+        self.output = output or Output.parse(None, format)
         self.view_based = format == 'eps' # only an NSView can generate EPS
-        cmyk_bitmap = _output_mode(self.colors) == CMYK and format in ('jpeg', 'jpg', 'tiff')
+        cmyk_bitmap = self.output.mode == CMYK and format in ('jpeg', 'jpg', 'tiff')
         self.presents = format not in ('pdf', 'eps') and not cmyk_bitmap
 
         m = re_padded.search(fname)
@@ -443,7 +442,7 @@ class ImageExportSession(ExportSession):
             if pad:
                 fname = re_padded.sub(pad%0, fname, count=1)
             if format == 'pdf':
-                self.writer = PaperbackWriter(fname, zoom, self.colors if isinstance(Profile.named.get(self.colors), Press) else None)
+                self.writer = PaperbackWriter(fname, zoom, self.output.press)
             else:
                 self.writer = Pages.alloc().initWithFile_(fname)
         else:
@@ -457,7 +456,7 @@ class ImageExportSession(ExportSession):
 
     def add(self, canvas, render=None):
         """Render the canvas and write it out, now or via render()"""
-        frame = canvas.commit(self.colors, self.format)
+        frame = canvas.commit(self.output)
         writer, format, zoom = self.writer, self.format, self.zoom
         def work(cancelled):
             if isinstance(writer, PaperbackWriter):
@@ -488,8 +487,8 @@ class MovieExportSession(ExportSession):
         bigger = [rate for rate in MovieExportSession.BITRATES if rate >= wanted]
         return bigger[0] if bigger else MovieExportSession.BITRATES[-1]
 
-    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=None, loop=0, codec=HEVC, zoom=1.0, colors=None, **rest):
-        from ..gfx.colors import _output_colors, P3, SRGB, _REC709, _REC2020
+    def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=None, loop=0, codec=HEVC, zoom=1.0, output=None, **rest):
+        from ..gfx.colors import Output, P3, SRGB, _REC709, _REC2020
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)
@@ -504,8 +503,8 @@ class MovieExportSession(ExportSession):
         self.bitrate = bitrate # None = auto
         self.codec = codec
         self.zoom = zoom
-        self.colors = _output_colors(colors, format)
-        self.video_colors = {P3: 'p3', SRGB: 'srgb', _REC709: 'rec709', _REC2020: 'rec2020'}.get(self.colors) # Video's names
+        self.output = output or Output.parse(None, format)
+        self.video_colors = {P3: 'p3', SRGB: 'srgb', _REC709: 'rec709', _REC2020: 'rec2020'}.get(self.output.profile.key) # Video's names
         self.presents = True
 
     def discard_if_failed(self):
@@ -525,7 +524,7 @@ class MovieExportSession(ExportSession):
             print('unrecognized output format: %s' % self.format)
             return self.shutdown()
 
-        frame = canvas.commit(self.colors, self.format)
+        frame = canvas.commit(self.output)
         if not self.writer:
             size = self.size = frame._raster_size(self.zoom)
             if self.format == 'mov':
@@ -542,7 +541,7 @@ class MovieExportSession(ExportSession):
         def work(cancelled):
             stopped = lambda: cancelled is not None and cancelled()
             if gif:
-                surface = PDSurface.surfaceWithWidth_height_space_(*self.size, frame._surface_space)
+                surface = PDSurface.surfaceWithWidth_height_space_(*self.size, frame.output.surface_space)
             else:
                 # wait for the encoder to provide a surface to draw in
                 while (surface := writer.nextSurface()) is None:

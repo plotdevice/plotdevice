@@ -320,7 +320,7 @@ class FrameLayers(object):
         bg = frame.background
         if not isinstance(bg, Color) or bg.alpha < 1:
             return None
-        color = bg._rgb if frame.outputmode == RGB else bg._cmyk
+        color = bg._rgb if frame.output.mode == RGB else bg._cmyk
         return CGColorCreateCopyByMatchingToColorSpace(CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGRenderingIntentDefault, color, None)
 
 class FramePresenter(object):

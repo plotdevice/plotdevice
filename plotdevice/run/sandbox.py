@@ -7,12 +7,12 @@ from PyObjCTools import AppHelper
 from ..lib.io import MovieExportSession, ImageExportSession
 from .common import stacktrace, coredump, uncoded
 from plotdevice import util, context, gfx, Halted, DeviceError
-from ..gfx.colors import _output_mode
+from ..gfx.colors import Output, Profile, RGB
 
 __all__ = ['Sandbox']
 
 Outcome = namedtuple('Outcome', ['ok', 'output'])
-Output = namedtuple('Output', ['isErr', 'data'])
+Echo = namedtuple('Echo', ['isErr', 'data'])
 
 class Metadata(object):
     __slots__ = 'args', 'virtualenv', 'first', 'frame', 'last', 'loop', 'colors'
@@ -191,8 +191,8 @@ class Sandbox(object):
         # if this is the initial pass, reset the namespace and canvas state
         if method is None:
             check = self._preflight() # compile the script
-            self.context._outputmode = _output_mode(self._meta.colors)
-            self.context._cli_colors = self._meta.colors
+            colors = self._meta.colors # a windowless run's --colors
+            self.context._output = Output(Profile.named[colors], None) if colors else Output.working(RGB)
             if not check.ok:
                 return check
 
@@ -350,7 +350,8 @@ class Sandbox(object):
 
         # set up an export manager and attach the delegate's callbacks
         ExportSession = ImageExportSession if kind=='image' else MovieExportSession
-        self.session = ExportSession(fname, **opts)
+        output = Output.parse(opts.get('colors'), opts['format'])
+        self.session = ExportSession(fname, output=output, **opts)
         self.session.on(progress=self.delegate.exportProgress,
                         status=self.delegate.exportStatus,
                         complete=self._exportComplete)
@@ -419,10 +420,10 @@ class StdIO(object):
             self.fileno = lambda: 1 if streamname=='stdout' else 2
 
         def write(self, data):
-            self._stream.write(Output(self.fileno()==2, data))
+            self._stream.write(Echo(self.fileno()==2, data))
 
         def writelines(self, lines):
-            self._stream.write(Output(self.fileno()==2, ''.join(lines)))
+            self._stream.write(Echo(self.fileno()==2, ''.join(lines)))
 
         def writable(self):
             return True
