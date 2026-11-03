@@ -8,9 +8,10 @@ from objc import super
 
 from .lib.cocoa import *
 from .lib import pathmatics
+from _plotdevice import PDPath
 from .lib.io import MovieExportSession, Distiller, HEVC
 from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
-from .gfx.geometry import Dimension, parse_coords
+from .gfx.geometry import Dimension, IDENTITY, parse_coords
 from .gfx.typography import Layout
 from .gfx.effects import Frob, _commit_all
 from .gfx import *
@@ -268,8 +269,14 @@ class Context(object):
         if self._path is not None:
             # if a bezier is being built in a `with` block, add curves to it, but
             # ignore kwargs since the parent bezier's styles apply to all lines drawn
-            xf = p._screen_transform
-            self._path.extend(xf.apply(p))
+            matrix = p._screen_matrix
+            if matrix == IDENTITY:
+                self._path._pdpath.add(p._pdpath)
+            else:
+                a, b, c, d, tx, ty = matrix
+                dpx = p._grid.dpx # scale the matrix to canvas units rather than px
+                self._path._pdpath.add(p._pdpath, (a, b, c, d, tx / dpx, ty / dpx))
+            self._path._fulcrum = None
         elif draw:
             # if this is a one-off primitive, draw it depending on the kwargs & state
             p.draw()
@@ -512,16 +519,13 @@ class Context(object):
 
     def beginpath(self, x=None, y=None):
         self._path = Bezier()
-        self._pathclosed = False
         if x != None and y != None:
             self._path.moveto(x,y)
 
     def closepath(self):
         if self._path is None:
             raise DeviceError("No active path. Use bezier() or beginpath() first.")
-        if not self._pathclosed:
-            self._path.closepath()
-            self._pathclosed = True
+        self._path.closepath()
 
     def endpath(self, **kwargs):
         if self._path is None:
@@ -534,7 +538,6 @@ class Context(object):
         if draw:
             p.draw()
         self._path = None
-        self._pathclosed = False
         return p
 
     def drawpath(self, path, **kwargs):
@@ -2013,30 +2016,30 @@ class Frame(object):
     def _traced(self, grobs):
         # the union of the grobs' shapes, in the frame's px space
         from .gfx.effects import Stencil
-        outline = NSBezierPath.bezierPath()
+        outline = PDPath()
         for grob in grobs:
             if isinstance(grob, Stencil):
                 # the contents within a clip(), or outside a mask()
                 contents = self._traced(grob.contents)
                 if hasattr(grob, 'path'):
-                    stencil, masked = grob.path._screen_transform.apply(grob.path._nsBezierPath), grob.evenodd
+                    stencil, masked = grob.path._screen_transform.apply(grob.path)._pdpath, grob.evenodd
                 else:
-                    stencil = grob.bmp._screen_transform.apply(grob.bmp._outline._nsBezierPath) # a bitmap stencil's image
+                    stencil = grob.bmp._screen_transform.apply(grob.bmp._outline)._pdpath # a bitmap stencil's image
                     masked = grob.invert != (grob.channel == 'black')
                 shape = pathmatics.difference(contents, stencil, 0.6) if masked else pathmatics.intersect(contents, stencil, 0.6)
             elif isinstance(grob, Frob):
                 shape = self._traced(grob.contents)
             elif isinstance(grob, Image):
-                shape = grob._screen_transform.apply(grob._outline._nsBezierPath)
+                shape = grob._screen_transform.apply(grob._outline)._pdpath
             elif isinstance(grob, Bezier):
-                shape = grob._nsBezierPath if grob._fillcolor is not None else NSBezierPath.bezierPath()
+                shape = grob._pdpath if grob._fillcolor is not None else PDPath()
                 if grob._strokecolor is not None:
-                    stroked = grob.trace(grob.nib, grob.joinstyle, grob.capstyle)._nsBezierPath
+                    stroked = grob.trace(grob.nib, grob.joinstyle, grob.capstyle)._pdpath
                     shape = pathmatics.union(shape, stroked, 0.6)
                 shape = grob._screen_transform.apply(shape)
             else:
                 path = grob.path # text's glyphs
-                shape = path._screen_transform.apply(path._nsBezierPath)
+                shape = path._screen_transform.apply(path)._pdpath
             outline = pathmatics.union(outline, shape, 0.6)
         return outline
 

@@ -4,6 +4,8 @@ import unittest
 from . import PlotDeviceTestCase, reference
 from plotdevice import *
 from plotdevice import DeviceError
+from AppKit import NSAffineTransform, NSBezierPath
+from _plotdevice import PDPath
 
 class DrawingTests(PlotDeviceTestCase):
     @reference('drawing/paths-transform-pre.png')
@@ -88,6 +90,107 @@ class DrawingTests(PlotDeviceTestCase):
         # apply a gradient fill color to the compound path
         fill('green', 'cyan')
         bezier(path)
+
+    def test_paths_compound_units(self):
+        # shapes transformed inside a compound path land where they would on their own, in any unit
+        size(20, 20, unit=cm)
+        with bezier(plot=False) as path:
+            with transform():
+                translate(1.5, -.5)
+                rect(2, 3, 4, 2)
+        (x, y), (w, h) = path.bounds
+        self.assertEqual([round(v, 9) for v in (x, y, w, h)], [3.5, 2.5, 4, 2])
+
+        transform(CENTER)
+        with bezier(plot=False) as path:
+            with transform():
+                rotate(30)
+                rect(2, 3, 4, 2)
+        self.assertAlmostEqual(path.center.x, 4)
+        self.assertAlmostEqual(path.center.y, 4)
+
+    def test_paths_xy(self):
+        # a path's x & y are its fulcrum's, or else its bounds' origin
+        size(100, 100)
+        box = rect(10, 20, 30, 40, plot=False)
+        self.assertEqual((box.x, box.y), (10, 20))
+        spiky = star(50, 60, 5, 20, plot=False)
+        self.assertEqual((spiky.x, spiky.y), (50, 60))
+        box.x, box.y = 15, 25
+        self.assertEqual(tuple(box.bounds.origin), (15, 25))
+
+    def test_paths_closepath(self):
+        # closepath() closes the current subpath, once, and does nothing without one
+        def triangle(x):
+            moveto(x, 0)
+            lineto(x + 10, 0)
+            lineto(x + 5, 8)
+        closes = lambda path: [el.cmd for el in path].count(CLOSE)
+
+        with bezier(plot=False) as path:
+            triangle(0)
+            closepath()
+            closepath()
+            triangle(20)
+            closepath()
+        self.assertEqual(closes(path), 2)
+
+        beginpath()
+        triangle(0)
+        closepath()
+        triangle(20)
+        self.assertEqual(closes(endpath(plot=False)), 2) # the open one is autoclosed
+
+        with bezier(plot=False, close=True) as path:
+            triangle(0)
+            closepath()
+        self.assertEqual(closes(path), 1)
+
+        beginpath()
+        self.assertEqual(len(endpath(plot=False)), 0)
+
+    def test_pdpath_matches_nsbezierpath(self):
+        # PDPath's shapes, closes, and transformed copies have NSBezierPath's elements and bounds
+        # (its ovals and arcs are computed rather than built by ns, so their points can differ in the last bits)
+        def elements(ns):
+            return tuple((int(cmd), tuple((pt.x, pt.y) for pt in pts))
+                         for cmd, pts in (ns.elementAtIndex_associatedPoints_(i) for i in range(ns.elementCount())))
+        def assertElementsClose(got, expected):
+            self.assertEqual([cmd for cmd, _ in got], [cmd for cmd, _ in expected])
+            for (_, pts), (_, ns_pts) in zip(got, expected):
+                for pt, ns_pt in zip(pts, ns_pts):
+                    self.assertAlmostEqual(pt[0], ns_pt[0], places=9)
+                    self.assertAlmostEqual(pt[1], ns_pt[1], places=9)
+        p, ns = PDPath(), NSBezierPath.bezierPath()
+        p.moveto(0, 0); ns.moveToPoint_((0, 0))
+        p.lineto(10, 0); ns.lineToPoint_((10, 0))
+        p.curveto(12, 2, 12, 6, 10, 8); ns.curveToPoint_controlPoint1_controlPoint2_((10, 8), (12, 2), (12, 6))
+        p.closepath(); ns.closePath()
+        p.rect(20, 0, 10, 6); ns.appendBezierPathWithRect_(((20, 0), (10, 6)))
+        p.lineto(25, 12); ns.lineToPoint_((25, 12))
+        p.rect(40, 0, 10, 6, 2, 3); ns.appendBezierPathWithRoundedRect_xRadius_yRadius_(((40, 0), (10, 6)), 2, 3)
+        p.oval(60, 0, 10, 6); ns.appendBezierPathWithOvalInRect_(((60, 0), (10, 6)))
+        p.arc(80, 3, 5, 30, 250, True); ns.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise_((80, 3), 5, 30, 250, True)
+        p.arcto(90, 10, 100, 0, 3); ns.appendBezierPathWithArcFromPoint_toPoint_radius_((90, 10), (100, 0), 3)
+        assertElementsClose(p.elements(), elements(ns))
+        self.assertEqual(len(p), ns.elementCount())
+        (x, y), (w, h) = ns.bounds()
+        for got, expected in zip(p.bounds(), (x, y, w, h)):
+            self.assertAlmostEqual(got, expected, places=9)
+
+        xf = NSAffineTransform.transform()
+        xf.rotateByDegrees_(30)
+        xf.translateXBy_yBy_(4, -2)
+        assertElementsClose(p.transformed(tuple(xf.transformStruct())).elements(), elements(xf.transformBezierPath_(ns)))
+        both = NSBezierPath.bezierPath()
+        both.appendBezierPath_(ns)
+        both.appendBezierPath_(xf.transformBezierPath_(ns))
+        added = PDPath()
+        added.add(p)
+        added.add(p, tuple(xf.transformStruct()))
+        assertElementsClose(added.elements(), elements(both))
+        self.assertEqual(PDPath(ns).elements(), elements(ns.copy()))
+        assertElementsClose(PDPath(p).elements(), elements(ns.copy()))
 
     @reference('drawing/paths-flat-union.png')
     def test_paths_flat_union(self):

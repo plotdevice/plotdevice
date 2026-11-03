@@ -10,6 +10,7 @@ from .colors import Color, Gradient, Pattern
 from .geometry import CENTER, DEGREES, IDENTITY, Transform, Region, Point, _pivot, _hull
 from ..util import trim_zeroes, _copy_attr, _flatten, numlike
 from ..lib import pathmatics
+from _plotdevice import PDPath
 
 _ctx = None
 __all__ = ("Bezier", "Curve", "BezierPath", "PathElement",
@@ -41,8 +42,8 @@ NORMAL = "normal"
 FORTYFIVE = "fortyfive"
 
 class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
-    """A Bezier provides a wrapper around NSBezierPath."""
-    stateAttrs = ('_nsBezierPath', '_fulcrum')
+    """A Bezier provides a wrapper around a CGPath."""
+    stateAttrs = ('_pdpath', '_fulcrum')
     opts = ('close', 'smooth')
 
     def __init__(self, path=None, **kwargs):
@@ -53,19 +54,21 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         # nsbezier reference to use as the backing store. otherwise start with a
         # fresh path with no points
         if path is None:
-            self._nsBezierPath = NSBezierPath.bezierPath()
+            self._pdpath = PDPath()
         elif isinstance(path, (list,tuple)):
             if isinstance(path[0], Curve):
-                self._nsBezierPath = NSBezierPath.bezierPath()
+                self._pdpath = PDPath()
                 self.extend(path)
             else:
                 p = pathmatics.findpath(path, 1.0 if kwargs.get('smooth') else 0.0)
-                self._nsBezierPath = p._nsBezierPath
+                self._pdpath = p._pdpath
         elif isinstance(path, Bezier):
-            self._nsBezierPath = nscopy(path._nsBezierPath)
+            self._pdpath = PDPath(path._pdpath)
             self._fulcrum = _copy_attr(path._fulcrum)
         elif isinstance(path, NSBezierPath):
-            self._nsBezierPath = nscopy(path)
+            self._pdpath = PDPath(path)
+        elif isinstance(path, PDPath):
+            self._pdpath = path # a native op's result, not shared with anything else
         else:
             badpath = "Don't know what to do with %s." % path
             raise DeviceError(badpath)
@@ -87,7 +90,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def copy(self):
         # pull all state from the original object (rather than inheriting from _ctx)
         clone = Bezier.__new__(Bezier)
-        clone._nsBezierPath = nscopy(self._nsBezierPath)
+        clone._pdpath = PDPath(self._pdpath)
         clone._transform = self._transform.copy()
         clone._effects = self._effects.copy()
         clone._fillcolor = _copy_attr(self._fillcolor)
@@ -100,16 +103,13 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     ### Path methods ###
 
     def moveto(self, x, y):
-        self._nsBezierPath.moveToPoint_( (x, y) )
+        self._pdpath.moveto(x, y)
 
     def lineto(self, x, y):
-        if self._nsBezierPath.elementCount()==0:
-            # use an implicit 0,0 origin if path doesn't have a prior moveto
-            self._nsBezierPath.moveToPoint_( (0, 0) )
-        self._nsBezierPath.lineToPoint_( (x, y) )
+        self._pdpath.lineto(x, y) # with an implicit 0,0 origin if the path doesn't have a prior moveto
 
     def curveto(self, x1, y1, x2, y2, x3, y3):
-        self._nsBezierPath.curveToPoint_controlPoint1_controlPoint2_( (x3, y3), (x1, y1), (x2, y2) )
+        self._pdpath.curveto(x1, y1, x2, y2, x3, y3)
 
     def arcto(self, x1, y1, x2=None, y2=None, radius=None, ccw=False):
         if x2 is not None and y2 is not None:
@@ -120,30 +120,29 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             # Take a look at the Adding Arcs section of apple's docs for some important edge cases:
             # https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaDrawingGuide/Paths/Paths.html
             radius = 1.0 if radius is None else radius
-            self._nsBezierPath.appendBezierPathWithArcFromPoint_toPoint_radius_( (x1,y1), (x2,y2), radius)
-            self._nsBezierPath.lineToPoint_( (x2,y2) )
+            self._pdpath.arcto(x1, y1, x2, y2, radius)
+            self._pdpath.lineto(x2, y2)
         else:
             # create a unitary semicircle...
             k = 0.5522847498 / 2.0
-            p = NSBezierPath.bezierPath()
-            p.moveToPoint_((0,0))
-            p.curveToPoint_controlPoint1_controlPoint2_((.5,-.5), (0,-k), (.5-k,-.5))
-            p.curveToPoint_controlPoint1_controlPoint2_((1,0), (.5+k,-.5), (1,-k))
+            p = PDPath()
+            p.moveto(0, 0)
+            p.curveto(0, -k, .5-k, -.5, .5, -.5)
+            p.curveto(.5+k, -.5, 1, -k, 1, 0)
 
             # ...and transform it to match the endpoints
-            src = self._nsBezierPath.currentPoint()
-            theta = pathmatics.angle(src.x, src.y, x1, y1)
-            dw = pathmatics.distance(src.x, src.y, x1, y1)
+            sx, sy = self._pdpath.current_point()
+            theta = pathmatics.angle(sx, sy, x1, y1)
+            dw = pathmatics.distance(sx, sy, x1, y1)
             dh = dw*(-1.0 if ccw else 1.0)
             t = Transform()
-            t.translate(src.x,src.y)
+            t.translate(sx, sy)
             t.rotate(-theta)
             t.scale(dw, dh)
-            p.transformUsingAffineTransform_(t._nsAffineTransform)
-            self.extend(Bezier(p)[1:]) # omit the initial moveto in the semicircle
+            self.extend(Curve(cmd, pts) for cmd, pts in p.transformed(tuple(t.matrix)).elements()[1:]) # omit the initial moveto in the semicircle
 
     def closepath(self):
-        self._nsBezierPath.closePath()
+        self._pdpath.closepath() # if the current subpath is open and non-empty
 
     def _autoclose(self):
         if self._needs_closure:
@@ -154,21 +153,21 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
     def rect(self, x, y, width, height, radius=None):
         if radius is None:
-            self._nsBezierPath.appendBezierPathWithRect_( ((x, y), (width, height)) )
+            self._pdpath.rect(x, y, width, height)
         else:
             if numlike(radius):
                 radius = (radius, radius)
             elif not isinstance(radius, (list, tuple)) or len(radius)!=2:
                 badradius = 'the radius for a rect must be either a number or an (x,y) tuple'
                 raise DeviceError(badradius)
-            self._nsBezierPath.appendBezierPathWithRoundedRect_xRadius_yRadius_( ((x,y), (width,height)), *radius)
+            self._pdpath.rect(x, y, width, height, *radius)
 
     def oval(self, x, y, width, height, rng=None, ccw=False, close=False):
         # range = None:      draw a full ellipse
         # range = 180:       draws a semicircle
         # range = (90, 180): draws a quadrant in the lower left
         if rng is None:
-            self._nsBezierPath.appendBezierPathWithOvalInRect_( ((x, y), (width, height)) )
+            self._pdpath.oval(x, y, width, height)
         else:
             # convert angles from canvas units to degrees
             if numlike(rng):
@@ -179,16 +178,15 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 start, end = -start, -end
             start, end = _ctx._angle(start, DEGREES), _ctx._angle(end, DEGREES)
 
-            p = NSBezierPath.bezierPath()
-            p.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise_((.5,.5), .5, start, end, ccw)
+            p = PDPath()
+            p.arc(.5, .5, .5, start, end, ccw)
             t = Transform()
             t.translate(x,y)
             t.scale(width, height)
-            p.transformUsingAffineTransform_(t._nsAffineTransform)
-            self._nsBezierPath.appendBezierPath_(p)
+            self._pdpath.add(p, tuple(t.matrix))
             if close:
                 # optionally close the path with a chord
-                self._nsBezierPath.closePath()
+                self._pdpath.closepath()
             self._fulcrum = Point(x+width/2, y+width/2)
     ellipse = oval
 
@@ -197,8 +195,8 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             self.moveto(x1,y1)
             self.arcto(x2,y2, ccw=ccw)
         else:
-            self._nsBezierPath.moveToPoint_( (x1, y1) )
-            self._nsBezierPath.lineToPoint_( (x2, y2) )
+            self._pdpath.moveto(x1, y1)
+            self._pdpath.lineto(x2, y2)
 
     ### Radial shapes (center + radius) ###
 
@@ -228,10 +226,10 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
         # walk around the circle adding points with proper scale/origin
         points = [ [radius*cos(theta)+x, radius*sin(theta)+y] for theta in angles]
-        self._nsBezierPath.moveToPoint_(points[0])
+        self._pdpath.moveto(*points[0])
         for pt in points[1:]:
-            self._nsBezierPath.lineToPoint_(pt)
-        self._nsBezierPath.closePath()
+            self._pdpath.lineto(*pt)
+        self._pdpath.closepath()
         self._fulcrum = Point(x,y)
 
     def arc(self, x, y, r, rng=None, ccw=False, close=False):
@@ -248,11 +246,11 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             start, end = _ctx._angle(start, DEGREES), _ctx._angle(end, DEGREES)
 
             # note that we're negating the ccw arg because the path is being drawn in flipped coords
-            self._nsBezierPath.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise_((x,y), r, start, end, ccw)
+            self._pdpath.arc(x, y, r, start, end, ccw)
         if close:
             # optionally close the path pac-man-style
-            self._nsBezierPath.lineToPoint_( (x,y) )
-            self._nsBezierPath.closePath()
+            self._pdpath.lineto(x, y)
+            self._pdpath.closepath()
         self._fulcrum = Point(x,y)
 
     def star(self, x, y, points=20, outer=100, inner=None):
@@ -260,12 +258,11 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         if inner is None:
             inner = outer * 0.5
 
-        self._nsBezierPath.moveToPoint_( (x, y+outer) )
+        self._pdpath.moveto(x, y+outer)
         for i in range(1, int(2 * points)):
           angle = i * pi / points
           radius = inner if i % 2 else outer
-          pt = (x+radius*sin(angle), y+radius*cos(angle))
-          self._nsBezierPath.lineToPoint_(pt)
+          self._pdpath.lineto(x+radius*sin(angle), y+radius*cos(angle))
         self.closepath()
         self._fulcrum = Point(x,y)
 
@@ -306,11 +303,10 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def __getitem__(self, index):
         if isinstance(index, slice):
             # slice-based access
-            pts = [self._nsBezierPath.elementAtIndex_associatedPoints_(i) for i in range(*index.indices(len(self)))]
-            return [Curve(cmd, el) for cmd,el in pts]
+            return [Curve(cmd, el) for cmd,el in self._pdpath.elements()[index]]
         else:
             # index-based access
-            cmd, el = self._nsBezierPath.elementAtIndex_associatedPoints_(index)
+            cmd, el = self._pdpath.elements()[index]
             return Curve(cmd, el)
 
     def __iter__(self):
@@ -318,7 +314,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             yield self[i]
 
     def __len__(self):
-        return self._nsBezierPath.elementCount()
+        return len(self._pdpath)
 
     def extend(self, pathElements):
         for el in pathElements:
@@ -355,11 +351,8 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
     @property
     def bounds(self):
-        try:
-            return Region(self._nsBezierPath.bounds())
-        except:
-            # Path is empty -- no bounds
-            return Region()
+        box = self._pdpath.bounds()
+        return Region() if box is None else Region(*box) # an empty path has no bounds
 
     @property
     def center(self):
@@ -370,7 +363,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             return Point(x+w/2, y+h/2)
 
     def contains(self, x, y):
-        return self._nsBezierPath.containsPoint_((x,y))
+        return self._pdpath.contains(x, y)
 
     @property
     def _screen_matrix(self):
@@ -388,8 +381,8 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     @property
     def cgPath(self):
         # transform the path's points from canvas- to postscript-units and return a CGPathRef
-        path = self._nsBezierPath if self._grid.dpx == 1 else self._to_px(self._nsBezierPath)
-        return pathmatics.convert_path(path)
+        path = self._pdpath if self._grid.dpx == 1 else self._pdpath.transformed(tuple(self._grid.to_px.matrix))
+        return path.cgpath
 
     @property
     def _paints_once(self):
@@ -398,10 +391,10 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     def _render_box(self):
         """The box its outline covers where it's drawn"""
         dpx = self._grid.dpx
-        try:
-            (x, y), (w, h) = self._nsBezierPath.bounds()
-        except Exception:
+        box = self._pdpath.bounds()
+        if box is None:
             return (0, 0, 0, 0) # an empty path
+        x, y, w, h = box
         if tuple(self.transform.matrix) == IDENTITY:
             return (x * dpx, y * dpx, w * dpx, h * dpx)
         return _hull(self._screen_matrix, x * dpx, y * dpx, w * dpx, h * dpx)
@@ -421,9 +414,9 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
 
                 # prepare to stroke, fill, or both
                 ink = None
-                path = self._nsBezierPath
+                path = self._pdpath
                 filled = isinstance(self._fillcolor, (Color, Pattern))
-                lone_segment = filled and path.elementCount() == 2 and path.elementAtIndex_(1) == NSLineToBezierPathElement
+                lone_segment = filled and len(path) == 2 and path.elements()[1][0] == LINETO
                 if filled and not lone_segment:
                     ink = kCGPathFill
                     CGContextSetFillColorWithColor(target, self._fillcolor.cgColor)
@@ -498,11 +491,11 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             else:
                 t.scale(min(width /pw, height / ph))
         t.translate(-px, -py)
-        self._nsBezierPath = t.apply(self)._nsBezierPath
+        self._pdpath = t.apply(self)._pdpath
         self._fulcrum = t.apply(self._fulcrum) if self._fulcrum else None
 
     def _get_x(self):
-        return getattr(self._fulcrum or self.bounds.origin.x, 'x')
+        return (self._fulcrum or self.bounds.origin).x
     def _set_x(self, new_x):
         if self._fulcrum:
             new_x -= self._fulcrum.x - self.bounds.origin.x
@@ -510,7 +503,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
     x = property(_get_x, _set_x)
 
     def _get_y(self):
-        return getattr(self._fulcrum or self.bounds.origin.x, 'y')
+        return (self._fulcrum or self.bounds.origin).y
     def _set_y(self, new_y):
         if self._fulcrum:
             new_y -= self._fulcrum.y - self.bounds.origin.y
@@ -533,24 +526,24 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         return pathmatics.points(self, int(amount), start=start, end=end) # int() so we don't choke on a float
 
     def addpoint(self, t):
-        self._nsBezierPath = pathmatics.insert_point(self, t)._nsBezierPath
+        self._pdpath = pathmatics.insert_point(self, t)._pdpath
 
     ### Clipping operations ###
 
     def intersects(self, other):
-        return pathmatics.intersects(self._nsBezierPath, other._nsBezierPath)
+        return pathmatics.intersects(self._pdpath, other._pdpath)
 
     def union(self, other, flatness=0.6):
-        return Bezier(pathmatics.union(self._nsBezierPath, other._nsBezierPath, flatness))
+        return Bezier(pathmatics.union(self._pdpath, other._pdpath, flatness))
 
     def intersect(self, other, flatness=0.6):
-        return Bezier(pathmatics.intersect(self._nsBezierPath, other._nsBezierPath, flatness))
+        return Bezier(pathmatics.intersect(self._pdpath, other._pdpath, flatness))
 
     def difference(self, other, flatness=0.6):
-        return Bezier(pathmatics.difference(self._nsBezierPath, other._nsBezierPath, flatness))
+        return Bezier(pathmatics.difference(self._pdpath, other._pdpath, flatness))
 
     def xor(self, other, flatness=0.6):
-        return Bezier(pathmatics.xor(self._nsBezierPath, other._nsBezierPath, flatness))
+        return Bezier(pathmatics.xor(self._pdpath, other._pdpath, flatness))
 
     def trace(self, nib=None, join=None, cap=None):
         """Returns a new Bezier representing this path's outline as though it
@@ -572,7 +565,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         if cap not in _CAPSTYLE:
             badstyle = 'Line cap style should be BUTT, ROUND or SQUARE.'
             raise DeviceError(badstyle)
-        return Bezier(pathmatics.stroke_to_fill(self._nsBezierPath, nib, _CAPSTYLE[cap], _JOINSTYLE[join]))
+        return Bezier(pathmatics.stroke_to_fill(self._pdpath, nib, _CAPSTYLE[cap], _JOINSTYLE[join]))
 
     def offset(self, delta, join=None, miter=2.0):
         """Returns a new Bezier with this path's boundary grown (delta > 0)
@@ -587,18 +580,18 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         if join not in _JOINSTYLE:
             badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
             raise DeviceError(badstyle)
-        return Bezier(pathmatics.offset(self._nsBezierPath, delta, _JOINSTYLE[join], miter))
+        return Bezier(pathmatics.offset(self._pdpath, delta, _JOINSTYLE[join], miter))
 
     def simplify(self, epsilon=1.0):
         """Returns a new Bezier with redundant points removed -- every
         remaining point stays within epsilon canvas units of the original
         boundary."""
-        return Bezier(pathmatics.simplify(self._nsBezierPath, epsilon))
+        return Bezier(pathmatics.simplify(self._pdpath, epsilon))
 
     @property
     def area(self):
         """The total filled area enclosed by this path, in canvas units squared."""
-        return pathmatics.area(self._nsBezierPath)
+        return pathmatics.area(self._pdpath)
 
 class Curve(object):
 

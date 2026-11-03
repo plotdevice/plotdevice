@@ -732,8 +732,8 @@ class Transform(object):
         self._nsAffineTransform.prependTransform_(other)
 
     def apply(self, obj):
-        from .bezier import Bezier
-        if isinstance(obj, (Bezier, NSBezierPath)):
+        from .bezier import Bezier, PDPath
+        if isinstance(obj, (Bezier, NSBezierPath, PDPath)):
             return self.transformBezier(obj)
         elif isinstance(obj, (Point, NSPoint)):
             return self.transformPoint(obj)
@@ -757,16 +757,18 @@ class Transform(object):
         return Region(origin, size)
 
     def transformBezier(self, path):
+        from .bezier import Bezier, PDPath
         if isinstance(path, NSBezierPath):
             return self._nsAffineTransform.transformBezierPath_(path)
+        elif isinstance(path, PDPath):
+            return path.transformed(tuple(self.matrix))
 
-        from .bezier import Bezier
         if isinstance(path, Bezier):
             path = path.copy()
         else:
             wrongtype = "Can only transform Beziers"
             raise DeviceError(wrongtype)
-        path._nsBezierPath = self._nsAffineTransform.transformBezierPath_(path._nsBezierPath)
+        path._pdpath = path._pdpath.transformed(tuple(self.matrix))
         return path
 
     def transformBezierPath(self, path):

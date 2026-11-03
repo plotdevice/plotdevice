@@ -2,89 +2,124 @@
 #include "clipper2/clipper.core.h"
 #include "clipper2/clipper.engine.h"
 #include "clipper2/clipper.h"
-#include <cstdlib>
 #include <cmath>
 
 using namespace Clipper2Lib;
 
-static PathsD
-to_paths(const PDPolygon *poly)
-{
+struct PDContours {
     PathsD paths;
-    paths.reserve(poly->count);
-    for (long c = 0; c < poly->count; c++) {
-        const PDContour &contour = poly->contours[c];
-        PathD path;
-        path.reserve(contour.count);
-        for (long v = 0; v < contour.count; v++) {
-            path.push_back(PointD(contour.points[v].x, contour.points[v].y));
-        }
-        paths.push_back(std::move(path));
-    }
-    return paths;
+    bool open = false; // the last contour can still take points
+    PointD start;      // where the last contour began
+};
+
+static void
+begin_contour(PDContours *contours)
+{
+    // room for most flattened contours, so they rarely grow point by point
+    contours->paths.emplace_back();
+    contours->paths.back().reserve(32);
+    contours->paths.back().push_back(contours->start);
+    contours->open = true;
 }
 
-static PDPolygon *
-from_paths(const PathsD &paths)
+static void
+end_contour(PDContours *contours)
 {
-    PDPolygon *poly = (PDPolygon *)malloc(sizeof(PDPolygon));
-    poly->count = (long)paths.size();
-    poly->contours = (PDContour *)malloc(sizeof(PDContour) * (size_t)poly->count);
-    for (size_t c = 0; c < paths.size(); c++) {
-        const PathD &path = paths[c];
-        PDContour &contour = poly->contours[c];
-        contour.count = (long)path.size();
-        contour.points = (PDPoint *)malloc(sizeof(PDPoint) * path.size());
-        for (size_t v = 0; v < path.size(); v++) {
-            contour.points[v].x = path[v].x;
-            contour.points[v].y = path[v].y;
-        }
-    }
-    return poly;
+    if (!contours->open) return;
+    if (contours->paths.back().size() < 3) contours->paths.pop_back();
+    contours->open = false;
 }
 
-PDPolygon *
-pd_polygon_boolean(PDBooleanOp op, const PDPolygon *a, const PDPolygon *b)
+PDContours *
+pd_contours_new(void)
 {
-    PathsD subjects = to_paths(a);
-    PathsD clips = to_paths(b);
+    return new PDContours();
+}
 
+void
+pd_contours_moveto(PDContours *contours, double x, double y)
+{
+    end_contour(contours);
+    contours->start = PointD(x, y);
+    begin_contour(contours);
+}
+
+void
+pd_contours_lineto(PDContours *contours, double x, double y)
+{
+    if (!contours->open) begin_contour(contours);
+    contours->paths.back().push_back(PointD(x, y));
+}
+
+void
+pd_contours_close(PDContours *contours)
+{
+    // a closed contour repeats its start
+    if (contours->open) contours->paths.back().push_back(contours->start);
+    end_contour(contours);
+}
+
+void
+pd_contours_end(PDContours *contours)
+{
+    end_contour(contours);
+}
+
+void
+pd_contours_free(PDContours *contours)
+{
+    delete contours;
+}
+
+static CGMutablePathRef
+to_cgpath(const PathsD &paths)
+{
+    CGMutablePathRef path = CGPathCreateMutable();
+    for (const PathD &contour : paths) {
+        CGPathMoveToPoint(path, NULL, contour[0].x, contour[0].y);
+        for (size_t v = 1; v < contour.size(); v++)
+            CGPathAddLineToPoint(path, NULL, contour[v].x, contour[v].y);
+        CGPathCloseSubpath(path);
+    }
+    return path;
+}
+
+static bool
+boolean_op(PDBooleanOp op, const PDContours *a, const PDContours *b, PathsD &result)
+{
     ClipType clipType;
     switch (op) {
         case PD_UNION:      clipType = ClipType::Union; break;
         case PD_INTERSECT:  clipType = ClipType::Intersection; break;
         case PD_DIFFERENCE: clipType = ClipType::Difference; break;
         case PD_XOR:        clipType = ClipType::Xor; break;
-        default:            return NULL;
+        default:            return false;
     }
 
-    PathsD result;
     ClipperD clipper;
-    clipper.AddSubject(subjects);
-    clipper.AddClip(clips);
-    if (!clipper.Execute(clipType, FillRule::NonZero, result)) {
-        return NULL;
-    }
-
-    return from_paths(result);
+    clipper.AddSubject(a->paths);
+    clipper.AddClip(b->paths);
+    return clipper.Execute(clipType, FillRule::NonZero, result);
 }
 
-void
-pd_free_polygon(PDPolygon *poly)
+CGMutablePathRef
+pd_contours_boolean(PDBooleanOp op, const PDContours *a, const PDContours *b)
 {
-    if (!poly) return;
-    for (long c = 0; c < poly->count; c++) {
-        free(poly->contours[c].points);
-    }
-    free(poly->contours);
-    free(poly);
+    PathsD result;
+    if (!boolean_op(op, a, b, result)) return NULL;
+    return to_cgpath(result);
 }
 
-PDPolygon *
-pd_polygon_offset(const PDPolygon *poly, double delta, CGLineJoin join, double miterLimit)
+bool
+pd_contours_intersect(const PDContours *a, const PDContours *b)
 {
-    PathsD paths = to_paths(poly);
+    PathsD result;
+    return boolean_op(PD_INTERSECT, a, b, result) && !result.empty();
+}
 
+CGMutablePathRef
+pd_contours_offset(const PDContours *contours, double delta, CGLineJoin join, double miterLimit)
+{
     JoinType jt;
     switch (join) {
         case kCGLineJoinMiter: jt = JoinType::Miter; break;
@@ -93,22 +128,19 @@ pd_polygon_offset(const PDPolygon *poly, double delta, CGLineJoin join, double m
         default:               return NULL;
     }
 
-    PathsD result = InflatePaths(paths, delta, jt, EndType::Polygon, miterLimit);
-    return from_paths(result);
+    return to_cgpath(InflatePaths(contours->paths, delta, jt, EndType::Polygon, miterLimit));
 }
 
-PDPolygon *
-pd_polygon_simplify(const PDPolygon *poly, double epsilon)
+CGMutablePathRef
+pd_contours_simplify(const PDContours *contours, double epsilon)
 {
-    PathsD paths = to_paths(poly);
-    PathsD result = SimplifyPaths(paths, epsilon, /*isClosedPath=*/true);
-    return from_paths(result);
+    return to_cgpath(SimplifyPaths(contours->paths, epsilon, /*isClosedPath=*/true));
 }
 
 double
-pd_polygon_area(const PDPolygon *poly)
+pd_contours_area(const PDContours *contours)
 {
     // union the contours (at top precision) so the winding rule is applied before calculating area
-    PathsD filled = Union(to_paths(poly), FillRule::NonZero, 8);
+    PathsD filled = Union(contours->paths, FillRule::NonZero, 8);
     return std::fabs(Area(filled));
 }

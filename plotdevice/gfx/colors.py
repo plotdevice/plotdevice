@@ -1021,7 +1021,7 @@ class Gradient(object):
             else:
                 self.nsGradient.drawInRect_relativeCenterPosition_(obj, self._center)
         elif obj.__class__.__name__ == 'Bezier':
-            pth = obj._nsBezierPath
+            pth = obj._pdpath.ns() # NSGradient draws in an NSBezierPath
             if self._angle is not None:
                 self.nsGradient.drawInBezierPath_angle_(pth, self._angle)
             else:

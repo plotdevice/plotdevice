@@ -179,7 +179,7 @@ class FrameTests(PlotDeviceTestCase):
         p = rect(0, 0, 10, 10, plot=False)
         clone = p.copy()
         self.assertEqual(set(vars(clone)), set(Bezier._state) | {'_needs_closure'})
-        for attr in ('_nsBezierPath', '_transform', '_effects', '_fillcolor'):
+        for attr in ('_pdpath', '_transform', '_effects', '_fillcolor'):
             self.assertIsNot(getattr(clone, attr), getattr(p, attr))
         img = image('tests/_in/macpaint-tile.png', 0, 0, plot=False)
         clone = img.copy()
