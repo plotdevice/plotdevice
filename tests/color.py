@@ -224,14 +224,14 @@ class ColorTests(PlotDeviceTestCase):
 
     def test_reads_of_cmyk_colors_go_through_the_export_blocks_press(self):
         from Quartz import CGColorCreate
-        from plotdevice.gfx.colors import Press, _components, _matched, _SPACES
+        from plotdevice.gfx.colors import Profile, _components, _matched, _SPACES
         cyan, white = color(1, 0, 0, 0, mode=CMYK), color(1)
         outside = (cyan.rgba, cyan.hex, cyan.blend(white, .5).rgba, hash(cyan))
         size(10, 10)
         with export(join(self.tmp, 'press.pdf'), colors=FOGRA47):
             inside = (cyan.rgba, cyan.hex, cyan.blend(white, .5).rgba, hash(cyan))
             self.assertEqual(cyan, color(1, 0, 0, 0, mode=CMYK)) # equality ignores the press
-        direct = _components(_matched(CGColorCreate(Press.named[FOGRA47].space, (1, 0, 0, 0, 1)), _SPACES[P3]))
+        direct = _components(_matched(CGColorCreate(Profile.named[FOGRA47].space, (1, 0, 0, 0, 1)), _SPACES[P3]))
         self.assertComponents(inside[0], direct)
         self.assertComponents(inside[2], [v + (1 - v) * .5 for v in direct])
         self.assertNotEqual(inside[1], outside[1])

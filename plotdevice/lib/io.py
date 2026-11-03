@@ -270,12 +270,12 @@ class PaperbackWriter(object):
     """Draws each frame it's given as the next page of one PDF file"""
 
     def __init__(self, fname, zoom=1.0, press=None):
-        from ..gfx.colors import Press
+        from ..gfx.colors import Profile
         self.fname = fname
         self.zoom = zoom
         self.pages = 0
         self.closed = False
-        self.intent = Press.named[press].intent if press else None
+        self.intent = Profile.named[press].intent if press else None
         self.blend_space = None # set by the first page
         self.context = CGPDFContextCreateWithURL(NSURL.fileURLWithPath_(fname), None, None)
         self.layers = {} # cached CGLayers of plotted canvases
@@ -423,7 +423,7 @@ class ExportSession(object):
 re_padded = re.compile(r'{(\d+)}')
 class ImageExportSession(ExportSession):
     def __init__(self, fname, format='pdf', zoom=1.0, first=1, last=None, single=False, colors=None, **rest):
-        from ..gfx.colors import _output_colors, _output_mode, CMYK, Press # circular import
+        from ..gfx.colors import _output_colors, _output_mode, CMYK, Profile, Press # circular import
         super(ImageExportSession, self).__init__()
         self.single_file = single or first==last
         if last is not None:
@@ -443,7 +443,7 @@ class ImageExportSession(ExportSession):
             if pad:
                 fname = re_padded.sub(pad%0, fname, count=1)
             if format == 'pdf':
-                self.writer = PaperbackWriter(fname, zoom, self.colors if self.colors in Press.named else None)
+                self.writer = PaperbackWriter(fname, zoom, self.colors if isinstance(Profile.named.get(self.colors), Press) else None)
             else:
                 self.writer = Pages.alloc().initWithFile_(fname)
         else:

@@ -15,7 +15,7 @@ from .gfx.geometry import Dimension, IDENTITY, parse_coords
 from .gfx.typography import Layout
 from .gfx.effects import Frob, _commit_all
 from .gfx import *
-from .gfx.colors import Press, _named, _output_colors, _output_space, _output_mode, _INKS
+from .gfx.colors import Profile, Press, _named, _output_colors, _output_space, _output_mode
 from .gfx.image import Snapshot
 from . import gfx, lib, util, Halted, DeviceError
 
@@ -1959,7 +1959,7 @@ class Frame(object):
         copying = isinstance(src, Frame) # its texts must keep their own colors
         self.colors = colors # either from export(colors=) or None for the working space
         self.format = format
-        self.press = colors if colors in Press.named else None
+        self.press = colors if isinstance(Profile.named.get(colors), Press) else None
         if colors is None:
             self.outputmode = src.outputmode if copying else (src._ctx._outputmode if src._ctx else RGB)
         else:
@@ -2112,14 +2112,14 @@ class Frame(object):
 
     @property
     def _surface_space(self):
-        return _INKS[self.ink] if self.ink and not self.press else None
+        return Profile.named[self.ink].space if self.ink and not self.press else None
 
     @property
     def _cmyk_space(self):
         # what CMYK bitmaps are tagged with to keep their numbers, or None outside a CMYK export
         if self.outputmode != CMYK or self.colors is None:
             return None
-        return Press.named[self.press].space if self.press and self.ink[1] else CGColorSpaceCreateDeviceCMYK()
+        return Profile.named[self.press].space if self.press and self.ink[1] else CGColorSpaceCreateDeviceCMYK()
 
     @property
     def _blend_space(self):
@@ -2148,7 +2148,7 @@ class Frame(object):
             CGPDFContextClose(pdfContext)
             pdfContext = None
             if self._blend_space is not None:
-                intent = Press.named[self.press].intent if self.press else None
+                intent = Profile.named[self.press].intent if self.press else None
                 update = Distiller(bytes(cgData), self._blend_space, intent=intent, title=title).endmatter()
                 cgData.appendBytes_length_(update, len(update))
             return cgData, None

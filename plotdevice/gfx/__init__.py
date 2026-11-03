@@ -177,7 +177,7 @@ def _outputpress():
         return frame.press
     if _ctx._press:
         return _ctx._press
-    return _ctx._cli_colors if _ctx._cli_colors in colors.Press.named else None
+    return _ctx._cli_colors if isinstance(colors.Profile.named.get(_ctx._cli_colors), colors.Press) else None
 
 def _inkmode():
     """The mode to make colors' CGColors & NSColors for"""

@@ -67,9 +67,6 @@ _SPACE_NAMES = {kCGColorSpaceExtendedDisplayP3:P3, kCGColorSpaceDisplayP3:P3,
 _GENERIC_CMYK = CGColorSpaceCreateWithName(kCGColorSpaceGenericCMYK)
 _DEVICE_CMYK = CGColorSpaceCreateDeviceCMYK()
 
-# rgb output spaces other than p3, by colors= key
-_INKS = {SRGB: CGColorSpaceCreateWithName(kCGColorSpaceSRGB)}
-
 # the colors= each format takes, and its default
 _FORMAT_COLORS = dict(png=('rgb',), heic=('rgb',), mov=(P3, SRGB, _REC709, _REC2020), gif=(SRGB,), eps=(SRGB, CMYK),
                       pdf=('rgb', CMYK), tiff=('rgb', CMYK), jpg=('rgb', CMYK))
@@ -102,40 +99,14 @@ def _output_colors(val, format):
         if numlike(val):
             notpalette += " (it isn't a gif's palette size)"
         raise DeviceError(notpalette)
-    key = val.lower().replace('-', '_')
+    profile = Profile.find(val)
+    key = profile.key
     if key in (P3, SRGB, CMYK):
         kind = key
-    elif key in _PRESSES:
+    elif isinstance(profile, Press):
         kind = 'press'
-        if key not in Press.named:
-            Press.named[key] = Press(key)
     else:
-        # a path, else an installed profile's name
-        path = {REC709: _REC709, REC2020: _REC2020}.get(key, val) # rec709 & rec2020 point to the system's .icc profiles
-        key = os.path.abspath(os.path.expanduser(path))
-        if not os.path.exists(key):
-            key = _installed_profiles()[1].get(val.lower(), key)
-        try:
-            icc = open(key, 'rb').read()
-        except OSError:
-            searched = ', '.join(_PROFILE_FOLDERS + [_SYSTEM_PROFILES])
-            unknown = "%r isn't a built-in color space or ICC profile filename (searched in: %s)" % (val, searched)
-            raise DeviceError(unknown)
-        model = icc[16:20] if icc[36:40] == b'acsp' else None
-        space = CGColorSpaceCreateWithICCData(icc) if model in (b'RGB ', b'CMYK') else None
-        if space is None:
-            notrgb = "%r isn't an RGB or CMYK ICC profile" % val
-            raise DeviceError(notrgb)
-        generic = os.path.join(_SYSTEM_PROFILES, 'Generic CMYK Profile.icc')
-        if model == b'CMYK' and os.path.exists(generic) and icc == open(generic, 'rb').read():
-            # generic cmyk means unlabeled CMYK
-            key = kind = CMYK
-        elif model == b'CMYK':
-            Press.named.setdefault(key, Press(key, space))
-            kind = 'press'
-        else:
-            _INKS.setdefault(key, space)
-            kind = 'rgb'
+        kind = 'rgb'
     allowed = _FORMAT_COLORS[format]
     listed = kind in allowed or key in allowed
     rgb_fits = kind in (P3, SRGB) and 'rgb' in allowed
@@ -153,15 +124,11 @@ def _output_colors(val, format):
 
 def _output_mode(colors):
     """The output mode an export's colors are drawn in"""
-    return CMYK if colors == CMYK or colors in Press.named else RGB
+    return Profile.named[colors].mode if colors in Profile.named else RGB
 
 def _output_space(colors):
     """The CGColorSpace an export's file is written in, or None for CMYK"""
-    if colors == CMYK:
-        return None
-    if colors in Press.named:
-        return Press.named[colors].space
-    return CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3) if colors == P3 else _INKS[colors]
+    return Profile.named[colors].space
 
 def _icc_text(icc, sig):
     count = int.from_bytes(icc[128:132], 'big')
@@ -228,13 +195,55 @@ def _installed_presses():
     """The installed CMYK output profiles, as (description, path) pairs"""
     return _installed_profiles()[0]
 
-class Press(object):
-    named = {} # key -> Press, as colors= names it
+class Profile(object):
+    named = {} # key -> Profile, as colors= names it
+
+    def __init__(self, key, mode, space):
+        self.key = key
+        self.mode = mode
+        self.space = space # the file's space, or None for Generic CMYK
+
+    @classmethod
+    def find(cls, val):
+        """The profile a colors= string names: a built-in space, a press, or an ICC profile's path or name"""
+        key = val.lower().replace('-', '_')
+        if key in (P3, SRGB, CMYK):
+            return cls.named[key]
+        if key in _PRESSES:
+            if key not in cls.named:
+                cls.named[key] = Press(key)
+            return cls.named[key]
+
+        # a path, else an installed profile's name
+        path = {REC709: _REC709, REC2020: _REC2020}.get(key, val) # rec709 & rec2020 point to the system's .icc profiles
+        key = os.path.abspath(os.path.expanduser(path))
+        if not os.path.exists(key):
+            key = _installed_profiles()[1].get(val.lower(), key)
+        try:
+            icc = open(key, 'rb').read()
+        except OSError:
+            searched = ', '.join(_PROFILE_FOLDERS + [_SYSTEM_PROFILES])
+            unknown = "%r isn't a built-in color space or ICC profile filename (searched in: %s)" % (val, searched)
+            raise DeviceError(unknown)
+        model = icc[16:20] if icc[36:40] == b'acsp' else None
+        space = CGColorSpaceCreateWithICCData(icc) if model in (b'RGB ', b'CMYK') else None
+        if space is None:
+            notrgb = "%r isn't an RGB or CMYK ICC profile" % val
+            raise DeviceError(notrgb)
+        generic = os.path.join(_SYSTEM_PROFILES, 'Generic CMYK Profile.icc')
+        if model == b'CMYK' and os.path.exists(generic) and icc == open(generic, 'rb').read():
+            # generic cmyk means unlabeled CMYK
+            return cls.named[CMYK]
+        if model == b'CMYK':
+            return cls.named.setdefault(key, Press(key, space))
+        return cls.named.setdefault(key, Profile(key, RGB, space))
+
+class Press(Profile):
 
     def __init__(self, key, space=None):
-        self.key = key
+        self.key = key # read by the icc property
         self._icc = self._intent = self._transform = None
-        self.space = space if space is not None else CGColorSpaceCreateWithICCData(self.icc)
+        super().__init__(key, CMYK, space if space is not None else CGColorSpaceCreateWithICCData(self.icc))
 
     @property
     def icc(self):
@@ -282,6 +291,11 @@ class Press(object):
         _, cmyk = ColorSyncTransformConvert(self._transform, 1, 1, array('H', [0] * 4), kColorSync16BitInteger,
                                             kColorSyncAlphaNone, 8, rgb, kColorSync16BitInteger, kColorSyncAlphaNone, 6, None)
         return tuple(0.0 if v < .001 else 1.0 if v > .999 else v for v in (c / 65535 for c in cmyk))
+
+# the built-in spaces
+Profile.named.update({P3: Profile(P3, RGB, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3)),
+                      SRGB: Profile(SRGB, RGB, CGColorSpaceCreateWithName(kCGColorSpaceSRGB)),
+                      CMYK: Profile(CMYK, CMYK, None)})
 
 def _clamp(v):
     return min(max(v, 0.0), 1.0)
@@ -453,9 +467,9 @@ class Color(object):
                 cg = CGColorCreate(_DEVICE_CMYK, self._values(CMYK))
             elif isinstance(mode, tuple):
                 press, in_space = mode
-                cg = CGColorCreate(Press.named[press].space if in_space else _DEVICE_CMYK, self._press_values(press))
+                cg = CGColorCreate(Profile.named[press].space if in_space else _DEVICE_CMYK, self._press_values(press))
             else:
-                cg = _matched(self._rgb, _INKS[mode])
+                cg = _matched(self._rgb, Profile.named[mode].space)
             self._to['cg', mode] = cg
             return cg
 
@@ -467,7 +481,7 @@ class Color(object):
                 self._to[key] = self._values(CMYK)
             else:
                 r, g, b, alpha = _components(self._rgb_as(P3))
-                self._to[key] = Press.named[press].convert((r, g, b)) + (alpha,)
+                self._to[key] = Profile.named[press].convert((r, g, b)) + (alpha,)
         return self._to[key]
 
     def _rgb_as(self, space):
@@ -478,7 +492,7 @@ class Color(object):
         press = _outputpress()
         if press is None or self._mode is not CMYK:
             return self._rgb_as(space)
-        return _matched(CGColorCreate(Press.named[press].space, self._values(CMYK)), _SPACES[space])
+        return _matched(CGColorCreate(Profile.named[press].space, self._values(CMYK)), _SPACES[space])
 
     def _read(self, mode):
         # scripts see cmyk colors through the output press
@@ -960,9 +974,9 @@ class Gradient(object):
                 if c_mode == CMYK or (isinstance(c_mode, tuple) and not c_mode[1]):
                     c_space = _DEVICE_CMYK
                 elif isinstance(c_mode, tuple):
-                    c_space = Press.named[c_mode[0]].space
+                    c_space = Profile.named[c_mode[0]].space
                 else:
-                    c_space = _INKS[c_mode]
+                    c_space = Profile.named[c_mode].space
                 clrs = [c.cgColor for c in self._colors]
             pd_gradient = PDGradient.alloc().initWithColors_atLocations_colorSpace_(clrs, self._steps, c_space)
             self._gradient, self._outputmode = pd_gradient, c_mode

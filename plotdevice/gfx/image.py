@@ -19,7 +19,7 @@ from ..lib.io import MovieExportSession, ImageExportSession, HEVC, H264, PRORES
 from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, _hull
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
 from .effects import Frob
-from .colors import _output_mode, Press
+from .colors import _output_mode, Profile, Press
 from . import _ns_context, _cg_port, _frame, _committing, _pdf_doc
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
@@ -546,7 +546,7 @@ class ExportRenderer(object):
 class ImageWriter(object):
     def __init__(self, fname, format, **opts):
         self.mode = _output_mode(opts['colors'])
-        self.press = opts['colors'] if opts['colors'] in Press.named else None
+        self.press = opts['colors'] if isinstance(Profile.named.get(opts['colors']), Press) else None
         self.fname = os.path.expanduser(fname)
         self.format = format
         self.opts = opts
