@@ -20,7 +20,7 @@ from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, 
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
 from .effects import Frob
 from .profiles import Output
-from . import _ns_context, _cg_port, _frame, _committing, _pdf_doc
+from .. import gfx
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
 
@@ -312,7 +312,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
         # if vector-based, use the canvas's CTM and the image's _screen_transform to
         # determine its 'actual' size (rather than just using its mediabox 1:1)
-        ctm = CGContextGetCTM(_cg_port())
+        ctm = CGContextGetCTM(gfx._state.port)
         ctm_scale = max(math.hypot(ctm.a, ctm.b), math.hypot(ctm.c, ctm.d))
         xf_a, xf_b, xf_c, xf_d, _, _ = self._screen_matrix
         xf_scale = max(math.hypot(xf_a, xf_b), math.hypot(xf_c, xf_d))
@@ -375,11 +375,13 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
     def _draw(self):
         """Draw an image on the given coordinates."""
 
-        with _ns_context():
+        saved = gfx._state.port
+        CGContextSaveGState(saved)
+        try:
             self._screen_transform.concat() # move the image into place via transforms
             with self.effects.applied(self): # apply any blend/alpha/shadow effects
                 NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
-                frame = _frame.get()
+                frame = gfx._state.frame
                 image = self._nsImage_as(frame.output.cmyk_space if frame is not None else None)
                 bounds = ((0,0), image.size()) # draw the image at (0,0)
                 vector = next((r for r in image.representations() if isinstance(r, (NSPDFImageRep, PDSVGImageRep))), None)
@@ -387,7 +389,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                     image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
                 else:
                     # draw svg & pdf reps directly, otherwise NSImage rasterizes them in layers and pattern cells
-                    port = _cg_port()
+                    port = gfx._state.port
                     if self.alpha < 1:
                         CGContextSetAlpha(port, self.alpha)
                         CGContextBeginTransparencyLayer(port, None)
@@ -398,6 +400,8 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                     vector.drawInRect_(bounds)
                     if self.alpha < 1:
                         CGContextEndTransparencyLayer(port)
+        finally:
+            CGContextRestoreGState(saved)
 
 ### a canvas plotted as vectors ###
 
@@ -442,7 +446,7 @@ class Snapshot(Image):
     def _commit(self, held):
         # resolve its colors as the frame being committed does
         snapshot = self.copy() if held else self
-        frame = _committing.get()
+        frame = gfx._state.committing
         recolor = frame is not None and frame.output != self._canvas.output
         if recolor:
             from ..context import Frame
@@ -473,11 +477,13 @@ class Snapshot(Image):
         return _hull(self._screen_matrix, 0, 0, w0, h0)
 
     def _draw(self):
-        with _ns_context():
+        saved = gfx._state.port
+        CGContextSaveGState(saved)
+        try:
             self._screen_transform.concat() # position the snapshot
             with self.effects.applied(self): # apply blend/alpha/shadow (if any)
                 # if this isn't a PDF, draw the grobs directly
-                (doc, layers), port = _pdf_doc.get(), _cg_port()
+                (doc, layers), port = gfx._state.pdf, gfx._state.port
                 if doc is None or CGBitmapContextGetWidth(port) > 0:
                     self._canvas.draw() # re-enters the render lock
                     return
@@ -502,6 +508,8 @@ class Snapshot(Image):
                     layers[key] = layer
                 CGContextConcatCTM(port, CGAffineTransformInvert(linear))
                 CGContextDrawLayerInRect(port, ((bx, by), (bw, bh)), layers[key])
+        finally:
+            CGContextRestoreGState(saved)
 
 ### context manager for calls to `with export(...)` ###
 

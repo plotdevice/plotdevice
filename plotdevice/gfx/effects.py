@@ -4,21 +4,22 @@ import re
 import sys
 import math
 from copy import copy
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import numlike
 from .colors import Color
 from .geometry import Point, CORNER
-from . import _cg_context, _cg_layer, _cg_bitmap, _cg_port, _canvas_dims, _base_ctm, _visible, _layer_box, \
-              _clip_depth, _casting, _render_lock
+from . import _render_lock
+from .. import gfx
 
 _ctx = None
 __all__ = ("Effect", "Shadow", "Stencil",)
 
 _CG_BLUR_LIMIT = 32  # widest blur handled by Core Graphics
 _OPAQUE = (kCGImageAlphaNone, kCGImageAlphaNoneSkipFirst, kCGImageAlphaNoneSkipLast)
+_NO_FX = nullcontext() # what Effect.applied() returns when there are no effects to apply
 
 # blend modes
 _BLEND=dict(
@@ -92,12 +93,17 @@ class Frob(object):
 
     def _draw(self):
         # apply state changes only to contained grobs
-        with _cg_context(), self.applied(self):
-            if not self._grobs:
-                return
-            for grob in _visible(self._grobs):
-                _render_lock.checkpoint()
-                grob._draw()
+        port = gfx._state.port
+        CGContextSaveGState(port)
+        try:
+            with self.applied(self):
+                if not self._grobs:
+                    return
+                for grob in gfx._state.visible(self._grobs):
+                    _render_lock.checkpoint()
+                    grob._draw()
+        finally:
+            CGContextRestoreGState(port)
 
     def _commit(self, held):
         """A copy of the container holding its committed contents"""
@@ -157,35 +163,37 @@ class Effect(Frob):
 
         fx = {k:v for k,v in self._fx.items() if k in effs}
         if 'alpha' in fx:
-            CGContextSetAlpha(_cg_port(), fx['alpha']);
+            CGContextSetAlpha(gfx._state.port, fx['alpha']);
         if 'blend' in fx:
-            CGContextSetBlendMode(_cg_port(), _BLEND[fx['blend']])
+            CGContextSetBlendMode(gfx._state.port, _BLEND[fx['blend']])
         if 'shadow' in fx:
             shadow = Shadow(None) if fx['shadow'] is None else fx['shadow']
             shadow.set()
 
         return bool(fx) # return whether any state was just changed
 
-    @contextmanager
     def applied(self, owner):
         """Apply compositing effects (if any) to any drawing inside the `with` block"""
-        if self._fx and _casting.get() is not owner:
-            shadowed = 'shadow' in self._fx
-            if self.set('blend', 'alpha'):
-                if not shadowed and getattr(owner, '_paints_once', False):
-                    yield # a lone fill or stroke needs no layer
-                else:
-                    with _cg_layer(_layer_box(owner)):
-                        if not shadowed:
-                            yield # if there's no shadow, we don't need a second layer
-                        else:
-                            with (self.shadow or Shadow(None)).applied(owner):
-                                yield # if there is, it needs its own
+        if not self._fx or gfx._state.casting is owner:
+            return _NO_FX # avoid making a generator if there's nothing to apply
+        return self._applying(owner)
+
+    @contextmanager
+    def _applying(self, owner):
+        shadowed = 'shadow' in self._fx
+        if self.set('blend', 'alpha'):
+            if not shadowed and getattr(owner, '_paints_once', False):
+                yield # a lone fill or stroke needs no layer
             else:
-                with (self.shadow or Shadow(None)).applied(owner):
-                    yield
+                with gfx._state.compositing(owner):
+                    if not shadowed:
+                        yield # if there's no shadow, we don't need a second layer
+                    else:
+                        with (self.shadow or Shadow(None)).applied(owner):
+                            yield # if there is, it needs its own
         else:
-            yield
+            with (self.shadow or Shadow(None)).applied(owner):
+                yield
 
     def copy(self):
         new = Effect()
@@ -270,23 +278,23 @@ class Shadow(object):
 
     @property
     def _device_offset(self):
-        a, b, c, d, _, _ = _base_ctm.get()
+        a, b, c, d, _, _ = gfx._state.base_ctm
         x, y = self._offset
         return a*x + c*y, b*x + d*y
 
     @property
     def _device_blur(self):
-        a, b, c, d, _, _ = _base_ctm.get()
+        a, b, c, d, _, _ = gfx._state.base_ctm
         return self._blur * abs(a*d - b*c) ** .5
 
     def set(self):
-        CGContextSetShadowWithColor(_cg_port(), self._device_offset, self._device_blur, self._color.cgColor)
+        CGContextSetShadowWithColor(gfx._state.port, self._device_offset, self._device_blur, self._color.cgColor)
 
     @contextmanager
     def applied(self, owner):
         """Draw the `with` block's drawing with this shadow behind it"""
-        port = _cg_port()
-        box = _layer_box(owner)
+        port = gfx._state.port
+        box = gfx._state.layer_box(owner)
         (dx, dy), blur = self._device_offset, self._device_blur
         in_bitmap = CGBitmapContextGetWidth(port) > 0
         rgba = in_bitmap and CGBitmapContextGetAlphaInfo(port) not in _OPAQUE \
@@ -295,33 +303,29 @@ class Shadow(object):
         reach = None
 
         # CG's blur is inconsistent (and slows down) as it widens, so for wide blurs scale down first
-        if wide and box is not None and rgba and not _clip_depth.get():
+        if wide and box is not None and rgba and not gfx._state.clip_depth:
             # the target and what can shadow it
             whole = ((0, 0), (CGBitmapContextGetWidth(port), CGBitmapContextGetHeight(port)))
             clip = CGRectApplyAffineTransform(CGContextGetClipBoundingBox(port), CGContextGetCTM(port))
             target = CGRectIntegral(CGRectIntersection(whole, clip))
-            drawn = CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), _base_ctm.get())
+            drawn = CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), gfx._state.base_ctm)
             reach = CGRectIntegral(CGRectIntersection(drawn, CGRectInset(target, -(blur + abs(dx)), -(blur + abs(dy)))))
         if reach is None or CGRectIsEmpty(reach):
             self.set()
-            with _cg_layer(box):
+            with gfx._state.compositing(owner):
                 yield
             return
 
         # draw the with-block content at full size
         shown = CGRectIntegral(CGRectIntersection(drawn, target))
-        with _cg_bitmap(shown if not CGRectIsEmpty(shown) else ((0, 0), (1, 1)), 1.0, CGContextGetCTM(port)) as drawing_port:
+        with gfx._state.rasterizing(shown if not CGRectIsEmpty(shown) else ((0, 0), (1, 1)), 1.0, CGContextGetCTM(port)) as drawing_port:
             yield
         drawing = CGBitmapContextCreateImage(drawing_port)
 
         # redraw scaled down to a _CG_BLUR_LIMIT blur
         scale = _CG_BLUR_LIMIT / blur
-        with _cg_bitmap(reach, scale, _base_ctm.get()) as silhouette_port:
-            casting = _casting.set(owner)
-            try:
-                owner._draw()
-            finally:
-                _casting.reset(casting)
+        with gfx._state.rasterizing(reach, scale, gfx._state.base_ctm) as silhouette_port, gfx._state.using(casting=owner):
+            owner._draw()
         silhouette = CGBitmapContextCreateImage(silhouette_port)
 
         # render just the shadow using the scaled silhouette
@@ -412,7 +416,7 @@ class Stencil(Frob):
             raise DeviceError(badstencil)
 
     def set(self):
-        port = _cg_port()
+        port = gfx._state.port
 
         if hasattr(self, 'path'):
             path_xf = self.path._screen_transform
@@ -420,7 +424,7 @@ class Stencil(Frob):
             CGContextBeginPath(port)
             if self.evenodd:
                 # if inverted, knock the path out of a full-screen rect and clip with that
-                CGContextAddRect(port, ((0,0), _canvas_dims()))
+                CGContextAddRect(port, ((0,0), gfx._state.canvas_dims))
                 CGContextAddPath(port, cg_path)
                 CGContextEOClip(port)
             else:
@@ -452,11 +456,8 @@ class Stencil(Frob):
     @contextmanager
     def applied(self, owner):
         self.set()
-        token = _clip_depth.set(_clip_depth.get() + 1)
-        try:
+        with gfx._state.using(clip_depth=gfx._state.clip_depth + 1):
             yield
-        finally:
-            _clip_depth.reset(token)
 
 class ClippingPath(Stencil):
     pass # NodeBox compat...

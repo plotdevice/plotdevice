@@ -8,7 +8,7 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path, numlike
-from . import _output, _frame, _base_ctm, _cg_port
+from .. import gfx
 from .profiles import RGB, HSV, HSB, CMYK, GREY, P3, SRGB, REC709, REC2020, GRACOL, GRACOL_UNCOATED, SWOP, FOGRA39, FOGRA47, \
                       Profile, Press
 
@@ -167,7 +167,7 @@ class Color(object):
         return hash(self._key())
 
     def set(self):
-        port = _cg_port()
+        port = gfx._state.port
         CGContextSetFillColorWithColor(port, self.cgColor)
         CGContextSetStrokeColorWithColor(port, self.cgColor)
 
@@ -215,7 +215,7 @@ class Color(object):
     @property
     def cgColor(self):
         # one per ink
-        ink = _output().ink
+        ink = gfx._state.output.ink
         try:
             return self._to['cg', ink]
         except KeyError:
@@ -247,14 +247,14 @@ class Color(object):
 
     def _read_as(self, space):
         # the rgb a script reads
-        press = _output().press
+        press = gfx._state.output.press
         if press is None or self._mode is not CMYK:
             return self._rgb_as(space)
         return _matched(CGColorCreate(press.space, self._values(CMYK)), SPACES[space])
 
     def _read(self, mode):
         # scripts see cmyk colors through the output press
-        press = _output().press if mode is not CMYK else None
+        press = gfx._state.output.press if mode is not CMYK else None
         return self._values(mode, press if self._mode is CMYK else None)
 
     def _values(self, mode, press=None):
@@ -582,9 +582,9 @@ class Pattern(object):
     @property
     def cgColor(self):
         # cache 'tiles' (based on the pattern's matrix & ink) on the source Image itself
-        frame = _frame.get()
-        matrix = CGAffineTransformConcat(self._image._screen_matrix, _base_ctm.get())
-        key = tuple(matrix), _output().ink, frame and frame.output
+        frame = gfx._state.frame
+        matrix = CGAffineTransformConcat(self._image._screen_matrix, gfx._state.base_ctm)
+        key = tuple(matrix), gfx._state.output.ink, frame and frame.output
         tiles = self._image._tiles
         try:
             return tiles[key]
@@ -722,7 +722,7 @@ class Gradient(object):
 
     @property
     def pdGradient(self):
-        ink = _output().ink
+        ink = gfx._state.output.ink
         if not self._gradient or self._ink != ink:
             # rgb in the gradient's space, else the output's
             profile = ink.profile

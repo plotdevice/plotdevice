@@ -1734,13 +1734,13 @@ class PlotContext(object):
 
 ### containers ###
 
-class _PostScriptView(NSView):
+class PostScriptView(NSView):
     # This view was created to provide EPS data. CoreGraphics isn't antiquarian
     # enough to speak EPS so we need to draw to an NSView then use its
     # dataWithEPSInsideRect_ instead
 
     def initWithCanvas_(self, canvas):
-        super(_PostScriptView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
+        super(PostScriptView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
         self.canvas = canvas
         return self
 
@@ -1961,11 +1961,8 @@ class Frame(object):
         self.output = output # from export(colors=), else the working space
 
         # texts resolve their colors while committing
-        token = gfx._committing.set(self)
-        try:
+        with gfx._state.using(committing=self):
             self.grobs = _commit_all(src.grobs, held=True) if copying else _commit_all(src._grobs)
-        finally:
-            gfx._committing.reset(token)
         self.width, self.height = src.width, src.height
         self.pagesize = src.pagesize
         self.background = src.background
@@ -1974,17 +1971,17 @@ class Frame(object):
 
     def draw(self, cancelled=None, within=None):
         """Render the frame into the current graphics context"""
-        with gfx._render_lock, gfx._rendering(self, within):
+        with gfx._render_lock, gfx._state.rendering(self, within):
             if self.background is not None:
                 rect = ((0,0), self.pagesize)
                 if isinstance(self.background, Gradient):
                     self.background.fill(rect)
                 else:
-                    CGContextSetFillColorWithColor(gfx._cg_port(), self.background.cgColor)
+                    CGContextSetFillColorWithColor(gfx._state.port, self.background.cgColor)
                     NSRectFillUsingOperation(rect, NSCompositeSourceOver)
 
             with autorelease():
-                for grob in gfx._visible(self.grobs):
+                for grob in gfx._state.visible(self.grobs):
                     if cancelled is not None and cancelled():
                         return
                     gfx._render_lock.checkpoint()
@@ -2090,13 +2087,15 @@ class Frame(object):
             NSGraphicsContext.saveGraphicsState()
             NSGraphicsContext.setCurrentContext_(ns_ctx)
             NSGraphicsContext.saveGraphicsState()
-            trans = NSAffineTransform.transform()
-            trans.translateXBy_yBy_(*(offset or (0, self.pagesize.height*zoom)))
-            trans.scaleXBy_yBy_(zoom,-zoom)
-            trans.concat()
-            self.draw(cancelled, within)
-            NSGraphicsContext.restoreGraphicsState()
-            NSGraphicsContext.restoreGraphicsState()
+            try:
+                trans = NSAffineTransform.transform()
+                trans.translateXBy_yBy_(*(offset or (0, self.pagesize.height*zoom)))
+                trans.scaleXBy_yBy_(zoom,-zoom)
+                trans.concat()
+                self.draw(cancelled, within)
+            finally:
+                NSGraphicsContext.restoreGraphicsState()
+                NSGraphicsContext.restoreGraphicsState()
 
     def _getImageData(self, format, zoom=1.0, title=None):
         return self._encode(format, zoom, title=title)[0]
@@ -2109,13 +2108,10 @@ class Frame(object):
             dataConsumer = CGDataConsumerCreateWithCFData(cgData)
             pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w*zoom, h*zoom), None)
             CGPDFContextBeginPage(pdfContext, None)
-            token = gfx._pdf_doc.set((pdfContext, {}))
-            try:
+            with gfx._state.using(pdf=(pdfContext, {})):
                 self._render_to_context(pdfContext, zoom)
                 with gfx._render_lock: # pattern tiles draw during EndPage, after the render released the lock
                     CGPDFContextEndPage(pdfContext)
-            finally:
-                gfx._pdf_doc.reset(token)
             CGPDFContextClose(pdfContext)
             pdfContext = None
             if self.output.profile.space is not None: # plain CMYK is left as is
@@ -2126,7 +2122,7 @@ class Frame(object):
             return cgData, None
         elif format == 'eps':
             with autorelease(), gfx._render_lock: # AppKit draws pattern tiles after drawRect_ returns
-                view = _PostScriptView.alloc().initWithCanvas_(self)
+                view = PostScriptView.alloc().initWithCanvas_(self)
                 return view.dataWithEPSInsideRect_(view.bounds()), None
         else:
             cgTypes = {"gif":  'com.compuserve.gif',

@@ -1,111 +1,114 @@
 # encoding: utf-8
 import math, threading, time
 from contextlib import contextmanager
-from contextvars import ContextVar
 from ..lib.cocoa import *
 
-### graphics context mgmt ###
-
-def _save():
-    NSGraphicsContext.currentContext().saveGraphicsState()
-
-def _restore():
-    NSGraphicsContext.currentContext().restoreGraphicsState()
-
-@contextmanager
-def _ns_context():
-    ctx = NSGraphicsContext.currentContext()
-    ctx.saveGraphicsState()
-    yield ctx
-    ctx.restoreGraphicsState()
-
-@contextmanager
-def _cg_context():
-    port = NSGraphicsContext.currentContext().CGContext()
-    CGContextSaveGState(port)
-    yield port
-    CGContextRestoreGState(port)
-
-@contextmanager
-def _cg_layer(box=None):
-    port = _cg_port()
-    if box:
-        # limit the transparency layer to the requested rect
-        to_user = CGAffineTransformConcat(_base_ctm.get(), CGAffineTransformInvert(CGContextGetCTM(port)))
-        CGContextBeginTransparencyLayerWithRect(port, CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), to_user), None)
-    else:
-        CGContextBeginTransparencyLayer(port, None)
-    yield
-    CGContextEndTransparencyLayer(port)
-
-@contextmanager
-def _cg_bitmap(rect, scale, ctm):
-    # draw into a new bitmap covering `rect`
-    port = _cg_port()
-    (x, y), (w, h) = rect
-    bitmap = CGBitmapContextCreate(None, int(math.ceil(w * scale)), int(math.ceil(h * scale)), 8, 0,
-                                   CGBitmapContextGetColorSpace(port),
-                                   kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
-    CGContextScaleCTM(bitmap, scale, scale)
-    CGContextTranslateCTM(bitmap, -x, -y)
-    CGContextConcatCTM(bitmap, ctm)
-    flipped = NSGraphicsContext.currentContext().isFlipped()
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmap, flipped))
-    to_bitmap = CGAffineTransformConcat(CGAffineTransformMakeTranslation(-x, -y), CGAffineTransformMakeScale(scale, scale))
-    moved = _base_ctm.set(CGAffineTransformConcat(_base_ctm.get(), to_bitmap))
-    try:
-        yield bitmap
-    finally:
-        _base_ctm.reset(moved)
-        NSGraphicsContext.restoreGraphicsState()
-
-def _cg_port():
-    return NSGraphicsContext.currentContext().CGContext()
-
-### render-time state ###
+### draw-time state ###
 
 # the canvas state used by the currently executing script
 _ctx = None
 
-# the Frame being rendered on this thread
-_frame = ContextVar('frame', default=None)
+### render-time state ###
 
-# the CTM when the frame started drawing
-_base_ctm = ContextVar('base_ctm', default=(1, 0, 0, -1, 0, 0))
+class RenderState(threading.local):
+    """The drawing in progress on each thread"""
+    port = None                    # the CGContext being drawn into
+    frame = None                   # the current output colors, canvas dims, & layer boxes
+    base_ctm = (1, 0, 0, -1, 0, 0) # taken at the frame's start, to size shadows in device pixels
+    culling = None                 # grobs outside this rect are skipped
+    clip_depth = 0                 # how many clip() or mask() stencils the drawing is inside
+    casting = None                 # a grob being redrawn to cast its shadow (so it knows to skip effects)
+    committing = None              # the Frame with the canvas's grobs recolored for export/proofing
+    pdf = (None, None)             # the document being drawn and its plotted-canvas layers (if any)
 
-# the rect being rendered, for culling
-_culling = ContextVar('culling', default=None)
+    @contextmanager
+    def using(self, **fields):
+        """Set fields for the duration of a `with` block, then restore them"""
+        saved = {name: getattr(self, name) for name in fields}
+        for name, value in fields.items():
+            setattr(self, name, value)
+        try:
+            yield
+        finally:
+            for name, value in saved.items():
+                setattr(self, name, value)
 
-# how many clip() or mask() stencils the drawing is inside
-_clip_depth = ContextVar('clip_depth', default=0)
+    def rendering(self, frame, within=None):
+        """Draw `frame` for the duration of a `with` block, culling to `within` if given"""
+        # re-check the CG context (since pattern tiles can draw after the render that filled with them)
+        port = NSGraphicsContext.currentContext().CGContext()
+        ctm = CGContextGetCTM(port)
 
-# a grob being redrawn to cast its shadow
-_casting = ContextVar('casting', default=None)
+        # a frame with its own context (e.g., a pattern tile or PDF layer) starts outside whatever clips/shadows are in effect
+        if port is not self.port:
+            return self.using(port=port, frame=frame, base_ctm=ctm, culling=within, clip_depth=0, casting=None)
 
-# the frame being committed
-_committing = ContextVar('committing', default=None)
+        return self.using(frame=frame, base_ctm=ctm, culling=within)
 
-# the PDF being drawn and its plotted-canvas layers (if any)
-_pdf_doc = ContextVar('pdf_doc', default=(None, None))
+    @contextmanager
+    def compositing(self, grob):
+        """Draw into a transparency layer for the duration of a `with` block, sized to `grob`'s layer box"""
+        port = self.port
+        box = self.layer_box(grob)
+        if box:
+            # limit the transparency layer to the requested rect
+            to_user = CGAffineTransformConcat(self.base_ctm, CGAffineTransformInvert(CGContextGetCTM(port)))
+            CGContextBeginTransparencyLayerWithRect(port, CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), to_user), None)
+        else:
+            CGContextBeginTransparencyLayer(port, None)
+        try:
+            yield
+        finally:
+            CGContextEndTransparencyLayer(port)
 
-@contextmanager
-def _rendering(frame, within=None):
-    token = _frame.set(frame)
-    ctm_token = _base_ctm.set(CGContextGetCTM(_cg_port()))
-    cull_token = _culling.set(within)
-    clip_token = _clip_depth.set(0) # a pattern's tile starts its canvas outside any clip
-    cast_token = _casting.set(None) # ...and outside any shadow being cast
-    try:
-        yield
-    finally:
-        _casting.reset(cast_token)
-        _clip_depth.reset(clip_token)
-        _culling.reset(cull_token)
-        _base_ctm.reset(ctm_token)
-        _frame.reset(token)
+    @contextmanager
+    def rasterizing(self, rect, scale, ctm):
+        """Draw into a new bitmap covering `rect` for the duration of a `with` block, yielding its context"""
+        port = self.port
+        (x, y), (w, h) = rect
+        bitmap = CGBitmapContextCreate(None, int(math.ceil(w * scale)), int(math.ceil(h * scale)), 8, 0,
+                                       CGBitmapContextGetColorSpace(port),
+                                       kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
+        CGContextScaleCTM(bitmap, scale, scale)
+        CGContextTranslateCTM(bitmap, -x, -y)
+        CGContextConcatCTM(bitmap, ctm)
+        flipped = NSGraphicsContext.currentContext().isFlipped()
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmap, flipped))
+        to_bitmap = CGAffineTransformConcat(CGAffineTransformMakeTranslation(-x, -y), CGAffineTransformMakeScale(scale, scale))
+        try:
+            with self.using(port=bitmap, base_ctm=CGAffineTransformConcat(self.base_ctm, to_bitmap)):
+                yield bitmap
+        finally:
+            NSGraphicsContext.restoreGraphicsState()
 
-class _RenderLock(object):
+    @property
+    def output(self):
+        """The output colors resolve for: the frame's, else the script's"""
+        frame = self.frame or self.committing
+        return _ctx._output if frame is None else frame.output
+
+    @property
+    def canvas_dims(self):
+        """The canvas's width & height in canvas units"""
+        frame = self.frame
+        if frame is None:
+            return _ctx.canvas.width, _ctx.canvas.height
+        return frame.width, frame.height
+
+    def visible(self, grobs):
+        """The grobs that may draw inside the rect being rendered"""
+        within = self.culling
+        return grobs if within is None else self.frame._bounds.within(within, grobs)
+
+    def layer_box(self, grob):
+        """The box a grob's transparency layer needs, or None"""
+        frame = self.frame
+        return None if frame is None or grob is None else frame._bounds.layer_box(grob)
+
+_state = RenderState()
+
+class RenderLock(object):
     """Serializes Core Graphics calls across threads
 
     Renders run until their time slice elapses, then hand off to the next thread.
@@ -153,29 +156,7 @@ class _RenderLock(object):
             self.__exit__()
             self.__enter__()
 
-_render_lock = _RenderLock()
-
-def _layer_box(grob):
-    """The box a grob's transparency layer needs, or None"""
-    frame = _frame.get()
-    return None if frame is None or grob is None else frame._bounds.layer_box(grob)
-
-def _visible(grobs):
-    """The grobs that may draw inside the rect being rendered"""
-    within = _culling.get()
-    return grobs if within is None else _frame.get()._bounds.within(within, grobs)
-
-def _output():
-    """The output colors resolve for: the frame's, else the script's"""
-    frame = _frame.get() or _committing.get()
-    return _ctx._output if frame is None else frame.output
-
-def _canvas_dims():
-    """The canvas's width & height in canvas units"""
-    frame = _frame.get()
-    if frame is None:
-        return _ctx.canvas.width, _ctx.canvas.height
-    return frame.width, frame.height
+_render_lock = RenderLock()
 
 ### submodule init ###
 
