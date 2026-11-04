@@ -1977,7 +1977,7 @@ class Frame(object):
                 if isinstance(self.background, Gradient):
                     self.background.fill(rect)
                 else:
-                    CGContextSetFillColorWithColor(gfx._cg_port(), self.background.cgColor)
+                    CGContextSetFillColorWithColor(gfx._state.port, self.background.cgColor)
                     NSRectFillUsingOperation(rect, NSCompositeSourceOver)
 
             with autorelease():

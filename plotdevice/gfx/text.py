@@ -16,7 +16,6 @@ from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, FrameMixin, Grob
 from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, Element, read
 from ..lib import foundry
-from . import _cg_port
 from .. import gfx
 
 _ctx = None
@@ -867,14 +866,14 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
     def _draw(self):
         # save and restore the gstate
-        saved = _cg_port()
+        saved = gfx._state.port
         CGContextSaveGState(saved)
         try:
             self._screen_transform.concat()  # transform so text can be drawn at the origin
             with self.effects.applied(self): # apply any blend/alpha/shadow effects
                 if self._engine is None:
                     # typeset with CoreText
-                    port = _cg_port()
+                    port = gfx._state.port
                     CGContextSetTextMatrix(port, CGAffineTransformMake(1, 0, 0, -1, 0, 0))
                     CGContextSetTextPosition(port, self._line.x, self._line.baseline)
                     foundry.PDLayoutManager.drawLine_fills_inContext_(self._line.ctline, self._fills(), port)

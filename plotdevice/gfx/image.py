@@ -20,7 +20,6 @@ from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, 
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
 from .effects import Frob
 from .profiles import Output
-from . import _cg_port
 from .. import gfx
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
@@ -313,7 +312,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
         # if vector-based, use the canvas's CTM and the image's _screen_transform to
         # determine its 'actual' size (rather than just using its mediabox 1:1)
-        ctm = CGContextGetCTM(_cg_port())
+        ctm = CGContextGetCTM(gfx._state.port)
         ctm_scale = max(math.hypot(ctm.a, ctm.b), math.hypot(ctm.c, ctm.d))
         xf_a, xf_b, xf_c, xf_d, _, _ = self._screen_matrix
         xf_scale = max(math.hypot(xf_a, xf_b), math.hypot(xf_c, xf_d))
@@ -376,7 +375,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
     def _draw(self):
         """Draw an image on the given coordinates."""
 
-        saved = _cg_port()
+        saved = gfx._state.port
         CGContextSaveGState(saved)
         try:
             self._screen_transform.concat() # move the image into place via transforms
@@ -390,7 +389,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                     image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
                 else:
                     # draw svg & pdf reps directly, otherwise NSImage rasterizes them in layers and pattern cells
-                    port = _cg_port()
+                    port = gfx._state.port
                     if self.alpha < 1:
                         CGContextSetAlpha(port, self.alpha)
                         CGContextBeginTransparencyLayer(port, None)
@@ -478,13 +477,13 @@ class Snapshot(Image):
         return _hull(self._screen_matrix, 0, 0, w0, h0)
 
     def _draw(self):
-        saved = _cg_port()
+        saved = gfx._state.port
         CGContextSaveGState(saved)
         try:
             self._screen_transform.concat() # position the snapshot
             with self.effects.applied(self): # apply blend/alpha/shadow (if any)
                 # if this isn't a PDF, draw the grobs directly
-                (doc, layers), port = gfx._state.pdf, _cg_port()
+                (doc, layers), port = gfx._state.pdf, gfx._state.port
                 if doc is None or CGBitmapContextGetWidth(port) > 0:
                     self._canvas.draw() # re-enters the render lock
                     return

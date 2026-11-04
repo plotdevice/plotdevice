@@ -4,7 +4,7 @@ from ..lib.cocoa import *
 from math import pi, sin, cos, sqrt
 
 from plotdevice import DeviceError
-from . import _cg_port
+from .. import gfx
 from .atoms import PenMixin, TransformMixin, ColorMixin, EffectsMixin, Grob
 from .colors import Color, Gradient, Pattern
 from .geometry import CENTER, DEGREES, IDENTITY, Transform, Region, Point, _pivot, _hull
@@ -400,7 +400,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         return _hull(self._screen_matrix, x * dpx, y * dpx, w * dpx, h * dpx)
 
     def _draw(self):
-        port = _cg_port()
+        port = gfx._state.port
         CGContextSaveGState(port)
         try:
             # modify the context's CTM to reflect our final resting place
@@ -410,7 +410,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             # apply blend/alpha/shadow (and any associated transparency layers)
             with self.effects.applied(self):
                 # effects (like shadows) may shift the active context, so re-fetch
-                target = _cg_port()
+                target = gfx._state.port
 
                 # prepare to stroke, fill, or both
                 ink = None

@@ -3,15 +3,12 @@ import math, threading, time
 from contextlib import contextmanager
 from ..lib.cocoa import *
 
-### graphics context mgmt ###
-
-def _cg_port():
-    return _state.port
-
-### render-time state ###
+### draw-time state ###
 
 # the canvas state used by the currently executing script
 _ctx = None
+
+### render-time state ###
 
 class RenderState(threading.local):
     """The drawing in progress on each thread"""

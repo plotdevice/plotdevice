@@ -11,7 +11,7 @@ from plotdevice import DeviceError
 from ..util import numlike
 from .colors import Color
 from .geometry import Point, CORNER
-from . import _cg_port, _render_lock
+from . import _render_lock
 from .. import gfx
 
 _ctx = None
@@ -93,7 +93,7 @@ class Frob(object):
 
     def _draw(self):
         # apply state changes only to contained grobs
-        port = _cg_port()
+        port = gfx._state.port
         CGContextSaveGState(port)
         try:
             with self.applied(self):
@@ -163,9 +163,9 @@ class Effect(Frob):
 
         fx = {k:v for k,v in self._fx.items() if k in effs}
         if 'alpha' in fx:
-            CGContextSetAlpha(_cg_port(), fx['alpha']);
+            CGContextSetAlpha(gfx._state.port, fx['alpha']);
         if 'blend' in fx:
-            CGContextSetBlendMode(_cg_port(), _BLEND[fx['blend']])
+            CGContextSetBlendMode(gfx._state.port, _BLEND[fx['blend']])
         if 'shadow' in fx:
             shadow = Shadow(None) if fx['shadow'] is None else fx['shadow']
             shadow.set()
@@ -288,12 +288,12 @@ class Shadow(object):
         return self._blur * abs(a*d - b*c) ** .5
 
     def set(self):
-        CGContextSetShadowWithColor(_cg_port(), self._device_offset, self._device_blur, self._color.cgColor)
+        CGContextSetShadowWithColor(gfx._state.port, self._device_offset, self._device_blur, self._color.cgColor)
 
     @contextmanager
     def applied(self, owner):
         """Draw the `with` block's drawing with this shadow behind it"""
-        port = _cg_port()
+        port = gfx._state.port
         box = gfx._state.layer_box(owner)
         (dx, dy), blur = self._device_offset, self._device_blur
         in_bitmap = CGBitmapContextGetWidth(port) > 0
@@ -416,7 +416,7 @@ class Stencil(Frob):
             raise DeviceError(badstencil)
 
     def set(self):
-        port = _cg_port()
+        port = gfx._state.port
 
         if hasattr(self, 'path'):
             path_xf = self.path._screen_transform
