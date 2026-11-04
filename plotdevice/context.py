@@ -1734,13 +1734,13 @@ class PlotContext(object):
 
 ### containers ###
 
-class _PostScriptView(NSView):
+class PostScriptView(NSView):
     # This view was created to provide EPS data. CoreGraphics isn't antiquarian
     # enough to speak EPS so we need to draw to an NSView then use its
     # dataWithEPSInsideRect_ instead
 
     def initWithCanvas_(self, canvas):
-        super(_PostScriptView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
+        super(PostScriptView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
         self.canvas = canvas
         return self
 
@@ -2120,7 +2120,7 @@ class Frame(object):
             return cgData, None
         elif format == 'eps':
             with autorelease(), gfx._render_lock: # AppKit draws pattern tiles after drawRect_ returns
-                view = _PostScriptView.alloc().initWithCanvas_(self)
+                view = PostScriptView.alloc().initWithCanvas_(self)
                 return view.dataWithEPSInsideRect_(view.bounds()), None
         else:
             cgTypes = {"gif":  'com.compuserve.gif',

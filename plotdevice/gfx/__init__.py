@@ -119,7 +119,7 @@ class RenderState(threading.local):
 
 _state = RenderState()
 
-class _RenderLock(object):
+class RenderLock(object):
     """Serializes Core Graphics calls across threads
 
     Renders run until their time slice elapses, then hand off to the next thread.
@@ -167,7 +167,7 @@ class _RenderLock(object):
             self.__exit__()
             self.__enter__()
 
-_render_lock = _RenderLock()
+_render_lock = RenderLock()
 
 ### submodule init ###
 
