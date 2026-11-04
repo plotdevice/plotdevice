@@ -404,14 +404,14 @@ class RendererTests(PlotDeviceTestCase):
 
     def test_clock_holds_early_deliveries_for_the_vblank(self):
         # a delivery mid-period waits for the next vblank, but a late one draws at once
-        from plotdevice import gui
+        from plotdevice.gui import display
         from unittest import mock
         link = SimpleNamespace(addToRunLoop_forMode_=lambda *args: None, invalidate=lambda: None,
                                timestamp=lambda: 0.0, targetTimestamp=lambda: 1 / 60)
         view = SimpleNamespace(displayLinkWithTarget_selector_=lambda target, sel: link)
-        clock = gui.FrameClock(view, None, None, 60)
+        clock = display.FrameClock(view, None, None, 60)
         def at(t, delivered=False):
-            with mock.patch.object(gui, 'CACurrentMediaTime', lambda: t):
+            with mock.patch.object(display, 'CACurrentMediaTime', lambda: t):
                 drew = clock.should_draw(delivered=delivered)
                 if drew:
                     clock.frame_done()
