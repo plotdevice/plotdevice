@@ -1,13 +1,6 @@
 #import <Cocoa/Cocoa.h>
 #include <Python.h>
-
-// the macOS 14 SDK renamed NSBezierPathElementCurveTo to ...CubicCurveTo and
-// added a new ...QuadraticCurveTo element type
-#if defined(MAC_OS_VERSION_14_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_14_0
-  #define HAS_QUADRATIC_PATH_ELEMENTS 1
-#else
-  #define HAS_QUADRATIC_PATH_ELEMENTS 0
-#endif
+#import "../gfx/PDPath.h"
 
 PyObject * cPathmatics_linepoint(PyObject *self, PyObject *args);
 PyObject * cPathmatics_linelength(PyObject *self, PyObject *args);
@@ -21,18 +14,11 @@ PyObject * cPathmatics_xor(PyObject *self, PyObject *args);
 PyObject * cPathmatics_offset(PyObject *self, PyObject *args);
 PyObject * cPathmatics_simplify(PyObject *self, PyObject *args);
 PyObject * cPathmatics_area(PyObject *self, PyObject *args);
-PyObject * cPathmatics_pdfOutline(PyObject *self, PyObject *args);
 PyObject * cPathmatics_strokeToFill(PyObject *self, PyObject *args);
-
-// the PDPath type (pdpath.m): adding it to the module, the CGPath behind one (NULL if obj isn't a
-// PDPath), and a new one of a CGPath with its closes made as closePath makes them
-int PDPath_register(PyObject *module);
-CGPathRef PDPath_CGPath(PyObject *obj);
-PyObject *PDPath_FromCGPath(CGPathRef path);
 
 // Shared NSBezierPath <-> CGPathRef conversion (used by the boolean-op backend
 // and cPathmatics_strokeToFill in pathmatics.m, and by the PDF content-stream
-// tracer in pdftrace.m).
+// tracer in tracer.m).
 @interface Pathmatician : NSObject
 + (CGPathRef)cgPath:(NSBezierPath *)nsPath;
 + (NSBezierPath *)bezierPath:(CGPathRef)cgPath;

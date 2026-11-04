@@ -1,5 +1,7 @@
 #import <Python.h>
+#import "gfx/PDPath.h"
 #import "pathmatics/pathmatics.h"
+#import "pathmatics/tracer.h"
 #import "clipper2/bridge.h"
 
 // Pathmatics routines written for NodeBox by Tom De Smedt and Frederik De Bleser

@@ -1,5 +1,5 @@
 //
-//  Surface.h
+//  PDSurface.h
 //  PlotDevice
 //
 //  An IOSurface-backed render target for windows and exports.

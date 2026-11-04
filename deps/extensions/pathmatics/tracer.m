@@ -1,4 +1,5 @@
 #import "pathmatics.h"
+#import "tracer.h"
 #import <Quartz/Quartz.h>
 #include <string.h>
 

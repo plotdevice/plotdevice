@@ -445,7 +445,7 @@ cPathmatics_area(PyObject *self, PyObject *args)
 }
 
 // NSBezierPath <-> CGPathRef conversion (interface declared in pathmatics.h
-// so pdftrace.m can use it too)
+// so tracer.m can use it too)
 @implementation Pathmatician
 + (CGPathRef)cgPath:(NSBezierPath *)nsPath{
     CGPathRef immutablePath = NULL;

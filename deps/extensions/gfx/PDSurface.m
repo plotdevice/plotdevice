@@ -1,10 +1,10 @@
 //
-//  Surface.m
+//  PDSurface.m
 //  PlotDevice
 //
 
 #import <CoreVideo/CoreVideo.h>
-#import "Surface.h"
+#import "PDSurface.h"
 
 @implementation PDSurface
 
