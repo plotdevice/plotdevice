@@ -20,7 +20,7 @@ def _ns_context():
 
 @contextmanager
 def _cg_context():
-    port = NSGraphicsContext.currentContext().CGContext()
+    port = _cg_port()
     CGContextSaveGState(port)
     try:
         yield port
@@ -57,13 +57,13 @@ def _cg_bitmap(rect, scale, ctm):
     NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmap, flipped))
     to_bitmap = CGAffineTransformConcat(CGAffineTransformMakeTranslation(-x, -y), CGAffineTransformMakeScale(scale, scale))
     try:
-        with _state.using(base_ctm=CGAffineTransformConcat(_state.base_ctm, to_bitmap)):
+        with _state.using(port=bitmap, base_ctm=CGAffineTransformConcat(_state.base_ctm, to_bitmap)):
             yield bitmap
     finally:
         NSGraphicsContext.restoreGraphicsState()
 
 def _cg_port():
-    return NSGraphicsContext.currentContext().CGContext()
+    return _state.port
 
 ### render-time state ###
 
@@ -72,6 +72,7 @@ _ctx = None
 
 class RenderState(threading.local):
     """The drawing in progress on each thread"""
+    port = None                    # the CGContext being drawn into
     frame = None                   # the current output colors, canvas dims, & layer boxes
     base_ctm = (1, 0, 0, -1, 0, 0) # taken at the frame's start, to size shadows in device pixels
     culling = None                 # grobs outside this rect are skipped
@@ -94,8 +95,12 @@ class RenderState(threading.local):
 
     def rendering(self, frame, within=None):
         """Draw `frame` for the duration of a `with` block, culling to `within` if given"""
+        # ask AppKit, since pattern tiles can draw after the render that filled with them has ended
+        port = NSGraphicsContext.currentContext().CGContext()
+
         # a frame drawn inside another starts outside its clips and shadow casting (likewise for pattern tiles)
-        return self.using(frame=frame, base_ctm=CGContextGetCTM(_cg_port()), culling=within, clip_depth=0, casting=None)
+        return self.using(frame=frame, port=port, base_ctm=CGContextGetCTM(port), culling=within, clip_depth=0,
+                          casting=None)
 
     @property
     def output(self):
