@@ -449,7 +449,7 @@ class Snapshot(Image):
         frame = gfx._state.committing
         recolor = frame is not None and frame.output != self._canvas.output
         if recolor:
-            from ..context import Frame
+            from .canvas import Frame
             snapshot = snapshot if held else self.copy()
             snapshot._canvas = Frame(self._source, frame.output)
         return snapshot

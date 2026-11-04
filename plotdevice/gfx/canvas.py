@@ -16,13 +16,10 @@ from .bezier import Bezier
 from .image import Image
 from .. import gfx, DeviceError
 
-# default size for Canvas and GraphicsView objects
-DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
-
 class Canvas(object):
     _ctx = None
 
-    def __init__(self, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, unit=px):
+    def __init__(self, width=512, height=512, unit=px):
         self.unit = unit
         self.width = width
         self.height = height
@@ -121,7 +118,7 @@ class Canvas(object):
 
 
 class Frame(object):
-    """A committed copy of a Canvas (or of another Frame, in other colors)"""
+    """A committed copy of a Canvas (or of another Frame, with output/proof settings)"""
 
     def __init__(self, src, output=None, proof=None):
         copying = isinstance(src, Frame) # its texts must keep their own colors

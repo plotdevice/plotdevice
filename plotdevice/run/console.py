@@ -28,7 +28,8 @@ from ..run import objc, encoded
 from ..lib.cocoa import *
 from ..lib.io import SysAdmin, ExportSession
 from ..util import rsrc_path
-from ..gui import ScriptController, FrameQueue, next_tick, set_timeout
+from ..gui import ScriptController, next_tick, set_timeout
+from ..gui.display import FrameQueue
 
 from PyObjCTools import AppHelper
 from AppKit import NSRunningApplication

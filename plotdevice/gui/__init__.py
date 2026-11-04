@@ -11,16 +11,7 @@ def bundle_path(subpath=None, rsrc=None, fmwk=None):
         return join(bundle, subpath)
     return bundle
 
-import sys, time, queue, threading
 from Foundation import NSTimer, NSRunLoop, NSRunLoopCommonModes
-from PyObjCTools import AppHelper
-from .. import free_threaded
-from ..util import autorelease
-from AppKit import (NSApplication, NSDate, NSEventMaskAny,
-                    NSEventMaskMouseMoved, NSEventMaskMouseEntered, NSEventMaskMouseExited,
-                    NSEventMaskCursorUpdate, NSEventMaskPeriodic, NSEventMaskAppKitDefined,
-                    NSEventMaskSystemDefined, NSEventMaskApplicationDefined)
-from Quartz import CACurrentMediaTime
 
 def set_timeout(target, sel, delay, info=None, repeat=False):
     timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(delay, target, sel, info, repeat)
@@ -30,8 +21,6 @@ def set_timeout(target, sel, delay, info=None, repeat=False):
 def next_tick(target, sel):
     timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0, target, sel, None, False)
     NSRunLoop.mainRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
-
-from .display import FrameClock, RenderJob, FrameQueue
 
 from .document import PlotDeviceDocument, PythonScriptDocument, ScriptController
 from .app import PlotDeviceAppDelegate

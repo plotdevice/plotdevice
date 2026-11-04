@@ -1,16 +1,14 @@
 # encoding: utf-8
 import sys
 import os
-import math
 import bisect
-import time
 import traceback
 import objc
 
-from . import set_timeout, FrameQueue
+from . import set_timeout
 from .display import FramePresenter
 from ..lib.cocoa import *
-from ..gfx.colors import Color, RGB
+from ..gfx.colors import Color
 from ..gfx.atoms import KEY_ESC
 from objc import super
 

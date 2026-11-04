@@ -1,24 +1,20 @@
 # encoding: utf-8
-import os, re, types, warnings
+import re, types, warnings
 from contextlib import contextmanager
 from collections import namedtuple, OrderedDict
 from os.path import exists, expanduser
-import objc
-from objc import super
 
 from .lib.cocoa import *
 from .lib import pathmatics
-from _plotdevice import PDPath
-from .lib.io import MovieExportSession, Distiller, HEVC
-from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
+from .lib.io import MovieExportSession, HEVC
+from .util import _copy_attr, _copy_attrs, _flatten, numlike
 from .gfx.geometry import Dimension, IDENTITY, parse_coords
 from .gfx.typography import Layout
-from .gfx.effects import Frob, _commit_all
 from .gfx import *
 from .gfx.colors import _canonical
 from .gfx.profiles import Output
 from .gfx.image import Snapshot
-from .gfx.canvas import DEFAULT_WIDTH, DEFAULT_HEIGHT, PostScriptView, Canvas, FrameBounds, Frame
+from .gfx.canvas import Canvas
 from . import gfx, lib, util, Halted, DeviceError
 
 __all__ = ('Context', 'Canvas')
