@@ -1961,11 +1961,8 @@ class Frame(object):
         self.output = output # from export(colors=), else the working space
 
         # texts resolve their colors while committing
-        token = gfx._committing.set(self)
-        try:
+        with gfx._state.using(committing=self):
             self.grobs = _commit_all(src.grobs, held=True) if copying else _commit_all(src._grobs)
-        finally:
-            gfx._committing.reset(token)
         self.width, self.height = src.width, src.height
         self.pagesize = src.pagesize
         self.background = src.background
@@ -2109,13 +2106,10 @@ class Frame(object):
             dataConsumer = CGDataConsumerCreateWithCFData(cgData)
             pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w*zoom, h*zoom), None)
             CGPDFContextBeginPage(pdfContext, None)
-            token = gfx._pdf_doc.set((pdfContext, {}))
-            try:
+            with gfx._state.using(pdf=(pdfContext, {})):
                 self._render_to_context(pdfContext, zoom)
                 with gfx._render_lock: # pattern tiles draw during EndPage, after the render released the lock
                     CGPDFContextEndPage(pdfContext)
-            finally:
-                gfx._pdf_doc.reset(token)
             CGPDFContextClose(pdfContext)
             pdfContext = None
             if self.output.profile.space is not None: # plain CMYK is left as is

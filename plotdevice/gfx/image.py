@@ -20,7 +20,8 @@ from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, 
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
 from .effects import Frob
 from .profiles import Output
-from . import _ns_context, _cg_port, _frame, _committing, _pdf_doc
+from . import _ns_context, _cg_port
+from .. import gfx
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
 
@@ -379,7 +380,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             self._screen_transform.concat() # move the image into place via transforms
             with self.effects.applied(self): # apply any blend/alpha/shadow effects
                 NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
-                frame = _frame.get()
+                frame = gfx._state.frame
                 image = self._nsImage_as(frame.output.cmyk_space if frame is not None else None)
                 bounds = ((0,0), image.size()) # draw the image at (0,0)
                 vector = next((r for r in image.representations() if isinstance(r, (NSPDFImageRep, PDSVGImageRep))), None)
@@ -442,7 +443,7 @@ class Snapshot(Image):
     def _commit(self, held):
         # resolve its colors as the frame being committed does
         snapshot = self.copy() if held else self
-        frame = _committing.get()
+        frame = gfx._state.committing
         recolor = frame is not None and frame.output != self._canvas.output
         if recolor:
             from ..context import Frame
@@ -477,7 +478,7 @@ class Snapshot(Image):
             self._screen_transform.concat() # position the snapshot
             with self.effects.applied(self): # apply blend/alpha/shadow (if any)
                 # if this isn't a PDF, draw the grobs directly
-                (doc, layers), port = _pdf_doc.get(), _cg_port()
+                (doc, layers), port = gfx._state.pdf, _cg_port()
                 if doc is None or CGBitmapContextGetWidth(port) > 0:
                     self._canvas.draw() # re-enters the render lock
                     return

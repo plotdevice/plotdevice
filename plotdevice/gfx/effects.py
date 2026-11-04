@@ -11,8 +11,8 @@ from plotdevice import DeviceError
 from ..util import numlike
 from .colors import Color
 from .geometry import Point, CORNER
-from . import _cg_context, _cg_layer, _cg_bitmap, _cg_port, _canvas_dims, _base_ctm, _visible, _layer_box, \
-              _clip_depth, _casting, _render_lock
+from . import _cg_context, _cg_layer, _cg_bitmap, _cg_port, _canvas_dims, _visible, _layer_box, _render_lock
+from .. import gfx
 
 _ctx = None
 __all__ = ("Effect", "Shadow", "Stencil",)
@@ -169,7 +169,7 @@ class Effect(Frob):
     @contextmanager
     def applied(self, owner):
         """Apply compositing effects (if any) to any drawing inside the `with` block"""
-        if self._fx and _casting.get() is not owner:
+        if self._fx and gfx._state.casting is not owner:
             shadowed = 'shadow' in self._fx
             if self.set('blend', 'alpha'):
                 if not shadowed and getattr(owner, '_paints_once', False):
@@ -270,13 +270,13 @@ class Shadow(object):
 
     @property
     def _device_offset(self):
-        a, b, c, d, _, _ = _base_ctm.get()
+        a, b, c, d, _, _ = gfx._state.base_ctm
         x, y = self._offset
         return a*x + c*y, b*x + d*y
 
     @property
     def _device_blur(self):
-        a, b, c, d, _, _ = _base_ctm.get()
+        a, b, c, d, _, _ = gfx._state.base_ctm
         return self._blur * abs(a*d - b*c) ** .5
 
     def set(self):
@@ -295,12 +295,12 @@ class Shadow(object):
         reach = None
 
         # CG's blur is inconsistent (and slows down) as it widens, so for wide blurs scale down first
-        if wide and box is not None and rgba and not _clip_depth.get():
+        if wide and box is not None and rgba and not gfx._state.clip_depth:
             # the target and what can shadow it
             whole = ((0, 0), (CGBitmapContextGetWidth(port), CGBitmapContextGetHeight(port)))
             clip = CGRectApplyAffineTransform(CGContextGetClipBoundingBox(port), CGContextGetCTM(port))
             target = CGRectIntegral(CGRectIntersection(whole, clip))
-            drawn = CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), _base_ctm.get())
+            drawn = CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), gfx._state.base_ctm)
             reach = CGRectIntegral(CGRectIntersection(drawn, CGRectInset(target, -(blur + abs(dx)), -(blur + abs(dy)))))
         if reach is None or CGRectIsEmpty(reach):
             self.set()
@@ -316,12 +316,8 @@ class Shadow(object):
 
         # redraw scaled down to a _CG_BLUR_LIMIT blur
         scale = _CG_BLUR_LIMIT / blur
-        with _cg_bitmap(reach, scale, _base_ctm.get()) as silhouette_port:
-            casting = _casting.set(owner)
-            try:
-                owner._draw()
-            finally:
-                _casting.reset(casting)
+        with _cg_bitmap(reach, scale, gfx._state.base_ctm) as silhouette_port, gfx._state.using(casting=owner):
+            owner._draw()
         silhouette = CGBitmapContextCreateImage(silhouette_port)
 
         # render just the shadow using the scaled silhouette
@@ -452,11 +448,8 @@ class Stencil(Frob):
     @contextmanager
     def applied(self, owner):
         self.set()
-        token = _clip_depth.set(_clip_depth.get() + 1)
-        try:
+        with gfx._state.using(clip_depth=gfx._state.clip_depth + 1):
             yield
-        finally:
-            _clip_depth.reset(token)
 
 class ClippingPath(Stencil):
     pass # NodeBox compat...

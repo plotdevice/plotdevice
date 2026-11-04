@@ -1,7 +1,6 @@
 # encoding: utf-8
 import math, threading, time
 from contextlib import contextmanager
-from contextvars import ContextVar
 from ..lib.cocoa import *
 
 ### graphics context mgmt ###
@@ -31,7 +30,7 @@ def _cg_layer(box=None):
     port = _cg_port()
     if box:
         # limit the transparency layer to the requested rect
-        to_user = CGAffineTransformConcat(_base_ctm.get(), CGAffineTransformInvert(CGContextGetCTM(port)))
+        to_user = CGAffineTransformConcat(_state.base_ctm, CGAffineTransformInvert(CGContextGetCTM(port)))
         CGContextBeginTransparencyLayerWithRect(port, CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), to_user), None)
     else:
         CGContextBeginTransparencyLayer(port, None)
@@ -53,11 +52,10 @@ def _cg_bitmap(rect, scale, ctm):
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmap, flipped))
     to_bitmap = CGAffineTransformConcat(CGAffineTransformMakeTranslation(-x, -y), CGAffineTransformMakeScale(scale, scale))
-    moved = _base_ctm.set(CGAffineTransformConcat(_base_ctm.get(), to_bitmap))
     try:
-        yield bitmap
+        with _state.using(base_ctm=CGAffineTransformConcat(_state.base_ctm, to_bitmap)):
+            yield bitmap
     finally:
-        _base_ctm.reset(moved)
         NSGraphicsContext.restoreGraphicsState()
 
 def _cg_port():
@@ -68,42 +66,33 @@ def _cg_port():
 # the canvas state used by the currently executing script
 _ctx = None
 
-# the Frame being rendered on this thread
-_frame = ContextVar('frame', default=None)
+class RenderState(threading.local):
+    """The drawing in progress on each thread"""
+    frame = None                   # the current output colors, canvas dims, & layer boxes
+    base_ctm = (1, 0, 0, -1, 0, 0) # taken at the frame's start, to size shadows in device pixels
+    culling = None                 # grobs outside this rect are skipped
+    clip_depth = 0                 # how many clip() or mask() stencils the drawing is inside
+    casting = None                 # a grob being redrawn to cast its shadow (so it knows to skip effects)
+    committing = None              # the Frame with the canvas's grobs recolored for export/proofing
+    pdf = (None, None)             # the document being drawn and its plotted-canvas layers (if any)
 
-# the CTM when the frame started drawing
-_base_ctm = ContextVar('base_ctm', default=(1, 0, 0, -1, 0, 0))
+    @contextmanager
+    def using(self, **fields):
+        """Set fields for the duration of a `with` block, then restore them"""
+        saved = {name: getattr(self, name) for name in fields}
+        for name, value in fields.items():
+            setattr(self, name, value)
+        try:
+            yield
+        finally:
+            for name, value in saved.items():
+                setattr(self, name, value)
 
-# the rect being rendered, for culling
-_culling = ContextVar('culling', default=None)
+_state = RenderState()
 
-# how many clip() or mask() stencils the drawing is inside
-_clip_depth = ContextVar('clip_depth', default=0)
-
-# a grob being redrawn to cast its shadow
-_casting = ContextVar('casting', default=None)
-
-# the frame being committed
-_committing = ContextVar('committing', default=None)
-
-# the PDF being drawn and its plotted-canvas layers (if any)
-_pdf_doc = ContextVar('pdf_doc', default=(None, None))
-
-@contextmanager
 def _rendering(frame, within=None):
-    token = _frame.set(frame)
-    ctm_token = _base_ctm.set(CGContextGetCTM(_cg_port()))
-    cull_token = _culling.set(within)
-    clip_token = _clip_depth.set(0) # a pattern's tile starts its canvas outside any clip
-    cast_token = _casting.set(None) # ...and outside any shadow being cast
-    try:
-        yield
-    finally:
-        _casting.reset(cast_token)
-        _clip_depth.reset(clip_token)
-        _culling.reset(cull_token)
-        _base_ctm.reset(ctm_token)
-        _frame.reset(token)
+    # a frame drawn inside another starts outside its clips and shadow casting (likewise for pattern tiles)
+    return _state.using(frame=frame, base_ctm=CGContextGetCTM(_cg_port()), culling=within, clip_depth=0, casting=None)
 
 class _RenderLock(object):
     """Serializes Core Graphics calls across threads
@@ -157,22 +146,22 @@ _render_lock = _RenderLock()
 
 def _layer_box(grob):
     """The box a grob's transparency layer needs, or None"""
-    frame = _frame.get()
+    frame = _state.frame
     return None if frame is None or grob is None else frame._bounds.layer_box(grob)
 
 def _visible(grobs):
     """The grobs that may draw inside the rect being rendered"""
-    within = _culling.get()
-    return grobs if within is None else _frame.get()._bounds.within(within, grobs)
+    within = _state.culling
+    return grobs if within is None else _state.frame._bounds.within(within, grobs)
 
 def _output():
     """The output colors resolve for: the frame's, else the script's"""
-    frame = _frame.get() or _committing.get()
+    frame = _state.frame or _state.committing
     return _ctx._output if frame is None else frame.output
 
 def _canvas_dims():
     """The canvas's width & height in canvas units"""
-    frame = _frame.get()
+    frame = _state.frame
     if frame is None:
         return _ctx.canvas.width, _ctx.canvas.height
     return frame.width, frame.height

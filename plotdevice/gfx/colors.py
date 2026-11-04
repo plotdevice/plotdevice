@@ -8,7 +8,8 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path, numlike
-from . import _output, _frame, _base_ctm, _cg_port
+from . import _output, _cg_port
+from .. import gfx
 from .profiles import RGB, HSV, HSB, CMYK, GREY, P3, SRGB, REC709, REC2020, GRACOL, GRACOL_UNCOATED, SWOP, FOGRA39, FOGRA47, \
                       Profile, Press
 
@@ -582,8 +583,8 @@ class Pattern(object):
     @property
     def cgColor(self):
         # cache 'tiles' (based on the pattern's matrix & ink) on the source Image itself
-        frame = _frame.get()
-        matrix = CGAffineTransformConcat(self._image._screen_matrix, _base_ctm.get())
+        frame = gfx._state.frame
+        matrix = CGAffineTransformConcat(self._image._screen_matrix, gfx._state.base_ctm)
         key = tuple(matrix), _output().ink, frame and frame.output
         tiles = self._image._tiles
         try:

@@ -280,18 +280,15 @@ class PaperbackWriter(object):
         self.layers = {} # cached CGLayers of plotted canvases
 
     def addPage_(self, frame):
-        from ..gfx import _render_lock, _pdf_doc
+        from .. import gfx
         if not self.pages:
             self.blend_space = frame.output.profile.space
         w, h = frame.pagesize
         CGContextBeginPage(self.context, CGRectMake(0, 0, w * self.zoom, h * self.zoom))
-        token = _pdf_doc.set((self.context, self.layers))
-        try:
+        with gfx._state.using(pdf=(self.context, self.layers)):
             frame._render_to_context(self.context, self.zoom)
-            with _render_lock: # pattern tiles draw during EndPage, after the render released the lock
+            with gfx._render_lock: # pattern tiles draw during EndPage, after the render released the lock
                 CGContextEndPage(self.context)
-        finally:
-            _pdf_doc.reset(token)
         self.pages += 1
 
     def closeFile(self):
