@@ -4,14 +4,14 @@ import re
 import sys
 import math
 from copy import copy
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from ..util import numlike
 from .colors import Color
 from .geometry import Point, CORNER
-from . import _cg_context, _cg_port, _render_lock
+from . import _cg_port, _render_lock
 from .. import gfx
 
 _ctx = None
@@ -19,6 +19,7 @@ __all__ = ("Effect", "Shadow", "Stencil",)
 
 _CG_BLUR_LIMIT = 32  # widest blur handled by Core Graphics
 _OPAQUE = (kCGImageAlphaNone, kCGImageAlphaNoneSkipFirst, kCGImageAlphaNoneSkipLast)
+_NO_FX = nullcontext() # what Effect.applied() returns when there are no effects to apply
 
 # blend modes
 _BLEND=dict(
@@ -92,12 +93,17 @@ class Frob(object):
 
     def _draw(self):
         # apply state changes only to contained grobs
-        with _cg_context(), self.applied(self):
-            if not self._grobs:
-                return
-            for grob in gfx._state.visible(self._grobs):
-                _render_lock.checkpoint()
-                grob._draw()
+        port = _cg_port()
+        CGContextSaveGState(port)
+        try:
+            with self.applied(self):
+                if not self._grobs:
+                    return
+                for grob in gfx._state.visible(self._grobs):
+                    _render_lock.checkpoint()
+                    grob._draw()
+        finally:
+            CGContextRestoreGState(port)
 
     def _commit(self, held):
         """A copy of the container holding its committed contents"""
@@ -166,26 +172,28 @@ class Effect(Frob):
 
         return bool(fx) # return whether any state was just changed
 
-    @contextmanager
     def applied(self, owner):
         """Apply compositing effects (if any) to any drawing inside the `with` block"""
-        if self._fx and gfx._state.casting is not owner:
-            shadowed = 'shadow' in self._fx
-            if self.set('blend', 'alpha'):
-                if not shadowed and getattr(owner, '_paints_once', False):
-                    yield # a lone fill or stroke needs no layer
-                else:
-                    with gfx._state.compositing(owner):
-                        if not shadowed:
-                            yield # if there's no shadow, we don't need a second layer
-                        else:
-                            with (self.shadow or Shadow(None)).applied(owner):
-                                yield # if there is, it needs its own
+        if not self._fx or gfx._state.casting is owner:
+            return _NO_FX # avoid making a generator if there's nothing to apply
+        return self._applying(owner)
+
+    @contextmanager
+    def _applying(self, owner):
+        shadowed = 'shadow' in self._fx
+        if self.set('blend', 'alpha'):
+            if not shadowed and getattr(owner, '_paints_once', False):
+                yield # a lone fill or stroke needs no layer
             else:
-                with (self.shadow or Shadow(None)).applied(owner):
-                    yield
+                with gfx._state.compositing(owner):
+                    if not shadowed:
+                        yield # if there's no shadow, we don't need a second layer
+                    else:
+                        with (self.shadow or Shadow(None)).applied(owner):
+                            yield # if there is, it needs its own
         else:
-            yield
+            with (self.shadow or Shadow(None)).applied(owner):
+                yield
 
     def copy(self):
         new = Effect()

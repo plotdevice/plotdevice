@@ -5,28 +5,6 @@ from ..lib.cocoa import *
 
 ### graphics context mgmt ###
 
-def _save():
-    NSGraphicsContext.currentContext().saveGraphicsState()
-
-def _restore():
-    NSGraphicsContext.currentContext().restoreGraphicsState()
-
-@contextmanager
-def _ns_context():
-    ctx = NSGraphicsContext.currentContext()
-    ctx.saveGraphicsState()
-    yield ctx
-    ctx.restoreGraphicsState()
-
-@contextmanager
-def _cg_context():
-    port = _cg_port()
-    CGContextSaveGState(port)
-    try:
-        yield port
-    finally:
-        CGContextRestoreGState(port)
-
 def _cg_port():
     return _state.port
 

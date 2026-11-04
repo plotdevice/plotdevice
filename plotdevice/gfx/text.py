@@ -16,7 +16,7 @@ from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, FrameMixin, Grob
 from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, Element, read
 from ..lib import foundry
-from . import _ns_context, _cg_port
+from . import _cg_port
 from .. import gfx
 
 _ctx = None
@@ -866,7 +866,10 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
         return fills
 
     def _draw(self):
-        with _ns_context():                  # save and restore the gstate
+        # save and restore the gstate
+        saved = _cg_port()
+        CGContextSaveGState(saved)
+        try:
             self._screen_transform.concat()  # transform so text can be drawn at the origin
             with self.effects.applied(self): # apply any blend/alpha/shadow effects
                 if self._engine is None:
@@ -883,6 +886,8 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
                         px_offset.x -= block._shift
                         self._engine.drawGlyphsForGlyphRange_atPoint_(block._glyphs, px_offset)
                     self._engine.setFills_(None)
+        finally:
+            CGContextRestoreGState(saved)
 
     @property
     def path(self):

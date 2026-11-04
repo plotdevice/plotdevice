@@ -20,7 +20,7 @@ from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, 
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
 from .effects import Frob
 from .profiles import Output
-from . import _ns_context, _cg_port
+from . import _cg_port
 from .. import gfx
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
@@ -376,7 +376,9 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
     def _draw(self):
         """Draw an image on the given coordinates."""
 
-        with _ns_context():
+        saved = _cg_port()
+        CGContextSaveGState(saved)
+        try:
             self._screen_transform.concat() # move the image into place via transforms
             with self.effects.applied(self): # apply any blend/alpha/shadow effects
                 NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
@@ -399,6 +401,8 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                     vector.drawInRect_(bounds)
                     if self.alpha < 1:
                         CGContextEndTransparencyLayer(port)
+        finally:
+            CGContextRestoreGState(saved)
 
 ### a canvas plotted as vectors ###
 
@@ -474,7 +478,9 @@ class Snapshot(Image):
         return _hull(self._screen_matrix, 0, 0, w0, h0)
 
     def _draw(self):
-        with _ns_context():
+        saved = _cg_port()
+        CGContextSaveGState(saved)
+        try:
             self._screen_transform.concat() # position the snapshot
             with self.effects.applied(self): # apply blend/alpha/shadow (if any)
                 # if this isn't a PDF, draw the grobs directly
@@ -503,6 +509,8 @@ class Snapshot(Image):
                     layers[key] = layer
                 CGContextConcatCTM(port, CGAffineTransformInvert(linear))
                 CGContextDrawLayerInRect(port, ((bx, by), (bw, bh)), layers[key])
+        finally:
+            CGContextRestoreGState(saved)
 
 ### context manager for calls to `with export(...)` ###
 
