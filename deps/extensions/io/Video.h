@@ -10,7 +10,7 @@
 #import <AppKit/AppKit.h>
 #import <AVFoundation/AVFoundation.h>
 #import <CoreVideo/CoreVideo.h>
-#import "Surface.h"
+#import "../gfx/PDSurface.h"
 #import <Accelerate/Accelerate.h>
 
 @interface Video : NSObject{

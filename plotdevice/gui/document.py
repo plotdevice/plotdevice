@@ -18,7 +18,8 @@ from .views import FullscreenWindow, FullscreenView
 from ..run import Sandbox, encoded
 from .. import DeviceError
 from ..gfx.profiles import Proof
-from . import set_timeout, FrameClock, FrameQueue
+from . import set_timeout
+from .display import FrameClock, FrameQueue
 
 NSEventGestureAxisVertical = 2
 

@@ -604,7 +604,7 @@ class Pattern(object):
             rep = vectors[0] if vectors else max(reps, key=lambda r: r.pixelsWide() * r.pixelsHigh(), default=None)
         filling = frame is not None and snapshot is not None
         if filling and frame.output != snapshot.output:
-            from ..context import Frame
+            from .canvas import Frame
             snapshot = Frame(snapshot, frame.output) # in the colors of the frame it fills
         scale = abs(matrix.a * matrix.d - matrix.b * matrix.c) ** .5
         flip = (scale, 0, 0, -scale, 0, size.height * scale) # a y-up tile at the render's scale, for shadows in PDFs

@@ -7,6 +7,7 @@ from PyObjCTools import AppHelper
 from ..lib.io import MovieExportSession, ImageExportSession
 from .common import stacktrace, coredump, uncoded
 from plotdevice import util, context, gfx, Halted, DeviceError
+from ..gfx.canvas import Canvas
 from ..gfx.profiles import Output, Profile, RGB
 
 __all__ = ['Sandbox']
@@ -75,7 +76,7 @@ class Sandbox(object):
         self.delegate = None    # object with export-lifecycle methods
 
         # set up the graphics plumbing
-        self.canvas = context.Canvas()
+        self.canvas = Canvas()
         self.context = context.Context(self.canvas, self.namespace)
         self.delegate = delegate or Delegate()
 

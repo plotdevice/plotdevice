@@ -1,9 +1,9 @@
 //
-//  Gradient.m
+//  PDGradient.m
 //  PlotDevice
 //
 
-#import "Gradient.h"
+#import "PDGradient.h"
 #include <dlfcn.h>
 
 typedef CGGradientRef (*GradientWithOptions)(CGColorSpaceRef, CFArrayRef, const CGFloat *, CFDictionaryRef);

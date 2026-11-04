@@ -1,4 +1,5 @@
 #import "pathmatics.h"
+#import "tracer.h"
 #import <Quartz/Quartz.h>
 #include <string.h>
 
@@ -18,12 +19,6 @@
 // with the CTM applied to the already-stroked result afterward (matching
 // `CGPathCreateCopyByStrokingPath`'s own `transform` semantics), or else
 // anisotropic `cm`s would scale/shear the stroke width incorrectly.
-
-typedef struct {
-    PyObject_HEAD
-    id        objc_object;
-    int       flags;
-} PDFTracePyObjCObject;
 
 extern PyObject * build_objc_instance(PyTypeObject *ob_type, id obj);
 
@@ -54,7 +49,7 @@ typedef struct {
     CGPDFOperatorTableRef table;      // shared across recursive Do-invoked scans
     CGPDFDictionaryRef    resources;  // resources dict for /Do lookups at this level
     int                   formDepth;  // Form XObject recursion depth (distinct from q/Q `depth`)
-} PDFTraceState;
+} TraceState;
 
 // Forward declaration -- op_Do (below) recurses into a Form XObject's own
 // content stream via this same function.
@@ -67,7 +62,7 @@ trace_content_stream(CGPDFContentStreamRef content, CGPDFOperatorTableRef table,
 // list, tagged with the CTM that was active while it was built, and starts a
 // fresh empty chunk under whatever CTM is current now.
 static void
-close_chunk(PDFTraceState *st)
+close_chunk(TraceState *st)
 {
     if (![st->current isEmpty]) {
         [st->chunkPaths addObject:st->current];
@@ -82,7 +77,7 @@ close_chunk(PDFTraceState *st)
 // Stamps the chunk's CTM the moment it starts accumulating content (called
 // from the two operators that can begin a fresh subpath: `m` and `re`).
 static void
-ensure_chunk_ctm(PDFTraceState *st)
+ensure_chunk_ctm(TraceState *st)
 {
     if ([st->current isEmpty]) {
         st->currentCTM = st->gs.ctm;
@@ -92,7 +87,7 @@ ensure_chunk_ctm(PDFTraceState *st)
 static void
 op_m(CGPDFScannerRef scanner, void *info)
 {
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     CGPDFReal x, y;
     if (!CGPDFScannerPopNumber(scanner, &y)) return;
     if (!CGPDFScannerPopNumber(scanner, &x)) return;
@@ -104,7 +99,7 @@ op_m(CGPDFScannerRef scanner, void *info)
 static void
 op_l(CGPDFScannerRef scanner, void *info)
 {
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     CGPDFReal x, y;
     if (!CGPDFScannerPopNumber(scanner, &y)) return;
     if (!CGPDFScannerPopNumber(scanner, &x)) return;
@@ -116,7 +111,7 @@ static void
 op_c(CGPDFScannerRef scanner, void *info)
 {
     // x1 y1 x2 y2 x3 y3 c -- cubic curve w/ two explicit control points
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     CGPDFReal x1, y1, x2, y2, x3, y3;
     if (!CGPDFScannerPopNumber(scanner, &y3)) return;
     if (!CGPDFScannerPopNumber(scanner, &x3)) return;
@@ -134,7 +129,7 @@ static void
 op_v(CGPDFScannerRef scanner, void *info)
 {
     // x2 y2 x3 y3 v -- cubic curve whose first control point is the current point
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     CGPDFReal x2, y2, x3, y3;
     if (!CGPDFScannerPopNumber(scanner, &y3)) return;
     if (!CGPDFScannerPopNumber(scanner, &x3)) return;
@@ -151,7 +146,7 @@ static void
 op_y(CGPDFScannerRef scanner, void *info)
 {
     // x1 y1 x3 y3 y -- cubic curve whose second control point is the endpoint
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     CGPDFReal x1, y1, x3, y3;
     if (!CGPDFScannerPopNumber(scanner, &y3)) return;
     if (!CGPDFScannerPopNumber(scanner, &x3)) return;
@@ -166,7 +161,7 @@ op_y(CGPDFScannerRef scanner, void *info)
 static void
 op_h(CGPDFScannerRef scanner, void *info)
 {
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     if (!st->hasCurrentPoint) return;
     [st->current closePath];
 }
@@ -175,7 +170,7 @@ static void
 op_re(CGPDFScannerRef scanner, void *info)
 {
     // x y w h re -- appends a closed rectangular subpath
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     CGPDFReal x, y, w, h;
     if (!CGPDFScannerPopNumber(scanner, &h)) return;
     if (!CGPDFScannerPopNumber(scanner, &w)) return;
@@ -193,7 +188,7 @@ op_re(CGPDFScannerRef scanner, void *info)
 static void
 op_cm(CGPDFScannerRef scanner, void *info)
 {
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     CGPDFReal a, b, c, d, e, f;
     if (!CGPDFScannerPopNumber(scanner, &f)) return;
     if (!CGPDFScannerPopNumber(scanner, &e)) return;
@@ -218,7 +213,7 @@ op_cm(CGPDFScannerRef scanner, void *info)
 static void
 op_q(CGPDFScannerRef scanner, void *info)
 {
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     if (st->depth < MAX_CTM_STACK) {
         st->stack[st->depth++] = st->gs;
     }
@@ -227,7 +222,7 @@ op_q(CGPDFScannerRef scanner, void *info)
 static void
 op_Q(CGPDFScannerRef scanner, void *info)
 {
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     if (st->depth > 0) {
         GState restored = st->stack[--st->depth];
         if (![st->current isEmpty] && !CGAffineTransformEqualToTransform(restored.ctm, st->gs.ctm)) {
@@ -240,7 +235,7 @@ op_Q(CGPDFScannerRef scanner, void *info)
 static void
 op_w(CGPDFScannerRef scanner, void *info)
 {
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     CGPDFReal width;
     if (!CGPDFScannerPopNumber(scanner, &width)) return;
     st->gs.lineWidth = width;
@@ -249,7 +244,7 @@ op_w(CGPDFScannerRef scanner, void *info)
 static void
 op_J(CGPDFScannerRef scanner, void *info)
 {
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     CGPDFReal cap;
     if (!CGPDFScannerPopNumber(scanner, &cap)) return;
     st->gs.lineCap = (int)cap;
@@ -258,7 +253,7 @@ op_J(CGPDFScannerRef scanner, void *info)
 static void
 op_j(CGPDFScannerRef scanner, void *info)
 {
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     CGPDFReal join;
     if (!CGPDFScannerPopNumber(scanner, &join)) return;
     st->gs.lineJoin = (int)join;
@@ -267,7 +262,7 @@ op_j(CGPDFScannerRef scanner, void *info)
 static void
 op_M(CGPDFScannerRef scanner, void *info)
 {
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     CGPDFReal limit;
     if (!CGPDFScannerPopNumber(scanner, &limit)) return;
     st->gs.miterLimit = limit;
@@ -280,7 +275,7 @@ op_M(CGPDFScannerRef scanner, void *info)
 // `b`/`b*` == `h B`/`h B*`) -- without it, a stroked shape that relies on
 // that implicit close would get end caps instead of a proper join at the seam.
 static void
-commit_paint(PDFTraceState *st, BOOL doFill, BOOL doStroke, BOOL shouldClose)
+commit_paint(TraceState *st, BOOL doFill, BOOL doStroke, BOOL shouldClose)
 {
     if (shouldClose) {
         [st->current closePath];
@@ -318,11 +313,11 @@ commit_paint(PDFTraceState *st, BOOL doFill, BOOL doStroke, BOOL shouldClose)
     [st->chunkCTMs removeAllObjects];
 }
 
-static void op_fill(CGPDFScannerRef scanner, void *info) { commit_paint((PDFTraceState *)info, YES, NO, NO); }
-static void op_stroke(CGPDFScannerRef scanner, void *info) { commit_paint((PDFTraceState *)info, NO, YES, NO); }
-static void op_closestroke(CGPDFScannerRef scanner, void *info) { commit_paint((PDFTraceState *)info, NO, YES, YES); }
-static void op_fillstroke(CGPDFScannerRef scanner, void *info) { commit_paint((PDFTraceState *)info, YES, YES, NO); }
-static void op_closefillstroke(CGPDFScannerRef scanner, void *info) { commit_paint((PDFTraceState *)info, YES, YES, YES); }
+static void op_fill(CGPDFScannerRef scanner, void *info) { commit_paint((TraceState *)info, YES, NO, NO); }
+static void op_stroke(CGPDFScannerRef scanner, void *info) { commit_paint((TraceState *)info, NO, YES, NO); }
+static void op_closestroke(CGPDFScannerRef scanner, void *info) { commit_paint((TraceState *)info, NO, YES, YES); }
+static void op_fillstroke(CGPDFScannerRef scanner, void *info) { commit_paint((TraceState *)info, YES, YES, NO); }
+static void op_closefillstroke(CGPDFScannerRef scanner, void *info) { commit_paint((TraceState *)info, YES, YES, YES); }
 
 // n -- ends the current path without painting it (typically used to install
 // a clip region via a preceding W/W*). Discard rather than commit: the path
@@ -330,7 +325,7 @@ static void op_closefillstroke(CGPDFScannerRef scanner, void *info) { commit_pai
 static void
 op_n(CGPDFScannerRef scanner, void *info)
 {
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     st->current = [NSBezierPath bezierPath];
     st->hasCurrentPoint = NO;
     [st->chunkPaths removeAllObjects];
@@ -345,7 +340,7 @@ op_n(CGPDFScannerRef scanner, void *info)
 static void
 op_Do(CGPDFScannerRef scanner, void *info)
 {
-    PDFTraceState *st = (PDFTraceState *)info;
+    TraceState *st = (TraceState *)info;
     const char *name;
     if (!CGPDFScannerPopName(scanner, &name)) return;
     if (st->formDepth >= MAX_FORM_DEPTH || !st->resources) return;
@@ -402,7 +397,7 @@ trace_content_stream(CGPDFContentStreamRef content, CGPDFOperatorTableRef table,
                       CGPDFDictionaryRef resources, CGAffineTransform initialCTM,
                       GState inheritedGS, int formDepth)
 {
-    PDFTraceState state;
+    TraceState state;
     state.committed = [NSBezierPath bezierPath];
     state.current = [NSBezierPath bezierPath];
     state.chunkPaths = [NSMutableArray array];
@@ -517,7 +512,7 @@ cPathmatics_pdfOutline(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    NSData *pdfData = ((PDFTracePyObjCObject *) pyData)->objc_object;
+    NSData *pdfData = ((PDObjCObject *) pyData)->objc_object;
     NSBezierPath *outline;
     Py_BEGIN_ALLOW_THREADS
     outline = trace_pdf_outline(pdfData);

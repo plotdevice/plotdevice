@@ -1,5 +1,5 @@
 //
-//  Gradient.h
+//  PDGradient.h
 //  PlotDevice
 //
 //  A CGGradient that fills paths and rects the way NSGradient does.

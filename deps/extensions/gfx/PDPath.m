@@ -1,4 +1,4 @@
-#import "pathmatics.h"
+#import "PDPath.h"
 
 // A mutable CGPath holding the elements NSBezierPath would (including the moveto it adds after an
 // explicit close but not after a shape's own), and tracking its last element, subpath start, and
@@ -17,7 +17,7 @@ typedef struct {
     PyObject *proxy;    // cached by .cgpath
 } PDPathObject;
 
-// pyobjc's object layout, as in pathmatics.m (flags 0x20 marks a CF object)
+// pyobjc's object layout, as in pathmatics.h (flags 0x20 marks a CF object)
 typedef struct {
     PyObject_HEAD
     id objc_object;
@@ -170,12 +170,12 @@ typedef struct {
     PDPathObject *path;
     CGAffineTransform t;
     BOOL as_closepath; // close as closePath does (with a moveto) rather than copying closes as is
-} PDAppend;
+} Append;
 
 static void
 pd_append_applier(void *info, const CGPathElement *el)
 {
-    PDAppend *a = (PDAppend *)info;
+    Append *a = (Append *)info;
     PDPathObject *self = a->path;
     CGPoint p[3];
     int n = el->type == kCGPathElementAddCurveToPoint ? 3 : el->type == kCGPathElementAddQuadCurveToPoint ? 2 : el->type == kCGPathElementCloseSubpath ? 0 : 1;
@@ -195,7 +195,7 @@ pd_append_applier(void *info, const CGPathElement *el)
 static void
 pd_append_cg(PDPathObject *self, CGPathRef src, CGAffineTransform t, BOOL as_closepath)
 {
-    PDAppend a = {self, t, as_closepath};
+    Append a = {self, t, as_closepath};
     CGPathRef walked = src == self->path ? CGPathCreateCopy(src) : CGPathRetain(src); // don't walk what's growing
     CGPathApply(walked, &a, pd_append_applier);
     CGPathRelease(walked);
@@ -511,10 +511,10 @@ PDPath_current_point(PDPathObject *self, PyObject *unused)
 typedef struct {
     PyObject *list;
     int failed;
-} PDWalk;
+} Walk;
 
 static void
-walk_emit(PDWalk *w, int cmd, CGPoint *pts, int n)
+walk_emit(Walk *w, int cmd, CGPoint *pts, int n)
 {
     if (w->failed) return;
     PyObject *points = PyTuple_New(n);
@@ -528,7 +528,7 @@ walk_emit(PDWalk *w, int cmd, CGPoint *pts, int n)
 static void
 walk_applier(void *info, const CGPathElement *el)
 {
-    PDWalk *w = (PDWalk *)info;
+    Walk *w = (Walk *)info;
     switch (el->type) {
         case kCGPathElementMoveToPoint: walk_emit(w, PD_MOVETO, el->points, 1); break;
         case kCGPathElementAddLineToPoint: walk_emit(w, PD_LINETO, el->points, 1); break;
@@ -544,7 +544,7 @@ PDPath_elements(PDPathObject *self, PyObject *unused)
     // the path's elements, as NSBezierPath's codes: a tuple of (cmd, ((x, y), ...))
     if (!self->elements) {
         pd_flush(self);
-        PDWalk w = {PyList_New(0), 0};
+        Walk w = {PyList_New(0), 0};
         if (!w.list) return NULL;
         CGPathApply(self->path, &w, walk_applier);
         if (w.failed) {

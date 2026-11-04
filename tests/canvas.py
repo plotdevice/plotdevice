@@ -361,7 +361,7 @@ def _pump(until, timeout=5.0):
 
 class RendererTests(PlotDeviceTestCase):
     def test_queue_delivers_in_order_and_drops_cancelled_jobs(self):
-        from plotdevice.gui import FrameQueue
+        from plotdevice.gui.display import FrameQueue
         import threading
         queue = FrameQueue()
         try:
@@ -389,7 +389,7 @@ class RendererTests(PlotDeviceTestCase):
             queue.shutdown()
 
     def test_queue_delivers_errors(self):
-        from plotdevice.gui import FrameQueue
+        from plotdevice.gui.display import FrameQueue
         queue = FrameQueue()
         try:
             got = []
@@ -404,14 +404,14 @@ class RendererTests(PlotDeviceTestCase):
 
     def test_clock_holds_early_deliveries_for_the_vblank(self):
         # a delivery mid-period waits for the next vblank, but a late one draws at once
-        from plotdevice import gui
+        from plotdevice.gui import display
         from unittest import mock
         link = SimpleNamespace(addToRunLoop_forMode_=lambda *args: None, invalidate=lambda: None,
                                timestamp=lambda: 0.0, targetTimestamp=lambda: 1 / 60)
         view = SimpleNamespace(displayLinkWithTarget_selector_=lambda target, sel: link)
-        clock = gui.FrameClock(view, None, None, 60)
+        clock = display.FrameClock(view, None, None, 60)
         def at(t, delivered=False):
-            with mock.patch.object(gui, 'CACurrentMediaTime', lambda: t):
+            with mock.patch.object(display, 'CACurrentMediaTime', lambda: t):
                 drew = clock.should_draw(delivered=delivered)
                 if drew:
                     clock.frame_done()
@@ -446,7 +446,7 @@ class RendererTests(PlotDeviceTestCase):
     def test_culled_render_matches_unculled(self):
         # culling the left half keeps shadows that reach right
         from Quartz import CGBitmapContextCreateImage
-        from plotdevice import context
+        from plotdevice.gfx.canvas import FrameBounds
         size(400, 300)
         background('white')
         with shadow('black', blur=10, offset=(20, 0)):
@@ -462,15 +462,15 @@ class RendererTests(PlotDeviceTestCase):
         frame = _ctx.canvas.commit()
 
         def render(cull):
-            within = context.FrameBounds.within
+            within = FrameBounds.within
             if not cull:
-                context.FrameBounds.within = lambda self, rect, grobs: grobs
+                FrameBounds.within = lambda self, rect, grobs: grobs
             try:
                 surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(400, 600)
                 frame._render_to_surface(surface, 2.0, origin=(400, 0))
                 return _pixels(CGBitmapContextCreateImage(surface.context()))
             finally:
-                context.FrameBounds.within = within
+                FrameBounds.within = within
         self.assertEqual(render(True), render(False))
 
         group = frame.grobs[0]
