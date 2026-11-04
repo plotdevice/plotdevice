@@ -422,7 +422,7 @@ class ExportSession(object):
 re_padded = re.compile(r'{(\d+)}')
 class ImageExportSession(ExportSession):
     def __init__(self, fname, format='pdf', zoom=1.0, first=1, last=None, single=False, output=None, **rest):
-        from ..gfx.colors import Output, CMYK # circular import
+        from ..gfx.profiles import Output, CMYK # circular import
         super(ImageExportSession, self).__init__()
         self.single_file = single or first==last
         if last is not None:
@@ -488,7 +488,7 @@ class MovieExportSession(ExportSession):
         return bigger[0] if bigger else MovieExportSession.BITRATES[-1]
 
     def __init__(self, fname, format='mov', first=1, last=None, fps=30, bitrate=None, loop=0, codec=HEVC, zoom=1.0, output=None, **rest):
-        from ..gfx.colors import Output, Profile, P3, SRGB
+        from ..gfx.profiles import Output, Profile, P3, SRGB
         super(MovieExportSession, self).__init__()
         try:
             os.unlink(fname)

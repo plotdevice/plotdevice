@@ -364,7 +364,7 @@ class DashboardController(NSObject):
 
 
 from ..context import RGB, CMYK
-from ..gfx.colors import P3, SRGB, Profile, Output
+from ..gfx.profiles import P3, SRGB, Profile, Output
 from ..lib.io import MovieExportSession, HEVC, H264, PRORES
 
 # include menu sections headers on macOS 14+

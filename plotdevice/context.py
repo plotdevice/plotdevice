@@ -15,7 +15,8 @@ from .gfx.geometry import Dimension, IDENTITY, parse_coords
 from .gfx.typography import Layout
 from .gfx.effects import Frob, _commit_all
 from .gfx import *
-from .gfx.colors import Output, _canonical
+from .gfx.colors import _canonical
+from .gfx.profiles import Output
 from .gfx.image import Snapshot
 from . import gfx, lib, util, Halted, DeviceError
 

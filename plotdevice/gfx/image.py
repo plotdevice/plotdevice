@@ -19,7 +19,7 @@ from ..lib.io import MovieExportSession, ImageExportSession, HEVC, H264, PRORES
 from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, _hull
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
 from .effects import Frob
-from .colors import Output
+from .profiles import Output
 from . import _ns_context, _cg_port, _frame, _committing, _pdf_doc
 
 PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')

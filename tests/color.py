@@ -224,7 +224,8 @@ class ColorTests(PlotDeviceTestCase):
 
     def test_reads_of_cmyk_colors_go_through_the_export_blocks_press(self):
         from Quartz import CGColorCreate
-        from plotdevice.gfx.colors import Profile, SPACES, _components, _matched
+        from plotdevice.gfx.profiles import Profile
+        from plotdevice.gfx.colors import SPACES, _components, _matched
         cyan, white = color(1, 0, 0, 0, mode=CMYK), color(1)
         outside = (cyan.rgba, cyan.hex, cyan.blend(white, .5).rgba, hash(cyan))
         size(10, 10)
@@ -635,7 +636,7 @@ class ColorTests(PlotDeviceTestCase):
                     self.assertEqual(tags[1], transfer, (codec, colors))
 
     def test_each_format_takes_the_colors_it_can_hold(self):
-        from plotdevice.gfx.colors import Output
+        from plotdevice.gfx.profiles import Output
         parsed = lambda val, format: Output.parse(val, format).profile.key
         profile = '/System/Library/ColorSync/Profiles/AdobeRGB1998.icc'
         accepts = dict(png='P3 SRGB icc rec', heic='P3 SRGB icc rec', mov='P3 SRGB rec', gif='SRGB', eps='SRGB CMYK',
@@ -687,7 +688,7 @@ class ColorTests(PlotDeviceTestCase):
 
     def test_bundled_presses_are_the_profiles_the_readme_lists(self):
         import hashlib
-        from plotdevice.gfx.colors import Press
+        from plotdevice.gfx.profiles import Press
         from plotdevice.util import rsrc_path
         readme = open(rsrc_path('press/README.md')).read()
         sums = dict((name, digest) for digest, name in re.findall(r'^([0-9a-f]{64})  (\S+)$', readme, re.M))
@@ -702,8 +703,7 @@ class ColorTests(PlotDeviceTestCase):
     def test_installed_profiles_by_file_name(self):
         # names match in folder order, after a path
         from Quartz import CGColorSpaceCopyICCData, CGColorSpaceCreateWithName, kCGColorSpaceSRGB
-        from plotdevice.gfx import colors
-        from plotdevice.gfx.colors import Output, Press
+        from plotdevice.gfx.profiles import Output, Press, Profile
         parsed = lambda val, format: Output.parse(val, format).profile.key
         cmyk, rgb = Press(FOGRA47).icc, bytes(CGColorSpaceCopyICCData(CGColorSpaceCreateWithName(kCGColorSpaceSRGB)))
         user, other = join(self.tmp, 'user'), join(self.tmp, 'other')
@@ -712,16 +712,16 @@ class ColorTests(PlotDeviceTestCase):
         for folder, name, icc in ((user, 'My Press.icc', cmyk), (other, 'My Press.icc', cmyk), (other, 'Lab Proof.ICM', rgb),
                                   (user, 'Shadowed.icc', rgb), (other, 'Shadowed.icc', cmyk)):
             open(join(folder, name), 'wb').write(icc)
-        saved = colors.Profile.FOLDERS
-        colors.Profile.FOLDERS = [user, other, colors.Profile.SYSTEM]
+        saved = Profile.FOLDERS
+        Profile.FOLDERS = [user, other, Profile.SYSTEM]
         try:
             for name in ('My Press', 'my press.icc', 'MY PRESS'):
                 self.assertEqual(parsed(name, 'pdf'), os.path.realpath(join(user, 'My Press.icc')))
             self.assertEqual(parsed('lab proof', 'png'), os.path.realpath(join(other, 'Lab Proof.ICM')))
             # the menus skip truncated profiles
             open(join(user, 'Cut Off.icc'), 'wb').write(cmyk[:4000])
-            self.assertIsNone(colors.Profile.header(join(user, 'Cut Off.icc')))
-            self.assertIsNotNone(colors.Profile.header(join(user, 'My Press.icc')))
+            self.assertIsNone(Profile.header(join(user, 'Cut Off.icc')))
+            self.assertIsNotNone(Profile.header(join(user, 'My Press.icc')))
             with self.assertRaisesRegex(DeviceError, "can't be exported"):
                 Output.parse('My Press', 'png')
             with self.assertRaisesRegex(DeviceError, "'Nothing Here' isn't a built-in color space or ICC profile filename"):
@@ -749,11 +749,11 @@ class ColorTests(PlotDeviceTestCase):
                 with self.assertRaisesRegex(DeviceError, "can't be exported"):
                     Output.parse('Generic CMYK Profile', 'png')
         finally:
-            colors.Profile.FOLDERS = saved
-            colors.Profile.scanned.clear()
+            Profile.FOLDERS = saved
+            Profile.scanned.clear()
 
     def test_presses_resolve_where_cmyk_fits(self):
-        from plotdevice.gfx.colors import Output, Profile, Press
+        from plotdevice.gfx.profiles import Output, Profile, Press
         path = join(self.tmp, 'press.icc')
         open(path, 'wb').write(Press(FOGRA47).icc)
         for val, format, key in ((GRACOL, 'pdf', GRACOL), ('FOGRA39', 'tiff', FOGRA39), ('swop', 'eps', SWOP), ('Gracol-Uncoated', 'jpg', GRACOL_UNCOATED), (path, 'jpg', path)):
@@ -778,7 +778,7 @@ class ColorTests(PlotDeviceTestCase):
 
     def test_rgb_colors_keep_their_shadows_in_a_press(self):
         # dark greys stay distinct, white is the paper
-        from plotdevice.gfx.colors import Output
+        from plotdevice.gfx.profiles import Output
         for press, greys in DARK_GREYS.items():
             Output.parse(press, 'pdf') # loads the press
             inks = [color(g / 255, g / 255, g / 255, space=SRGB)._press_values(press) for g in (0, 8, 16, 26, 255)]
@@ -792,7 +792,7 @@ class ColorTests(PlotDeviceTestCase):
                             CGBitmapContextCreate, CGContextDrawImage, CGBitmapContextCreateImage, CGDataProviderCopyData,
                             CGImageGetDataProvider, kCGImageAlphaNone)
         from Foundation import NSURL
-        from plotdevice.gfx.colors import Press
+        from plotdevice.gfx.profiles import Press
         self._press_swatches()
         red = tuple(round(v * 255) for v in GRACOL_RED)
         for ext in ('tiff', 'jpg'):
@@ -812,7 +812,7 @@ class ColorTests(PlotDeviceTestCase):
 
     def test_press_pdfs_are_pdfx4(self):
         import zlib
-        from plotdevice.gfx.colors import Press
+        from plotdevice.gfx.profiles import Press
         self._press_swatches()
         path = join(self.tmp, 'press.pdf')
         export(path, colors=GRACOL)
@@ -847,7 +847,7 @@ class ColorTests(PlotDeviceTestCase):
                             CGImageDestinationAddImage, CGImageDestinationFinalize, kCGImageAlphaNone, CGImageSourceCreateWithURL,
                             CGImageSourceCreateImageAtIndex, CGImageGetColorSpace, CGContextDrawImage, CGDataProviderCopyData, CGImageGetDataProvider)
         from Foundation import NSURL
-        from plotdevice.gfx.colors import Press
+        from plotdevice.gfx.profiles import Press
         def write(name, space, comps, alpha=kCGImageAlphaNone, relabel=None):
             ctx = CGBitmapContextCreate(None, 10, 10, 8, 40, space, alpha)
             CGContextSetFillColorWithColor(ctx, CGColorCreate(space, comps + (1,)))
@@ -979,7 +979,7 @@ class ColorTests(PlotDeviceTestCase):
                             kCGImageAlphaPremultipliedLast, CGContextSetRenderingIntent, kCGRenderingIntentRelativeColorimetric,
                             CGImageSourceCreateWithURL, CGImageSourceCreateImageAtIndex)
         from Foundation import NSURL
-        from plotdevice.gfx.colors import Output, Proof
+        from plotdevice.gfx.profiles import Output, Proof
         def pixels(img, w=40, h=20):
             # drawn into p3, as the window is
             ctx = CGBitmapContextCreate(None, w, h, 8, w * 4, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), kCGImageAlphaPremultipliedLast)
@@ -1026,7 +1026,7 @@ class ColorTests(PlotDeviceTestCase):
     def test_run_fullscreen_keeps_the_proof(self):
         # Run Fullscreen keeps the window's proof
         from plotdevice.gui.views import FullscreenView
-        from plotdevice.gfx.colors import Proof
+        from plotdevice.gfx.profiles import Proof
         class Presenter(object):
             def render(self, frame, *args, **kwargs):
                 self.frame = frame
@@ -1047,8 +1047,7 @@ class ColorTests(PlotDeviceTestCase):
         import objc
         from Quartz import (CGBitmapContextCreate, CGBitmapContextCreateImage, CGContextDrawImage, CGDataProviderCopyData,
                             CGImageGetDataProvider, CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, kCGImageAlphaPremultipliedLast)
-        from plotdevice.gfx.profiles import _simulate, _decode
-        from plotdevice.gfx.colors import Proof
+        from plotdevice.gfx.profiles import Proof, _simulate, _decode
         encode = lambda v: 12.92 * v if v <= 0.0031308 else 1.055 * v ** (1 / 2.4) - 0.055
         swatches = [(1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0), (0, 1, 1), (1, 0, 1), (.5, .5, .5), (1, 1, 1), (.8, .4, .1), (.2, .7, .4)]
         size(10 * len(swatches), 10)

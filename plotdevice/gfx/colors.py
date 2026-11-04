@@ -10,7 +10,7 @@ from plotdevice import DeviceError
 from ..util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, rsrc_path, numlike
 from . import _output, _frame, _base_ctm, _cg_port
 from .profiles import RGB, HSV, HSB, CMYK, GREY, P3, SRGB, REC709, REC2020, GRACOL, GRACOL_UNCOATED, SWOP, FOGRA39, FOGRA47, \
-                      Profile, Press, Output, Proof
+                      Profile, Press
 
 PDGradient = objc.lookUpClass('PDGradient')
 

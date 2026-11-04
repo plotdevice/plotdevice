@@ -7,7 +7,7 @@ from PyObjCTools import AppHelper
 from ..lib.io import MovieExportSession, ImageExportSession
 from .common import stacktrace, coredump, uncoded
 from plotdevice import util, context, gfx, Halted, DeviceError
-from ..gfx.colors import Output, Profile, RGB
+from ..gfx.profiles import Output, Profile, RGB
 
 __all__ = ['Sandbox']
 

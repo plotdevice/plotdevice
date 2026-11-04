@@ -17,7 +17,7 @@ from .widgets import DashboardController, ExportSheet
 from .views import FullscreenWindow, FullscreenView
 from ..run import Sandbox, encoded
 from .. import DeviceError
-from ..gfx.colors import Proof
+from ..gfx.profiles import Proof
 from . import set_timeout, FrameClock, FrameQueue
 
 NSEventGestureAxisVertical = 2
