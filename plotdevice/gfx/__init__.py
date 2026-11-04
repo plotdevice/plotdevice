@@ -95,12 +95,15 @@ class RenderState(threading.local):
 
     def rendering(self, frame, within=None):
         """Draw `frame` for the duration of a `with` block, culling to `within` if given"""
-        # ask AppKit, since pattern tiles can draw after the render that filled with them has ended
+        # re-check the CG context (since pattern tiles can draw after the render that filled with them)
         port = NSGraphicsContext.currentContext().CGContext()
+        ctm = CGContextGetCTM(port)
 
-        # a frame drawn inside another starts outside its clips and shadow casting (likewise for pattern tiles)
-        return self.using(frame=frame, port=port, base_ctm=CGContextGetCTM(port), culling=within, clip_depth=0,
-                          casting=None)
+        # a frame with its own context (e.g., a pattern tile or PDF layer) starts outside whatever clips/shadows are in effect
+        if port is not self.port:
+            return self.using(port=port, frame=frame, base_ctm=ctm, culling=within, clip_depth=0, casting=None)
+
+        return self.using(frame=frame, base_ctm=ctm, culling=within)
 
     @property
     def output(self):

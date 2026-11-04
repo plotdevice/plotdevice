@@ -332,6 +332,24 @@ class FrameTests(PlotDeviceTestCase):
                 pdf = bytes(_ctx.canvas.commit()._getImageData('pdf'))
                 self.assertIsNone(re.search(rb'/Subtype\s*/Image', pdf), src)
 
+    def test_plotted_wide_shadows_match_drawing_directly_under_a_clip(self):
+        # a canvas plotted inside a clip() casts its wide shadows as the same drawing on the page does
+        def shape():
+            rect(40, 40, 80, 80, fill='orange', shadow=Shadow('black', blur=60, offset=30))
+        size(200, 200)
+        background(None)
+        shape()
+        snapshot = plot(_ctx.canvas, 0, 0)
+        pixels = {}
+        for name, draw in (('plotted', lambda: plot(snapshot, 0, 0)), ('direct', shape)):
+            clear(all)
+            size(200, 200)
+            background('white')
+            with clip(oval(60, 60, 90, 90, plot=False)):
+                draw()
+            pixels[name] = _pixels(_ctx.canvas.commit()._render_to_cgimage(1.0, 2.0))
+        self.assertEqual(pixels['plotted'], pixels['direct'])
+
 def _pump(until, timeout=5.0):
     """Run the main run loop until `until()` holds"""
     from Foundation import NSRunLoop, NSDate, NSDefaultRunLoopMode
