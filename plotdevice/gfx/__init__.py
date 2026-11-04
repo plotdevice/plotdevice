@@ -27,41 +27,6 @@ def _cg_context():
     finally:
         CGContextRestoreGState(port)
 
-@contextmanager
-def _cg_layer(box=None):
-    port = _cg_port()
-    if box:
-        # limit the transparency layer to the requested rect
-        to_user = CGAffineTransformConcat(_state.base_ctm, CGAffineTransformInvert(CGContextGetCTM(port)))
-        CGContextBeginTransparencyLayerWithRect(port, CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), to_user), None)
-    else:
-        CGContextBeginTransparencyLayer(port, None)
-    try:
-        yield
-    finally:
-        CGContextEndTransparencyLayer(port)
-
-@contextmanager
-def _cg_bitmap(rect, scale, ctm):
-    # draw into a new bitmap covering `rect`
-    port = _cg_port()
-    (x, y), (w, h) = rect
-    bitmap = CGBitmapContextCreate(None, int(math.ceil(w * scale)), int(math.ceil(h * scale)), 8, 0,
-                                   CGBitmapContextGetColorSpace(port),
-                                   kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
-    CGContextScaleCTM(bitmap, scale, scale)
-    CGContextTranslateCTM(bitmap, -x, -y)
-    CGContextConcatCTM(bitmap, ctm)
-    flipped = NSGraphicsContext.currentContext().isFlipped()
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmap, flipped))
-    to_bitmap = CGAffineTransformConcat(CGAffineTransformMakeTranslation(-x, -y), CGAffineTransformMakeScale(scale, scale))
-    try:
-        with _state.using(port=bitmap, base_ctm=CGAffineTransformConcat(_state.base_ctm, to_bitmap)):
-            yield bitmap
-    finally:
-        NSGraphicsContext.restoreGraphicsState()
-
 def _cg_port():
     return _state.port
 
@@ -104,6 +69,43 @@ class RenderState(threading.local):
             return self.using(port=port, frame=frame, base_ctm=ctm, culling=within, clip_depth=0, casting=None)
 
         return self.using(frame=frame, base_ctm=ctm, culling=within)
+
+    @contextmanager
+    def compositing(self, grob):
+        """Draw into a transparency layer for the duration of a `with` block, sized to `grob`'s layer box"""
+        port = self.port
+        box = self.layer_box(grob)
+        if box:
+            # limit the transparency layer to the requested rect
+            to_user = CGAffineTransformConcat(self.base_ctm, CGAffineTransformInvert(CGContextGetCTM(port)))
+            CGContextBeginTransparencyLayerWithRect(port, CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), to_user), None)
+        else:
+            CGContextBeginTransparencyLayer(port, None)
+        try:
+            yield
+        finally:
+            CGContextEndTransparencyLayer(port)
+
+    @contextmanager
+    def rasterizing(self, rect, scale, ctm):
+        """Draw into a new bitmap covering `rect` for the duration of a `with` block, yielding its context"""
+        port = self.port
+        (x, y), (w, h) = rect
+        bitmap = CGBitmapContextCreate(None, int(math.ceil(w * scale)), int(math.ceil(h * scale)), 8, 0,
+                                       CGBitmapContextGetColorSpace(port),
+                                       kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
+        CGContextScaleCTM(bitmap, scale, scale)
+        CGContextTranslateCTM(bitmap, -x, -y)
+        CGContextConcatCTM(bitmap, ctm)
+        flipped = NSGraphicsContext.currentContext().isFlipped()
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmap, flipped))
+        to_bitmap = CGAffineTransformConcat(CGAffineTransformMakeTranslation(-x, -y), CGAffineTransformMakeScale(scale, scale))
+        try:
+            with self.using(port=bitmap, base_ctm=CGAffineTransformConcat(self.base_ctm, to_bitmap)):
+                yield bitmap
+        finally:
+            NSGraphicsContext.restoreGraphicsState()
 
     @property
     def output(self):

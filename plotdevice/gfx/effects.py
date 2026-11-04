@@ -11,7 +11,7 @@ from plotdevice import DeviceError
 from ..util import numlike
 from .colors import Color
 from .geometry import Point, CORNER
-from . import _cg_context, _cg_layer, _cg_bitmap, _cg_port, _render_lock
+from . import _cg_context, _cg_port, _render_lock
 from .. import gfx
 
 _ctx = None
@@ -175,7 +175,7 @@ class Effect(Frob):
                 if not shadowed and getattr(owner, '_paints_once', False):
                     yield # a lone fill or stroke needs no layer
                 else:
-                    with _cg_layer(gfx._state.layer_box(owner)):
+                    with gfx._state.compositing(owner):
                         if not shadowed:
                             yield # if there's no shadow, we don't need a second layer
                         else:
@@ -304,19 +304,19 @@ class Shadow(object):
             reach = CGRectIntegral(CGRectIntersection(drawn, CGRectInset(target, -(blur + abs(dx)), -(blur + abs(dy)))))
         if reach is None or CGRectIsEmpty(reach):
             self.set()
-            with _cg_layer(box):
+            with gfx._state.compositing(owner):
                 yield
             return
 
         # draw the with-block content at full size
         shown = CGRectIntegral(CGRectIntersection(drawn, target))
-        with _cg_bitmap(shown if not CGRectIsEmpty(shown) else ((0, 0), (1, 1)), 1.0, CGContextGetCTM(port)) as drawing_port:
+        with gfx._state.rasterizing(shown if not CGRectIsEmpty(shown) else ((0, 0), (1, 1)), 1.0, CGContextGetCTM(port)) as drawing_port:
             yield
         drawing = CGBitmapContextCreateImage(drawing_port)
 
         # redraw scaled down to a _CG_BLUR_LIMIT blur
         scale = _CG_BLUR_LIMIT / blur
-        with _cg_bitmap(reach, scale, gfx._state.base_ctm) as silhouette_port, gfx._state.using(casting=owner):
+        with gfx._state.rasterizing(reach, scale, gfx._state.base_ctm) as silhouette_port, gfx._state.using(casting=owner):
             owner._draw()
         silhouette = CGBitmapContextCreateImage(silhouette_port)
 
