@@ -83,15 +83,44 @@ class ColorTests(PlotDeviceTestCase):
             self.assertEqual(c.rgba, (.2, .4, .6, 1.0))
             self.assertEqual(c.space, P3)
 
-    def test_hex_is_in_the_active_space(self):
-        srgb_red = color('#f00', space=SRGB)
-        self.assertEqual(srgb_red.hex, '#ea3323')
+    def test_setting_space_converts(self):
+        c = color(1, 0, 0)
+        c.space = SRGB
+        self.assertEqual(c.space, SRGB)
+        self.assertComponents(c.rgba[:3], P3_RED_IN_SRGB)
+        c.space = 'P3'
+        self.assertComponents(c.rgba, (1, 0, 0, 1))
+        # cmyk colors keep their inks
+        cmyk = color(.1, .2, .3, .4, mode=CMYK)
+        inks = cmyk.cmyka
+        cmyk.space = SRGB
+        self.assertEqual(cmyk.cmyka, inks)
+        self.assertEqual(cmyk, color(color(.1, .2, .3, .4, mode=CMYK), space=SRGB))
+        # copies are left alone
+        d = color(.2, .4, .6)
+        e = d.copy()
+        e.space = SRGB
+        self.assertEqual((d.space, d.rgba), (P3, (.2, .4, .6, 1.0)))
+        self.assertRaises(DeviceError, setattr, d, 'space', 'lab')
+        self.assertRaises(DeviceError, setattr, d, 'space', None)
+
+    def test_hex_is_in_the_colors_own_space(self):
+        srgb_red, p3_red = color('#f00', space=SRGB), color('#f00')
+        self.assertEqual(srgb_red.hex, '#f00')
         with color(space=SRGB):
-            self.assertEqual(srgb_red.hex, '#f00')
-            self.assertEqual(color(1, 0, 0).hex, '#f00') # p3 red, clipped to srgb
+            self.assertEqual(p3_red.hex, '#f00')
+        # setting hex keeps the color's space and its components in it
         c = color(.2, .4, .6, space=SRGB)
+        c.hex = '#00f'
+        self.assertEqual((c.space, c.rgba), (SRGB, (0.0, 0.0, 1.0, 1.0)))
+        self.assertEqual(repr(c), "Color('#00f', space=SRGB)")
+        c.hexa = ('#f80', .5)
+        self.assertEqual(repr(c), "Color('#f80', 0.5, space=SRGB)")
+        # and reading it back in any scope gives the same color
         with color(space=SRGB):
-            self.assertEqual(color(c.hex), c)
+            d = color(.2, .4, .6, space=P3)
+            d.hex = d.hex
+            self.assertEqual(d, color(.2, .4, .6, space=P3))
 
     def test_hex_rounds(self):
         self.assertEqual(color(.5).hex, '#808080')

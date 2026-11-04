@@ -84,14 +84,8 @@ class Color(object):
             clr, values = Color._cgcolor(GREY, space, 0, 0)
         elif params == 1 and isinstance(args[0], Color):    # Color object
             self._share(args[0])
-            if converting and self.space != space:
-                if self._mode is CMYK:
-                    self._cmyk = self._src
-                    self._space = space # rgb converted on demand
-                else:
-                    self._rgb = _matched(self._rgb, SPACES[space])
-                    self._space = space
-                    self._updateCmyk()
+            if converting:
+                self.space = space
             return
         elif params == 1 and isinstance(args[0], Gradient): # Gradient (use first shade)
             self._share(args[0]._colors[0])
@@ -198,8 +192,25 @@ class Color(object):
 
     @property
     def space(self):
-        """The color space of the rgb, hsv & grey components"""
+        """The color space of the rgb, hsv, & grey components (setting it converts them)"""
         return self._space
+
+    @space.setter
+    def space(self, space):
+        # convert the components into the new space
+        space = _canonical('space', space)
+        if space is None:
+            nospace = 'A color\'s space must be P3 or SRGB, not None'
+            raise DeviceError(nospace)
+        if space == self._space:
+            return
+        if self._mode is CMYK:
+            self._cmyk = self._src
+            self._space = space # rgb converted on demand
+        else:
+            self._rgb = _matched(self._rgb, SPACES[space])
+            self._space = space
+            self._updateCmyk()
 
     @property
     def cgColor(self):
@@ -431,22 +442,22 @@ class Color(object):
         return self._values(CMYK)
     cmyka = property(_get_cmyka, doc="a tuple containing the CMYKA values for this color")
 
-    # hex strings use the current color space
+    # hex strings use the color's own space, like its components
     def _get_hex(self):
-        r, g, b, a = _components(self._read_as(_ctx._colorspace))
+        r, g, b, a = self._read(RGB)
         return Color._hexstring(r, g, b)
     def _set_hex(self, val):
         r, g, b, a = Color._parse(val)
-        self._rgb, self._to['rgba'] = Color._cgcolor(RGB, _ctx._colorspace, r, g, b, self.a)
+        self._rgb, self._to['rgba'] = Color._cgcolor(RGB, self.space, r, g, b, self.a)
         self._updateCmyk()
-    hex = property(_get_hex, _set_hex, doc="the rgb hex string for the color (in the current color space)")
+    hex = property(_get_hex, _set_hex, doc="the rgb hex string for the color (in the color's own space)")
 
     def _get_hexa(self):
         return (self.hex, self.a)
     def _set_hexa(self, hexa):
         clr, alpha = hexa
         r, g, b, _ = Color._parse(clr)
-        self._rgb, self._to['rgba'] = Color._cgcolor(RGB, _ctx._colorspace, r, g, b, self._normalize(alpha))
+        self._rgb, self._to['rgba'] = Color._cgcolor(RGB, self.space, r, g, b, self._normalize(alpha))
         self._updateCmyk()
     hexa = property(_get_hexa, _set_hexa, doc="a tuple containing the color's rgb hex string and an alpha float")
 
