@@ -11,7 +11,7 @@ from plotdevice import DeviceError
 from ..util import numlike
 from .colors import Color
 from .geometry import Point, CORNER
-from . import _cg_context, _cg_layer, _cg_bitmap, _cg_port, _canvas_dims, _visible, _layer_box, _render_lock
+from . import _cg_context, _cg_layer, _cg_bitmap, _cg_port, _render_lock
 from .. import gfx
 
 _ctx = None
@@ -95,7 +95,7 @@ class Frob(object):
         with _cg_context(), self.applied(self):
             if not self._grobs:
                 return
-            for grob in _visible(self._grobs):
+            for grob in gfx._state.visible(self._grobs):
                 _render_lock.checkpoint()
                 grob._draw()
 
@@ -175,7 +175,7 @@ class Effect(Frob):
                 if not shadowed and getattr(owner, '_paints_once', False):
                     yield # a lone fill or stroke needs no layer
                 else:
-                    with _cg_layer(_layer_box(owner)):
+                    with _cg_layer(gfx._state.layer_box(owner)):
                         if not shadowed:
                             yield # if there's no shadow, we don't need a second layer
                         else:
@@ -286,7 +286,7 @@ class Shadow(object):
     def applied(self, owner):
         """Draw the `with` block's drawing with this shadow behind it"""
         port = _cg_port()
-        box = _layer_box(owner)
+        box = gfx._state.layer_box(owner)
         (dx, dy), blur = self._device_offset, self._device_blur
         in_bitmap = CGBitmapContextGetWidth(port) > 0
         rgba = in_bitmap and CGBitmapContextGetAlphaInfo(port) not in _OPAQUE \
@@ -416,7 +416,7 @@ class Stencil(Frob):
             CGContextBeginPath(port)
             if self.evenodd:
                 # if inverted, knock the path out of a full-screen rect and clip with that
-                CGContextAddRect(port, ((0,0), _canvas_dims()))
+                CGContextAddRect(port, ((0,0), gfx._state.canvas_dims))
                 CGContextAddPath(port, cg_path)
                 CGContextEOClip(port)
             else:

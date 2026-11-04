@@ -1971,7 +1971,7 @@ class Frame(object):
 
     def draw(self, cancelled=None, within=None):
         """Render the frame into the current graphics context"""
-        with gfx._render_lock, gfx._rendering(self, within):
+        with gfx._render_lock, gfx._state.rendering(self, within):
             if self.background is not None:
                 rect = ((0,0), self.pagesize)
                 if isinstance(self.background, Gradient):
@@ -1981,7 +1981,7 @@ class Frame(object):
                     NSRectFillUsingOperation(rect, NSCompositeSourceOver)
 
             with autorelease():
-                for grob in gfx._visible(self.grobs):
+                for grob in gfx._state.visible(self.grobs):
                     if cancelled is not None and cancelled():
                         return
                     gfx._render_lock.checkpoint()

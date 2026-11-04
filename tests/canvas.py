@@ -482,7 +482,7 @@ class RendererTests(PlotDeviceTestCase):
     def test_layers_sized_to_their_contents_match_full_ones(self):
         # sized layers clip nothing, even overhanging glyphs
         from Quartz import CGBitmapContextCreateImage
-        from plotdevice.gfx import effects
+        from plotdevice.gfx import RenderState
         size(500, 400)
         background('white')
         text('Zapfino', 40, 120, font='Zapfino', size=40, fill='purple', alpha=.6)
@@ -495,21 +495,21 @@ class RendererTests(PlotDeviceTestCase):
         frame = _ctx.canvas.commit()
 
         def render(sized):
-            layer_box = effects._layer_box
+            layer_box = RenderState.layer_box
             if not sized:
-                effects._layer_box = lambda grob: None
+                RenderState.layer_box = lambda self, grob: None
             try:
                 frame._bounds._layers = {}
                 return _pixels(frame._render_to_cgimage(1.0, 2.0))
             finally:
-                effects._layer_box = layer_box
+                RenderState.layer_box = layer_box
         self.assertEqual(render(True), render(False))
         render(True)
         self.assertTrue(any(box is not None for box in frame._bounds._layers.values()))
 
     def test_scaled_text_layers_hold_their_glyphs(self):
         # a scaled text's layer grows with its overhang
-        from plotdevice.gfx import effects
+        from plotdevice.gfx import RenderState
         size(600, 600)
         background('white')
         with transform(CORNER):
@@ -520,14 +520,14 @@ class RendererTests(PlotDeviceTestCase):
         frame = _ctx.canvas.commit()
 
         def render(sized):
-            layer_box = effects._layer_box
+            layer_box = RenderState.layer_box
             if not sized:
-                effects._layer_box = lambda grob: None
+                RenderState.layer_box = lambda self, grob: None
             try:
                 frame._bounds._layers = {}
                 return _pixels(frame._render_to_cgimage(1.0, 1.0))
             finally:
-                effects._layer_box = layer_box
+                RenderState.layer_box = layer_box
         self.assertEqual(render(True), render(False))
 
     def test_paints_once_alpha_skips_its_layer(self):

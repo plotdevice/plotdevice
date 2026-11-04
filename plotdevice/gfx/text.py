@@ -16,7 +16,8 @@ from .bezier import Bezier
 from .atoms import TransformMixin, ColorMixin, EffectsMixin, StyleMixin, FrameMixin, Grob
 from ..util import _copy_attrs, trim_zeroes, numlike, ordered, XMLParser, Element, read
 from ..lib import foundry
-from . import _ns_context, _cg_port, _output
+from . import _ns_context, _cg_port
+from .. import gfx
 
 _ctx = None
 __all__ = ("Text", "LEFT", "RIGHT", "CENTER", "JUSTIFY",)
@@ -846,7 +847,7 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
 
     def _fills(self):
         # the runs' CGColors in a map table, since dictionaries copy their keys and CGColors can't be copied
-        ink = _output().ink
+        ink = gfx._state.output.ink
         if self._fill_cache is None or self._fill_cache[0] != ink:
             colors, patterns = NSMapTable.strongToStrongObjectsMapTable(), []
             for paint, fill in self._paints.items():

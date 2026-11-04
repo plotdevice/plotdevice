@@ -88,11 +88,36 @@ class RenderState(threading.local):
             for name, value in saved.items():
                 setattr(self, name, value)
 
-_state = RenderState()
+    def rendering(self, frame, within=None):
+        """Draw `frame` for the duration of a `with` block, culling to `within` if given"""
+        # a frame drawn inside another starts outside its clips and shadow casting (likewise for pattern tiles)
+        return self.using(frame=frame, base_ctm=CGContextGetCTM(_cg_port()), culling=within, clip_depth=0, casting=None)
 
-def _rendering(frame, within=None):
-    # a frame drawn inside another starts outside its clips and shadow casting (likewise for pattern tiles)
-    return _state.using(frame=frame, base_ctm=CGContextGetCTM(_cg_port()), culling=within, clip_depth=0, casting=None)
+    @property
+    def output(self):
+        """The output colors resolve for: the frame's, else the script's"""
+        frame = self.frame or self.committing
+        return _ctx._output if frame is None else frame.output
+
+    @property
+    def canvas_dims(self):
+        """The canvas's width & height in canvas units"""
+        frame = self.frame
+        if frame is None:
+            return _ctx.canvas.width, _ctx.canvas.height
+        return frame.width, frame.height
+
+    def visible(self, grobs):
+        """The grobs that may draw inside the rect being rendered"""
+        within = self.culling
+        return grobs if within is None else self.frame._bounds.within(within, grobs)
+
+    def layer_box(self, grob):
+        """The box a grob's transparency layer needs, or None"""
+        frame = self.frame
+        return None if frame is None or grob is None else frame._bounds.layer_box(grob)
+
+_state = RenderState()
 
 class _RenderLock(object):
     """Serializes Core Graphics calls across threads
@@ -143,28 +168,6 @@ class _RenderLock(object):
             self.__enter__()
 
 _render_lock = _RenderLock()
-
-def _layer_box(grob):
-    """The box a grob's transparency layer needs, or None"""
-    frame = _state.frame
-    return None if frame is None or grob is None else frame._bounds.layer_box(grob)
-
-def _visible(grobs):
-    """The grobs that may draw inside the rect being rendered"""
-    within = _state.culling
-    return grobs if within is None else _state.frame._bounds.within(within, grobs)
-
-def _output():
-    """The output colors resolve for: the frame's, else the script's"""
-    frame = _state.frame or _state.committing
-    return _ctx._output if frame is None else frame.output
-
-def _canvas_dims():
-    """The canvas's width & height in canvas units"""
-    frame = _state.frame
-    if frame is None:
-        return _ctx.canvas.width, _ctx.canvas.height
-    return frame.width, frame.height
 
 ### submodule init ###
 
