@@ -2087,13 +2087,15 @@ class Frame(object):
             NSGraphicsContext.saveGraphicsState()
             NSGraphicsContext.setCurrentContext_(ns_ctx)
             NSGraphicsContext.saveGraphicsState()
-            trans = NSAffineTransform.transform()
-            trans.translateXBy_yBy_(*(offset or (0, self.pagesize.height*zoom)))
-            trans.scaleXBy_yBy_(zoom,-zoom)
-            trans.concat()
-            self.draw(cancelled, within)
-            NSGraphicsContext.restoreGraphicsState()
-            NSGraphicsContext.restoreGraphicsState()
+            try:
+                trans = NSAffineTransform.transform()
+                trans.translateXBy_yBy_(*(offset or (0, self.pagesize.height*zoom)))
+                trans.scaleXBy_yBy_(zoom,-zoom)
+                trans.concat()
+                self.draw(cancelled, within)
+            finally:
+                NSGraphicsContext.restoreGraphicsState()
+                NSGraphicsContext.restoreGraphicsState()
 
     def _getImageData(self, format, zoom=1.0, title=None):
         return self._encode(format, zoom, title=title)[0]

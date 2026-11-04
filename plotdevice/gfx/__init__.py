@@ -22,8 +22,10 @@ def _ns_context():
 def _cg_context():
     port = NSGraphicsContext.currentContext().CGContext()
     CGContextSaveGState(port)
-    yield port
-    CGContextRestoreGState(port)
+    try:
+        yield port
+    finally:
+        CGContextRestoreGState(port)
 
 @contextmanager
 def _cg_layer(box=None):
@@ -34,8 +36,10 @@ def _cg_layer(box=None):
         CGContextBeginTransparencyLayerWithRect(port, CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), to_user), None)
     else:
         CGContextBeginTransparencyLayer(port, None)
-    yield
-    CGContextEndTransparencyLayer(port)
+    try:
+        yield
+    finally:
+        CGContextEndTransparencyLayer(port)
 
 @contextmanager
 def _cg_bitmap(rect, scale, ctm):
