@@ -2,6 +2,13 @@
 #include <Python.h>
 #import "../gfx/PDPath.h"
 
+// pyobjc's object layout (flags 0x20 marks a CF object), shared by pathmatics.m and tracer.m
+typedef struct {
+    PyObject_HEAD
+    id        objc_object;
+    int       flags;
+} PDObjCObject;
+
 PyObject * cPathmatics_linepoint(PyObject *self, PyObject *args);
 PyObject * cPathmatics_linelength(PyObject *self, PyObject *args);
 PyObject * cPathmatics_curvepoint(PyObject *self, PyObject *args);

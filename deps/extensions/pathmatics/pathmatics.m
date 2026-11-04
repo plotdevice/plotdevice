@@ -248,12 +248,6 @@ intersects_path(CGPathRef p1, CGPathRef p2)
     return hit;
 }
 
-typedef struct {
-    PyObject_HEAD
-    id        objc_object;
-    int       flags;
-} PyObjCObject;
-
 PyObject *
 build_objc_instance(PyTypeObject *ob_type, id obj) {
     // Because we don't want to include PyObjC on compilation,
@@ -261,8 +255,8 @@ build_objc_instance(PyTypeObject *ob_type, id obj) {
     // PyObjCObject_New.
     PyObject *result;
     result = ob_type->tp_alloc(ob_type, 0);
-    ((PyObjCObject*)result)->objc_object = obj;
-    ((PyObjCObject*)result)->flags = 0;
+    ((PDObjCObject*)result)->objc_object = obj;
+    ((PDObjCObject*)result)->flags = 0;
     return result;
 }
 

@@ -1,8 +1,8 @@
 // A small extern "C" adapter around Clipper2's boolean-op engine, so plain
 // Objective-C (pathmatics.m) can call into it without needing Objective-C++.
 // Paths come in as the contours of a flattened path and go back out as CGPaths.
-#ifndef PD_CLIPPER2_BRIDGE_H
-#define PD_CLIPPER2_BRIDGE_H
+#ifndef CLIPPER2_BRIDGE_H
+#define CLIPPER2_BRIDGE_H
 
 #include <CoreGraphics/CoreGraphics.h>
 #include <stdbool.h>
