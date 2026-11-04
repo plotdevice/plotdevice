@@ -12,15 +12,13 @@ UNUSED_FILES = lib/python3.*/test lib/python3.*/lib-dynload/_test* lib/python3.*
 PIP_ENV = $(if $(PIP_NO_CACHE_DIR),PIP_NO_CACHE_DIR=1,)
 
 # Use the framework's headers (otherwise clang defaults to looking in /Library/Frameworks/Python.framework)
-PIP_INCLUDES = $(shell $(BIN)/python3-config --includes)
-PIP_INCLUDES_T = $(shell $(BIN_T)/python3t-config --includes)
+PIP_INCLUDES = $(shell PYTHONDONTWRITEBYTECODE=1 $(BIN)/python3-config --includes)
+PIP_INCLUDES_T = $(shell PYTHONDONTWRITEBYTECODE=1 $(BIN_T)/python3t-config --includes)
 
-# reinstall plotdevice on every build, then relocate
+# reinstall plotdevice on every build, compiling only its own .pyc files, as hash-based ones
 all: Python.framework PythonT.framework
-	$(PIP_ENV) CFLAGS="$(PIP_INCLUDES)" $(BIN)/pip3 install --upgrade ../..
-	$(PIP_ENV) CFLAGS="$(PIP_INCLUDES_T)" $(BIN_T)/pip3 install --upgrade ../..
-	python3 relocate.py Python.framework
-	python3 relocate.py PythonT.framework
+	PYTHONDONTWRITEBYTECODE=1 SOURCE_DATE_EPOCH=0 $(PIP_ENV) CFLAGS="$(PIP_INCLUDES)" $(BIN)/pip3 install --upgrade --no-deps --no-build-isolation ../..
+	PYTHONDONTWRITEBYTECODE=1 SOURCE_DATE_EPOCH=0 $(PIP_ENV) CFLAGS="$(PIP_INCLUDES_T)" $(BIN_T)/pip3 install --upgrade --no-deps --no-build-isolation ../..
 
 $(PYTHON_PKG):
 	curl --fail -o $@.download https://www.python.org/ftp/python/$(PYTHON_VERSION)/$(notdir $@)
@@ -47,6 +45,8 @@ Python.framework PythonT.framework: %.framework:
 	find $@ -type d \( -name PyObjCTest -o -name \*.dSYM \) -prune -exec rm -rf {} +
 	# drop CPython's tests, tkinter, idle and docs
 	cd $@/Versions/Current && rm -rf $(UNUSED_FILES)
+	# fix the shebangs and bytecode of what pip installed
+	python3 relocate.py $@
 
 clean:
 	rm -rf Python.framework PythonT.framework *.framework.pkg ../local/*-fmwk

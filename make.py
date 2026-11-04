@@ -171,18 +171,16 @@ def cmd_distclean(args):
 
 
 def cmd_app(args):
-    # make sure the embedded frameworks exist
-    print("Set up Python.framework & PythonT.framework for app build")
-    env = os.environ.copy()
-    if args.no_cache:
-        env['PIP_NO_CACHE_DIR'] = '1'
-    call('cd deps/frameworks && make', shell=True, env=env)
-
     # clear out existing build products
     for product in ('dist/PlotDevice.app', 'dist/PlotDevice.app.dSYM'):
         if exists(product):
             rmtree(product)
-    spawn(['xcodebuild', '-configuration', 'Release'])
+
+    # xcode's Build Python Framework phase sets up the embedded frameworks
+    env = os.environ.copy()
+    if args.no_cache:
+        env['PIP_NO_CACHE_DIR'] = '1'
+    spawn(['xcodebuild', '-configuration', 'Release'], env=env)
     dsym = 'dist/PlotDevice.app.dSYM'
     if exists(dsym):
         rmtree(dsym)
