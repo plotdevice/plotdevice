@@ -673,22 +673,19 @@ class ScriptController(NSWindowController):
         if self.animationTimer is not None:
             self.stopScript()
 
-        # if this is a single-image export and the canvas already contains some grobs,
-        # write it out synchronously rather than starting up an export session
-        if kind=='image' and opts['last']==opts['first'] and list(self.vm.canvas):
-            img_data = self.vm.canvas._getImageData(opts['format'], opts['zoom'], opts['colors'])
-            img_data.writeToFile_atomically_(fname, True)
-            self.exportStatus('complete')
-            return
-
-        # if we're exporting multiple frames, give some ui feedback
-        if self.outputView:
-            self.outputView.clear(timestamp=True)
-
         # replace the toolbar buttons with a progress indicator
         self.setToolbarMode_("export")
         if self.statusView:
             self.statusView.beginExport()
+
+        # a single image of an already rendered canvas can be written without re-running it
+        if kind=='image' and opts['last']==opts['first'] and list(self.vm.canvas):
+            self.vm.exportCanvas(fname, opts)
+            return
+
+        # clear the console before re-running the script
+        if self.outputView:
+            self.outputView.clear(timestamp=True)
 
         # fetch the current source, then let the Sandbox take over
         def begin(source):

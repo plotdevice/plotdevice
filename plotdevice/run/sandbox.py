@@ -362,6 +362,17 @@ class Sandbox(object):
         self._stopped = False
         self._exportFrame()
 
+    def exportCanvas(self, fname, opts):
+        """Write the canvas as it stands to an image file, without running the script"""
+        output = Output.parse(opts.get('colors'), opts['format'])
+        self.session = ImageExportSession(fname, output=output, **opts)
+        self.session.presents = False # the window already shows this canvas
+        self.session.on(progress=self.delegate.exportProgress,
+                        status=self.delegate.exportStatus,
+                        complete=self._exportComplete)
+        self.session.add(self.canvas, self.delegate.exportRender)
+        self.session.done(self.delegate.exportRender)
+
     def stopExport(self):
         """End the export early, still running the script's stop()"""
         self._stopped = True
