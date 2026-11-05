@@ -6,4 +6,5 @@ pyobjc==12.2.2
 setuptools
 wheel
 requests
+truststore
 six

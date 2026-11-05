@@ -30,6 +30,13 @@ if in_bundle:
     sys.path[site_index:site_index] = [interpreter_lib_dir, lib_dir]
     sys.meta_path.insert(0, BundledFinder(site_dir))
 
+    # check https certificates against the keychain, since the bundled openssl has no CA file
+    try:
+        import truststore
+        truststore.inject_into_ssl()
+    except ImportError:
+        pass # py2app builds don't include it
+
 try:
     # test the sys.path by attempting to load a PyObjC submodule...
     import Foundation
