@@ -122,6 +122,7 @@ class EditorView(NSView):
         nc.addObserver_selector_name_object_(self, "themeChanged", "ThemeChanged", None)
         nc.addObserver_selector_name_object_(self, "fontChanged", "FontChanged", None)
         nc.addObserver_selector_name_object_(self, "bindingsChanged", "BindingsChanged", None)
+        nc.addObserver_selector_name_object_(self, "scrollerStyleChanged", NSPreferredScrollerStyleDidChangeNotification, None)
         nc.addObserver_selector_name_object_(self, "insertDroppedFiles:", "DropOperation", self.webview)
         self._edits = 0
         self._last_source = ''
@@ -255,6 +256,9 @@ class EditorView(NSView):
 
     def bindingsChanged(self, note=None):
         self.js('editor.bindings', args(get_default('bindings')))
+
+    def scrollerStyleChanged(self, note=None):
+        self.js('editor.rescroll')
 
     def focus(self):
         if self.window():
@@ -450,7 +454,10 @@ class OutputTextView(NSTextView):
         self.setTypingAttributes_({"NSColor":clr['color'], "NSFont":font, "NSLigature":0})
         self.setSelectedTextAttributes_({"NSBackgroundColor":clr['selection']})
         scrollview = self.superview().superview()
-        scrollview.setScrollerKnobStyle_(2 if editor_info('dark') else 1)
+        theme = NSAppearanceNameDarkAqua if editor_info('dark') else NSAppearanceNameAqua
+        scrollview.setAppearance_(NSAppearance.appearanceNamed_(theme))
+        scrollview.setBackgroundColor_(clr['background']) # also fills in behind legacy scrollers
+        scrollview.setDrawsBackground_(True)
 
         # recolor previous contents
         attrs = self._attrs()

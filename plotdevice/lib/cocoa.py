@@ -44,7 +44,8 @@ from Quartz import CALayer, CGAffineTransformConcat, CGAffineTransformInvert, CG
                    kCGLineCapRound, kCGLineCapSquare, kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, \
                    kCGPathFill, kCGPathFillStroke, kCGPathStroke, kCGPatternTilingConstantSpacing, \
                    kCGRenderingIntentDefault, kCGRenderingIntentRelativeColorimetric, kCIInputImageKey
-from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplication, \
+from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSAppearanceNameAqua, \
+                   NSAppearanceNameDarkAqua, NSApplication, \
                    NSApplicationActivationPolicyAccessory, NSApplicationActivationPolicyRegular, \
                    NSApplicationPresentationAutoHideMenuBar, NSApplicationPresentationAutoHideToolbar, \
                    NSApplicationPresentationFullScreen, NSBackingStoreBuffered, NSBeep, NSBezierPath, \
@@ -63,7 +64,8 @@ from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSApplicati
                    NSMenu, NSMenuItem, NSMiniControlSize, NSMoveToBezierPathElement, NSMutableParagraphStyle, NSNib, \
                    NSOffState, NSOnState, NSParagraphStyleAttributeName, NSPasteboard, NSPasteboardTypePDF, \
                    NSPasteboardTypeTIFF, NSPasteboardURLReadingContentsConformToTypesKey, \
-                   NSPasteboardURLReadingFileURLsOnlyKey, NSPDFImageRep, NSPNGFileType, NSPrintOperation, \
+                   NSPasteboardURLReadingFileURLsOnlyKey, NSPDFImageRep, NSPNGFileType, \
+                   NSPreferredScrollerStyleDidChangeNotification, NSPrintOperation, \
                    NSRectFill, NSRectFillUsingOperation, NSResponder, NSRightTextAlignment, NSSavePanel, NSScreen, \
                    NSScrollElasticityAllowed, NSScrollElasticityNone, NSScrollViewDidEndLiveMagnifyNotification, \
                    NSScrollViewWillStartLiveMagnifyNotification, NSShadow, NSSlider, NSSmallControlSize, \

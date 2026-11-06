@@ -32,7 +32,6 @@ var Editor = function(elt){
                 'modifyNumberDown'],
         "Python":[]
     }
-    var _htimer = null, _vtimer = null, _hmin=0, _vmin=0;
     var that = {
         init:function(){
 
@@ -74,11 +73,6 @@ var Editor = function(elt){
             // the viewport to the cursor position. ace.js's default behavior is all or none
             // sess.setUndoSelect(false);
 
-            // being able to switch between light and dark scrollbars also means being
-            // responsible for their hide/show behavior, sadly....
-            sess.on("changeScrollLeft", that._scroll_h)
-            sess.on("changeScrollTop", that._scroll_v)
-
             // show a preview popup when a snippet is highlighted
             langTools.snippetCompleter.getDocTooltip = function(item){
                 if (item.snippet && !item.docHTML){
@@ -112,30 +106,6 @@ var Editor = function(elt){
             for (const [cmds, menu] of Object.entries(_menu_cmds)){
                 if (cmds.includes(cmd)) app.flash_menu(menu)
             }
-        },
-        _scroll_h:function(x){
-            var now = Date.now()
-            if (_htimer) clearTimeout(_htimer)
-            else{
-                _hmin = now + 500
-                dom.classList.add('scrolling-h')
-            }
-            _htimer = setTimeout(function(){
-                dom.classList.remove('scrolling-h')
-                _htimer=null
-            }, Math.max(_hmin-now, 180))
-        },
-        _scroll_v:function(y){
-            var now = Date.now()
-            if (_vtimer) clearTimeout(_vtimer)
-            else{
-                _vmin = now + 500
-                dom.classList.add('scrolling-v')
-            }
-            _vtimer = setTimeout(function(){
-                dom.classList.remove('scrolling-v')
-                _vtimer=null
-            }, Math.max(_vmin-now, 180))
         },
 
 
@@ -221,11 +191,26 @@ var Editor = function(elt){
             dom.style.fontFamily = family
             dom.style.fontSize = `${px}px`
         },
+        rescroll:function(){
+            // ace measures the scrollbars once, so redo it when the system's scroller style changes
+            var r = ed.renderer, w = aceDom.scrollbarWidth(document)
+            r.$scrollbarWidth = r.scrollBarV.width = r.scrollBarH.height = w
+            r.scrollBarV.element.style.width = r.scrollBarV.inner.style.width = (w || 15) + 5 + "px"
+            r.scrollBarH.element.style.height = r.scrollBarH.inner.style.height = (w || 15) + 5 + "px"
+            ed.resize(true)
+        },
         theme:function(thm){
             if (thm===undefined){
                 return ed.getTheme()
             }else{
-                ed.setTheme(thm)
+                ed.setTheme(thm, function(){
+                    // native scrollbars only pick up a new color-scheme when they're rebuilt
+                    for (const bar of dom.querySelectorAll('.ace_scrollbar')){
+                        bar.style.overflow = 'hidden'
+                        bar.offsetWidth
+                        bar.style.overflow = ''
+                    }
+                })
             }
         },
         bindings:function(mode){
