@@ -214,22 +214,35 @@ class Press(Profile):
 
     def convert(self, rgb):
         """The inks this press prints for P3 `rgb` components"""
-        if self._transform is None:
-            # colorsync's transform from p3 into the press
-            profile, _ = ColorSyncProfileCreate(self.icc, None) # (profile, error)
-            steps = [{kColorSyncProfile: ColorSyncProfileCreateWithName(kColorSyncDisplayP3Profile),
-                      kColorSyncRenderingIntent: kColorSyncRenderingIntentRelative,
-                      kColorSyncTransformTag: kColorSyncTransformDeviceToPCS},
-                     {kColorSyncProfile: profile, kColorSyncRenderingIntent: kColorSyncRenderingIntentRelative,
-                      kColorSyncTransformTag: kColorSyncTransformPCSToDevice, kColorSyncBlackPointCompensation: True}]
-            self._transform = ColorSyncTransformCreate(steps, {kColorSyncBlackPointCompensation: True})
 
-        # clipped p3 in 16-bit ints. ColorSync's float
-        # path tints white with black point compensation.
-        rgb = array('H', (round(min(max(v, 0.0), 1.0) * 65535) for v in rgb))
-        _, cmyk = ColorSyncTransformConvert(self._transform, 1, 1, array('H', [0] * 4), kColorSync16BitInteger,
-                                            kColorSyncAlphaNone, 8, rgb, kColorSync16BitInteger, kColorSyncAlphaNone, 6, None)
-        return tuple(0.0 if v < .001 else 1.0 if v > .999 else v for v in (c / 65535 for c in cmyk))
+        def transformed(transform, values, count):
+            # apply the color `transform` to a pixel's `values` and return `count` float components
+            depth, alpha = kColorSync32BitFloat, kColorSyncAlphaNone
+            _, out = ColorSyncTransformConvert(
+              transform, 1, 1,
+              array('f', [0] * count), depth, alpha, 4 * count,
+              array('f', values), depth, alpha, 4 * len(values), None
+            )
+            return out
+
+        if self._transform is None:
+            # use colorsync's transforms from p3 into the press and back
+            profile, _ = ColorSyncProfileCreate(self.icc, None) # (profile, error)
+            p3 = ColorSyncProfileCreateWithName(kColorSyncDisplayP3Profile)
+            step = lambda prof, tag: {kColorSyncProfile: prof,
+                                      kColorSyncRenderingIntent: kColorSyncRenderingIntentRelative,
+                                      kColorSyncTransformTag: tag}
+            self._transform = ColorSyncTransformCreate([step(p3, kColorSyncTransformDeviceToPCS), step(profile, kColorSyncTransformPCSToDevice)], None)
+            back = ColorSyncTransformCreate([step(profile, kColorSyncTransformDeviceToPCS), step(p3, kColorSyncTransformPCSToDevice)], None)
+
+            # the luminance of the press's black
+            black = transformed(back, transformed(self._transform, (0, 0, 0), 4), 3)
+            self._black = _apply(_TO_XYZ, [_decode(v) for v in black])[1]
+
+        # black point compensation in linear p3, since ColorSync's lightens and shifts neutrals toward violet
+        lin = (self._black + (1 - self._black) * _decode(min(max(v, 0.0), 1.0)) for v in rgb)
+        cmyk = transformed(self._transform, [v * 12.92 if v <= 0.0031308 else 1.055 * v ** (1 / 2.4) - 0.055 for v in lin], 4)
+        return tuple(0.0 if v < .001 else 1.0 if v > .999 else v for v in cmyk)
 
 # the built-in spaces
 Profile.named.update({P3: Profile(P3, RGB, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3)),

@@ -91,8 +91,8 @@ from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CI
                        NSZeroRect
 from WebKit import WKUserScript, WKUserScriptInjectionTimeAtDocumentStart, WKWebView, WKWebViewConfiguration
 from ColorSync import ColorSyncProfileCreate, ColorSyncProfileCreateWithName, ColorSyncTransformConvert, \
-                      ColorSyncTransformCreate, kColorSync16BitInteger, kColorSyncAlphaNone, \
-                      kColorSyncBlackPointCompensation, kColorSyncDisplayP3Profile, kColorSyncProfile, \
+                      ColorSyncTransformCreate, kColorSync32BitFloat, kColorSyncAlphaNone, \
+                      kColorSyncDisplayP3Profile, kColorSyncProfile, \
                       kColorSyncRenderingIntent, kColorSyncRenderingIntentRelative, kColorSyncTransformDeviceToPCS, \
                       kColorSyncTransformPCSToDevice, kColorSyncTransformTag
 from objc import IBAction, IBOutlet
