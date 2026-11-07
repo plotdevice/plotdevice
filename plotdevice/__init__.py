@@ -35,7 +35,7 @@ class Halted(Exception): pass      # special exception to cleanly exit animation
 called_from = getattr(sys.modules['__main__'], '__file__', '<interactive>')
 in_app = called_from.endswith('plotdevice-app.py')
 in_setup = called_from.endswith('setup.py')
-in_cli = sys.argv[0] == '-m' and __name__ in getattr(sys, 'orig_argv', [])
+in_cli = sys.argv[0] == '-m' and getattr(sys, 'orig_argv', sys.argv)[-len(sys.argv)] in (__name__, '-m' + __name__) # the token naming -m's module
 in_bundle = '.app/Contents/' in sys.executable # the app, or the command line tool in its bundle
 free_threaded = bool(get_config_var('Py_GIL_DISABLED'))
 gil_chosen = 'PYTHON_GIL' in os.environ or 'gil' in sys._xoptions

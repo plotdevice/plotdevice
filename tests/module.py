@@ -34,6 +34,17 @@ class ModuleTests(PlotDeviceTestCase):
         check_output([sys.executable, '-m', 'plotdevice', script, '--export', output], stderr=STDOUT, cwd=sdist_path)
         self.render(save_output=False)
 
+    @unittest.skipUnless(hasattr(sys, 'orig_argv'), 'needs python 3.10')
+    def test_cli_joined_flags(self):
+        # -mplotdevice is the cli too
+        with tempfile.TemporaryDirectory() as tmp:
+            script = os.path.join(tmp, 'cli.pv')
+            with open(script, 'w') as f:
+                f.write("import plotdevice\nprint('in_cli=%s' % plotdevice.in_cli)\nsize(10, 10)\n")
+            for flags in (['-m', 'plotdevice'], ['-mplotdevice']):
+                out = check_output([sys.executable, *flags, '-q', script], stderr=STDOUT, cwd=sdist_path, text=True)
+                self.assertIn('in_cli=True', out)
+
     @unittest.skipUnless(plotdevice.free_threaded, 'needs a free-threaded build')
     def test_cli_gil(self):
         # the free-threaded cli relaunches with -X gil=0
