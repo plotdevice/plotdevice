@@ -21,6 +21,7 @@ case "$env" in
         # run without the GIL on -t or --free-threaded
         for arg in "$@"; do
             case "$arg" in
+                --) break ;; # the rest belongs to the script
                 --fre*) free_threaded=1 ;; # the only --fre option
                 --*) ;;
                 -*) case "${arg%%o*}" in *t*) free_threaded=1 ;; esac ;; # -o takes the rest as its value
