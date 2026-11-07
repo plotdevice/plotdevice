@@ -917,6 +917,24 @@ class DrawingTests(PlotDeviceTestCase):
         p = endpath(plot=False)
         drawpath(p)
 
+    def test_drawpath_uses_the_current_state(self):
+        # each drawpath() draws a copy in the state at the time, leaving the path as it was made
+        from plotdevice import _ctx
+        size(200, 100)
+        fill('red')
+        nostroke()
+        p = rect(10, 10, 40, 40, plot=False)
+        fill('blue')
+        stroke('black')
+        first = drawpath(p)
+        translate(60, 0)
+        second = drawpath(p, fill='green')
+        drawn = _ctx.canvas.commit().grobs
+        self.assertEqual([g.fill for g in drawn], [Color('blue'), Color('green')])
+        self.assertEqual([tuple(g.transform.matrix)[4] for g in drawn], [0, 60])
+        self.assertIsNot(first, p)
+        self.assertEqual((p.fill, p.stroke), (Color('red'), None))
+
     @reference('drawing/endpath.png')
     def test_endpath(self):
         # ref/Drawing/compat/endpath()
