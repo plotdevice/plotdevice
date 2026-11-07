@@ -379,22 +379,29 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         CGContextSaveGState(saved)
         try:
             self._screen_transform.concat() # move the image into place via transforms
-            with self.effects.applied(self): # apply any blend/alpha/shadow effects
-                NSGraphicsContext.currentContext().setImageInterpolation_(NSImageInterpolationHigh)
-                frame = gfx._state.frame
-                image = self._nsImage_as(frame.output.cmyk_space if frame is not None else None)
-                bounds = ((0,0), image.size()) # draw the image at (0,0)
-                vector = next((r for r in image.representations() if isinstance(r, (NSPDFImageRep, PDSVGImageRep))), None)
-                if vector is None:
-                    image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, 1.0)
-                else:
+            frame = gfx._state.frame
+            image = self._nsImage_as(frame.output.cmyk_space if frame is not None else None)
+            bounds = ((0,0), image.size()) # draw the image at (0,0)
+            reps = image.representations()
+            bitmap = reps[0] if len(reps) == 1 and isinstance(reps[0], NSBitmapImageRep) else None
+            vector = next((r for r in reps if isinstance(r, (NSPDFImageRep, PDSVGImageRep))), None)
+            with self.effects.applied(self, layer=bitmap is None): # apply any blend/alpha/shadow effects
+                port = gfx._state.port
+                CGContextSetInterpolationQuality(port, kCGInterpolationHigh)
+
+                # bitmaps and pdfs need a manual y-axis flip
+                if bitmap or isinstance(vector, NSPDFImageRep):
+                    CGContextTranslateCTM(port, 0, image.size().height)
+                    CGContextScaleCTM(port, 1, -1)
+
+                if bitmap:
+                    # CGImage keeps the context's alpha and blend, so a lone bitmap needs no layer
+                    CGContextDrawImage(port, bounds, bitmap.CGImage())
+                elif vector:
                     # draw svg & pdf reps directly, otherwise NSImage rasterizes them in layers and pattern cells
-                    port = gfx._state.port
-                    if isinstance(vector, NSPDFImageRep):
-                        # only pdfs need a manual y-axis flip
-                        CGContextTranslateCTM(port, 0, image.size().height)
-                        CGContextScaleCTM(port, 1, -1)
                     vector.drawInRect_(bounds)
+                else:
+                    image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, 1.0)
         finally:
             CGContextRestoreGState(saved)
 
