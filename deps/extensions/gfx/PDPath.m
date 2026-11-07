@@ -138,12 +138,23 @@ pd_close(PDPathObject *self)
     if (self->last == PD_LINETO || self->last == PD_CURVETO) pd_closepath_ns(self);
 }
 
-static void
+static int
 pd_append_ns(PDPathObject *self, NSBezierPath *ns, BOOL skip_first, BOOL as_closepath)
 {
     // replay an NSBezierPath's elements as they are, or with every close made as closePath makes it
     NSInteger count = [ns elementCount];
-    NSPoint p[3];
+    NSPoint p[3] = {{0, 0}, {0, 0}, {0, 0}};
+    for (NSInteger i = 0; i < count; i++) {
+        // refuse non-finite points before appending (since CG would otherwise silently drop them)
+        NSBezierPathElement el = [ns elementAtIndex:i associatedPoints:p];
+        int n = el == NSBezierPathElementClosePath ? 0 : (el == NSBezierPathElementMoveTo || el == NSBezierPathElementLineTo) ? 1 : 3;
+        for (int j = 0; j < n; j++) {
+            if (!isfinite(p[j].x) || !isfinite(p[j].y)) {
+                PyErr_SetString(PyExc_ValueError, "path coordinates cannot be NaN or infinity");
+                return -1;
+            }
+        }
+    }
     for (NSInteger i = skip_first ? 1 : 0; i < count; i++) {
         NSBezierPathElement el = [ns elementAtIndex:i associatedPoints:p];
         if (el == NSBezierPathElementMoveTo) {
@@ -164,6 +175,7 @@ pd_append_ns(PDPathObject *self, NSBezierPath *ns, BOOL skip_first, BOOL as_clos
             pd_curveto(self, p[0].x, p[0].y, p[1].x, p[1].y, p[2].x, p[2].y);
         }
     }
+    return 0;
 }
 
 typedef struct {
@@ -215,6 +227,10 @@ parse_doubles(PyObject *const *args, Py_ssize_t nargs, Py_ssize_t min, Py_ssize_
     for (Py_ssize_t i = 0; i < nargs; i++) {
         out[i] = PyFloat_AsDouble(args[i]);
         if (out[i] == -1.0 && PyErr_Occurred()) return -1;
+        if (!isfinite(out[i])) {
+            PyErr_SetString(PyExc_ValueError, "path coordinates cannot be NaN or infinity");
+            return -1;
+        }
     }
     return 0;
 }
@@ -230,6 +246,10 @@ parse_matrix(PyObject *obj, CGAffineTransform *t)
     for (int i = 0; ok == 0 && i < 6; i++) {
         m[i] = PyFloat_AsDouble(PySequence_Fast_GET_ITEM(seq, i));
         if (m[i] == -1.0 && PyErr_Occurred()) ok = -1;
+        else if (!isfinite(m[i])) {
+            PyErr_SetString(PyExc_ValueError, "a transform matrix must be finite (cannot contain NaN or infinity)");
+            ok = -1;
+        }
     }
     Py_DECREF(seq);
     if (ok == 0) *t = CGAffineTransformMake(m[0], m[1], m[2], m[3], m[4], m[5]);
@@ -265,7 +285,10 @@ PDPath_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         pd_flush((PDPathObject *)src);
         pd_append_cg(self, ((PDPathObject *)src)->path, CGAffineTransformIdentity, YES);
     } else if (ns) {
-        pd_append_ns(self, ns, NO, YES);
+        if (pd_append_ns(self, ns, NO, YES) < 0) {
+            Py_DECREF(self);
+            return NULL;
+        }
     } else {
         Py_DECREF(self);
         PyErr_Format(PyExc_TypeError, "can't make a PDPath from %s", Py_TYPE(src)->tp_name);
@@ -397,10 +420,6 @@ PDPath_arc(PDPathObject *self, PyObject *const *args, Py_ssize_t nargs)
     double v[6];
     if (parse_doubles(args, nargs, 6, 6, v) < 0) return NULL;
     double cx = v[0], cy = v[1], r = v[2], start = v[3], end = v[4];
-    if (!isfinite(r) || !isfinite(start) || !isfinite(end)) {
-        PyErr_SetString(PyExc_ValueError, "an arc's radius and angles must be finite");
-        return NULL;
-    }
 
     // wrap the sweep to the direction in degrees, where whole turns are exact (ns does it in
     // radians, so a non-integer start can tip a whole turn into nothing or a full circle)
@@ -447,8 +466,9 @@ PDPath_arcto(PDPathObject *self, PyObject *const *args, Py_ssize_t nargs)
     NSBezierPath *ns = [[NSBezierPath alloc] init];
     [ns moveToPoint:NSMakePoint(cur.x, cur.y)];
     [ns appendBezierPathWithArcFromPoint:NSMakePoint(v[0], v[1]) toPoint:NSMakePoint(v[2], v[3]) radius:v[4]];
-    pd_append_ns(self, ns, YES, NO);
+    int ok = pd_append_ns(self, ns, YES, NO);
     [ns release];
+    if (ok < 0) return NULL;
     Py_RETURN_NONE;
 }
 

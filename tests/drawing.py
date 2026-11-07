@@ -192,6 +192,21 @@ class DrawingTests(PlotDeviceTestCase):
         self.assertEqual(PDPath(ns).elements(), elements(ns.copy()))
         assertElementsClose(PDPath(p).elements(), elements(ns.copy()))
 
+    def test_pdpath_rejects_nonfinite_values(self):
+        # NaN and infinity raise rather than leaving a path cg has silently shortened
+        for bad in (float('nan'), float('inf')):
+            p = PDPath()
+            p.moveto(0, 0)
+            for call in (lambda: p.moveto(bad, 0), lambda: p.lineto(0, bad), lambda: p.curveto(bad, 0, 1, 1, 2, 2),
+                         lambda: p.rect(0, 0, bad, 10), lambda: p.oval(bad, 0, 10, 10), lambda: p.arc(0, 0, bad, 0, 90, 0),
+                         lambda: p.arcto(bad, 0, 10, 10, 3), lambda: p.transformed((1, 0, 0, bad, 0, 0))):
+                with self.assertRaisesRegex(ValueError, 'NaN or infinity'):
+                    call()
+            self.assertEqual(len(p), len(p.elements()))
+        ns = NSBezierPath.bezierPathWithRect_(((0, 0), (float('inf'), 10))) # appkit keeps infinity in a rect
+        with self.assertRaisesRegex(ValueError, 'NaN or infinity'):
+            PDPath(ns)
+
     @reference('drawing/paths-flat-union.png')
     def test_paths_flat_union(self):
         # tut/Bezier_Paths (7)
