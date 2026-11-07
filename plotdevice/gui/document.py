@@ -878,9 +878,10 @@ class ScriptController(NSWindowController):
         self._shownProof = proof
         self.graphicsView.proof = shown
 
-        # if animating, wait for the next frame. if static, trigger a proofed re-render
+        # if animating or exporting, wait for the next frame. if static, trigger a proofed re-render
         animating = self.animationTimer is not None and self.animationTimer.isValid()
-        if self.graphicsView.canvas is not None and not animating:
+        exporting = self.vm.session is not None
+        if self.graphicsView.canvas is not None and not animating and not exporting:
             self.graphicsView.render(self.graphicsView.canvas)
         return True
 
