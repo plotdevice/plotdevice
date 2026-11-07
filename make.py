@@ -77,19 +77,19 @@ def cmd_dev(args):
         spawn(['deps/frameworks/PythonT.framework/Versions/Current/bin/python3t', '-B', 'make.py', 'dev'])
         return
 
-    # install pyobjc, requests and the other pypi dependencies in deps/local
+    # install pyobjc, requests, and the other pypi dependencies in a deps/local venv
     import platform
     venv_name = platform.python_version() + sys.abiflags # add 't' if free-threaded
     if is_framework:
         venv_name += '-fmwk'
         os.environ['PYTHONDONTWRITEBYTECODE'] = '1' # prevent .pyc files from invalidating code-signing
     venv_dir = join('deps/local', venv_name)
-    if not exists(venv_dir):
+    if not glob(join(venv_dir, 'lib/python3*/site-packages/plotdevice-*.dist-info')):
         # resolve symlinked interpreters (like uv/pyenv stubs)
         spawn([realpath(sys.executable), '-m', 'venv', venv_dir])
         PIP = join(venv_dir, 'bin/pip3')
-        call([PIP, 'install', '--upgrade', 'pip', 'setuptools', 'wheel', 'py2app', 'twine'])
-        call([PIP, 'install', '-e', ROOT])
+        spawn([PIP, 'install', '--upgrade', 'pip', 'setuptools', 'wheel', 'py2app', 'twine'])
+        spawn([PIP, 'install', '-e', ROOT])
         if is_framework:
             # add a .pth to keep bytecode in the venv
             site_packages = glob(join(venv_dir, 'lib/python3*/site-packages'))[0]
@@ -205,7 +205,7 @@ def cmd_py2app(args):
     from py2app.build_app import py2app as build_py2app
 
     # make sure _plotdevice.so + plotdevice/rsrc/ are built first
-    call([sys.executable, 'setup.py', 'build_ext', '--inplace'])
+    spawn([sys.executable, 'setup.py', 'build_ext', '--inplace'])
 
     class BuildPy2AppCommand(build_py2app):
         def finalize_options(self):
