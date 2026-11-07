@@ -386,20 +386,15 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
                 bounds = ((0,0), image.size()) # draw the image at (0,0)
                 vector = next((r for r in image.representations() if isinstance(r, (NSPDFImageRep, PDSVGImageRep))), None)
                 if vector is None:
-                    image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
+                    image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, 1.0)
                 else:
                     # draw svg & pdf reps directly, otherwise NSImage rasterizes them in layers and pattern cells
                     port = gfx._state.port
-                    if self.alpha < 1:
-                        CGContextSetAlpha(port, self.alpha)
-                        CGContextBeginTransparencyLayer(port, None)
                     if isinstance(vector, NSPDFImageRep):
                         # only pdfs need a manual y-axis flip
                         CGContextTranslateCTM(port, 0, image.size().height)
                         CGContextScaleCTM(port, 1, -1)
                     vector.drawInRect_(bounds)
-                    if self.alpha < 1:
-                        CGContextEndTransparencyLayer(port)
         finally:
             CGContextRestoreGState(saved)
 
