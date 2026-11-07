@@ -172,9 +172,11 @@ def line_metrics(spec):
         raise DeviceError(chaoticneutral)
 
     # floatify dimensions and hyphenation (mapping bools to 0/1)
-    for attr in 'size', 'leading', 'tracking', 'indent', 'hyphenate':
+    for attr in 'size', 'leading', 'indent', 'hyphenate':
         if attr in spec:
             spec[attr] = float(spec[attr])
+    if spec.get('tracking') is not None:
+        spec['tracking'] = float(spec['tracking']) # None turns kerning off
 
     for attr in 'margin', 'spacing':
         if attr in spec:

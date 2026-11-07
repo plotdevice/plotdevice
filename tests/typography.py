@@ -493,6 +493,13 @@ class TypographyTests(PlotDeviceTestCase):
         quip = "If it ain't fun make it fun"
         text(quip, 10, 55, width=80)
 
+    def test_tracking_none(self):
+        # None turns the font's kerning off
+        size(400, 100)
+        kerned = text('AVATAR WAVY', 10, 50, font=('Avenir', 40), plot=False)
+        unkerned = text('AVATAR WAVY', 10, 50, font=('Avenir', 40), tracking=None, plot=False)
+        self.assertGreater(unkerned.metrics.w, kerned.metrics.w)
+
     @reference('typography/font-metrics.png')
     def test_font_metrics(self):
         # ref/Typography/types/Font
