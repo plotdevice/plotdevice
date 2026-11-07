@@ -287,22 +287,22 @@ class DrawingTests(PlotDeviceTestCase):
         with stroke(None), fill(0):
             bezier(combined)
 
-    @reference('drawing/paths-offset.png')
-    def test_paths_offset(self):
-        # offset() grows/shrinks a path's own boundary -- distinct from
+    @reference('drawing/paths-inset.png')
+    def test_paths_inset(self):
+        # inset() shrinks/grows a path's own boundary -- distinct from
         # trace(), which converts an existing stroke into fill geometry
         size(175, 109)
         path = oval(47, 34, 80, 40, plot=False)
         with stroke(None), fill(0.85):
-            bezier(path.offset(10))
+            bezier(path.inset(-10))
         with stroke(None), fill(0.3):
             bezier(path)
         with stroke(None), fill(0):
-            bezier(path.offset(-10))
+            bezier(path.inset(10))
 
-    @reference('drawing/paths-offset-join.png')
-    def test_paths_offset_join(self):
-        # a sharply-pointed star exercises offset()'s corner styles at acute
+    @reference('drawing/paths-inset-join.png')
+    def test_paths_inset_join(self):
+        # a sharply-pointed star exercises inset()'s corner styles at acute
         # angles -- the same kind of sharp/concave-corner edge case that
         # exposed the even-odd/gpc bug for trace()+union(), just reaching
         # Clipper2's offsetting code path (ClipperOffset) instead of its
@@ -312,21 +312,21 @@ class DrawingTests(PlotDeviceTestCase):
         for x, j in ((30, MITER), (87, ROUND), (144, BEVEL)):
             star_path = star(x, 58, points=5, outer=25, inner=11, plot=False)
             with stroke(None), fill(0.2):
-                bezier(star_path.offset(6, join=j))
+                bezier(star_path.inset(-6, join=j))
 
-    def test_paths_offset_collapse(self):
+    def test_paths_inset_collapse(self):
         # shrinking by more than the shape can support should collapse
         # cleanly to an empty path, not crash or produce garbage geometry
         size(50, 50)
         path = oval(5, 5, 40, 40, plot=False)
-        collapsed = path.offset(-100)
+        collapsed = path.inset(100)
         self.assertEqual(len(collapsed), 0)
         self.assertEqual(collapsed.area, 0)
 
-    def test_paths_offset_bad_join(self):
+    def test_paths_inset_bad_join(self):
         path = oval(0, 0, 40, 40, plot=False)
         with self.assertRaises(DeviceError):
-            path.offset(5, join="bogus")
+            path.inset(5, join="bogus")
 
     @reference('drawing/paths-simplify.png')
     def test_paths_simplify(self):

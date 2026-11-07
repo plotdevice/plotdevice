@@ -46,7 +46,7 @@ def stroke_to_fill(path, width, cap, join, miter=10.0):
     return _stroke_to_fill(path, width, cap, join, miter)
 
 from _plotdevice import offset as _offset
-def offset(path, delta, join, miter=2.0, flatness=0.6):
+def offset(path, delta, join, miter=10.0, flatness=0.6):
     """Grows (delta > 0) or shrinks (delta < 0) a PDPath's boundary."""
     return _offset(path, delta, join, miter, flatness)
 

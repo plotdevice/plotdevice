@@ -374,7 +374,7 @@ cPathmatics_offset(PyObject *self, PyObject *args)
 {
     PyObject *pyObject;
     CGPathRef path;
-    double delta, miter = 2.0;
+    double delta, miter = 10.0;
     int join;
     float flatness = 0.6;
 
