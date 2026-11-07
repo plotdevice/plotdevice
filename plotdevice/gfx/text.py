@@ -935,7 +935,8 @@ class TextFragment(object):
         self.m = None
 
         if isinstance(match, foundry.Slug): # via line_slugs()
-            self.start, self.end = match.span
+            loc, count = match.span
+            self.start, self.end = loc, loc + count
             self._slugs = [match]
         elif hasattr(match, 'range'): # NSSubText
             self.start, n = match.range()

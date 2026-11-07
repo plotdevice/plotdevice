@@ -529,6 +529,15 @@ class TypographyTests(PlotDeviceTestCase):
         self.assertEqual([line.text for line in copied.lines], [line.text for line in t.lines])
         self.assertEqual(copied.frame, t.frame)
 
+    def test_lines_cover_the_text(self):
+        # each line picks up where the last one ended, hyphenated or not
+        size(300, 400)
+        src = ('Internationalization of extraordinarily incomprehensible documentation characteristically '
+               'necessitates uncharacteristically comprehensive reorganization.')
+        for hyphenate in (False, True):
+            t = text(src, 20, 40, width=120, hyphenate=hyphenate, plot=False)
+            self.assertEqual(''.join(line.text for line in t.lines), src)
+
     def test_flowed_blocks_keep_the_texts_size_and_units(self):
         # flowed blocks match the first, even after the canvas changes units
         size(10, 8, cm)
