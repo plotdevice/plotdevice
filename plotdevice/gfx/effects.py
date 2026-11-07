@@ -172,17 +172,17 @@ class Effect(Frob):
 
         return bool(fx) # return whether any state was just changed
 
-    def applied(self, owner):
+    def applied(self, owner, layer=True):
         """Apply compositing effects (if any) to any drawing inside the `with` block"""
         if not self._fx or gfx._state.casting is owner:
             return _NO_FX # avoid making a generator if there's nothing to apply
-        return self._applying(owner)
+        return self._applying(owner, layer)
 
     @contextmanager
-    def _applying(self, owner):
+    def _applying(self, owner, layer):
         shadowed = 'shadow' in self._fx
         if self.set('blend', 'alpha'):
-            if not shadowed and getattr(owner, '_paints_once', False):
+            if not shadowed and not layer:
                 yield # a lone fill or stroke needs no layer
             else:
                 with gfx._state.compositing(owner):

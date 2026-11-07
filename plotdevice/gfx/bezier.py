@@ -384,10 +384,6 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         path = self._pdpath if self._grid.dpx == 1 else self._pdpath.transformed(tuple(self._grid.to_px.matrix))
         return path.cgpath
 
-    @property
-    def _paints_once(self):
-        return self._fillcolor is None or not self._strokecolor
-
     def _render_box(self):
         """The box its outline covers where it's drawn"""
         dpx = self._grid.dpx
@@ -408,7 +404,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
                 self._screen_transform.concat()
 
             # apply blend/alpha/shadow (and any associated transparency layers)
-            with self.effects.applied(self):
+            with self.effects.applied(self, layer=self._fillcolor is not None and bool(self._strokecolor)):
                 # effects (like shadows) may shift the active context, so re-fetch
                 target = gfx._state.port
 

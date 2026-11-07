@@ -548,9 +548,10 @@ class RendererTests(PlotDeviceTestCase):
                 RenderState.layer_box = layer_box
         self.assertEqual(render(True), render(False))
 
-    def test_paints_once_alpha_skips_its_layer(self):
+    def test_lone_paint_alpha_skips_its_layer(self):
         # paths that paint once match their layered render
-        from plotdevice.gfx.bezier import Bezier
+        import re
+        from plotdevice.gfx.effects import Effect
         size(200, 200)
         background(.9)
         for i in range(4):
@@ -558,15 +559,17 @@ class RendererTests(PlotDeviceTestCase):
         star(100, 140, 7, 50, 20, fill=None, stroke='black', strokewidth=6, dash=[9, 4], alpha=.5)
         oval(120, 120, 60, 60, fill='teal', stroke='black', strokewidth=10, alpha=.5)
         frame = _ctx.canvas.commit()
-        self.assertEqual([g._paints_once for g in frame.grobs], [True] * 5 + [False])
+        groups = lambda: len(re.findall(rb'/S\s*/Transparency', bytes(frame._getImageData('pdf'))))
+        self.assertEqual(groups(), 1) # only the filled & stroked oval needs a layer
 
         direct = _pixels(frame._render_to_cgimage(1.0, 2.0))
-        paints_once = Bezier._paints_once
-        Bezier._paints_once = property(lambda self: False)
+        applied = Effect.applied
+        Effect.applied = lambda self, owner, layer=True: applied(self, owner)
         try:
+            self.assertEqual(groups(), 6)
             layered = _pixels(frame._render_to_cgimage(1.0, 2.0))
         finally:
-            Bezier._paints_once = paints_once
+            Effect.applied = applied
         self.assertLessEqual(max(abs(a - b) for a, b in zip(direct, layered)), 3)
 
     def test_wide_shadow_blurs_match_core_graphics(self):
