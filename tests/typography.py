@@ -493,6 +493,13 @@ class TypographyTests(PlotDeviceTestCase):
         quip = "If it ain't fun make it fun"
         text(quip, 10, 55, width=80)
 
+    def test_tracking_none(self):
+        # None turns the font's kerning off
+        size(400, 100)
+        kerned = text('AVATAR WAVY', 10, 50, font=('Avenir', 40), plot=False)
+        unkerned = text('AVATAR WAVY', 10, 50, font=('Avenir', 40), tracking=None, plot=False)
+        self.assertGreater(unkerned.metrics.w, kerned.metrics.w)
+
     @reference('typography/font-metrics.png')
     def test_font_metrics(self):
         # ref/Typography/types/Font
@@ -529,6 +536,15 @@ class TypographyTests(PlotDeviceTestCase):
         self.assertEqual([line.text for line in copied.lines], [line.text for line in t.lines])
         self.assertEqual(copied.frame, t.frame)
 
+    def test_lines_cover_the_text(self):
+        # each line picks up where the last one ended, hyphenated or not
+        size(300, 400)
+        src = ('Internationalization of extraordinarily incomprehensible documentation characteristically '
+               'necessitates uncharacteristically comprehensive reorganization.')
+        for hyphenate in (False, True):
+            t = text(src, 20, 40, width=120, hyphenate=hyphenate, plot=False)
+            self.assertEqual(''.join(line.text for line in t.lines), src)
+
     def test_flowed_blocks_keep_the_texts_size_and_units(self):
         # flowed blocks match the first, even after the canvas changes units
         size(10, 8, cm)
@@ -538,6 +554,30 @@ class TypographyTests(PlotDeviceTestCase):
         self.assertEqual(len(t.blocks), 10)
         self.assertEqual({tuple(b.size) for b in t.blocks}, {(4, 1.5)})
         self.assertEqual({b._grid.dpx for b in t.blocks}, {t._grid.dpx})
+
+    def test_bounds_follow_the_canvas_units(self):
+        # a text's bounds, on a line (coretext) and in a block (textkit), land where they do on a px canvas
+        def bounds_px(unit, width):
+            size(1, 1, unit)
+            dpx = text('x', 0, 0, plot=False)._grid.dpx
+            t = text('Some text that wraps', 50 / dpx, 80 / dpx, width=width and width / dpx, align=CENTER, plot=False)
+            boxes = [t.bounds] + ([t.blocks[0].bounds] if width else [])
+            return [tuple(round(v * dpx, 6) for v in (b.x, b.y, b.w, b.h)) for b in boxes]
+        for width in (None, 100):
+            self.assertEqual(bounds_px(cm, width), bounds_px(px, width))
+
+    def test_flowed_blocks_left_empty_use_the_texts_font(self):
+        # blocks the text no longer reaches after a flow are measured with the Text's own font
+        size(400, 300)
+        t = text('a long run of words that wraps around ' * 3, 20, 30, width=120, height=40, plot=False)
+        empty = list(t.flow())
+        t.width = None
+        self.assertEqual({b.text for b in empty}, {''})
+        for block in empty:
+            self.assertEqual(block._headroom, t._font.ascender)
+            self.assertAlmostEqual(block.frame.y, t.y + block.y - block._from_px(t._font.ascender))
+            block.bounds
+        t.frame
 
     def test_pattern_fills_tile_text_as_they_do_shapes(self):
         # glyphs show the tiles a shape filled with the same pattern would, on a line (coretext) and in a block (textkit)

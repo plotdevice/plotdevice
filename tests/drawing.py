@@ -192,6 +192,21 @@ class DrawingTests(PlotDeviceTestCase):
         self.assertEqual(PDPath(ns).elements(), elements(ns.copy()))
         assertElementsClose(PDPath(p).elements(), elements(ns.copy()))
 
+    def test_pdpath_rejects_nonfinite_values(self):
+        # NaN and infinity raise rather than leaving a path cg has silently shortened
+        for bad in (float('nan'), float('inf')):
+            p = PDPath()
+            p.moveto(0, 0)
+            for call in (lambda: p.moveto(bad, 0), lambda: p.lineto(0, bad), lambda: p.curveto(bad, 0, 1, 1, 2, 2),
+                         lambda: p.rect(0, 0, bad, 10), lambda: p.oval(bad, 0, 10, 10), lambda: p.arc(0, 0, bad, 0, 90, 0),
+                         lambda: p.arcto(bad, 0, 10, 10, 3), lambda: p.transformed((1, 0, 0, bad, 0, 0))):
+                with self.assertRaisesRegex(ValueError, 'NaN or infinity'):
+                    call()
+            self.assertEqual(len(p), len(p.elements()))
+        ns = NSBezierPath.bezierPathWithRect_(((0, 0), (float('inf'), 10))) # appkit keeps infinity in a rect
+        with self.assertRaisesRegex(ValueError, 'NaN or infinity'):
+            PDPath(ns)
+
     @reference('drawing/paths-flat-union.png')
     def test_paths_flat_union(self):
         # tut/Bezier_Paths (7)
@@ -287,22 +302,22 @@ class DrawingTests(PlotDeviceTestCase):
         with stroke(None), fill(0):
             bezier(combined)
 
-    @reference('drawing/paths-offset.png')
-    def test_paths_offset(self):
-        # offset() grows/shrinks a path's own boundary -- distinct from
+    @reference('drawing/paths-inset.png')
+    def test_paths_inset(self):
+        # inset() shrinks/grows a path's own boundary -- distinct from
         # trace(), which converts an existing stroke into fill geometry
         size(175, 109)
         path = oval(47, 34, 80, 40, plot=False)
         with stroke(None), fill(0.85):
-            bezier(path.offset(10))
+            bezier(path.inset(-10))
         with stroke(None), fill(0.3):
             bezier(path)
         with stroke(None), fill(0):
-            bezier(path.offset(-10))
+            bezier(path.inset(10))
 
-    @reference('drawing/paths-offset-join.png')
-    def test_paths_offset_join(self):
-        # a sharply-pointed star exercises offset()'s corner styles at acute
+    @reference('drawing/paths-inset-join.png')
+    def test_paths_inset_join(self):
+        # a sharply-pointed star exercises inset()'s corner styles at acute
         # angles -- the same kind of sharp/concave-corner edge case that
         # exposed the even-odd/gpc bug for trace()+union(), just reaching
         # Clipper2's offsetting code path (ClipperOffset) instead of its
@@ -312,21 +327,21 @@ class DrawingTests(PlotDeviceTestCase):
         for x, j in ((30, MITER), (87, ROUND), (144, BEVEL)):
             star_path = star(x, 58, points=5, outer=25, inner=11, plot=False)
             with stroke(None), fill(0.2):
-                bezier(star_path.offset(6, join=j))
+                bezier(star_path.inset(-6, join=j))
 
-    def test_paths_offset_collapse(self):
+    def test_paths_inset_collapse(self):
         # shrinking by more than the shape can support should collapse
         # cleanly to an empty path, not crash or produce garbage geometry
         size(50, 50)
         path = oval(5, 5, 40, 40, plot=False)
-        collapsed = path.offset(-100)
+        collapsed = path.inset(100)
         self.assertEqual(len(collapsed), 0)
         self.assertEqual(collapsed.area, 0)
 
-    def test_paths_offset_bad_join(self):
+    def test_paths_inset_bad_join(self):
         path = oval(0, 0, 40, 40, plot=False)
         with self.assertRaises(DeviceError):
-            path.offset(5, join="bogus")
+            path.inset(5, join="bogus")
 
     @reference('drawing/paths-simplify.png')
     def test_paths_simplify(self):
@@ -901,6 +916,24 @@ class DrawingTests(PlotDeviceTestCase):
         lineto(40, 10)
         p = endpath(plot=False)
         drawpath(p)
+
+    def test_drawpath_uses_the_current_state(self):
+        # each drawpath() draws a copy in the state at the time, leaving the path as it was made
+        from plotdevice import _ctx
+        size(200, 100)
+        fill('red')
+        nostroke()
+        p = rect(10, 10, 40, 40, plot=False)
+        fill('blue')
+        stroke('black')
+        first = drawpath(p)
+        translate(60, 0)
+        second = drawpath(p, fill='green')
+        drawn = _ctx.canvas.commit().grobs
+        self.assertEqual([g.fill for g in drawn], [Color('blue'), Color('green')])
+        self.assertEqual([tuple(g.transform.matrix)[4] for g in drawn], [0, 60])
+        self.assertIsNot(first, p)
+        self.assertEqual((p.fill, p.stroke), (Color('red'), None))
 
     @reference('drawing/endpath.png')
     def test_endpath(self):

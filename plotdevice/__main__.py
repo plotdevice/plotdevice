@@ -16,6 +16,10 @@ Examples:
     python3 -m plotdevice script.pv --export retina.png --zoom 200
     python3 -m plotdevice script.pv --export also-retina@2x.png
 
+  Pass arguments to the script (after `--` they can start with a dash):
+    python3 -m plotdevice script.pv --args red 12
+    python3 -m plotdevice script.pv -- --color red -v
+
 Animation Examples:
   Create a 5 second long H.265 video at 2 megabits/sec:
     python3 -m plotdevice script.pv --export output.mov --frames 150 --rate 2.0
@@ -61,7 +65,7 @@ def main():
   o.add_argument('--codec', metavar='NAME', default='hevc', choices=('hevc', 'h264', 'prores'), help='codec for an exported video: hevc (default), h264, or prores (ProRes 4444, for editing elsewhere)')
   o.add_argument('--loop', metavar='N', default=0, nargs='?', const=-1, help='number of times to loop an exported animated gif (omit N to loop forever)')
   o.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
-  o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='arguments to be passed to the script as sys.argv')
+  o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='arguments to be passed to the script as sys.argv (as is everything after a `--`)')
   o.add_argument('--version', action='version', version='PlotDevice %s' % plotdevice.__version__)
 
   x = parser.add_argument_group("Export Options")
@@ -94,7 +98,13 @@ def main():
     packages = sys.argv[sys.argv.index('--install')+1:]
     sys.exit(call([sys.executable, '-m', 'pip', 'install', '--isolated', '--target', interpreter_lib_dir, *packages]))
 
-  opts = parser.parse_args()
+  # everything after a `--` goes to the script as is (placed after any --args values)
+  argv, passed = sys.argv[1:], []
+  if '--' in argv:
+    split = argv.index('--')
+    argv, passed = argv[:split], argv[split + 1:]
+  opts = parser.parse_args(argv)
+  opts.args += passed
 
   if opts.virtualenv:
     libdirs = glob('%s/lib/python3.*/site-packages'%opts.virtualenv)

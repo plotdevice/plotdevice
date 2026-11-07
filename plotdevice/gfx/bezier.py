@@ -567,12 +567,12 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
             raise DeviceError(badstyle)
         return Bezier(pathmatics.stroke_to_fill(self._pdpath, nib, _CAPSTYLE[cap], _JOINSTYLE[join]))
 
-    def offset(self, delta, join=None, miter=2.0):
-        """Returns a new Bezier with this path's boundary grown (delta > 0)
-        or shrunk (delta < 0) by delta canvas units.
+    def inset(self, delta, join=None, miter=10.0):
+        """Returns a new Bezier with this path's boundary shrunk (delta > 0)
+        or grown (delta < 0) by delta canvas units.
 
         join (omitted defaults to the canvas's current pen() join) controls
-        the corner style where the offset boundary bends: MITER, ROUND, or
+        the corner style where the inset boundary bends: MITER, ROUND, or
         BEVEL.
         """
         if join is None:
@@ -580,7 +580,7 @@ class Bezier(EffectsMixin, TransformMixin, ColorMixin, PenMixin, Grob):
         if join not in _JOINSTYLE:
             badstyle = 'Line join style should be MITER, ROUND or BEVEL.'
             raise DeviceError(badstyle)
-        return Bezier(pathmatics.offset(self._pdpath, delta, _JOINSTYLE[join], miter))
+        return Bezier(pathmatics.offset(self._pdpath, -delta, _JOINSTYLE[join], miter))
 
     def simplify(self, epsilon=1.0):
         """Returns a new Bezier with redundant points removed -- every

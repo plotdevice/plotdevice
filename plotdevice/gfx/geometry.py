@@ -752,9 +752,8 @@ class Transform(object):
         return Size(self._nsAffineTransform.transformSize_(tuple(size)))
 
     def transformRegion(self, rect):
-        origin = self.transformPoint(rect.origin)
-        size = self.transformSize(rect.size)
-        return Region(origin, size)
+        (x, y), (w, h) = rect
+        return Region(*_hull(self.matrix, x, y, w, h))
 
     def transformBezier(self, path):
         from .bezier import Bezier, PDPath

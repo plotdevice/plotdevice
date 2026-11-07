@@ -1,5 +1,6 @@
 REPO := https://github.com/swhitty/SwiftDraw.git
 TAG := 0.21.0
+SWIFT_BUILD := swift build --package-path SwiftDraw -c release --arch arm64 --arch x86_64
 .PHONY: all clean distclean
 
 all: SwiftDraw.o
@@ -9,8 +10,8 @@ all: SwiftDraw.o
 SwiftDraw.o: SwiftDraw PDSVGImageRep.swift Package.swift.tmpl
 	cp PDSVGImageRep.swift SwiftDraw/SwiftDraw
 	cp Package.swift.tmpl SwiftDraw/Package.swift
-	cd SwiftDraw && swift build -c release --target SwiftDraw --arch arm64 --arch x86_64
-	cp SwiftDraw/.build/apple/Products/Release/SwiftDraw*.o $@
+	$(SWIFT_BUILD) --target SwiftDraw
+	cp "$$($(SWIFT_BUILD) --show-bin-path)"/SwiftDraw*.o $@
 
 SwiftDraw:
 	git clone --depth 1 --branch $(TAG) $(REPO)

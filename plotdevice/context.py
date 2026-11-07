@@ -534,13 +534,11 @@ class Context(object):
         return p
 
     def drawpath(self, path, **kwargs):
+        """Draw a copy of a path's shape with the current graphics state (and any kwargs on top)"""
         Bezier.validate(kwargs)
-        if isinstance(path, (list, tuple)):
-            path = Bezier(path, **kwargs)
-        else: # Set the values in the current bezier path with the kwargs
-            for arg_key, arg_val in kwargs.items():
-                setattr(path, arg_key, _copy_attr(arg_val))
-        path.draw()
+        drawn = Bezier(path, **kwargs) # takes the geometry only, as bezier(path) does
+        drawn.draw()
+        return drawn
 
     def autoclosepath(self, close=True):
         self._autoclosepath = close

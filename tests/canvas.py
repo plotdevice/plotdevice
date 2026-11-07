@@ -617,6 +617,29 @@ class CanvasTests(PlotDeviceTestCase):
         gc.collect(); grown = sys.getallocatedblocks() - before
         self.assertLess(grown, 1000, 'rendering grew the heap by %d blocks over 30 frames' % grown)
 
+    def test_finish_before_add_raises_and_writes_nothing(self):
+        # an export with nothing added says so rather than saving the canvas
+        import gc, os, tempfile
+        size(40, 40)
+        rect(10, 10, 20, 20)
+        with tempfile.TemporaryDirectory() as tmp:
+            for name, opts in (('out.mov', dict(fps=30)), ('out.gif', dict(fps=30)), ('out.pdf', {}), ('out.png', {})):
+                path = os.path.join(tmp, name)
+                writer = export(path, **opts)
+                with self.assertRaisesRegex(DeviceError, "Nothing was added to 'out"):
+                    writer.finish()
+                del writer
+                gc.collect()
+                self.assertFalse(os.path.exists(path), name)
+            # an animation's with-block needs frames too, but a still's draws the image
+            for name in ('anim.mov', 'anim.gif'):
+                with self.assertRaisesRegex(DeviceError, "Nothing was added"):
+                    with export(os.path.join(tmp, 'block-' + name), fps=30):
+                        rect(10, 10, 20, 20)
+            with export(os.path.join(tmp, 'block.png')):
+                rect(10, 10, 20, 20)
+            self.assertTrue(os.path.exists(os.path.join(tmp, 'block.png')))
+
     def test_pdf_exports_are_documents_unless_numbered(self):
         # pages go in one pdf unless the name is numbered
         import os, tempfile

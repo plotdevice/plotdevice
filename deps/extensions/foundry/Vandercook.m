@@ -110,6 +110,7 @@ static NSDictionary *AAT;
 }
 
 + (NSArray *)lineFragmentsInRange:(NSRange)rng withLayout:(NSLayoutManager *)layout{
+    [layout ensureLayoutForCharacterRange:rng]; // include any hyphens added during layout
     NSRange full_range = [layout glyphRangeForCharacterRange:rng actualCharacterRange:NULL];
     NSArray *blocks = [layout textContainers];
     NSTextStorage *store = [layout textStorage];

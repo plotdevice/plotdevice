@@ -636,7 +636,7 @@ class ExportSheet(NSObject):
             else:
                 item.setHidden_(not holds_cmyk)
         chosen = popup.selectedItem()
-        if chosen is None or chosen.isHidden() or not chosen.isEnabled():
+        if chosen is None or chosen.isHidden():
             default = Output.DEFAULTS.get(format, P3)
             popup.selectItemAtIndex_(popup.indexOfItemWithRepresentedObject_(default))
         choices = [item for item in popup.itemArray() if item.representedObject() is not None and not item.isHidden()]

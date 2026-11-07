@@ -27,6 +27,29 @@ class CompositingTests(PlotDeviceTestCase):
             rect(10,10, 50,50, fill='red')
             rect(35,35, 50,50, fill='black')
 
+    def test_image_alpha_applies_once(self):
+        # an image at half opacity matches a rect at half opacity
+        import os, tempfile
+        from plotdevice import _ctx
+        from Quartz import CGDataProviderCopyData, CGImageGetDataProvider
+        def middle(draw):
+            clear(all)
+            size(60, 60)
+            background('white')
+            draw()
+            pixels = CGDataProviderCopyData(CGImageGetDataProvider(_ctx.canvas.commit()._render_to_cgimage(1.0, 1.0)))
+            return bytes(pixels[(30 * 60 + 30) * 4:][:4])
+        with tempfile.TemporaryDirectory() as tmp:
+            png, svg = os.path.join(tmp, 'black.png'), os.path.join(tmp, 'black.svg')
+            size(40, 40)
+            rect(0, 0, 40, 40, fill='black')
+            export(png)
+            with open(svg, 'w') as f:
+                f.write('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40"/></svg>')
+            expected = middle(lambda: rect(10, 10, 40, 40, fill='black', alpha=.5))
+            for src in (png, svg):
+                self.assertEqual(middle(lambda: image(src, 10, 10, alpha=.5)), expected)
+
     @reference('compositing/clip.png')
     def test_clip(self):
         # ref/Compositing/commands/clip()

@@ -8,7 +8,6 @@ approaches like `pip install .` or `python -m build`.
 """
 import zlib
 from glob import glob
-from subprocess import call
 from os.path import dirname, abspath, basename, exists, join, getmtime
 
 from setuptools import setup
@@ -27,8 +26,8 @@ class BuildExtCommand(build_ext):
     depends on (icns, colors.json, an ibtool-compiled nib, the press profiles)."""
 
     def run(self):
-        call('cd deps/extensions/svg && make', shell=True, cwd=ROOT)
-        call('cd deps/extensions/clipper2 && make', shell=True, cwd=ROOT)
+        self.spawn(['make', '-C', join(ROOT, 'deps/extensions/svg')])
+        self.spawn(['make', '-C', join(ROOT, 'deps/extensions/clipper2')])
 
         # relink if any .o is updated
         for ext in self.extensions:
@@ -92,7 +91,7 @@ class SdistPrepCommand(sdist):
             self.spawn(['/usr/bin/ibtool', '--compile', nib, xib])
 
         # make sure we have the sources for SwiftDraw
-        call('cd deps/extensions/svg && make SwiftDraw', shell=True, cwd=ROOT)
+        self.spawn(['make', '-C', join(ROOT, 'deps/extensions/svg'), 'SwiftDraw'])
 
         # build the sdist based on our MANIFEST.in additions
         sdist.run(self)

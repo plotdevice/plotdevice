@@ -175,6 +175,17 @@ class GeometryTests(PlotDeviceTestCase):
         rect(shrunk, stroke='orange', dash=3)
         rect(grown, stroke='red', dash=3)
 
+    def test_region_transform(self):
+        # a transformed region bounds the transformed rect
+        size(125, 125)
+        r = Region(10, 20, 100, 50)
+        xf = Transform()
+        xf.rotate(30)
+        xf.skew(10, 0)
+        got, want = xf.apply(r), xf.apply(rect(r, plot=False)).bounds
+        for a, b in zip((got.x, got.y, got.w, got.h), (want.x, want.y, want.w, want.h)):
+            self.assertAlmostEqual(a, b)
+
     @reference('geometry/reset.jpg')
     def test_reset(self):
         # ref/Transform/commands/reset()

@@ -436,7 +436,8 @@ class Stencil(Frob):
             # run the filter chain and render to a cg-image
             singlechannel = ciFilter(self.channel, self.bmp._ciImage)
             greyscale = ciFilter(self.invert, singlechannel)
-            ci_ctx = CIContext.contextWithOptions_(None)
+            unmanaged = {kCIContextWorkingColorSpace: NSNull.null(), kCIContextOutputColorSpace: NSNull.null()}
+            ci_ctx = CIContext.contextWithOptions_(unmanaged) # don't treat mask values as colors
             maskRef = ci_ctx.createCGImage_fromRect_(greyscale, ((0,0), self.bmp._screen_size))
 
             # turn the image into an ‘imagemask’ cg-image
@@ -482,7 +483,7 @@ def _channelFilter(channel, img):
         transmat = [tuple(rgb_row)] * 3
         transmat += [ (0,0,0,0), (0,0,0,1) ]
     elif channel in ('black', 'white'):
-        transmat = [(.333, .333, .333, 0)] * 3
+        transmat = [(.2126, .7152, .0722, 0)] * 3 # rec. 709 luma
         transmat += [ (0,0,0,0), (0,0,0,1) ]
     return _matrixFilter(transmat, img)
 
