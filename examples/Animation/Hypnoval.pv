@@ -20,8 +20,8 @@ from math import sin, cos
 
 size(300,300)
 
-# Set the animation speed to 30 frames per second
-speed(30)
+# Set the animation speed to 60 frames per second
+speed(60)
 
 # The setup method is called once, at the start of the animation.
 # Here, it initializes the counter.
@@ -48,4 +48,4 @@ def draw(anim):
 
     # Increase the global counter. The `anim` object will stick around
     # between calls to setup, draw, and stop.
-    anim.counter += 0.19
+    anim.counter += 0.095

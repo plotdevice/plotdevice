@@ -217,9 +217,9 @@ class Sandbox(object):
                 # we're in the initial pass through the script so flag the run as ongoing
                 self._anim = util.adict()
 
-                # default to 30fps if speed() wasn't called in the script
+                # default to 60fps if speed() wasn't called in the script
                 if self.speed is None:
-                    self.canvas.speed = 30
+                    self.canvas.speed = 60
 
                 # determine which of the script's routines accept an argument
                 for routine in 'setup','draw','stop':

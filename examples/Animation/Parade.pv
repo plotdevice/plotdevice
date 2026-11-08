@@ -3,7 +3,7 @@
 This example shows object-oriented design in animation for
 defining a set of "actors" (the balls) that parade on stage.
 """
-speed(30)
+speed(60)
 size(340, 482)
 
 # Import PRNG and trigonometry functions
@@ -25,9 +25,9 @@ class Balloon:
 
     # Update the internal state values.
     def update(self):
-        self.dx = sin(FRAME/float(random(5,100))) * 20.0
-        self.dy = cos(FRAME/float(random(5,100))) * 20.0
-        self.ds = cos(FRAME/float(random(5,100))) * 10.0
+        self.dx = sin(FRAME/random(5,100)/2) * 20.0
+        self.dy = cos(FRAME/random(5,100)/2) * 20.0
+        self.ds = cos(FRAME/random(5,100)/2) * 10.0
 
     # Draw a ball: set the fill color first and draw a circle.
     def draw(self):
@@ -45,7 +45,7 @@ def draw(anim):
     background(0.2)
     seed(1)
     # This translate command makes the ball move up on the screen.
-    translate(0, HEIGHT-FRAME)
+    translate(0, HEIGHT-FRAME/2.0)
     for ball in anim.balloons:
         ball.update()
         ball.draw()

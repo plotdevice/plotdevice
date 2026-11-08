@@ -235,7 +235,7 @@ text("Welcome to PlotDevice", 20, 40)
 # frame-rate value. This has the side-effect of
 # running setup, draw, and stop in the pattern
 # described below:
-speed(30)
+speed(60)
 
 # runs once before the first frame of animation
 def setup():

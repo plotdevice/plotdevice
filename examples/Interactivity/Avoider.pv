@@ -9,7 +9,7 @@ object-oriented programming, and interactivity.
 
 # You can change the size of the canvas to get a bigger or smaller playing field.
 size(300, 324)
-speed(30)
+speed(60)
 
 # The height of the bar at the bottom displaying the current time.
 STATUS_BAR_HEIGHT = 12
@@ -24,7 +24,7 @@ class Hero:
 
     def __init__(self, x, y):
         self.origin = Point(x, y)
-        self.speed = 5.0
+        self.speed = 2.5
         self.size = 5.0
 
     def draw(self):
@@ -42,7 +42,7 @@ class Blob:
     def __init__(self, x, y):
         self.origin = Point(x, y)
         self.size = 5.0
-        self.speed = random(0.5,0.8)
+        self.speed = random(0.25,0.4)
         self.seed = random()
         self.angle = 0.0
 
@@ -86,7 +86,7 @@ class Blob:
                 self.origin = random_spot_away_from_hero(hero)
 
         # Increase and decrease the size based on the speed of the blob
-        self.size = abs(sin(self.seed+FRAME/(5.0-self.speed*2.0)) * 2.0+self.seed) + 4.0
+        self.size = abs(sin(self.seed+FRAME/(10.0-self.speed*8.0)) * 2.0+self.seed) + 4.0
 
 
 def random_spot_away_from_hero(hero, mindist = 20.0):
@@ -124,9 +124,9 @@ def draw():
     translate(WIDTH/2, HEIGHT/2)
     # The rotation amount and speed is linked to the current FRAME. The farther in the game,
     # the faster and bigger the rotation gets
-    rotate(sin(FRAME/70.0)*FRAME/10.0)
+    rotate(sin(FRAME/140.0)*FRAME/20.0)
     # The speed of the saling is also linked to the current FRAME.
-    scale(0.6 + abs(sin(FRAME/100.0)*0.4))
+    scale(0.6 + abs(sin(FRAME/200.0)*0.4))
     # Move the canvas back. The rotation is now applied.
     translate(-WIDTH/2, -HEIGHT/2)
 
@@ -194,6 +194,6 @@ def draw():
     # and draw the "GAME OVER" message
     if gameover:
         if hero.size < 500:
-            hero.size += 30.0
+            hero.size += 15.0
         fill(1)
         text("GAME OVER", (WIDTH/2.0)-textwidth("game over")/2.0, HEIGHT/2)

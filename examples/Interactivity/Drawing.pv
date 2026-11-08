@@ -7,7 +7,7 @@ then draws the points in this list. We use findpath to find a path
 """
 
 size(500, 500)
-speed(30)
+speed(60)
 
 def setup():
     # px/py are the previous mouse coordinates.
@@ -61,8 +61,8 @@ def transform_point(pt, index, total_length):
     # Add something to the x and y coordinates.
     # The formula (total_length - index), makes the influence on "older"
     # points (in the beginning of the list, with a low index) greater.
-    pt.x += sin(index/50.0) * (total_length-index) / 100.0
-    pt.y -= cos(index/100.0) * (total_length-index) / 100.0
+    pt.x += sin(index/100.0) * (total_length-index) / 400.0
+    pt.y -= cos(index/200.0) * (total_length-index) / 400.0
     # If the point is offscreen, return None to indicate that we want the point deleted.
     if pt.x < 0 or pt.x > WIDTH or pt.y < 0 or pt.y > HEIGHT:
         return None
