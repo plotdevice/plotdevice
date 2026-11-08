@@ -504,7 +504,8 @@ class MovieExportSession(ExportSession):
         self.codec = codec
         self.zoom = zoom
         self.output = output or Output.parse(None, format)
-        self.video_colors = {P3: 'p3', SRGB: 'srgb', Profile.REC709: 'rec709', Profile.REC2020: 'rec2020'}.get(self.output.profile.key) # Video's names
+        rec709, rec2020 = Profile.SYSTEM_VIDEO
+        self.video_colors = {P3: 'p3', SRGB: 'srgb', rec709: 'rec709', rec2020: 'rec2020'}.get(self.output.profile.key) # Video's names
         self.presents = True
 
     def discard_if_failed(self):

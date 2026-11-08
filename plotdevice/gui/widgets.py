@@ -629,7 +629,7 @@ class ExportSheet(NSObject):
             colors = item.representedObject()
             if colors is None:
                 item.setHidden_(idx > 0 and not holds_cmyk)
-            elif colors in (Profile.REC709, Profile.REC2020) and 'rgb' in allowed:
+            elif colors in Profile.SYSTEM_VIDEO and 'rgb' in allowed:
                 item.setHidden_(format not in ('png', 'tiff'))
             elif colors in (P3, SRGB) or colors in system:
                 item.setHidden_(not (colors in allowed or 'rgb' in allowed))

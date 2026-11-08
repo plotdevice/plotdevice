@@ -713,7 +713,7 @@ class ColorTests(PlotDeviceTestCase):
                                   (user, 'Shadowed.icc', rgb), (other, 'Shadowed.icc', cmyk)):
             open(join(folder, name), 'wb').write(icc)
         saved = colors.Profile.FOLDERS
-        colors.Profile.FOLDERS = [user, other]
+        colors.Profile.FOLDERS = [user, other, colors.Profile.SYSTEM]
         try:
             for name in ('My Press', 'my press.icc', 'MY PRESS'):
                 self.assertEqual(parsed(name, 'pdf'), os.path.realpath(join(user, 'My Press.icc')))

@@ -44,21 +44,22 @@ FOGRA47 = "fogra47"
 class Profile(object):
     named = {} # key -> Profile, as colors= names it
 
+    # system profiles, searched after the installed ones
+    SYSTEM = '/System/Library/ColorSync/Profiles'
+
     # ICC profile search path
     FOLDERS = ['~/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles', '/Library/ColorSync/Profiles/Profiles',
                '/Library/ColorSync/Profiles/Recommended', '/Library/Application Support/Adobe/Color/Profiles',
-               '/Library/Application Support/Adobe/Color/Profiles/Recommended']
-
-    # system profiles (searched last)
-    SYSTEM = '/System/Library/ColorSync/Profiles'
+               '/Library/Application Support/Adobe/Color/Profiles/Recommended', SYSTEM]
 
     # default video spaces
-    REC709 = os.path.join(SYSTEM, 'ITU-709.icc')
-    REC2020 = os.path.join(SYSTEM, 'ITU-2020.icc')
+    SYSTEM_VIDEO = {os.path.join(SYSTEM, 'ITU-709.icc'): 'Rec. 709',
+                    os.path.join(SYSTEM, 'ITU-2020.icc'): 'Rec. 2020'}
 
     # system rgb spaces offered beside P3 and sRGB
-    SYSTEM_RGB = {'AdobeRGB1998.icc': 'Adobe RGB (1998)', 'ROMM RGB.icc': 'ROMM RGB (ProPhoto)',
-                  'ITU-709.icc': 'Rec. 709', 'ITU-2020.icc': 'Rec. 2020'}
+    SYSTEM_RGB = {os.path.join(SYSTEM, 'AdobeRGB1998.icc'): 'Adobe RGB (1998)',
+                  os.path.join(SYSTEM, 'ROMM RGB.icc'): 'ROMM RGB (ProPhoto)',
+                  **SYSTEM_VIDEO}
 
     scanned = {} # folder mtimes -> (presses, names)
 
@@ -79,14 +80,15 @@ class Profile(object):
             return cls.named[key]
 
         # a path, else an installed profile's name
-        path = {REC709: cls.REC709, REC2020: cls.REC2020}.get(key, val) # rec709 & rec2020 point to the system's .icc profiles
+        rec709, rec2020 = cls.SYSTEM_VIDEO
+        path = {REC709: rec709, REC2020: rec2020}.get(key, val) # rec709 & rec2020 point to the system's .icc profiles
         key = os.path.abspath(os.path.expanduser(path))
         if not os.path.exists(key):
             key = cls.scan()[1].get(val.lower(), key)
         try:
             icc = open(key, 'rb').read()
         except OSError:
-            searched = ', '.join(cls.FOLDERS + [cls.SYSTEM])
+            searched = ', '.join(cls.FOLDERS)
             unknown = "%r isn't a built-in color space or ICC profile filename (searched in: %s)" % (val, searched)
             raise DeviceError(unknown)
         model = icc[16:20] if icc[36:40] == b'acsp' else None
@@ -106,8 +108,7 @@ class Profile(object):
     def installed(cls, mode):
         """The profiles the menus offer for `mode` beside the built-in spaces, as (label, key) pairs"""
         if mode == RGB:
-            return [(label, os.path.join(cls.SYSTEM, name)) for name, label in cls.SYSTEM_RGB.items()
-                    if os.path.exists(os.path.join(cls.SYSTEM, name))]
+            return [(label, path) for path, label in cls.SYSTEM_RGB.items() if os.path.exists(path)]
         return [(label, press) for press, label in Press.LABELS.items()] + cls.scan()[0]
 
     @staticmethod
@@ -140,7 +141,7 @@ class Profile(object):
         lists = cls.scanned.get(sources)
         if lists is None:
             found, names = {}, {}
-            for folder in folders + [cls.SYSTEM]:
+            for folder in folders:
                 for name in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
                     stem, ext = os.path.splitext(name)
                     if ext.lower() not in ('.icc', '.icm'):
@@ -255,7 +256,7 @@ class Output(namedtuple('Output', ['profile', 'format'])):
     __slots__ = ()
 
     # the colors= each format takes, and its default
-    FORMATS = dict(png=('rgb',), heic=('rgb',), mov=(P3, SRGB, Profile.REC709, Profile.REC2020), gif=(SRGB,), eps=(SRGB, CMYK),
+    FORMATS = dict(png=('rgb',), heic=('rgb',), mov=(P3, SRGB, *Profile.SYSTEM_VIDEO), gif=(SRGB,), eps=(SRGB, CMYK),
                    pdf=('rgb', CMYK), tiff=('rgb', CMYK), jpg=('rgb', CMYK))
     DEFAULTS = dict(gif=SRGB, eps=SRGB)
 
@@ -283,7 +284,8 @@ class Output(namedtuple('Output', ['profile', 'format'])):
         rgb_fits = kind in (P3, SRGB) and 'rgb' in allowed
         press_fits = kind == 'press' and CMYK in allowed
         if not (listed or rgb_fits or press_fits):
-            names = {'rgb': 'an RGB ICC profile', Profile.REC709: 'REC709', Profile.REC2020: 'REC2020'}
+            rec709, rec2020 = Profile.SYSTEM_VIDEO
+            names = {'rgb': 'an RGB ICC profile', rec709: 'REC709', rec2020: 'REC2020'}
             options = ', '.join(names.get(opt, opt.upper()) for opt in allowed)
             if 'rgb' in allowed:
                 options = 'P3, SRGB, ' + options
