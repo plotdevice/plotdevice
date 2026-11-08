@@ -43,7 +43,8 @@ from Quartz import CALayer, CGAffineTransformConcat, CGAffineTransformInvert, CG
                    kCGImagePropertyDPIHeight, kCGImagePropertyDPIWidth, kCGInterpolationHigh, kCGLineCapButt, \
                    kCGLineCapRound, kCGLineCapSquare, kCGLineJoinBevel, kCGLineJoinMiter, kCGLineJoinRound, \
                    kCGPathFill, kCGPathFillStroke, kCGPathStroke, kCGPatternTilingConstantSpacing, \
-                   kCGRenderingIntentDefault, kCGRenderingIntentRelativeColorimetric, kCIInputImageKey
+                   kCGRenderingIntentDefault, kCGRenderingIntentRelativeColorimetric, kCIContextOutputColorSpace, \
+                   kCIContextWorkingColorSpace, kCIInputImageKey
 from AppKit import NSAlert, NSAlternateKeyMask, NSApp, NSAppearance, NSAppearanceNameAqua, \
                    NSAppearanceNameDarkAqua, NSApplication, \
                    NSApplicationActivationPolicyAccessory, NSApplicationActivationPolicyRegular, \
@@ -85,7 +86,7 @@ from Foundation import CIAffineTransform, CIColorMatrix, CIContext, CIFilter, CI
                        NSFileHandle, NSFileHandleDataAvailableNotification, NSHeight, NSInsetRect, \
                        NSIntersectionRange, NSIntersectionRect, NSLocale, NSLog, NSMacOSRomanStringEncoding, \
                        NSMakeRange, NSMapTable, NSMidX, NSMidY, NSMutableAttributedString, NSMutableData, \
-                       NSNotFound, NSNotificationCenter, NSObject, NSOffsetRect, NSOperationQueue, NSPoint, \
+                       NSNotFound, NSNotificationCenter, NSNull, NSObject, NSOffsetRect, NSOperationQueue, NSPoint, \
                        NSPointInRect, NSRect, NSRectFromString, NSSelectorFromString, NSSize, NSString, \
                        NSStringFromRect, NSTimer, NSTimeZone, NSURL, NSUserDefaults, NSUTF8StringEncoding, NSWidth, \
                        NSZeroRect
