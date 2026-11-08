@@ -46,10 +46,10 @@ except ImportError:
     repo = abspath(join(dirname(__file__), '../..'))
     make_py = '%s/make.py' % repo
     if exists(make_py):
-        from platform import python_version
         from sysconfig import get_config_var
         # the `make.py dev`-created venv for whichever interpreter called it
-        local_libs = '%s/deps/local/%s%s/lib/python%s%s/site-packages' % (repo, python_version(), sys.abiflags, get_config_var('py_version_short'), sys.abiflags)
+        version = get_config_var('py_version_short') + sys.abiflags
+        local_libs = '%s/deps/local/%s/lib/python%s/site-packages' % (repo, version, version)
         if not exists(local_libs):
             call([sys.executable, make_py, 'dev'])
         site.addsitedir(local_libs)

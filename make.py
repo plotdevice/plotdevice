@@ -78,8 +78,8 @@ def cmd_dev(args):
         return
 
     # install pyobjc, requests, and the other pypi dependencies in a deps/local venv
-    import platform
-    venv_name = platform.python_version() + sys.abiflags # add 't' if free-threaded
+    from sysconfig import get_config_var
+    venv_name = get_config_var('py_version_short') + sys.abiflags
     if is_framework:
         venv_name += '-fmwk'
         os.environ['PYTHONDONTWRITEBYTECODE'] = '1' # prevent .pyc files from invalidating code-signing
