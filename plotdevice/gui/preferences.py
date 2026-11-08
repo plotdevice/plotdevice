@@ -268,7 +268,7 @@ class PlotDevicePreferencesController(NSWindowController):
             self.pythonModeNote.setStringValue_("Settings will take effect the next time you launch PlotDevice")
         else:
             self.pythonModeNote.setAttributedStringValue_(self._noteText)
-        self.pythonModeNoteAsterisk.setHidden_(not relaunch)
+        self.pythonModeNoteAsterisk.setHidden_(relaunch)
         self.window().invalidateCursorRectsForView_(self.pythonModeNote)
 
     def checkThemes(self):
