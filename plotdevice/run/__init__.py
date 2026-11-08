@@ -14,7 +14,7 @@ class BundledFinder:
     """Imports PyObjC and PlotDevice from the app's own site-packages"""
     def __init__(self, site_dir):
         self.site_dir = site_dir
-        self.names = {'plotdevice', '_plotdevice'}
+        self.names = {'plotdevice'}
         for top_level in glob(join(site_dir, 'pyobjc*.dist-info', 'top_level.txt')):
             with open(top_level) as f:
                 self.names.update(f.read().split())

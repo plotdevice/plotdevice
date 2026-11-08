@@ -10,7 +10,7 @@ from .colors import Color, Gradient, Pattern
 from .geometry import CENTER, DEGREES, IDENTITY, Transform, Region, Point, _pivot, _hull
 from ..util import trim_zeroes, _copy_attr, _flatten, numlike
 from ..lib import pathmatics
-from _plotdevice import PDPath
+from ..lib._native import PDPath
 
 _ctx = None
 __all__ = ("Bezier", "Curve", "BezierPath", "PathElement",

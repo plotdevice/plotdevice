@@ -25,9 +25,9 @@ PyMethodDef methods[] = {
   {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
-PyMODINIT_FUNC PyInit__plotdevice(void){
+PyMODINIT_FUNC PyInit__native(void){
     static struct PyModuleDef moduledef = {
-      PyModuleDef_HEAD_INIT, "_plotdevice", "Typography, image/video export, and bezier math routines", -1, methods
+      PyModuleDef_HEAD_INIT, "plotdevice.lib._native", "Typography, image/video export, and bezier math routines", -1, methods
     };
 
     PyObject *m = PyModule_Create(&moduledef);

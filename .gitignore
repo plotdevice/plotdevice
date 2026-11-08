@@ -11,9 +11,9 @@ MANIFEST.in
 
 # local development
 deps/local
-/*.so
 .build
 /_*
+*.so
 
 # external dependencies
 deps/frameworks/*.framework

@@ -136,7 +136,7 @@ def cmd_clean(args):
         'tests/_out',
         'tests/_diff',
         'details.html',
-        '_plotdevice.*.so',
+        'plotdevice/lib/_native.*.so',
         'plotdevice/rsrc',
         'MANIFEST.in',
         '**/*.pyc',
@@ -204,7 +204,7 @@ def cmd_py2app(args):
 
     from py2app.build_app import py2app as build_py2app
 
-    # make sure _plotdevice.so + plotdevice/rsrc/ are built first
+    # make sure plotdevice/lib/_native.so + plotdevice/rsrc/ are built first
     spawn([sys.executable, 'setup.py', 'build_ext', '--inplace'])
 
     class BuildPy2AppCommand(build_py2app):
@@ -224,6 +224,12 @@ def cmd_py2app(args):
 
             # undo py2app's weird treatment of the config.version value
             update_plist('dist/PlotDevice.app/Contents/Info.plist', CFBundleShortVersionString=None)
+
+            # py2app copied the whole package, so filter out stale builds of the .so
+            from sysconfig import get_config_var
+            for ext in glob(join(self.resdir, 'lib/python*/plotdevice/lib/_native.*.so')):
+                if not ext.endswith(get_config_var('EXT_SUFFIX')):
+                    os.remove(ext)
 
             # place the command line tool in SharedSupport
             BIN = join(dirname(self.resdir), 'SharedSupport')

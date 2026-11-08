@@ -32,37 +32,37 @@ def reflect(x0, y0, x1, y1, d=1.0, a=180):
 
 # Ye olde polymagic
 
-from _plotdevice import intersects, union, intersect, difference, xor
-from _plotdevice import pdf_outline as _pdf_outline
+from ._native import intersects, union, intersect, difference, xor
+from ._native import pdf_outline as _pdf_outline
 def pdf_outline(pdf_data):
     """Traces the vector shapes in `pdf_data` (raw bytes of a PDF file, page 1
     only) into a single NSBezierPath, in the page's own (y-up) coordinates."""
     return _pdf_outline(pdf_data, NSBezierPath.bezierPath())
 
-from _plotdevice import stroke_to_fill as _stroke_to_fill
+from ._native import stroke_to_fill as _stroke_to_fill
 def stroke_to_fill(path, width, cap, join, miter=10.0):
     """Converts a stroked PDPath into its equivalent fill-only outline
     (in the same local coordinate space as path itself)."""
     return _stroke_to_fill(path, width, cap, join, miter)
 
-from _plotdevice import offset as _offset
+from ._native import offset as _offset
 def offset(path, delta, join, miter=10.0, flatness=0.6):
     """Grows (delta > 0) or shrinks (delta < 0) a PDPath's boundary."""
     return _offset(path, delta, join, miter, flatness)
 
-from _plotdevice import simplify as _simplify
+from ._native import simplify as _simplify
 def simplify(path, epsilon, flatness=0.6):
     """Reduces a PDPath's point count, keeping every remaining point
     within epsilon of the original boundary."""
     return _simplify(path, epsilon, flatness)
 
-from _plotdevice import area as _area
+from ._native import area as _area
 def area(path, flatness=0.6):
     """Returns the total unsigned fill area enclosed by a PDPath."""
     return _area(path, flatness)
 
 try:
-    from _plotdevice import linepoint, linelength, curvepoint, curvelength
+    from ._native import linepoint, linelength, curvepoint, curvelength
 except ImportError:
     from math import sqrt, pow
 

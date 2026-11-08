@@ -5,7 +5,7 @@ from . import PlotDeviceTestCase, reference
 from plotdevice import *
 from plotdevice import DeviceError
 from AppKit import NSAffineTransform, NSBezierPath
-from _plotdevice import PDPath
+from plotdevice.lib._native import PDPath
 
 class DrawingTests(PlotDeviceTestCase):
     @reference('drawing/paths-transform-pre.png')

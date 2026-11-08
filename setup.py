@@ -1,5 +1,5 @@
 # encoding: utf-8
-"""setup.py for building the mixed C/Objective-C/Swift/C++ `_plotdevice` extension
+"""setup.py for building the mixed C/Objective-C/Swift/C++ `_native` extension
 
 This file exists only for the things `pyproject.toml` can't handle, in particular
 the prebuild and compilation steps necessary for setuptools to package the module.
@@ -21,7 +21,7 @@ def stale(dst, src):
     return exists(src) and (not exists(dst) or getmtime(dst) < getmtime(src))
 
 class BuildExtCommand(build_ext):
-    """Build SwiftDraw.o before linking _plotdevice, then populate
+    """Build SwiftDraw.o before linking _native, then populate
     plotdevice/rsrc/ with the runtime resources plotdevice.util.rsrc_path
     depends on (icns, colors.json, an ibtool-compiled nib, the press profiles)."""
 
@@ -98,7 +98,7 @@ class SdistPrepCommand(sdist):
 
 setup(
     ext_modules=[Extension(
-        '_plotdevice',
+        'plotdevice.lib._native',
         sources=['deps/extensions/module.m', *glob('deps/extensions/*/*.[cm]')],
         extra_objects=['deps/extensions/svg/SwiftDraw.o',
                        'deps/extensions/clipper2/clipper.engine.o',

@@ -5,7 +5,7 @@ from objc import super
 
 from ..lib.cocoa import *
 from ..lib import pathmatics
-from _plotdevice import PDPath
+from ..lib._native import PDPath
 from ..lib.io import Distiller
 from ..util import trim_zeroes, autorelease
 from .geometry import Size, px, inch, mm, cm, pica

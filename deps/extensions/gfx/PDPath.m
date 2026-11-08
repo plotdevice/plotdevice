@@ -623,7 +623,7 @@ static PySequenceMethods PDPath_sequence = {
 
 static PyTypeObject PDPathType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "_plotdevice.PDPath",
+    .tp_name = "plotdevice.lib._native.PDPath",
     .tp_doc = "A CGMutablePath with NSBezierPath's elements",
     .tp_basicsize = sizeof(PDPathObject),
     .tp_flags = Py_TPFLAGS_DEFAULT,
