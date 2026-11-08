@@ -563,10 +563,8 @@ class Text(EffectsMixin, TransformMixin, FrameMixin, StyleMixin, Grob):
     def bounds(self):
         """Returns the size & position of the actual text (typically a subset of the bounds)"""
         if self._engine is None:
-            # mixes units as TextBlock.bounds does (see bugs.md)
             line, dpx = self._line, self._grid.dpx
-            x = line.x - line.frame_x + line.frame_x / dpx + self.x
-            return Region(x / dpx, (self.y - line.ascender) / dpx, line.width / dpx, line.height / dpx)
+            return Region(self.x + line.x / dpx, self.y - line.ascender / dpx, line.width / dpx, line.height / dpx)
         box = Region()
         for block in self._blocks:
             box = box.union(block.bounds)
@@ -1170,8 +1168,9 @@ class TextBlock(FrameMixin, Grob):
         origin, size = self._parent._engine.usedRectForTextContainer_(self._block)
         origin.x -= self._shift    # from container- to block-relative coords
         origin.y -= self._headroom # adjust for the ascent above baseline
-        origin += self.offset + self._parent.baseline
-        return self._from_px(Region(origin, size))
+        bbox = self._from_px(Region(origin, size))
+        bbox.origin += self.offset + self._parent.baseline
+        return bbox
 
     @property
     def _fit(self):

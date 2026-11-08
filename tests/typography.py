@@ -555,6 +555,17 @@ class TypographyTests(PlotDeviceTestCase):
         self.assertEqual({tuple(b.size) for b in t.blocks}, {(4, 1.5)})
         self.assertEqual({b._grid.dpx for b in t.blocks}, {t._grid.dpx})
 
+    def test_bounds_follow_the_canvas_units(self):
+        # a text's bounds, on a line (coretext) and in a block (textkit), land where they do on a px canvas
+        def bounds_px(unit, width):
+            size(1, 1, unit)
+            dpx = text('x', 0, 0, plot=False)._grid.dpx
+            t = text('Some text that wraps', 50 / dpx, 80 / dpx, width=width and width / dpx, align=CENTER, plot=False)
+            boxes = [t.bounds] + ([t.blocks[0].bounds] if width else [])
+            return [tuple(round(v * dpx, 6) for v in (b.x, b.y, b.w, b.h)) for b in boxes]
+        for width in (None, 100):
+            self.assertEqual(bounds_px(cm, width), bounds_px(px, width))
+
     def test_flowed_blocks_left_empty_use_the_texts_font(self):
         # blocks the text no longer reaches after a flow are measured with the Text's own font
         size(400, 300)
