@@ -1209,13 +1209,15 @@ class TextBlock(FrameMixin, Grob):
 
     @property
     def _headroom(self):
-        # use Text's font metrics for empty text blocks
+        # use Text's font metrics for empty/unreached text blocks
         parent = self._parent
-        if not parent._store.length():
+        first = self is parent._blocks[0]
+        unreached = not first and not self._glyphs.length
+        if not parent._store.length() or unreached:
             return parent._font.ascender
 
         # otherwise use the font from the block's first glyph
-        at = 0 if self is parent._blocks[0] else parent._engine.characterIndexForGlyphAtIndex_(self._glyphs.location)
+        at = 0 if first else parent._engine.characterIndexForGlyphAtIndex_(self._glyphs.location)
         fnt, _ = parent._store.attribute_atIndex_effectiveRange_("NSFont", at, None)
         if not fnt:
             return parent._font.ascender

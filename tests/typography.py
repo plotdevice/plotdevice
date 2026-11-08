@@ -555,6 +555,19 @@ class TypographyTests(PlotDeviceTestCase):
         self.assertEqual({tuple(b.size) for b in t.blocks}, {(4, 1.5)})
         self.assertEqual({b._grid.dpx for b in t.blocks}, {t._grid.dpx})
 
+    def test_flowed_blocks_left_empty_use_the_texts_font(self):
+        # blocks the text no longer reaches after a flow are measured with the Text's own font
+        size(400, 300)
+        t = text('a long run of words that wraps around ' * 3, 20, 30, width=120, height=40, plot=False)
+        empty = list(t.flow())
+        t.width = None
+        self.assertEqual({b.text for b in empty}, {''})
+        for block in empty:
+            self.assertEqual(block._headroom, t._font.ascender)
+            self.assertAlmostEqual(block.frame.y, t.y + block.y - block._from_px(t._font.ascender))
+            block.bounds
+        t.frame
+
     def test_pattern_fills_tile_text_as_they_do_shapes(self):
         # glyphs show the tiles a shape filled with the same pattern would, on a line (coretext) and in a block (textkit)
         from plotdevice import _ctx
