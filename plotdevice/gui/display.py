@@ -505,6 +505,7 @@ class FramePresenter(object):
         self._shown = (0, None, None)    # (seq, zoom, dpr) on display
         self._period = None              # frame interval while live
         self._zooming = False            # a zoom preview is on screen
+        self._backdrop_job = None        # low-res render behind tiles during a zoom
         self._in_layout = False          # laying out for a frame being shown
         self._refresh = None             # re-render of the shown frame where the view has moved
         self._export_surfaces = ()       # those on screen
@@ -570,12 +571,13 @@ class FramePresenter(object):
         """Back a tiled or viewport-only frame with a low-res render for a zoom"""
         self._zooming = True
 
-        # a whole frame needs no backdrop, and one already drawn from this frame is reused
+        # a whole frame needs no backdrop, and already drawn/rendering ones are reused
         frame = self._layers.frame
         drawn, _ = self._layers.backdrop or (None, None)
         whole = frame is None
         backed = drawn is frame
-        if whole or backed:
+        rendering = self._backdrop_job is not None and self._backdrop_job.pending
+        if whole or backed or rendering:
             return
 
         # render it at low res, unless the zoom has ended by the time it arrives
@@ -584,7 +586,7 @@ class FramePresenter(object):
         def deliver(surface, err):
             if err is None and self._zooming:
                 self._layers.show_backdrop((frame, surface))
-        self.queue.submit(work, deliver)
+        self._backdrop_job = self.queue.submit(work, deliver)
 
     def zoom_ended(self):
         """End the zoom preview"""
