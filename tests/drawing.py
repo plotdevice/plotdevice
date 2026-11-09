@@ -1,7 +1,9 @@
 # encoding: utf-8
+import sys
 import math
 import unittest
-from . import PlotDeviceTestCase, reference
+from os.path import join
+from . import PlotDeviceTestCase, reference, tests_root
 from plotdevice import *
 from plotdevice import DeviceError
 from AppKit import NSAffineTransform, NSBezierPath
@@ -821,15 +823,15 @@ class DrawingTests(PlotDeviceTestCase):
             self.assertEqual(font().align, CENTER)
         self.assertEqual(font().align, LEFT)
 
-    @unittest.skip("fix colors library first")
-    @reference('drawing/ximport-colors.png')
-    def test_ximport_colors(self):
-        # ref/Canvas/compat/ximport()
-        size(125, 125)
-        colors = ximport("colors")
-        background(colors.papayawhip())
-        fill(colors.chocolate())
-        rect(10, 10, 50, 50)
+    def test_ximport(self):
+        # ximport() hands the library the current context
+        from unittest import mock
+        from plotdevice import _ctx
+        with mock.patch.object(sys, 'path', [join(tests_root, '_in')] + sys.path), mock.patch.dict(sys.modules):
+            swatches = ximport("swatches")
+            self.assertIs(swatches._ctx, _ctx)
+            self.assertIs(_ctx._ns['swatches'], swatches)
+            self.assertEqual(swatches.chocolate(), color('chocolate'))
 
     @reference('drawing/arcto-simple.png')
     def test_arcto_simple(self):
