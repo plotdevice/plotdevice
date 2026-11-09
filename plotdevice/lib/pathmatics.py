@@ -1,46 +1,27 @@
-import objc
 from collections import namedtuple
-from .cocoa import CGPathRelease
+from math import degrees, atan2, sqrt, pow, radians, sin, cos
+from .cocoa import NSBezierPath
 from ..gfx.geometry import Point
 from ..gfx.bezier import Bezier, Curve
 
-# Quartz loop speedups
-
-Pathmatician = objc.lookUpClass('Pathmatician')
-def convert_path(ns_path):
-    """Creates a CGPath from the points in an NSBezierPath"""
-    pth = Pathmatician.cgPath_(ns_path)
-    CGPathRelease(pth)
-    return pth
-
-
 # Trig helpers
 
-try:
-    # Faster C versions.
-    from _plotdevice import fast_inverse_sqrt, angle, distance, coordinates
-    isqrt = inverse_sqrt = fast_inverse_sqrt
-except ImportError:
-    from math import degrees, atan2
-    from math import sqrt, pow
-    from math import radians, sin, cos
+def inverse_sqrt(x):
+    return 1.0 / sqrt(x)
 
-    def inverse_sqrt(x):
-        return 1.0 / sqrt(x)
+isqrt = inverse_sqrt
 
-    isqrt = inverse_sqrt
+def angle(x0, y0, x1, y1):
+    a = degrees( atan2(y1-y0, x1-x0) )
+    return a
 
-    def angle(x0, y0, x1, y1):
-        a = degrees( atan2(y1-y0, x1-x0) )
-        return a
+def distance(x0, y0, x1, y1):
+    return sqrt(pow(x1-x0, 2) + pow(y1-y0, 2))
 
-    def distance(x0, y0, x1, y1):
-        return sqrt(pow(x1-x0, 2) + pow(y1-y0, 2))
-
-    def coordinates(x0, y0, distance, angle):
-        x1 = x0 + cos(radians(angle)) * distance
-        y1 = y0 + sin(radians(angle)) * distance
-        return x1, y1
+def coordinates(x0, y0, distance, angle):
+    x1 = x0 + cos(radians(angle)) * distance
+    y1 = y0 + sin(radians(angle)) * distance
+    return x1, y1
 
 def reflect(x0, y0, x1, y1, d=1.0, a=180):
     d *= distance(x0, y0, x1, y1)
@@ -51,9 +32,37 @@ def reflect(x0, y0, x1, y1, d=1.0, a=180):
 
 # Ye olde polymagic
 
-from _plotdevice import intersects, union, intersect, difference, xor
+from ._native import intersects, union, intersect, difference, xor
+from ._native import pdf_outline as _pdf_outline
+def pdf_outline(pdf_data):
+    """Traces the vector shapes in `pdf_data` (raw bytes of a PDF file, page 1
+    only) into a single NSBezierPath, in the page's own (y-up) coordinates."""
+    return _pdf_outline(pdf_data, NSBezierPath.bezierPath())
+
+from ._native import stroke_to_fill as _stroke_to_fill
+def stroke_to_fill(path, width, cap, join, miter=10.0):
+    """Converts a stroked PDPath into its equivalent fill-only outline
+    (in the same local coordinate space as path itself)."""
+    return _stroke_to_fill(path, width, cap, join, miter)
+
+from ._native import offset as _offset
+def offset(path, delta, join, miter=10.0, flatness=0.6):
+    """Grows (delta > 0) or shrinks (delta < 0) a PDPath's boundary."""
+    return _offset(path, delta, join, miter, flatness)
+
+from ._native import simplify as _simplify
+def simplify(path, epsilon, flatness=0.6):
+    """Reduces a PDPath's point count, keeping every remaining point
+    within epsilon of the original boundary."""
+    return _simplify(path, epsilon, flatness)
+
+from ._native import area as _area
+def area(path, flatness=0.6):
+    """Returns the total unsigned fill area enclosed by a PDPath."""
+    return _area(path, flatness)
+
 try:
-    from _plotdevice import linepoint, linelength, curvepoint, curvelength
+    from ._native import linepoint, linelength, curvepoint, curvelength
 except ImportError:
     from math import sqrt, pow
 
@@ -258,29 +267,49 @@ def length(path, segmented=False, n=20):
     else:
         return segment_lengths(path, relative=True, n=n)
 
-def _locate(path, t, segments=None):
+def _curve_at(seg_t, x0, y0, p1, closeto):
+    """Builds the Curve at `seg_t` (0..1) along the segment running from
+    (x0, y0) to p1, p1 being the segment's own endpoint element as returned
+    by iterating a Bezier. A CLOSE segment interpolates toward `closeto`
+    (the contour's start point) rather than p1's own placeholder (0,0)."""
 
-    """Locates t on a specific segment in the path.
+    if p1.cmd == CLOSE:
+        x, y = linepoint(seg_t, x0, y0, closeto.x, closeto.y)
+        return Curve(LINETO, ((x, y),))
+    elif p1.cmd == LINETO:
+        x, y = linepoint(seg_t, x0, y0, p1.x, p1.y)
+        return Curve(LINETO, ((x, y),))
+    elif p1.cmd == CURVETO:
+        x3, y3, x1, y1, x2, y2 = p1.x, p1.y, p1.ctrl1.x, p1.ctrl1.y, p1.ctrl2.x, p1.ctrl2.y
+        x, y, c1x, c1y, c2x, c2y = curvepoint(seg_t, x0, y0, x1, y1, x2, y2, x3, y3)
+        return Curve(CURVETO, ((c1x, c1y), (c2x, c2y), (x, y)))
+    else:
+        raise DeviceError("Unknown cmd for p1 %s" % p1)
 
-    Returns (index, t, Curve)
+def _locate(path, t, lengths=None, segments=None):
 
-    A path is a combination of lines and curves (segments).
-    The returned index indicates the start of the segment
-    that contains point t.
+    """Finds which segment of the path a path-wide t (0.0 to 1.0) falls
+    within, and how far along just that one segment it is.
 
-    The returned t is the absolute time on that segment,
-    in contrast to the relative t on the whole of the path.
-    The returned point is the last MOVETO,
-    any subsequent CLOSETO after i closes to that point.
+    Returns (index, t_segment, closeto).
 
-    When you supply the list of segment lengths yourself,
-    as returned from length(path, segmented=True),
-    point() works about thirty times faster in a for-loop,
-    since it doesn't need to recalculate the length
-    during each iteration. Note that this has been deprecated:
-    the Bezier now caches the segment lengths the moment you use
-    them.
+    A path is a sequence of lines and curves (segments). The returned `index` 
+    indicates which segment in the patch contains the target point `t` 
+    (a fraction of the path's total length, 0–1). The returned  `t_segment` 
+    is also a 0–1 value but identifies where the target point lies on this 
+    particular segment (i.e., at path[index]).
 
+    `closeto` is the current contour's starting coordinate. It's needed because 
+    a CLOSE segment's own stored coordinates are just a placeholder; the
+    point it actually closes back to is `closeto`.
+
+    Zero length segment (e.g., MOVETO) are skipped over or rounded down to 
+    the previous 'real' segment if at t=1.0.
+
+    To speed up repeated calls for the same path, you can pass in:
+        lengths = path.segmentlengths(relative=True)
+        segments = list(path)
+    
     >>> path = Bezier(None)
     >>> _locate(path, 0.0)
     Traceback (most recent call last):
@@ -298,25 +327,63 @@ def _locate(path, t, segments=None):
     (0, 1.0, Point(x=0.0, y=0.0))
     """
 
-    if segments == None:
-        segments = path.segmentlengths(relative=True)
+    if segments is None:
+        segments = list(path)
+        
+    if lengths is None:
+        lengths = path.segmentlengths(relative=True)
 
-    if len(segments) == 0:
-        raise DeviceError("The given path is empty")
+    if len(lengths) == 0:
+        raise DeviceError("The path is empty")
 
-    for i, el in enumerate(path):
+    for i, el in enumerate(segments):
         if i == 0 or el.cmd == MOVETO:
             closeto = Point(el.x, el.y)
-        if t <= segments[i] or i == len(segments)-1: break
-        else: t -= segments[i]
 
-    try: t /= segments[i]
-    except ZeroDivisionError: pass
-    if i == len(segments)-1 and segments[i] == 0: i -= 1
+        if lengths[i] == 0:
+            # A zero-length segment marks either a MOVETO jump between contours
+            # or the meaningless MOVETO NSBezierPath appends after closePath()
+            if i < len(lengths)-1:
+                continue # mid-path, just move on to the next segment
+            else:
+                # at the end, with nothing left to skip to -- resolve to the
+                # end of the path instead: t=1.0 on the preceding, real
+                # segment. A single step back isn't always enough -- e.g. a
+                # CLOSE (or LINETO) that's already at its destination is
+                # *also* zero-length, and can cascade with the trailing
+                # MOVETO -- so walk backward until segments[i+1] (the
+                # segment's own endpoint) isn't itself a MOVETO (the only
+                # element type _curve_at() can't resolve; a zero-length
+                # CLOSE/LINETO/CURVETO is harmless, since its start and end
+                # coincide). Bounded at i>=0: segments[0] is always a MOVETO
+                # (every path starts with one), so checking segments[i+1]
+                # at i==-1 could only ever come back true, which would just
+                # drive the next step to i==-2 -- and segments[-1] in
+                # Python silently wraps around to the *end* of the list
+                # instead of erroring. Since that always-true check can't
+                # tell us anything we don't already know, treat needing it
+                # as having run out of real content instead of making it.
+                while i >= 0 and segments[i+1].cmd == MOVETO:
+                    i -= 1
+                if i < 0:
+                    raise DeviceError("The path has no non-empty contours")
+                t_segment = 1.0
+                break
 
-    return (i, t, closeto)
+        # Strict `<` (not `<=`) so an exact tie -- t landing precisely at a
+        # segment's far edge -- falls through to the next segment rather
+        # than stopping here; that's what lets a tie that lands on a
+        # following zero-length marker actually reach the skip-forward
+        # handling above instead of resolving to this segment's t=1.0.
+        if t < lengths[i] or i == len(lengths)-1:
+            t_segment = t / lengths[i]
+            break
+        else:
+            t -= lengths[i]
 
-def point(path, t, segments=None):
+    return (i, t_segment, closeto)
+
+def point(path, t, lengths=None, segments=None):
 
     """Returns coordinates for point at t on the path.
 
@@ -329,9 +396,11 @@ def point(path, t, segments=None):
     as returned from length(path, segmented=True),
     point() works about thirty times faster in a for-loop,
     since it doesn't need to recalculate the length
-    during each iteration. Note that this has been deprecated:
-    the Bezier now caches the segment lengths the moment you use
-    them.
+    during each iteration.
+
+    `segments` is passed straight through to _locate() -- see its
+    docstring -- and, when given, is also used here in place of `path` to
+    look up the segment's own endpoints.
 
     >>> path = Bezier(None)
     >>> point(path, 0.0)
@@ -353,29 +422,23 @@ def point(path, t, segments=None):
     if len(path) == 0:
         raise DeviceError("The given path is empty")
 
-    i, t, closeto = _locate(path, t, segments=segments)
+    i, t, closeto = _locate(path, t, lengths=lengths, segments=segments)
 
-    x0, y0 = path[i].x, path[i].y
-    p1 = path[i+1]
+    src = path if segments is None else segments
+    x0, y0 = src[i].x, src[i].y
+    p1 = src[i+1]
 
-    if p1.cmd == CLOSE:
-        x, y = linepoint(t, x0, y0, closeto.x, closeto.y)
-        return Curve(LINETO, ((x, y),))
-    elif p1.cmd == LINETO:
-        x1, y1 = p1.x, p1.y
-        x, y = linepoint(t, x0, y0, x1, y1)
-        return Curve(LINETO, ((x, y),))
-    elif p1.cmd == CURVETO:
-        x3, y3, x1, y1, x2, y2 = p1.x, p1.y, p1.ctrl1.x, p1.ctrl1.y, p1.ctrl2.x, p1.ctrl2.y
-        x, y, c1x, c1y, c2x, c2y = curvepoint(t, x0, y0, x1, y1, x2, y2, x3, y3)
-        return Curve(CURVETO, ((c1x, c1y), (c2x, c2y), (x, y)))
-    else:
-        raise DeviceError("Unknown cmd for p1 %s" % p1)
+    return _curve_at(t, x0, y0, p1, closeto)
 
-def points(path, amount=100):
+def points(path, amount=100, start=0, end=1):
     """Returns an iterator with a list of calculated points for the path.
     This method calls the point method <amount> times, increasing t,
     distributing point spacing linearly.
+
+    `start`/`end` restrict the sweep to a sub-range of the path (fractions
+    of its total length, the same units as point()'s `t`) instead of
+    always covering it from 0.0 to 1.0. Each is clamped to the valid
+    0.0-1.0 range.
 
     >>> path = Bezier(None)
     >>> list(points(path))
@@ -389,23 +452,37 @@ def points(path, amount=100):
     DeviceError: The given path is empty
     >>> path.lineto(100, 0)
     >>> list(points(path, amount=4))
-    [Curve(LINETO, ((0.0, 0.0),)), Curve(LINETO, ((25.0, 0.0),)), Curve(LINETO, ((50.0, 0.0),)), Curve(LINETO, ((75.0, 0.0),))]
+    [Curve(LINETO, ((0.0, 0.0),)), Curve(LINETO, ((33.333, 0.0),)), Curve(LINETO, ((66.667, 0.0),)), Curve(LINETO, ((100.0, 0.0),))]
     """
 
     if len(path) == 0:
         raise DeviceError("The given path is empty")
 
-    # The delta value is divided by amount - 1, because we also want the last point (t=1.0)
+    start = max(start, 0.0)
+    end = min(end, 1.0)
+
+    # The delta value is divided by amount - 1, because we also want the last point (t=end)
     # If I wouldn't use amount - 1, I fall one point short of the end.
-    # E.g. if amount = 4, I want point at t 0.0, 0.33, 0.66 and 1.0,
-    # if amount = 2, I want point at t 0.0 and t 1.0
+    # E.g. if amount = 4, I want point at t start, start+.33*span, start+.66*span
+    # and end, if amount = 2, I want point at t start and t end
     try:
-        delta = 1.0/(amount-1)
+        delta = (end-start)/(amount-1)
     except ZeroDivisionError:
         delta = 1.0
 
-    for i in range(amount):
-        yield point(path, delta*i)
+    # point()/_locate() each re-walk `path` from its first element by
+    # default, and every element access crosses the PyObjC bridge
+    # (elementAtIndex:associatedPoints:) -- fine for a single lookup, but
+    # this generator calls point() `amount` times, which made the naive
+    # `[point(path, delta*i) for i in range(amount)]` cost O(amount x
+    # len(path)) bridge crossings. Materialize the path's segments once and
+    # hand them to point() so every one of those calls indexes a plain list
+    # instead, and the segment lengths so they aren't recomputed each time.
+    segments = list(path)
+    lengths = path.segmentlengths(relative=True)
+
+    for step in range(amount):
+        yield point(path, start + delta*step, lengths=lengths, segments=segments)
 
 def contours(path):
     """Returns a list of contours in the path.
@@ -617,4 +694,3 @@ def insert_point(path, t):
             if path[j].cmd == CLOSE:
                 new_path.closepath()
     return new_path
-

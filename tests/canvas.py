@@ -1,0 +1,794 @@
+# encoding: utf-8
+import unittest
+from types import SimpleNamespace
+from collections import UserDict
+from . import PlotDeviceTestCase
+from plotdevice import *
+from plotdevice import _ctx, gfx, lib, DeviceError
+import objc
+
+class _Poison(object):
+    """Stands in for _ctx and fails on any attribute access"""
+    def __getattr__(self, attr):
+        raise AssertionError('rendering read _ctx.%s' % attr)
+
+def _scene():
+    """A Frame using the state grobs look up while drawing"""
+    size(80, 60)
+    background(.95)
+    with mask(oval(10, 10, 40, 40, plot=False)):
+        fill(1, 0, 0)
+        rect(0, 0, 80, 60)
+    with shadow('#888', blur=3), alpha(.8):
+        fill('black', 'white')
+        rect(45, 5, 30, 30)
+    font('Avenir', 12)
+    fill(0, 0, 1)
+    text('frame', 5, 55)
+    return _ctx.canvas.commit()
+
+def _png(frame):
+    return bytes(frame._getImageData('png'))
+
+def _pixels(cgimage):
+    """The image's pixel bytes without row padding"""
+    from Quartz import CGImageGetDataProvider, CGDataProviderCopyData, CGImageGetBytesPerRow, CGImageGetWidth, CGImageGetHeight
+    raw = bytes(CGDataProviderCopyData(CGImageGetDataProvider(cgimage)))
+    stride, width = CGImageGetBytesPerRow(cgimage), CGImageGetWidth(cgimage) * 4
+    return b''.join(raw[row * stride:row * stride + width] for row in range(CGImageGetHeight(cgimage)))
+
+class FrameTests(PlotDeviceTestCase):
+    def test_frame_renders_without_the_context(self):
+        # a committed frame renders without the live context
+        frame = _scene()
+        expected = _png(frame)
+        gfx.bind(_Poison())
+        lib.bind(_Poison())
+        try:
+            with self.assertRaises(AssertionError):
+                Color(1, 0, 0).cgColor # the poison catches reads...
+            rendered = _png(frame)     # ...and a render never makes one
+        finally:
+            _ctx._activate()
+        self.assertEqual(rendered, expected)
+
+    def test_frame_captures_the_output_mode(self):
+        outputmode(CMYK)
+        frame = _scene()
+        expected = _png(frame)
+        outputmode(RGB)
+        self.assertEqual(_png(frame), expected)   # still renders as cmyk
+        self.assertNotEqual(_png(_scene()), expected) # whereas a fresh frame doesn't
+
+    def test_frame_ignores_later_edits(self):
+        size(40, 40)
+        with alpha(.5):
+            r = rect(0, 0, 20, 20)
+        frame = _ctx.canvas.commit()
+        expected = _png(frame)
+        clear(r) # removes it from the live canvas...
+        rect(20, 20, 20, 20)
+        self.assertNotIn(r, _ctx.canvas[0].contents)
+        self.assertEqual(len(frame.grobs[0].contents), 1) # ...but not from the committed frame
+        self.assertEqual(_png(frame), expected)
+
+    def test_frame_commits_text(self):
+        # rendering never writes to the text storage,
+        # which used to deadlock two renders of a frame
+        size(120, 60)
+        t = text('committed', 10, 40)
+        outputmode(CMYK) # a mode the text wasn't made in
+        frame = _ctx.canvas.commit()
+        committed = frame.grobs[0] # a copy, since `t` is still held
+        if committed._engine is not None:
+            self.assertEqual(committed._engine.firstUnlaidCharacterIndex(), len(committed.text))
+        else:
+            self.assertIsNotNone(committed._line) # laid out by CoreText
+        stored = committed._store.copy()
+        _png(frame)
+        self.assertTrue(committed._store.isEqualToAttributedString_(stored))
+
+    def test_frame_shares_grobs_the_script_let_go_of(self):
+        size(100, 100)
+        rect(0, 0, 10, 10)
+        line(0, 0, 10, 10)
+        arc(50, 50, 10)
+        text('unheld', 10, 40)
+        image('tests/_in/macpaint-tile.png', 50, 50)
+        with shadow('#888', blur=2):
+            oval(20, 20, 10, 10)
+        frame = _ctx.canvas.commit()
+        for committed, grob in zip(frame.grobs[:-1], _ctx.canvas[:-1]):
+            self.assertIs(committed, grob)
+        self.assertIs(frame.grobs[-1].contents[0], _ctx.canvas[-1].contents[0])
+
+    def test_frame_copies_grobs_the_script_holds(self):
+        # the script may edit grobs it kept
+        size(100, 100)
+        p = line(0, 0, 10, 10)
+        t = text('held', 10, 40)
+        img = image('tests/_in/macpaint-tile.png', 50, 50)
+        block = text('by its block', 10, 60).blocks[0]
+        word = text('by a word', 10, 80).words[0]
+        with shadow('#888', blur=2):
+            r = rect(20, 20, 10, 10)
+        frame = _ctx.canvas.commit()
+        for committed, grob in zip(frame.grobs[:-1], _ctx.canvas[:-1]):
+            self.assertIsNot(committed, grob)
+            self.assertIs(type(committed), type(grob))
+        self.assertIsNot(frame.grobs[-1].contents[0], r)
+
+    def test_frame_copies_the_contents_of_containers_the_script_holds(self):
+        # the script can reach them through the container
+        size(100, 100)
+        with clip(oval(0, 0, 50, 50, plot=False)) as stencil:
+            rect(20, 20, 10, 10)
+        frame = _ctx.canvas.commit()
+        self.assertIsNot(frame.grobs[0].contents[0], stencil.contents[0])
+
+    def test_held_grobs_can_be_edited_after_commit(self):
+        size(100, 100)
+        pen(2, dash=4)
+        stroke(0)
+        fill(.2, .5, .8)
+        p = rect(10, 10, 40, 30)
+        t = text('kept', 10, 80)
+        frame = _ctx.canvas.commit()
+        expected = _png(frame)
+        p.lineto(90, 90)
+        p.rotate(30)
+        p.fill.alpha = .2
+        p.alpha = .5
+        t.append(' and edited')
+        t.width = 30
+        t.x += 20
+        self.assertEqual(_png(frame), expected)
+
+    def test_held_image_keeps_its_own_state(self):
+        size(60, 60)
+        img = image('tests/_in/macpaint-tile.png', 10, 10, width=40)
+        img.alpha = .3
+        img.rotate(30)
+        frame = _ctx.canvas.commit()
+        self.assertIsNot(frame.grobs[0], img)
+        clear()
+        img.draw()
+        self.assertEqual(_png(frame), _png(_ctx.canvas.commit()))
+
+    def test_plot_draws_an_image_as_is(self):
+        # a plotted image keeps its own styling
+        size(60, 60)
+        img = image('tests/_in/macpaint-tile.png', 10, 10, plot=False)
+        img.alpha = .3
+        rotate(30)
+        alpha(.8)
+        plotted = plot(img)
+        self.assertEqual(plotted.alpha, .3)
+        self.assertEqual(tuple(plotted.transform.matrix), tuple(img.transform.matrix))
+
+    def test_copies_cover_their_state(self):
+        # copy() lists Bezier and Image attrs by hand
+        from plotdevice.gfx.bezier import Bezier
+        from plotdevice.gfx.image import Image
+        p = rect(0, 0, 10, 10, plot=False)
+        clone = p.copy()
+        self.assertEqual(set(vars(clone)), set(Bezier._state) | {'_needs_closure'})
+        for attr in ('_pdpath', '_transform', '_effects', '_fillcolor'):
+            self.assertIsNot(getattr(clone, attr), getattr(p, attr))
+        img = image('tests/_in/macpaint-tile.png', 0, 0, plot=False)
+        clone = img.copy()
+        self.assertEqual(set(vars(clone)), set(Image._state))
+        for attr in ('_frame', '_transform', '_effects'):
+            self.assertIsNot(getattr(clone, attr), getattr(img, attr))
+
+    def test_frame_renders_to_a_surface_identically(self):
+        # surfaces must match the CGImage path's pixels
+        from Quartz import CGBitmapContextCreateImage
+        frame = _scene()
+        width, height = [max(int(dim * 2.0), 1) for dim in frame.pagesize]
+        surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(width, height)
+        for _ in range(2): # surfaces get reused
+            frame._render_to_surface(surface, 2.0)
+        self.assertEqual(_pixels(CGBitmapContextCreateImage(surface.context())),
+                         _pixels(frame._render_to_cgimage(1.0, 2.0)))
+
+    def test_canvas_as_image_is_a_p3_bitmap(self):
+        # the same pixels on every machine, which Image treats as raster
+        from AppKit import NSBitmapImageRep
+        from Quartz import CGImageGetColorSpace, CGColorSpaceCopyName, kCGColorSpaceDisplayP3
+        frame = _scene()
+        snapshot = Image(_ctx.canvas)
+        rep, = snapshot._nsImage.representations()
+        self.assertIsInstance(rep, NSBitmapImageRep)
+        self.assertEqual(tuple(rep.size()), tuple(frame.pagesize))
+        self.assertEqual(CGColorSpaceCopyName(CGImageGetColorSpace(rep.CGImage())), kCGColorSpaceDisplayP3)
+        self.assertEqual(_pixels(rep.CGImage()), _pixels(frame._render_to_cgimage(1.0, 2.0)))
+        outline = snapshot._outline.bounds
+        self.assertEqual((outline.w, outline.h), tuple(frame.pagesize))
+
+    def test_canvas_draws_as_an_image_and_a_pattern(self):
+        import re
+        size(100, 50)
+        background('white')
+        rect(0, 0, 50, 25, fill='red')
+        snapshot, tile = Image(_ctx.canvas), Pattern(_ctx.canvas)
+        original = _pixels(_ctx.canvas.commit()._render_to_cgimage(1.0, 2.0))
+
+        # both are exact at 2x: the image as a 2x bitmap, the pattern by drawing the canvas's vectors
+        draws = [(lambda: image(snapshot, 0, 0), 1), (lambda: rect(0, 0, 100, 50, fill=tile), 0)]
+        for draw, bitmaps in draws:
+            clear(all)
+            draw()
+            frame = _ctx.canvas.commit()
+            self.assertEqual(_pixels(frame._render_to_cgimage(1.0, 2.0)), original)
+            pdf = bytes(frame._getImageData('pdf'))
+            self.assertEqual(len(re.findall(rb'/Subtype\s*/Image', pdf)), bitmaps)
+
+    def test_plotted_canvas_draws_its_vectors(self):
+        # as the same shapes drawn directly, nested canvases included
+        def shapes(x, y):
+            rect(x + 5, y + 5, 30, 20, fill='teal')
+            oval(x + 40, y + 10, 25, 25, fill='orange', stroke='black', strokewidth=2)
+            text('Hi', x + 10, y + 50, size=20, fill='navy')
+        size(80, 60)
+        background(None)
+        shapes(0, 0)
+        inner = plot(_ctx.canvas, 0, 0)
+        clear(all)
+        size(80, 60)
+        background(None)
+        plot(inner)
+        nested = plot(_ctx.canvas, 0, 0)
+        clear(all)
+        size(300, 100)
+        plot(inner, 10, 10)
+        plot(nested, 150, 10)
+        plotted = _pixels(_ctx.canvas.commit()._render_to_cgimage(1.0, 2.0))
+        clear(all)
+        size(300, 100)
+        shapes(10, 10)
+        shapes(150, 10)
+        self.assertEqual(plotted, _pixels(_ctx.canvas.commit()._render_to_cgimage(1.0, 2.0)))
+
+    def test_plotted_canvases_share_a_layer_in_pdfs(self):
+        # drawn once into the PDF, however many times and at whatever scale it's plotted
+        import re
+        size(80, 60)
+        background(None)
+        rect(5, 5, 30, 20, fill='teal')
+        text('Hi', 10, 50, size=20, fill='navy')
+        snapshot = plot(_ctx.canvas, 0, 0)
+        clear(all)
+        size(400, 300)
+        for i in range(12):
+            with rotate(i * 7):
+                plot(snapshot, 20 + (i % 4) * 90, 20 + (i // 4) * 90, width=40 + i * 3)
+        pdf = bytes(_ctx.canvas.commit()._getImageData('pdf'))
+        self.assertEqual(len(re.findall(rb'/Subtype\s*/Form', pdf)), 1)
+        self.assertEqual(len(re.findall(rb'/Subtype\s*/Image', pdf)), 0)
+
+    def test_plotted_canvases_in_patterns_stay_vectors(self):
+        # a canvas plotted inside a canvas used as a pattern is drawn as vectors in pdf & eps exports
+        import re
+        size(40, 40)
+        background(None)
+        oval(5, 5, 30, 30, fill='teal')
+        inner = plot(_ctx.canvas, 0, 0)
+        frames = {}
+        for name, draw in (('plotted', lambda: plot(inner, 10, 10)), ('direct', lambda: oval(15, 15, 30, 30, fill='teal'))):
+            clear(all)
+            size(60, 60)
+            background(None)
+            draw()
+            tile = Pattern(_ctx.canvas)
+            clear(all)
+            size(200, 150)
+            rect(0, 0, 200, 150, fill=tile)
+            frames[name] = _ctx.canvas.commit()
+        self.assertIsNone(re.search(rb'/Subtype\s*/Image', bytes(frames['plotted']._getImageData('pdf'))))
+        plotted, direct = (len(bytes(frames[name]._getImageData('eps'))) for name in ('plotted', 'direct'))
+        self.assertLess(plotted, 2 * direct) # a rasterized layer makes it ~30x
+
+    def test_plotted_shadows_scale_in_pdfs(self):
+        # a shadowed canvas plotted at another size or angle matches in a PDF and a bitmap
+        from Quartz import (CGPDFDocumentCreateWithProvider, CGDataProviderCreateWithCFData, CGPDFDocumentGetPage,
+                            CGContextDrawPDFPage, CGBitmapContextCreate, CGBitmapContextCreateImage, CGContextScaleCTM,
+                            CGColorSpaceCreateWithName, kCGColorSpaceDisplayP3, kCGImageAlphaPremultipliedFirst,
+                            kCGBitmapByteOrder32Host)
+        size(100, 80)
+        background(None)
+        with shadow('black', blur=4, offset=3):
+            oval(15, 15, 40, 40, fill='teal')
+        snapshot = plot(_ctx.canvas, 0, 0)
+        clear(all)
+        size(200, 150)
+        background('white')
+        plot(snapshot, 10, 10, width=150)
+        plot(snapshot, 10, 100, width=50)
+        with transform(CENTER), rotate(30):
+            plot(snapshot, 120, 70, width=60)
+        frame = _ctx.canvas.commit()
+        bitmap = _pixels(frame._render_to_cgimage(1.0, 2.0))
+        doc = CGPDFDocumentCreateWithProvider(CGDataProviderCreateWithCFData(frame._getImageData('pdf')))
+        ctx = CGBitmapContextCreate(None, 400, 300, 8, 1600, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3),
+                                    kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
+        CGContextScaleCTM(ctx, 2, 2)
+        CGContextDrawPDFPage(ctx, CGPDFDocumentGetPage(doc, 1))
+        self.assertLessEqual(max(abs(a - b) for a, b in zip(bitmap, _pixels(CGBitmapContextCreateImage(ctx)))), 8)
+
+    def test_vector_images_stay_vectors_in_plotted_and_tiled_canvases(self):
+        # svg & pdf images inside a canvas that's plotted or used as a pattern are written as vectors, as on the page
+        import re
+        for src in ('tests/_in/vector-fill.svg', 'tests/_in/tiny-triangle.pdf'):
+            clear(all)
+            size(60, 60)
+            background(None)
+            image(src, 5, 5, width=50)
+            snapshot = plot(_ctx.canvas, 0, 0)
+            for draw in (lambda: plot(snapshot, 10, 10, width=80), lambda: rect(0, 0, 200, 150, fill=Pattern(snapshot))):
+                clear(all)
+                size(200, 150)
+                draw()
+                pdf = bytes(_ctx.canvas.commit()._getImageData('pdf'))
+                self.assertIsNone(re.search(rb'/Subtype\s*/Image', pdf), src)
+
+    def test_plotted_wide_shadows_match_drawing_directly_under_a_clip(self):
+        # a canvas plotted inside a clip() casts its wide shadows as the same drawing on the page does
+        def shape():
+            rect(40, 40, 80, 80, fill='orange', shadow=Shadow('black', blur=60, offset=30))
+        size(200, 200)
+        background(None)
+        shape()
+        snapshot = plot(_ctx.canvas, 0, 0)
+        pixels = {}
+        for name, draw in (('plotted', lambda: plot(snapshot, 0, 0)), ('direct', shape)):
+            clear(all)
+            size(200, 200)
+            background('white')
+            with clip(oval(60, 60, 90, 90, plot=False)):
+                draw()
+            pixels[name] = _pixels(_ctx.canvas.commit()._render_to_cgimage(1.0, 2.0))
+        self.assertEqual(pixels['plotted'], pixels['direct'])
+
+def _pump(until, timeout=5.0):
+    """Run the main run loop until `until()` holds"""
+    from Foundation import NSRunLoop, NSDate, NSDefaultRunLoopMode
+    import time
+    deadline = time.time() + timeout
+    while not until() and time.time() < deadline:
+        NSRunLoop.currentRunLoop().runMode_beforeDate_(NSDefaultRunLoopMode, NSDate.dateWithTimeIntervalSinceNow_(0.01))
+    return until()
+
+class RendererTests(PlotDeviceTestCase):
+    def test_queue_delivers_in_order_and_drops_cancelled_jobs(self):
+        from plotdevice.gui.display import FrameQueue
+        import threading
+        queue = FrameQueue()
+        try:
+            delivered, gate = [], threading.Event()
+            def job(n):
+                def work(cancelled):
+                    gate.wait(2.0)   # make the rest queue up
+                    return n
+                return work
+            for n in range(4):
+                queue.submit(job(n), lambda result, err, n=n: delivered.append((n, result, err)))
+            self.assertFalse(queue.ready)  # one in flight with the GIL
+            queue.cancel()                 # ...so cancelling now drops all four
+            gate.set()
+            self.assertTrue(_pump(lambda: queue.idle))
+            self.assertEqual(delivered, [])
+            gate.clear()
+            for n in range(4, 7):
+                queue.submit(job(n), lambda result, err, n=n: delivered.append((n, result, err)))
+            gate.set()
+            self.assertTrue(_pump(lambda: queue.idle))
+            self.assertEqual(delivered, [(4, 4, None), (5, 5, None), (6, 6, None)])
+            self.assertTrue(queue.ready)
+        finally:
+            queue.shutdown()
+
+    def test_queue_delivers_errors(self):
+        from plotdevice.gui.display import FrameQueue
+        queue = FrameQueue()
+        try:
+            got = []
+            def work(cancelled):
+                raise ValueError('bad grob')
+            queue.submit(work, lambda result, err: got.append((result, err)))
+            self.assertTrue(_pump(lambda: got))
+            self.assertIsNone(got[0][0])
+            self.assertIsInstance(got[0][1], ValueError)
+        finally:
+            queue.shutdown()
+
+    def test_clock_holds_early_deliveries_for_the_vblank(self):
+        # a delivery mid-period waits for the next vblank, but a late one draws at once
+        from plotdevice.gui import display
+        from unittest import mock
+        link = SimpleNamespace(addToRunLoop_forMode_=lambda *args: None, invalidate=lambda: None,
+                               timestamp=lambda: 0.0, targetTimestamp=lambda: 1 / 60)
+        view = SimpleNamespace(displayLinkWithTarget_selector_=lambda target, sel: link)
+        clock = display.FrameClock(view, None, None, 60)
+        def at(t, delivered=False):
+            with mock.patch.object(display, 'CACurrentMediaTime', lambda: t):
+                drew = clock.should_draw(delivered=delivered)
+                if drew:
+                    clock.frame_done()
+                return drew
+        self.assertTrue(at(0.0))
+        self.assertFalse(at(0.0115, delivered=True))
+        self.assertTrue(at(1 / 60))
+        self.assertTrue(at(0.045, delivered=True))
+        clock.invalidate()
+
+    def test_frame_draw_stops_when_cancelled(self):
+        # a cancelled render stops between grobs
+        size(40, 40)
+        background(None)
+        fill(1, 0, 0); rect(0, 0, 20, 20)
+        fill(0, 0, 1); rect(20, 20, 20, 20)
+        frame = _ctx.canvas.commit()
+        calls = [0]
+        def cancelled():
+            calls[0] += 1
+            return calls[0] > 1   # trips at the second grob
+        from Quartz import CGBitmapContextCreateImage
+        surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(40, 40)
+        frame._render_to_surface(surface, 1.0, cancelled)
+        partial = _pixels(CGBitmapContextCreateImage(surface.context()))
+        clear()
+        size(40, 40); background(None); fill(1, 0, 0); rect(0, 0, 20, 20)
+        surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(40, 40)
+        _ctx.canvas.commit()._render_to_surface(surface, 1.0)
+        self.assertEqual(partial, _pixels(CGBitmapContextCreateImage(surface.context())))
+
+    def test_culled_render_matches_unculled(self):
+        # culling the left half keeps shadows that reach right
+        from Quartz import CGBitmapContextCreateImage
+        from plotdevice.gfx.canvas import FrameBounds
+        size(400, 300)
+        background('white')
+        with shadow('black', blur=10, offset=(20, 0)):
+            rect(170, 100, 10, 40, fill='red')
+            with clip(oval(20, 20, 100, 100, plot=False)):
+                for x in range(0, 400, 20):
+                    rect(x, 0, 10, 300, fill='green')
+        rect(170, 200, 20, 20, fill='blue', shadow=Shadow('black', blur=4, offset=(25, 0)))
+        with transform(CENTER), rotate(60):
+            text('rotated text', 120, 280, font='Avenir', size=30)
+        oval(20, 250, 30, 30, fill=(0, 0, 0, .8), blend='destinationin')
+        rect(20, 150, 30, 30, fill='orange')
+        frame = _ctx.canvas.commit()
+
+        def render(cull):
+            within = FrameBounds.within
+            if not cull:
+                FrameBounds.within = lambda self, rect, grobs: grobs
+            try:
+                surface = objc.lookUpClass('PDSurface').surfaceWithWidth_height_(400, 600)
+                frame._render_to_surface(surface, 2.0, origin=(400, 0))
+                return _pixels(CGBitmapContextCreateImage(surface.context()))
+            finally:
+                FrameBounds.within = within
+        self.assertEqual(render(True), render(False))
+
+        group = frame.grobs[0]
+        self.assertEqual(frame._bounds.within((200, 0, 200, 300), group.contents), [group.contents[0]])
+        self.assertLess(len(frame._bounds.within((200, 0, 200, 300), frame.grobs)), len(frame.grobs))
+
+    def test_tiles_reassemble_into_the_full_render(self):
+        # tiles match the full render to within a level or two.
+        # antialiasing and dithering shift with the tile's origin
+        from Quartz import CGBitmapContextCreateImage
+        frame = _scene()
+        scale, tile = 8.0, 100  # 7×5 tiles, some partial
+        width, height = [max(int(dim * scale), 1) for dim in frame.pagesize]
+        PDSurface = objc.lookUpClass('PDSurface')
+        surface = PDSurface.surfaceWithWidth_height_(width, height)
+        frame._render_to_surface(surface, scale)
+        whole = _pixels(CGBitmapContextCreateImage(surface.context()))
+        for y in range(0, height, tile):
+            for x in range(0, width, tile):
+                w, h = min(tile, width - x), min(tile, height - y)
+                part = PDSurface.surfaceWithWidth_height_(w, h)
+                frame._render_to_surface(part, scale, origin=(x, y))
+                got = _pixels(CGBitmapContextCreateImage(part.context()))
+                crop = b''.join(whole[(y + row) * width * 4 + x * 4:(y + row) * width * 4 + (x + w) * 4] for row in range(h))
+                self.assertLessEqual(max(abs(p - q) for p, q in zip(got, crop)), 2, 'the tile at %r differs' % ((x, y),))
+
+    def test_layers_sized_to_their_contents_match_full_ones(self):
+        # sized layers clip nothing, even overhanging glyphs
+        from Quartz import CGBitmapContextCreateImage
+        from plotdevice.gfx import RenderState
+        size(500, 400)
+        background('white')
+        text('Zapfino', 40, 120, font='Zapfino', size=40, fill='purple', alpha=.6)
+        text('ƒjord', 300, 120, font='Avenir', size=48, italic=True, shadow=Shadow('black', blur=5, offset=8))
+        with transform(CENTER), rotate(30), shadow('red', blur=8, offset=(10, -5)):
+            rect(100, 250, 120, 60, fill='orange')
+            image('tests/_in/plaid.png', 250, 240, width=80)
+        with alpha(.5), blend('multiply'):
+            oval(320, 260, 120, 120, fill='teal')
+        frame = _ctx.canvas.commit()
+
+        def render(sized):
+            layer_box = RenderState.layer_box
+            if not sized:
+                RenderState.layer_box = lambda self, grob: None
+            try:
+                frame._bounds._layers = {}
+                return _pixels(frame._render_to_cgimage(1.0, 2.0))
+            finally:
+                RenderState.layer_box = layer_box
+        self.assertEqual(render(True), render(False))
+        render(True)
+        self.assertTrue(any(box is not None for box in frame._bounds._layers.values()))
+
+    def test_scaled_text_layers_hold_their_glyphs(self):
+        # a scaled text's layer grows with its overhang
+        from plotdevice.gfx import RenderState
+        size(600, 600)
+        background('white')
+        with transform(CORNER):
+            with translate(60, 420), scale(20):
+                text('f', 0, 0, font='Times', italic=True, size=24, alpha=.6)
+            with translate(250, 200), scale(6):
+                text('Zap', 0, 0, font='Zapfino', size=24, alpha=.6)
+        frame = _ctx.canvas.commit()
+
+        def render(sized):
+            layer_box = RenderState.layer_box
+            if not sized:
+                RenderState.layer_box = lambda self, grob: None
+            try:
+                frame._bounds._layers = {}
+                return _pixels(frame._render_to_cgimage(1.0, 1.0))
+            finally:
+                RenderState.layer_box = layer_box
+        self.assertEqual(render(True), render(False))
+
+    def test_lone_paint_alpha_skips_its_layer(self):
+        # paths that paint once match their layered render
+        import re
+        from plotdevice.gfx.effects import Effect
+        size(200, 200)
+        background(.9)
+        for i in range(4):
+            oval(20 + i * 30, 20, 80, 80, fill=(.2, .3, .7), alpha=.5, blend='multiply')
+        star(100, 140, 7, 50, 20, fill=None, stroke='black', strokewidth=6, dash=[9, 4], alpha=.5)
+        oval(120, 120, 60, 60, fill='teal', stroke='black', strokewidth=10, alpha=.5)
+        frame = _ctx.canvas.commit()
+        groups = lambda: len(re.findall(rb'/S\s*/Transparency', bytes(frame._getImageData('pdf'))))
+        self.assertEqual(groups(), 1) # only the filled & stroked oval needs a layer
+
+        direct = _pixels(frame._render_to_cgimage(1.0, 2.0))
+        applied = Effect.applied
+        Effect.applied = lambda self, owner, layer=True: applied(self, owner)
+        try:
+            self.assertEqual(groups(), 6)
+            layered = _pixels(frame._render_to_cgimage(1.0, 2.0))
+        finally:
+            Effect.applied = applied
+        self.assertLessEqual(max(abs(a - b) for a, b in zip(direct, layered)), 3)
+
+    def test_wide_shadow_blurs_match_core_graphics(self):
+        # downsampled wide blurs match Core Graphics' own
+        from plotdevice.gfx import effects
+        size(400, 300)
+        background('white')
+        rect(40, 40, 120, 90, fill='crimson', shadow=Shadow('black', blur=60, offset=(20, 15)))
+        with shadow(('navy', .6), blur=40, offset=(-10, 25)):
+            star(280, 120, 6, 70, 30, fill='orange')
+            oval(220, 180, 80, 60, fill='teal')
+        with clip(rect(40, 170, 150, 110, plot=False)):
+            oval(60, 180, 100, 80, fill='plum', shadow=Shadow('black', blur=50, offset=30))
+        text('Shadowed', 220, 285, font='Avenir', size=30, shadow=Shadow('purple', blur=40, offset=(10, -15)))
+        with transform(CENTER), rotate(25):
+            image('tests/_in/plaid.png', 300, 200, width=60, shadow=Shadow('black', blur=35, offset=12))
+        frame = _ctx.canvas.commit()
+
+        def render(downsampled):
+            limit = effects._CG_BLUR_LIMIT
+            if not downsampled:
+                effects._CG_BLUR_LIMIT = float('inf')
+            try:
+                return _pixels(frame._render_to_cgimage(1.0, 2.0))
+            finally:
+                effects._CG_BLUR_LIMIT = limit
+        cg, ours = render(False), render(True)
+        self.assertNotEqual(cg, ours)
+        diffs = [abs(a - b) for a, b in zip(cg, ours)]
+        self.assertLessEqual(max(diffs), 8)
+        self.assertGreater(sum(d <= 3 for d in diffs) / len(diffs), .995)
+
+class CanvasTests(PlotDeviceTestCase):
+    def test_rendering_does_not_leak(self):
+        # graphicsPort() leaked a proxy per grob,
+        # megabytes per second in an animation
+        import sys, gc, objc
+        if objc.__version__.startswith('11.'):
+            self.skipTest('PyObjC 11 (the last release supporting Python 3.9) leaks on struct- and object-returning calls')
+        size(100, 100)
+        for i in range(200):
+            fill(i / 200.0, .2, .4); rect(i % 10 * 10, i // 10 * 5, 8, 4)
+        canvas = _ctx.canvas
+        canvas._getImageData('png')
+        gc.collect(); before = sys.getallocatedblocks()
+        for _ in range(30):
+            canvas._getImageData('png')
+        gc.collect(); grown = sys.getallocatedblocks() - before
+        self.assertLess(grown, 1000, 'rendering grew the heap by %d blocks over 30 frames' % grown)
+
+    def test_finish_before_add_raises_and_writes_nothing(self):
+        # an export with nothing added says so rather than saving the canvas
+        import gc, os, tempfile
+        size(40, 40)
+        rect(10, 10, 20, 20)
+        with tempfile.TemporaryDirectory() as tmp:
+            for name, opts in (('out.mov', dict(fps=30)), ('out.gif', dict(fps=30)), ('out.pdf', {}), ('out.png', {})):
+                path = os.path.join(tmp, name)
+                writer = export(path, **opts)
+                with self.assertRaisesRegex(DeviceError, "Nothing was added to 'out"):
+                    writer.finish()
+                del writer
+                gc.collect()
+                self.assertFalse(os.path.exists(path), name)
+            # an animation's with-block needs frames too, but a still's draws the image
+            for name in ('anim.mov', 'anim.gif'):
+                with self.assertRaisesRegex(DeviceError, "Nothing was added"):
+                    with export(os.path.join(tmp, 'block-' + name), fps=30):
+                        rect(10, 10, 20, 20)
+            with export(os.path.join(tmp, 'block.png')):
+                rect(10, 10, 20, 20)
+            self.assertTrue(os.path.exists(os.path.join(tmp, 'block.png')))
+
+    def test_pdf_exports_are_documents_unless_numbered(self):
+        # pages go in one pdf unless the name is numbered
+        import os, tempfile
+        from Foundation import NSURL
+        from Quartz import CGPDFDocumentCreateWithURL, CGPDFDocumentGetNumberOfPages
+        tmp = tempfile.mkdtemp()
+        def written(stem):
+            names = sorted(n for n in os.listdir(tmp) if n.startswith(stem))
+            return [(n, CGPDFDocumentGetNumberOfPages(CGPDFDocumentCreateWithURL(NSURL.fileURLWithPath_(os.path.join(tmp, n)))))
+                    for n in names]
+        def three(pdf, how):
+            for i in range(3):
+                if how == 'add':
+                    clear(all)
+                    rect(10 * i, 0, 10, 10)
+                    pdf.add()
+                else:
+                    with getattr(pdf, how):
+                        rect(10 * i, 0, 10, 10)
+        size(40, 10)
+        for how in ('add', 'frame', 'page'):
+            with export(os.path.join(tmp, how + '.pdf')) as pdf:
+                three(pdf, how)
+            self.assertEqual(written(how), [(how + '.pdf', 3)], how)
+        # the manual's form, without a with-block
+        pdf = export(os.path.join(tmp, 'manual.pdf'))
+        three(pdf, 'add')
+        pdf.finish()
+        self.assertEqual(written('manual'), [('manual.pdf', 3)])
+        # add() then page
+        with export(os.path.join(tmp, 'mixed.pdf')) as pdf:
+            three(pdf, 'add')
+            three(pdf, 'page')
+        self.assertEqual(written('mixed'), [('mixed.pdf', 6)])
+        for how in ('add', 'frame'):
+            with export(os.path.join(tmp, 'seq-%s-{2}.pdf' % how)) as pdf:
+                three(pdf, how)
+            self.assertEqual(written('seq-' + how), [('seq-%s-%02d.pdf' % (how, n), 1) for n in (1, 2, 3)], how)
+        with self.assertRaisesRegex(DeviceError, 'numbered'):
+            with export(os.path.join(tmp, 'seq-page-{2}.pdf')) as pdf:
+                with pdf.page:
+                    pass
+
+    def test_text_does_not_leak_colors(self):
+        # TextKit caches attr dicts forever, so a
+        # Color in one leaked per text() call
+        import gc
+        from plotdevice.gfx.colors import Color
+        size(100, 100); font('Avenir', 12); fill(.2, .3, .4)
+        text('warm up', 10, 50); clear()
+        gc.collect(); before = sum(1 for o in gc.get_objects() if isinstance(o, Color))
+        for i in range(50):
+            text('line %d' % i, 10, 50)
+        _ctx.canvas._getImageData('png'); clear()
+        gc.collect(); retained = sum(1 for o in gc.get_objects() if isinstance(o, Color)) - before
+        self.assertEqual(retained, 0, '%d Colors survived their texts' % retained)
+
+    def test_state_does_not_chain_across_frames(self):
+        # kept state mustn't chain to prior values
+        def depth(obj):
+            n = 0
+            while hasattr(obj, '_rollback'):
+                obj = obj._rollback
+                obj = next(iter(obj.values())) if isinstance(obj, dict) else obj
+                n += 1
+            return n
+        size(100, 100)
+        for frame in range(10):
+            clear()
+            for i in range(10):
+                fill(i / 10.0); stroke(0); font('Avenir', 10 + i); rect(0, 0, 10, 10)
+        self.assertEqual([depth(_ctx._fillcolor), depth(_ctx._strokecolor), depth(_ctx._font)], [0, 0, 0])
+
+    def test_ordered_by_dotted_attr(self):
+        size(100, 100)
+        positions = [80, 20, 50]
+        for y in positions:
+            rect(10, y, 10, 10)
+
+        sorted_grobs = ordered(canvas, 'bounds.y')
+        self.assertEqual([g.bounds.y for g in sorted_grobs], sorted(positions))
+
+    def test_ordered_by_dict_like_non_dict(self):
+        items = [UserDict({'y': 80}), UserDict({'y': 20}), UserDict({'y': 50})]
+        sorted_items = ordered(items, 'y')
+        self.assertEqual([d['y'] for d in sorted_items], [20, 50, 80])
+
+    def test_ordered_heterogeneous_items(self):
+        items = [{'y': 80}, SimpleNamespace(y=20), {'y': 50}]
+        sorted_items = ordered(items, 'y')
+        ys = [it['y'] if isinstance(it, dict) else it.y for it in sorted_items]
+        self.assertEqual(ys, [20, 50, 80])
+
+    def test_dimension_range(self):
+        # reproduces https://github.com/plotdevice/plotdevice/issues/67
+        size(300, 200)
+        self.assertEqual(list(range(0, WIDTH)), list(range(0, 300)))
+        self.assertEqual(list(range(0, HEIGHT)), list(range(0, 200)))
+
+    def test_magicnumber_protocol(self):
+        # exercise the dunder methods on MagicNumber that make it behave like a real float
+        size(300, 200)
+        for magic in (WIDTH, HEIGHT, px, inch, pica, cm, mm):
+            expected = float(magic)
+            with self.subTest(magic=magic):
+                self.assertEqual(list(range(0, magic)), list(range(0, int(expected))))
+                self.assertEqual(round(magic), round(expected))
+                self.assertEqual(hash(magic), hash(expected))
+                self.assertTrue(magic <= expected)
+                self.assertTrue(magic >= expected)
+                self.assertEqual(format(magic, '.2f'), format(expected, '.2f'))
+                self.assertEqual(144 / magic, 144 / expected)
+
+    def test_magicnumber_cross_comparisons(self):
+        # confirm dimension-to-unit comparisons work
+        size(10 * cm, 20 * cm)
+        self.assertEqual(WIDTH / cm, 10)
+        self.assertEqual(HEIGHT / cm, 20)
+        for a, b in [(inch, pica), (cm, mm), (WIDTH, cm), (HEIGHT, inch), (WIDTH, HEIGHT)]:
+            with self.subTest(a=a, b=b):
+                self.assertEqual(a <= b, float(a) <= float(b))
+                self.assertEqual(a >= b, float(a) >= float(b))
+
+    def test_magicnumber_unsupported_operators(self):
+        # confirm errors blame the actual type (Dimension or Unit) rather than
+        # the spurious 'float' comparison from earlier releases
+        size(300, 200)
+        for magic in (WIDTH, HEIGHT, px, inch, pica, cm, mm):
+            typename = type(magic).__name__
+            ops = [
+                lambda m: m << 2,
+                lambda m: m >> 2,
+                lambda m: 2 << m,
+                lambda m: 2 >> m,
+                lambda m: ~m,
+            ]
+            for op in ops:
+                with self.subTest(magic=magic, op=op):
+                    with self.assertRaises(TypeError) as exc:
+                        op(magic)
+                    self.assertIn(typename, str(exc.exception))
+                    self.assertNotIn('float', str(exc.exception))
+
+def suite():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(CanvasTests))
+    suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FrameTests))
+    suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(RendererTests))
+    return suite

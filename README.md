@@ -1,5 +1,18 @@
-PlotDevice
-==========
+<center>
+
+![PlotDevice: A Python-based graphics language for designers, developers, and tinkerers](app/art/hero@2x.png)
+
+</center>
+
+<div align="center">
+  <a href="https://plotdevice.io">Website</a> <span>&nbsp;&nbsp;·&nbsp;&nbsp;</span>
+  <a href="https://github.com/plotdevice/plotdevice/releases">Download</a> <span>&nbsp;&nbsp;·&nbsp;&nbsp;</span>
+  <a href="https://plotdevice.io/manual">Docs</a>  <span>&nbsp;&nbsp;·&nbsp;&nbsp;</span>
+  <a href="https://github.com/plotdevice/plotdevice/discussions">Discussion Forum</a>
+</div>
+
+---
+
 PlotDevice is a Macintosh application used for computational graphic design. It 
 provides an interactive Python environment where you can create two-dimensional 
 graphics and output them in a variety of vector, bitmap, and animation formats. 
@@ -13,103 +26,58 @@ of 2D imagery and powerful compositing operations.
 
 #### Requirements
 
-The PlotDevice application requires macOS 11 or greater (either on Intel or Apple Silicon) 
-and comes bundled with a Python 3.10 distribution. The module can be installed via `pip3` 
-on Python versions ≥3.6 (including the interpreter from the Xcode 
-[command line tools](https://developer.apple.com/download/all/?q=command%20line%20tools%20for%20xcode)
-and those [installed through Homebrew](https://docs.brew.sh/Homebrew-and-Python)).
+The PlotDevice application requires macOS 11 or greater (either on Intel or Apple Silicon). 
+Installing the `plotdevice` python module and command line tool via `pip3` require you to 
+have Python version ≥3.9 on your system.
 
-#### Latest changes (July 2022)
+See the [build instructions](BUILDING.md) for details on setting up Python locally using 
+one of the recommended interpreters:
+- [Homebrew](BUILDING.md#homebrew) (recommended)
+- [Xcode command line tools](BUILDING.md#xcode) (stuck at version 3.9)
+- [`pyenv`](BUILDING.md#pyenv)
+- [`uv`](BUILDING.md#uv)
 
-Over the years since the last release, progress in both macOS and Python itself led to quite
-a bit of breakage. Some of the highlights of this maintenance release include:
+#### Latest changes
 
-###### New Features
-- Runs natively on Intel and Apple Silicon and supports retina displays
-- Python 3 support (including a bundled 3.10 installation in the app)
-- images can now be exported in HEIC format and videos support H.265 (HEVC)
-- SVG files can now be drawn to the canvas using the `image()` command (thanks to the magical [SwiftDraw](https://github.com/swhitty/SwiftDraw) library)
-- image exports have a configurable `zoom` to create 2x/3x/etc ‘retina’ images
-- revamped `var()` command for creating GUIs to modify values via sliders, buttons, toggles, etc.
-- updated text editor with multiple tabs, new themes, and additional key-binding modes emulating Sublime Text and VS Code
-- the module's command line interface is now accessible through `python3 -m plotdevice`
-- the command line tool has a new `--install` option to download [PyPI](https://pypi.org) packages for use within the app
-- document autosaving is now user-configurable 
+Version 1.1 adds compatibility for more recent Python 3 versions and no longer requires
+the C & Swift extensions to be compiled when installing via `pip3` (since they're now 
+included in binary wheels). The app’s text editor has been updated to version 1.44 of 
+[Ace](https://ace.c9.io) and has an updated default theme. The module now installs cleanly
+using [`uv`](https://docs.astral.sh/uv/) and the command line tool can be [run via `uvx`](BUILDING.md#uv).
 
-###### Bugfixes
-- exported images generated on retina machines now have the proper dimensions
-- hex colors can now use lowercase letters
-- automatic variables like `WIDTH` & `HEIGHT` correctly support the `/` operator
-- the Color object's `.blend()` method is working again
-- the `read()` command can now handle csv files with spaces in their header row names
-- the `translate()` command now incorporates non-pixel grid units set via the `size()` command
-- cmyk exports are working reliably for command line `--export` and via the `export(cmyk=True)` method
-- arguments defined using the command line tool's `--args` options are now passed to the script's `sys.argv`
-
-###### Misc. Improvements
-- the command line tool can be exited via ctrl-c in addtion to being Quit from the menu bar
-- simplified unicode handling (and improved support for normalization of user-provided strings)
-- building the module now only requires Xcode command line tools—not a full Xcode.app installation
-- the `text()` command will always treat its first argument as content (even if it's not a string) unless a `str`, `xml`, or `src` keyword argument is provided
-- the mouse pointer is now visible in full-screen mode (and will auto-hide when inactive)
-
-###### Unfortunate Casualties
-- The NodeBox Libraries (`coreimage`, `colors`, and friends) would require quite a bit of attention to get working properly again. 
-  A first pass can be found in the [`plotdevice-libs` repository](https://github.com/plotdevice/plotdevice-libs) but they're not
-  ready for prime-time. If you're interested in contributing, this would be a terrific place to start!
+See the [changelog](CHANGES.md) for additional details.
 
 Installation
 ------------
 
-PlotDevice supports being built as either a full-fledged Cocoa application, or as
-a standard Python module to be installed into a virtualenv alongside your source files.
-In both cases it now includes a command line tool called [`plotdevice`](#running-scripts) allowing you to run
-scripts and perform batch exports from the console.
+PlotDevice can be used as either a full-fledged Cocoa application or
+a standard Python module installed into a virtualenv alongside your source files.
+In both cases, it includes a command line tool called [`plotdevice`](#running-scripts) 
+allowing you to run scripts and perform batch exports from the console.
 
-#### Application builds
+#### Application
 
-The application can be built in Xcode with the `PlotDevice.xcodeproj` project. It can also
-be built from the command line by using `python3 setup.py app` (which uses Xcode) or 
-`python3 setup.py py2app` (which uses setuptools). 
+You can download a copy of the GUI app from the [PlotDevice website](https://plotdevice.io) or the most recent 
+[release](https://github.com/plotdevice/plotdevice/releases) on GitHub. The app has a built-in code editor and 
+is bundled with a copy of Python 3.14, so it's everything you need to write and run scripts. Open the app's 
+Preferences window to [set up the command line tool](https://plotdevice.io/tut/Console) if you'd like to 
+[run scripts](#running-scripts) from the terminal as well.
 
-The resulting binary will appear in the `dist` subdirectory and can be moved to your
-Applications folder or any other fixed directory. To install a symlink to the command
-line tool, launch the app from its installed location and click the Install button in
-the Preferences window.
+#### Python module & terminal command
 
-Prebuilt application binaries can be downloaded from the [PlotDevice site](https://plotdevice.io).
-
-#### Module builds
-
-PlotDevice can also be built as a Python module, allowing you to rely on an external editor
-and launch scripts from the command line (or from a ‘shebang’ line at the top of your
-script invoking the `plotdevice` tool). To install the module and command line tool use
-`python3 setup.py install`
-
-Easier still, you can install the module directly from PyPI with a simple `pip3 install plotdevice`.
-It's a good idea to install the `wheel` module first since it greatly speeds up installation of the
-PyObjC libraries PlotDevice depends on.
-
-#### Alternative Python Interpreters
-
-When using [pyenv](https://github.com/pyenv/pyenv) (or compiling Python from source) you have the
-option of building the interpreter as a **Framework**. This gives you access to a GUI interface for
-running PlotDevice scripts via the `python3 -m plotdevice` command. Non-framework builds support the
-command line's `--export` functionality and will open a viewer window, but will not show an icon in
-the Dock or give you access to the menu bar.
-
-To set up and run a script using a Framework build, do something along the lines of:
+To install the module for use in your own Python scripts, you can use the command:
 ```console
-env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.10.4
-pyenv shell 3.10.4
 pip3 install plotdevice
-python3 -m plotdevice <script.pv>
-``` 
+```
 
-#### Building from source
+This will also install the `plotdevice` command line tool, which you can use to [run `.pv` scripts](#running-scripts). 
+See the note below about [using a virtual environment](#installing-python-modules) if you don't want to install `plotdevice` 
+globally for your whole system.
 
-You can also clone the git repository and build PlotDevice as a module or application from scratch. 
-Consult the [build instructions](https://github.com/plotdevice/plotdevice/discussions/59) for details.
+#### Build from source
+
+If you're interested in doing development work on the library itself, take a look at the full 
+[build instructions](BUILDING.md).
 
 Documentation
 -------------
@@ -310,7 +278,7 @@ use of a nested `with` statement in the final example):
 ```python
 # export a 100-frame movie
 movie = export('anim.mov', fps=50, bitrate=1.8)
-for i in xrange(100):
+for i in range(100):
     clear(all)  # erase the previous frame from the canvas
     ...         # (do some drawing)
     movie.add() # add the canvas to the movie
@@ -319,7 +287,7 @@ movie.finish()  # wait for i/o to complete
 ```python
 # export a movie (with the context manager finishing the file when done)
 with export('anim.mov', fps=50, bitrate=1.8) as movie:
-    for i in xrange(100):
+    for i in range(100):
         clear(all)  # erase the previous frame from the canvas
         ...         # (do some drawing)
         movie.add() # add the canvas to the movie
@@ -328,7 +296,7 @@ with export('anim.mov', fps=50, bitrate=1.8) as movie:
 # export a movie (with the context manager finishing the file when done)
 # let the movie.frame context manager call clear() and add() for us
 with export('anim.mov', fps=50, bitrate=1.8) as movie:
-    for i in xrange(100):
+    for i in range(100):
         with movie.frame:
             ... # draw the next frame
 ```
@@ -341,7 +309,7 @@ use the `page` attribute rather than `frame`:
 ```python
 # export a five-page pdf document
 pdf = export('multipage.pdf')
-for i in xrange(5):
+for i in range(5):
     clear(all) # erase the previous page's graphics from the canvas
     ...        # (do some drawing)
     pdf.add()  # add the canvas to the pdf as a new page
@@ -350,7 +318,7 @@ pdf.finish()   # write the pdf document to disk
 ```python
 # export a pdf document more succinctly
 with export('multipage.pdf') as pdf:
-    for i in xrange(5):
+    for i in range(5):
         with pdf.page:
             ... # draw the next page
 ```
@@ -367,7 +335,7 @@ If the filename contains a number between curly braces (e.g., `"name-{4}.ext"`),
 # export a sequence of images to output-0001.png, output-0002.png, ...
 #                                output-0099.png, output-0100.png
 with export('output.png') as img:
-    for i in xrange(100):
+    for i in range(100):
         with img.frame:
             ... # draw the next image in the sequence
 ```
@@ -375,7 +343,7 @@ with export('output.png') as img:
 # export a sequence of images to 01-img.png, 02-img.png, ...
 #                                99-img.png, 100-img.png
 with export('{2}-img.png') as img:
-    for i in xrange(100):
+    for i in range(100):
         with img.frame:
             ... # draw the next image in the sequence
 ```

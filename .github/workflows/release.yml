@@ -38,13 +38,17 @@ jobs:
         # collect notarization credentials
         xcrun notarytool store-credentials "AC_NOTARY" --apple-id "$AC_ID" --team-id "$AC_TEAM" --password "${{ secrets.AC_PASSWORD }}"
 
-    - name: Run Tests
+    - name: Install build dependencies
+      run: pip3 install -U pip wheel setuptools
+
+    - name: Install PlotDevice and run tests
       run: |
-        python3 setup.py test
+        pip3 install .
+        python3 -m tests
 
     - name: Build & Notarize App
       run: |
-        python3 setup.py dist
+        python3 make.py dist
 
     - name: Create Draft Release
       uses: softprops/action-gh-release@v1
@@ -55,7 +59,7 @@ jobs:
         files: |
           dist/*.zip
 
-  sdist:
+  packages:
     name: Post to test.pypi.org
     runs-on: macos-latest
 
@@ -63,13 +67,22 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Run Tests
+    - name: Install build dependencies
+      run: pip3 install -U pip wheel twine build setuptools
+
+    - name: Install PlotDevice and run tests
       run: |
-        python3 setup.py test
+        pip3 install .
+        python3 -m tests
+
+    - name: Build Wheels
+      uses: pypa/cibuildwheel@v4
+      with:
+        output-dir: dist
 
     - name: Build Source Distribution
       run: |
-        python3 setup.py sdist
+        python3 -m build --sdist
 
     - name: Upload to test.pypi.org
       env:
@@ -78,6 +91,5 @@ jobs:
         TWINE_REPOSITORY: https://test.pypi.org/legacy/
         TWINE_NON_INTERACTIVE: 1
       run: |
-        pip3 install twine
         twine check dist/*
         twine upload -r testpypi dist/*

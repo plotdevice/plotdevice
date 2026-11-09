@@ -1,12 +1,14 @@
 # encoding: utf-8
 import os
+import objc
 import sys
 import re
 import json
 import csv
 from contextlib import contextmanager
-from functools import cmp_to_key
+from functools import cmp_to_key, reduce
 from collections import OrderedDict, defaultdict
+from collections.abc import Mapping
 from os.path import abspath, dirname, exists, join, splitext
 from random import choice, shuffle
 
@@ -106,18 +108,15 @@ def _key(seq, names):
     # treat objects without a given key and objects with the key set to None equivalently
     MISSING = None
 
-    # look for dict items by default
-    getter = lambda obj: tuple(obj.get(n, MISSING) for n in names)
+    def getter(obj):
+        # use item lookup if obj is dict-like
+        if isinstance(obj, Mapping):
+            return tuple(obj.get(n, MISSING) for n in names)
 
-    # walk through the objects and see if any of them lacks the dict fields but has attrs
-    for obj in seq:
-        try:
-            if any(n in obj for n in names):
-                break # dict fields exist so use the itemgetter
-        except TypeError:
-            # for non-dict objects like namedtuples and dataclasses use an attrgetter
-            if any(hasattr(obj, n) for n in names):
-                getter = lambda obj: tuple(getattr(obj, n, MISSING) for n in names)
+        # otherwise check attrs
+        return tuple(
+            reduce(lambda o, part: getattr(o, part, MISSING), n.split('.'), obj) for n in names
+        )
 
     def compare(a, b):
         default = 0
@@ -211,6 +210,10 @@ def trim_zeroes(func):
 ### Dimension-aware number detector (replacement for isintance) ###
 
 def numlike(obj):
+    if isinstance(obj, (int, float)):
+        return True
+    if isinstance(obj, objc.objc_object):
+        return False # NSNumbers were caught above, so avoid the bridged hasattr
     return hasattr(obj, '__int__') or hasattr(obj, '__float__')
 
 ### give ordered- and default-dict a nicer repr ###
@@ -301,26 +304,28 @@ class adict(BetterRepr, dict):
 @contextmanager
 def autorelease():
     pool = NSAutoreleasePool.alloc().init()
-    yield
-    del pool
+    try:
+        yield
+    finally:
+        del pool
 
 
 ### module data dir ###
 
-def rsrc_path(resource=None):
-    """Return absolute path of the rsrc directory (or a file within it)"""
+def rsrc_path(resource):
+    """Return absolute path of a file within the rsrc directory"""
     mod_root = abspath(dirname(dirname(__file__)))
     app_root = NSBundle.mainBundle().bundlePath()
     mod_rsrc = join(mod_root, 'rsrc')
     app_rsrc = join(app_root, 'Contents/Resources')
     src_rsrc = join(mod_root, '../app/Resources')
 
-    for rsrc_root in (mod_rsrc, app_rsrc, src_rsrc):
-        if exists("%s/colors.json" % rsrc_root): # check for a known rsrc file
-            break
-    else:
-        raise RuntimeError("Couldn't locate resources directory.")
+    roots = [mod_rsrc, app_rsrc, src_rsrc]
+    if '.app/Contents/' in mod_root:
+        roots.insert(1, mod_root.split('.app/Contents/')[0] + '.app/Contents/Resources')
 
-    if resource:
-        return join(rsrc_root, resource)
-    return rsrc_root
+    for root in roots:
+        path = join(root, resource)
+        if exists(path):
+            return path
+    return join(mod_rsrc, resource) # so opening it reports the module's path

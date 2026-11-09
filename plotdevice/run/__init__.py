@@ -1,23 +1,59 @@
 import sys, site
-from os.path import abspath, dirname, exists, join
+from glob import glob
+from importlib.machinery import PathFinder
+from os.path import abspath, dirname, exists, expanduser, join
 from subprocess import call
+from sysconfig import get_path
+from .. import in_bundle
+
+# the per-interpreter subdirectories used by `plotdevice --install`
+lib_dir = expanduser('~/Library/Application Support/PlotDevice')
+interpreter_lib_dir = join(lib_dir, 'python%d.%d%s' % (*sys.version_info[:2], sys.abiflags))
+
+class BundledFinder:
+    """Imports PyObjC and PlotDevice from the app's own site-packages"""
+    def __init__(self, site_dir):
+        self.site_dir = site_dir
+        self.names = {'plotdevice'}
+        for top_level in glob(join(site_dir, 'pyobjc*.dist-info', 'top_level.txt')):
+            with open(top_level) as f:
+                self.names.update(f.read().split())
+
+    def find_spec(self, name, path=None, target=None):
+        if path is None and name in self.names:
+            return PathFinder.find_spec(name, [self.site_dir])
+
+if in_bundle:
+    # let the packages the user installed take precedence over the app's, except for PyObjC and PlotDevice
+    site_dir = get_path('purelib')
+    site_index = sys.path.index(site_dir) if site_dir in sys.path else len(sys.path)
+    sys.path[site_index:site_index] = [interpreter_lib_dir, lib_dir]
+    sys.meta_path.insert(0, BundledFinder(site_dir))
+
+    # check https certificates against the keychain, since the bundled openssl has no CA file
+    try:
+        import truststore
+        truststore.inject_into_ssl()
+    except ImportError:
+        pass # py2app builds don't include it
 
 try:
     # test the sys.path by attempting to load a PyObjC submodule...
-    from Foundation import *
+    import Foundation
     import objc
 except ImportError:
     # detect whether we're being run from the repository and set up a local env if so
     repo = abspath(join(dirname(__file__), '../..'))
-    setup_py = '%s/setup.py' % repo
-    if exists(setup_py):
-        from platform import python_version
+    make_py = '%s/make.py' % repo
+    if exists(make_py):
         from sysconfig import get_config_var
-        local_libs = '%s/deps/local/%s/lib/python%s/site-packages' % (repo, python_version(), get_config_var('py_version_short'))
+        # the `make.py dev`-created venv for whichever interpreter called it
+        version = get_config_var('py_version_short') + sys.abiflags
+        local_libs = '%s/deps/local/%s/lib/python%s/site-packages' % (repo, version, version)
         if not exists(local_libs):
-            call([sys.executable, setup_py, 'dev'])
+            call([sys.executable, make_py, 'dev'])
         site.addsitedir(local_libs)
-        from Foundation import *
+        import Foundation
         import objc
     else:
         from pprint import pformat

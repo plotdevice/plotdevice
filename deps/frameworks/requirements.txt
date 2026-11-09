@@ -2,7 +2,9 @@
 xattr
 cachecontrol[filecache]
 cffi
-pyobjc==11.0
-py2app
+pyobjc==12.2.2
+setuptools
+wheel
 requests
+truststore
 six

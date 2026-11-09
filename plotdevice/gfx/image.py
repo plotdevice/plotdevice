@@ -1,30 +1,37 @@
 # encoding: utf-8
 import os
 import re
+import sys
 import json
+import queue
+import threading
 import warnings
 import math
+import objc
 from contextlib import contextmanager
 from urllib.parse import urlparse
 from ..lib.cocoa import *
 
-from plotdevice import DeviceError
+from plotdevice import DeviceError, free_threaded
 from ..util import _copy_attrs, autorelease
 from ..util.readers import get_http_session, last_modified
-from ..lib.io import MovieExportSession, ImageExportSession
-from .geometry import Region, Size, Point, Transform, CENTER
+from ..lib.io import MovieExportSession, ImageExportSession, HEVC, H264, PRORES
+from .geometry import Region, Size, Point, Transform, CENTER, IDENTITY, _pivot, _hull
 from .atoms import TransformMixin, EffectsMixin, FrameMixin, Grob
-from .colors import CMYK
-from . import _ns_context
+from .effects import Frob
+from .profiles import Output
+from .. import gfx
+
+PDSVGImageRep = objc.lookUpClass('PDSVGImageRep')
 
 _ctx = None
-__all__ = ("Image", 'ImageWriter')
+__all__ = ("Image", 'ImageWriter', 'HEVC', 'H264', 'PRORES')
 
 ### The bitmap/vector image-container (a.k.a. NSImage proxy) ###
 
 class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
-    stateAttrs = ('_nsImage',)
-    opts = ('data',)
+    stateAttrs = ('_nsImage', '_tiles')
+    opts = ('data', 'src', 'image')
 
     def __init__(self, *args, **kwargs):
         """
@@ -80,6 +87,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         else:
             undefined = "Image requires either a source (path/url/Image) or image data"
             raise DeviceError(undefined)
+        self._tiles = getattr(src, '_tiles', {}) # pattern tiles by matrix & ink, shared with images made from this one
 
         # set the bounds (in phases)
         if isinstance(src, Image):
@@ -94,6 +102,17 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             for k,v in kwargs.items():
                 if k in FrameMixin.opts:
                     setattr(self, k, v)
+
+    def copy(self):
+        # pull all state from the original object (rather than inheriting from _ctx)
+        clone = Image.__new__(Image)
+        clone._nsImage = self._nsImage # never edited in place
+        clone._tiles = self._tiles
+        clone._frame = self._frame.copy()
+        clone._transform = self._transform.copy()
+        clone._effects = self._effects.copy()
+        clone._grid, clone._transformmode = self._grid, self._transformmode
+        return clone
 
     def _lazyload(self, path=None, data=None):
         # loads either a `path` or `data` kwarg and returns an NSImage
@@ -164,7 +183,7 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
     @property
     def image(self):
-        warnings.warn("The 'image' attribute is deprecated. Please use _nsImage instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn("The 'image' attribute is deprecated. Please use _nsImage instead.", FutureWarning, stacklevel=2)
         return self._nsImage
 
     @property
@@ -174,8 +193,9 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
             if isinstance(bitmap, NSBitmapImageRep):
                 break
         else:
-            # ...otherwise convert the vector image to a bitmap
-            # (note that this should use _screen_transform somehow but currently doesn't)
+            # ...otherwise convert the vector image to a bitmap at its native size.
+            # it will only be used for a hasAlpha() check in effects.py, so the actual
+            # pixel data needn't match its _screen_size
             tiffdata = self._nsImage.TIFFRepresentation()
             image = NSImage.alloc().initWithData_(tiffdata)
             bitmap = image.representations()[0]
@@ -183,12 +203,41 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
 
     @property
     def _ciImage(self):
+        """A CIImage suitable for use as a clip()/mask() stencil.
+
+        Raster sources are used as-is. Vector sources are scaled to the size
+        they'll actually occupy on the canvas before being rasterized.
+        """
+
+        # if the image is raster-based, use its bitmap as-is
+        for bitmap in self._nsImage.representations():
+            if isinstance(bitmap, NSBitmapImageRep):
+                break
+        else:
+            # if vector-based, rasterize it at its 'actual' on-screen size
+            w, h = self._screen_size
+
+            # create an offscreen bitmap context and rasterize the scaled image into it
+            bitmap_opts = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
+            bitmap_ctx = CGBitmapContextCreate(None, w, h, 8, w*4, CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3), bitmap_opts)
+            # flip the CTM itself, since flipped=True below only tells AppKit the context is flipped
+            CGContextTranslateCTM(bitmap_ctx, 0, h)
+            CGContextScaleCTM(bitmap_ctx, 1, -1)
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.setCurrentContext_(
+              NSGraphicsContext.graphicsContextWithCGContext_flipped_(bitmap_ctx, True)
+            )
+            self._nsImage.drawInRect_fromRect_operation_fraction_(((0,0),(w,h)), NSZeroRect, NSCompositeSourceOver, 1.0)
+            NSGraphicsContext.restoreGraphicsState() # NB: class-level restore also resets currentContext
+
+            bitmap = NSBitmapImageRep.alloc().initWithCGImage_(CGBitmapContextCreateImage(bitmap_ctx))
+
         # core-image needs to be told to compensate for our flipped coords
         flip = NSAffineTransform.transform()
-        flip.translateXBy_yBy_(0, self.size.height)
+        flip.translateXBy_yBy_(0, bitmap.pixelsHigh())
         flip.scaleXBy_yBy_(1,-1)
 
-        ciImage = CIImage.alloc().initWithBitmapImageRep_(self._nsBitmap)
+        ciImage = CIImage.alloc().initWithBitmapImageRep_(bitmap)
         transform = CIFilter.filterWithName_("CIAffineTransform")
         transform.setValue_forKey_(ciImage, "inputImage")
         transform.setValue_forKey_(flip, "inputTransform")
@@ -221,92 +270,340 @@ class Image(EffectsMixin, TransformMixin, FrameMixin, Grob):
         return factor
 
     @property
-    def _screen_transform(self):
-        """Returns the Transform object that will be used to draw the image.
+    def _screen_matrix(self):
+        """The matrix the image is drawn with.
 
         The transform incorporates the global context state but also accounts for
         centering and max width/height values set in the constructor."""
-
-        # accumulate transformations in a fresh matrix
-        xf = Transform()
 
         # set scale factor so entire image fits in the given rect or dimension
         factor = self._scalefactor
 
         # calculate the pixel dimensions (accounting for the canvas's units)
         dx, dy = self._to_px(Point(self.x, self.y))
-        w, h = self._to_px(self.size)
 
-        # calculate the translation offset for centering (if any)
-        nudge = Transform()
-        if self._transformmode == CENTER:
-            nudge.translate(w*factor/2, h*factor/2)
+        matrix = tuple(self.transform.matrix)
+        if self._transformmode == CENTER and matrix != IDENTITY:
+            # apply the context's CTM at the image's center
+            w, h = self._to_px(self.size)
+            a, b, c, d, tx, ty = _pivot(matrix, w * factor / 2, h * factor / 2, dx, dy)
+        else:
+            # in CORNER mode (or if untransformed) simply apply the CTM
+            a, b, c, d, mx, my = matrix
+            tx, ty = mx + dx, my + dy
+        return (a * factor, b * factor, c * factor, d * factor, tx, ty) # scale to fit size constraints (if any)
 
-        xf.translate(dx, dy)       # set the position before applying transforms
-        xf.prepend(nudge)          # nudge the image to its center (or not)
-        xf.prepend(self.transform) # add context's CTM.
-        xf.prepend(nudge.inverse)  # Move back to the real origin.
-        xf.scale(factor)           # scale to fit size constraints (if any)
-        return xf
+    @property
+    def _screen_transform(self):
+        """Returns the Transform object that will be used to draw the image."""
+        return Transform(self._screen_matrix)
+
+    @property
+    def _screen_size(self):
+        """Returns the image's real pixel dimensions.
+
+        Raster-backed images return their native size, but vector-based images incorporate
+        the canvas's current CTM and the image's scaling based on its _screen_transform."""
+
+        # if the image is raster-based, use its native size
+        for bitmap in self._nsImage.representations():
+            if isinstance(bitmap, NSBitmapImageRep):
+                return bitmap.pixelsWide(), bitmap.pixelsHigh()
+
+        # if vector-based, use the canvas's CTM and the image's _screen_transform to
+        # determine its 'actual' size (rather than just using its mediabox 1:1)
+        ctm = CGContextGetCTM(gfx._state.port)
+        ctm_scale = max(math.hypot(ctm.a, ctm.b), math.hypot(ctm.c, ctm.d))
+        xf_a, xf_b, xf_c, xf_d, _, _ = self._screen_matrix
+        xf_scale = max(math.hypot(xf_a, xf_b), math.hypot(xf_c, xf_d))
+        scale = max(ctm_scale * xf_scale, 1.0)
+        src_w, src_h = self._nsImage.size()
+
+        return max(1, round(src_w * scale)), max(1, round(src_h * scale))
+
+    @property
+    def _outline(self):
+        """A Bezier in the image's local pixel space tracing its shape(s), for use
+        as a vector clip()/mask() stencil (channel='outline').
+
+        Raster images get a rect matching their dimensions. PDF/SVG images get
+        the union of every shape in the graphic (PDFs are traced from their raw
+        content stream; SVGs are traced from the parsed shape/command list)."""
+        from .bezier import Bezier
+        from ..lib import pathmatics
+
+        w, h = self._nsImage.size()
+        for bitmap in self._nsImage.representations():
+            if isinstance(bitmap, NSBitmapImageRep):
+                outline = Bezier()
+                outline.rect(0, 0, w, h)
+                return outline
+            if isinstance(bitmap, NSPDFImageRep):
+                ns_path = pathmatics.pdf_outline(bitmap.PDFRepresentation())
+                # pdf content streams are y-up/bottom-left; flip to match our y-down convention
+                flip = Transform()
+                flip.translate(0, h)
+                flip.scale(1, -1)
+                return flip.apply(Bezier(ns_path))
+            if isinstance(bitmap, PDSVGImageRep):
+                # svg paths are already y-down
+                return Bezier(bitmap.outline())
+
+        # no rep we know how to trace
+        return Bezier()
+
+    def _render_box(self):
+        """The box its pixels cover where it's drawn"""
+        w0, h0 = self._nsImage.size()
+        if tuple(self.transform.matrix) == IDENTITY:
+            dpx, factor = self._grid.dpx, self._scalefactor
+            return (self.x * dpx, self.y * dpx, w0 * factor, h0 * factor)
+        return _hull(self._screen_matrix, 0, 0, w0, h0)
+
+    def _nsImage_as(self, cmyk):
+        """The NSImage to draw, with a CMYK bitmap re-tagged as `cmyk` (keeping its numbers)"""
+        image = self._nsImage
+        if cmyk is not None:
+            # preserve numbers for cmyk bitmaps and relabel to match the current press profile
+            rep = next((r for r in image.representations() if isinstance(r, NSBitmapImageRep)), None)
+            cg = rep.CGImage() if rep is not None else None
+            if cg is not None and CGColorSpaceGetModel(CGImageGetColorSpace(cg)) == kCGColorSpaceModelCMYK:
+                image = NSImage.alloc().initWithCGImage_size_(CGImageCreateCopyWithColorSpace(cg, cmyk), image.size())
+                image.setFlipped_(True)
+        return image
 
     def _draw(self):
         """Draw an image on the given coordinates."""
 
-        with _ns_context() as ns_ctx:
+        saved = gfx._state.port
+        CGContextSaveGState(saved)
+        try:
             self._screen_transform.concat() # move the image into place via transforms
-            with self.effects.applied():    # apply any blend/alpha/shadow effects
-                ns_ctx.setImageInterpolation_(NSImageInterpolationHigh)
-                bounds = ((0,0), self._nsImage.size()) # draw the image at (0,0)
-                self._nsImage.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, self.alpha)
-                # NB: the nodebox source warns about quartz bugs triggered by drawing
-                # EPSs to other origin points. no clue whether this still applies...
+            frame = gfx._state.frame
+            image = self._nsImage_as(frame.output.cmyk_space if frame is not None else None)
+            bounds = ((0,0), image.size()) # draw the image at (0,0)
+            reps = image.representations()
+            bitmap = reps[0] if len(reps) == 1 and isinstance(reps[0], NSBitmapImageRep) else None
+            vector = next((r for r in reps if isinstance(r, (NSPDFImageRep, PDSVGImageRep))), None)
+            with self.effects.applied(self, layer=bitmap is None): # apply any blend/alpha/shadow effects
+                port = gfx._state.port
+                CGContextSetInterpolationQuality(port, kCGInterpolationHigh)
+
+                # bitmaps and pdfs need a manual y-axis flip
+                if bitmap or isinstance(vector, NSPDFImageRep):
+                    CGContextTranslateCTM(port, 0, image.size().height)
+                    CGContextScaleCTM(port, 1, -1)
+
+                if bitmap:
+                    # CGImage keeps the context's alpha and blend, so a lone bitmap needs no layer
+                    CGContextDrawImage(port, bounds, bitmap.CGImage())
+                elif vector:
+                    # draw svg & pdf reps directly, otherwise NSImage rasterizes them in layers and pattern cells
+                    vector.drawInRect_(bounds)
+                else:
+                    image.drawAtPoint_fromRect_operation_fraction_((0,0), bounds, NSCompositeSourceOver, 1.0)
+        finally:
+            CGContextRestoreGState(saved)
+
+### a canvas plotted as vectors ###
+
+class Snapshot(Image):
+    stateAttrs = ('_canvas', '_source', '_shadowed')
+
+    def __init__(self, src, *coords, **kwargs):
+        super(Image, self).__init__(**kwargs)
+        if isinstance(src, Snapshot):
+            # inherit cached tiles as well as content
+            self._source, self._shadowed, self._tiles = src._source, src._shadowed, src._tiles
+            for attr in ['x','y','width','height']:
+                setattr(self, attr, getattr(src, attr))
+        else:
+            self._source = src.commit() if hasattr(src, 'commit') else src # the canvas as it was plotted
+            self._tiles = {} # CGColors containing pattern tiles (for using the snapshot as a fill/stroke/background)
+
+            # check for nested grobs with shadows (which layer drawing doesn't automatically scale)
+            nested, self._shadowed = list(self._source.grobs), False
+            while nested and not self._shadowed:
+                grob = nested.pop()
+                effects = grob if isinstance(grob, Frob) else getattr(grob, '_effects', None)
+                self._shadowed = getattr(effects, '_fx', {}).get('shadow') is not None or getattr(grob, '_shadowed', False)
+                nested.extend(grob.contents if isinstance(grob, Frob) else ())
+        self._canvas = self._source # the canvas in the colors of the frame it's eventually drawn in
+
+        if coords:
+            self._frame._parse(coords)
+        for k, v in kwargs.items():
+            if k in FrameMixin.opts:
+                setattr(self, k, v)
+
+    def copy(self):
+        clone = Snapshot.__new__(Snapshot)
+        clone._canvas, clone._source, clone._shadowed, clone._tiles = self._canvas, self._source, self._shadowed, self._tiles
+        clone._frame = self._frame.copy()
+        clone._transform = self._transform.copy()
+        clone._effects = self._effects.copy()
+        clone._grid, clone._transformmode = self._grid, self._transformmode
+        return clone
+
+    def _commit(self, held):
+        # resolve its colors as the frame being committed does
+        snapshot = self.copy() if held else self
+        frame = gfx._state.committing
+        recolor = frame is not None and frame.output != self._canvas.output
+        if recolor:
+            from .canvas import Frame
+            snapshot = snapshot if held else self.copy()
+            snapshot._canvas = Frame(self._source, frame.output)
+        return snapshot
+
+    @property
+    def _nsImage(self):
+        # return a 2x bitmap for use by image(snapshot)
+        return self._canvas._nsImage
+
+    @property
+    def _outline(self):
+        # the canvas's shapes, as a vector stencil
+        from .bezier import Bezier
+        return Bezier(self._canvas._traced(self._canvas.grobs))
+
+    @property
+    def size(self):
+        return self._from_px(self._canvas.pagesize)
+
+    def _render_box(self):
+        w0, h0 = self._canvas.pagesize
+        if tuple(self.transform.matrix) == IDENTITY:
+            dpx, factor = self._grid.dpx, self._scalefactor
+            return (self.x * dpx, self.y * dpx, w0 * factor, h0 * factor)
+        return _hull(self._screen_matrix, 0, 0, w0, h0)
+
+    def _draw(self):
+        saved = gfx._state.port
+        CGContextSaveGState(saved)
+        try:
+            self._screen_transform.concat() # position the snapshot
+            with self.effects.applied(self): # apply blend/alpha/shadow (if any)
+                # if this isn't a PDF, draw the grobs directly
+                (doc, layers), port = gfx._state.pdf, gfx._state.port
+                if doc is None or CGBitmapContextGetWidth(port) > 0:
+                    self._canvas.draw() # re-enters the render lock
+                    return
+
+                # in a PDF, draw into a layer once then reuse that reference for subsequent draws
+                ctm = CGContextGetCTM(port)
+                linear = (ctm.a, ctm.b, ctm.c, ctm.d, 0, 0) if self._shadowed else (1, 0, 0, -1, 0, 0)
+                w, h = self._canvas.pagesize
+                (bx, by), (bw, bh) = CGRectApplyAffineTransform(((0, 0), (w, h)), linear)
+                key = self._source, self._canvas.output, linear
+                if key not in layers:
+                    layer = CGLayerCreateWithContext(doc, (bw, bh), None)
+                    ctx = CGLayerGetContext(layer)
+                    CGContextTranslateCTM(ctx, -bx, -by)
+                    CGContextConcatCTM(ctx, linear)
+                    NSGraphicsContext.saveGraphicsState()
+                    NSGraphicsContext.setCurrentContext_(NSGraphicsContext.graphicsContextWithCGContext_flipped_(ctx, True))
+                    try:
+                        self._canvas.draw()
+                    finally:
+                        NSGraphicsContext.restoreGraphicsState()
+                    layers[key] = layer
+                CGContextConcatCTM(port, CGAffineTransformInvert(linear))
+                CGContextDrawLayerInRect(port, ((bx, by), (bw, bh)), layers[key])
+        finally:
+            CGContextRestoreGState(saved)
 
 ### context manager for calls to `with export(...)` ###
 
 import time
 re_padded = re.compile(r'{(\d+)}')
+
+class ExportRenderer(object):
+    """Renders an export's frames one at a time on a thread of its own"""
+    def __init__(self):
+        self._error = None
+        self._failed = False
+        self._jobs = queue.Queue(maxsize=1)
+        self._thread = threading.Thread(target=self._loop, daemon=True, name='export-render')
+        self._thread.start()
+
+    def __call__(self, frame, work):
+        self.check()
+        self._jobs.put((frame, work))
+
+    def check(self):
+        if self._error is not None:
+            error, self._error = self._error, None
+            raise error
+
+    def finish(self):
+        """Wait for the remaining frames and end the thread"""
+        self._jobs.put(None)
+        self._thread.join()
+
+    def _loop(self):
+        while (job := self._jobs.get()) is not None:
+            frame, work = job
+            closing = frame is None # done()'s job, which closes the file even after a failure
+            if self._failed and not closing:
+                continue
+            try:
+                with autorelease():
+                    work(cancelled=None)
+            except Exception as err:
+                self._failed, self._error = True, err
+
 class ImageWriter(object):
     def __init__(self, fname, format, **opts):
-        self.mode = CMYK if opts['cmyk'] else _ctx._outputmode
         self.fname = os.path.expanduser(fname)
         self.format = format
         self.opts = opts
         self.anim = 'fps' in opts
+        if format == 'pdf' and not self.anim:
+            # one document unless the name is numbered
+            self.opts['single'] = not re_padded.search(self.fname)
         self.session = None
+        self.renderer = None # used only with the GIL off
+        self._finished = False
 
     def __enter__(self):
         self._pool = NSAutoreleasePool.alloc().init()
         _ctx._saveContext()
-        _ctx._outputmode = self.mode
+        _ctx._output = Output(self.opts['output'].profile, None) # for scripts' reads
         return self
 
     def __exit__(self, type, value, tb):
-        if not self.session:
+        if not self.session and not self.anim:
             #
             # with export('out.png'):
             #     ... # draw a single frame
             #
             self.opts['single'] = True
-            self.add()
+            self._session().add(_ctx.canvas)
         _ctx._restoreContext()
-        self.finish()
+        try:
+            self.finish()
+        except Exception:
+            if type is None:
+                raise # else report the script's error
         del self._pool
 
 
     def __del__(self):
-        if not self.session:
+        if not self.session and not self._finished:
             #
             # ... # draw a single frame
             # export('out.png')
             #
             m = re_padded.search(self.fname)
             fn = re_padded.sub('0'*int(m.group(1)), self.fname, count=1) if m else self.fname
-            _ctx._outputmode = self.mode
-            _ctx.canvas.save(fn, self.format, self.opts['zoom'], self.mode==CMYK)
+            _ctx.canvas.save(fn, self.format, self.opts['zoom'], colors=self.opts['output'].profile.key)
 
     @property
     def page(self):
         """Clears the canvas, runs the code in the `with` block, then adds the canvas as a new pdf page.
+        In a PDF export `frame` does the same, but `page` also checks that the export is a document: a numbered
+        file name like 'page-{4}.pdf' writes a sequence of single-page files instead, and `page` refuses it.
 
         For example, to create a pdf with two pages, you could write:
 
@@ -329,7 +626,9 @@ class ImageWriter(object):
         if self.format != 'pdf':
             badform = 'The `page` property can only be used in PDF exports (not %r)'%self.format
             raise DeviceError(badform)
-        self.opts['single'] = True
+        if not self.opts['single']:
+            numbered = 'The `page` property makes pages of one PDF, but %r is numbered for a sequence of files (use `frame`)' % os.path.basename(self.fname)
+            raise DeviceError(numbered)
         return self.frame
 
     @property
@@ -350,6 +649,9 @@ class ImageWriter(object):
             with export("anim.mov") as movie:
                 with movie.frame:
                     ... # draw the frame
+
+        In a PDF export, each frame is a page of the document (as with `page`), unless the file name
+        is numbered (see below), which writes each to a file of its own.
 
         You can also use the `frame` property when writing to a series of sequentially-named
         files. For example, to generate 'output-0001.png' through 'output-0100.png':
@@ -376,18 +678,33 @@ class ImageWriter(object):
 
     def add(self):
         """Add a new frame or page with the current contents of the canvas."""
+        gil_off = free_threaded and not sys._is_gil_enabled()
+        if self.renderer is None and gil_off:
+            self.renderer = ExportRenderer()
+        self._session().add(_ctx.canvas, self.renderer)
+
+    def _session(self):
         if not self.session:
             if self.anim:
                 self.session = MovieExportSession(self.fname, self.format, **self.opts)
             else:
                 self.session = ImageExportSession(self.fname, self.format, **self.opts)
-        self.session.add(_ctx.canvas)
+        return self.session
 
     def finish(self):
         """Blocks until disk I/O is complete"""
-        self.session.done()
+        self._finished = True
+        if not self.session:
+            nothing = "Nothing was added to %r (call add() for each frame or page)" % os.path.basename(self.fname)
+            raise DeviceError(nothing)
+        self.session.done(self.renderer)
+        if self.renderer is not None:
+            self.renderer.finish()
         while True:
             if self.session.writer.doneWriting():
                 break
             time.sleep(0.1)
-
+        if self.renderer is not None:
+            self.renderer.check()
+        if isinstance(self.session, MovieExportSession) and self.session.discard_if_failed():
+            raise DeviceError("Export failed: encoding error")

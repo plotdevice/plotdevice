@@ -1,22 +1,23 @@
 # encoding: utf-8
-import os, re, types
+import re, types, warnings
 from contextlib import contextmanager
 from collections import namedtuple, OrderedDict
 from os.path import exists, expanduser
-from objc import super
 
 from .lib.cocoa import *
 from .lib import pathmatics
-from .util import _copy_attr, _copy_attrs, _flatten, trim_zeroes, numlike, autorelease
-from .gfx.geometry import Dimension, parse_coords
+from .lib.io import MovieExportSession, HEVC
+from .util import _copy_attr, _copy_attrs, _flatten, numlike
+from .gfx.geometry import Dimension, IDENTITY, parse_coords
 from .gfx.typography import Layout
 from .gfx import *
+from .gfx.colors import _canonical
+from .gfx.profiles import Output
+from .gfx.image import Snapshot
+from .gfx.canvas import Canvas
 from . import gfx, lib, util, Halted, DeviceError
 
 __all__ = ('Context', 'Canvas')
-
-# default size for Canvas and GraphicsView objects
-DEFAULT_WIDTH, DEFAULT_HEIGHT = 512, 512
 
 # named tuples for grouping state attrs
 PenStyle = namedtuple('PenStyle', ['nib', 'cap', 'join', 'dash'])
@@ -24,7 +25,7 @@ GridUnits = namedtuple('GridUnits', ['unit', 'dpx', 'to_px', 'from_px'])
 
 ### NSGraphicsContext wrapper (whose methods are the business-end of the user-facing API) ###
 class Context(object):
-    _state_vars = '_outputmode', '_colormode', '_colorrange', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_params', '_vars'
+    _state_vars = '_output', '_colormode', '_colorrange', '_colorspace', '_fillcolor', '_strokecolor', '_penstyle', '_font', '_effects', '_path', '_autoclosepath', '_grid', '_transform', '_transformmode', '_thetamode', '_transformstack', '_params', '_vars'
 
     def __init__(self, canvas=None, ns=None):
         """Initializes the context.
@@ -33,6 +34,7 @@ class Context(object):
         ximport's _ctx-passing magic.
         """
         self.canvas = Canvas() if canvas is None else canvas
+        self.canvas._ctx = self
         self._ns = {} if ns is None else ns
         self._imagecache = {}
         self._statestack = []
@@ -68,7 +70,7 @@ class Context(object):
         self._grid = GridUnits(px, 1, Transform(), Transform())
 
         # default output colorspace
-        self._outputmode = RGB
+        self._output = Output.working(RGB)
 
     def _resetContext(self):
         """Do a thorough reset of all the state variables"""
@@ -77,6 +79,7 @@ class Context(object):
         # color state
         self._colormode = RGB
         self._colorrange = 1.0
+        self._colorspace = P3
         self._fillcolor = Color() # can also be a Gradient or Pattern
         self._strokecolor = None
 
@@ -203,28 +206,20 @@ class Context(object):
         be specified with the `center` keyword arg. If included, the center arg should be a
         2-tuple with x,y values in the range -1 to +1.
 
+        A Gradient object can also be passed as the sole argument.
+
         In addition to colors, you can also call background() with an image() as its sole argument.
         In this case the image will be tiled to fill the canvas.
         """
-        if len(args) > 0:
-            if len(args) == 1 and args[0] is None:
-                bg = None
-            elif isinstance(args[0], Image):
-                bg = Pattern(args[0])
-                self.canvas.clear(args[0])
-            elif isinstance(args[0],str) and (args[0].startswith('http') or exists(expanduser(args[0]))):
-                bg = Pattern(args[0])
-            elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
-                bg = Gradient(*args, **kwargs)
-            else:
-                bg = Color(args)
-            self.canvas.background = bg
+        if args or kwargs:
+            clear = len(args) == 1 and args[0] is None
+            self.canvas.background = None if clear else self._color_arg(args, kwargs, 'background')
         return self.canvas.background
 
     def outputmode(self, mode=None):
         if mode is not None:
-            self._outputmode = mode
-        return self._outputmode
+            self._output = Output.working(mode)
+        return self._output.mode
 
     ### Bezier Path Commands ###
 
@@ -267,8 +262,14 @@ class Context(object):
         if self._path is not None:
             # if a bezier is being built in a `with` block, add curves to it, but
             # ignore kwargs since the parent bezier's styles apply to all lines drawn
-            xf = p._screen_transform
-            self._path.extend(xf.apply(p))
+            matrix = p._screen_matrix
+            if matrix == IDENTITY:
+                self._path._pdpath.add(p._pdpath)
+            else:
+                a, b, c, d, tx, ty = matrix
+                dpx = p._grid.dpx # scale the matrix to canvas units rather than px
+                self._path._pdpath.add(p._pdpath, (a, b, c, d, tx / dpx, ty / dpx))
+            self._path._fulcrum = None
         elif draw:
             # if this is a one-off primitive, draw it depending on the kwargs & state
             p.draw()
@@ -511,16 +512,13 @@ class Context(object):
 
     def beginpath(self, x=None, y=None):
         self._path = Bezier()
-        self._pathclosed = False
         if x != None and y != None:
             self._path.moveto(x,y)
 
     def closepath(self):
         if self._path is None:
             raise DeviceError("No active path. Use bezier() or beginpath() first.")
-        if not self._pathclosed:
-            self._path.closepath()
-            self._pathclosed = True
+        self._path.closepath()
 
     def endpath(self, **kwargs):
         if self._path is None:
@@ -533,17 +531,14 @@ class Context(object):
         if draw:
             p.draw()
         self._path = None
-        self._pathclosed = False
         return p
 
     def drawpath(self, path, **kwargs):
+        """Draw a copy of a path's shape with the current graphics state (and any kwargs on top)"""
         Bezier.validate(kwargs)
-        if isinstance(path, (list, tuple)):
-            path = Bezier(path, **kwargs)
-        else: # Set the values in the current bezier path with the kwargs
-            for arg_key, arg_val in kwargs.items():
-                setattr(path, arg_key, _copy_attr(arg_val))
-        path.draw()
+        drawn = Bezier(path, **kwargs) # takes the geometry only, as bezier(path) does
+        drawn.draw()
+        return drawn
 
     def autoclosepath(self, close=True):
         self._autoclosepath = close
@@ -734,6 +729,8 @@ class Context(object):
             fill('#74e9ff', 0.4) # translucent pale blue
             stroke('chartreuse') # electric bile
         """
+        Color.validate(kwargs)
+
         # flatten any tuples in the arguments list
         args = _flatten(args)
 
@@ -743,9 +740,12 @@ class Context(object):
             kwargs.setdefault('mode', mode)
 
         if not args:
-            # if called without any component values update the global mode/range,
+            # if called without any component values update the global mode/range/space,
             # and return a context manager for `with color(mode=...)` usage
-            if {'range', 'mode'}.intersection(kwargs):
+            if {'range', 'mode', 'space'}.intersection(kwargs):
+                for kind in ('mode', 'space'):
+                    if kind in kwargs:
+                        kwargs[kind] = _canonical(kind, kwargs[kind])
                 return PlotContext(self, **kwargs)
 
         # if we got at least one numerical/string arg, parse it
@@ -754,7 +754,7 @@ class Context(object):
     def colormode(self, mode=None, range=None):
         """Legacy command. Equivalent to: color(mode=...)"""
         if mode is not None:
-            self._colormode = mode
+            self._colormode = _canonical('mode', mode)
         if range is not None:
             self._colorrange = float(range)
         return self._colormode
@@ -769,7 +769,7 @@ class Context(object):
         """Set the fill color to None"""
         clr = Color(None)
         setattr(clr, '_rollback', dict(fill=self._fillcolor))
-        self._fillcolor = None
+        self._fillcolor = clr._installed = None
         return clr
 
     def fill(self, *args, **kwargs):
@@ -789,6 +789,9 @@ class Context(object):
         be specified with the `center` keyword arg. If included, the center arg should be a
         2-tuple with x,y values in the range -1 to +1.
 
+        A Gradient object can also be passed as the sole argument (its steps, angle, and center
+        having been set when it was created).
+
         In addition to colors, you can also call fill() with an image() as its sole argument.
         In this case the image will be tiled to fit the object being filled.
 
@@ -799,51 +802,92 @@ class Context(object):
             fill() can be used as part of a `with` statement in which case the fill will
             be reset to its previous value once the block completes
         """
-        if args:
-            if args[0] is None:
-                return self.nofill()
-
-            if isinstance(args[0], Image):
-                clr = Pattern(args[0])
-                self.canvas.clear(args[0])
-            elif isinstance(args[0],str) and (args[0].startswith('http') or exists(expanduser(args[0]))):
-                clr = Pattern(args[0])
-            elif set(Gradient.kwargs) >= set(kwargs) and len(args)>1 and all(Color.recognized(c) for c in args):
-                clr = Gradient(*args, **kwargs)
-            else:
-                clr = Color(*args)
+        if args and args[0] is None:
+            return self.nofill()
+        if args or kwargs:
+            clr = self._color_arg(args, kwargs, 'fill')
             setattr(clr, '_rollback', dict(fill=self._fillcolor))
-            self._fillcolor = clr
+            self._fillcolor = clr._installed = clr.copy()
+            return clr
         return self._fillcolor
 
     def nostroke(self):
         """Set the stroke color to None"""
         clr = Color(None)
-        setattr(clr, '_rollback', dict(fill=self._strokecolor))
-        self._strokecolor = None
+        setattr(clr, '_rollback', dict(stroke=self._strokecolor))
+        self._strokecolor = clr._installed = None
         return clr
 
-    def stroke(self, *args):
+    def stroke(self, *args, **kwargs):
         """Set the stroke color
 
         Arguments will be interpeted according to the current color-mode and range. For details:
             help(color)
 
+        As with fill(), more than one color arg (or a Gradient object) strokes with a gradient,
+        which spans the outline the stroke paints. The `steps`, `angle`, and `center` keyword args
+        work as they do for fill().
+
+        In addition to colors, you can also call stroke() with an image() as its sole argument.
+        In this case the image will be tiled along the outline being stroked.
+
         Returns:
-            the current stroke color as a Color object.
+            the current stroke color as a Color (or Gradient/Pattern) object.
 
         Context Manager:
             stroke() can be used as part of a `with` statement in which case the stroke will
             be reset to its previous value once the block completes
         """
-        if len(args) > 0:
-            if args[0] is None:
-                return self.nostroke()
-
-            annotated = Color(*args)
-            setattr(annotated, '_rollback', dict(stroke=self._strokecolor))
-            self._strokecolor = annotated
+        if args and args[0] is None:
+            return self.nostroke()
+        if args or kwargs:
+            clr = self._color_arg(args, kwargs, 'stroke')
+            setattr(clr, '_rollback', dict(stroke=self._strokecolor))
+            self._strokecolor = clr._installed = clr.copy()
+            return clr
         return self._strokecolor
+
+    def _color_arg(self, args, kwargs, command):
+        # the Pattern, Gradient, or Color a background(), fill(), or stroke() call describes
+        if not args:
+            Color.validate({arg: val for arg, val in kwargs.items() if arg not in Gradient.kwargs})
+            nocolor = "%s() takes '%s' only with a color" % (command, "', '".join(kwargs))
+            raise DeviceError(nocolor)
+
+        src = args[0]
+        is_path = isinstance(src, str) and (src.startswith('http') or exists(expanduser(src)))
+        if isinstance(src, (Image, Pattern, Canvas)) or is_path:
+            if len(args) > 1 or kwargs:
+                badimage = "%s() takes an image as its only argument" % command
+                raise DeviceError(badimage)
+        if isinstance(src, Canvas):
+            return Pattern(src) # tiles its vectors as of now
+        if isinstance(src, Image):
+            self.canvas.clear(src) # remove the image drawn as a side effect by `image(pth)`
+            return Pattern(src) # use the image for just the pattern instead
+        if is_path:
+            return Pattern(src)
+        if isinstance(src, Pattern):
+            return src.copy() # make sure each use of a Pattern gets its own rollback
+
+        if isinstance(src, Gradient):
+            if len(args) > 1 or kwargs:
+                badgradient = "%s() takes a Gradient object as its only argument (its steps, angle and center are set when it's created)" % command
+                raise DeviceError(badgradient)
+            return src.copy() # make sure each use of a Gradient gets its own rollback
+
+        several_colors = len(args) > 1 and all(Color.recognized(c) for c in args)
+        gradient_args = [arg for arg in kwargs if arg in Gradient.kwargs]
+        if several_colors:
+            unknown = [arg for arg in kwargs if arg not in Gradient.kwargs]
+            if unknown:
+                badarg = "Unknown Gradient argument%s '%s'" % ('' if len(unknown)==1 else 's', "', '".join(unknown))
+                raise DeviceError(badarg)
+            return Gradient(*args, **kwargs)
+        if gradient_args:
+            nogradient = "%s() takes '%s' only with two or more colors (for a gradient)" % (command, "', '".join(gradient_args))
+            raise DeviceError(nogradient)
+        return Color(*args, **kwargs)
 
     ### Pen Commands ###
 
@@ -872,7 +916,9 @@ class Context(object):
 
         # validate the line-dash stepsize (if any)
         if numlike(spec.get('dash',None)):
-            spec['dash'] = [spec['dash']]
+            spec['dash'] = (spec['dash'],)
+        elif spec.get('dash') is not None:
+            spec['dash'] = tuple(spec['dash'])
         if len(spec.get('dash') or []) % 2:
             spec['dash'] += spec['dash'][-1:] # assume even spacing for omitted skip sizes
 
@@ -1011,7 +1057,13 @@ class Context(object):
         With an image mask, drawing operations will have high opacity in places where
         the mask value is *low*. The `channel` arg specifies which component of the mask
         image should be used for this calculation. If omitted it defaults to 'alpha'
-        (if available) or 'black' level (if the image is opaque).
+        (if available) or 'black' level (if the image is opaque). If `channel` is
+        'outline', the image's vector shapes are traced into a Bezier path (or, for
+        a raster image, a rect the size of the image) and used as the mask directly,
+        rather than rasterizing a bitmap mask.
+
+        A canvas, or plot(canvas, ...) reference, masks with the outline of its vector
+        shapes. If channel is set to 'alpha' or 'black', it will be rasterized first.
 
         See also: clip()
         """
@@ -1032,7 +1084,13 @@ class Context(object):
         With an image mask, drawing operations will have high opacity in places where
         the mask value is also high. The `channel` arg specifies which component of
         the mask image should be used for this calculation. If omitted it defaults
-        to 'alpha' (if available) or 'black' level (if the image is opaque).
+        to 'alpha' (if available) or 'black' level (if the image is opaque). If
+        `channel` is 'outline', the image's vector shapes are traced into a Bezier
+        path (or, for a raster image, a rect the size of the image) and used as the
+        clip directly, rather than rasterizing a bitmap mask.
+
+        A canvas, or plot(canvas, ...) reference, masks with the outline of its vector
+        shapes. If channel is set to 'alpha' or 'black', it will be rasterized first.
 
         See also: mask()
         """
@@ -1101,7 +1159,8 @@ class Context(object):
         if args or kwargs:
             newfont = Font(*args, **kwargs)
             newfont._rollback = self._font
-            self._font = newfont
+            self._font = newfont._installed = newfont.copy()
+            return newfont
         return self._font
 
     def layout(self, **kwargs):
@@ -1143,7 +1202,7 @@ class Context(object):
             newfont = Font(**kwargs)
             layout = Layout(newfont)
             layout._rollback = self._font
-            self._font = newfont
+            self._font = layout._installed = newfont
         else:
             layout = Layout(self._font)
         return layout
@@ -1358,6 +1417,7 @@ class Context(object):
             be overridden via the corresponding keyword arguments.
         """
         draw = self._should_plot(kwargs)
+        Image.validate(kwargs)
         img = Image(*args, **kwargs)
         if draw:
             img.draw()
@@ -1420,17 +1480,24 @@ class Context(object):
             return self._autoplot
         elif obj in (True,False):
             return PlotContext(self, auto=obj)
+        elif isinstance(obj, Canvas):
+            obj = Snapshot(obj) # a vector clone of the canvas's current contents
         elif not isinstance(obj, Grob):
-            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects (not %s)'%type(obj)
+            notdrawable = 'plot() only knows how to draw Bezier, Image, or Text objects, or a canvas (not %s)'%type(obj)
             raise DeviceError(notdrawable)
 
         # by default, plot a copy of the grob and return a reference to that new copy.
         # if live=True, the obj itself will be added to the canvas and the caller can
         # make additional modifications on that instance
-        grob = obj if kwargs.get('live') else obj.copy()
+        grob = obj if kwargs.pop('live', False) else obj.copy()
 
         # if there are any positional args following the grob, assign a new x/y (and possibly w/h)
-        if coords:
+        plain_numbers = len(coords) in (2, 3) and all(type(c) in (int, float) for c in coords)
+        if plain_numbers and len(coords) == 2:
+            grob.x, grob.y = parse_coords(coords, [Point])
+        elif plain_numbers and len(coords) == 3:
+            (grob.x, grob.y), grob.width = parse_coords(coords, [Point,float])
+        elif coords:
             try:
                 (grob.x, grob.y), (grob.width, grob.height) = parse_coords(coords, [Point,Size])
             except:
@@ -1470,12 +1537,13 @@ class Context(object):
         else:
             self.canvas.clear(*grobs)
 
-    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=1.0, cmyk=False):
+    def export(self, fname, zoom=1.0, fps=None, loop=None, bitrate=None, codec=HEVC, *, colors=None, cmyk=None):
         """Write single images or manage batch exports for animations.
 
         To write the canvas's current contents to a file, simply call export("~/somefile.png")
-        after your drawing commands have executed. When writing files that support non-RGB colors
-        (e.g., PDFs or TIFFs), the `cmyk` argument lets you optionally specify CMYK output.
+        after your drawing commands have executed. The `colors` argument chooses the color space
+        the file is written in: P3 (the default), SRGB, the path to an RGB .icc profile, or (for
+        PDF, TIFF, JPEG and EPS files) CMYK.
 
         When writing multiple images or frames of animation, the export manager keeps track of when
         the canvas needs to be cleared, when to write the graphics to file, and preventing the python
@@ -1495,12 +1563,16 @@ class Context(object):
         is `gif`, an image will be exported unless an `fps` or `loop` argument (of any value) is
         also provided, in which case an animated gif will be created. Otherwise all arguments aside
         from the fname are optional and default to:
-            fps: 30      (relevant for both gif and mov exports)
-            loop: False  (set to True to loop forever or an integer for a fixed number of repetitions)
-            bitrate: 1.0 (in megabits per second)
+            fps: 30       (relevant for both gif and mov exports)
+            loop: False   (set to True to loop forever or an integer for a fixed number of repetitions)
+            bitrate: None (in megabits per second; by default, picked from the canvas size)
+            codec: HEVC   (or H264 for broader compatibility / PRORES for post-export video editing)
+            colors: P3    (or SRGB for standard gamut / SWOP, GRACOL, etc. for CMYK profiles / path to an .icc file)
 
-        Note that the `loop` argument only applies to animated gifs and `bitrate` is used in the H.264
-        encoding of `mov` files.
+        Note that the `loop` argument only applies to animated gifs, and `bitrate` and `codec` to `mov`
+        files (a ProRes movie keeps the canvas's transparency and has a fixed quality rather than a bitrate).
+        Each format takes the `colors` it can hold: PNG and HEIC an RGB space or profile, MOV P3 or SRGB,
+        GIF only SRGB (its default, as is EPS's), and EPS SRGB or CMYK.
         """
 
         # determine the format by normalizing the file extension
@@ -1509,12 +1581,32 @@ class Context(object):
             badform = 'Unknown export format "%s"'%format
             raise DeviceError(badform)
 
+        if codec not in MovieExportSession.CODECS:
+            badcodec = 'Unknown video codec "%s" (should be one of %s)' % (codec, ', '.join(MovieExportSession.CODECS))
+            raise DeviceError(badcodec)
+
+        # pick output color space via fallback cascade:
+        # `export(colors)` > `--colors` switch > `outputmode()` > default RGB for selected format
+        if cmyk is not None:
+            if colors is not None:
+                both = "export() accepts `colors` or `cmyk`, but not both"
+                raise DeviceError(both)
+            warnings.warn("export()'s cmyk= is deprecated: use colors=CMYK instead", FutureWarning, stacklevel=2)
+            output = Output.parse(CMYK if cmyk else None, format)
+        elif colors is not None:
+            output = Output.parse(colors, format)
+        else:
+            try:
+                output = Output.parse(self._output.profile.key, format)
+            except DeviceError:
+                output = Output.parse(None, format) # the format doesn't support it
+
         # build up opts based on type of output file (anim vs static)
-        opts = {"cmyk":cmyk, "zoom":zoom}
+        opts = {"output":output, "zoom":zoom}
         if format=='mov' or (format=='gif' and fps or loop is not None):
             opts.update(fps=fps or 30, # set a default for .mov exports
                         loop={True:-1, False:0, None:0}.get(loop, loop), # convert bool args to int
-                        bitrate=bitrate)
+                        bitrate=bitrate, codec=codec)
 
         return ImageWriter(fname, format, **opts)
 
@@ -1576,18 +1668,25 @@ class Context(object):
 class PlotContext(object):
     """Performs the setup/cleanup for a `with pen()/stroke()/fill()/color(mode,range)` block"""
     _statevars = dict(pen='_penstyle', stroke='_strokecolor', fill='_fillcolor',
-                      mode='_colormode', range='_colorrange', auto='_autoplot')
+                      mode='_colormode', range='_colorrange', space='_colorspace', auto='_autoplot')
 
     def __init__(self, ctx, restore=None, **spec):
+        unknown = [k for k in spec if k not in self._statevars]
+        if unknown:
+            badarg = 'Unknown argument%s: %s' % ('' if len(unknown)==1 else 's', ", ".join(unknown))
+            raise DeviceError(badarg)
+
         # start with the current context state as a baseline
         prior = {k:getattr(ctx, v) for k,v in self._statevars.items() if k in spec or restore==all}
-        snapshots = {k:v._rollback for k,v in spec.items() if hasattr(v, '_rollback')}
-        prior.update(snapshots)
+        for param, val in spec.items():
+            # a fill() or stroke() call already set its rollback, so restore what that call replaced
+            rollback = getattr(val, '_rollback', {})
+            if param in rollback:
+                prior[param] = rollback[param]
 
         for param, val in spec.items():
             # make sure fill & stroke are Color objects (or None)
-            if param in ('stroke','fill'):
-                if val is None: continue
+            if param in ('stroke','fill') and val is not None:
                 val = Color(val)
                 spec[param] = val
             setattr(ctx, self._statevars[param], val)
@@ -1623,201 +1722,3 @@ class PlotContext(object):
     def __repr__(self):
         spec = ", ".join('%s=%r'%(k,v) for k,v in self._spec.items())
         return 'PlotContext(%s)'%spec
-
-
-### containers ###
-
-class _PostScriptView(NSView):
-    # This view was created to provide EPS data. CoreGraphics isn't antiquarian
-    # enough to speak EPS so we need to draw to an NSView then use its
-    # dataWithEPSInsideRect_ instead
-
-    def initWithCanvas_(self, canvas):
-        super(_PostScriptView, self).initWithFrame_( ((0, 0), canvas.pagesize) )
-        self.canvas = canvas
-        return self
-
-    def drawRect_(self, rect):
-        self.canvas.draw()
-
-    def isOpaque(self):
-        return False
-
-    def isFlipped(self):
-        return True
-
-class Canvas(object):
-
-    def __init__(self, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, unit=px):
-        self.unit = unit
-        self.width = width
-        self.height = height
-        self.speed = None
-        self.mousedown = False
-        self.clear() # set up the container & stack
-
-    @trim_zeroes
-    def __repr__(self):
-        return 'Canvas(%0.3f, %0.3f, %s)'%(self.width, self.height, self.unit.name)
-
-    def reset(self):
-        """Reset dimensions & animation state then clear"""
-        self.__init__()
-
-    def clear(self, *grobs):
-        """Erase the canvas entirely (or remove specified grobs)"""
-        if not grobs:
-            self._grobs = self._container = []
-            self._stack = [self._container]
-        else:
-            for grob in grobs:
-                self._drop(grob, self._grobs)
-
-    def _drop(self, grob, container):
-        if grob in container:
-            container.remove(grob)
-        for frob in [f for f in container if hasattr(f, 'contents')]:
-            self._drop(grob, frob.contents)
-
-    @property
-    def size(self):
-        """The canvas's size in terms of its default unit"""
-        return Size(self.width, self.height)
-
-    @property
-    def pagesize(self):
-        """The canvas's size in Postscript points"""
-        dpx = self.unit.basis
-        return Size(self.width*dpx, self.height*dpx)
-
-    def _get_unit(self):
-        return self._unit
-    def _set_unit(self, u):
-        if u not in (px, inch, pica, cm, mm):
-            nonstandard = 'Canvas units must be one of: px, inch, pica, cm, or mm (not %r)'%u
-            raise DeviceError(nonstandard)
-        self._unit = u
-    unit = property(_get_unit, _set_unit)
-
-    def __iter__(self):
-        for grob in self._grobs:
-            yield grob
-
-    def __len__(self):
-        return len(self._grobs)
-
-    def __getitem__(self, index):
-        return self._grobs[index]
-
-    def append(self, el):
-        # when beziers, images, and text are added, they're placed in the current
-        # tail of the container stack (see push/pop)
-        self._container.append(el)
-
-    def push(self, containerFrob):
-        # when Frobs like Stencils or Effects are added, they become their own container
-        # that applies to all grobs drawn until the frob is popped off the stack
-        self._stack.insert(0, containerFrob)
-        self._container.append(containerFrob)
-        self._container = containerFrob
-
-    def pop(self):
-        try:
-            del self._stack[0]
-            self._container = self._stack[0]
-        except IndexError as e:
-            raise DeviceError("pop: too many canvas pops!")
-
-    def draw(self):
-        if self.background is not None:
-            rect = ((0,0), self.pagesize)
-            if isinstance(self.background, Gradient):
-                self.background.fill(rect)
-            else:
-                self.background.set()
-                NSRectFillUsingOperation(rect, NSCompositeSourceOver)
-
-        with autorelease():
-            for grob in self._grobs:
-                grob._draw()
-        # import cProfile
-        # cProfile.runctx('[grob._draw() for grob in self._grobs*10]', globals(), {"self":self}, sort='cumulative')
-
-    @property
-    def _nsImage(self):
-        # Allow the canvas to be used with the image() command
-        return self._render_to_image()
-
-    def _render_to_image(self, zoom=1.0):
-        size = Size(*[int(dim*zoom) for dim in self.pagesize])
-        img = NSImage.alloc().initWithSize_(size)
-        img.lockFocusFlipped_(True)
-        trans = NSAffineTransform.transform()
-        trans.scaleXBy_yBy_(zoom,zoom)
-        trans.concat()
-        self.draw()
-        img.unlockFocus()
-        return img
-
-    def _render_to_context(self, cgContext, zoom):
-        ns_ctx = NSGraphicsContext.graphicsContextWithCGContext_flipped_(cgContext, True)
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.setCurrentContext_(ns_ctx)
-        NSGraphicsContext.saveGraphicsState()
-        trans = NSAffineTransform.transform()
-        trans.translateXBy_yBy_(0, self.pagesize.height*zoom)
-        trans.scaleXBy_yBy_(zoom,-zoom)
-        trans.concat()
-        self.draw()
-        NSGraphicsContext.restoreGraphicsState()
-        NSGraphicsContext.restoreGraphicsState()
-
-    def _getImageData(self, format, zoom=1.0, cmyk=False):
-        if format == 'pdf':
-            w, h = self.pagesize
-            cgData = NSMutableData.data()
-            dataConsumer = CGDataConsumerCreateWithCFData(cgData)
-            pdfContext = CGPDFContextCreate(dataConsumer, CGRectMake(0, 0, w*zoom, h*zoom), None)
-            CGPDFContextBeginPage(pdfContext, None)
-            self._render_to_context(pdfContext, zoom)
-            CGPDFContextEndPage(pdfContext)
-            CGPDFContextClose(pdfContext)
-            pdfContext = None
-            return cgData
-        elif format == 'eps':
-            view = _PostScriptView.alloc().initWithCanvas_(self)
-            return view.dataWithEPSInsideRect_(view.bounds())
-        else:
-            cgTypes = {"gif":  kUTTypeGIF,
-                       "jpg":  kUTTypeJPEG,
-                       "jpeg": kUTTypeJPEG,
-                       "png":  kUTTypePNG,
-                       "tiff": kUTTypeTIFF,
-                       "heic": 'public.heic'}
-
-            if format in ('jpeg', 'jpg', 'tiff') and cmyk:
-                colorspace, opts = CGColorSpaceCreateDeviceCMYK(), kCGImageAlphaNone
-            else:
-                colorspace, opts = CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host
-
-            size = Size(*[int(dim*zoom) for dim in self.pagesize])
-            bitmapContext = CGBitmapContextCreate(None, size.width, size.height, 8, size.width * 4, colorspace, opts)
-            self._render_to_context(bitmapContext, zoom)
-            cgImage = CGBitmapContextCreateImage(bitmapContext)
-            cgData = NSMutableData.data()
-            cgDest = CGImageDestinationCreateWithData(cgData, cgTypes[format], 1, None)
-            cgProperies = {kCGImagePropertyDPIWidth: 72*zoom, kCGImagePropertyDPIHeight: 72*zoom}
-            if format in ('jpg', 'jpeg'):
-                cgProperies[kCGImageDestinationLossyCompressionQuality] = 1.0
-            CGImageDestinationAddImage(cgDest, cgImage, cgProperies)
-            CGImageDestinationFinalize(cgDest)
-            return cgData
-
-    def save(self, fname, format=None, zoom=1.0, cmyk=False):
-        """Write the current graphics objects to an image file"""
-        if format is None:
-            format = fname.rsplit('.',1)[-1].lower()
-        data = self._getImageData(format, zoom, cmyk)
-        fname = NSString.stringByExpandingTildeInPath(fname)
-        data.writeToFile_atomically_(fname, False)
-

@@ -1,5 +1,5 @@
 import sys
-import _plotdevice # make sure the c-extensions are accessible for the submodules
+from . import _native # make sure the c-extensions are accessible for the submodules
 
 # allow Libraries to request a _ctx reference
 def register(module):

@@ -7,14 +7,16 @@ from PyObjCTools import AppHelper
 from ..lib.io import MovieExportSession, ImageExportSession
 from .common import stacktrace, coredump, uncoded
 from plotdevice import util, context, gfx, Halted, DeviceError
+from ..gfx.canvas import Canvas
+from ..gfx.profiles import Output, Profile, RGB
 
 __all__ = ['Sandbox']
 
 Outcome = namedtuple('Outcome', ['ok', 'output'])
-Output = namedtuple('Output', ['isErr', 'data'])
+Echo = namedtuple('Echo', ['isErr', 'data'])
 
 class Metadata(object):
-    __slots__ = 'args', 'virtualenv', 'first', 'frame', 'last', 'loop'
+    __slots__ = 'args', 'virtualenv', 'first', 'frame', 'last', 'loop', 'colors'
     def __init__(self, **opts):
         for k,v in opts.items(): setattr(self,k,v)
     def update(self, changes):
@@ -27,6 +29,10 @@ class Metadata(object):
 
 class Delegate(object):
     """No-op sandbox delegate that will be used by default if a delegate isn't specified"""
+    def exportRender(self, frame, work):
+        work(None)
+    def exportReady(self):
+        return True
     def exportFrame(self, status, canvas=None):
         pass
     def exportStatus(self, status):
@@ -66,18 +72,18 @@ class Sandbox(object):
         self.crashed = False    # flag whether the script exited abnormally
         self.live = False       # whether to keep the output pipe open between runs
         self.session = None     # the image/movie export session (if any)
-        self.delegate = None    # object with exportFrame and exportProgress methods
-
+        self._stopped = False   # session ended early by stopExport()
+        self.delegate = None    # object with export-lifecycle methods
 
         # set up the graphics plumbing
-        self.canvas = context.Canvas()
+        self.canvas = Canvas()
         self.context = context.Context(self.canvas, self.namespace)
         self.delegate = delegate or Delegate()
 
         # control params used during exports and console-based runs
         self._meta = Metadata(args=[], virtualenv=None, # environmant
                               first=1, frame=1, last=None, # runtime
-                              loop=False) # export opts
+                              loop=False, colors=None) # export opts
 
     # .script
     def _get_path(self):
@@ -125,6 +131,11 @@ class Sandbox(object):
         self.context._params.clear()
         self.context._params.update(new_params)
     params = property(_get_params, _set_params)
+
+    @property
+    def ran(self):
+        """Whether the current source has run without crashing (r)"""
+        return self._code is not None and not self.crashed
 
     @property
     def vars(self):
@@ -175,13 +186,14 @@ class Sandbox(object):
 
         return result
 
-    def run(self, method=None, cmyk=False):
+    def run(self, method=None):
         """Clear the context and run either the entire script or a specific method."""
 
         # if this is the initial pass, reset the namespace and canvas state
         if method is None:
             check = self._preflight() # compile the script
-            self.context._outputmode = 'cmyk' if cmyk else 'rgb'
+            colors = self._meta.colors # a windowless run's --colors
+            self.context._output = Output(Profile.named[colors], None) if colors else Output.working(RGB)
             if not check.ok:
                 return check
 
@@ -205,9 +217,9 @@ class Sandbox(object):
                 # we're in the initial pass through the script so flag the run as ongoing
                 self._anim = util.adict()
 
-                # default to 30fps if speed() wasn't called in the script
+                # default to 60fps if speed() wasn't called in the script
                 if self.speed is None:
-                    self.canvas.speed = 30
+                    self.canvas.speed = 60
 
                 # determine which of the script's routines accept an argument
                 for routine in 'setup','draw','stop':
@@ -274,8 +286,8 @@ class Sandbox(object):
         os.chdir(scriptDir)
 
         try:
-            # run the code object we were passed
-            method()
+            self.context._activate() # ensure this sandbox's context is bound
+            method() # run the code object we were passed
         except Halted:
             return Outcome('HALTED', output.data)
         except:
@@ -315,7 +327,7 @@ class Sandbox(object):
                    for a movie export also include:
                      bitrate, fps, loop
                    and for an image sequence:
-                     cmyk, single
+                     colors, single
         """
 
         # pull off the file extension and use that as the format
@@ -325,7 +337,7 @@ class Sandbox(object):
         self._meta.first, self._meta.last = opts['first'], opts['last']
 
         # compile & evaluate the script once
-        firstpass = self.run(cmyk=opts.get('cmyk',False))
+        firstpass = self.run()
         self.delegate.exportFrame(firstpass, canvas=None)
         if not firstpass.ok:
             return
@@ -339,33 +351,60 @@ class Sandbox(object):
 
         # set up an export manager and attach the delegate's callbacks
         ExportSession = ImageExportSession if kind=='image' else MovieExportSession
-        self.session = ExportSession(fname, **opts)
+        output = Output.parse(opts.get('colors'), opts['format'])
+        self.session = ExportSession(fname, output=output, **opts)
         self.session.on(progress=self.delegate.exportProgress,
                         status=self.delegate.exportStatus,
                         complete=self._exportComplete)
 
         # start looping through frames, calling draw() and adding the canvas
         # to the export-session on each iteration
+        self._stopped = False
         self._exportFrame()
 
+    def exportCanvas(self, fname, opts):
+        """Write the canvas as it stands to an image file, without running the script"""
+        output = Output.parse(opts.get('colors'), opts['format'])
+        self.session = ImageExportSession(fname, output=output, **opts)
+        self.session.presents = False # the window already shows this canvas
+        self.session.on(progress=self.delegate.exportProgress,
+                        status=self.delegate.exportStatus,
+                        complete=self._exportComplete)
+        self.session.add(self.canvas, self.delegate.exportRender)
+        self.session.done(self.delegate.exportRender)
+
+    def stopExport(self):
+        """End the export early, still running the script's stop()"""
+        self._stopped = True
+        self.session.cancel()
+        self.call("stop")
+
     def _exportFrame(self):
+        if self._stopped:
+            return
         if self.session.next():
+            # wait for the render thread to have room for another frame
+            if not self.delegate.exportReady():
+                AppHelper.callLater(0.005, self._exportFrame)
+                return
+
             # step to the proper FRAME value
             self._meta.frame = self.session.next()
 
             if self.animated:
                 # run the draw() function if it exists
-                result = self.run("draw", cmyk=self.session.cmyk)
+                result = self.run("draw")
             else:
                 # if not, we've already exec'd the module & setup() so use the canvas as-is
                 result = Outcome(True, StdIO().data)
 
             # let the delegate draw to the screen
-            self.delegate.exportFrame(result, self.canvas)
+            preview = None if self.session.presents else self.canvas # unless it shows the export's render
+            self.delegate.exportFrame(result, preview)
 
             # pass the frame content to the file-writer
             if result.ok:
-                self.session.add(self.canvas)
+                self.session.add(self.canvas, self.delegate.exportRender)
 
             # know when to fold 'em
             if result.ok in (False, 'HALTED'):
@@ -377,7 +416,7 @@ class Sandbox(object):
             # we've drawn the final frame in the export
             result = self.call("stop")
             self.delegate.exportFrame(result, canvas=None)
-            self.session.done()
+            self.session.done(self.delegate.exportRender)
 
     def _exportComplete(self):
         self.session = None
@@ -393,10 +432,10 @@ class StdIO(object):
             self.fileno = lambda: 1 if streamname=='stdout' else 2
 
         def write(self, data):
-            self._stream.write(Output(self.fileno()==2, data))
+            self._stream.write(Echo(self.fileno()==2, data))
 
         def writelines(self, lines):
-            self._stream.write(Output(self.fileno()==2, ''.join(lines)))
+            self._stream.write(Echo(self.fileno()==2, ''.join(lines)))
 
         def writable(self):
             return True

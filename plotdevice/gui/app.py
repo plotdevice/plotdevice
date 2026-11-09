@@ -1,11 +1,14 @@
 # encoding: utf-8
 import sys
 import os
+import time
 import objc
 from glob import glob
 from ..lib.cocoa import *
 from PyObjCTools import AppHelper
 from .preferences import PlotDevicePreferencesController, get_default
+from .document import ScriptController
+from ..lib.io import ExportSession
 from . import bundle_path, set_timeout
 
 LIB_DIR_README = """"You can put PlotDevice libraries In this directory to make them available to your scripts.
@@ -30,6 +33,9 @@ class PlotDeviceAppDelegate(NSObject):
                 f.close()
         except OSError: pass
         except IOError: pass
+
+    def applicationSupportsSecureRestorableState_(self, app):
+        return True
 
     def applicationDidFinishLaunching_(self, note):
         mm=NSApp().mainMenu()
@@ -115,6 +121,25 @@ class PlotDeviceAppDelegate(NSObject):
     def showSite_(self, sender):
         url = NSURL.URLWithString_("http://plotdevice.io/")
         NSWorkspace.sharedWorkspace().openURL_(url)
+
+    def applicationShouldTerminate_(self, app):
+        # try to end exports cleanly so they can write complete files
+        for win in app.windows():
+            controller = win.windowController()
+            open_script = isinstance(controller, ScriptController) and controller.vm is not None
+            if open_script and controller.vm.session:
+                controller.finishExport()
+        if not ExportSession.unfinished:
+            return NSTerminateNow
+        self._quitBy = time.time() + 10
+        set_timeout(self, 'quitOnceWritten:', 0.1, repeat=True)
+        return NSTerminateLater
+
+    def quitOnceWritten_(self, timer):
+        writing = ExportSession.writing()
+        if not writing or time.time() > self._quitBy:
+            timer.invalidate()
+            NSApplication.sharedApplication().replyToApplicationShouldTerminate_(True)
 
     def applicationWillTerminate_(self, note):
         import atexit

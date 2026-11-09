@@ -4,6 +4,7 @@ import re
 import sys
 import objc
 import difflib
+from time import monotonic
 from operator import itemgetter, attrgetter
 from collections import namedtuple, OrderedDict as odict, defaultdict as ddict
 from .cocoa import *
@@ -19,6 +20,7 @@ __all__ = ["font_family", "font_encoding", "font_face", "best_face",
 Face = namedtuple('Face', ['family', 'psname', 'weight','wgt', 'width','wid', 'variant', 'italic', 'ascent', 'descent'])
 Slug = namedtuple("Slug", ["frame", "bounds", "baseline", "span"])
 Vandercook = objc.lookUpClass('Vandercook')
+PDLayoutManager = objc.lookUpClass('PDLayoutManager')
 
 # introspection methods for postscript names & families
 
@@ -116,15 +118,16 @@ def font_axes(*args, **kwargs):
             for k,v in item._spec.items():
                 spec.setdefault(k,v)
         elif isinstance(item, str):
-            # name-like values
-            if fammy(item):
-                spec.setdefault('family', family_name(item))
+            # check for an exact family match first and only try a fuzzy match after ensuring it isn't a width or weight
+            exact = LIBRARY.match_fam(item)
+            if exact:
+                spec.setdefault('family', exact)
             elif widthy(item):
                 spec.setdefault('width', item)
             elif weighty(item):
                 spec.setdefault('weight', item)
             else:
-                family_name(item) # raise an exception suggesting family names
+                spec.setdefault('family', family_name(item)) # if no match, raise an exception with suggested familiy names
         elif numlike(item) and 'size' not in kwargs:
             spec['size'] = float(item)
     return spec
@@ -169,9 +172,11 @@ def line_metrics(spec):
         raise DeviceError(chaoticneutral)
 
     # floatify dimensions and hyphenation (mapping bools to 0/1)
-    for attr in 'size', 'leading', 'tracking', 'indent', 'hyphenate':
+    for attr in 'size', 'leading', 'indent', 'hyphenate':
         if attr in spec:
             spec[attr] = float(spec[attr])
+    if spec.get('tracking') is not None:
+        spec['tracking'] = float(spec['tracking']) # None turns kerning off
 
     for attr in 'margin', 'spacing':
         if attr in spec:
@@ -269,6 +274,7 @@ def trace_text(txt_obj, rng=None):
     nspath = NSBezierPath.bezierPath()
     for block in txt_obj.blocks:
         offset = block._to_px(block.offset)
+        offset.x -= block._shift # from container- to block-relative coords
         block_rng = NSIntersectionRange(rng, block._chars)
         if block_rng.length:
             subpath = Vandercook.traceGlyphs_atOffset_withLayout_(block_rng, offset, txt_obj._engine)
@@ -296,12 +302,17 @@ def line_slugs(txt_obj, rng=None):
     for frag in Vandercook.lineFragmentsInRange_withLayout_(rng, txt_obj._engine):
         # convert to local units & types
         block = txt_obj._blocks[frag['block']]
-        frame = block._from_px(frag['frame'].rectValue())
+        frame = frag['frame'].rectValue()
+        if not block._frame.size.w:
+            # use the shrink-to-fit bounds if no width is specified
+            frame.origin.x, frame.size.width = block._shift, block._fit.width
+        frame = block._from_px(frame)
         bounds = block._from_px(frag['bounds'].rectValue())
         baseline = block._from_px(frag['baseline'].pointValue())
 
         # shift from container- to canvas-relative coords
         offset = block.offset + txt_obj.baseline
+        offset.x -= block._from_px(block._shift)
         baseline += offset
         bounds.origin += offset
         frame.origin += offset
@@ -374,18 +385,6 @@ def sanitized(unclean):
         return [_sanitize(s) for s in unclean]
     else:
         return _sanitize(unclean)
-
-def fammy(word):
-    try:
-        family_name(word)
-    except DeviceError:
-        return False
-    return True
-
-def facey(word):
-    if word in _fm.availableFontFamilies():
-        return False
-    return word in _fm.availableFonts() or NSFont.fontWithName_size_(word,9)
 
 def widthy(word):
     return sanitized(word) in wid_corpus + list(wid_abbrevs.keys())
@@ -517,22 +516,50 @@ class Librarian(object):
 
     def __init__(self):
         self._fonts = _fm.availableFonts()
-        self._fams = sorted(_fm.availableFontFamilies())
+        self._families = None # listed on first use, since that takes ~80 ms
         self._members = {} # famname -> [Face(), Face(), ...]
         self._parents = {} # psname -> famname
         self._enc = {}     # psname -> encoding
         self._specs = {}   # spec_dict -> psname
         self._fuzzy = {}   # fammy name -> famname
+        self._styled = odict() # style key -> text attrs, ordered LRU first
+        self._checked = monotonic() # last installed-font check
         self._mgr.setUsesFontLeading_(False)
 
     def refresh(self):
+        # pick up newly (un)installed fonts once a second
+        now = monotonic()
+        if now - self._checked < 1.0:
+            return
+        self._checked = now
         if self._fonts != _fm.availableFonts():
             self.__init__()
+
+    def recall(self, key):
+        """Returns the value remembered for a style key, or None"""
+        self.refresh()
+        val = self._styled.get(key)
+        if val is not None:
+            self._styled.move_to_end(key)
+        return val
+
+    def remember(self, key, val):
+        """Caches a value until the installed fonts change"""
+        self._styled[key] = val
+        if len(self._styled) > 2048:
+            self._styled.popitem(last=False)
+        return val
 
     @property
     def font_names(self):
         self.refresh()
         return list(self._fonts)
+
+    @property
+    def _fams(self):
+        if self._families is None:
+            self._families = sorted(_fm.availableFontFamilies())
+        return self._families
 
     @property
     def fam_names(self):
@@ -602,14 +629,21 @@ class Librarian(object):
 
         return font_face(self._specs[q])
 
+    def match_fam(self, word):
+        """Returns the family's name if the arg names one exactly (ignoring case), or None"""
+        word = re.sub(r'  +',' ',word.strip())
+        members = _fm.availableMembersOfFontFamily_(word)
+        return self.parent_fam(members[0][0]) if members else None
+
     def best_fam(self, word):
         """Returns a valid family name if the arg fuzzy matches any existing families"""
         self.refresh()
 
-        # first try for an exact match
+        # first try for an exact match, which needn't list every family
+        exact = self.match_fam(word)
+        if exact:
+            return exact
         word = re.sub(r'  +',' ',word.strip())
-        if word in self._fams:
-            return word
 
         # do a case-insensitive, no-whitespace comparison
         if word not in self._fuzzy:

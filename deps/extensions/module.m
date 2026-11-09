@@ -1,5 +1,8 @@
 #import <Python.h>
+#import "gfx/PDPath.h"
 #import "pathmatics/pathmatics.h"
+#import "pathmatics/tracer.h"
+#import "clipper2/bridge.h"
 
 // Pathmatics routines written for NodeBox by Tom De Smedt and Frederik De Bleser
 PyMethodDef methods[] = {
@@ -14,23 +17,29 @@ PyMethodDef methods[] = {
   {"intersect", cPathmatics_intersect, METH_VARARGS, "Calculates the intersection of two NSBezierPaths."},
   {"difference", cPathmatics_difference, METH_VARARGS, "Calculates the difference of two NSBezierPaths."},
   {"xor", cPathmatics_xor, METH_VARARGS, "Calculates the exclusive or of two NSBezierPaths."},
-  // trig
-  {"fast_inverse_sqrt", fast_inverse_sqrt, METH_VARARGS },
-  {"angle", angle, METH_VARARGS },
-  {"distance", distance, METH_VARARGS },
-  {"coordinates", coordinates, METH_VARARGS },
+  {"offset", cPathmatics_offset, METH_VARARGS, "Grows or shrinks an NSBezierPath's boundary."},
+  {"simplify", cPathmatics_simplify, METH_VARARGS, "Reduces an NSBezierPath's point count within a tolerance."},
+  {"area", cPathmatics_area, METH_VARARGS, "Calculates the fill area enclosed by an NSBezierPath."},
+  {"pdf_outline", cPathmatics_pdfOutline, METH_VARARGS, "Traces the vector shapes in a PDF's content stream into an NSBezierPath."},
+  {"stroke_to_fill", cPathmatics_strokeToFill, METH_VARARGS, "Converts a stroked NSBezierPath into its equivalent fill-only outline."},
   {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
-PyMODINIT_FUNC PyInit__plotdevice(void){
+PyMODINIT_FUNC PyInit__native(void){
     static struct PyModuleDef moduledef = {
-      PyModuleDef_HEAD_INIT, "_plotdevice", "Typography, image/video export, and bezier math routines", -1, methods
+      PyModuleDef_HEAD_INIT, "plotdevice.lib._native", "Typography, image/video export, and bezier math routines", -1, methods
     };
 
     PyObject *m = PyModule_Create(&moduledef);
+#ifdef Py_GIL_DISABLED
+    // don't re-enable the GIL on import
+    PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED);
+#endif
     PyObject *err = PyErr_NewException("cPathmatics.error", NULL, NULL);
     Py_INCREF(err);
     PyModule_AddObject(m, "error", err);
+
+    if (PDPath_register(m) < 0) return NULL;
 
     return m;
 }

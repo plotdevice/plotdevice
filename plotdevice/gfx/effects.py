@@ -1,17 +1,25 @@
 # encoding: utf-8
 import os
 import re
-from contextlib import contextmanager
+import sys
+import math
+from copy import copy
+from contextlib import contextmanager, nullcontext
 from ..lib.cocoa import *
 
 from plotdevice import DeviceError
-from ..util import _copy_attr, _copy_attrs, numlike
+from ..util import numlike
 from .colors import Color
-from .geometry import Point
-from . import _cg_context, _cg_layer, _cg_port
+from .geometry import Point, CORNER
+from . import _render_lock
+from .. import gfx
 
 _ctx = None
 __all__ = ("Effect", "Shadow", "Stencil",)
+
+_CG_BLUR_LIMIT = 32  # widest blur handled by Core Graphics
+_OPAQUE = (kCGImageAlphaNone, kCGImageAlphaNoneSkipFirst, kCGImageAlphaNoneSkipLast)
+_NO_FX = nullcontext() # what Effect.applied() returns when there are no effects to apply
 
 # blend modes
 _BLEND=dict(
@@ -60,6 +68,16 @@ BLEND_MODES = """    normal, clear, copy, xor, multiply, screen,
 
 ### Effects objects ###
 
+def _commit_all(grobs, held=False):
+    """The grobs to use for drawing (or copies of any the script still holds references to)"""
+    for probe in [object()]:
+        unheld = sys.getrefcount(probe) # the refcount of an unreferenced grob
+    committed = []
+    for grob in grobs:
+        copying = held or sys.getrefcount(grob) > unheld # measured before grob._commit adds a reference
+        committed.append(grob._commit(copying))
+    return tuple(committed)
+
 class Frob(object):
     """A FoRmatting OBject encapsulates changes to the graphics context state.
 
@@ -75,11 +93,23 @@ class Frob(object):
 
     def _draw(self):
         # apply state changes only to contained grobs
-        with _cg_context(), self.applied():
-            if not self._grobs:
-                return
-            for grob in self._grobs:
-                grob._draw()
+        port = gfx._state.port
+        CGContextSaveGState(port)
+        try:
+            with self.applied(self):
+                if not self._grobs:
+                    return
+                for grob in gfx._state.visible(self._grobs):
+                    _render_lock.checkpoint()
+                    grob._draw()
+        finally:
+            CGContextRestoreGState(port)
+
+    def _commit(self, held):
+        """A copy of the container holding its committed contents"""
+        frob = copy(self)
+        frob._grobs = _commit_all(self.contents, held) # the script can reach a held container's contents
+        return frob
 
     @property
     def contents(self):
@@ -92,7 +122,7 @@ class Effect(Frob):
         self._fx = {}
 
         if kwargs.pop('rollback', False):
-            self._rollback = {eff:getattr(_ctx._effects, eff) for eff in kwargs}
+            self._rollback = {eff:_ctx._effects._fx.get(eff) for eff in kwargs}
 
         for eff, val in kwargs.items():
             self._fx[eff] = Effect._validate(eff, val)
@@ -106,8 +136,8 @@ class Effect(Frob):
         if not hasattr(self, '_rollback'):
             self._rollback = {eff:val for eff,val in _ctx._effects._fx.items() if eff in self._fx}
 
-        # concat ourseves as a new canvas container
-        _ctx.canvas.push(self)
+        # concat a snapshot of ourselves as a new canvas container
+        _ctx.canvas.push(Effect(**self._fx))
 
         # reset the global per-object effects state within the block (since the effects
         # will be applied to a transparency layer encapsulating all drawing)
@@ -133,37 +163,37 @@ class Effect(Frob):
 
         fx = {k:v for k,v in self._fx.items() if k in effs}
         if 'alpha' in fx:
-            CGContextSetAlpha(_cg_port(), fx['alpha']);
+            CGContextSetAlpha(gfx._state.port, fx['alpha']);
         if 'blend' in fx:
-            CGContextSetBlendMode(_cg_port(), _BLEND[fx['blend']])
+            CGContextSetBlendMode(gfx._state.port, _BLEND[fx['blend']])
         if 'shadow' in fx:
             shadow = Shadow(None) if fx['shadow'] is None else fx['shadow']
-            shadow._nsShadow.set() # don't mess with cg for shadows
+            shadow.set()
 
-        # i *think* it's better to skip the transparency layer when only blending,
-        # but am bracing for the discovery that it's not...
-        return bool(fx) and fx.keys() != ('blend',)
-        # return bool(fx) # return whether any state was just changed
+        return bool(fx) # return whether any state was just changed
+
+    def applied(self, owner, layer=True):
+        """Apply compositing effects (if any) to any drawing inside the `with` block"""
+        if not self._fx or gfx._state.casting is owner:
+            return _NO_FX # avoid making a generator if there's nothing to apply
+        return self._applying(owner, layer)
 
     @contextmanager
-    def applied(self):
-        """Apply compositing effects (if any) to any drawing inside the `with` block"""
-        if self._fx:
-            if self.set('blend', 'alpha'):
-                with _cg_layer():
-                    if not self.set('shadow'):
+    def _applying(self, owner, layer):
+        shadowed = 'shadow' in self._fx
+        if self.set('blend', 'alpha'):
+            if not shadowed and not layer:
+                yield # a lone fill or stroke needs no layer
+            else:
+                with gfx._state.compositing(owner):
+                    if not shadowed:
                         yield # if there's no shadow, we don't need a second layer
                     else:
-                        with _cg_layer():
-                            yield # if there is, we do
-            else:
-                # no blend or alpha changes, but since _fx exists there must be a shadow
-                self.set('shadow')
-                with _cg_layer():
-                    yield
+                        with (self.shadow or Shadow(None)).applied(owner):
+                            yield # if there is, it needs its own
         else:
-            # nothing to be done
-            yield
+            with (self.shadow or Shadow(None)).applied(owner):
+                yield
 
     def copy(self):
         new = Effect()
@@ -223,12 +253,11 @@ class Shadow(object):
     def __init__(self, *args, **kwargs):
         super(Shadow, self).__init__()
         if args and isinstance(args[0], Shadow):
-            self._nsShadow = _copy_attr(args[0]._nsShadow)
+            self._color, self._blur, self._offset = args[0]._color, args[0]._blur, args[0]._offset
             for attr, val in kwargs.items():
                 if attr not in Shadow.kwargs: continue
                 setattr(self, attr, val)
         else:
-            self._nsShadow = NSShadow.alloc().init()
             for attr, val in zip(Shadow.kwargs, args):
                 kwargs.setdefault(attr, val)
 
@@ -247,59 +276,147 @@ class Shadow(object):
     def copy(self):
         return Shadow(self)
 
+    @property
+    def _device_offset(self):
+        a, b, c, d, _, _ = gfx._state.base_ctm
+        x, y = self._offset
+        return a*x + c*y, b*x + d*y
+
+    @property
+    def _device_blur(self):
+        a, b, c, d, _, _ = gfx._state.base_ctm
+        return self._blur * abs(a*d - b*c) ** .5
+
+    def set(self):
+        CGContextSetShadowWithColor(gfx._state.port, self._device_offset, self._device_blur, self._color.cgColor)
+
+    @contextmanager
+    def applied(self, owner):
+        """Draw the `with` block's drawing with this shadow behind it"""
+        port = gfx._state.port
+        box = gfx._state.layer_box(owner)
+        (dx, dy), blur = self._device_offset, self._device_blur
+        in_bitmap = CGBitmapContextGetWidth(port) > 0
+        rgba = in_bitmap and CGBitmapContextGetAlphaInfo(port) not in _OPAQUE \
+               and CGColorSpaceGetModel(CGBitmapContextGetColorSpace(port)) == kCGColorSpaceModelRGB
+        wide = blur > _CG_BLUR_LIMIT
+        reach = None
+
+        # CG's blur is inconsistent (and slows down) as it widens, so for wide blurs scale down first
+        if wide and box is not None and rgba and not gfx._state.clip_depth:
+            # the target and what can shadow it
+            whole = ((0, 0), (CGBitmapContextGetWidth(port), CGBitmapContextGetHeight(port)))
+            clip = CGRectApplyAffineTransform(CGContextGetClipBoundingBox(port), CGContextGetCTM(port))
+            target = CGRectIntegral(CGRectIntersection(whole, clip))
+            drawn = CGRectApplyAffineTransform(((box[0], box[1]), (box[2], box[3])), gfx._state.base_ctm)
+            reach = CGRectIntegral(CGRectIntersection(drawn, CGRectInset(target, -(blur + abs(dx)), -(blur + abs(dy)))))
+        if reach is None or CGRectIsEmpty(reach):
+            self.set()
+            with gfx._state.compositing(owner):
+                yield
+            return
+
+        # draw the with-block content at full size
+        shown = CGRectIntegral(CGRectIntersection(drawn, target))
+        with gfx._state.rasterizing(shown if not CGRectIsEmpty(shown) else ((0, 0), (1, 1)), 1.0, CGContextGetCTM(port)) as drawing_port:
+            yield
+        drawing = CGBitmapContextCreateImage(drawing_port)
+
+        # redraw scaled down to a _CG_BLUR_LIMIT blur
+        scale = _CG_BLUR_LIMIT / blur
+        with gfx._state.rasterizing(reach, scale, gfx._state.base_ctm) as silhouette_port, gfx._state.using(casting=owner):
+            owner._draw()
+        silhouette = CGBitmapContextCreateImage(silhouette_port)
+
+        # render just the shadow using the scaled silhouette
+        (rx, ry), (rw, rh) = reach
+        sx, sy, sw, sh = rx + dx - blur, ry + dy - blur, rw + 2 * blur, rh + 2 * blur
+        shadow_w, shadow_h = int(math.ceil(sw * scale)), int(math.ceil(sh * scale))
+        shadow_port = CGBitmapContextCreate(None, shadow_w, shadow_h, 8, 0, CGBitmapContextGetColorSpace(port),
+                                            kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host)
+        CGContextSetShadowWithColor(shadow_port, (shadow_w, 0), _CG_BLUR_LIMIT, self._color.cgColor)
+        silhouette_size = (CGBitmapContextGetWidth(silhouette_port), CGBitmapContextGetHeight(silhouette_port))
+        CGContextDrawImage(shadow_port, ((blur * scale - shadow_w, blur * scale), silhouette_size), silhouette)
+        shadow = CGBitmapContextCreateImage(shadow_port)
+
+        # draw the scaled-up shadow and the with-block content on top
+        CGContextSaveGState(port)
+        CGContextConcatCTM(port, CGAffineTransformInvert(CGContextGetCTM(port)))
+        CGContextSetInterpolationQuality(port, kCGInterpolationHigh)
+        CGContextDrawImage(port, ((sx, sy), (shadow_w / scale, shadow_h / scale)), shadow)
+        if not CGRectIsEmpty(shown):
+            CGContextDrawImage(port, shown, drawing)
+        CGContextRestoreGState(port)
+
     def _get_color(self):
-        return Color(self._nsShadow.shadowColor())
+        return Color(self._color)
     def _set_color(self, spec):
         if isinstance(spec, Color):
-            self._nsShadow.setShadowColor_(spec.nsColor)
+            self._color = Color(spec)
         elif spec is None:
-            self._nsShadow.setShadowColor_(None)
+            self._color = Color(None)
         else:
             if not isinstance(spec, (tuple,list)):
                 spec = tuple([spec])
-            self._nsShadow.setShadowColor_(Color(*spec).nsColor)
+            self._color = Color(*spec)
     color = property(_get_color, _set_color)
 
     def _get_blur(self):
-        return self._nsShadow.shadowBlurRadius()
+        return self._blur
     def _set_blur(self, blur):
-        self._nsShadow.setShadowBlurRadius_(blur)
+        self._blur = float(blur)
     blur = property(_get_blur, _set_blur)
 
     def _get_offset(self):
-        x,y = self._nsShadow.shadowOffset()
-        return Point(x,-y)
+        return Point(self._offset)
     def _set_offset(self, offset):
         if numlike(offset):
             x = y = offset
         else:
             x,y = offset
-        self._nsShadow.setShadowOffset_((x,-y))
+        self._offset = Point(float(x), float(y))
     offset = property(_get_offset, _set_offset)
 
 class Stencil(Frob):
     def __init__(self, stencil, invert=False, channel=None):
         from .text import Text
         from .bezier import Bezier
-        from .image import Image
+        from .image import Image, Snapshot
+        if hasattr(stencil, 'commit'):
+            stencil = Snapshot(stencil) # wrap raw canvas references in a Snapshot
+        if isinstance(stencil, Snapshot) and not channel:
+            channel = 'outline' # trace vector shapes unless a bitmap channel is selected
         if isinstance(stencil, Text):
             self.path = stencil.path
             self.evenodd = invert
-        if isinstance(stencil, Bezier):
+        elif isinstance(stencil, Bezier):
             self.path = stencil.copy()
             self.evenodd = invert
         elif isinstance(stencil, Image):
-            # default to using alpha if available and darkness if not
-            if not channel:
-                channel = 'alpha' if stencil._nsBitmap.hasAlpha() else 'black'
-            if channel=='black':
-                invert = not invert
-            self.channel = channel
-            self.invert = invert
-            self.bmp = stencil
+            if channel == 'outline':
+                # trace the image's vector shapes (or its bounding rect, if raster)
+                # into a Bezier and clip/mask against that directly, rather than
+                # rasterizing a bitmap mask
+                outline = stencil._outline
+                outline.transformmode = CORNER
+                outline.transform = stencil._screen_transform
+                self.path = outline
+                self.evenodd = invert
+            else:
+                # default to using alpha if available and darkness if not
+                if not channel:
+                    channel = 'alpha' if stencil._nsBitmap.hasAlpha() else 'black'
+                if channel=='black':
+                    invert = not invert
+                self.channel = channel
+                self.invert = invert
+                self.bmp = stencil
+        else:
+            badstencil = "clip() and mask() take a Bezier, Image, Text, or Canvas stencil (not %s)" % type(stencil).__name__
+            raise DeviceError(badstencil)
 
     def set(self):
-        port = _cg_port()
+        port = gfx._state.port
 
         if hasattr(self, 'path'):
             path_xf = self.path._screen_transform
@@ -307,7 +424,7 @@ class Stencil(Frob):
             CGContextBeginPath(port)
             if self.evenodd:
                 # if inverted, knock the path out of a full-screen rect and clip with that
-                CGContextAddRect(port, ((0,0),(_ctx.WIDTH, _ctx.HEIGHT)))
+                CGContextAddRect(port, ((0,0), gfx._state.canvas_dims))
                 CGContextAddPath(port, cg_path)
                 CGContextEOClip(port)
             else:
@@ -319,8 +436,9 @@ class Stencil(Frob):
             # run the filter chain and render to a cg-image
             singlechannel = ciFilter(self.channel, self.bmp._ciImage)
             greyscale = ciFilter(self.invert, singlechannel)
-            ci_ctx = CIContext.contextWithOptions_(None)
-            maskRef = ci_ctx.createCGImage_fromRect_(greyscale, ((0,0), self.bmp.size))
+            unmanaged = {kCIContextWorkingColorSpace: NSNull.null(), kCIContextOutputColorSpace: NSNull.null()}
+            ci_ctx = CIContext.contextWithOptions_(unmanaged) # don't treat mask values as colors
+            maskRef = ci_ctx.createCGImage_fromRect_(greyscale, ((0,0), self.bmp._screen_size))
 
             # turn the image into an ‘imagemask’ cg-image
             cg_mask = CGImageMaskCreate(CGImageGetWidth(maskRef),
@@ -337,9 +455,10 @@ class Stencil(Frob):
             xf.inverse.concat() # ...restore the previous state after
 
     @contextmanager
-    def applied(self):
+    def applied(self, owner):
         self.set()
-        yield
+        with gfx._state.using(clip_depth=gfx._state.clip_depth + 1):
+            yield
 
 class ClippingPath(Stencil):
     pass # NodeBox compat...
@@ -364,7 +483,7 @@ def _channelFilter(channel, img):
         transmat = [tuple(rgb_row)] * 3
         transmat += [ (0,0,0,0), (0,0,0,1) ]
     elif channel in ('black', 'white'):
-        transmat = [(.333, .333, .333, 0)] * 3
+        transmat = [(.2126, .7152, .0722, 0)] * 3 # rec. 709 luma
         transmat += [ (0,0,0,0), (0,0,0,1) ]
     return _matrixFilter(transmat, img)
 

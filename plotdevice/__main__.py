@@ -16,6 +16,10 @@ Examples:
     python3 -m plotdevice script.pv --export retina.png --zoom 200
     python3 -m plotdevice script.pv --export also-retina@2x.png
 
+  Pass arguments to the script (after `--` they can start with a dash):
+    python3 -m plotdevice script.pv --args red 12
+    python3 -m plotdevice script.pv -- --color red -v
+
 Animation Examples:
   Create a 5 second long H.265 video at 2 megabits/sec:
     python3 -m plotdevice script.pv --export output.mov --frames 150 --rate 2.0
@@ -32,6 +36,7 @@ Installing Libraries:
 
 import sys, os, re
 import argparse
+from glob import glob
 from os.path import exists, islink, dirname, basename, abspath, realpath, join, splitext
 
 
@@ -51,19 +56,23 @@ def main():
   o.add_argument('-f', dest='fullscreen', action='store_const', const=True, default=False, help='run full-screen')
   o.add_argument('-b', dest='activate', action='store_const', const=False, default=True, help='run PlotDevice in the background (i.e., leave focus in the active application)')
   o.add_argument('-q', dest='mode', action='store_const', const='headless', default='windowed', help='run a PlotDevice script ‘quietly’ (without opening a window)')
+  if plotdevice.in_bundle:
+    o.add_argument('-t', '--free-threaded', action='store_true', help='run the script with the app’s free-threaded Python (with the GIL off unless PYTHON_GIL=1)')
   o.add_argument('--virtualenv', metavar='PATH', help='path to virtualenv whose libraries you want to use (this should point to the top-level virtualenv directory; a folder containing a lib/python3.x/site-packages subdirectory)')
   o.add_argument('--frames', metavar='N or M-N', help='number of frames to render or a range specifying the first and last frames (default "1-")')
   o.add_argument('--fps', metavar='N', default=30, type=int, help='frames per second in exported video (default 30)')
-  o.add_argument('--rate', metavar='N', default=1.0, type=float, dest='bitrate', help='bitrate in megabits per second (video only)')
+  o.add_argument('--rate', metavar='N', default=None, type=float, dest='bitrate', help='bitrate in megabits per second (video only; picked from the canvas size by default)')
+  o.add_argument('--codec', metavar='NAME', default='hevc', choices=('hevc', 'h264', 'prores'), help='codec for an exported video: hevc (default), h264, or prores (ProRes 4444, for editing elsewhere)')
   o.add_argument('--loop', metavar='N', default=0, nargs='?', const=-1, help='number of times to loop an exported animated gif (omit N to loop forever)')
   o.add_argument('--live', action='store_const', const=True, help='re-render graphics each time the file is saved')
-  o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='arguments to be passed to the script as sys.argv')
+  o.add_argument('--args', nargs='*', default=[], metavar=('a','b'), help='arguments to be passed to the script as sys.argv (as is everything after a `--`)')
   o.add_argument('--version', action='version', version='PlotDevice %s' % plotdevice.__version__)
 
   x = parser.add_argument_group("Export Options")
   x.add_argument('--export', '-o', metavar='FILE', help='a destination filename ending in pdf, eps, png, tiff, jpg, heic, gif, or mov')
-  x.add_argument('--zoom', metavar='PERCENT', default=100, type=int, help='scale of the output image (100 = regular size) unless specified by a filename ending in @2x/@3x/etc')
-  x.add_argument('--cmyk', action='store_const', const=True, default=False, help='convert colors to c/m/y/k during exports')
+  x.add_argument('--zoom', metavar='PERCENT', default=100, type=int, help='scale of the output image or movie (100 = regular size); an image\'s can also be given by a filename ending in @2x/@3x/etc')
+  x.add_argument('--colors', metavar='NAME', help='the color profile used for exports: p3 (the default), srgb, rec709, rec2020, cmyk, gracol, gracol_uncoated, swop, fogra39, fogra47, or the path to an .icc profile')
+  x.add_argument('--cmyk', action='store_const', const=True, default=False, help='deprecated (equivalent to: --colors cmyk)')
 
   i = parser.add_argument_group("PlotDevice Script File", None)
   i.add_argument('script', help='the python script to be rendered')
@@ -72,28 +81,37 @@ def main():
   p.add_argument('--install', nargs='*', default=[], metavar='package', help="Use `pip` to download libraries into the ~/Library/Application Support/PlotDevice directory, making them `import`-able in the application and by scripts run from the command line")
 
 
+  installing = sys.argv[1:2] == ['--install'] or sys.argv[1:3] in (['-t', '--install'], ['--free-threaded', '--install'])
   if len(sys.argv)==1:
     parser.print_usage()
     print('for more detail:\n  %s --help' % parser.prog)
     return
-  elif sys.argv[1] == '--install':
-    # --install has to be the first argument (in which case we can handle it now and bail)
-    libDir = os.path.join(os.getenv("HOME"), "Library", "Application Support", "PlotDevice")
-    if not os.path.exists(libDir):
-        os.mkdir(libDir)
+  elif installing:
+    # --install has to come first (or be right after -t)
+    if not plotdevice.in_bundle:
+      unbundled = "--install is only available in the PlotDevice app's command line tool; install packages with pip (or uv)\nin the Python environment you run PlotDevice from instead\n"
+      parser.exit(1, unbundled)
 
     from subprocess import call
-    PIP = os.environ.pop('_p_l_o_t_d_e_v_i_c_e___p_i_p_', 'pip3')
-    sys.exit(call([PIP, 'install', '--isolated', '--target', libDir, *sys.argv[2:]]))
+    from .run import interpreter_lib_dir
+    os.makedirs(interpreter_lib_dir, exist_ok=True)
+    packages = sys.argv[sys.argv.index('--install')+1:]
+    sys.exit(call([sys.executable, '-m', 'pip', 'install', '--isolated', '--target', interpreter_lib_dir, *packages]))
 
-  opts = parser.parse_args()
+  # everything after a `--` goes to the script as is (placed after any --args values)
+  argv, passed = sys.argv[1:], []
+  if '--' in argv:
+    split = argv.index('--')
+    argv, passed = argv[:split], argv[split + 1:]
+  opts = parser.parse_args(argv)
+  opts.args += passed
 
   if opts.virtualenv:
     libdirs = glob('%s/lib/python3.*/site-packages'%opts.virtualenv)
-    if len(libdirs) and exists(libdir[0]):
-      opts.virtualenv = abspath(libdir[0])
+    if len(libdirs) and exists(libdirs[0]):
+      opts.virtualenv = abspath(libdirs[0])
     else:
-      parser.exit(1, "bad argument [--virtualenv]\nvirtualenv site-packages dir not found: %s\n"%libdir)
+      parser.exit(1, "bad argument [--virtualenv]\nvirtualenv site-packages dir not found in: %s\n"%opts.virtualenv)
 
   if opts.script:
     opts.script = abspath(opts.script)
@@ -143,12 +161,32 @@ def main():
 
     # if it's a multiframe pdf, check for a telltale "{n}" to determine whether
     # it's a `single' doc or a sequence of numbered pdf files
-    opts.single = bool(ext=='pdf' and not re.search('{\d+}', opts.export) and opts.last and opts.first < opts.last)
+    opts.single = bool(ext=='pdf' and not re.search(r'{\d+}', opts.export) and opts.last and opts.first < opts.last)
 
-    if m:= re.search(r'@(\d+)[xX]$', outname):
+    # a still image's zoom can also come from its filename
+    m = re.search(r'@(\d+)[xX]$', outname)
+    still = ext not in ('mov', 'gif')
+    if m and still:
       opts.zoom = float(m.group(1))
     else:
       opts.zoom = max(0.01, opts.zoom/100)
+
+  if opts.cmyk:
+    if opts.colors:
+      parser.exit(1, 'bad argument [--cmyk]\nuse --colors or the older --cmyk, but not both\n')
+    sys.stderr.write('warning: --cmyk is deprecated, use --colors cmyk instead\n')
+    opts.colors = 'cmyk'
+  del opts.cmyk
+
+  if opts.colors:
+    if opts.mode != 'headless':
+      parser.exit(1, 'bad argument [--colors]\n--colors applies only with --export or -q\n')
+    from plotdevice import DeviceError
+    from .gfx.profiles import Output
+    try:
+      opts.colors = Output.parse(opts.colors, ext if opts.export else 'pdf').profile.key
+    except DeviceError as e:
+      parser.exit(1, 'bad argument [--colors]\n%s\n' % e)
 
   if opts.install:
     print("The --install option must be used on its own, not in combination with other flags")

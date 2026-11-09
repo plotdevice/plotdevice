@@ -4,10 +4,10 @@ from math import floor
 from collections import namedtuple, defaultdict
 
 from .. import DeviceError
-from ..lib.foundry import fontspec
+from ..lib.foundry import fontspec, LIBRARY
 from ..util import _copy_attrs, _copy_attr, _flatten, trim_zeroes, numlike
-from .colors import Color
-from .geometry import Transform, Dimension, Region, Pair
+from .colors import Color, Gradient, Pattern
+from .geometry import Transform, Dimension, Region, Pair, CENTER, CORNER
 from .effects import Effect
 
 _ctx = None
@@ -42,6 +42,7 @@ class Bequest(type):
         _inherit: attrs to copy from the _ctx when creating a new grob
         _state:   attrs to copy from instance to instance when making a copy
         _opts:    valid keyword arguments (for setting inline styles)
+        _shared:  inherited attrs that are never modified in place, so needn't be copied
 
     The tuples are added as class variables and can be accessed as attributes on any
     instance of Bezier, Image, or Text.
@@ -51,10 +52,11 @@ class Bequest(type):
         super(Bequest, cls).__init__(name, bases, dct)
         if not (name=='Grob' or name.endswith('Mixin')):
             info = defaultdict(set)
-            for typ in (cls,)+bases:
+            for typ in cls.__mro__:
                 info['_inherit'].update(getattr(typ,'ctxAttrs',[]))
                 info['_state'].update(getattr(typ,'stateAttrs',[]))
                 info['_opts'].update(getattr(typ,'opts',[]))
+                info['_shared'].update(getattr(typ,'sharedAttrs',[]))
             info['_state'].update(info['_inherit'])
             for attr, val in info.items():
                 setattr(cls, attr, val)
@@ -62,9 +64,14 @@ class Bequest(type):
 class Grob(object, metaclass=Bequest):
     """A GRaphic OBject is the base class for all drawing primitives."""
     ctxAttrs = ('_grid',)
+    sharedAttrs = ('_grid',)
 
     def __init__(self, **kwargs):
         self.inherit() # copy over every _ctx attribute we're interested in
+
+    def _commit(self, held):
+        """The grob to use for drawing (a copy if the script still holds a reference to it)"""
+        return self.copy() if held else self
 
     def draw(self):
         """Adds the grob to the canvas. This will result in a _draw later on, when the
@@ -83,7 +90,9 @@ class Grob(object, metaclass=Bequest):
             src, attrs = _ctx, self._inherit
         else:
             attrs = set(src._state).intersection(self._state)
-        _copy_attrs(src, self, attrs)
+        for attr in self._shared.intersection(attrs):
+            setattr(self, attr, getattr(src, attr))
+        _copy_attrs(src, self, attrs.difference(self._shared))
 
     def update(self, mapping=None, **kwargs):
         """Assign new values to one or more properties
@@ -110,12 +119,18 @@ class Grob(object, metaclass=Bequest):
         """Convert from canvas units to postscript points"""
         if numlike(unit) or isinstance(unit, Pair):
             return unit * self._grid.dpx
+        if type(unit) is Region:
+            dpx = self._grid.dpx
+            return Region(unit.x * dpx, unit.y * dpx, unit.w * dpx, unit.h * dpx)
         return self._grid.to_px.apply(unit)
 
     def _from_px(self, px):
         """Convert from postscript points to canvas units"""
         if numlike(px) or isinstance(px, Pair):
             return px / self._grid.dpx
+        if type(px) is Region:
+            dpx = self._grid.dpx
+            return Region(px.x / dpx, px.y / dpx, px.w / dpx, px.h / dpx)
         return self._grid.from_px.apply(px)
 
 
@@ -222,19 +237,26 @@ class ColorMixin(Grob):
     def _get_fill(self):
         return self._fillcolor
     def _set_fill(self, *args):
-        self._fillcolor = None if args[0] is None else Color(*args)
+        if isinstance(args[0], (Gradient, Pattern)):
+            self._fillcolor = args[0].copy()
+        else:
+            self._fillcolor = None if args[0] is None else Color(*args)
     fill = property(_get_fill, _set_fill)
 
     def _get_stroke(self):
         return self._strokecolor
     def _set_stroke(self, *args):
-        self._strokecolor = None if args[0] is None else Color(*args)
+        if isinstance(args[0], (Gradient, Pattern)):
+            self._strokecolor = args[0].copy()
+        else:
+            self._strokecolor = None if args[0] is None else Color(*args)
     stroke = property(_get_stroke, _set_stroke)
 
 class TransformMixin(Grob):
     """Mixin class for transformation support.
     Adds the _transform and _transformmode attributes to the class."""
     ctxAttrs = ('_transform', '_transformmode',)
+    sharedAttrs = ('_transformmode',)
 
     def __init__(self, **kwargs):
         super(TransformMixin, self).__init__(**kwargs)
@@ -242,7 +264,7 @@ class TransformMixin(Grob):
     def _get_transformmode(self):
         return self._transformmode
     def _set_transformmode(self, mode):
-        if style not in (CENTER, CORNER):
+        if mode not in (CENTER, CORNER):
             badmode = 'Transform mode should be CENTER or CORNER.'
             raise DeviceError(badmode)
         self._transformmode = mode
@@ -279,6 +301,7 @@ class PenMixin(Grob):
     """Mixin class for linestyle support.
     Adds the nib, cap, join, and dash attributes to the class."""
     ctxAttrs = ('_penstyle', )
+    sharedAttrs = ('_penstyle',)
     opts = ('nib','cap','join','dash','strokewidth','capstyle','joinstyle','dashstyle',)
 
     def __init__(self, **kwargs):
@@ -319,7 +342,7 @@ class PenMixin(Grob):
         if None in segments:
             steps = None
         else:
-            steps = list(map(int, _flatten(segments)))
+            steps = tuple(map(int, _flatten(segments)))
             if len(steps)%2:
                 steps += steps[-1:] # assume even spacing for omitted skip sizes
         self._penstyle = self._penstyle._replace(dash=steps)
@@ -329,6 +352,7 @@ class StyleMixin(Grob):
     """Mixin class for text-styling support.
     Adds the stylesheet, fill, and font attributes to the class."""
     ctxAttrs = ('_font', '_stylesheet', '_fillcolor')
+    sharedAttrs = ('_font',)
     layoutOpts = ('leading','spacing','margin','indent','align','hyphenate','lineheight')
     fontOpts = ('face','family','size','weight','width','variant','italic','tracking','fontname','fontsize','font')
     aatOpts = ('lig','sc','osf','tab','vpos','frac', 'ss')
@@ -342,18 +366,22 @@ class StyleMixin(Grob):
             kwargs = dict(kwargs)
             del kwargs['width']
 
-        self._update_style(**kwargs)
+        # only restyle if style kwargs were passed
+        if any(k in StyleMixin.opts for k in kwargs):
+            self._update_style(**kwargs)
 
     def _parse_style(self, *args, **opts):
+        if not args and not opts:
+            return {}
         fontopts = {k:v for k,v in opts.items() if k in StyleMixin.opts}
         fontargs = opts.get('font', args)
         if not isinstance(fontargs, (list,tuple)):
             fontargs = [fontargs]
 
-        spec = self.stylesheet._styles.get( opts.get('style'), {} )
+        spec = dict(self.stylesheet._styles.get( opts.get('style'), {} ))
         spec.update(fontspec(*fontargs, **fontopts))
         if 'fill' in opts:
-            spec['fill'] = Color(opts['fill'])
+            spec['fill'] = opts['fill'] if isinstance(opts['fill'], Pattern) else Color(opts['fill'])
         return spec
 
     def _update_style(self, *args, **kwargs):
@@ -363,7 +391,8 @@ class StyleMixin(Grob):
         spec.update(self._parse_style(*args, **kwargs)) # merge in any modifications from the text() call
 
         # update the font & fill references to reflect kwarg styling (if any)
-        self._font = self._font.__class__(**spec)
+        key = ('font',) + tuple(sorted((k, v) for k, v in spec.items() if k != 'fill'))
+        self._font = LIBRARY.recall(key) or LIBRARY.remember(key, self._font.__class__(**spec))
         self._fillcolor = spec.get('fill', self._fillcolor)
 
     def font(self, *args, **kwargs):

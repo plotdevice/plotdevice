@@ -14,3 +14,8 @@
 + (NSArray *)lineFragmentsInRange:(NSRange)char_range withLayout:(NSLayoutManager *)layout;
 + (NSArray *)textContainersInRange:(NSRange)rng withLayout:(NSLayoutManager *)layout;
 @end
+
+@interface PDLayoutManager : NSLayoutManager
+@property (nonatomic, retain) NSMapTable *fills; // the CGColor for each run, keyed by its PDColor attribute
++ (void)drawLine:(id)line fills:(NSMapTable *)fills inContext:(CGContextRef)port;
+@end

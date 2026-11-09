@@ -1,9 +1,11 @@
 # encoding: utf-8
 import os, re
+import time
 from collections import OrderedDict
 from ..lib.cocoa import *
 from math import floor, ceil
 import objc
+from . import set_timeout
 
 ## classes instantiated by PlotDeviceDocument.xib & PlotDeviceScript.xib
 
@@ -248,13 +250,20 @@ class DashboardRow(NSView):
 class DashboardController(NSObject):
     script = IBOutlet()
     panel = IBOutlet()
+    BURST = 0.25 # secs between edits to qualify as a burst
 
     def awakeFromNib(self):
         self.panel.contentView().setFlipped_(True)
+        self.panel.contentView().setMaterial_(NSVisualEffectMaterialHUDWindow)
         self.rows = OrderedDict()
         self.positioned = False
+        self.editing = False # edits are arriving in a burst
+        self._lastEdit = 0
+        self._settle = None
 
     def shutdown(self):
+        if self._settle is not None:
+            self._settle.invalidate()
         self.panel.close()
         for row in self.rows.values():
             row.delegate = None
@@ -264,18 +273,31 @@ class DashboardController(NSObject):
     def setVariable_to_(self, name, val):
         var = self.script.vm.params[name]
         var.value = val
-        if self.script.animationTimer is None:
+        # if animating/exporting, wait for the next frame to see the update
+        animating = self.script.animationTimer is not None
+        exporting = self.script.vm.session is not None
+        if not animating and not exporting:
+            # a second edit close behind starts a burst
+            now = time.perf_counter()
+            self.editing = self.editing or now - self._lastEdit < self.BURST
+            self._lastEdit = now
+            if self._settle is not None:
+                self._settle.invalidate()
+            self._settle = set_timeout(self, 'settle:', self.BURST)
             self.script.runScript()
+
+    def settle_(self, timer):
+        self._settle = None
+        if self.editing:
+            self.editing = False
+            self.script.graphicsView.liveEnded()
 
     def callHandler_(self, name):
         var = self.script.vm.params[name]
         result = self.script.vm.call(var.name)
         self.script.echo(result.output)
         if result.ok:
-            try:
-                self.script.currentView.setCanvas(self.script.vm.canvas)
-            except DeviceError as e:
-                return self.script.crash()
+            self.script.currentView.render(self.script.vm.canvas, onerror=self.script._renderCrashed)
 
 
     @objc.python_method
@@ -342,6 +364,67 @@ class DashboardController(NSObject):
 
 
 from ..context import RGB, CMYK
+from ..gfx.profiles import P3, SRGB, Profile, Output
+from ..lib.io import MovieExportSession, HEVC, H264, PRORES
+
+# include menu sections headers on macOS 14+
+SECTION_HEADERS = hasattr(NSMenuItem, 'sectionHeaderWithTitle_')
+
+class ProofColorsMenu(NSObject):
+    """View > Proof Colors, previewing the highlighted item"""
+    PREVIEW = 0.1 # secs before a highlight previews
+    _timer = None
+
+    @objc.python_method
+    def _controller(self):
+        return NSApp().targetForAction_to_from_('proofColors:', None, None)
+
+    def preview_(self, timer):
+        self._timer = None
+        controller = self._controller()
+        if controller is not None:
+            controller.showProof(timer.userInfo()[0])
+
+    def menu_willHighlightItem_(self, menu, item):
+        controller = self._controller()
+        if controller is None:
+            return
+        previewable = item is not None and item.action() == 'proofColors:'
+        proof = item.representedObject() if previewable else controller.proof
+        if self._timer is not None:
+            self._timer.invalidate()
+        self._timer = set_timeout(self, 'preview:', self.PREVIEW, info=[proof])
+
+    def menuDidClose_(self, menu):
+        # restore once a click has made its choice
+        if self._timer is not None:
+            self._timer.invalidate()
+        self._timer = set_timeout(self, 'restore:', 0)
+
+    def restore_(self, timer):
+        self._timer = None
+        controller = self._controller()
+        if controller is not None:
+            controller.showProof(controller.proof)
+
+    def menuNeedsUpdate_(self, menu):
+        win = NSApp().mainWindow()
+        screen = win.screen() if win else NSScreen.mainScreen()
+        spaces = [(label, ('rgb', key)) for label, key in Profile.installed(RGB)]
+        rgb = [(screen.localizedName(), None), ('sRGB', ('rgb', SRGB))] + spaces
+        cmyk = [(label, ('press', key)) for label, key in Profile.installed(CMYK)]
+        vision = [(name.capitalize(), ('vision', name)) for name in ('protanopia', 'protanomaly', 'deuteranopia', 'deuteranomaly',
+                                                                     'tritanopia', 'tritanomaly')]
+        menu.removeAllItems()
+        for header, items in [('RGB', rgb), ('CMYK', cmyk), ('Accessibility', vision)]:
+            if SECTION_HEADERS:
+                menu.addItem_(NSMenuItem.sectionHeaderWithTitle_(header))
+            elif menu.numberOfItems():
+                menu.addItem_(NSMenuItem.separatorItem())
+            for title, value in items:
+                item = menu.addItemWithTitle_action_keyEquivalent_(title, 'proofColors:', '')
+                item.setRepresentedObject_(value)
+
 class ExportSheet(NSObject):
     # the script whose doExportAsImage and doExportAsMovie methods will be called
     script = IBOutlet()
@@ -352,7 +435,7 @@ class ExportSheet(NSObject):
     imageZoom = IBOutlet()
     imagePageCount = IBOutlet()
     imagePagination = IBOutlet()
-    imageCMYK = IBOutlet()
+    imageColors = IBOutlet()
 
     # Movie export settings
     movieAccessory = IBOutlet()
@@ -361,12 +444,17 @@ class ExportSheet(NSObject):
     movieFps = IBOutlet()
     movieLoop = IBOutlet()
     movieBitrate = IBOutlet()
+    movieZoom = IBOutlet()
+    movieColors = IBOutlet()
 
     def awakeFromNib(self):
-        self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'heic', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'mov', 'gif'))
-        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=1, loop=0, codec=0)
-        self.image = dict(format='pdf', zoom=1.0, first=1, last=1, cmyk=False, single=True)
+        self.formats = dict(image=(0, 'pdf', 0,0, 'png', 'jpg', 'heic', 'tiff', 'gif', 0,0, 'pdf', 'eps'), movie=('mov', 'mov', 'mov', 'gif'))
+        self.codecs = (HEVC, H264, PRORES, None)
+        self.movie = dict(format='mov', first=1, last=150, fps=30, bitrate=None, loop=0, codec=HEVC, zoom=1.0, colors=P3)
+        self.image = dict(format='pdf', zoom=1.0, first=1, last=1, colors=P3, single=True)
         self.last = None
+        self.canvasSize = None # size of last run (for bitrate suggestion)
+        self.movieFps.setDelegate_(self)
 
     @objc.python_method
     def beginExport(self, kind):
@@ -383,20 +471,26 @@ class ExportSheet(NSObject):
             self.imagePageCount.setIntValue_(self.image['last'])
 
             self.updatePagination()
-            self.updateColorMode()
+            self.fillColors(self.imageColors, self.image['colors'])
 
         elif kind=='movie':
             format = self.movie['format']
             accessory = self.movieAccessory
-            format_idx = self.formats['movie'].index(self.movie['format'])
+            format_idx = self.codecs.index(self.movie['codec'])
             should_loop = self.movie['format']=='gif' and self.movie['loop']==-1
             self.movieFrames.setIntValue_(self.movie['last'])
             self.movieFps.setIntValue_(self.movie['fps'])
             self.movieFormat.selectItemAtIndex_(format_idx)
             self.movieLoop.setState_(NSOnState if should_loop else NSOffState)
             self.movieLoop.setEnabled_(format=='gif')
-            self.movieBitrate.setEnabled_(format!='gif')
-            self.movieBitrate.selectItemWithTag_(self.movie['bitrate'])
+            self.movieBitrate.setEnabled_(self.movie['codec'] in (HEVC, H264))
+            self.movieBitrate.selectItemWithTag_(self.movie['bitrate'] or 0)
+            self.fillColors(self.movieColors, self.movie['colors'])
+            self.canvasSize = None
+            if self.script.vm.ran:
+                w, h = self.script.vm.canvas.pagesize
+                self.canvasSize = (int(w), int(h))
+            self.updateBitrate()
 
         # set the default filename and save dir
         # path = self.script.fileName()
@@ -445,6 +539,10 @@ class ExportSheet(NSObject):
             self.last = os.path.split(fname) # save the path we exported to
             self.script.exportInit(kind, fname, opts)
 
+    # PyObjC lacks this selector's metadata
+    exportPanelDidEnd_returnCode_contextInfo_ = objc.selector(
+        exportPanelDidEnd_returnCode_contextInfo_, signature=b'v@:@q^v')
+
     def movieState(self, key=None):
         fmts = self.formats['movie']
         fmt_idx = self.movieFormat.indexOfSelectedItem()
@@ -453,8 +551,10 @@ class ExportSheet(NSObject):
                      last=self.movieFrames.intValue(),
                      fps=self.movieFps.floatValue(),
                      loop=-1 if self.movieLoop.state()==NSOnState else 0,
-                     bitrate=self.movieBitrate.selectedItem().tag(),
-                     codec=fmt_idx ) # 0=h265 1=h264
+                     bitrate=self.movieBitrate.selectedItem().tag() or None,
+                     codec=self.codecs[fmt_idx],
+                     colors=self.movieColors.selectedItem().representedObject(),
+                     zoom=self.movie['zoom'] )
         if key:
             return state[key]
         return state
@@ -465,7 +565,7 @@ class ExportSheet(NSObject):
         state = dict(format=fmts[fmt_idx],
                      zoom=self.image['zoom'],
                      first=1,
-                     cmyk=self.imageCMYK.state()==NSOnState,
+                     colors=self.imageColors.selectedItem().representedObject(),
                      single=fmt_idx==1,
                      last=self.imagePageCount.intValue())
         if key:
@@ -476,18 +576,77 @@ class ExportSheet(NSObject):
         label = 'Pages:' if self.imageState('single') else 'Files:'
         self.imagePagination.setStringValue_(label)
 
-    def updateColorMode(self):
-        format = self.imageState('format')
-        can_cmyk = format in ('pdf','eps','tiff','jpg')
-        self.imageCMYK.setEnabled_(can_cmyk)
-        if not can_cmyk:
-            self.imageCMYK.setState_(NSOffState)
+    def updateBitrate(self):
+        automatic = 'Automatic'
+        fps = self.movieFps.floatValue()
+        if self.canvasSize is not None and fps > 0:
+            w, h = [int(dim * self.movie['zoom']) for dim in self.canvasSize]
+            automatic += ' (%i Mbit/s)' % MovieExportSession.auto_bitrate(w, h, fps)
+        self.movieBitrate.menu().itemWithTag_(0).setTitle_(automatic)
+        self.movieBitrate.synchronizeTitleAndSelectedItem()
+
+    def controlTextDidChange_(self, note):
+        if note.object() == self.movieFps:
+            self.updateBitrate()
+
+    @objc.python_method
+    def proofed(self, proof):
+        """Preset both Colors pop-ups from View > Proof Colors' choice"""
+        kind, value = proof or (None, None)
+        if kind == 'vision':
+            return
+        self.image['colors'] = value if kind in ('press', 'rgb') else P3
+        self.movie['colors'] = value if value == SRGB else P3
+
+    @objc.python_method
+    def fillColors(self, popup, colors):
+        """Rebuild a Colors pop-up and select `colors`"""
+        rgb = [('Display P3', P3), ('sRGB', SRGB)] + Profile.installed(RGB)
+        cmyk = [('Generic CMYK', CMYK)] + Profile.installed(CMYK)
+        popup.removeAllItems()
+        for header, items in [('RGB', rgb), ('CMYK', cmyk)]:
+            if SECTION_HEADERS:
+                popup.menu().addItem_(NSMenuItem.sectionHeaderWithTitle_(header))
+            elif popup.numberOfItems():
+                popup.menu().addItem_(NSMenuItem.separatorItem())
+            for title, value in items:
+                popup.addItemWithTitle_(title)
+                popup.lastItem().setRepresentedObject_(value)
+        popup.selectItemAtIndex_(popup.indexOfItemWithRepresentedObject_(colors))
+        self.updateColors(popup)
+
+    @objc.python_method
+    def updateColors(self, popup):
+        """Show only the colors the format can hold"""
+        if popup is self.imageColors:
+            format = self.formats['image'][self.imageFormat.indexOfSelectedItem()]
+        else:
+            format = self.formats['movie'][self.movieFormat.indexOfSelectedItem()]
+        allowed = Output.FORMATS[format]
+        holds_cmyk = CMYK in allowed
+        system = [key for _, key in Profile.installed(RGB)]
+        for idx, item in enumerate(popup.itemArray()):
+            colors = item.representedObject()
+            if colors is None:
+                item.setHidden_(idx > 0 and not holds_cmyk)
+            elif colors in Profile.SYSTEM_VIDEO and 'rgb' in allowed:
+                item.setHidden_(format not in ('png', 'tiff'))
+            elif colors in (P3, SRGB) or colors in system:
+                item.setHidden_(not (colors in allowed or 'rgb' in allowed))
+            else:
+                item.setHidden_(not holds_cmyk)
+        chosen = popup.selectedItem()
+        if chosen is None or chosen.isHidden():
+            default = Output.DEFAULTS.get(format, P3)
+            popup.selectItemAtIndex_(popup.indexOfItemWithRepresentedObject_(default))
+        choices = [item for item in popup.itemArray() if item.representedObject() is not None and not item.isHidden()]
+        popup.setEnabled_(len(choices) > 1)
 
     @IBAction
     def imageFormatChanged_(self, sender):
         format = self.formats['image'][sender.indexOfSelectedItem()]
         self.exportPanel.setAllowedFileTypes_([format])
-        self.updateColorMode()
+        self.updateColors(self.imageColors)
         self.updatePagination()
 
     @IBAction
@@ -517,11 +676,39 @@ class ExportSheet(NSObject):
         self.imageZoom.setStringValue_("%i%%" % pct)
 
     @IBAction
+    def movieZoomStepped_(self, sender):
+        step = sender.intValue()
+        sender.setIntValue_(0)
+
+        self.movieZoomChanged_(None) # reflect any editing in text field
+        pct = self.movie['zoom'] * 100
+
+        if step > 0:
+            pct = 100 * ceil((pct + 1) / 100)
+        elif step < 0:
+            pct = 100 * floor((pct - 1) / 100)
+
+        if 0 < pct < 10000:
+            self.movie['zoom'] = pct / 100
+            self.movieZoom.setStringValue_("%i%%" % pct)
+        self.updateBitrate()
+
+    @IBAction
+    def movieZoomChanged_(self, sender):
+        pct = self.movieZoom.intValue()
+        if pct > 0:
+            self.movie['zoom'] = pct / 100
+        else:
+            pct = self.movie['zoom'] * 100
+        self.movieZoom.setStringValue_("%i%%" % pct)
+        self.updateBitrate()
+
+    @IBAction
     def movieFormatChanged_(self, sender):
         format = self.formats['movie'][sender.indexOfSelectedItem()]
         self.exportPanel.setAllowedFileTypes_([format])
         is_gif = format=='gif'
         self.movieLoop.setState_(NSOnState if is_gif else NSOffState)
         self.movieLoop.setEnabled_(is_gif)
-        self.movieBitrate.setEnabled_(not is_gif)
-
+        self.movieBitrate.setEnabled_(self.codecs[sender.indexOfSelectedItem()] in (HEVC, H264))
+        self.updateColors(self.movieColors)

@@ -19,4 +19,4 @@ jobs:
       run: brew install python-setuptools
 
     - name: Run tests
-      run: python3 setup.py test
+      run: python3 -m tests

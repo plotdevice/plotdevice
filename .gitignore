@@ -6,16 +6,20 @@ build/
 dist/
 plotdevice.egg-info
 app/Resources/viewer.nib
-Manifest.in
+plotdevice/rsrc
+MANIFEST.in
 
 # local development
 deps/local
-/*.so
+.build
+/_*
+*.so
 
 # external dependencies
 deps/frameworks/*.framework
-deps/frameworks/relocatable-python
+deps/frameworks/*.framework.pkg
 deps/extensions/svg/SwiftDraw*
+deps/extensions/clipper2/*.o
 
 # cds garbage
 related/

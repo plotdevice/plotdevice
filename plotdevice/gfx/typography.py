@@ -8,7 +8,7 @@ from ..lib.cocoa import *
 
 from plotdevice import DeviceError
 from .atoms import StyleMixin
-from .colors import Color
+from .colors import Color, Pattern
 from ..util import _copy_attrs
 from ..lib.foundry import *
 
@@ -78,14 +78,13 @@ class Font(object):
         return ('Font(%s)'%" ".join(spec))
 
     def __enter__(self):
-        if not hasattr(self, '_rollback'):
-            self._rollback = _ctx._font
-        _ctx._font = self
+        if _ctx._font is not getattr(self, '_installed', None):
+            self._rollback, self._installed = _ctx._font, self.copy()
+            _ctx._font = self._installed
         return self
 
     def __exit__(self, type, value, tb):
         _ctx._font = self._rollback
-        del self._rollback
 
     def copy(self):
         return Font(self)
@@ -208,6 +207,12 @@ class Font(object):
         spec.update(self._metrics)
         return spec
 
+    @property
+    def _key(self):
+        if not hasattr(self, '_sorted'):
+            self._sorted = tuple(sorted((k, v) for k, v in self._spec.items() if k != 'margin'))
+        return self._sorted
+
     @classmethod
     def validate(cls, kwargs):
         known = StyleMixin.fontOpts + StyleMixin.aatOpts
@@ -224,13 +229,13 @@ class Layout(LineLayout):
         return self
 
     def __enter__(self):
-        if not hasattr(self, '_rollback'):
+        if _ctx._font is not getattr(self, '_installed', None):
             self._rollback = _ctx._font
+            _ctx._font = self._installed = Font(**self._asdict())
         return self
 
     def __exit__(self, type, value, tb):
         _ctx._font = self._rollback
-        del self._rollback
 
     @classmethod
     def validate(cls, kwargs):
@@ -360,10 +365,12 @@ class Stylesheet(object):
 
     def __delitem__(self, key):
         if key in self._styles:
-            del self._styles[key]
+            self._styles = {k:v for k,v in self._styles.items() if k != key}
 
     def copy(self):
-        return Stylesheet(self._styles)
+        new = Stylesheet.__new__(Stylesheet)
+        new._styles = self._styles # styles are immutable, so share them
+        return new
 
     @property
     def styles(self):
@@ -377,11 +384,12 @@ class Stylesheet(object):
             spec.update(self._styles.get( kwargs.get('style'), {} ))
             spec.update(fontspec(*args, **kwargs))
             color = kwargs.get('fill')
-            if color and not isinstance(color, Color):
+            if color and not isinstance(color, (Color, Pattern)):
                 if isinstance(color, (str, int, float)):
                     color = (color,)
                 color = Color(*color)
             if color:
                 spec['fill'] = color
+            self._styles = dict(self._styles)
             self._styles[name] = spec
         return self[name]

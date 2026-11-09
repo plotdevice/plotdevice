@@ -12,6 +12,7 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customObject id="PCm-ob-001" userLabel="ProofColorsMenu" customClass="ProofColorsMenu"/>
         <menu title="PlotDevice" systemMenu="main" id="29" userLabel="MainMenu">
             <items>
                 <menuItem title="PlotDevice" id="56">
@@ -389,11 +390,6 @@ CQ
                             <menuItem title="Zoom to" id="500">
                                 <menu key="submenu" title="Zoom to" id="501">
                                     <items>
-                                        <menuItem title="To Fit" keyEquivalent="0" id="512">
-                                            <connections>
-                                                <action selector="zoomToFit:" target="-1" id="513"/>
-                                            </connections>
-                                        </menuItem>
                                         <menuItem title="Actual Size" tag="100" keyEquivalent="1" id="502">
                                             <connections>
                                                 <action selector="zoomToTag:" target="-1" id="506"/>
@@ -414,9 +410,15 @@ CQ
                                                 <action selector="zoomToTag:" target="-1" id="509"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="zS4-0p-Kq7"/>
                                         <menuItem title="50%" tag="50" keyEquivalent="5" id="510">
                                             <connections>
                                                 <action selector="zoomToTag:" target="-1" id="511"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Fit Window" keyEquivalent="0" id="512">
+                                            <connections>
+                                                <action selector="zoomToFit:" target="-1" id="513"/>
                                             </connections>
                                         </menuItem>
                                     </items>
@@ -434,6 +436,14 @@ CQ
                                 <connections>
                                     <action selector="aceInvisibles:" target="-1" id="mHz-98-MoV"/>
                                 </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="PCm-sp-001"/>
+                            <menuItem title="Proof Colors" id="PCm-it-001">
+                                <menu key="submenu" title="Proof Colors" id="PCm-mn-001">
+                                    <connections>
+                                        <outlet property="delegate" destination="PCm-ob-001" id="PCm-dl-001"/>
+                                    </connections>
+                                </menu>
                             </menuItem>
                         </items>
                     </menu>

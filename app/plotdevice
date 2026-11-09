@@ -9,12 +9,29 @@ env=$(
 )
 
 PYTHON="$env/python3"
-PIP="$env/pip3"
-if [ ! -x $PYTHON ]; then
+if [ ! -x "$PYTHON" ]; then
     PYTHON=python3
-    PIP=pip3
 fi
 
+case "$env" in
+    *.app/Contents/*)
+        # don't generate bytecode files in a signed app bundle
+        export PYTHONDONTWRITEBYTECODE=1
+
+        # run without the GIL on -t or --free-threaded
+        for arg in "$@"; do
+            case "$arg" in
+                --) break ;; # the rest belongs to the script
+                --fre*) free_threaded=1 ;; # the only --fre option
+                --*) ;;
+                -*) case "${arg%%o*}" in *t*) free_threaded=1 ;; esac ;; # -o takes the rest as its value
+            esac
+        done
+        if [ -n "$free_threaded" ]; then
+            PYTHON="${env%/Python.framework/*}/PythonT.framework/Versions/Current/bin/python3t"
+        fi
+        ;;
+esac
+
 export _p_l_o_t_d_e_v_i_c_e_=$(basename ${0})
-export _p_l_o_t_d_e_v_i_c_e___p_i_p_=$PIP
-$PYTHON -m plotdevice $@
+"$PYTHON" -m plotdevice "$@"

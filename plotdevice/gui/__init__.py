@@ -12,6 +12,7 @@ def bundle_path(subpath=None, rsrc=None, fmwk=None):
     return bundle
 
 from Foundation import NSTimer, NSRunLoop, NSRunLoopCommonModes
+
 def set_timeout(target, sel, delay, info=None, repeat=False):
     timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(delay, target, sel, info, repeat)
     NSRunLoop.mainRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
@@ -23,5 +24,5 @@ def next_tick(target, sel):
 
 from .document import PlotDeviceDocument, PythonScriptDocument, ScriptController
 from .app import PlotDeviceAppDelegate
-from .views import GraphicsBackdrop, GraphicsView, FullscreenView
+from .views import CenteringClipView, GraphicsView, FullscreenView
 from .widgets import StatusView, DashboardController, ExportSheet
